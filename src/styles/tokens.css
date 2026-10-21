@@ -1,0 +1,97 @@
+/* Numeria design tokens. Every module uses these variables; do not hardcode colors or fonts elsewhere
+   except world/character art. */
+
+@font-face { font-family: 'Andika'; src: url('/fonts/Andika-Regular.woff') format('woff'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Andika'; src: url('/fonts/Andika-Bold.woff') format('woff'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Andika'; src: url('/fonts/Andika-Italic.woff') format('woff'); font-style: italic; font-display: swap; }
+@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-400.woff') format('woff'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-500.woff') format('woff'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-600.woff') format('woff'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-700.woff') format('woff'); font-weight: 700; font-display: swap; }
+
+:root {
+  /* Typography: Fredoka for titles, numbers and buttons; Andika (literacy font, single-storey a/g) for reading text. */
+  --font-display: 'Fredoka', system-ui, sans-serif;
+  --font-read: 'Andika', system-ui, sans-serif;
+  --fs-xs: clamp(12px, 1.1vmin + 4px, 14px);
+  --fs-sm: clamp(14px, 1.3vmin + 5px, 17px);
+  --fs-md: clamp(17px, 1.6vmin + 6px, 21px);
+  --fs-lg: clamp(21px, 2.2vmin + 7px, 28px);
+  --fs-xl: clamp(28px, 3.2vmin + 8px, 40px);
+  --fs-2xl: clamp(36px, 4.6vmin + 8px, 56px);
+  --fs-num: clamp(30px, 4.2vmin + 6px, 52px); /* numbers inside exercises */
+
+  /* Brand */
+  --c-ink: #2e1a47;           /* main text */
+  --c-ink-soft: #5b4a75;
+  --c-ink-mute: #8b7aa8;
+  --c-bg: #faf5ff;
+  --c-surface: #ffffff;
+  --c-surface-2: #f5f3ff;
+  --c-line: #e9d5ff;
+  --c-primary: #7c3aed;
+  --c-primary-strong: #6d28d9;
+  --c-primary-soft: #ede9fe;
+  --c-magic: #c026d3;
+  --c-magic-soft: #fae8ff;
+  --c-gold: #f59e0b;
+  --c-gold-soft: #fef3c7;
+  --c-success: #16a34a;
+  --c-success-soft: #dcfce7;
+  --c-warn: #ea580c;
+  --c-warn-soft: #ffedd5;
+  --c-error: #e11d48;      /* used sparingly and gently: errors are clues, never red screens */
+  --c-error-soft: #ffe4e6;
+
+  /* Place-value colours (same as the printed workbook) */
+  --pv-u: #3b82f6;  --pv-u-soft: #eff6ff;
+  --pv-d: #ec4899;  --pv-d-soft: #fdf2f8;
+  --pv-c: #22c55e;  --pv-c-soft: #f0fdf4;
+  --pv-um: #f59e0b; --pv-um-soft: #fffbeb;
+
+  /* World colours (season 1) */
+  --w1: #15803d; --w1-soft: #dcfce7;   /* Bosque de los Grupos */
+  --w2: #2563eb; --w2-soft: #dbeafe;   /* Río de las Sumas */
+  --w3: #dc2626; --w3-soft: #fee2e2;   /* Cueva del Seis */
+  --w4: #0e7490; --w4-soft: #cffafe;   /* Montaña de las Restas */
+  --w5: #7c3aed; --w5-soft: #ede9fe;   /* Lago del Ocho */
+  --w6: #c026d3; --w6-soft: #fae8ff;   /* Jardín del Arcoíris */
+  --w7: #ea580c; --w7-soft: #ffedd5;   /* Forja del Dragón */
+  --w8: #a16207; --w8-soft: #fef9c3;   /* Castillo del Reparto */
+
+  /* Shape */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+  --shadow-1: 0 2px 0 rgba(46, 26, 71, .08), 0 4px 14px rgba(124, 58, 237, .10);
+  --shadow-2: 0 4px 0 rgba(46, 26, 71, .10), 0 10px 30px rgba(124, 58, 237, .16);
+  --shadow-press: 0 1px 0 rgba(46, 26, 71, .12);
+
+  /* Spacing */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
+
+  /* Touch: children's fingers + pencil. Never make a tappable thing smaller than this. */
+  --tap-min: 56px;
+  --cell-size: clamp(64px, 9vmin, 96px);     /* one handwritten digit cell */
+  --cell-size-sm: clamp(44px, 6vmin, 64px);  /* carry / borrow cells */
+
+  /* Motion */
+  --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+  --dur-fast: 140ms;
+  --dur-med: 280ms;
+  --dur-slow: 600ms;
+
+  /* Layers */
+  --z-hud: 20;
+  --z-overlay: 40;
+  --z-modal: 60;
+  --z-toast: 80;
+  --z-ink: 90;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 1ms; --dur-med: 1ms; --dur-slow: 1ms; }
+}

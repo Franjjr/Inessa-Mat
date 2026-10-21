@@ -1,0 +1,44 @@
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  height: 100%;
+  background: var(--c-bg);
+  color: var(--c-ink);
+}
+
+body {
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  /* Tablet game ergonomics: no rubber-band scroll, no text selection, no iOS long-press callout,
+     no double-tap zoom. Screens that need scrolling (adult dashboards) opt back in with .scrollable */
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#root { display: flex; flex-direction: column; }
+
+h1, h2, h3, h4, button, .display { font-family: var(--font-display); }
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; font-weight: 600; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+input, textarea, select { font: inherit; -webkit-user-select: text; user-select: text; }
+
+.scrollable { overflow-y: auto; -webkit-overflow-scrolling: touch; -webkit-user-select: text; user-select: text; }
+
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+:focus-visible { outline: 3px solid var(--c-magic); outline-offset: 3px; border-radius: 8px; }
