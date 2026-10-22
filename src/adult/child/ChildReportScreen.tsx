@@ -1,14 +1,13 @@
 /* One child's report for the grown-ups. Order: the conclusion first (which tables to praise and which to review),
-   the four figures for the last 7 days, the times-table grid with its legend, the most frequent mistakes and the
-   worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
+   the four figures for the last 7 days, what the child is learning (temario, mistakes by kind, tests), then the
+   times-table grid with its legend and the worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
    deletion). A picture of the story so far can be shared. */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
 import { clearInkSamples, eraseChild, exportChildData, getChildSummary, getProgress, useChildren } from '@/data'
-import { describeError } from '@/engine'
 import { season1 } from '@/content'
-import type { ChildSummary, CompanionSpecies, ErrorType, ProgressState } from '@/types'
+import type { ChildSummary, CompanionSpecies, ProgressState } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
@@ -21,7 +20,7 @@ import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
 import { OtherMethodsCard } from './OtherMethodsCard'
-import { PlacementCard } from './PlacementCard'
+import { LearningSection } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -201,6 +200,8 @@ export default function ChildReportScreen() {
         </div>
       </section>
 
+      <LearningSection childId={childId} childName={name} progress={progress} />
+
       <div className={s.twoCol}>
         <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">
           <div className={s.heatWrap}>
@@ -220,25 +221,6 @@ export default function ChildReportScreen() {
         </section>
 
         <div className={adult.stack}>
-          <section className={adult.card} aria-labelledby="errors-title">
-            <h2 id="errors-title" className={adult.subheading}>Errores más frecuentes</h2>
-            <p className={adult.muted}>Del último mes. Los errores de lectura de la letra no cuentan.</p>
-            {summary.topErrors.length === 0 ? (
-              <p className={adult.lead}>Todavía no hay errores que destacar.</p>
-            ) : (
-              <ul className={adult.list} aria-label="Errores más frecuentes">
-                {summary.topErrors.map((e) => (
-                  <li key={e.errorType} className={s.errorRow}>
-                    <span className={s.errorCount}>{e.count} {e.count === 1 ? 'vez' : 'veces'}</span>
-                    <span className={adult.lead} style={{ fontSize: 'var(--fs-sm)' }}>
-                      {describeError(e.errorType as ErrorType)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
           <SubtractionMethodsCard info={summary.subtractionMethods} />
           <OtherMethodsCard division={summary.divisionMethods} tables={summary.tableTricks} />
 
@@ -261,8 +243,6 @@ export default function ChildReportScreen() {
           </section>
         </div>
       </div>
-
-      <PlacementCard childId={childId} childName={name} progress={progress} />
 
       <RewardCard childId={childId} childName={name} />
 

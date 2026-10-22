@@ -15,6 +15,9 @@ const data = vi.hoisted(() => ({
   exportChildData: vi.fn(),
   setChestReward: vi.fn(),
   markRewardClaimed: vi.fn(),
+  getMastery: vi.fn(),
+  listAttempts: vi.fn(),
+  updateProgress: vi.fn(),
 }))
 
 vi.mock('@/data', () => data)
@@ -83,6 +86,12 @@ describe('ChildReportScreen', () => {
     data.getChildSummary.mockResolvedValue(SUMMARY)
     data.getProgress.mockResolvedValue(PROGRESS)
     data.getRewards.mockResolvedValue([])
+    data.getMastery.mockResolvedValue({})
+    // Four wrong times-table answers in the last days.
+    data.listAttempts.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({
+      id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',
+      ms: 3000, inputMode: 'keypad', hintsUsed: 0, errorType: 'fact', context: {}, createdAt: new Date(Date.now() - (i + 1) * 86_400_000).toISOString(),
+    })))
   })
 
   it('renders the 10×10 times-table heatmap from the seeded summary', async () => {
@@ -98,10 +107,13 @@ describe('ChildReportScreen', () => {
     expect(within(heatmap).getByRole('cell', { name: '9 × 9 = 81: Sin practicar' })).toBeInTheDocument()
   })
 
-  it('explains frequent errors in plain Spanish and shows 7-day time and accuracy', async () => {
+  it('explains the mistakes by kind with what helps, and shows 7-day time and accuracy', async () => {
     renderReport()
 
-    expect(await screen.findByText('Resultado de la tabla o cálculo básico incorrecto')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Tablas y cálculo básico' })).toBeInTheDocument()
+    expect(screen.getByText('4 veces')).toBeInTheDocument()
+    expect(screen.getByText(/Repasar un rato esas tablas/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
     expect(screen.getByText('42 min')).toBeInTheDocument()
     expect(screen.getByText('80 %')).toBeInTheDocument()
     expect(screen.getByText('1 de 8')).toBeInTheDocument()
