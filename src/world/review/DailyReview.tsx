@@ -7,7 +7,7 @@ import { useActiveChild, useMastery, useProgress } from '@/data'
 import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { StarIcon } from '@/art'
-import { Button, Screen, Spinner } from '@/ui'
+import { BackButton, Button, Screen, Spinner } from '@/ui'
 import type { DailyReviewProps } from '@/world/contracts'
 import type { Exercise } from '@/types'
 import { ExerciseStep } from './ExerciseStep'
@@ -49,7 +49,7 @@ function ReviewSession({ onDone, onExit }: DailyReviewProps) {
   const title = (
     <header className={s.header}>
       {onExit && phase === 'playing' && exercises.length > 0 && (
-        <Button variant="secondary" size="sm" onClick={onExit}>Salir</Button>
+        <BackButton variant="exit" onClick={onExit} />
       )}
       <h1 className={s.headerTitle}>Repaso de hoy</h1>
     </header>

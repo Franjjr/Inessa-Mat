@@ -124,7 +124,7 @@
   min-height: var(--tap-min);
   min-width: var(--tap-min);
   padding: 0 var(--sp-4);
-  border: 2px dashed var(--accent);
+  border: 2px solid var(--accent);
   border-radius: var(--r-pill);
   background: var(--accent-soft);
   color: var(--c-ink);
@@ -138,6 +138,9 @@
 .hintBtn:disabled {
   opacity: .45;
   cursor: default;
+  border-style: solid;
+  background: var(--c-surface-2);
+  border-color: var(--c-line);
 }
 
 .hintBtn:focus-visible {

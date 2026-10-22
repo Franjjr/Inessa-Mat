@@ -10,7 +10,7 @@ import { sfx, speech } from '@/audio'
 import { useActiveChild } from '@/data'
 import type { CharacterId, Pose, SfxName, SpeechOptions, StoryDef, StoryLine, StoryScene } from '@/types'
 import type { StoryPlayerProps } from '../contracts'
-import { Button } from '@/ui'
+import { BackButton, Button } from '@/ui'
 import s from './StoryPlayer.module.css'
 
 /** Names shown above the bubbles (the companion and the child are named from the child's profile). */
@@ -154,7 +154,7 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
 
         <header className={s.top}>
           {onExit ? (
-            <Button variant="secondary" size="sm" className={s.touch} onClick={onExit}>Salir</Button>
+            <BackButton variant="exit" onClick={onExit} />
           ) : <span />}
           <h1 className={s.title}>{renderTemplate(story.title, ctx)}</h1>
           <Button variant="ghost" size="sm" className={s.touch} onClick={finish}>Saltar</Button>

@@ -18,7 +18,7 @@ vi.mock('@/data', () => ({
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
-vi.mock('@/art', () => ({ StarIcon: ({ filled }: { filled?: boolean }) => <i data-testid={filled ? 'star-on' : 'star-off'} /> }))
+vi.mock('@/art/worlds/StarIcon', () => ({ StarIcon: ({ filled }: { filled?: boolean }) => <i data-testid={filled ? 'star-on' : 'star-off'} /> }))
 
 const W = 330
 const H = 420

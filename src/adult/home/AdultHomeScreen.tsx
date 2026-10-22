@@ -3,7 +3,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { CompanionArt } from '@/art'
 import { useAuth, useChildren } from '@/data'
-import { Button, Card, toast } from '@/ui'
+import { BackButton, Button, Card, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
 import { SyncBadge } from '../shared/SyncBadge'
@@ -44,7 +44,7 @@ export default function AdultHomeScreen() {
   }
 
   return (
-    <AdultPage title="Zona de adultos" back="/kids" actions={<Button variant="ghost" size="sm" onClick={leave}>Salir</Button>}>
+    <AdultPage title="Zona de adultos" back="/kids" actions={<BackButton variant="exit" onClick={leave} />}>
       <header className={s.hero}>
         <div className={adult.stack} style={{ gap: 6 }}>
           <h2 className={adult.heading}>{activeOrg ? activeOrg.name : 'Tus perfiles en este dispositivo'}</h2>

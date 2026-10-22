@@ -185,7 +185,8 @@ export default function OnboardingScreen() {
                     placeholder="Escribe tu nombre"
                     onChange={(e) => update({ name: e.target.value })}
                   />
-                  <Button type="submit" size="lg" className={s.next} disabled={!draft.name.trim()}>Siguiente ›</Button>
+                  <Button type="submit" size="lg" className={s.next} disabled={!draft.name.trim()} aria-describedby={draft.name.trim() ? undefined : 'ob-name-hint'}>Siguiente ›</Button>
+                  {!draft.name.trim() && <p id="ob-name-hint" className={s.hint}>Escribe tu nombre para seguir</p>}
                 </form>
               </Question>
             )}
@@ -282,7 +283,8 @@ export default function OnboardingScreen() {
                     placeholder="Escribe un nombre"
                     onChange={(e) => update({ petName: e.target.value })}
                   />
-                  <Button type="submit" size="lg" className={s.next} disabled={!draft.petName.trim()}>Siguiente ›</Button>
+                  <Button type="submit" size="lg" className={s.next} disabled={!draft.petName.trim()} aria-describedby={draft.petName.trim() ? undefined : 'ob-pet-hint'}>Siguiente ›</Button>
+                  {!draft.petName.trim() && <p id="ob-pet-hint" className={s.hint}>Escribe un nombre para seguir</p>}
                 </form>
               </Question>
             )}

@@ -4,7 +4,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearAdultPin, hasAdultPin, setAdultPin, useAuth, verifyAdultPin } from '@/data'
-import { Button, Spinner } from '@/ui'
+import { BackButton, Button, Spinner } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { NumberPad, PinDots } from '../shared/NumberPad'
 import { errorMessage } from '../shared/messages'
@@ -390,7 +390,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
             </button>
           )}
         </div>
-        <Button variant="ghost" onClick={() => navigate('/kids')}>Volver a la zona de niños</Button>
+        <BackButton label="Volver a la zona de niños" onClick={() => navigate('/kids')} />
       </section>
     </AdultPage>
   )

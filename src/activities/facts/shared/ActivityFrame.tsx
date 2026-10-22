@@ -3,7 +3,7 @@ import clsx from 'clsx'
 import { motion, useReducedMotion } from 'motion/react'
 import type { CSSProperties, ReactNode } from 'react'
 import { Sparkles, StarIcon } from '@/art'
-import { Button } from '@/ui'
+import { BackButton, Button } from '@/ui'
 import type { ActivityResult } from '@/types'
 import { useActivityHost } from '../../host'
 import { formatClock } from './items'
@@ -33,9 +33,7 @@ export function ActivityFrame({ title, instructions, index, total, accent, accen
     <section className={clsx(s.frame, className)} style={style} aria-label={host.t(title)}>
       <header className={s.header}>
         {onExit ? (
-          <Button variant="secondary" round aria-label="Salir del juego" onClick={onExit}>
-            <span aria-hidden style={{ fontSize: 26, lineHeight: 1 }}>‹</span>
-          </Button>
+          <BackButton variant="exit" onClick={onExit} />
         ) : <span />}
         <h1 className={s.title}>{host.t(title)}</h1>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

@@ -109,16 +109,18 @@
 }
 .label { font-family: var(--font-display); font-size: var(--fs-sm); color: var(--c-ink-soft); }
 
-/* Disabled "Siguiente": a clearly inactive dashed pill instead of a faded primary button. */
+/* Disabled "Siguiente": flat light grey, no border (a dashed outline reads as a drop zone). The solid
+   primary returns as soon as the field has text, and a line under the button says what is missing. */
 .next.next:disabled {
   filter: none;
   opacity: 1;
-  background: var(--c-surface);
-  color: var(--c-ink-mute);
+  background: #e7e4ec;
+  color: var(--c-ink-soft);
   box-shadow: none;
-  border: 3px dashed var(--c-ink-mute);
+  border: 0;
   cursor: not-allowed;
 }
+.hint { margin: 0; text-align: center; font-family: var(--font-display); font-size: var(--fs-sm); color: var(--c-ink-soft); }
 .input {
   min-height: 64px;
   padding: 0 var(--sp-4);

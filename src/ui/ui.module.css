@@ -25,10 +25,25 @@
 .ghost { --btn-bg: transparent; --btn-fg: var(--c-primary); --btn-shadow: transparent; box-shadow: none; }
 .ghost:active:not(:disabled) { box-shadow: none; }
 .danger { --btn-bg: var(--c-surface); --btn-fg: var(--c-error); --btn-shadow: var(--c-error-soft); border: 2px solid var(--c-error-soft); }
-.sm { min-height: 44px; min-width: 44px; padding: 0 var(--sp-4); font-size: var(--fs-sm); }
+.sm { min-height: var(--tap-min); min-width: var(--tap-min); padding: 0 var(--sp-4); font-size: var(--fs-sm); }
 .lg { min-height: 72px; padding: 0 var(--sp-6); font-size: var(--fs-lg); }
 .block { width: 100%; }
 .round { padding: 0; border-radius: 50%; }
+
+/* Back and exit: one shape everywhere (see BackButton). Same look for both; the icon and label tell them apart. */
+.backBtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  min-height: var(--tap-min); min-width: var(--tap-min); padding: 0 var(--sp-4);
+  border: 2px solid var(--c-line); border-radius: var(--r-pill);
+  background: var(--c-surface); color: var(--c-primary);
+  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); white-space: nowrap;
+  box-shadow: 0 4px 0 var(--c-line);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);
+}
+.backBtn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--c-line); }
+.backBtn:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
+.backIcon { font-size: 24px; line-height: 1; }
+.backExit .backIcon { font-size: 20px; }
 
 .card {
   background: var(--c-surface);
@@ -79,6 +94,10 @@
 .pill { display: inline-flex; align-items: center; gap: var(--sp-2); padding: 6px 14px; border-radius: var(--r-pill); background: var(--c-primary-soft); color: var(--c-primary); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); }
 
 .spinner { width: 48px; height: 48px; border-radius: 50%; border: 6px solid var(--c-primary-soft); border-top-color: var(--c-primary); animation: spin 900ms linear infinite; }
+.spinnerLabel { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); color: var(--c-ink-soft); text-align: center; padding: 0 var(--sp-5); }
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2400ms; }
+}
 .center { flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: var(--sp-4); }
 
 .placeholder { margin: var(--sp-6); padding: var(--sp-6); border: 3px dashed var(--c-line); border-radius: var(--r-lg); font-family: var(--font-display); color: var(--c-ink-mute); text-align: center; }

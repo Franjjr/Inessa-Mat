@@ -14,12 +14,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Repasitos" />
     <meta name="description" content="Repasitos: aventuras matemáticas para aprender las tablas, sumar, restar, multiplicar y dividir jugando." />
-    <link rel="preload" href="/fonts/Fredoka-600.woff" as="font" type="font/woff" crossorigin />
-    <link rel="preload" href="/fonts/Andika-Regular.woff" as="font" type="font/woff" crossorigin />
+    <link rel="preload" href="/fonts/Fredoka-600.woff2" as="font" type="font/woff2" crossorigin />
     <title>Repasitos · Aventuras matemáticas</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until React mounts (React replaces this on first render). Spoken once by screen readers. -->
+    <div id="root"><p role="status" aria-live="polite" style="min-height:100dvh;margin:0;display:flex;align-items:center;justify-content:center;font:600 20px system-ui,sans-serif;color:#5b4a75;background:#faf5ff">Cargando…</p></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

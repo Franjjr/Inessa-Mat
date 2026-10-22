@@ -1,6 +1,6 @@
 /* Frame of an operations minigame: exit button, title, round progress and the body. */
 import type { CSSProperties, ReactNode } from 'react'
-import { Button } from '@/ui'
+import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '@/activities/host'
 import s from './OpsShell.module.css'
 
@@ -23,9 +23,7 @@ export function OpsShell({ title, index, total, onExit, background, children, cl
     <main className={`${s.shell} ${className ?? ''}`} style={{ background, ...style }}>
       <header className={s.top}>
         {onExit && (
-          <Button variant="secondary" round aria-label="Salir" onClick={onExit}>
-            <span aria-hidden style={{ fontSize: 26, lineHeight: 1 }}>‹</span>
-          </Button>
+          <BackButton variant="exit" onClick={onExit} />
         )}
         <h1 className={s.title}>{host.t(title)}</h1>
         {total > 0 && (

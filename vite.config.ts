@@ -13,7 +13,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['fonts/*.woff', 'models/**/*', 'icons/*'],
+      includeAssets: ['fonts/*.woff2', 'models/**/*', 'icons/*'],
       manifest: {
         name: 'Repasitos · Aventuras matemáticas',
         short_name: 'Repasitos',
@@ -31,7 +31,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff,json,bin,mp3,ogg}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,json,bin,mp3,ogg}'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/dev\//],
