@@ -68,7 +68,7 @@
   width: clamp(44px, 7vmin, 62px);
   height: clamp(54px, 8.4vmin, 74px);
   border-radius: var(--r-md);
-  border: 3px dashed var(--c-line);
+  border: 3px dashed var(--c-ink-mute);
   background: var(--c-surface);
   font-family: var(--font-display);
   font-weight: 700;
@@ -77,9 +77,9 @@
 }
 
 .tileOn {
-  border: 3px solid var(--c-gold);
-  background: var(--c-gold-soft);
-  color: #78350f;
+  border: var(--sticker-border);
+  background: var(--c-yellow-soft, var(--c-gold-soft));
+  color: var(--c-ink);
   animation: pop var(--dur-slow) var(--ease-bounce) both;
 }
 
@@ -89,9 +89,9 @@
   align-items: center;
   gap: var(--sp-3);
   width: min(100%, 560px);
-  background: linear-gradient(180deg, var(--c-gold-soft), var(--c-surface));
-  border: 3px solid var(--c-gold);
-  box-shadow: var(--shadow-2);
+  background: linear-gradient(180deg, var(--c-yellow-soft, var(--c-gold-soft)), var(--c-surface));
+  border: var(--sticker-border);
+  box-shadow: var(--sticker-shadow);
 }
 
 .prizeKicker {

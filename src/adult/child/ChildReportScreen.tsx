@@ -1,6 +1,7 @@
-/* One child's report for the grown-ups: times-table heatmap, frequent mistakes explained, time and accuracy
-   for the last 7 days, progress through the worlds, the real prize, learning settings and data tools
-   (calibration reset, GDPR export, deletion). */
+/* One child's report for the grown-ups. Order: the conclusion first (which tables to praise and which to review),
+   the four figures for the last 7 days, the times-table grid with its legend, the most frequent mistakes and the
+   worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
+   deletion). A picture of the story so far can be shared. */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
@@ -12,12 +13,15 @@ import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { countFactStates, FACT_STATE_LABEL } from '../shared/heatmap'
+import { countFactStates } from '../shared/heatmap'
+import { readTables } from '../shared/reading'
 import { downloadBlob, slug } from '../shared/download'
 import { errorMessage } from '../shared/messages'
 import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { RewardCard } from './RewardCard'
+import { SubjectsCard } from './SubjectsCard'
+import { renderSummaryPng, shareSummaryPng } from './shareSummary'
 import s from './child.module.css'
 import adult from '../shared/adult.module.css'
 
@@ -34,6 +38,7 @@ export default function ChildReportScreen() {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -72,6 +77,7 @@ export default function ChildReportScreen() {
   }
 
   const counts = countFactStates(summary.factGrid)
+  const reading = readTables(summary.factGrid, child?.nickname ?? summary.nickname)
   const worldsTotal = season1.worlds.length
   const name = child?.nickname ?? summary.nickname
 
@@ -93,7 +99,7 @@ export default function ChildReportScreen() {
     setActionError(null)
     try {
       const blob = await exportChildData(childId)
-      downloadBlob(blob, `numeria-${slug(name)}-datos.json`)
+      downloadBlob(blob, `repasitos-${slug(name)}-datos.json`)
       toast('Copia de datos descargada')
     } catch (e) {
       setActionError(errorMessage(e))
@@ -112,6 +118,26 @@ export default function ChildReportScreen() {
       setActionError(errorMessage(e, 'No hemos podido borrar el perfil. Inténtalo de nuevo.'))
     } finally {
       setBusy(false)
+    }
+  }
+
+  const share = async () => {
+    setSharing(true)
+    try {
+      const currentName = season1.worlds.find((w) => w.id === summary.currentWorld)?.name ?? null
+      const blob = await renderSummaryPng({
+        nickname: name,
+        companionName: child?.companion.name ?? '',
+        crystals: summary.worldsCompleted,
+        totalCrystals: worldsTotal,
+        currentWorld: summary.worldsCompleted >= worldsTotal ? null : currentName,
+      })
+      const result = await shareSummaryPng(blob, name)
+      if (result === 'downloaded') toast('Imagen descargada')
+    } catch (e) {
+      toast(errorMessage(e, 'No hemos podido crear la imagen.'))
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -141,46 +167,53 @@ export default function ChildReportScreen() {
             </p>
           </div>
         </div>
+        <Button variant="secondary" onClick={() => void share()} disabled={sharing}>
+          {sharing ? 'Preparando la imagen…' : 'Compartir resumen'}
+        </Button>
       </header>
 
-      <section className={s.stats} aria-label="Resumen de la última semana">
+      <section className={`${adult.card} ${adult.cardYellow} ${s.verdict}`} aria-labelledby="report-title">
+        <h2 id="report-title" className={s.name} style={{ fontSize: 'clamp(26px, 3.4vw, 34px)', lineHeight: 1.12 }}>
+          {reading.headline}
+        </h2>
+        <p className={adult.lead}>{reading.support}</p>
+      </section>
+
+      <section className={s.stats} aria-label="Cifras de los últimos 7 días y en total">
         <div className={s.stat}>
           <span className={s.statValue}>{formatMinutes(summary.minutesLast7Days)}</span>
           <span className={s.statLabel}>jugando en los últimos 7 días</span>
         </div>
         <div className={s.stat}>
           <span className={s.statValue}>{formatPercent(summary.accuracyLast7Days)}</span>
-          <span className={s.statLabel}>de respuestas correctas en la última semana</span>
+          <span className={s.statLabel}>de aciertos en los últimos 7 días</span>
         </div>
         <div className={s.stat}>
           <span className={s.statValue}>{counts.mastered} de 55</span>
-          <span className={s.statLabel}>multiplicaciones dominadas</span>
+          <span className={s.statLabel}>multiplicaciones dominadas en total</span>
         </div>
         <div className={s.stat}>
           <span className={s.statValue}>{summary.worldsCompleted} de {worldsTotal}</span>
-          <span className={s.statLabel}>{plural(summary.worldsCompleted, 'cristal mágico recuperado', 'cristales mágicos recuperados')}</span>
+          <span className={s.statLabel}>{plural(summary.worldsCompleted, 'cristal conseguido en total', 'cristales conseguidos en total')}</span>
         </div>
       </section>
 
       <div className={s.twoCol}>
-        <section className={adult.card} aria-labelledby="heatmap-title">
+        <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">
           <div className={s.heatWrap}>
             <h2 id="heatmap-title" className={adult.subheading}>Tablas de multiplicar</h2>
             <p className={adult.muted}>
-              Cada casilla es una multiplicación. Así se ve lo que sabe {name} hoy.
+              Cada casilla es una multiplicación, sin repetir: 55 en total (7 × 6 y 6 × 7 son la misma). Así va lo que sabe {name} hasta ahora.
             </p>
           </div>
-          <FactHeatmap grid={summary.factGrid} label={`Mapa de las tablas de ${name}`} />
           <FactLegend />
+          <FactHeatmap triangle grid={summary.factGrid} label={`Mapa de las tablas de ${name}`} />
           <p className={adult.hint}>
-            {(['mastered', 'learning', 'struggling', 'unseen'] as const)
-              .map((st) => `${counts[st]} ${FACT_STATE_LABEL[st].toLowerCase()}`)
-              .join(' · ')}
+            Dominadas: {counts.mastered} · En camino: {counts.learning} · Para repasar: {counts.struggling} · Sin practicar: {counts.unseen}
           </p>
-          <p className={adult.hint}>
-            Las casillas se repiten en las dos direcciones (7 × 6 y 6 × 7 son la misma). Si una casilla aparece «para repasar»,
-            conviene jugar un rato con esas tablas, sin prisa.
-          </p>
+          {reading.reviewFacts.length > 0 && (
+            <p className={adult.hint}>Si una casilla aparece «Hay que repasarla», conviene jugar un rato con esas tablas, sin prisa.</p>
+          )}
         </section>
 
         <div className={adult.stack}>
@@ -193,7 +226,7 @@ export default function ChildReportScreen() {
               <ul className={adult.list} aria-label="Errores más frecuentes">
                 {summary.topErrors.map((e) => (
                   <li key={e.errorType} className={s.errorRow}>
-                    <span className={s.errorCount} aria-label={`${e.count} veces`}>{e.count}</span>
+                    <span className={s.errorCount}>{e.count} {e.count === 1 ? 'vez' : 'veces'}</span>
                     <span className={adult.lead} style={{ fontSize: 'var(--fs-sm)' }}>
                       {describeError(e.errorType as ErrorType)}
                     </span>
@@ -225,12 +258,17 @@ export default function ChildReportScreen() {
 
       <RewardCard childId={childId} childName={name} />
 
-      {child && <ChildSettingsCard child={child} />}
+      <section className={s.group} aria-labelledby="settings-group-title">
+        <h2 id="settings-group-title" className={adult.heading} style={{ fontSize: 'var(--fs-lg)' }}>Ajustes de {name}</h2>
+        <p className={adult.muted}>Cambian cómo se usa Repasitos con {name}. No cambian lo que ya sabe.</p>
+        {child && <SubjectsCard child={child} />}
+        {child && <ChildSettingsCard child={child} />}
+      </section>
 
       <section className={adult.card} aria-labelledby="data-title">
         <h2 id="data-title" className={adult.subheading}>Datos y privacidad</h2>
         <p className={adult.muted}>
-          Puedes descargar todo lo que Numeria guarda de {name} o borrar su perfil. Ten en cuenta que borrar no se puede deshacer.
+          Puedes descargar todo lo que Repasitos guarda de {name} o borrar su perfil. Ten en cuenta que borrar no se puede deshacer.
         </p>
         {actionError && <p className={adult.error} role="alert">{actionError}</p>}
         <div className={adult.actions}>
@@ -252,7 +290,7 @@ export default function ChildReportScreen() {
         onCancel={() => setCalibrationOpen(false)}
       >
         <p className={adult.lead}>
-          Numeria olvidará las muestras de escritura de {name} y volverá a pedirle que escriba algunos números para aprender su letra.
+          Repasitos olvidará las muestras de escritura de {name} y volverá a pedirle que escriba algunos números para aprender su letra.
           Sus avances no cambian.
         </p>
       </ConfirmModal>

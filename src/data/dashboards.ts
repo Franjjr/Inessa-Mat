@@ -56,7 +56,7 @@ export async function eraseChild(childId: string): Promise<void> {
     const a = getAuth()
     if (!isBackendAvailable() || a.status !== 'signed-in') throw new DataError('not-signed-in', 'Inicia sesión para borrar este perfil también de la nube.')
     const role = a.memberships.find((m) => m.orgId === child.orgId)?.role
-    if (role !== 'owner' && role !== 'admin') throw new DataError('permission', 'Solo la persona responsable de la familia o del colegio puede borrar perfiles.')
+    if (role !== 'owner' && role !== 'admin') throw new DataError('permission', 'Solo el responsable de la familia o del colegio puede borrar perfiles.')
     const sb = await getSupabase()
     const { error } = await sb!.rpc('erase_child', { p_child_id: childId })
     if (error) throw toDataError(error)

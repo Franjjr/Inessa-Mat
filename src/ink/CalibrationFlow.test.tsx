@@ -18,7 +18,7 @@ vi.mock('@/data', () => ({
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
-vi.mock('@/art', () => ({ CompanionArt: ({ pose }: { pose?: string }) => <span data-testid="pet" data-pose={pose} /> }))
+vi.mock('@/art/companions/CompanionArt', () => ({ CompanionArt: ({ pose }: { pose?: string }) => <span data-testid="pet" data-pose={pose} /> }))
 
 const W = 240
 const H = 300

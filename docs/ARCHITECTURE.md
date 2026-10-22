@@ -63,7 +63,7 @@ persists attempts and updates mastery.
 ## Conventions
 
 - **Language**: all child/adult-facing copy in Spanish (Spain), simple for 7–8-year-olds in child screens.
-  Child copy goes through templates (`{child}`, `{pet}`, `{cg:…|…|…}` — see `src/types/content.ts`). Code and
+  Child copy goes through templates (`{child}`, `{pet}`, `{cg:…|…}` — see `src/types/content.ts`). Code and
   comments in English.
 - **Styling**: CSS Modules (`Foo.module.css`) + variables from `src/styles/tokens.css`. No hard-coded fonts; colours
   only via tokens (art files may use literal colours). Fredoka (`--font-display`) for titles/numbers/buttons, Andika

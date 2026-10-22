@@ -2,8 +2,8 @@ export type ID = string
 /** ISO-8601 timestamp, e.g. new Date().toISOString() */
 export type ISODate = string
 
-/** Grammatical gender used to inflect Spanish copy. 'n' = prefer not to say → neutral phrasing. */
-export type GrammaticalGender = 'f' | 'm' | 'n'
+/** Grammatical gender used to inflect Spanish copy: feminine or masculine (generic masculine is not a separate option). */
+export type GrammaticalGender = 'f' | 'm'
 
 /**
  * How the child is answering right now.

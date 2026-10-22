@@ -9,11 +9,10 @@
      {del_pet_species}   with "de" + article (de + el → del)      → "de la gatita" / "del gatito"   (extension)
      {Pet_species} {El_pet_species} {Al_pet_species} {Del_pet_species}
                          same, first letter upper-cased (sentence start)                          (extension)
-     {cg:F|M|N}          pick by CHILD gender (f|m|n)
-     {pg:F|M|N}          pick by COMPANION gender
-   Gender selectors may contain the simple placeholders above ("{cg:Querida {child}|Querido {child}|Hola, {child}}").
-   With two options the neutral form falls back to the second (masculine-generic) one; with one option it is used
-   for every gender. Unknown placeholders are left untouched so mistakes are visible during development.
+     {cg:F|M}          pick by CHILD gender (f|m)
+     {pg:F|M}          pick by COMPANION gender
+   Gender selectors may contain the simple placeholders above ("{cg:Querida {child}|Querido {child}}").
+   With one option it is used for every gender. Unknown placeholders are left untouched so mistakes are visible during development.
    User-provided values (names) are inserted verbatim and never re-parsed. */
 import type { ChildProfile, CompanionSpecies, GrammaticalGender, TemplateString } from '@/types'
 import { speciesNoun } from './companions'
@@ -26,13 +25,14 @@ export interface TemplateContext {
   petSpecies: CompanionSpecies
 }
 
-/** Affectionate, gender-free fallback when a nickname is missing. */
-export const FALLBACK_CHILD_NAME = 'Peque'
+/** Affectionate fallback when a nickname is missing. */
+export const FALLBACK_CHILD_NAME = 'Amigo'
 
-const GENDER_INDEX: Record<GrammaticalGender, 0 | 1 | 2> = { f: 0, m: 1, n: 2 }
+const GENDER_INDEX: Record<GrammaticalGender, 0 | 1> = { f: 0, m: 1 }
 
-function genderIndex(g: GrammaticalGender | undefined): 0 | 1 | 2 {
-  return g ? GENDER_INDEX[g] ?? 2 : 2
+/** Missing or unknown gender reads as masculine (also how the legacy stored 'n' is read). */
+function genderIndex(g: GrammaticalGender | undefined): 0 | 1 {
+  return g ? GENDER_INDEX[g] ?? 1 : 1
 }
 
 function capitalize(s: string): string {
@@ -41,12 +41,12 @@ function capitalize(s: string): string {
 
 export function templateContext(child: ChildProfile): TemplateContext {
   const species: CompanionSpecies = child.companion?.species ?? 'cat'
-  const petGender: GrammaticalGender = child.companion?.gender ?? 'n'
+  const petGender: GrammaticalGender = child.companion?.gender ?? 'm'
   const childName = (child.nickname ?? '').trim() || FALLBACK_CHILD_NAME
   const petName = (child.companion?.name ?? '').trim() || capitalize(speciesNoun(species, petGender).noun)
   return {
     childName,
-    childGender: child.gender ?? 'n',
+    childGender: child.gender ?? 'm',
     petName,
     petGender,
     petSpecies: species,
@@ -105,9 +105,8 @@ function splitOptions(body: string): string[] {
   return out
 }
 
-function pickOption(options: string[], idx: 0 | 1 | 2): string {
+function pickOption(options: string[], idx: 0 | 1): string {
   if (options.length === 1) return options[0]
-  if (options.length === 2) return options[idx === 2 ? 1 : idx]
   return options[idx] ?? options[options.length - 1]
 }
 

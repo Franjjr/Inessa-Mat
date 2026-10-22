@@ -152,7 +152,7 @@ describe('GDPR export includes the cloud copy (security-3)', () => {
 
   it('a child that only exists on this device says it has no cloud copy', async () => {
     signIn('u1', []) // no organization: the child is local-only
-    const c = await createChild({ nickname: 'Solo', gender: 'n', companion: LUNA })
+    const c = await createChild({ nickname: 'Solo', gender: 'm', companion: LUNA })
     const doc = JSON.parse(await (await exportChildData(c.id)).text())
     expect(doc.cloud.included).toBe(false)
     expect(doc.notice).toContain('solo existe en este dispositivo')

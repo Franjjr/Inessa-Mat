@@ -8,7 +8,7 @@ import {
   getWorld, isNodeUnlocked, isWorldUnlocked, nextNode, renderTemplate, templateContext,
 } from '@/content'
 import { useActiveChild, useProgress } from '@/data'
-import { Button, Screen, Spinner, toast } from '@/ui'
+import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
 import s from './WorldMapScreen.module.css'
 
@@ -92,9 +92,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
       <WorldBackground id={world.background} vividness={vividness} />
 
       <header className={s.top}>
-        <Button variant="secondary" round aria-label="Volver al inicio" onClick={() => navigate('/play')}>
-          <span aria-hidden style={{ fontSize: 28, lineHeight: 1 }}>‹</span>
-        </Button>
+        <BackButton aria-label="Volver al inicio" onClick={() => navigate('/play')} />
         <div className={s.titleBox}>
           <span className={s.kicker}>Mundo {world.index}</span>
           <h1 className={s.title}>{renderTemplate(world.name, ctx)}</h1>
@@ -168,7 +166,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                   )}
                 </span>
                 {isGuardian && !crystal && <span className={s.guardianTag}>¡Ayúdame!</span>}
-                {isCurrent && <span className={s.here}>Aquí</span>}
+                {isCurrent && <span className={s.here}>Aquí sigue {ctx.petName}</span>}
                 <span className={s.label}>{label}</span>
                 {done && (
                   <span className={s.stars} aria-hidden="true">

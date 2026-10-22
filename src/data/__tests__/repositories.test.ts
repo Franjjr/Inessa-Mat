@@ -51,7 +51,7 @@ describe('children', () => {
   })
 
   it('scopes the list to the active organization plus local-only children', async () => {
-    const local = await createChild({ nickname: 'Local', gender: 'n', companion: LUNA })
+    const local = await createChild({ nickname: 'Local', gender: 'f', companion: LUNA })
     signIn('u1', [org('fam-a'), org('fam-b')])
     const a = await createChild({ nickname: 'De A', gender: 'm', companion: LUNA })
     expect(a.orgId).toBe('fam-a')

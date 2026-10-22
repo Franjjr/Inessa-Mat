@@ -1,5 +1,7 @@
-/* Home: a friendly two-column stage on tablets, one column on phones. Scrolls only when it must. */
-.screen.screen { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+/* Home, direction C «lúdica y colorista»: sticker panels (thick ink outline, hard offset shadow) with soft colour
+   fills. Tablet: greeting on top, subjects and the stage on the left, the next step and the tiles on the right, the
+   world bar at the bottom. Phones and portrait: one column, the world bar becomes one row that scrolls sideways. */
+.screen.screen { overflow-y: auto; -webkit-overflow-scrolling: touch; gap: var(--sp-3); }
 
 .top {
   position: relative;
@@ -9,30 +11,88 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-3);
-  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
-.hello { display: flex; flex-direction: column; line-height: 1.05; }
-.helloSmall { font-family: var(--font-read); font-size: var(--fs-sm); color: var(--c-ink-soft); }
-.helloName { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2xl); color: var(--c-ink); }
+.hello {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1;
+  color: var(--c-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, .9);
+}
+.helloName { color: var(--c-primary); }
 .topRight { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
 
 .sync {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 48px;
   padding: 0 var(--sp-4);
+  border: var(--sticker-border);
   border-radius: var(--r-pill);
-  background: var(--c-surface);
-  box-shadow: var(--shadow-1);
-  font-family: var(--font-display);
-  font-size: var(--fs-xs);
-  color: var(--c-ink-soft);
+  background: var(--c-green-soft, var(--c-success-soft));
+  font-family: var(--font-read);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
 }
 .syncDot { width: 10px; height: 10px; border-radius: 50%; background: var(--c-success); }
 .toneBusy .syncDot { background: var(--c-gold); animation: pulse 1.2s ease-in-out infinite; }
+.toneWarn { background: var(--c-warn-soft); }
 .toneWarn .syncDot { background: var(--c-warn); }
 @keyframes pulse { 50% { transform: scale(.6); opacity: .5; } }
+
+.chipBtn {
+  border: var(--sticker-border);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+
+/* Subjects: the ones the adult enabled. Only shown when there is more than one. */
+.subjects {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.subj {
+  min-height: 64px;
+  min-width: 120px;
+  padding: 6px 16px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-lg);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  line-height: 1.05;
+  cursor: pointer;
+}
+.subj small { font-family: var(--font-read); font-weight: 700; font-size: var(--fs-sm); }
+.subjOn {
+  background: var(--c-green, #15803d);
+  color: #fff;
+  border: var(--sticker-border);
+  box-shadow: var(--sticker-shadow-sm);
+}
+.subjOn small { color: var(--c-yellow); }
+.subjOff {
+  background: transparent;
+  color: var(--c-ink-mute);
+  border: 3px dashed var(--c-ink-mute);
+  cursor: default;
+}
 
 .main {
   position: relative;
@@ -44,135 +104,184 @@
   align-items: center;
   width: min(1100px, 100%);
   margin: 0 auto;
-  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) var(--sp-4) max(16px, env(safe-area-inset-left));
+  padding: 0 max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
   box-sizing: border-box;
 }
+.left, .right { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
 
-.stage { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+/* The stage: a blue sticker panel with the companion and Lumi, and the horn underneath. */
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4);
+  border: var(--sticker-border);
+  border-radius: var(--r-xl);
+  background: var(--c-blue-soft, #dbeafe);
+  box-shadow: var(--sticker-shadow);
+}
 .friends { display: flex; align-items: flex-end; justify-content: center; }
 .companion { position: relative; display: flex; flex-direction: column; align-items: center; margin-right: -24px; z-index: 1; }
 .companionName {
   margin-top: -6px;
-  padding: 4px 16px;
+  padding: 6px 16px;
+  border: var(--sticker-border);
   border-radius: var(--r-pill);
   background: var(--c-surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow-sm);
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 800;
   font-size: var(--fs-md);
   color: var(--c-ink);
 }
 .lumi { display: flex; }
 
+/* The horn of Lumi: a yellow sticker with the crystals and the stars. */
 .horn {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  background: var(--c-surface);
-  border-radius: var(--r-xl);
-  box-shadow: var(--shadow-1);
-  padding: var(--sp-3) var(--sp-5) var(--sp-3) var(--sp-3);
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--sticker-border);
+  border-radius: var(--r-lg);
+  background: var(--c-yellow-soft, #fef9c3);
+  box-shadow: var(--sticker-shadow-sm);
 }
-.hornText { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.hornTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--c-ink-mute); }
-.hornCount { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); color: var(--c-ink); }
+.hornText { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.hornTitle { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-sm); color: var(--c-ink-soft); }
+.hornCount { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); color: var(--c-ink); }
 
-.side { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
-
-.continue {
+/* Next step: the big sticker card. */
+.next {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 8px;
   width: 100%;
-  min-height: 132px;
+  box-sizing: border-box;
   padding: var(--sp-5) var(--sp-6);
-  border: 0;
+  border: var(--sticker-border);
   border-radius: var(--r-xl);
-  background: linear-gradient(135deg, var(--c-primary), var(--c-magic));
-  color: #fff;
+  background: var(--c-pink-soft, #fce7f3);
+  box-shadow: var(--sticker-shadow);
+  color: var(--c-ink);
   text-align: left;
   font: inherit;
   cursor: pointer;
-  box-shadow: 0 7px 0 #5b21b6, var(--shadow-2);
   transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
-.continue:active { transform: translateY(5px); box-shadow: 0 2px 0 #5b21b6; }
-.continue:focus-visible { outline: 4px solid var(--c-gold); outline-offset: 4px; }
-.continueKicker { font-family: var(--font-read); font-size: var(--fs-sm); opacity: .9; }
-.continueTitle { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); line-height: 1.1; }
-/* Gold text on the purple gradient is ~2.6:1 (too low). The gold becomes a light pill with dark ink (well above 4.5:1). */
-.continueCta {
-  align-self: flex-start;
-  margin-top: var(--sp-2);
-  padding: var(--sp-1) var(--sp-3);
-  border-radius: var(--r-pill);
-  background: var(--c-gold-soft);
-  color: var(--c-ink);
+.next:active { transform: translate(3px, 4px); box-shadow: 2px 2px 0 var(--sticker-line); }
+.next:focus-visible { outline: 4px solid var(--c-gold); outline-offset: 4px; }
+.nextKicker {
   font-family: var(--font-display);
-  font-weight: 600;
-  font-size: var(--fs-md);
+  font-weight: 800;
+  font-size: var(--fs-sm);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--c-magic);
+}
+.nextTitle { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 3.6vw, 42px); line-height: 1.02; }
+.nextText { font-family: var(--font-read); font-size: var(--fs-md); color: var(--c-ink-soft); }
+/* The call to action is a yellow pill with the ink outline, so it reads like a button in a sticker book. */
+.nextCta {
+  margin-top: 6px;
+  min-height: 64px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 30px;
+  border: var(--sticker-border);
+  border-radius: var(--r-pill);
+  background: var(--c-yellow);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
 }
 
+/* Daily tiles: one solid sticker colour each. */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
 .tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  justify-content: center;
+  gap: 4px;
   min-height: 104px;
   padding: var(--sp-3) var(--sp-4);
-  border: 0;
+  border: var(--sticker-border);
   border-radius: var(--r-lg);
-  background: var(--tone-soft, var(--c-surface));
-  box-shadow: var(--shadow-1);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm);
   text-align: left;
   font: inherit;
   cursor: pointer;
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
 }
-.tile:active { transform: scale(.97); }
+.tile:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--sticker-line); }
 .tile:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
-.tileArt { min-height: 0; display: inline-flex; }
-.tileLabel { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--tone, var(--c-ink)); }
-.tileHint { font-family: var(--font-read); font-size: var(--fs-xs); color: var(--c-ink-soft); }
-.primary { --tone: var(--c-primary-strong); --tone-soft: var(--c-primary-soft); }
-.magic { --tone: #86198f; --tone-soft: var(--c-magic-soft); }
-.gold { --tone: #92400e; --tone-soft: var(--c-gold-soft); }
-.success { --tone: #166534; --tone-soft: var(--c-success-soft); }
+.tileLabel { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-lg); line-height: 1.05; color: var(--tone-ink, var(--c-ink)); }
+.tileHint { font-family: var(--font-read); font-size: var(--fs-sm); color: var(--tone-hint, var(--c-ink-soft)); }
+.tileArt { position: absolute; right: 10px; top: 10px; display: inline-flex; }
+.violet { background: var(--c-primary); --tone-ink: #fff; --tone-hint: #ede9fe; }
+.blue { background: var(--c-blue-soft, #dbeafe); }
+.yellow { background: var(--c-yellow-soft, #fef9c3); }
+.green { background: var(--c-green-soft, #dcfce7); }
 
+/* World bar: solid stickers, the current world in yellow, locked ones with a text label and a dashed outline. */
 .worlds {
   position: relative;
   z-index: 1;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: var(--sp-2);
-  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 0 max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
-.chip {
-  display: inline-flex;
+.world {
+  min-height: 86px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-height: var(--tap-min);
-  padding: 4px 14px 4px 6px;
-  border: 0;
-  border-radius: var(--r-pill);
+  justify-content: center;
+  gap: 4px;
+  border: var(--sticker-border);
+  border-radius: var(--r-lg);
   background: var(--c-surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow-sm);
   font: inherit;
   cursor: pointer;
+  min-width: 0;
 }
-.chipName { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--c-ink); }
-.chipLocked { opacity: .72; cursor: default; filter: grayscale(.5); }
-.chipDone { box-shadow: 0 0 0 3px var(--c-gold-soft), var(--shadow-1); }
+.worldName { font-family: var(--font-display); font-weight: 800; font-size: var(--fs-sm); line-height: 1; color: var(--c-ink); white-space: nowrap; }
+.worldState { font-family: var(--font-read); font-weight: 700; font-size: var(--fs-xs); line-height: 1; color: var(--c-ink-soft); min-height: 14px; }
+.worldDone { background: var(--c-primary-soft); }
+.worldDone .worldState { color: var(--c-ink); }
+.worldNow { background: var(--c-yellow); box-shadow: var(--sticker-shadow); }
+.worldLock { border-style: dashed; background: var(--c-surface); box-shadow: none; color: var(--c-ink-mute); cursor: default; }
+.worldLock .worldName { color: var(--c-ink-mute); }
+.worldLock .worldState { color: var(--c-ink-mute); }
+.worldLock > span:first-child { opacity: .6; }
+.world:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
 
-/* Narrow screens: lay the worlds out in two even rows instead of leaving one orphan chip on the second line. */
+/* Narrow screens: the world bar is one row that scrolls sideways, and the two columns stack. */
 @media (max-width: 1000px) {
-  .worlds { display: grid; grid-template-columns: repeat(4, max-content); justify-content: center; }
+  .worlds {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    justify-content: flex-start;
+  }
+  .world { flex: 0 0 auto; min-width: 104px; }
 }
 
-/* Phones and small portrait screens: one column. */
 @media (max-width: 760px) {
   .main { grid-template-columns: minmax(0, 1fr); }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -180,16 +289,11 @@
 
 @media (prefers-reduced-motion: reduce) {
   .toneBusy .syncDot { animation: none; }
-  .continue, .tile { transition: none; }
+  .next, .tile { transition: none; }
 }
 
 /* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
 
 /* The family door sits over the string lights: give it a solid surface so it reads on any background. */
-.family.family {
-  background: var(--c-surface);
-  box-shadow: var(--shadow-1);
-  color: var(--c-primary-strong);
-  padding: 0 var(--sp-4);
-}
+.family.family { color: var(--c-primary-strong); padding: 0 var(--sp-4); }

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { useActivityHost } from '@/activities'
 import { music } from '@/audio'
 import { Character, Crystal } from '@/art'
-import { Button, Screen, TopBar } from '@/ui'
+import { BackButton, Button, Screen, TopBar } from '@/ui'
 import { worldHex } from '@/world/rewards/worldColors'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import type { Exercise, ExerciseOutcome } from '@/types'
@@ -91,7 +91,7 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
   const header = (
     <TopBar
       title={host.t(guardian.title)}
-      left={stage !== 'won' ? <Button variant="secondary" size="sm" onClick={onExit}>{host.t('Salir')}</Button> : undefined}
+      left={stage !== 'won' ? <BackButton variant="exit" label={host.t('Salir')} onClick={onExit} /> : undefined}
     />
   )
 

@@ -15,16 +15,19 @@ export default function DiplomaScreen() {
 
   const earned = progress.diplomaEarnedAt
   if (!earned) {
-    const left = crystalsOf(progress).filter((c) => !c).length
+    const crystals = crystalsOf(progress)
+    const left = crystals.filter((c) => !c).length
+    const lead = left === 1
+      ? `Te falta 1 cristal para conseguir tu diploma, ${child.nickname}.`
+      : `Te faltan ${left} cristales para conseguir tu diploma, ${child.nickname}.`
     return (
       <Screen className={s.root} background="var(--c-bg)">
         <TopBar back="/play" title="Mi diploma" />
         <div className={s.locked}>
-          <p className={s.lockedText}>
-            {left === 1
-              ? `Te falta 1 cristal para conseguir tu diploma, ${child.nickname}.`
-              : `Te faltan ${left} cristales para conseguir tu diploma, ${child.nickname}.`}
-          </p>
+          <div className={s.previewWrap}>
+            <DiplomaCertificate child={child} crystals={crystals} className={s.printSheet} />
+          </div>
+          <p className={s.lockedText}>{lead}</p>
           <Button variant="magic" size="lg" onClick={() => navigate('/play')}>Volver al mapa</Button>
         </div>
       </Screen>

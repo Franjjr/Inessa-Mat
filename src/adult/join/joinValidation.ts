@@ -24,5 +24,5 @@ export function validateJoin(input: JoinInput): JoinErrors {
 /** The consent sentence, shown and accepted by the adult before the child is linked. */
 export function consentText(childName: string, className: string | null): string {
   const clase = className ? `de la clase «${className}»` : 'de la clase con este código'
-  return `Doy mi consentimiento para que el profesorado ${clase} vea el progreso de ${childName} en matemáticas (tablas, sumas, restas, multiplicaciones y divisiones) y le pueda asignar prácticas. Sé que puedo pedir al colegio que retire a ${childName} de la clase en cualquier momento.`
+  return `Doy mi consentimiento para que los profesores ${clase} vean el progreso de ${childName} en matemáticas (tablas, sumas, restas, multiplicaciones y divisiones) y les puedan asignar prácticas. Sé que puedo pedir al colegio que retire a ${childName} de la clase en cualquier momento.`
 }

@@ -24,7 +24,7 @@ export const prologue = story('prologue', 'El libro que brilla', [
     say('lumi', 'Necesito ocho cristales mágicos. Están escondidos en ocho lugares del reino.', 'talk'),
   ]),
   scene('home', [cast('companion', 'happy', 'left'), cast('lumi', 'talk', 'center')], [
-    say('lumi', 'Busco {cg:una aprendiz de maga|un aprendiz de mago|a alguien con ganas de aprender magia}. ¿Me ayudas, {child}?', 'talk'),
+    say('lumi', 'Busco {cg:una aprendiz de maga|un aprendiz de mago}. ¿Me ayudas, {child}?', 'talk'),
     say('lumi', 'Si encuentras los ocho cristales, se abrirá el Gran Cofre de Numeria.', 'happy'),
     say('lumi', 'Y recuerda: en Numeria los errores no son malos. ¡Son pistas!', 'happy'),
     say('companion', '¡Pues claro que te ayudamos! ¿Verdad, {child}?', 'cheer'),

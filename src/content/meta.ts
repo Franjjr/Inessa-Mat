@@ -24,17 +24,17 @@ export const SEASON2_TEASER = {
 export const DIPLOMA_TEXT: { kicker: TemplateString; title: TemplateString; subtitle: TemplateString; givenTo: TemplateString; body: TemplateString; signature: TemplateString } = {
   kicker: 'Reino de Numeria',
   title: 'DIPLOMA',
-  subtitle: '{cg:de Gran Maga de los Números|de Gran Mago de los Números|de Gran Magia de los Números}',
+  subtitle: '{cg:de Gran Maga de los Números|de Gran Mago de los Números}',
   givenTo: 'Se entrega a',
   body:
     'por encontrar los 8 cristales mágicos de Numeria, conquistar las tablas del 6, del 7 y del 8, sumar, restar, ' +
-    'multiplicar y dividir {cg:como una auténtica maga|como un auténtico mago|con auténtica magia} y demostrar que es muy VALIENTE.',
+    'multiplicar y dividir {cg:como una auténtica maga|como un auténtico mago} y demostrar que es muy VALIENTE.',
   signature: 'Lumi, unicornio guardián',
 }
 
 /** Words of the Gran Cofre screen. The prize itself is set by the adult in the adult area. */
 export const CHEST_TEXT: { locked: TemplateString; prompt: TemplateString; open: TemplateString } = {
-  locked: 'El Gran Cofre necesita las 8 letras de la palabra secreta.',
+  locked: 'Cada cristal te da una letra de la palabra secreta. Con los 8 cristales se abre el Gran Cofre.',
   prompt: 'Escribe la palabra secreta y dila en voz alta, {child}.',
   open: '¡El Gran Cofre se ha abierto! Dentro hay una sorpresa solo para ti.',
 }

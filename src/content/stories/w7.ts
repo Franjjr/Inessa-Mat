@@ -10,7 +10,7 @@ export const w7Arrival = story('w7-arrival', 'El farolillo de la forja', [
   ]),
   scene('volcano', [cast('lumi', 'worried', 'left'), cast('companion', 'worried', 'center', 'cage')], [
     narrate('¡Clac! La puerta del farolillo se cierra con un candado de números.', 'pop'),
-    say('companion', '¡Estoy {pg:encerrada|encerrado|encerrado}! Bueno… por lo menos aquí no hace frío.', 'worried'),
+    say('companion', '¡Estoy {pg:encerrada|encerrado}! Bueno… por lo menos aquí no hace frío.', 'worried'),
   ]),
   scene('volcano', [cast('lumi', 'talk', 'left'), cast('companion', 'worried', 'center', 'cage'), cast('dragon', 'talk', 'right')], [
     say('dragon', '¡GRRR! Bueno… en realidad soy muy simpática. Hola, soy Chispa.', 'happy'),

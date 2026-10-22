@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasitos · A · Inicio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Dirección A · Cuento ilustrado. Evolución de la marca actual: mismos tokens violeta, arcos de cuento y Lumi como guía. */
+:root {
+  --bg: oklch(97.6% .012 300);
+  --surface: oklch(100% 0 0);
+  --paper: oklch(99% .005 300);
+  --fg: oklch(26% .06 292);
+  --muted: oklch(43% .04 292);
+  --border: oklch(88% .035 300);
+  --accent: oklch(52% .22 293);
+  --accent-strong: oklch(46% .22 293);
+  --accent-soft: oklch(93% .04 300);
+  --gold: oklch(84% .14 84);
+  --font-display: 'Fredoka', system-ui, sans-serif;
+  --font-read: 'Andika', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-read); font-size: 18px; line-height: 1.55; }
+body { overflow-x: hidden; }
+img { max-width: 100%; display: block; }
+a { color: var(--accent-strong); }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
+.wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+h1, h2, h3, .display { font-family: var(--font-display); font-weight: 600; letter-spacing: -.01em; line-height: 1.1; margin: 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 56px; padding: 0 26px; border-radius: 999px; font: 600 18px/1 var(--font-display); text-decoration: none; border: 2px solid transparent; cursor: pointer; white-space: nowrap; }
+.btn-primary { background: var(--accent); color: #fff; box-shadow: 0 5px 0 var(--accent-strong); }
+.btn-secondary { background: var(--surface); color: var(--accent-strong); border-color: var(--border); }
+.btn-text { background: none; color: var(--accent-strong); padding: 0 10px; min-height: 44px; text-decoration: underline; text-underline-offset: 4px; }
+.btn:hover { filter: brightness(.97); }
+
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0; }
+.brand { display: flex; align-items: center; gap: 10px; font: 600 28px/1 var(--font-display); color: var(--accent-strong); text-decoration: none; }
+.brand img { width: 44px; height: 44px; object-fit: contain; }
+.brand img { background: var(--surface); border-radius: 50%; }
+.nav-actions { display: flex; gap: 10px; align-items: center; }
+.nav-links { display: flex; gap: 22px; font-size: 17px; }
+.nav-links a { color: var(--muted); text-decoration: none; }
+
+.hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; padding: 28px 0 64px; }
+.kicker { display: inline-block; font: 600 15px/1 var(--font-display); color: var(--accent-strong); background: var(--accent-soft); padding: 9px 14px; border-radius: 999px; }
+.hero h1 { font-size: clamp(40px, 5.4vw, 66px); margin: 18px 0 18px; }
+.hero p.lead { font-size: 21px; color: var(--muted); max-width: 34em; margin: 0 0 28px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.hero-note { font-size: 16px; color: var(--muted); margin-top: 16px; }
+.arch { position: relative; padding: 18px; background: var(--surface); border-radius: 240px 240px 36px 36px; border: 2px solid var(--border); box-shadow: 0 10px 0 var(--accent-soft); }
+.arch img { border-radius: 226px 226px 22px 22px; width: 100%; aspect-ratio: 1180 / 820; object-fit: cover; object-position: left top; }
+.arch .lumi { position: absolute; left: -26px; bottom: 56px; width: 130px; background: var(--surface); border-radius: 50%; padding: 6px; border: 2px solid var(--border); }
+.caption { font-size: 15px; color: var(--muted); margin-top: 12px; text-align: center; }
+
+section.block { padding: 72px 0; border-top: 2px dashed var(--border); }
+.block h2 { font-size: clamp(30px, 3.6vw, 44px); margin-bottom: 14px; }
+.block .intro { font-size: 19px; color: var(--muted); max-width: 40em; margin: 0 0 36px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.card { background: var(--surface); border: 2px solid var(--border); border-radius: 28px; padding: 28px; }
+.card h3 { font-size: 26px; margin-bottom: 10px; }
+.card p, .card li { color: var(--muted); margin: 0; }
+.card ul { padding-left: 20px; margin: 0; display: grid; gap: 8px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.step { position: relative; }
+.step .num { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font: 600 26px/1 var(--font-display); margin-bottom: 16px; }
+.step h3 { font-size: 24px; margin-bottom: 8px; }
+.step p { color: var(--muted); margin: 0; }
+.shots { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; }
+.shots figure { margin: 0; }
+.shots img { border-radius: 26px; border: 2px solid var(--border); width: 100%; }
+.shots figcaption { font-size: 16px; color: var(--muted); margin-top: 10px; }
+.trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.trust .card { background: var(--paper); }
+.trust .tick { width: 48px; height: 48px; border-radius: 16px; background: var(--accent-soft); color: var(--accent-strong); display: grid; place-items: center; font: 600 24px/1 var(--font-display); margin-bottom: 14px; }
+.subjects { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr 1fr; gap: 14px; }
+.subject { border-radius: 24px; padding: 20px; border: 2px solid var(--border); background: var(--surface); min-height: 150px; display: flex; flex-direction: column; gap: 8px; }
+.subject.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.subject.on p { color: oklch(96% .02 300); }
+.subject.off { background: transparent; border-style: dashed; color: var(--muted); }
+.subject h3 { font-size: 22px; }
+.subject p { margin: 0; font-size: 16px; color: var(--muted); }
+.pill { align-self: flex-start; font: 600 14px/1 var(--font-display); padding: 7px 11px; border-radius: 999px; background: var(--surface); color: var(--accent-strong); }
+.subject.off .pill { background: var(--accent-soft); color: var(--muted); }
+.closing { background: var(--surface); border: 2px solid var(--border); border-radius: 36px; padding: 44px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
+.closing h2 { font-size: clamp(28px, 3.4vw, 40px); }
+.closing p { margin: 10px 0 0; color: var(--muted); }
+footer.foot { padding: 36px 0 56px; color: var(--muted); font-size: 16px; display: flex; flex-wrap: wrap; gap: 14px; justify-content: space-between; border-top: 2px solid var(--border); }
+footer.foot a { color: var(--muted); }
+
+@media (max-width: 900px) {
+  .hero, .two, .shots, .closing { grid-template-columns: 1fr; }
+  .grid3, .trust { grid-template-columns: 1fr; }
+  .subjects { grid-template-columns: 1fr 1fr; }
+  .nav-links { display: none; }
+  .arch { border-radius: 160px 160px 28px 28px; }
+  .arch img { border-radius: 150px 150px 16px 16px; }
+}
+@media (max-width: 480px) {
+  html, body { font-size: 17px; }
+  .wrap { width: calc(100% - 32px); }
+  header.top { flex-wrap: wrap; }
+  .nav-actions .btn-text { display: none; }
+  .hero { padding-top: 12px; gap: 32px; }
+  .hero p.lead { font-size: 19px; }
+  .cta-row .btn { width: 100%; }
+  .arch .lumi { width: 96px; left: -8px; bottom: -14px; }
+  .subjects { grid-template-columns: 1fr; }
+  .closing { padding: 26px; }
+  .btn { padding: 0 20px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#"><img src="img/lumi.svg" alt="">Repasitos</a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#como">Cómo funciona</a>
+      <a href="#asignaturas">Asignaturas</a>
+      <a href="#confianza">Confianza</a>
+    </nav>
+    <div class="nav-actions">
+      <a class="btn btn-text" href="#">Iniciar sesión</a>
+      <a class="btn btn-primary" href="#">Crear cuenta</a>
+    </div>
+  </header>
+
+  <section class="hero" aria-labelledby="titulo">
+    <div>
+      <span class="kicker">Matemáticas · niños de 7 a 9 años</span>
+      <h1 id="titulo">Repasar las cuentas es una aventura con Lumi.</h1>
+      <p class="lead">Repasitos acompaña a los niños con las tablas de multiplicar, las sumas, las restas, las multiplicaciones y las divisiones. Cada niño elige un compañero animal y lo rescata en ocho mundos mágicos.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#">Crear cuenta</a>
+        <a class="btn btn-secondary" href="#">Probar sin cuenta</a>
+      </div>
+      <p class="hero-note">¿Ya tienes cuenta? <a href="#">Iniciar sesión</a></p>
+    </div>
+    <figure class="arch" style="margin:0">
+      <img src="img/nino-inicio.png" alt="Pantalla de inicio del niño en el iPad: Luna la gata, Lumi con su cuerno de cristales y el siguiente paso de la aventura">
+      <img class="lumi" src="img/lumi.svg" alt="">
+      
+    </figure>
+  </section>
+
+  <section class="block" id="que">
+    <div class="two">
+      <div>
+        <h2>Qué es Repasitos</h2>
+        <p class="intro" style="margin:0">Una app de repaso para casa y para el aula. El niño practica en el ritmo que le toca, y la familia o el colegio ven qué domina y qué conviene repasar. No es un examen ni un juego de azar: cada respuesta sirve para repasar lo que todavía cuesta.</p>
+      </div>
+      <div class="card">
+        <h3>Escribe con el lápiz, el dedo o el teclado</h3>
+        <p>Pensada para tablet, con el lápiz del iPad. También funciona en móvil y en ordenador.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="para">
+    <h2 id="para">Para quién es</h2>
+    <p class="intro">Tres personas distintas, una misma aventura.</p>
+    <div class="grid3">
+      <article class="card"><h3>Niños de 7 a 9 años</h3><ul><li>Eligen su compañero animal y le ponen nombre.</li><li>Avanzan por ocho mundos, uno por cada cristal de Lumi.</li><li>Cada error es una pista, no un castigo.</li></ul></article>
+      <article class="card"><h3>Familias</h3><ul><li>Ven qué tablas domina cada hijo y cuáles repasar.</li><li>Eligen el premio real del Gran Cofre.</li><li>Pueden exportar o borrar los datos cuando quieran.</li></ul></article>
+      <article class="card"><h3>Colegios</h3><ul><li>Crean clases con un código para unir a las familias.</li><li>Ven el progreso de la clase.</li><li>Invitan a otros profesores sin compartir contraseñas.</li></ul></article>
+    </div>
+  </section>
+
+  <section class="block" id="como">
+    <h2>Cómo funciona</h2>
+    <p class="intro">Tres pasos, y el niño ya sabe qué hacer.</p>
+    <div class="grid3">
+      <div class="step"><span class="num">1</span><h3>Elige su compañero</h3><p>Gato, perro, zorro, conejo, panda, pingüino, dragón o unicornio bebé. Lo nombra él.</p></div>
+      <div class="step"><span class="num">2</span><h3>Resuelve la aventura</h3><p>Cada mundo tiene un guardián y una prueba. Si su compañero se mete en un lío, lo rescata con la respuesta.</p></div>
+      <div class="step"><span class="num">3</span><h3>Repasa lo que toca</h3><p>El «Repaso del día» reúne lo que todavía cuesta. Cuando completa los ocho mundos, abre el Gran Cofre.</p></div>
+    </div>
+  </section>
+
+  <section class="block" aria-labelledby="capturas">
+    <h2 id="capturas">Así se ve</h2>
+    <p class="intro">Capturas reales de la app, en iPad.</p>
+    <div class="shots">
+      <figure><img src="img/mundo1.png" alt="Mapa del Bosque de los Grupos con caminos de lecciones y el mensaje: Luna se ha enredado en las lianas de las hadas"><figcaption>El mapa del mundo: «¡Luna se ha enredado en las lianas de las hadas!»</figcaption></figure>
+      <figure><img src="img/leccion-grupos.png" alt="Pantalla de lección por grupos"><figcaption>Una lección, un paso cada vez.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="block" id="confianza" aria-labelledby="conf">
+    <h2 id="conf">Confianza</h2>
+    <p class="intro">Lo que los adultos preguntan primero.</p>
+    <div class="trust">
+      <div class="card"><div class="tick">✓</div><h3>Sin publicidad</h3><p>No hay anuncios ni compras dentro de la app para los niños.</p></div>
+      <div class="card"><div class="tick">✓</div><h3>Datos que puedes borrar</h3><p>Exporta o borra los datos de tu hijo cuando quieras, desde la zona de adultos.</p></div>
+      <div class="card"><div class="tick">✓</div><h3>Prueba sin cuenta</h3><p>Todo se queda en este dispositivo. Creas la cuenta cuando te interese.</p></div>
+    </div>
+  </section>
+
+  <section class="block" id="asignaturas" aria-labelledby="asig">
+    <h2 id="asig">Asignaturas</h2>
+    <p class="intro">Empezamos por Matemáticas. Las demás llegarán por etapas.</p>
+    <div class="subjects">
+      <article class="subject on"><span class="pill">Disponible</span><h3>Matemáticas</h3><p>Tablas, sumas, restas, multiplicaciones y divisiones.</p></article>
+      <article class="subject off"><span class="pill">Próximamente</span><h3>Lengua</h3></article>
+      <article class="subject off"><span class="pill">Próximamente</span><h3>Inglés</h3></article>
+      <article class="subject off"><span class="pill">Próximamente</span><h3>Ciencias</h3></article>
+      <article class="subject off"><span class="pill">Próximamente</span><h3>Historia</h3></article>
+    </div>
+  </section>
+
+  <section class="block" aria-label="Empezar">
+    <div class="closing">
+      <div>
+        <h2>¿Empezamos la aventura?</h2>
+        <p>Crea una cuenta para guardar una copia segura, o prueba sin cuenta en este dispositivo.</p>
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#">Crear cuenta</a>
+        <a class="btn btn-secondary" href="#">Probar sin cuenta</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span class="brand" style="font-size:20px">Repasitos</span>
+    <span><a href="#">Privacidad y datos</a> · Sin publicidad</span>
+  </footer>
+</div>
+</body>
+</html>

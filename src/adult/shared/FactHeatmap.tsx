@@ -1,10 +1,11 @@
 /* 10×10 times-table heatmap. Each cell has a fill colour, a glyph and an accessible label, so the state
-   survives greyscale printing and colour-blindness. Read-only. */
+   survives greyscale printing and colour-blindness. Read-only. With `triangle`, only the 55 distinct facts
+   (a ≤ b) are drawn: the mirrored half is left blank so the cells add up to the total. */
 import clsx from 'clsx'
 import { FACT_STATE_GLYPH, FACT_STATE_LABEL, factState } from './heatmap'
 import s from './FactHeatmap.module.css'
 
-export function FactHeatmap({ grid, compact, label }: { grid: number[][]; compact?: boolean; label: string }) {
+export function FactHeatmap({ grid, compact, label, triangle }: { grid: number[][]; compact?: boolean; label: string; triangle?: boolean }) {
   const nums = Array.from({ length: 10 }, (_, i) => i + 1)
   return (
     <div className={clsx(s.wrap, compact && s.compact)} role="table" aria-label={label}>
@@ -18,6 +19,9 @@ export function FactHeatmap({ grid, compact, label }: { grid: number[][]; compac
         <div role="row" key={a} className={s.row}>
           <div role="rowheader" className={s.head} aria-hidden={compact || undefined}>{a}</div>
           {nums.map((b) => {
+            if (triangle && b < a) {
+              return <div key={b} role="none" aria-hidden className={s.blank} />
+            }
             const box = grid[a - 1]?.[b - 1] ?? -1
             const state = factState(box)
             const cellLabel = `${a} × ${b} = ${a * b}: ${FACT_STATE_LABEL[state]}`

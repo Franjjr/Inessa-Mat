@@ -29,7 +29,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'off',
-    launchOptions: executablePath ? { executablePath } : {},
+    launchOptions: { args: ['--mute-audio'], ...(executablePath ? { executablePath } : {}) },
     serviceWorkers: 'allow',
   },
   projects: [

@@ -38,7 +38,7 @@ export const w8Rescue = story('w8-rescue', 'El último cristal', [
     narrate('La red se deshace en mil estrellitas, y {pet} salta a los brazos de {child}.', 'rescue'),
   ]),
   scene('castle', [cast('lumi', 'surprised', 'left'), cast('companion', 'cheer', 'center'), cast('queen', 'happy', 'right')], [
-    say('companion', '¡Gracias, {child}! ¡Me has rescatado ocho veces! ¡Eres {cg:mi heroína|mi héroe|lo más}!', 'cheer'),
+    say('companion', '¡Gracias, {child}! ¡Me has rescatado ocho veces! ¡Eres {cg:mi heroína|mi héroe}!', 'cheer'),
     say('queen', 'Toma el cristal dorado, {child}. Es el último.', 'happy', 'crystal'),
     say('lumi', '¡La letra del castillo es la E! ¡Ya tenemos las ocho letras!', 'surprised', 'sparkle'),
     say('companion', '¡Rápido, Lumi! ¡Vamos a poner los cristales en tu cuerno!', 'cheer'),

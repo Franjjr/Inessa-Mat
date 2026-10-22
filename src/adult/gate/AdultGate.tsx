@@ -4,7 +4,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { clearAdultPin, hasAdultPin, setAdultPin, useAuth, verifyAdultPin } from '@/data'
-import { Button, Spinner } from '@/ui'
+import { BackButton, Button, Spinner } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { NumberPad, PinDots } from '../shared/NumberPad'
 import { errorMessage } from '../shared/messages'
@@ -105,7 +105,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
         if (!alive) return
         setHasPin(has)
         setMode(has ? 'enter' : 'setup')
-        setMessage(has ? null : { tone: 'info', text: 'Crea un PIN para entrar aquí. Solo lo sabrán las personas adultas.' })
+        setMessage(has ? null : { tone: 'info', text: 'Crea un PIN para entrar aquí. Solo lo sabrán los adultos.' })
       })
       .catch(() => {
         if (alive) setMessage({ tone: 'error', text: 'No hemos podido comprobar el PIN. Vuelve a intentarlo.' })
@@ -292,9 +292,9 @@ export function AdultGate({ children }: { children: ReactNode }) {
   const title = mode === 'setup' || mode === 'confirm' ? 'Crea tu PIN' : mode === 'forgot-password' || mode === 'forgot-maths' ? 'Recuperar el PIN' : 'Zona de adultos'
   const subtitle =
     mode === 'enter'
-      ? 'Esta zona es para las personas adultas. Escribe el PIN para continuar.'
+      ? 'Esta zona es para los adultos. Escribe el PIN para continuar.'
       : mode === 'setup'
-        ? 'Elige entre 4 y 8 números. Así, los peques no entran aquí sin querer.'
+        ? 'Elige entre 4 y 8 números. Así, los niños no entran aquí sin querer.'
         : mode === 'confirm'
           ? 'Escríbelo otra vez para confirmarlo.'
           : mode === 'forgot-password'
@@ -390,7 +390,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
             </button>
           )}
         </div>
-        <Button variant="ghost" onClick={() => navigate('/kids')}>Volver a la zona de niños</Button>
+        <BackButton label="Volver a la zona de niños" onClick={() => navigate('/kids')} />
       </section>
     </AdultPage>
   )

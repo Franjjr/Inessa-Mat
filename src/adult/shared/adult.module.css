@@ -57,9 +57,15 @@
   gap: var(--sp-4);
   padding: var(--sp-5);
   border-radius: var(--r-lg);
+  border: var(--sticker-border);
   background: var(--c-surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow);
 }
+/* Soft colour fills per section (direction C): the outline and the offset shadow stay the same. */
+.cardYellow { background: var(--c-yellow-soft); }
+.cardGreen { background: var(--c-green-soft); }
+.cardBlue { background: var(--c-blue-soft); }
+.cardPink { background: var(--c-pink-soft); }
 .cardHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 
 .grid2 {

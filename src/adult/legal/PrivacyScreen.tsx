@@ -7,11 +7,11 @@ export default function PrivacyScreen() {
   return (
     <AdultPage title="Privacidad y datos" back="/">
       <article className={s.doc} aria-labelledby="privacy-doc-title">
-        <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Numeria</h2>
+        <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Repasitos</h2>
         <p className={s.updated}>Última actualización: 22 de octubre de 2026</p>
 
         <p>
-          Numeria es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
+          Repasitos es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
           cuánto tiempo los guardamos y qué derechos tienes. Su uso es voluntario: puedes dejar de usarla y borrar los datos cuando quieras.
         </p>
 
@@ -21,43 +21,43 @@ export default function PrivacyScreen() {
           <a href="mailto:contact@falkir.es">contact@falkir.es</a>.
         </p>
         <p>
-          Si un colegio crea clases en Numeria, el colegio es el responsable de los datos de su alumnado dentro de la clase, y Numeria
+          Si un colegio crea clases en Repasitos, el colegio es el responsable de los datos de sus alumnos dentro de la clase, y Repasitos
           solo los trata por su cuenta y siguiendo sus instrucciones, como encargado del tratamiento.
         </p>
 
         <h2>2. Qué datos guardamos</h2>
-        <p>Solo lo necesario para que la aplicación funcione y para que las personas adultas vean el progreso:</p>
+        <p>Solo lo necesario para que la aplicación funcione y para que los adultos vean el progreso:</p>
         <ul>
-          <li><strong>De la niña o el niño:</strong> su apodo, su género gramatical (para las frases de la aplicación), su curso y su año de nacimiento si lo indicas, y el nombre y tipo del compañero animal que elija.</li>
+          <li><strong>Del niño:</strong> su apodo, su género gramatical (para las frases de la aplicación), su curso y su año de nacimiento si lo indicas, y el nombre y tipo del compañero animal que elija.</li>
           <li><strong>Su aprendizaje:</strong> respuestas a los ejercicios (acierto o error, tipo de error, tiempo de respuesta), sesiones de juego (fecha y minutos), avances por mundos y ajustes de juego que elijas.</li>
           <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo y nunca se suben a la nube.</li>
-          <li><strong>De las personas adultas:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
+          <li><strong>De los adultos:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
         </ul>
         <p>No pedimos el nombre completo, la dirección, el teléfono ni fotos de los niños.</p>
 
         <h2>3. Para qué los usamos</h2>
         <ul>
-          <li>Para que el juego adapte los ejercicios a lo que cada niña o niño necesita repasar.</li>
-          <li>Para mostrar a las personas adultas el informe de cada perfil y, en un colegio, el de su clase.</li>
+          <li>Para que el juego adapte los ejercicios a lo que cada niño necesita repasar.</li>
+          <li>Para mostrar a los adultos el informe de cada perfil y, en un colegio, el de su clase.</li>
           <li>Para sincronizar la información entre los dispositivos de la familia o del colegio.</li>
-          <li>Para que una clase asigne prácticas cuando una familia une a su peque con el código del colegio.</li>
+          <li>Para que una clase asigne prácticas cuando una familia une a su hijo con el código del colegio.</li>
         </ul>
 
         <h2>4. Qué no hacemos</h2>
         <ul>
           <li>No usamos publicidad ni la vendemos.</li>
           <li>No incluimos herramientas de analítica ni rastreo de terceros en la aplicación.</li>
-          <li>Los niños y niñas no crean cuentas ni dan sus datos directamente: los gestiona una persona adulta.</li>
+          <li>Los niños no crean cuentas ni dan sus datos directamente: los gestiona un adulto.</li>
         </ul>
 
         <h2>5. Base legal y consentimiento</h2>
         <p>
-          Tratamos los datos porque la persona adulta lo pide al crear el perfil y acepta esta política (consentimiento, artículo 6.1.a
+          Tratamos los datos porque el adulto lo pide al crear el perfil y acepta esta política (consentimiento, artículo 6.1.a
           del Reglamento General de Protección de Datos). Cuando un colegio gestiona las clases, es el colegio quien
-          determina la base legal. En España, el consentimiento para tratar datos de menores de 14 años lo dan quienes ejercen su patria potestad o tutela
+          determina la base legal. En España, el consentimiento para tratar datos de menores de 14 años lo dan los padres o tutores que ejercen la patria potestad o la tutela
           (artículo 7 de la Ley Orgánica 3/2018).
         </p>
-        <p>Al unir a un peque a una clase, la persona adulta da su consentimiento expreso en ese momento, y puede pedir que lo retiren.</p>
+        <p>Al unir a un niño a una clase, el adulto da su consentimiento expreso en ese momento, y puede pedir que lo retiren.</p>
 
         <h2>6. Dónde se guardan los datos</h2>
         <p>
@@ -92,10 +92,10 @@ export default function PrivacyScreen() {
 
         <h2>10. Lectura en voz alta</h2>
         <p>
-          Numeria puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
+          Repasitos puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
           sin conexión. En iPad y iPhone las voces son del propio sistema. En algunos navegadores, como Chrome, ciertas voces envían el texto a
           los servidores del fabricante del navegador para pronunciarlo. Ese texto son las instrucciones del juego y puede incluir el apodo del
-          peque. Si lo prefieres, puedes apagar la voz en la zona de adultos, en Ajustes.
+          niño. Si lo prefieres, puedes apagar la voz en la zona de adultos, en Ajustes.
         </p>
 
         <h2>11. Cambios en esta política</h2>

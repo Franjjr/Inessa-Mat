@@ -3,8 +3,8 @@ import { childText } from './childText'
 import { worldHex } from './worldColors'
 
 describe('childText', () => {
-  it('renders the child name with the neutral fallback when no child is loaded', () => {
-    expect(childText(null, '¡Muy bien, {child}!')).toBe('¡Muy bien, Peque!')
+  it('renders the child name with the fallback when no child is loaded', () => {
+    expect(childText(null, '¡Muy bien, {child}!')).toBe('¡Muy bien, Amigo!')
   })
 
   it('leaves plain text untouched', () => {

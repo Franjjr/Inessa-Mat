@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createInviteLink, hasAdultPin, listOrgMembers, setAdultPin, updateChild, useAuth, useChildren, verifyAdultPin } from '@/data'
 import type { ChildProfile, OrgRole } from '@/types'
+import { speech } from '@/audio'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { SyncBadge } from '../shared/SyncBadge'
@@ -16,9 +17,9 @@ import s from './settings.module.css'
 import adult from '../shared/adult.module.css'
 
 const ROLE_LABEL: Record<OrgRole, string> = {
-  owner: 'Propietario/a',
-  admin: 'Administrador/a',
-  teacher: 'Docente',
+  owner: 'Propietario',
+  admin: 'Administrador',
+  teacher: 'Profesor',
   guardian: 'Familiar',
 }
 
@@ -91,7 +92,7 @@ function AccountCard({
     return (
       <section className={adult.card} aria-labelledby="account-title">
         <h2 id="account-title" className={adult.subheading}>Cuenta</h2>
-        <p className={adult.lead}>Estás usando Numeria sin cuenta. Los datos se quedan en este dispositivo.</p>
+        <p className={adult.lead}>Estás usando Repasitos sin cuenta. Los datos se quedan en este dispositivo.</p>
         {backendAvailable && (
           <div className={adult.actions}>
             <Button onClick={() => navigate('/signup')}>Crear cuenta</Button>
@@ -160,7 +161,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
     setInviteError(null)
     setLink(null)
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      setEmailError('Escribe el correo de la persona que quieres invitar.')
+      setEmailError('Escribe el correo del adulto que quieres invitar.')
       return
     }
     setEmailError(null)
@@ -179,7 +180,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
   const share = async (url: string) => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: 'Invitación a Numeria', text: 'Únete a nuestra cuenta de Numeria:', url })
+        await navigator.share({ title: 'Invitación a Repasitos', text: 'Únete a nuestra cuenta de Repasitos:', url })
         return
       } catch {
         /* cancelled: fall back to copying */
@@ -191,11 +192,11 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
 
   return (
     <section className={adult.card} aria-labelledby="members-title">
-      <h2 id="members-title" className={adult.subheading}>Personas adultas</h2>
+      <h2 id="members-title" className={adult.subheading}>Adultos</h2>
       <p className={adult.muted}>
         {orgKind === 'school'
-          ? 'Las personas docentes de tu colegio ven las clases que les compartas.'
-          : 'Otras personas adultas de la familia pueden ver y ajustar los perfiles.'}
+          ? 'Los profesores de tu colegio ven las clases que les compartas.'
+          : 'Otros adultos de la familia pueden ver y ajustar los perfiles.'}
       </p>
       {loadError && <p className={adult.error} role="alert">{loadError}</p>}
       {members && (
@@ -212,7 +213,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
         </ul>
       )}
 
-      <form className={adult.stack} onSubmit={invite} noValidate aria-label="Invitar a una persona adulta">
+      <form className={adult.stack} onSubmit={invite} noValidate aria-label="Invitar a un adulto">
         <div className={adult.field}>
           <span className={adult.label} id="role-label">Papel</span>
           <div className={adult.segmented} role="radiogroup" aria-labelledby="role-label">
@@ -224,7 +225,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
           </div>
         </div>
         <TextField
-          id="invite-email" label="Correo de la persona invitada" type="email" inputMode="email" autoCapitalize="none"
+          id="invite-email" label="Correo del invitado" type="email" inputMode="email" autoCapitalize="none"
           value={email} onChange={(e) => setEmail(e.target.value)} error={emailError}
           hint="Entrará automáticamente cuando inicie sesión o cree su cuenta con este correo."
         />
@@ -236,7 +237,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
 
       {link && (
         <div className={s.inviteBox} role="status">
-          <span className={adult.strong}>Invitación lista. Envía este enlace a la persona invitada:</span>
+          <span className={adult.strong}>Invitación lista. Envía este enlace al invitado:</span>
           <span className={s.linkText}>{link}</span>
           <div className={adult.actions}>
             <Button size="sm" onClick={() => void share(link)}>Compartir enlace</Button>
@@ -298,6 +299,7 @@ function SoundCard({ profiles }: { profiles: ChildProfile[] }) {
         checked={child.settings.voice}
         onChange={(v) => void change({ voice: v })}
       />
+      <VoicePicker />
       {error && <p className={adult.error} role="alert">{error}</p>}
     </section>
   )
@@ -355,7 +357,7 @@ function PinCard() {
   return (
     <section className={adult.card} aria-labelledby="pin-title">
       <h2 id="pin-title" className={adult.subheading}>PIN de la zona de adultos</h2>
-      <p className={adult.muted}>Entre 4 y 8 números. Solo lo debe conocer la persona adulta.</p>
+      <p className={adult.muted}>Entre 4 y 8 números. Solo lo debe conocer el adulto.</p>
       {hasPin !== null && (
         <form className={adult.stack} onSubmit={save} noValidate aria-label="Cambiar el PIN">
           <div className={s.pinGrid}>
@@ -372,5 +374,63 @@ function PinCard() {
         </form>
       )}
     </section>
+  )
+}
+
+/** Voice for this device (system voices differ a lot in quality), with a sample to compare them. */
+function VoicePicker() {
+  const [voices, setVoices] = useState(() => speech.voices())
+  const [chosen, setChosen] = useState(() => speech.preferredVoice() ?? '')
+
+  useEffect(() => {
+    // Voices arrive late on iOS and Chrome: look again for a few seconds.
+    if (voices.length) return
+    const timer = setInterval(() => {
+      const list = speech.voices()
+      if (list.length) {
+        setVoices(list)
+        clearInterval(timer)
+      }
+    }, 500)
+    const stop = setTimeout(() => clearInterval(timer), 6000)
+    return () => {
+      clearInterval(timer)
+      clearTimeout(stop)
+    }
+  }, [voices.length])
+
+  const pick = (id: string) => {
+    setChosen(id)
+    speech.setPreferredVoice(id || null)
+  }
+  const tryVoice = () => {
+    speech.stop()
+    void speech.say('¡Hola! Soy Lumi. Seis por siete son cuarenta y dos.', { voice: 'lumi', interrupt: true })
+  }
+
+  if (!voices.length) return null
+  return (
+    <div className={adult.stack}>
+      <label className={adult.muted} htmlFor="voice-picker">Voz de este dispositivo</label>
+      <div className={adult.actions}>
+        <select
+          id="voice-picker"
+          className={`${adult.input} ${adult.select}`}
+          style={{ width: 'auto', minWidth: 220 }}
+          value={chosen}
+          onChange={(e) => pick(e.target.value)}
+        >
+          <option value="">Automática: voz natural de Repasitos (con internet) o la mejor del dispositivo</option>
+          {voices.map((v) => (
+            <option key={v.id} value={v.id}>{v.name}{v.local ? '' : ' (necesita internet)'}</option>
+          ))}
+        </select>
+        <Button variant="secondary" size="sm" onClick={tryVoice}>Probar</Button>
+      </div>
+      <p className={adult.muted}>
+        En iPad suena mucho mejor la voz mejorada: Ajustes del iPad → Accesibilidad → Contenido leído → Voces → Español
+        (España) → descarga «Mónica (mejorada)» y elígela aquí.
+      </p>
+    </div>
   )
 }

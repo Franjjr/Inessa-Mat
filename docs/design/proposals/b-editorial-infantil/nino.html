@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasitos · B · Niño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Dirección B · Editorial con toques infantiles · inicio del niño (iPad 1180×820). Nombre de demo: Lía (ficticio). */
+:root {
+  --bg: oklch(98.6% .004 260);
+  --surface: oklch(100% 0 0);
+  --fg: oklch(24% .04 275);
+  --muted: oklch(46% .03 275);
+  --rule: oklch(86% .01 275);
+  --accent: oklch(52% .21 292);
+  --accent-strong: oklch(45% .21 292);
+  --accent-tint: oklch(95% .03 292);
+  --font-serif: 'Young Serif', Georgia, serif;
+  --font-read: 'Andika', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-read); }
+body { overflow: hidden; }
+img { display: block; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.screen { width: 1180px; height: 820px; margin: 0 auto; padding: 34px 48px 30px; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 22px; }
+.top { display: flex; justify-content: space-between; align-items: end; border-bottom: 1px solid var(--rule); padding-bottom: 16px; }
+.hello { font: 400 44px/1 var(--font-serif); }
+.hello span { color: var(--accent); }
+.meta { display: flex; gap: 22px; font-size: 17px; align-items: center; }
+.meta .ok { color: var(--muted); }
+.meta a { color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; min-height: 56px; display: inline-flex; align-items: center; }
+
+.body { display: grid; grid-template-columns: 270px minmax(0,1fr) 290px; gap: 28px; min-height: 0; }
+.index { display: grid; align-content: start; gap: 0; }
+.index h2 { font: 400 14px/1 var(--font-read); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin: 0 0 14px; }
+.sub { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; min-height: 64px; border-top: 1px solid var(--rule); font: 400 23px/1.1 var(--font-serif); cursor: default; }
+.sub:last-child { border-bottom: 1px solid var(--rule); }
+.sub small { font: 700 12px/1 var(--font-read); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.sub .n { font-size: 18px; color: var(--muted); }
+.sub.on { color: var(--accent-strong); }
+.sub.on .n { color: var(--accent); }
+.sub.off { color: var(--muted); }
+.sub.on small { color: #fff; background: var(--accent); padding: 6px 8px; border-radius: 6px; }
+
+.chapter { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 30px 32px; display: grid; grid-template-rows: auto minmax(0,1fr); min-height: 0; overflow: hidden; }
+.chapter .eyebrow { font: 700 14px/1 var(--font-read); text-transform: uppercase; letter-spacing: .14em; color: var(--accent-strong); }
+.chapter h3 { font: 400 40px/1.08 var(--font-serif); margin: 12px 0 12px; }
+.chapter p { font-size: 20px; color: var(--muted); margin: 0; max-width: 24em; }
+.chapter .go { display: flex; align-items: center; gap: 18px; margin-top: 20px; }
+.btn { min-height: 62px; padding: 0 30px; border-radius: 12px; background: var(--accent); color: #fff; font: 700 21px/1 var(--font-read); border: 0; display: inline-flex; align-items: center; }
+.chapter .stage { display: flex; align-items: end; justify-content: center; margin-top: 0; min-height: 0; }
+.chapter .stage img { width: 168px; height: 168px; }
+.chapter .stage .figs { display: flex; gap: 12px; }
+.cap { font-size: 16px; color: var(--muted); margin-top: 6px; text-align: center; }
+
+.side { display: grid; grid-template-rows: auto auto minmax(0,1fr); gap: 16px; min-height: 0; }
+.plate { background: var(--surface); border: 1px solid var(--rule); border-radius: 14px; padding: 22px 24px; }
+.plate h4 { font: 400 13px/1 var(--font-read); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin: 0 0 12px; }
+.crystal-count { font: 400 56px/1 var(--font-serif); }
+.crystal-count small { font: 400 20px/1 var(--font-read); color: var(--muted); }
+.dots { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 6px; margin-top: 14px; }
+.dots span { height: 22px; border-radius: 50%; border: 1.5px solid var(--fg); }
+.dots span.on { background: var(--accent); border-color: var(--accent); }
+.quick { display: grid; gap: 0; }
+.quick button { all: unset; box-sizing: border-box; cursor: pointer; min-height: 64px; display: grid; grid-template-columns: 1fr; align-content: center; border-top: 1px solid var(--rule); font: 400 21px/1.1 var(--font-serif); }
+.quick button:last-child { border-bottom: 1px solid var(--rule); }
+.quick small { font: 400 16px/1.2 var(--font-read); color: var(--muted); display: block; margin-top: 4px; }
+.quick .arr { font: 400 20px/1 var(--font-read); color: var(--muted); }
+
+.worlds { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); border-top: 1px solid var(--fg); border-bottom: 1px solid var(--rule); }
+.worlds div { padding: 14px 8px 12px; border-left: 1px solid var(--rule); display: grid; gap: 6px; font: 400 17px/1.15 var(--font-serif); text-align: left; }
+.worlds div:first-child { border-left: 0; }
+.worlds b { font: 700 12px/1 var(--font-read); letter-spacing: .1em; color: var(--muted); }
+.worlds .done b, .worlds .cur b { color: var(--accent); }
+.worlds .off { color: var(--muted); }
+.worlds .cur { background: var(--accent-tint); }
+</style>
+</head>
+<body>
+<div class="screen">
+  <header class="top">
+    <div class="hello">Hola, <span>Lía</span></div>
+    <div class="meta">
+      <span class="ok">Guardado en este dispositivo</span>
+      <a href="#">Cambiar</a>
+      <a href="#">Familia</a>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="index" aria-label="Asignaturas">
+      <h2>Asignaturas</h2>
+      <button class="sub on" type="button"><span class="n">01</span><span>Matemáticas</span><small>Hoy</small></button>
+      <button class="sub off" type="button" disabled><span class="n">02</span><span>Lengua</span><small>Pronto</small></button>
+      <button class="sub off" type="button" disabled><span class="n">03</span><span>Inglés</span><small>Pronto</small></button>
+      <button class="sub off" type="button" disabled><span class="n">04</span><span>Ciencias</span><small>Pronto</small></button>
+      <button class="sub off" type="button" disabled><span class="n">05</span><span>Historia</span><small>Pronto</small></button>
+    </nav>
+
+    <section class="chapter" aria-label="Siguiente paso">
+      <div>
+        <span class="eyebrow">Capítulo 2 · El Río de las Sumas</span>
+        <h3>¡Borrón quiere las mochilas!</h3>
+        <p>Luna se ha metido en el río. Ayúdala a salir con sumas.</p>
+        <div class="go"><button class="btn" type="button">Seguir la aventura</button></div>
+      </div>
+      <div class="stage">
+        <div class="figs" style="display:flex;gap:4px;align-items:flex-end">
+          <div><img src="img/luna.svg" alt="Luna, la gata compañera"><p class="cap" style="margin:0">Luna</p></div>
+          <div><img src="img/lumi.svg" alt="Lumi, el unicornio guía"><p class="cap" style="margin:0">Lumi</p></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="plate" aria-label="Cuerno de Lumi">
+        <h4>Cuerno de Lumi</h4>
+        <div class="crystal-count">1 <small>de 8 cristales · 44 estrellas</small></div>
+        <div class="dots" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <div class="plate quick">
+        <h4>Otras cosas</h4>
+        <button type="button">Repaso del día<small>2 cosas para repasar</small></button>
+        <button type="button">Juego libre<small>Practica lo que quieras</small></button>
+        <button type="button">Álbum y tienda<small>Pegatinas y ropa para tu compañero</small></button>
+      </div>
+      <div></div>
+    </aside>
+  </div>
+
+  <footer class="worlds" aria-label="Mundos">
+    <div class="done"><b>01 ✓</b>Bosque</div>
+    <div class="cur"><b>02 · AHORA</b>Río</div>
+    <div class="off"><b>03</b>Cueva</div>
+    <div class="off"><b>04</b>Montaña</div>
+    <div class="off"><b>05</b>Lago</div>
+    <div class="off"><b>06</b>Jardín</div>
+    <div class="off"><b>07</b>Forja</div>
+    <div class="off"><b>08</b>Castillo</div>
+  </footer>
+</div>
+</body>
+</html>

@@ -113,7 +113,7 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
       {showSum && <p className={s.sum}>{repeated} = ?</p>}
 
       <div className={s.answer}>
-        <span className={s.answerLabel}>{host.t('Total:')}</span>
+        <span className={s.answerLabel} aria-hidden>{`${ex.groups} × ${ex.perGroup} =`}</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -124,7 +124,7 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
           maxDigits={3}
           size="lg"
           status={status}
-          ariaLabel="Total de objetos"
+          ariaLabel={`Resultado de ${ex.groups} × ${ex.perGroup}`}
           placeholder="?"
           keypadToggle
         />

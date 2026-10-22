@@ -22,11 +22,16 @@
   text-shadow: 0 2px 0 rgba(255, 255, 255, .9);
 }
 .sub {
-  margin: var(--sp-2) auto 0;
+  margin: var(--sp-3) auto 0;
   max-width: 560px;
+  padding: 8px 18px;
+  border: var(--sticker-border);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm);
   font-family: var(--font-read);
   font-size: var(--fs-md);
-  color: var(--c-ink-soft);
+  color: var(--c-ink);
 }
 
 .grid {
@@ -40,6 +45,7 @@
   flex: 1;
 }
 .card, .add {
+  border: var(--sticker-border);
   width: 100%;
   min-height: 300px;
   display: flex;
@@ -48,17 +54,16 @@
   justify-content: center;
   gap: var(--sp-2);
   padding: var(--sp-5);
-  border: 0;
   border-radius: var(--r-xl);
   cursor: pointer;
   box-sizing: border-box;
   transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
-  box-shadow: var(--shadow-2);
+  box-shadow: var(--sticker-shadow);
   background: var(--c-surface);
   color: var(--c-ink);
   font: inherit;
 }
-.card:active, .add:active { transform: translateY(4px) scale(.99); box-shadow: var(--shadow-press); }
+.card:active, .add:active { transform: translate(3px, 4px); box-shadow: 2px 2px 0 var(--sticker-line); }
 .card:focus-visible, .add:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 4px; }
 .art { display: inline-flex; }
 .name { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); }
@@ -79,9 +84,9 @@
 }
 
 .add {
-  background: transparent;
-  box-shadow: none;
-  border: 3px dashed var(--c-line);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm);
+  border: 3px dashed var(--c-ink-mute);
   color: var(--c-primary);
 }
 .plus {
@@ -96,7 +101,14 @@
   font-size: 44px;
   line-height: 1;
 }
-.addText { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); }
+.addText {
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+}
 
 .footer { display: flex; justify-content: center; }
 

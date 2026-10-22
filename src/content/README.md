@@ -29,13 +29,13 @@ between nodes at 1180×820 / 1280×800 and ≥ 100 px at 820×1180, with x in [0
 
 ## Templates
 
-`{child} {pet} {pet_species} {el_pet_species} {cg:F|M|N} {pg:F|M|N}` as in `src/types/content.ts`, plus:
+`{child} {pet} {pet_species} {el_pet_species} {cg:F|M} {pg:F|M}` as in `src/types/content.ts`, plus:
 
 - `{al_pet_species}` / `{del_pet_species}` → "al gatito" / "a la gatita", "del gatito" / "de la gatita"
   (never write "a {el_pet_species}").
 - Capitalised variants for sentence starts: `{Pet_species}`, `{El_pet_species}`, `{Al_pet_species}`, `{Del_pet_species}`.
-- Gender options may contain simple placeholders: `{cg:Querida {child}|Querido {child}|Hola, {child}}`.
-- Two options → neutral uses the second; one option → used for everyone. Unknown placeholders stay visible.
+- Gender options may contain simple placeholders: `{cg:Querida {child}|Querido {child}}`.
+- Two options → feminine, masculine (no third, gender-free form). One option → used for everyone. Unknown placeholders stay visible.
 - Inserted names are never re-parsed. Gender agreement is always done on `{pet}` (the name), never on the species
   noun (the fox is "el zorrito" for every gender).
 

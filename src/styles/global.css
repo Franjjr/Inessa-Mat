@@ -28,7 +28,7 @@ body {
 #root { display: flex; flex-direction: column; }
 
 h1, h2, h3, h4, button, .display { font-family: var(--font-display); }
-h1, h2, h3, h4 { margin: 0; line-height: 1.15; font-weight: 600; }
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; font-weight: 700; }
 
 button { font: inherit; color: inherit; cursor: pointer; }
 
@@ -41,4 +41,4 @@ input, textarea, select { font: inherit; -webkit-user-select: text; user-select:
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-:focus-visible { outline: 3px solid var(--c-magic); outline-offset: 3px; border-radius: 8px; }
+:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; border-radius: 8px; }

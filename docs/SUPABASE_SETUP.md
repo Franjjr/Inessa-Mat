@@ -35,7 +35,7 @@ Estas dos son **públicas**: van dentro de la app y la seguridad la ponen las re
 
 1. Ve a **Authentication → Sign In / Providers** y comprueba que **Email** está activado.
 2. Ve a **Authentication → URL Configuration**:
-   - **Site URL:** la dirección que te dé Vercel (por ejemplo `https://inessa-mat.vercel.app`).
+   - **Site URL:** la dirección que te dé Vercel (la de producción es `https://repasitos.es`).
    - **Redirect URLs:** añade esa misma dirección con `/**` al final, y también `http://localhost:5173/**`.
 
 ## Paso 5 · Conectar Vercel (cuando el código esté en GitHub)

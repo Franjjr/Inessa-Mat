@@ -90,3 +90,6 @@
 .swatch.learning { color: #92400e; }
 .swatch.struggling { color: #9a3412; }
 .swatch.unseen { border: 2px dashed var(--c-line); color: var(--c-ink-mute); }
+.blank { visibility: hidden; aspect-ratio: 1 / 1; }
+.swatch { border: 3px solid var(--sticker-line); }
+.swatch.unseen { border-style: dashed; }

@@ -31,7 +31,7 @@ export const MESSAGES: Record<DataErrorCode, string> = {
   'not-found': 'No lo hemos encontrado. Puede que se haya borrado.',
   invalid: 'Algún dato no es válido. Revísalo y vuelve a intentarlo.',
   'invalid-code': 'Ese código de clase no existe o ya no está activo. Revisa las letras con el profe.',
-  conflict: 'Otra persona ha cambiado esto a la vez. Vuelve a intentarlo.',
+  conflict: 'Otro usuario ha cambiado esto a la vez. Vuelve a intentarlo.',
   unknown: 'Algo no ha ido bien. Vuelve a intentarlo dentro de un momento.',
 }
 
@@ -90,6 +90,6 @@ export function toDataError(e: unknown): DataError {
   if (code === '23505') return new DataError('conflict', undefined, e)
   if (code === '23514' || code === '22023' || code === '22P02' || code === '23502') return new DataError('invalid', undefined, e)
   if (code === 'P0001' && /too many/i.test(msg)) return new DataError('rate-limited', undefined, e)
-  if (code === 'P0001' && /owner/i.test(msg)) return new DataError('invalid', 'Una familia o un colegio necesita al menos una persona responsable (propietaria).', e)
+  if (code === 'P0001' && /owner/i.test(msg)) return new DataError('invalid', 'Una familia o un colegio necesita al menos un responsable (propietario).', e)
   return new DataError('unknown', undefined, e)
 }

@@ -9,7 +9,7 @@ export const w1Groups = lesson('w1-groups', '¿Qué es multiplicar?', [
   show('groups', mushrooms, 'Podemos sumar: 3 + 3 + 3 + 3 = 12. ¡Pero es un poco largo!'),
   show('groups', mushrooms, 'Más rápido: 4 × 3 = 12. Se lee «cuatro por tres, doce».'),
   show('groups', mushrooms, 'Multiplicar es sumar grupos iguales. ¡El primer número dice cuántos grupos hay!', 'owl'),
-  tryIt('groups', { groups: 2, perGroup: 5, emoji: '🍓' }, '¡Te toca! Cuenta los grupos y escribe la multiplicación.', { kinds: ['groups'], factorRange: [2, 5] }),
+  tryIt('groups', { groups: 2, perGroup: 5, emoji: '🍓' }, '¡Te toca! Cuenta los grupos y escribe el resultado de la multiplicación.', { kinds: ['groups'], factorRange: [2, 5] }),
   show('array-rotate', flowers, 'Las flores se plantan en filas: 3 filas de 5. 3 × 5 = 15.'),
   show('array-rotate', flowers, 'Si giras las flores, salen 5 filas de 3. ¡También son 15!'),
   show('array-rotate', flowers, 'Es el truco del espejo: el orden no cambia el resultado.'),

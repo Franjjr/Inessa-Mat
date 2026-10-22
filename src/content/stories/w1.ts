@@ -10,7 +10,7 @@ export const w1Arrival = story('w1-arrival', 'Las lianas de las hadas', [
   ]),
   scene('forest', [cast('lumi', 'worried', 'left'), cast('companion', 'scared', 'center', 'vines')], [
     narrate('¡Zas! Las lianas de las hadas se enrollan alrededor de {pet}.', 'pop'),
-    say('companion', '¡Ay! ¡Estoy {pg:enredada|enredado|enredado} como un ovillo de lana!', 'scared'),
+    say('companion', '¡Ay! ¡Estoy {pg:enredada|enredado} como un ovillo de lana!', 'scared'),
     say('companion', '¡{child}, ayúdame, porfa! ¡No me puedo mover!', 'sad'),
   ]),
   scene('forest', [cast('lumi', 'talk', 'left'), cast('companion', 'worried', 'center', 'vines'), cast('owl', 'talk', 'right')], [
@@ -41,7 +41,7 @@ export const w1Rescue = story('w1-rescue', '¡{pet} está libre!', [
     narrate('Las lianas brillan, se sueltan… ¡y {pet} cae en una cama de hojas blanditas!', 'rescue'),
   ]),
   scene('forest', [cast('lumi', 'happy', 'left'), cast('companion', 'cheer', 'center'), cast('owl', 'happy', 'right')], [
-    say('companion', '¡Libre! ¡Gracias, {child}! ¡Eres {cg:la mejor|el mejor|lo más}!', 'cheer'),
+    say('companion', '¡Libre! ¡Gracias, {child}! ¡Eres {cg:la mejor|el mejor}!', 'cheer'),
     narrate('{pet} le da a {child} un abrazo enorme, de esos que hacen cosquillas.'),
     say('owl', 'Toma, {child}: el cristal verde. Te lo has ganado.', 'happy', 'crystal'),
     narrate('El cristal vuela hasta el cuerno de Lumi y se enciende. ¡Clic!', 'sparkle'),

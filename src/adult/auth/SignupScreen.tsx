@@ -15,8 +15,8 @@ import s from './auth.module.css'
 import adult from '../shared/adult.module.css'
 
 const ORG_OPTIONS: { kind: OrgKind; title: string; text: string }[] = [
-  { kind: 'family', title: 'Familia', text: 'Para tus hijos e hijas. Cada peque tiene su perfil y su aventura.' },
-  { kind: 'school', title: 'Colegio', text: 'Para docentes. Clases con código, asignaciones y progreso de la clase.' },
+  { kind: 'family', title: 'Familia', text: 'Para tus hijos. Cada niño tiene su perfil y su aventura.' },
+  { kind: 'school', title: 'Colegio', text: 'Para profesores. Clases con código, asignaciones y progreso de la clase.' },
 ]
 
 const EMPTY: SignupInput = {
@@ -55,9 +55,9 @@ export default function SignupScreen() {
   if (!backendAvailable) {
     return (
       <AdultPage title="Crear cuenta" back="/welcome" narrow>
-        <section className={adult.card}>
+        <section className={`${adult.card} ${s.panel}`}>
           <h2 className={adult.subheading}>Las cuentas no están disponibles en esta versión</h2>
-          <p className={adult.lead}>Puedes probar Numeria sin cuenta. Todo se guarda en este dispositivo.</p>
+          <p className={adult.lead}>Puedes probar Repasitos sin cuenta. Todo se guarda en este dispositivo.</p>
           <div className={adult.actions}><Button onClick={() => navigate('/welcome')}>Volver al inicio</Button></div>
         </section>
       </AdultPage>
@@ -67,7 +67,7 @@ export default function SignupScreen() {
   if (sent) {
     return (
       <AdultPage title="Revisa tu correo" back="/welcome" narrow>
-        <section className={adult.card} role="status">
+        <section className={`${adult.card} ${s.panel}`} role="status">
           <h2 className={adult.subheading}>Te hemos enviado un correo de confirmación</h2>
           <p className={adult.lead}>
             Abre el enlace de <strong>{sent}</strong> en este dispositivo para activar tu cuenta. Si no lo ves, revisa la carpeta de spam.
@@ -113,7 +113,7 @@ export default function SignupScreen() {
           Tienes una invitación. Crea la cuenta con el correo al que te la enviaron.
         </div>
       )}
-      <form className={adult.card} onSubmit={submit} noValidate aria-label="Crear cuenta">
+      <form className={`${adult.card} ${s.panel}`} onSubmit={submit} noValidate aria-label="Crear cuenta">
         <TextField
           id="signup-name" label="Tu nombre" autoComplete="name" value={form.displayName}
           onChange={(e) => set('displayName', e.target.value)} error={errors.displayName}
@@ -133,7 +133,7 @@ export default function SignupScreen() {
         />
 
         <fieldset className={s.form} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }} aria-describedby={errors.orgKind ? 'signup-org-error' : undefined}>
-          <legend className={adult.label} style={{ marginBottom: 8 }}>¿Cómo usarás Numeria?</legend>
+          <legend className={adult.label} style={{ marginBottom: 8 }}>¿Cómo usarás Repasitos?</legend>
           <div className={s.orgChoices} role="radiogroup" aria-label="Tipo de cuenta">
             {ORG_OPTIONS.map((o) => (
               <button
@@ -155,7 +155,7 @@ export default function SignupScreen() {
         {form.orgKind && (
           <TextField
             id="signup-org" label={orgLabel} value={form.orgName} onChange={(e) => set('orgName', e.target.value)}
-            error={errors.orgName} hint={form.orgKind === 'school' ? 'Así lo verán las familias al unirse a una clase.' : 'Solo lo veis las personas adultas de la familia.'}
+            error={errors.orgName} hint={form.orgKind === 'school' ? 'Así lo verán las familias al unirse a una clase.' : 'Solo lo veis los adultos de la familia.'}
           />
         )}
 
@@ -168,7 +168,7 @@ export default function SignupScreen() {
           />
           <span>
             He leído y acepto la <Link to="/legal/privacidad" target="_blank" rel="noreferrer">política de privacidad</Link>.
-            Entiendo que los datos de los menores los gestiono yo como persona adulta responsable.
+            Entiendo que los datos de los menores los gestiono yo como adulto responsable.
           </span>
         </label>
         {errors.acceptedPrivacy && <p className={adult.error}>{errors.acceptedPrivacy}</p>}

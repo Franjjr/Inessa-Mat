@@ -54,7 +54,7 @@ beforeEach(() => {
 describe('ChestScreen', () => {
   it('is locked until all 8 crystals are collected: no prize shown, nothing marked', async () => {
     renderChest()
-    expect(await screen.findByText(/necesita las 8 letras/)).toBeInTheDocument()
+    expect(await screen.findByText(/Cada cristal te da una letra/)).toBeInTheDocument()
     expect(screen.queryByText('Una tarde de cine contigo')).not.toBeInTheDocument()
     expect(data.markRewardUnlocked).not.toHaveBeenCalled()
     expect(data.updateProgress).not.toHaveBeenCalled()

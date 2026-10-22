@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
 import type { LessonDef } from '@/types'
-import { Button } from '@/ui'
+import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
 import { LESSON_VISUALS } from './visuals'
 import { SafeVisual } from './SafeVisual'
@@ -131,9 +131,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
     <main className={styles.player} aria-label={host.t(lesson.title)}>
       <header className={styles.top}>
         {onExit ? (
-          <Button variant="ghost" size="sm" onClick={onExit} aria-label="Salir de la lección">
-            ✕ Salir
-          </Button>
+          <BackButton variant="exit" onClick={onExit} aria-label="Salir de la lección" />
         ) : (
           <span />
         )}

@@ -45,17 +45,36 @@ export function Screen({ children, className, background, style }: { children: R
   )
 }
 
-/** Top bar with an optional back button. back=true → navigate(-1); back='/path' → navigate there. */
+/**
+ * The one way to go back or leave in the app. Always a labelled pill (≥ 56 px), never a bare icon.
+ * variant "back": chevron + «Volver», for navigation between screens.
+ * variant "exit": ✕ + «Salir», for leaving an activity or an area.
+ * Navigation is the caller's job: pass `onClick` (e.g. `() => navigate('/play')`). Use `aria-label` only
+ * when the name needs more words, and keep the visible label inside it.
+ */
+export interface BackButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
+  variant?: 'back' | 'exit'
+  /** Visible text. Defaults to «Volver» or «Salir». */
+  label?: string
+}
+
+export function BackButton({ variant = 'back', label, className, ...rest }: BackButtonProps) {
+  const text = label ?? (variant === 'exit' ? 'Salir' : 'Volver')
+  return (
+    <button type="button" className={clsx(s.backBtn, variant === 'exit' && s.backExit, className)} {...rest}>
+      <span aria-hidden className={s.backIcon}>{variant === 'exit' ? '✕' : '‹'}</span>
+      <span>{text}</span>
+    </button>
+  )
+}
+
+/** Top bar with an optional back button. back=true → back one screen; back='/path' → navigate there. */
 export function TopBar({ title, back, left, right }: { title?: ReactNode; back?: boolean | string; left?: ReactNode; right?: ReactNode }) {
   const navigate = useNavigate()
   return (
     <header className={s.topbar}>
       <div className={s.topbarSide}>
-        {back && (
-          <Button variant="secondary" round aria-label="Volver" onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))}>
-            <span aria-hidden style={{ fontSize: 28, lineHeight: 1 }}>‹</span>
-          </Button>
-        )}
+        {back && <BackButton onClick={() => (typeof back === 'string' ? navigate(back) : navigate(-1))} />}
         {left}
       </div>
       <div className={s.topbarTitle}>{title}</div>
@@ -125,11 +144,12 @@ export function Pill({ children, style }: { children: ReactNode; style?: CSSProp
   return <span className={s.pill} style={style}>{children}</span>
 }
 
+/** Loading state. The label is visible (children are not expected to read a bare spinner) and announced once. */
 export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   return (
-    <div className={s.center} role="status">
-      <div className={s.spinner} />
-      <span className="visually-hidden">{label}</span>
+    <div className={s.center} role="status" aria-live="polite">
+      <div className={s.spinner} aria-hidden />
+      <span className={s.spinnerLabel}>{label}</span>
     </div>
   )
 }

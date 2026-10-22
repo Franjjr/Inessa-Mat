@@ -3,7 +3,7 @@
    gentle scoring with 1–3 stars. onDone receives the result. */
 import clsx from 'clsx'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { StarIcon } from '@/art'
+import { StarIcon } from '@/art/worlds/StarIcon'
 import { sfx } from '@/audio'
 import { celebrate } from '@/fx'
 import { IDLE_MS_SLOW } from './constants'

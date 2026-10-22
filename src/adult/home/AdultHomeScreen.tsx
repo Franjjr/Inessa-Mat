@@ -1,35 +1,27 @@
-/* The grown-ups' start page: the children of the active organisation, sync state, and links to reports,
-   the school area (for schools), settings and privacy. */
+/* The grown-ups' start page. For the selected child: one conclusion built from the times-table data, the ten
+   tables with a legend, and the most frequent mistake. Beside it, the profiles (pick one, open its report, add
+   one) and the three links: settings and account, classes and school, privacy and data. */
+import { useEffect, useState } from 'react'
+import clsx from 'clsx'
 import { Link, useNavigate } from 'react-router-dom'
 import { CompanionArt } from '@/art'
-import { useAuth, useChildren } from '@/data'
-import { Button, Card, toast } from '@/ui'
+import { getChildSummary, useAuth, useChildren } from '@/data'
+import { describeError } from '@/engine'
+import type { ChildSummary, ErrorType } from '@/types'
+import { BackButton, Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
 import { SyncBadge } from '../shared/SyncBadge'
-import { plural } from '../shared/format'
+import { plural, formatPercent } from '../shared/format'
+import { errorMessage } from '../shared/messages'
 import { lockAdultArea } from '../gate/AdultGate'
+import { readTables, TABLE_STATE_LABEL, type TableState } from '../shared/reading'
 import s from './home.module.css'
 import adult from '../shared/adult.module.css'
 
 const KIND_LABEL = { family: 'Familia', school: 'Colegio' } as const
-
-/** Simple line icons for the section tiles (decorative: the tile title names the link). */
-function TileIcon({ kind }: { kind: 'class' | 'join' | 'settings' | 'privacy' }) {
-  const paths = {
-    class: <><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><circle cx="17" cy="9" r="2.4" /><path d="M16.5 13.6c2.6.2 4.5 2.2 4.5 4.9" /></>,
-    join: <><path d="M10 14l4-4" /><path d="M8.5 11.5 6 14a3.5 3.5 0 0 0 5 5l2.5-2.5" /><path d="M15.5 12.5 18 10a3.5 3.5 0 0 0-5-5l-2.5 2.5" /></>,
-    settings: <><circle cx="12" cy="12" r="3" /><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6" /></>,
-    privacy: <><path d="M12 3l7 3v5.5c0 4.3-2.9 7.9-7 9.5-4.1-1.6-7-5.2-7-9.5V6l7-3z" /><path d="M9.2 12.2l2 2 3.6-3.8" /></>,
-  } as const
-  return (
-    <span className={s.tileIcon} aria-hidden>
-      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        {paths[kind]}
-      </svg>
-    </span>
-  )
-}
+const TABLE_LEGEND: TableState[] = ['mastered', 'struggling', 'learning', 'unseen']
+const WORLDS_TOTAL = 8
 
 export default function AdultHomeScreen() {
   const { status, activeOrg, organizations, setActiveOrg, backendAvailable } = useAuth()
@@ -38,13 +30,39 @@ export default function AdultHomeScreen() {
   const isSchool = activeOrg?.kind === 'school'
   const signedIn = status === 'signed-in'
 
+  const [pickedId, setPickedId] = useState<string | null>(null)
+  const current = children.find((c) => c.id === pickedId) ?? children[0] ?? null
+  const currentId = current?.id ?? null
+  const [summary, setSummary] = useState<ChildSummary | null>(null)
+  const [summaryError, setSummaryError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setSummary(null)
+    setSummaryError(null)
+    if (!currentId) return
+    let alive = true
+    getChildSummary(currentId)
+      .then((sum) => {
+        if (alive) setSummary(sum)
+      })
+      .catch((e: unknown) => {
+        if (alive) setSummaryError(errorMessage(e, 'No hemos podido cargar este resumen.'))
+      })
+    return () => {
+      alive = false
+    }
+  }, [currentId])
+
   const leave = () => {
     lockAdultArea()
     navigate('/kids')
   }
 
+  const reading = current && summary ? readTables(summary.factGrid, current.nickname) : null
+  const topError = summary?.topErrors[0] ?? null
+
   return (
-    <AdultPage title="Zona de adultos" back="/kids" actions={<Button variant="ghost" size="sm" onClick={leave}>Salir</Button>}>
+    <AdultPage title="Zona de adultos" back="/kids" actions={<BackButton variant="exit" onClick={leave} />}>
       <header className={s.hero}>
         <div className={adult.stack} style={{ gap: 6 }}>
           <h2 className={adult.heading}>{activeOrg ? activeOrg.name : 'Tus perfiles en este dispositivo'}</h2>
@@ -72,12 +90,13 @@ export default function AdultHomeScreen() {
         </div>
       )}
 
-      <SyncBadge />
+      {/* Without an account the panel below already says it, with the button to create one. */}
+      {status !== 'local-only' && <SyncBadge />}
 
       {status === 'local-only' && (
         <div className={`${adult.notice} ${adult.noticeInfo}`} role="note">
           <div className={adult.stack} style={{ gap: 6, flex: 1 }}>
-            <strong>Estás usando Numeria sin cuenta.</strong>
+            <strong>Estás usando Repasitos sin cuenta.</strong>
             <span>Los datos solo están en este dispositivo. Si creas una cuenta, puedes guardarlos y verlos desde otros dispositivos.</span>
           </div>
           {backendAvailable && (
@@ -88,64 +107,139 @@ export default function AdultHomeScreen() {
 
       {signedIn && <ClaimLocalPanel onDone={() => toast('Perfiles guardados en tu cuenta')} />}
 
-      <section className={adult.stack} aria-labelledby="children-title">
-        <div className={adult.cardHead}>
-          <h2 id="children-title" className={adult.subheading}>Perfiles</h2>
-          <Button onClick={() => navigate('/kids/new')}>Añadir perfil</Button>
-        </div>
-        {children.length === 0 ? (
-          <Card>
-            <p className={adult.lead}>Todavía no hay ningún perfil. Crea el primero para empezar la aventura.</p>
-          </Card>
-        ) : (
-          <Card>
-            <ul className={adult.list} aria-label="Perfiles">
-              {children.map((c) => (
-                <li key={c.id} className={s.childRow}>
-                  <CompanionArt species={c.companion.species} size={64} colorway={c.companion.colorway} equipped={c.companion.equipped} animated={false} />
-                  <div className={s.childInfo}>
-                    <span className={s.childName}>{c.nickname}</span>
-                    <span className={adult.muted}>
-                      {c.grade ? `${c.grade}.º de Primaria` : 'Curso sin elegir'} · Compañero: {c.companion.name}
-                    </span>
-                  </div>
-                  <Button variant="secondary" onClick={() => navigate(`/adult/child/${c.id}`)}>Ver informe</Button>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        )}
-      </section>
+      {children.length === 0 ? (
+        <section className={`${adult.card} ${adult.cardYellow}`} aria-label="Sin perfiles">
+          <p className={adult.lead}>Todavía no hay ningún perfil. Crea el primero para empezar la aventura.</p>
+          <div className={adult.actions}>
+            <Button onClick={() => navigate('/kids/new')}>Añadir perfil</Button>
+          </div>
+        </section>
+      ) : (
+        <div className={s.main}>
+          <div className={s.col}>
+            <section className={`${adult.card} ${adult.cardYellow} ${s.verdict}`} aria-labelledby="verdict-title">
+              {current && (
+                <div className={s.pic} aria-hidden>
+                  <CompanionArt species={current.companion.species} size={104} colorway={current.companion.colorway} equipped={current.companion.equipped} animated={false} />
+                </div>
+              )}
+              <div className={adult.stack} style={{ gap: 6, minWidth: 0 }}>
+                <span className={s.kicker}>
+                  {current?.nickname} · {current?.grade ? `${current.grade}.º de Primaria` : 'Curso sin elegir'} · Matemáticas
+                </span>
+                {summaryError && <p className={adult.error} role="alert">{summaryError}</p>}
+                {!summary && !summaryError && <p className={adult.muted} role="status">Preparando el resumen…</p>}
+                {reading && summary && (
+                  <>
+                    <h2 id="verdict-title" className={s.verdictTitle}>{reading.headline}</h2>
+                    <p className={adult.lead}>
+                      {summary.worldsCompleted} de {WORLDS_TOTAL} cristales conseguidos. {reading.support}
+                    </p>
+                  </>
+                )}
+              </div>
+            </section>
 
-      <section className={s.tiles} aria-label="Secciones">
-        {isSchool ? (
-          <Link to="/adult/school" className={s.tile}>
-            <TileIcon kind="class" />
-            <h3 className={s.tileTitle}>Clases y colegio</h3>
-            <p className={s.tileText}>Crea clases, comparte los códigos con las familias y asigna práctica para la semana.</p>
-            <span className={s.tileFoot}>Abrir clases →</span>
-          </Link>
-        ) : (
-          signedIn && (
-            <Link to="/adult/join" className={s.tile}>
-              <TileIcon kind="join" />
-              <h3 className={s.tileTitle}>Unirse a una clase</h3>
-              <p className={s.tileText}>Si el colegio de tu hijo o hija usa Numeria, introduce aquí el código de su clase.</p>
-              <span className={s.tileFoot}>Introducir código →</span>
-            </Link>
-          )
-        )}
-        <Link to="/adult/settings" className={s.tile}>
-          <TileIcon kind="settings" />
-          <h3 className={s.tileTitle}>Ajustes y cuenta</h3>
-          <p className={s.tileText}>Cuenta, miembros, sonido de cada perfil, cambiar el PIN y cerrar sesión.</p>
-          <span className={s.tileFoot}>Abrir ajustes →</span>
+            <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="tables-title">
+              <header className={s.tablesHead}>
+                <h2 id="tables-title" className={adult.subheading}>Tablas de multiplicar</h2>
+                <ul className={s.legend} aria-label="Leyenda de las tablas">
+                  {TABLE_LEGEND.map((st) => (
+                    <li key={st} className={s.legendItem}>
+                      <span className={clsx(s.swatch, s[st])} aria-hidden />
+                      {TABLE_STATE_LABEL[st]}
+                    </li>
+                  ))}
+                </ul>
+              </header>
+              {reading ? (
+                <ul className={s.tableGrid} aria-label="Estado de cada tabla">
+                  {reading.tables.map((t) => (
+                    <li
+                      key={t.n}
+                      className={clsx(s.tableCell, s[t.state])}
+                      aria-label={`Tabla del ${t.n}: ${TABLE_STATE_LABEL[t.state]}`}
+                    >
+                      <b>{t.n}</b>
+                      <small>{TABLE_STATE_LABEL[t.state]}</small>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className={adult.muted}>Las tablas aparecen cuando el niño empiece a jugar.</p>
+              )}
+            </section>
+
+            <section className={`${adult.card} ${adult.cardPink}`} aria-labelledby="error-title">
+              <h2 id="error-title" className={adult.subheading}>Error más frecuente</h2>
+              {topError ? (
+                <p className={adult.lead}>
+                  {describeError(topError.errorType as ErrorType)}: {topError.count} {topError.count === 1 ? 'vez' : 'veces'} en el último mes.
+                  Los errores de lectura de la letra no cuentan.
+                </p>
+              ) : (
+                <p className={adult.lead}>Todavía no hay errores que destacar en el último mes.</p>
+              )}
+              {current && (
+                <div className={adult.actions}>
+                  <Button variant="secondary" onClick={() => navigate(`/adult/child/${current.id}`)}>Ver el informe de {current.nickname}</Button>
+                </div>
+              )}
+            </section>
+          </div>
+
+          <section className={`${adult.card} ${s.kids}`} aria-labelledby="children-title">
+            <div className={adult.cardHead}>
+              <h2 id="children-title" className={adult.subheading}>Perfiles</h2>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/kids/new')}>+ Añadir perfil</Button>
+            </div>
+            <ul className={adult.list} aria-label="Perfiles">
+              {children.map((c) => {
+                const selected = c.id === currentId
+                return (
+                  <li key={c.id} className={clsx(s.childRow, selected && s.childRowOn)}>
+                    <button
+                      type="button"
+                      className={s.childPick}
+                      aria-pressed={selected}
+                      onClick={() => setPickedId(c.id)}
+                    >
+                      <CompanionArt species={c.companion.species} size={64} colorway={c.companion.colorway} equipped={c.companion.equipped} animated={false} />
+                      <span className={s.childInfo}>
+                        <span className={s.childName}>{c.nickname}</span>
+                        <span className={adult.muted}>
+                          {c.grade ? `${c.grade}.º de Primaria` : 'Curso sin elegir'} · Compañero: {c.companion.name}
+                        </span>
+                        {selected && summary && <span className={adult.muted}>Aciertos de la semana: {formatPercent(summary.accuracyLast7Days)}</span>}
+                      </span>
+                    </button>
+                    <Button variant="secondary" size="sm" onClick={() => navigate(`/adult/child/${c.id}`)}>Ver informe</Button>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        </div>
+      )}
+
+      <section className={s.links} aria-label="Secciones">
+        <Link to="/adult/settings" className={clsx(s.link, s.linkA)}>
+          <span className={s.linkTitle}>Ajustes y cuenta</span>
+          <span className={s.linkText}>Cuenta, cambiar el PIN y cerrar sesión.</span>
         </Link>
-        <Link to="/legal/privacidad" className={s.tile}>
-          <TileIcon kind="privacy" />
-          <h3 className={s.tileTitle}>Privacidad y datos</h3>
-          <p className={s.tileText}>Qué datos guardamos de los peques, para qué, y cómo exportarlos o borrarlos.</p>
-          <span className={s.tileFoot}>Leer la política →</span>
+        <Link to={isSchool || !signedIn ? '/adult/school' : '/adult/join'} className={clsx(s.link, s.linkB)}>
+          <span className={s.linkTitle}>Clases y colegio</span>
+          <span className={s.linkText}>
+            {isSchool
+              ? 'Crea clases, comparte sus códigos y asigna práctica para la semana.'
+              : signedIn
+                ? 'Si el colegio de tu hijo usa Repasitos, une aquí a tu hijo con el código de su clase.'
+                : 'Solo para colegios: códigos y práctica de la semana.'}
+          </span>
+        </Link>
+        <Link to="/legal/privacidad" className={clsx(s.link, s.linkC)}>
+          <span className={s.linkTitle}>Privacidad y datos</span>
+          <span className={s.linkText}>Qué datos guardamos de los niños, para qué, y cómo exportarlos o borrarlos.</span>
         </Link>
       </section>
     </AdultPage>

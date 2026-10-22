@@ -54,3 +54,11 @@
 @media (prefers-reduced-motion: reduce) {
   .key, .keyMuted, .keyGo { transition: none; }
 }
+
+/* Short tablets (iPad landscape, 820 px high): the whole pad, including «Seguir», must fit without scrolling. */
+@media (max-height: 900px) {
+  .pad { gap: var(--sp-2); }
+  .key, .keyMuted, .keyGo { min-height: 60px; }
+  .keyGo { min-height: 60px; }
+  .dots { min-height: 22px; }
+}

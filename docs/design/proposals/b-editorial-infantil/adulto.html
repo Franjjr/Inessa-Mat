@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasitos · B · Adulto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Dirección B · Editorial con toques infantiles · inicio del adulto (iPad 1180×820). Nombres de demo ficticios. */
+:root {
+  --bg: oklch(98.6% .004 260);
+  --surface: oklch(100% 0 0);
+  --fg: oklch(24% .04 275);
+  --muted: oklch(46% .03 275);
+  --rule: oklch(86% .01 275);
+  --accent: oklch(52% .21 292);
+  --accent-strong: oklch(45% .21 292);
+  --accent-tint: oklch(95% .03 292);
+  --warn: oklch(60% .17 45);
+  --font-serif: 'Young Serif', Georgia, serif;
+  --font-read: 'Andika', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-read); }
+body { overflow: hidden; }
+img { display: block; }
+.screen { width: 1180px; height: 820px; margin: 0 auto; padding: 30px 48px; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 20px; }
+.top { display: flex; justify-content: space-between; align-items: end; border-bottom: 1px solid var(--rule); padding-bottom: 14px; }
+.top h1 { font: 400 36px/1 var(--font-serif); margin: 0; }
+.top a { min-height: 52px; display: inline-flex; align-items: center; color: var(--accent-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+.body { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(0,1fr); gap: 40px; min-height: 0; }
+.col { display: grid; grid-template-rows: auto minmax(0,1fr); gap: 18px; min-height: 0; }
+.lead { font: 400 40px/1.1 var(--font-serif); margin: 0; }
+.lead em { font-style: normal; color: var(--accent); }
+.lead-meta { font-size: 17px; color: var(--muted); margin: 10px 0 0; }
+.eyebrow { font: 700 13px/1 var(--font-read); text-transform: uppercase; letter-spacing: .14em; color: var(--muted); margin: 0 0 10px; }
+.grid10 { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); border-top: 1px solid var(--fg); }
+.grid10 div { padding: 14px 12px 12px; border-bottom: 1px solid var(--rule); border-right: 1px solid var(--rule); display: grid; gap: 8px; min-height: 96px; align-content: start; }
+.grid10 div:nth-child(5n) { border-right: 0; }
+.grid10 b { font: 400 40px/1 var(--font-serif); }
+.grid10 small { font-size: 15px; color: var(--muted); }
+.grid10 .dom b { color: var(--accent); }
+.grid10 .dom small { color: var(--accent-strong); font-weight: 700; }
+.grid10 .rep { background: oklch(97% .025 60); }
+.grid10 .rep b { color: var(--fg); }
+.grid10 .rep small { color: oklch(40% .1 45); font-weight: 700; }
+.grid10 .none b { color: var(--muted); }
+.key { display: flex; gap: 18px; font-size: 16px; color: var(--muted); flex-wrap: wrap; }
+.key span::before { content: "■ "; }
+.key .k-dom::before { color: var(--accent); }
+.key .k-rep::before { color: var(--warn); }
+.key .k-cur::before { color: var(--fg); }
+.key .k-none::before { content: "□ "; }
+.kids { display: grid; align-content: start; }
+.kid { display: grid; grid-template-columns: 96px 1fr; gap: 18px; align-items: center; padding: 18px 0; border-top: 1px solid var(--rule); }
+.kid:last-of-type { border-bottom: 1px solid var(--rule); }
+.kid img { width: 96px; height: 96px; }
+.kid h3 { font: 400 28px/1 var(--font-serif); margin: 0 0 6px; }
+.kid p { margin: 0; color: var(--muted); font-size: 17px; }
+.kid .actions { margin-top: 10px; display: flex; gap: 14px; align-items: center; }
+.btn { min-height: 52px; padding: 0 22px; border-radius: 12px; font: 700 18px/1 var(--font-read); display: inline-flex; align-items: center; border: 1.5px solid var(--fg); color: var(--fg); background: transparent; text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.more { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-top: 1px solid var(--rule); }
+.more a { padding: 14px 12px 0 0; color: var(--fg); text-decoration: none; font: 400 21px/1.15 var(--font-serif); }
+.more a small { display: block; font: 400 15px/1.3 var(--font-read); color: var(--muted); margin-top: 6px; }
+.note { font-size: 15px; color: var(--muted); border-left: 2px solid var(--warn); padding-left: 12px; margin: 0; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <header class="top">
+    <h1>Zona de adultos</h1>
+    <a href="#">Volver</a>
+  </header>
+
+  <div class="body">
+    <div class="col">
+      <div>
+        <p class="eyebrow">Lía · 2.º de Primaria · Matemáticas</p>
+        <p class="lead">Domina la del 2 y el 5; <em>repasa la del 7</em>.</p>
+        <p class="lead-meta">Lía lleva 1 de 8 cristales. Hoy tiene 2 cosas para repasar.</p>
+      </div>
+      <div>
+        <p class="eyebrow">Tablas de multiplicar</p>
+        <div class="grid10" role="table" aria-label="Estado de cada tabla">
+          <div class="cur"><b>1</b><small>En curso</small></div>
+          <div class="dom"><b>2</b><small>Dominada</small></div>
+          <div class="cur"><b>3</b><small>En curso</small></div>
+          <div class="cur"><b>4</b><small>En curso</small></div>
+          <div class="dom"><b>5</b><small>Dominada</small></div>
+          <div class="cur"><b>6</b><small>En curso</small></div>
+          <div class="rep"><b>7</b><small>Repasar</small></div>
+          <div class="cur"><b>8</b><small>En curso</small></div>
+          <div class="none"><b>9</b><small>Sin practicar</small></div>
+          <div class="dom"><b>10</b><small>Dominada</small></div>
+        </div>
+        <div class="key" style="margin-top:12px">
+          <span class="k-dom">Dominada</span><span class="k-rep">Repasar</span><span class="k-cur">En curso</span><span class="k-none">Sin practicar</span>
+        </div>
+        <p class="note" style="margin-top:18px">[Dato del informe: errores más frecuentes, con el resultado real del niño.]</p>
+      </div>
+    </div>
+
+    <div class="col">
+      <section class="kids" aria-label="Perfiles">
+        <p class="eyebrow">Perfiles</p>
+        <div class="kid">
+          <img src="img/luna.svg" alt="">
+          <div>
+            <h3>Lía</h3>
+            <p>2.º · Compañera: Luna (gata)</p>
+            <div class="actions"><a class="btn primary" href="#">Ver informe completo</a></div>
+          </div>
+        </div>
+        <div class="kid">
+          <img src="img/lumi.svg" alt="">
+          <div>
+            <h3>Mateo</h3>
+            <p>3.º · Compañero: Pipo (panda)</p>
+            <div class="actions"><a class="btn" href="#">Ver informe</a></div>
+          </div>
+        </div>
+        <div style="padding-top:16px"><a class="btn" href="#">Añadir perfil</a></div>
+      </section>
+    </div>
+  </div>
+
+  <footer class="more">
+    <a href="#">Ajustes y cuenta<small>Cuenta, cambiar el PIN y cerrar sesión.</small></a>
+    <a href="#">Clases y colegio<small>Solo para colegios: códigos y práctica de la semana.</small></a>
+    <a href="#">Privacidad y datos<small>Qué datos guardamos, exportar o borrar.</small></a>
+  </footer>
+</div>
+</body>
+</html>

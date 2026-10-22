@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasitos · Tres direcciones visuales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Young+Serif&family=Baloo+2:wght@700;800&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Índice de propuestas: tres direcciones lado a lado. Neutro (blanco y gris cálido sin beige) para no competir con las maquetas. */
+:root { --bg: oklch(98.5% .003 250); --ink: oklch(24% .03 260); --muted: oklch(46% .02 260); --rule: oklch(88% .01 260); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Andika', system-ui, sans-serif; font-size: 17px; line-height: 1.55; }
+body { overflow-x: hidden; }
+.wrap { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 40px 0 60px; }
+header h1 { font: 600 38px/1.1 'Fredoka', system-ui, sans-serif; margin: 0 0 10px; }
+header p { margin: 0; color: var(--muted); max-width: 46em; font-size: 18px; }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 22px; margin-top: 32px; }
+.dir { background: #fff; border: 1px solid var(--rule); border-radius: 14px; overflow: hidden; display: grid; grid-template-rows: auto auto 1fr auto; }
+.dir > a.thumb { display: block; border-bottom: 1px solid var(--rule); background: #f1f1f4; }
+.dir img { display: block; width: 100%; aspect-ratio: 1180 / 820; object-fit: cover; object-position: top left; }
+.body { padding: 20px 22px 0; display: grid; gap: 10px; }
+.letter { font: 600 14px/1 'Fredoka', system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.dir h2 { font: 600 26px/1.1 'Fredoka', system-ui, sans-serif; margin: 0; }
+.dir .idea { margin: 0; font-size: 17px; }
+.sw { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.sw span { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); border: 1px solid var(--rule); border-radius: 999px; padding: 3px 9px 3px 4px; }
+.sw i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.12); display: inline-block; }
+.type { font-size: 15px; color: var(--muted); margin: 0; }
+.links { padding: 18px 22px 22px; display: grid; gap: 8px; }
+.links a { display: flex; justify-content: space-between; align-items: center; min-height: 48px; padding: 0 14px; border: 1px solid var(--rule); border-radius: 10px; color: var(--ink); text-decoration: none; font-weight: 700; }
+.links a:hover { background: #f5f5f8; }
+.links a:focus-visible { outline: 3px solid oklch(52% .2 260); outline-offset: 2px; }
+.links a span { color: var(--muted); font-weight: 400; font-size: 14px; }
+@media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .wrap { width: calc(100% - 32px); } header h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Repasitos: tres direcciones visuales</h1>
+    <p>Cada dirección tiene una pantalla pública (inicio, con capturas reales del juego), otra para el niño y otra para el adulto, en iPad 1180×820. La pantalla pública también se ha comprobado a 390 px. Las maquetas son estáticas y están en español con contenido real del proyecto.</p>
+  </header>
+
+  <div class="grid">
+    <article class="dir">
+      <a class="thumb" href="a-cuento-ilustrado/landing.html"><img src="a-cuento-ilustrado/img/miniatura-inicio.png" alt="Miniatura de la pantalla pública, dirección A"></a>
+      <div class="body">
+        <span class="letter">A · Cuento ilustrado</span>
+        <h2>Cuento ilustrado</h2>
+        <p class="idea">Evolución de la marca actual: arcos de cuento, Lumi como guía y el violeta de siempre, con el ritmo de un libro para leer despacio.</p>
+        <div class="sw">
+          <span><i style="background:oklch(97.6% .012 300)"></i>fondo</span>
+          <span><i style="background:oklch(52% .22 293)"></i>acento</span>
+          <span><i style="background:oklch(26% .06 292)"></i>texto</span>
+          <span><i style="background:oklch(84% .14 84)"></i>oro</span>
+        </div>
+        <p class="type">Titulares: Fredoka · Texto: Andika</p>
+      </div>
+      <nav class="links" aria-label="Maquetas de la dirección A">
+        <a href="a-cuento-ilustrado/landing.html">Pantalla pública <span>landing</span></a>
+        <a href="a-cuento-ilustrado/nino.html">Inicio del niño <span>iPad</span></a>
+        <a href="a-cuento-ilustrado/adulto.html">Inicio del adulto <span>iPad</span></a>
+      </nav>
+    </article>
+
+    <article class="dir">
+      <a class="thumb" href="b-editorial-infantil/landing.html"><img src="b-editorial-infantil/img/miniatura-inicio.png" alt="Miniatura de la pantalla pública, dirección B"></a>
+      <div class="body">
+        <span class="letter">B · Editorial infantil</span>
+        <h2>Editorial con toques infantiles</h2>
+        <p class="idea">Titulares en serif, filetes finos y numeración de capítulo; lo infantil queda en los personajes y en el color de un solo acento.</p>
+        <div class="sw">
+          <span><i style="background:oklch(98.6% .004 260)"></i>fondo</span>
+          <span><i style="background:oklch(52% .21 292)"></i>acento</span>
+          <span><i style="background:oklch(24% .04 275)"></i>texto</span>
+          <span><i style="background:oklch(86% .01 275)"></i>filete</span>
+        </div>
+        <p class="type">Titulares: Young Serif · Texto: Andika</p>
+      </div>
+      <nav class="links" aria-label="Maquetas de la dirección B">
+        <a href="b-editorial-infantil/landing.html">Pantalla pública <span>landing</span></a>
+        <a href="b-editorial-infantil/nino.html">Inicio del niño <span>iPad</span></a>
+        <a href="b-editorial-infantil/adulto.html">Inicio del adulto <span>iPad</span></a>
+      </nav>
+    </article>
+
+    <article class="dir">
+      <a class="thumb" href="c-ludica-colorista/landing.html"><img src="c-ludica-colorista/img/miniatura-inicio.png" alt="Miniatura de la pantalla pública, dirección C"></a>
+      <div class="body">
+        <span class="letter">C · Lúdica y colorista</span>
+        <h2>Lúdica y colorista</h2>
+        <p class="idea">Contornos gruesos tipo pegatina, los colores de cada mundo y titulares redondos para jugar; el color separa paneles y estados.</p>
+        <div class="sw">
+          <span><i style="background:oklch(96.5% .03 300)"></i>fondo</span>
+          <span><i style="background:oklch(54% .23 293)"></i>violeta</span>
+          <span><i style="background:#facc15"></i>amarillo</span>
+          <span><i style="background:#15803d"></i>verde</span>
+        </div>
+        <p class="type">Titulares: Baloo 2 · Texto: Andika</p>
+      </div>
+      <nav class="links" aria-label="Maquetas de la dirección C">
+        <a href="c-ludica-colorista/landing.html">Pantalla pública <span>landing</span></a>
+        <a href="c-ludica-colorista/nino.html">Inicio del niño <span>iPad</span></a>
+        <a href="c-ludica-colorista/adulto.html">Inicio del adulto <span>iPad</span></a>
+      </nav>
+    </article>
+  </div>
+</main>
+</body>
+</html>

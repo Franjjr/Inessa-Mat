@@ -131,7 +131,7 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
       )}
 
       <div className={s.answer}>
-        <span className={s.answerLabel}>{host.t('Total:')}</span>
+        <span className={s.answerLabel} aria-hidden>{`${rows} × ${cols} =`}</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -142,7 +142,7 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
           maxDigits={3}
           size="lg"
           status={status}
-          ariaLabel="Total de objetos"
+          ariaLabel={`Resultado de ${rows} × ${cols}`}
           placeholder="?"
         />
       </div>

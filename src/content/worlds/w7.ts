@@ -11,7 +11,7 @@ export const w7 = world({
   guardian: 'dragon',
   crystalName: 'naranja',
   predicament: 'cage',
-  hook: '¡{pet} se ha quedado {pg:encerrada|encerrado|encerrado} en un farolillo!',
+  hook: '¡{pet} se ha quedado {pg:encerrada|encerrado} en un farolillo!',
   skillsSummary: 'Multiplicar 2 cifras × 1 cifra: por trocitos, en columna y con llevadas',
   path: [[0.12, 0.86], [0.14, 0.58], [0.2, 0.28], [0.38, 0.18], [0.46, 0.46], [0.5, 0.78], [0.68, 0.86], [0.78, 0.58], [0.8, 0.3], [0.86, 0.13]],
   nodes: [

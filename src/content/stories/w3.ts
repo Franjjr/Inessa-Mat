@@ -9,10 +9,10 @@ export const w3Arrival = story('w3-arrival', 'Las mariquitas luminosas', [
   ]),
   scene('cave', [cast('lumi', 'worried', 'left'), cast('companion', 'scared', 'center', 'stuck')], [
     narrate('La mariquita se mete en un túnel diminuto. {pet} la sigue y… ¡crac!', 'pop'),
-    say('companion', '¡Me he quedado {pg:atascada|atascado|atascado}! ¡Solo me asoma la colita!', 'scared'),
+    say('companion', '¡Me he quedado {pg:atascada|atascado}! ¡Solo me asoma la colita!', 'scared'),
   ]),
   scene('cave', [cast('lumi', 'talk', 'left'), cast('companion', 'worried', 'center', 'stuck'), cast('ladybug', 'talk', 'right')], [
-    say('ladybug', '¡{cg:Bienvenida|Bienvenido|Te doy la bienvenida}, {child}! Soy la Reina Mariquita.', 'happy'),
+    say('ladybug', '¡{cg:Bienvenida|Bienvenido}, {child}! Soy la Reina Mariquita.', 'happy'),
     say('ladybug', 'Esta noche es la Gran Fiesta del Baile. ¡Pero Borrón nos ha borrado la tabla del 6!', 'worried'),
     say('ladybug', 'Y sin la tabla del 6 no sabemos cuántas patas habrá en la pista.', 'sad'),
     narrate('A {child} la tabla del 6 le parece difícil. Pero Lumi le guiña un ojo.'),
@@ -28,7 +28,7 @@ export const w3Mid = story('w3-mid', '¡Se apagan las luces!', [
     say('borron', '¡Ji, ji! ¡He apagado las mariquitas! ¡A ver cómo bailáis ahora!', 'happy'),
     say('lumi', 'Cada resultado de la tabla del 6 enciende una mariquita. ¡Vamos, {child}!', 'talk'),
     narrate('—Seis por siete, cuarenta y dos —dice {child}. ¡Y la cueva vuelve a brillar!', 'sparkle'),
-    say('borron', '¿Otra vez? ¡{cg:Esta niña|Este niño|Aquí alguien} sabe demasiado!', 'surprised', 'whoosh'),
+    say('borron', '¿Otra vez? ¡{cg:Esta niña|Este niño} sabe demasiado!', 'surprised', 'whoosh'),
     say('companion', '¡El túnel se ensancha! ¡Ya puedo mover una pata!', 'happy'),
   ]),
 ])

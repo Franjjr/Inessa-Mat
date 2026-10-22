@@ -9,6 +9,7 @@ import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
 import { averageGrid, countFactStates } from '../shared/heatmap'
+import { hardestTable, struggleCount } from '../shared/reading'
 import { errorMessage } from '../shared/messages'
 import { formatDate, formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
@@ -26,6 +27,7 @@ export default function ClassScreen() {
   const [removing, setRemoving] = useState<{ id: string; nickname: string } | null>(null)
   const [busy, setBusy] = useState(false)
   const [removeError, setRemoveError] = useState<string | null>(null)
+  const [order, setOrder] = useState<'need' | 'arrival'>('need')
 
   const [title, setTitle] = useState('')
   const [preset, setPreset] = useState(ASSIGNMENT_PRESETS[0]!.id)
@@ -73,6 +75,18 @@ export default function ClassScreen() {
   const { classRoom: room, children } = overview
   const classGrid = averageGrid(children.map((c) => c.factGrid))
   const classCounts = countFactStates(classGrid)
+  const notThisWeek = children.filter((c) => c.minutesLast7Days === 0).length
+  const hard = hardestTable(classGrid)
+  const synthesis = [
+    notThisWeek === 0
+      ? 'Todos han practicado esta semana.'
+      : `Esta semana, ${plural(notThisWeek, 'alumno', 'alumnos')} ${notThisWeek === 1 ? 'no ha' : 'no han'} practicado.`,
+    hard ? `La tabla del ${hard} es la que más les cuesta.` : 'Ahora mismo no hay tablas para repasar en la clase.',
+  ].join(' ')
+  // Pupils who need the most review come first; "arrival" keeps the order the server returns.
+  const pupils = order === 'need'
+    ? [...children].sort((x, y) => struggleCount(y.factGrid) - struggleCount(x.factGrid) || x.minutesLast7Days - y.minutesLast7Days)
+    : children
 
   const remove = async () => {
     if (!removing) return
@@ -137,7 +151,14 @@ export default function ClassScreen() {
         </Button>
       </header>
 
-      <section className={adult.card} aria-labelledby="class-heat-title">
+      {children.length > 0 && (
+        <section className={`${adult.card} ${adult.cardYellow}`} aria-labelledby="class-summary-title">
+          <h2 id="class-summary-title" className={adult.subheading}>Esta semana en la clase</h2>
+          <p className={adult.lead}>{synthesis}</p>
+        </section>
+      )}
+
+      <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="class-heat-title">
         <div className={adult.stack} style={{ gap: 4 }}>
           <h2 id="class-heat-title" className={adult.subheading}>Tablas de la clase</h2>
           <p className={adult.muted}>
@@ -148,8 +169,8 @@ export default function ClassScreen() {
           <p className={adult.lead}>Todavía no hay alumnos en esta clase. Comparte el código {room.joinCode} con las familias.</p>
         ) : (
           <>
-            <FactHeatmap grid={classGrid} label={`Mapa de las tablas de la clase ${room.name}`} />
             <FactLegend />
+            <FactHeatmap triangle grid={classGrid} label={`Mapa de las tablas de la clase ${room.name}`} />
             <p className={adult.hint}>
               Dominadas en la clase: {classCounts.mastered} de 55 · Para repasar: {classCounts.struggling} · Sin practicar: {classCounts.unseen}
             </p>
@@ -158,12 +179,19 @@ export default function ClassScreen() {
       </section>
 
       <section className={adult.card} aria-labelledby="pupils-title">
-        <h2 id="pupils-title" className={adult.subheading}>Alumnos</h2>
+        <div className={adult.cardHead}>
+          <h2 id="pupils-title" className={adult.subheading}>Alumnos</h2>
+          {children.length > 1 && (
+            <Button variant="ghost" size="sm" onClick={() => setOrder((o) => (o === 'need' ? 'arrival' : 'need'))}>
+              {order === 'need' ? 'Ver por orden de llegada' : 'Ordenar por necesidad de repaso'}
+            </Button>
+          )}
+        </div>
         {children.length === 0 ? (
-          <p className={adult.muted}>Cuando una familia una a su hijo o hija con el código, aparecerá aquí.</p>
+          <p className={adult.muted}>Cuando una familia una a su hijo con el código, aparecerá aquí.</p>
         ) : (
           <ul className={s.childList} aria-label="Alumnos de la clase">
-            {children.map((c) => {
+            {pupils.map((c) => {
               const mastered = countFactStates(c.factGrid).mastered
               return (
                 <li key={c.childId} className={s.childRow}>
@@ -177,7 +205,7 @@ export default function ClassScreen() {
                     </div>
                   </div>
                   <div className={s.mini}>
-                    <FactHeatmap compact grid={c.factGrid} label={`Tablas de ${c.nickname}`} />
+                    <FactHeatmap compact triangle grid={c.factGrid} label={`Tablas de ${c.nickname}`} />
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => { setRemoveError(null); setRemoving({ id: c.childId, nickname: c.nickname }) }}>
                     Quitar

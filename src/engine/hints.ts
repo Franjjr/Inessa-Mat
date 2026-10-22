@@ -145,7 +145,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       return [
         hint(1, l1, 'none'),
         hint(2, 'Se juntan dos cantidades: hay que sumar.', 'place-value', params),
-        hint(3, `Escribe la operación en columna: ${a} + ${b} = ?`, 'carry', { ...params, column: Math.max(0, first - 1), carry: first > 0 ? carries[first] : 0 }),
+        hint(3, `Piénsalo en columna: ${a} + ${b} = ?`, 'carry', { ...params, column: Math.max(0, first - 1), carry: first > 0 ? carries[first] : 0 }),
       ]
     }
     case 'sub': {
@@ -153,7 +153,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       return [
         hint(1, l1, 'none'),
         hint(2, 'Se quita una cantidad (o se comparan dos): hay que restar.', 'borrow', params),
-        hint(3, `Escribe la operación en columna: ${a} − ${b} = ?`, 'borrow', params),
+        hint(3, `Piénsalo en columna: ${a} − ${b} = ?`, 'borrow', params),
       ]
     }
     case 'mul': {
@@ -163,13 +163,13 @@ function wordHints(ex: WordProblemExercise): Hint[] {
         return [
           hint(1, l1, 'none'),
           hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar. Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
-          hint(3, `Escribe la operación con el ${b} arriba: ${b} × ${a} = ?`, 'carry', { ...params, column: 1, carry: Math.floor(((b % 10) * a) / 10) }),
+          hint(3, `Piénsalo con el ${b} arriba: ${b} × ${a} = ?`, 'carry', { ...params, column: 1, carry: Math.floor(((b % 10) * a) / 10) }),
         ]
       }
       return [
         hint(1, l1, 'none'),
         hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar.`, 'groups', { groups: a, perGroup: b }),
-        hint(3, `Escribe la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b }),
+        hint(3, `Piensa la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b }),
       ]
     }
     case 'div': {
@@ -177,7 +177,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       return [
         hint(1, l1, 'none'),
         hint(2, `Hay que repartir ${a} en partes iguales: hay que dividir entre ${b}.`, 'share', params),
-        hint(3, `Escribe la operación: ${a} ÷ ${b} = ?`, 'share', params),
+        hint(3, `Piensa la operación: ${a} ÷ ${b} = ?`, 'share', params),
       ]
     }
   }

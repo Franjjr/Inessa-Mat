@@ -4,7 +4,7 @@ import type { GrammaticalGender, ID, ISODate } from './common'
 export type CompanionSpecies =
   | 'cat'      // gatito / gatita
   | 'dog'      // perrito / perrita
-  | 'fox'      // zorrito (always masculine noun; use the pet name + "tu amigo/amiga" for gender)
+  | 'fox'      // zorrito (always masculine noun; use the pet name + {pg:…} for gender)
   | 'bunny'    // conejito / conejita
   | 'panda'    // osito panda / osita panda
   | 'penguin'  // pingüino / pingüina
@@ -28,6 +28,17 @@ export interface Companion {
 
 export type AnswerInputPreference = 'auto' | 'pen' | 'keyboard' | 'keypad'
 
+/** School subjects. Only 'math' has content today; the others are announced as «Próximamente». */
+export type SubjectId = 'math' | 'language' | 'english' | 'science' | 'history'
+
+export const SUBJECTS: { id: SubjectId; name: string; available: boolean }[] = [
+  { id: 'math', name: 'Matemáticas', available: true },
+  { id: 'language', name: 'Lengua', available: false },
+  { id: 'english', name: 'Inglés', available: false },
+  { id: 'science', name: 'Ciencias', available: false },
+  { id: 'history', name: 'Historia', available: false },
+]
+
 export interface ChildSettings {
   /** 'auto' = pen/touch writing on tablets, keyboard on computers. */
   inputPreference: AnswerInputPreference
@@ -42,6 +53,8 @@ export interface ChildSettings {
   handedness: 'right' | 'left'
   /** Larger writing cells for younger children / finger writing. */
   bigCells: boolean
+  /** Subjects the adult has enabled for this child (adult area). The child only sees these. */
+  subjects: SubjectId[]
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
@@ -53,6 +66,7 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   timedActivities: true,
   handedness: 'right',
   bigCells: false,
+  subjects: ['math'],
 }
 
 export interface ChildProfile {

@@ -11,7 +11,7 @@ export const w4 = world({
   guardian: 'polarbear',
   crystalName: 'celeste',
   predicament: 'ice',
-  hook: '¡{pet} está {pg:congelada|congelado|congelado} en un bloque de hielo!',
+  hook: '¡{pet} está {pg:congelada|congelado} en un bloque de hielo!',
   skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, ceros y prueba de la resta',
   path: [[0.12, 0.86], [0.42, 0.88], [0.76, 0.8], [0.86, 0.62], [0.62, 0.54], [0.32, 0.56], [0.15, 0.4], [0.34, 0.26], [0.62, 0.3], [0.56, 0.12]],
   nodes: [

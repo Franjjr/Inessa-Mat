@@ -7,9 +7,9 @@ import type { CompanionSpecies } from './child'
  *   {pet}              companion's name                       → "Bigotes"
  *   {pet_species}      species noun with gender               → "gatita"
  *   {el_pet_species}   with article                           → "la gatita"
- *   {cg:F|M|N}         pick by CHILD gender (f|m|n)           → "{cg:valiente|valiente|valiente}", "{cg:Querida|Querido|Hola}"
- *   {pg:F|M|N}         pick by COMPANION gender               → "tu {pg:amiga|amigo|amigo}"
- * N (neutral) must read naturally without gender, e.g. "{cg:lista|listo|una crack}".
+ *   {cg:F|M}           pick by CHILD gender (f|m)             → "{cg:valiente|valiente}", "{cg:Querida|Querido}"
+ *   {pg:F|M}           pick by COMPANION gender               → "tu {pg:amiga|amigo}"
+ * One option is used for every gender, e.g. "{cg:valiente}".
  */
 export type TemplateString = string
 
@@ -183,9 +183,9 @@ export interface SeasonDef {
 
 export interface CompanionDef {
   species: CompanionSpecies
-  /** Noun forms: [feminine, masculine, neutral-fallback]. e.g. ['gatita','gatito','gatito'] */
-  noun: [string, string, string]
-  articleNoun: [string, string, string] // ['la gatita','el gatito','el gatito']
+  /** Noun forms: [feminine, masculine]. e.g. ['gatita','gatito'] */
+  noun: [string, string]
+  articleNoun: [string, string] // ['la gatita','el gatito']
   personality: string     // child-facing: "Curioso y juguetón"
   suggestedNames: string[]
   colorways: string[]
