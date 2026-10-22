@@ -140,11 +140,15 @@ function PolygonBody({ f, corners }: { f: PolygonFigure; corners?: { marked: num
         const a = pts[i]
         const b = pts[(i + 1) % pts.length]
         const mid: Pt = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
-        const dx = mid[0] - centroid[0]
-        const dy = mid[1] - centroid[1]
-        const len = Math.hypot(dx, dy) || 1
-        const lx = mid[0] + (dx / len) * 22
-        const ly = mid[1] + (dy / len) * 22
+        // Outside the figure, square to the side (an L-shape has sides whose outside faces its own centre), and far
+        // enough for the text not to touch the side: half its width on upright sides, half its height on flat ones.
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+        let nx = (b[1] - a[1]) / len
+        let ny = -(b[0] - a[0]) / len
+        if (inside(pts, [mid[0] + nx * 2, mid[1] + ny * 2])) { nx = -nx; ny = -ny }
+        const gap = 6 + Math.abs(nx) * text.length * 4.5 + Math.abs(ny) * 8
+        const lx = mid[0] + nx * gap
+        const ly = mid[1] + ny * gap
         return (
           <text key={i} x={r1(lx)} y={r1(ly)} textAnchor="middle" dominantBaseline="middle" className={s.label}>{text}</text>
         )
@@ -164,6 +168,17 @@ function PolygonBody({ f, corners }: { f: PolygonFigure; corners?: { marked: num
       })}
     </g>
   )
+}
+
+/** Ray casting: is the point inside the polygon? */
+function inside(pts: readonly Pt[], [x, y]: Pt): boolean {
+  let hit = false
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const [xi, yi] = pts[i]
+    const [xj, yj] = pts[j]
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) hit = !hit
+  }
+  return hit
 }
 
 /** A small square in the corner, the way a right angle is drawn on a mark (used only when the child has tapped it). */

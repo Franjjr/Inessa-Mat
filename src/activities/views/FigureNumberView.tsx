@@ -42,6 +42,8 @@ function NumberRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Perimet
         />
       </div>
       <div className={s.inputRow}>
+        {/* The unit goes before the box: after it would sit beside the pad's own ✓ button. */}
+        {isPerimeter && <span className={s.unitLabel}>En {ex.unit === 'm' ? 'metros' : ex.unit === 'cm' ? 'centímetros' : ex.unit}:</span>}
         <NumberInput
           value={value}
           onChange={setValue}
@@ -53,7 +55,6 @@ function NumberRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Perimet
           placeholder="?"
           autoFocus
         />
-        {isPerimeter && <span className={s.bigText}>{ex.unit === 'm' ? 'metros' : ex.unit === 'cm' ? 'cm' : ex.unit}</span>}
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
     </section>

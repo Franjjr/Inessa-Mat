@@ -146,6 +146,14 @@
   flex-wrap: wrap;
 }
 
+.unitLabel {
+  align-self: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
 .bigText {
   font-family: var(--font-display);
   font-size: var(--fs-num);
