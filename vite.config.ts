@@ -12,7 +12,7 @@ function ttsDevApi(): Plugin {
     configureServer(server) {
       const env = loadEnv(server.config.mode, process.cwd(), 'AZURE_')
       server.middlewares.use('/api/tts', async (req, res) => {
-        const { default: handler } = await server.ssrLoadModule('/api/tts.ts')
+        const { handler } = await server.ssrLoadModule('/api/tts.ts')
         const headers = new Headers()
         for (const [k, v] of Object.entries(req.headers)) if (typeof v === 'string') headers.set(k, v)
         const response: Response = await handler(new Request(`http://localhost${req.originalUrl ?? req.url}`, { headers }), env)

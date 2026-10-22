@@ -1,8 +1,7 @@
-/* Vercel Edge Function: GET /api/tts?v=<character>&t=<text> → MP3 spoken by an Azure neural voice.
+/* Vercel Function (Node runtime): GET /api/tts?v=<character>&t=<text> → MP3 spoken by an Azure neural voice.
    The Azure key stays on the server (AZURE_SPEECH_KEY / AZURE_SPEECH_REGION); the app falls back to the device voice
    whenever this fails. Responses are immutable for a given text and character, so the CDN and the service worker
    cache them and each sentence is synthesised once. The F0 (free) Azure tier never bills: at its quota it refuses. */
-export const config = { runtime: 'edge' }
 
 type Character = 'lumi' | 'companion' | 'narrator' | 'guardian'
 
@@ -54,7 +53,13 @@ export function ssml(text: string, character: Character): string {
     `<voice name="${v.name}">${spoken}</voice></speak>`
 }
 
-export default async function handler(req: Request, env: Env = process.env as Env): Promise<Response> {
+/** Vercel entry point. Reads the variables by name so the platform always provides them at run time. */
+export function GET(req: Request): Promise<Response> {
+  return handler(req, { AZURE_SPEECH_KEY: process.env.AZURE_SPEECH_KEY, AZURE_SPEECH_REGION: process.env.AZURE_SPEECH_REGION })
+}
+
+/** Shared by the Vercel entry point, the Vite dev server and the tests. */
+export async function handler(req: Request, env: Env): Promise<Response> {
   if (req.method !== 'GET') return fail(405, 'Method not allowed')
   if (!allowedCaller(req)) return fail(403, 'Forbidden')
   const key = env.AZURE_SPEECH_KEY

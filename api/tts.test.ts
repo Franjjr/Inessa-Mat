@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import handler, { ssml } from './tts.ts'
+import { handler, ssml } from './tts.ts'
 
 const env = { AZURE_SPEECH_KEY: 'secret-key', AZURE_SPEECH_REGION: 'westeurope' }
 const call = (query: string, headers: Record<string, string> = { referer: 'https://repasitos.es/play' }, e: Record<string, string | undefined> = env) =>
