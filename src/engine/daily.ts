@@ -14,6 +14,8 @@ import { statementClock } from './clock'
 import { generate } from './generate'
 import { hintsFor } from './hints'
 import { fmt, numberWords } from './numeric'
+import { moneyStatement } from './money'
+import { measureStatement } from './measure'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -42,6 +44,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'clock-read': 25, 'clock-set': 60, 'time-convert': 30, 'time-duration': 60, calendar: 25,
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
+  money: 40, measure: 35,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -116,6 +119,8 @@ export function statementOf(ex: Exercise): string {
     case 'perimeter': return ex.text ?? 'Suma los lados para hallar el contorno'
     case 'shape-count': return ex.ask === 'sides' ? '¿Cuántos lados tiene?' : '¿Cuántas esquinas tiene?'
     case 'error-hunt': return `${ex.top} ${ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'} ${ex.bottom} = ${ex.shown}`
+    case 'money': return moneyStatement(ex)
+    case 'measure': return measureStatement(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`

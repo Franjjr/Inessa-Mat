@@ -31,6 +31,12 @@ import type { ID, InputMode } from './common'
  *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
  *   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
  *                                    geometry (3.º, block E): polygons, lines, angles, circle, solids, perimeter
+ *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
+ *   measure:unit:length|mass|capacity                 choose the unit of a real object
+ *   measure:convert:length|mass|capacity              simple conversions (1 m = 100 cm, medio kilo = 500 g)
+ *   measure:ruler                                     read a measure on an on-screen ruler (start not always 0)
+ *   measure:word                                      add two measures (mixed units) in a word problem
+ *   measure:estimate                                  ¿es razonable? a claimed measure
  */
 export type SkillKey = string
 
@@ -71,6 +77,8 @@ export type ExerciseKind =
   | 'angle-tap'       // tap the corners of a figure that are right angles (geo:angle:tap)
   | 'perimeter'       // perimeter of a figure with its side lengths, or a garden problem (geo:perimeter)
   | 'shape-count'     // how many sides (or corners) a polygon has (geo:poly:sides)
+  | 'money'           // dinero: recognise, pay, change, add prices, compare, convert (money:*)
+  | 'measure'         // medida: unit, conversion, ruler, add, estimate (measure:*)
 
 interface ExerciseBase {
   id: ID
@@ -357,6 +365,80 @@ export interface ShapeCountExercise extends ExerciseBase {
   kind: 'shape-count'; figure: PolygonFigure; ask: 'sides' | 'vertices'; answer: number
 }
 
+// ---------------------------------------------------------------- dinero and medida (3.º, block C)
+
+/** Money mode: recognise a coin or note, pay exactly, give the change, add prices, compare, convert. */
+export type MoneyMode = 'recognise' | 'pay' | 'change' | 'add' | 'compare' | 'convert'
+/** A priced thing of a story or a shop card. price in céntimos. */
+export interface MoneyItem { name: string; emoji: string; price: number }
+
+/** Amounts are céntimos (integers): 3,40 € = 340. The views show them with a decimal comma. */
+export interface MoneyRecogniseExercise extends ExerciseBase {
+  kind: 'money'; mode: 'recognise'; piece: number; options: number[]; answer: number
+}
+export interface MoneyPayExercise extends ExerciseBase { kind: 'money'; mode: 'pay'; price: number; answer: number }
+export interface MoneyChangeExercise extends ExerciseBase {
+  kind: 'money'; mode: 'change'; price: number; paid: number; text: string
+  /** The change in céntimos (paid − price). */
+  answer: number
+}
+export interface MoneyAddExercise extends ExerciseBase {
+  kind: 'money'; mode: 'add'; items: MoneyItem[]; story: boolean; text: string
+  /** Sum in céntimos. */
+  answer: number
+}
+export interface MoneyCompareExercise extends ExerciseBase {
+  kind: 'money'; mode: 'compare'; items: MoneyItem[]; question: 'more' | 'less'
+  /** Name of the item that is the answer. */
+  answer: string
+}
+export interface MoneyConvertExercise extends ExerciseBase {
+  kind: 'money'; mode: 'convert'; direction: 'to-cents' | 'to-euros'; amount: number
+  /** to-cents: céntimos. to-euros: [euros, céntimos]. */
+  answer: number | number[]
+}
+
+/** Measure mode: unit of an object, simple conversion, ruler reading, adding measures, estimate. */
+export type MeasureMode = 'unit' | 'convert' | 'ruler' | 'add' | 'estimate'
+export type MeasureDimension = 'length' | 'mass' | 'capacity'
+
+export interface MeasureUnitExercise extends ExerciseBase {
+  kind: 'measure'; mode: 'unit'; dimension: MeasureDimension; object: string; emoji: string
+  /** The three (or two) readings of the same number in different units; one unit is the right one. */
+  options: { value: number; unit: string }[]
+  /** The unit that fits the object. */
+  answer: string
+}
+export interface MeasureConvertExercise extends ExerciseBase {
+  kind: 'measure'; mode: 'convert'; dimension: MeasureDimension
+  /** The given amount, written as the child reads it: '1 m', '300 cm', 'medio kilo', 'un cuarto de litro'. */
+  given: string
+  /** Unit of the blank (the answer). */
+  unit: string
+  /** Number of small units in one big unit (100, 1 000) and the fraction of the big unit given, if any. */
+  factor: number
+  fraction: 'half' | 'quarter' | null
+  /** true when the blank is the big unit (300 cm = ___ m). */
+  toBig: boolean
+  answer: number
+}
+export interface MeasureRulerExercise extends ExerciseBase {
+  kind: 'measure'; mode: 'ruler'; start: number; end: number; max: number
+  /** Length in cm: end − start. */
+  answer: number
+}
+export interface MeasureAddExercise extends ExerciseBase {
+  kind: 'measure'; mode: 'add'; dimension: MeasureDimension; text: string
+  /** Unit of the answer (the smaller one). */
+  unit: string
+  answer: number
+}
+export interface MeasureEstimateExercise extends ExerciseBase {
+  kind: 'measure'; mode: 'estimate'; object: string; emoji: string; claim: string
+  /** true when the claim is reasonable. */
+  answer: boolean
+}
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
@@ -366,6 +448,8 @@ export type Exercise =
   | ClockReadExercise | ClockSetExercise | TimeConvertExercise | TimeDurationExercise | CalendarExercise
   | EquationExercise | FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise
   | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
+  | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
+  | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -389,6 +473,8 @@ export type Answer =
   | { type: 'shade'; chosen: number[] }                                    // fraction-shade: the parts the child coloured
   | { type: 'fraction'; numerator: number | null; denominator: number | null } // fraction-read: written over and under
   | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
+  | { type: 'option'; value: string | null }                               // dinero and medida: the option tapped
+  | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per

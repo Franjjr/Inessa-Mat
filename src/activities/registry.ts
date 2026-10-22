@@ -74,4 +74,7 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'angle-tap': lazy(() => import('./views/AngleTapView')),
   perimeter: lazy(() => import('./views/FigureNumberView')),
   'shape-count': lazy(() => import('./views/FigureNumberView')),
+  // ---- dinero and medida (3.º, block C) — src/activities/views/<name>.tsx
+  money: lazy(() => import('./views/MoneyView')),
+  measure: lazy(() => import('./views/MeasureView')),
 }

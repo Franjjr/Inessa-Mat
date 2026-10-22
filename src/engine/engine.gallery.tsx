@@ -49,6 +49,8 @@ function showAnswer(a: Answer): string {
     case 'shade': return `${a.chosen.length} partes`
     case 'fraction': return `${a.numerator ?? '—'}/${a.denominator ?? '—'}`
     case 'marks': return a.marked.length ? a.marked.map((i) => i + 1).join(', ') : 'ninguna'
+    case 'option': return a.value ?? '—'
+    case 'pieces': return a.pieces.length ? a.pieces.join(' + ') : '—'
   }
 }
 

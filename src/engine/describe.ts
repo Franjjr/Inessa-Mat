@@ -1,6 +1,7 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
-import type { ErrorType, SkillKey } from '@/types'
+import type { ErrorType, MeasureDimension, MeasureMode, MoneyMode, SkillKey } from '@/types'
 import { GEO_OPS, parseSkill } from './skills'
+import { DIMENSION_NAME } from './measure'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
 const prestamos = (n: number) => (n === 0 ? 'sin préstamos' : n === 1 ? 'con 1 préstamo' : `con ${n} préstamos`)
@@ -73,6 +74,27 @@ export function describeSkill(skill: SkillKey): string {
     case 'calendar': return CALENDAR_TEXT[p.topic]
     case 'fraction': return fractionText(p)
     case 'geo': return GEO_TEXT[p.op]
+    case 'money': return MONEY_TEXT[p.mode]
+    case 'measure': return measureText(p.mode, p.dimension)
+  }
+}
+
+const MONEY_TEXT: Record<MoneyMode, string> = {
+  recognise: 'Reconocer monedas y billetes',
+  pay: 'Pagar un precio exacto con monedas y billetes',
+  change: 'Calcular el cambio',
+  add: 'Sumar precios (euros y céntimos)',
+  compare: 'Comparar precios: ¿qué cuesta más?',
+  convert: 'Euros y céntimos: 1 € = 100 céntimos',
+}
+
+function measureText(mode: MeasureMode, dimension: MeasureDimension | null): string {
+  switch (mode) {
+    case 'unit': return `Elegir la unidad de ${DIMENSION_NAME[dimension ?? 'length']}`
+    case 'convert': return `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}`
+    case 'ruler': return 'Medir con la regla (cm)'
+    case 'add': return 'Sumar medidas con unidades distintas'
+    case 'estimate': return '¿Es razonable? Estimar medidas'
   }
 }
 

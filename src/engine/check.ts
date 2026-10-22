@@ -21,6 +21,8 @@ import { checkNumeric } from './numeric'
 import { checkClock, expectedClock } from './clock'
 import { checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
 import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
+import { checkMoney } from './money'
+import { checkMeasure } from './measure'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -572,5 +574,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'angle-tap': return checkAngleTap(exercise, answer)
     case 'perimeter': return checkPerimeter(exercise, answer)
     case 'shape-count': return checkShapeCount(exercise, answer)
+    case 'money': return checkMoney(exercise, answer)
+    case 'measure': return checkMeasure(exercise, answer)
   }
 }

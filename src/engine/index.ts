@@ -77,6 +77,10 @@ export { checkCheckCalc, checkErrorHunt, checkHints, genCheckCalc, genErrorHunt,
 export { climbProducts, climbQuotient, divisionParts, divisionPartsResult } from './divParts'
 export type { PartsStep } from './divParts'
 export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
+/** Dinero and medida (3.º, block C): generators, checks, hints and statements (see money.ts and measure.ts). */
+export { buildMoney, checkMoney, euros, hintsMoney, isNote, moneyStatement, MONEY_MODES, PIECES, pieceName, splitCents, SHOP } from './money'
+export { buildMeasure, checkMeasure, DIMENSION_NAME, hintsMeasure, MEASURE_MODES, measureStatement, THINGS, UNITS } from './measure'
+export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */
 export { expandedParts, fmt, numberWords, placeName, roundTo } from './numeric'
 export { mentalHints, holds } from './calc'

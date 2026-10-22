@@ -18,6 +18,9 @@ import { buildNumericExercise, numericSkillsOf } from './numeric'
 import { buildClock, clockSkillsOf } from './clock'
 import { genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade } from './fractions'
 import { genGeometry } from './geometry'
+import { buildMoney, MONEY_MODES } from './money'
+import { buildMeasure } from './measure'
+import { moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
@@ -34,6 +37,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   // tiempo (block D, src/engine/clock.ts)
   'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
   'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
+  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -218,7 +222,17 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal':
     case 'shape-choice': case 'angle-tap': case 'perimeter': case 'shape-count':
+      break
       for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
+    case 'money':
+      for (const mode of MONEY_MODES) addItem(map, moneySkill(mode), kind, 1)
+      break
+    case 'measure':
+      for (const dim of ['length', 'mass', 'capacity'] as const) {
+        addItem(map, measureSkill('unit', dim), kind, 1)
+        addItem(map, measureSkill('convert', dim), kind, 1)
+      }
+      for (const skill of ['measure:ruler', 'measure:add', 'measure:estimate']) addItem(map, skill, kind, 1)
       break
     default: {
       const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
@@ -671,6 +685,8 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
     if (built) return built
   }
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
+  if (p.type === 'money') return buildMoney(p.mode, rng, used)
+  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)

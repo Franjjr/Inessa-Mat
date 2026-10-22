@@ -9,7 +9,7 @@ import { allMulFactSkills, divSkill, parseSkill } from './skills'
 /** Attempts of the placement carry this activity name in their context. */
 export const PLACEMENT_ACTIVITY = 'prueba-inicial'
 
-export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas' | 'tiempo' | 'fracciones-geometria'
+export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas' | 'tiempo' | 'fracciones-geometria' | 'dinero-medida'
 
 export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'numeros', label: 'Números' },
@@ -19,6 +19,7 @@ export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'problemas', label: 'Problemas' },
   { id: 'tiempo', label: 'Tiempo' },
   { id: 'fracciones-geometria', label: 'Fracciones y figuras' },
+  { id: 'dinero-medida', label: 'Dinero y medida' },
 ]
 
 export interface PlacementItem {
@@ -26,7 +27,7 @@ export interface PlacementItem {
   exercise: Exercise
 }
 
-export const PLACEMENT_COUNT = 19
+export const PLACEMENT_COUNT = 20
 
 export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
   const p = parseSkill(skill)
@@ -39,6 +40,7 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'word': case 'bar': return 'problemas'
     case 'clock-read': case 'clock-set': case 'clock-convert': case 'time-duration': case 'calendar': return 'tiempo'
     case 'fraction': case 'geo': return 'fracciones-geometria'
+    case 'money': case 'measure': return 'dinero-medida'
     case 'place': case 'compare': case 'order': case 'round': case 'line': return 'numeros'
     default: return null
   }
@@ -60,6 +62,7 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
     { block: 'problemas', skills: ['bar:add', 'bar:sub'] },
     { block: 'tiempo', skills: ['clock:read:15'] },
     { block: 'fracciones-geometria', skills: ['frac:read:4'] },
+    { block: 'dinero-medida', skills: ['money:pay'] },
   ]
   const out: PlacementItem[] = []
   for (const { block, skills } of plan) {

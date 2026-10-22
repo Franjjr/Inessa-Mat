@@ -25,8 +25,14 @@
    frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
    geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
                               geometry (block E, geometría): see src/engine/geometry.ts
+   money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
+   measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
+   measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
+   measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
 */
-import type { BarOp, DivisionExercise, ExerciseKind, MentalFamily, PlaceMode, SkillKey } from '@/types'
+import type {
+  BarOp, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode, SkillKey,
+} from '@/types'
 
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
 export const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12] as const
@@ -87,6 +93,8 @@ export type ParsedSkill =
   | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
   | { type: 'fraction'; op: 'equal' | 'compare' }
   | { type: 'geo'; op: GeoOp }
+  | { type: 'money'; mode: MoneyMode }
+  | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
 
 // ---------------------------------------------------------------- builders
 
@@ -163,6 +171,12 @@ export function fractionSkill(op: FractionOp, d?: number): SkillKey {
 export function geoSkill(op: GeoOp): SkillKey {
   return `geo:${op}`
 }
+export function moneySkill(mode: MoneyMode): SkillKey {
+  return `money:${mode}`
+}
+export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension): SkillKey {
+  return `measure:${mode}:${dimension}`
+}
 
 // ---------------------------------------------------------------- parser
 
@@ -233,6 +247,13 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   }
   if ((m = key.match(/^frac:(equal|compare)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' }
   if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
+  if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
+  if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)$/))) {
+    return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension }
+  }
+  if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
+  if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
+  if (key === 'measure:estimate') return { type: 'measure', mode: 'estimate', dimension: null }
   return null
 }
 
@@ -328,6 +349,8 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
         case 'perimeter': return ['perimeter']
         default: return ['shape-choice']
       }
+    case 'money': return ['money']
+    case 'measure': return ['measure']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']

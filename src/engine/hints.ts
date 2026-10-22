@@ -12,6 +12,8 @@ import { hintsCalc } from './calc'
 import { hintsNumeric } from './numeric'
 import { hintsClock } from './clock'
 import { barHints } from './bars'
+import { hintsMoney } from './money'
+import { hintsMeasure } from './measure'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
 import { TABLE_METHODS } from './methods'
@@ -384,6 +386,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'angle-tap':
     case 'perimeter':
     case 'shape-count': return geometryHints(ex)
+    case 'money': return hintsMoney(ex) ?? []
+    case 'measure': return hintsMeasure(ex) ?? []
   }
 }
 

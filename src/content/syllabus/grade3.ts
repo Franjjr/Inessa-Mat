@@ -145,7 +145,12 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'dinero',
       name: 'Dinero',
-      topics: [pending('dinero-precios', 'Sumar precios y dar el cambio', 'Falta la vista de monedas y billetes.')],
+      topics: [
+        { id: 'monedas-billetes', name: 'Monedas y billetes', skills: ['money:recognise'], status: 'disponible', rungs: { concreto: 'Monedas y billetes en la pantalla', dibujo: 'Cada pieza con su valor impreso', numeros: 'El valor escrito: 2,50 €', uso: 'Contar el dinero de una hucha' } },
+        { id: 'pagar-cambio', name: 'Pagar y dar el cambio', skills: ['money:pay', 'money:change'], status: 'disponible', rungs: { concreto: 'Poner monedas en la bandeja hasta el precio', numeros: 'Precio y billete: cuánto devuelven', uso: 'Problemas de compra con cambio' } },
+        { id: 'sumar-precios', name: 'Sumar precios y comparar', skills: ['money:add', 'money:compare'], status: 'disponible', rungs: { dibujo: 'Precios en tarjetas, uno debajo de otro', numeros: '2,50 € + 1,35 € = ?', uso: 'Problemas de compra: ¿qué cuesta más?' } },
+        { id: 'euros-centimos', name: 'Euros y céntimos (1 € = 100 céntimos)', skills: ['money:convert'], status: 'disponible', rungs: { dibujo: 'Cien céntimos forman 1 €', numeros: '2,35 € son 235 céntimos' } },
+      ],
     },
     {
       id: 'tiempo',
@@ -161,7 +166,12 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'medida',
       name: 'Medida',
-      topics: [pending('medida-longitud-masa-capacidad', 'Longitud, masa y capacidad', 'Falta la vista de unidades.')],
+      topics: [
+        { id: 'unidades-longitud', name: 'Longitud: cm, m y km', skills: ['measure:unit:length', 'measure:convert:length'], status: 'disponible', rungs: { concreto: 'Objetos conocidos para comparar', dibujo: 'Una tira de 1 m marcada en centímetros', numeros: '1 m = 100 cm; 1 km = 1 000 m', uso: 'Elegir la unidad de una distancia' } },
+        { id: 'regla', name: 'Medir con la regla', skills: ['measure:ruler'], status: 'disponible', rungs: { concreto: 'Regla en pantalla y un objeto', numeros: 'Hasta dónde acaba menos dónde empieza' } },
+        { id: 'unidades-masa-capacidad', name: 'Masa y capacidad: g, kg, ml y l', skills: ['measure:unit:mass', 'measure:unit:capacity', 'measure:convert:mass', 'measure:convert:capacity'], status: 'disponible', rungs: { concreto: 'Un vaso, una botella, una bolsa de pan', dibujo: 'Medio kilo y cuarto de litro en la tira', numeros: '1 kg = 1 000 g; 1 l = 1 000 ml', uso: 'Elegir la unidad de lo que se pesa o se llena' } },
+        { id: 'medir-problemas', name: 'Sumar medidas y estimar', skills: ['measure:add', 'measure:estimate'], status: 'disponible', rungs: { dibujo: 'Pasar las dos medidas a la misma unidad', uso: '¿Es razonable este resultado?' } },
+      ],
     },
     {
       id: 'geometria',
