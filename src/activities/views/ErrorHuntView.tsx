@@ -68,7 +68,8 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
         <span className={s.line} style={{ gridColumn: `1 / span ${cols}`, gridRow: 3 }} aria-hidden />
         {order.map((i) => {
           const picked = verdict === 'error' && column === i
-          const selectable = verdict === 'error'
+          // A difference never has more digits than the top number: the spare column is only for sums and products.
+          const selectable = verdict === 'error' && (ex.op !== 'sub' || i < digitCount(ex.top))
           const label = `columna de las ${columnName(i)}`
           return selectable ? (
             <button
