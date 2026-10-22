@@ -1,11 +1,12 @@
 /* E2E for the ink module: draws digits with synthetic Apple-Pencil PointerEvents (pointerType 'pen') into the
-   live DigitCell / NumberInput of the gallery (/dev/gallery?only=src/ink) and checks the recognised value.
+   live DigitCell / NumberInput of the gallery (/dev/gallery?only=src/ink/live.gallery) and checks the recognised value.
    Recognition tests are skipped (with a clear message) while public/models/digits/model.json is missing.
    Run with the dev server up:  npx playwright test tests/e2e/ink.spec.ts  (E2E_BASE_URL to override). */
 import { expect, test, type Page } from '@playwright/test'
+import { DIGIT_MODELS } from '../../src/ink/digitModels'
 
 const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:5173'
-const GALLERY = `${BASE}/dev/gallery?only=src/ink/ink.gallery`
+const GALLERY = `${BASE}/dev/gallery?only=src/ink/live.gallery`
 
 type Poly = [number, number][]
 
@@ -25,7 +26,7 @@ const DIGITS: Record<string, Poly[]> = {
 }
 
 /** Dispatches pen strokes into the element matched by `selector`, mapping the 100×140 box into `box` (fractions of the element). */
-async function drawDigit(page: Page, selector: string, digit: string, box = { x: 0.15, y: 0.1, w: 0.7, h: 0.8 }) {
+async function drawDigit(page: Page, selector: string, digit: string | Poly[], box = { x: 0.15, y: 0.1, w: 0.7, h: 0.8 }) {
   await page.evaluate(
     ({ selector, strokes, box }) => {
       const el = document.querySelector(selector) as HTMLElement
@@ -57,9 +58,12 @@ async function drawDigit(page: Page, selector: string, digit: string, box = { x:
         fire('pointerup', lx, ly, 0)
       }
     },
-    { selector, strokes: DIGITS[digit], box },
+    { selector, strokes: typeof digit === 'string' ? DIGITS[digit] : digit, box },
   )
 }
+
+/** The app's own school models (TraceDigit / CalibrationFlow), as polylines. */
+const schoolDigit = (d: number): Poly[] => DIGIT_MODELS[d].map((st) => st.map((p) => [p.x, p.y] as [number, number]))
 
 async function modelAvailable(page: Page): Promise<boolean> {
   const res = await page.request.get(`${BASE}/models/digits/model.json`).catch(() => null)
@@ -95,6 +99,49 @@ test.describe('ink · handwriting input', () => {
       await drawDigit(page, CELL, d)
       await expect(value, `digit ${d}`).toHaveText(d, { timeout: 4000 })
       await expect(page.locator(`${CELL} >> xpath=..`)).toHaveAttribute('data-phase', /recognized|unsure/)
+    }
+  })
+
+  test('every digit written in Spanish school stroke order is recognised (6, 7, 8 matter most)', async ({ page }) => {
+    test.skip(!(await modelAvailable(page)), 'Digit model not available yet (public/models/digits/model.json, ml module) — skipping recognition e2e')
+    await expect(page.getByTestId('ink-e2e-ready')).toHaveText('listo', { timeout: 10_000 })
+    const value = page.getByTestId('ink-e2e-cell-value')
+    const misread: string[] = []
+    for (const d of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]) {
+      await page.locator(CELL).focus()
+      await page.keyboard.press('Backspace')
+      await expect(value).toHaveText('–')
+      await drawDigit(page, CELL, schoolDigit(d))
+      await expect(page.locator(`${CELL} >> xpath=..`)).toHaveAttribute('data-phase', /recognized|unsure|unknown/, { timeout: 4000 })
+      const got = (await value.textContent())?.trim() ?? ''
+      if (got !== String(d)) misread.push(`${d}→${got}`)
+    }
+    expect(misread, `misread school digits: ${misread.join(', ')}`).toEqual([])
+  })
+
+  test('a scribble-out erases the cell', async ({ page }) => {
+    const value = page.getByTestId('ink-e2e-cell-value')
+    await page.locator(CELL).focus()
+    await page.keyboard.press('3')
+    await expect(value).toHaveText('3')
+    const zigzag: Poly = Array.from({ length: 11 }, (_, i) => [i % 2 === 0 ? 8 : 92, 10 + i * 12] as [number, number])
+    await drawDigit(page, CELL, [zigzag])
+    await expect(value).toHaveText('–')
+    await expect(page.locator(`${CELL} >> xpath=..`)).toHaveAttribute('data-phase', 'empty')
+  })
+
+  test('answers of the 6, 7 and 8 tables written in the NumberInput (school digits)', async ({ page }) => {
+    test.skip(!(await modelAvailable(page)), 'Digit model not available yet (public/models/digits/model.json, ml module) — skipping recognition e2e')
+    await expect(page.getByTestId('ink-e2e-ready')).toHaveText('listo', { timeout: 10_000 })
+    const value = page.getByTestId('ink-e2e-number-value')
+    const erase = page.locator('[data-testid="ink-e2e-number"] button[aria-label="Borrar"]')
+    for (const n of ['42', '56', '48', '63', '72']) {
+      const [a, b] = n.split('').map(Number)
+      await drawDigit(page, PAD, schoolDigit(a), { x: 0.16, y: 0.08, w: 0.28, h: 0.84 })
+      await drawDigit(page, PAD, schoolDigit(b), { x: 0.47, y: 0.08, w: 0.28, h: 0.84 })
+      await expect(value, n).toHaveText(n, { timeout: 4000 })
+      await erase.click()
+      await expect(value).toHaveText('–')
     }
   })
 

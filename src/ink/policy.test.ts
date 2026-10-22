@@ -1,5 +1,5 @@
 import { PEN_SEEN_KEY } from './constants'
-import { forgetPenSeen, isEraserPointer, isPalmPress, notePenContact, PALM_GUARD_MS, persistPenSeen, pointerRole, readPenSeen, resolveInputMode } from './policy'
+import { forgetPenSeen, isEraserPointer, isPalmPress, msSincePenContact, notePenContact, PALM_GUARD_MS, persistPenSeen, pointerRole, readPenSeen, resolveInputMode } from './policy'
 
 describe('palm rejection (pointerRole)', () => {
   it('lets fingers write until a pen has been seen', () => {
@@ -79,5 +79,14 @@ describe('palm guard for buttons', () => {
   it('a lost pen-up cannot block fingers forever', () => {
     notePenContact(true, 10_000)
     expect(isPalmPress('touch', 20_000)).toBe(false)
+  })
+})
+
+describe('msSincePenContact', () => {
+  it('is 0 while the pen touches and grows after it lifts', () => {
+    notePenContact(true, 1000)
+    expect(msSincePenContact(5000)).toBe(0)
+    notePenContact(false, 1200)
+    expect(msSincePenContact(4200)).toBe(3000)
   })
 })

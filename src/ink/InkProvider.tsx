@@ -11,9 +11,11 @@ export interface InkProviderProps {
   childId?: string | null
   /** Inject a recogniser (tests, gallery demos). Defaults to the app-wide one from src/ink/ml. */
   recognizer?: Recognizer
+  /** Force "a pen has been used on this device" for this subtree (tests, gallery demos); not persisted. */
+  penSeen?: boolean
 }
 
-export function InkProvider({ children, childId = null, recognizer: injected }: InkProviderProps) {
+export function InkProvider({ children, childId = null, recognizer: injected, penSeen: forcedPenSeen }: InkProviderProps) {
   const recognizer = useMemo(() => injected ?? getSharedRecognizer(), [injected])
   const [ready, setReady] = useState<boolean>(() => !!recognizer.ready)
   const [learning] = useState(() => new LearningStore())
@@ -40,15 +42,18 @@ export function InkProvider({ children, childId = null, recognizer: injected }: 
   // ---- child preferences
   const { child } = useActiveChild()
   const settings = child && child.id === childId ? child.settings : null
-  const [override, setOverride] = useState<{ childId: string | null; pref: AnswerInputPreference } | null>(null)
+  // setPreferred() applies at once; the stored setting wins again as soon as it changes (saved, or edited by an adult).
+  const [override, setOverride] = useState<{ childId: string | null; pref: AnswerInputPreference; base: AnswerInputPreference | undefined } | null>(null)
+  const stored = settings?.inputPreference
   const preference: AnswerInputPreference =
-    override && override.childId === childId ? override.pref : settings?.inputPreference ?? 'auto'
+    override && override.childId === childId && override.base === stored ? override.pref : stored ?? 'auto'
 
   const childRef = useRef(child)
   useEffect(() => { childRef.current = child }, [child])
 
   const setPreferred = useCallback((pref: AnswerInputPreference) => {
-    setOverride({ childId, pref })
+    const c0 = childRef.current
+    setOverride({ childId, pref, base: c0 && c0.id === childId ? c0.settings.inputPreference : undefined })
     const c = childRef.current
     if (childId && c && c.id === childId && c.settings.inputPreference !== pref) {
       updateChild(childId, { settings: { ...c.settings, inputPreference: pref } }).catch((err: unknown) =>
@@ -58,8 +63,9 @@ export function InkProvider({ children, childId = null, recognizer: injected }: 
   }, [childId])
 
   // ---- pen detection (palm rejection) and physical keyboard detection
-  const [penSeen, setPenSeen] = useState<boolean>(readPenSeen)
-  const penSeenRef = useRef(penSeen)
+  const [detectedPenSeen, setPenSeen] = useState<boolean>(readPenSeen)
+  const penSeen = forcedPenSeen ?? detectedPenSeen
+  const penSeenRef = useRef(detectedPenSeen)
   useEffect(() => {
     const onPen = (e: PointerEvent) => trackPenEvent(e)
     const onDown = (e: PointerEvent) => {

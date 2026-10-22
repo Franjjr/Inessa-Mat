@@ -33,3 +33,4 @@ ml/cache/
 shots/
 test-results/
 playwright-report/
+__pycache__/

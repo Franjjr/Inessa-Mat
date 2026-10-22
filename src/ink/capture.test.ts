@@ -14,6 +14,7 @@ function setup(opts: { penSeen?: boolean; role?: (t: string, primary: boolean) =
     onStrokeEnd: (s) => { events.push('end'); ended.push(s) },
     onStrokeCancel: () => events.push('cancel'),
     onTap: (i) => events.push(`tap:${i.pointerType}:${i.role}`),
+    onBlockedWrite: (i) => events.push(`blocked:${i.pointerType}`),
     onEraseAt: () => events.push('erase'),
     onEraseEnd: () => events.push('eraseEnd'),
   }
@@ -52,7 +53,37 @@ describe('InkCapture', () => {
     const { el, cap, events } = setup({ penSeen: true })
     replayStrokes(el, handwrite(1, { x: 0, y: 0, w: 90, h: 110 }, { pointerType: 'touch' }))
     expect(cap.strokes).toHaveLength(0)
+    expect(events).toEqual(['blocked:touch']) // the finger "wrote": reported, not inked
     tap(el, 30, 30, 'touch')
+    expect(events).toEqual(['blocked:touch', 'tap:touch:tap'])
+  })
+
+  it('reports a finger that tries to write after a pen was seen (no ink)', () => {
+    const { el, cap, events } = setup({ penSeen: true })
+    replayStrokes(el, handwrite(7, { x: 0, y: 0, w: 90, h: 110 }, { pointerType: 'touch' }))
+    expect(cap.strokes).toHaveLength(0)
+    expect(events).toContain('blocked:touch')
+    expect(events.some((e) => e.startsWith('tap'))).toBe(false)
+  })
+
+  it('a resting palm does not take the focus; a deliberate finger tap does', () => {
+    const { el } = setup({ penSeen: true })
+    el.tabIndex = 0
+    const other = document.createElement('button')
+    document.body.appendChild(other)
+    other.focus()
+    el.dispatchEvent(pe('pointerdown', { pointerId: 8, pointerType: 'touch', clientX: 20, clientY: 20, buttons: 1 }))
+    expect(document.activeElement).toBe(other)
+    el.dispatchEvent(pe('pointerup', { pointerId: 8, pointerType: 'touch', clientX: 20, clientY: 20 }))
+    expect(document.activeElement).toBe(el) // it was a quick tap
+  })
+
+  it('a finger tap whose pointerup was lost is closed silently (no phantom tap)', () => {
+    const { el, events } = setup({ penSeen: true })
+    el.dispatchEvent(pe('pointerdown', { pointerId: 4, pointerType: 'touch', clientX: 20, clientY: 20, buttons: 1 }))
+    // the same pointer id comes down again: the first press is closed without an event
+    el.dispatchEvent(pe('pointerdown', { pointerId: 4, pointerType: 'touch', clientX: 30, clientY: 30, buttons: 1 }))
+    el.dispatchEvent(pe('pointerup', { pointerId: 4, pointerType: 'touch', clientX: 30, clientY: 30 }))
     expect(events).toEqual(['tap:touch:tap'])
   })
 

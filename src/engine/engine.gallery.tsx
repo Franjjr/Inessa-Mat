@@ -26,7 +26,7 @@ function show(ex: Exercise): string {
 function showAnswer(a: Answer): string {
   switch (a.type) {
     case 'number': return String(a.value ?? '—')
-    case 'digits': return a.digits.map((d) => (d === null ? '·' : String(d))).reverse().join('')
+    case 'digits': return a.digits.map((d) => (d === null ? '·' : d > 9 ? `[${d}]` : String(d))).reverse().join('')
     case 'division': return `${a.quotient ?? '—'} resto ${a.remainder ?? '—'}`
     case 'facts': return a.facts.join(' · ')
     case 'numbers': return a.values.join(', ')
@@ -72,9 +72,14 @@ const CASES: { ex: Exercise; answer: Answer }[] = [
   { ex: makeColumnSub(503, 128), answer: { type: 'digits', digits: [5, 8, 4] } },
   { ex: makeColumnMul(47, 6), answer: { type: 'digits', digits: [2, 4, 2] } },
   { ex: makeColumnMul(47, 6), answer: { type: 'digits', digits: [2, 8, 4] } },
+  { ex: makeColumnMul(23, 3), answer: { type: 'digits', digits: [6, 2] } },
+  { ex: makeColumnSub(734, 459), answer: { type: 'digits', digits: [15, 7, 2] } },
   { ex: makeDivision(17, 5), answer: { type: 'division', quotient: 2, remainder: 7 } },
   { ex: makeDivision(38, 6), answer: { type: 'division', quotient: 7, remainder: 0 } },
+  { ex: makeDivision(29, 4), answer: { type: 'division', quotient: 5, remainder: 1 } },
   { ex: makeDivision(72, 3), answer: { type: 'division', quotient: 20, remainder: 2 } },
+  { ex: makeDivision(84, 4), answer: { type: 'division', quotient: 2, remainder: 0 } },
+  { ex: makeDivision(84, 4), answer: { type: 'division', quotient: 12, remainder: 0 } },
   { ex: makeFactFamily(6, 7), answer: { type: 'facts', facts: ['6×7=42', '7×6=42', '6÷42=7', '42÷7=6'] } },
 ]
 

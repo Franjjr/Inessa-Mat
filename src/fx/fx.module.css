@@ -1,0 +1,64 @@
+/* Visual effects layer (agent: audio-pwa). Sits above everything (ink layer included) and never takes input. */
+
+.canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: calc(var(--z-ink, 90) + 10);
+}
+
+/* Reduced-motion alternative: a soft glow and twinkling stars that only fade (no movement). */
+.gentle {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: calc(var(--z-ink, 90) + 10);
+}
+
+.glow {
+  position: absolute;
+  left: var(--fx-x);
+  top: var(--fx-y);
+  width: var(--fx-size);
+  height: var(--fx-size);
+  margin-left: calc(var(--fx-size) / -2);
+  margin-top: calc(var(--fx-size) / -2);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--fx-c1) 0%, var(--fx-c2) 32%, var(--fx-c3) 58%, transparent 72%);
+  opacity: 0;
+  animation: fxGlow var(--fx-dur) ease-in-out forwards;
+}
+
+.star {
+  position: absolute;
+  left: calc(var(--fx-x) + var(--dx));
+  top: calc(var(--fx-y) + var(--dy));
+  width: var(--sz);
+  height: var(--sz);
+  margin-left: calc(var(--sz) / -2);
+  margin-top: calc(var(--sz) / -2);
+  opacity: 0;
+  animation: fxTwinkle calc(var(--fx-dur) * 0.75) ease-in-out var(--delay) forwards;
+}
+
+.star svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
+}
+
+@keyframes fxGlow {
+  0% { opacity: 0; }
+  30% { opacity: 0.75; }
+  100% { opacity: 0; }
+}
+
+@keyframes fxTwinkle {
+  0% { opacity: 0; }
+  40% { opacity: 1; }
+  100% { opacity: 0; }
+}

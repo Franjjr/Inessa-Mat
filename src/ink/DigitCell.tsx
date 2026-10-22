@@ -7,11 +7,11 @@ import clsx from 'clsx'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode, type RefObject } from 'react'
 import type { DigitCellProps, DigitRecognition, InkStroke } from '@/types'
 import { sfx } from '@/audio'
-import { CONTINUE_MAX_HEIGHT, CONTINUE_MS, IDLE_MS, LOW_CONFIDENCE } from './constants'
+import { CONTINUE_MAX_HEIGHT, CONTINUE_MS, IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
 import { useInk } from './context'
 import { useCellGroup } from './groupContext'
 import { isScribble, strokeBBox } from './geometry'
-import { pointerRole } from './policy'
+import { msSincePenContact, pointerRole } from './policy'
 import { useInkSurface } from './useInkSurface'
 import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
@@ -216,6 +216,17 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     sfx.play('select', { volume: 0.4 })
   }
 
+  /**
+   * A finger on the cell although a pen is in use on this device (the Pencil may be lost or charging): a lone cell
+   * opens the digit picker, a cell in a group points to the group's keypad. Never while the pen is busy (palm).
+   */
+  const fingerFallback = () => {
+    const { ink: ctx, group: g } = latest.current
+    if (!editable || ctx.mode === 'keypad' || msSincePenContact() < PEN_IDLE_FALLBACK_MS) return
+    if (g) { if (!g.keypadVisible) g.nudgeKeypad(); return }
+    setPopover('pick')
+  }
+
   const surface = useInkSurface({
     surfaceRef,
     canvasRef,
@@ -268,13 +279,18 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
         const p = phaseRef.current
         if (p === 'unsure') { setPopover((v) => (v ? null : 'alts')); return }
         if (p === 'unknown') { setPopover((v) => (v ? null : 'fix')); return }
-        if (p === 'recognized') {
-          // Tap to rewrite — never from a finger once a pen is in use (a palm brushing the screen must not erase).
-          if (info.role === 'write') clearAll()
+        const { ink: ctx, group: g } = latest.current
+        if (ctx.mode === 'keypad' && (p === 'empty' || p === 'typed')) {
+          if (!g?.keypadVisible) setPopover((v) => (v ? null : 'pick'))
           return
         }
-        const { ink: ctx, group: g } = latest.current
-        if ((p === 'empty' || p === 'typed') && ctx.mode === 'keypad' && !g?.keypadVisible) setPopover('pick')
+        if (info.role === 'tap') { fingerFallback(); return }
+        // The pen (or a finger on a device without pen) tapped: close the picker, or rewrite a recognised digit.
+        if (popover === 'pick') { setPopover(null); return }
+        if (p === 'recognized') clearAll()
+      },
+      onBlockedWrite() {
+        fingerFallback()
       },
       onEraseAt() {
         if (!isEmpty()) clearAll()
@@ -299,7 +315,19 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     if (autoFocus && editable) surfaceRef.current?.focus({ preventScroll: true })
   }, [])
 
-  useEffect(() => () => clearIdle(), [])
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      clearIdle()
+      // An unmounted cell's pending recognition must not be confirmed by a later exercise; the grace time lets an
+      // activity call confirm() right after the answer, even if the cells unmount in the same update.
+      // (StrictMode's simulated unmount remounts at once: `mounted` is true again and nothing is forgotten.)
+      const { learning } = latest.current.ink
+      setTimeout(() => { if (!mounted.current) learning.forget(uid) }, UNMOUNT_FORGET_MS)
+    }
+  }, [])
 
   // Register with the surrounding CellGroup (focus order, keypad target).
   const flush = () => {

@@ -4,7 +4,7 @@
 import type { Rng } from '@/types'
 import { analyzeAdd, analyzeDiv, analyzeSub, fromDigits } from './arith'
 import type { DivisionVariant } from './skills'
-import { pick, randInt, range, shuffle } from './rng'
+import { pick, randInt, range, shuffle, weightedIndex } from './rng'
 
 const ATTEMPTS = 60
 
@@ -164,10 +164,22 @@ export function divisionPool(variant: DivisionVariant, divisors?: number[]): [nu
   return filtered.length ? filtered : all
 }
 
-/** Divisor first (uniform among the available ones), then a dividend. */
+/**
+ * A (dividend, divisor) pair of the variant.
+ * - 'rem': divisor first (uniform), so every table appears (17 ÷ 5, 23 ÷ 4, 38 ÷ 6, 45 ÷ 7…).
+ * - 'exact' / 'long': the pools are very uneven (÷2 has 20 exact pairs, ÷7 only 70 and 77), so a uniform divisor
+ *   would make 70 ÷ 7, 80 ÷ 8, 55 ÷ 5… most of the items. Pairs are weighted by poolSize^-0.25 per divisor, which keeps
+ *   the workbook's ÷2 / ÷3 / ÷4 at the centre (48 ÷ 2, 69 ÷ 3, 84 ÷ 4) while still visiting the big tables, and exact
+ *   divisions ending in 0 (30 ÷ 3, 70 ÷ 7 → quotient 10) are rarer.
+ */
 export function genDivision(rng: Rng, variant: DivisionVariant, divisors?: number[]): [number, number] {
   const pool = divisionPool(variant, divisors)
-  const ds = [...new Set(pool.map(([, d]) => d))]
-  const d = pick(rng, ds)
-  return pick(rng, pool.filter(([, x]) => x === d))
+  const sizes = new Map<number, number>()
+  for (const [, d] of pool) sizes.set(d, (sizes.get(d) ?? 0) + 1)
+  const weights = pool.map(([dividend, d]) => {
+    const n = sizes.get(d)!
+    const perDivisor = variant === 'rem' ? 1 / n : n ** -0.25
+    return perDivisor * (variant === 'exact' && dividend % 10 === 0 ? 0.3 : 1)
+  })
+  return pool[weightedIndex(rng, weights)]
 }

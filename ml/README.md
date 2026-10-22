@@ -64,7 +64,7 @@ shared fixtures (`src/ink/ml/__fixtures__/cases.json`, test `preprocess.test.ts`
 | MNIST re-stroked | 180 k | MNIST train → 4× upsample → skeleton (spur pruning) → re-rendered with the app's uniform pen; 1 clean + 2 augmented variants per image |
 | MNIST raw | 60 k | original images (robustness to thick, variable ink) |
 | handwriting fonts | 150 k | 94 Google Fonts incl. 20 *Playwrite* national school scripts (Spain's among them); glyph → skeleton → uniform pen, 160 augmented variants per digit |
-| synthetic strokes | 240 k | `ml/synth.py`: every digit as 1-3 strokes with child-like variants (1 with/without flag and base, Spanish long-flag 1, 7 with/without crossbar, short-bar 7, open/closed 4, 9 with straight/curved/separate tail, 2 with/without loop, round/angular/cusp 3, 5 with joined/detached top bar, 6/9 loop sizes, single-stroke and two-loop 8), wobble, tremor, overshoot, gaps between strokes, tilt, size and aspect variation |
+| synthetic strokes | 240 k | `ml/synth.py`: every digit as 1-3 strokes with child-like variants (1 with/without flag and base, Spanish long-flag 1 incl. long flat flags, 7 with/without crossbar, short-bar 7, open/closed 4, 9 with straight/curved/separate tail, 2 with/without loop, round/angular/cusp 3, 5 with joined/detached top bar, 6/9 loop sizes, single-stroke and two-loop 8), wobble, tremor, overshoot, gaps between strokes, tilt, size and aspect variation |
 | non-digits ("reject") | ~29 k | scribbles, hatching, spirals, ×, +, =, #, stars, dashes, scattered marks |
 
 Augmentation (stroke level, before rasterising): rotation ±15°, shear ±0.3, aspect 0.72–1.35, smooth elastic
@@ -116,9 +116,41 @@ Tested in `recognizer.test.ts` with a simulated child who writes a mirrored "3" 
 See `ml/metrics.json` (written by `ml/eval.py` on the exported model, NumPy reference == TS runtime).
 "app accuracy" applies the app's decision rule (null if reject wins or confidence < 0.35, counted as wrong).
 
-METRICS_TABLE
+<!-- metrics:begin -->
+| test set | digits | accuracy (0-9) | app accuracy | null (asks again) | wrong digit | scribbles rejected |
+|---|---:|---:|---:|---:|---:|---:|
+| MNIST test (original images) | 10000 | **99.36 %** | 99.12 % | 0.30 % | 0.58 % | — |
+| MNIST test re-stroked with the app pen | 10000 | **98.86 %** | 98.75 % | 0.23 % | 1.02 % | — |
+| held-out handwriting fonts (never trained on) | 4800 | **98.90 %** | 98.88 % | 0.02 % | 1.10 % | — |
+| synthetic child-like strokes (test seed) | 5287 | **99.96 %** | 99.96 % | 0.00 % | 0.04 % | 99.6 % of 713 |
 
-Inference in Node (V8, this dev container): METRICS_TIMING. Tablets with a modern browser are in the same range.
+Confusions between the classic pairs (errors in both directions / digits of both classes, app decision):
+
+| test set | 1↔7 | 4↔9 | 3↔8 | 5↔6 | 2↔7 | top confusions (true→pred) |
+|---|---:|---:|---:|---:|---:|---|
+| MNIST test (original images) | 12 (0.56 %) | 10 (0.50 %) | 2 (0.10 %) | 3 (0.16 %) | 4 (0.19 %) | 9->4: 10, 7->1: 10, 5->3: 6, 6->0: 5 |
+| MNIST test re-stroked with the app pen | 9 (0.42 %) | 11 (0.55 %) | 3 (0.15 %) | 1 (0.05 %) | 7 (0.34 %) | 9->7: 11, 9->4: 7, 7->1: 7, 9->1: 5 |
+| held-out handwriting fonts (never trained on) | 50 (5.21 %) | 0 (0.00 %) | 0 (0.00 %) | 0 (0.00 %) | 0 (0.00 %) | 1->7: 40, 7->1: 10, 7->9: 2, 1->9: 1 |
+| synthetic child-like strokes (test seed) | 2 (0.19 %) | 0 (0.00 %) | 0 (0.00 %) | 0 (0.00 %) | 0 (0.00 %) | 1->7: 2 |
+
+Per-class accuracy (0-9), %:
+
+| test set | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| MNIST test (original images) | 99.6 | 99.8 | 99.6 | 99.7 | 100.0 | 99.2 | 98.6 | 98.9 | 99.2 | 98.8 |
+| MNIST test re-stroked with the app pen | 99.7 | 99.2 | 99.1 | 99.5 | 99.2 | 98.9 | 98.6 | 98.7 | 98.2 | 97.4 |
+| held-out handwriting fonts (never trained on) | 100.0 | 91.5 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 97.5 | 100.0 | 100.0 |
+| synthetic child-like strokes (test seed) | 100.0 | 99.6 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 | 100.0 |
+
+Model `digits-bfa3be125a`.
+<!-- metrics:end -->
+
+Inference in Node 22 (V8, 4-CPU dev container, single thread), measured by `npx vitest run src/ink/ml`:
+
+<!-- timing:begin -->
+<!-- timing:end -->
+
+A 2020+ iPad / Android tablet browser runs V8/JSC at a similar speed, far below the 5 ms budget.
 
 ## How to retrain
 

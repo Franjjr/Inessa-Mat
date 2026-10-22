@@ -1,7 +1,7 @@
 """Evaluate the EXPORTED model (public/models/digits, NumPy reference == TS runtime) on the cached test sets.
 
 Writes ml/metrics.json (summary is embedded into model.json by export.py on the next export).
-Usage: python eval.py
+Usage: python eval.py [--model-dir DIR] [--out metrics.json]
 """
 from __future__ import annotations
 
@@ -32,8 +32,13 @@ def app_decision(p: np.ndarray) -> np.ndarray:
 
 
 def main():
-    m = NpModel()
-    report = {'modelId': m.spec['modelId'], 'sets': {}}
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--model-dir', default=None, help='exported model folder (default public/models/digits)')
+    ap.add_argument('--out', default=os.path.join(HERE, 'metrics.json'))
+    args = ap.parse_args()
+    m = NpModel(args.model_dir) if args.model_dir else NpModel()
+    report = {'modelId': m.spec['modelId'], 'arch': m.spec.get('arch'), 'sets': {}}
     summary = {}
     for name, f in TESTS.items():
         path = os.path.join(CACHE, f + '.npz')
@@ -78,9 +83,15 @@ def main():
               + (f'  scribbles rejected {res["nondigit_rejected_pct"]:.1f}%' if 'nondigit_rejected_pct' in res else '')
               + f'  top confusions {res["top_confusions"][:4]}')
     report['summary'] = summary
-    with open(os.path.join(HERE, 'metrics.json'), 'w') as f:
+    old = {}
+    if os.path.exists(args.out):
+        with open(args.out) as f:
+            old = json.load(f)
+    if old.get('modelId') == report['modelId'] and 'timing' in old:
+        report['timing'] = old['timing']  # Node timings (readme_metrics.py) stay valid for the same model
+    with open(args.out, 'w') as f:
         json.dump(report, f, indent=1)
-    print('wrote ml/metrics.json')
+    print('wrote', os.path.relpath(args.out))
 
 
 if __name__ == '__main__':

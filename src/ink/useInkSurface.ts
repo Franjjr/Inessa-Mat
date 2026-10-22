@@ -80,6 +80,7 @@ export function useInkSurface(opts: InkSurfaceOptions): InkSurface {
         onStrokeEnd: (s) => latest.current.callbacks.onStrokeEnd?.(s),
         onStrokeCancel: () => latest.current.callbacks.onStrokeCancel?.(),
         onTap: (i) => latest.current.callbacks.onTap?.(i),
+        onBlockedWrite: (i) => latest.current.callbacks.onBlockedWrite?.(i),
         onEraseAt: (x, y) => latest.current.callbacks.onEraseAt?.(x, y),
         onEraseEnd: () => latest.current.callbacks.onEraseEnd?.(),
         onInk: () => { redraw(); latest.current.callbacks.onInk?.() },

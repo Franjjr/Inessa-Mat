@@ -21,6 +21,8 @@ export interface CaptureCallbacks {
   /** A started stroke was dropped (palm replaced by a pen, cancelled by the system). */
   onStrokeCancel?(): void
   onTap?(info: TapInfo): void
+  /** A pointer that may only tap (a finger after a pen was seen) moved like writing: it was not inked. */
+  onBlockedWrite?(info: TapInfo): void
   onEraseAt?(x: number, y: number): void
   onEraseEnd?(): void
   /** Something visible changed (redraw). */
@@ -119,6 +121,10 @@ export class InkCapture {
 
   private prevent = (e: Event) => { e.preventDefault() }
 
+  private focus() {
+    try { this.el.focus({ preventScroll: true }) } catch { /* old browsers */ }
+  }
+
   private blockTouch = (e: TouchEvent) => {
     const t = e.target as Element | null
     if (t && t.closest && t.closest('button, a, [data-ink-allow-touch]')) return
@@ -172,8 +178,10 @@ export class InkCapture {
     }
 
     e.preventDefault()
-    try { this.el.focus({ preventScroll: true }) } catch { /* old browsers */ }
+    // A pointer that may only tap (a finger after a pen was seen) takes focus only once it really taps: a palm
+    // resting on a neighbouring cell must not move the focus away from the cell being written in.
     if (role !== 'tap') {
+      this.focus()
       try { this.el.setPointerCapture(e.pointerId) } catch { /* synthetic or already released pointer */ }
     }
     const origin = this.origin()
@@ -237,9 +245,12 @@ export class InkCapture {
 
     if (a.role === 'erase') { this.cb.onEraseEnd?.(); return }
     if (a.role === 'tap') {
-      if (!cancelled && end - a.t0 <= 400 && a.maxMove <= Math.max(14, Math.min(zone.width, zone.height) * 0.15)) {
-        this.cb.onTap?.({ x: a.x0, y: a.y0, pointerType: a.kind, role: 'tap' })
-      }
+      if (cancelled || synthetic) return
+      const info: TapInfo = { x: a.x0, y: a.y0, pointerType: a.kind, role: 'tap' }
+      if (end - a.t0 <= 400 && a.maxMove <= Math.max(14, Math.min(zone.width, zone.height) * 0.15)) {
+        this.focus()
+        this.cb.onTap?.(info)
+      } else if (a.maxMove >= Math.max(20, Math.min(zone.width, zone.height) * 0.3)) this.cb.onBlockedWrite?.(info)
       return
     }
 

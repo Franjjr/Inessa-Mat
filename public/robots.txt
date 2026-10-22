@@ -1,0 +1,9 @@
+# Numeria is an app for children: keep the child and adult areas out of search engines.
+User-agent: *
+Allow: /$
+Allow: /welcome
+Allow: /legal/
+Disallow: /kids
+Disallow: /play
+Disallow: /adult
+Disallow: /dev/

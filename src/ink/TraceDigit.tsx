@@ -13,6 +13,7 @@ import { isScribble } from './geometry'
 import { pointerRole } from './policy'
 import { fitModel, scoreTrace, type TraceScore } from './trace'
 import { useInkSurface } from './useInkSurface'
+import { usePalmGuard } from './usePalmGuard'
 import { ModelDigit } from './ModelDigit'
 import { CheckIcon, EraserIcon, PlayIcon, RedoIcon } from './icons'
 import s from './TraceDigit.module.css'
@@ -41,6 +42,8 @@ function TraceDigitInner({ digit, onDone, className }: TraceDigitProps) {
   const [play, setPlay] = useState(0)
   const [hasInk, setHasInk] = useState(false)
   const [result, setResult] = useState<TraceScore | null>(null)
+  const [penHint, setPenHint] = useState(false)
+  const palm = usePalmGuard()
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null)
   const latest = useRef({ ink, digit })
   useLayoutEffect(() => { latest.current = { ink, digit } })
@@ -77,7 +80,7 @@ function TraceDigitInner({ digit, onDone, className }: TraceDigitProps) {
     overflow: 0.04,
     role: (t, primary) => pointerRole(t, { penSeen: latest.current.ink.penSeen, mode: 'touch', isPrimary: primary }),
     callbacks: {
-      onStrokeStart() { clearIdle(); setPlay(0) },
+      onStrokeStart() { clearIdle(); setPlay(0); setPenHint(false) },
       onStrokeEnd(stroke) {
         if (isScribble(stroke, surface.size.current)) { reset(); return false }
         setHasInk(true)
@@ -86,6 +89,8 @@ function TraceDigitInner({ digit, onDone, className }: TraceDigitProps) {
         return true
       },
       onEraseAt() { reset() },
+      // a pen has been used on this device, so fingers do not write (palm rejection)
+      onBlockedWrite() { setPenHint(true) },
     },
   })
 
@@ -96,7 +101,7 @@ function TraceDigitInner({ digit, onDone, className }: TraceDigitProps) {
     <div className={clsx(s.root, className)}>
       <header className={s.head}>
         <h3 className={s.title}>Repasa el <span className={s.big}>{digit}</span></h3>
-        <p className={s.tip}>{tip}</p>
+        <p className={clsx(s.tip, penHint && s.penHint)} aria-live="polite">{penHint ? '¡Repasa con el lápiz!' : tip}</p>
       </header>
 
       <div className={s.stage}>
@@ -121,26 +126,26 @@ function TraceDigitInner({ digit, onDone, className }: TraceDigitProps) {
           )}
           {!result ? (
             <>
-              <button type="button" className={s.tool} onClick={() => { reset(); setPlay((p) => p + 1) }} aria-label="Mira cómo se hace">
+              <button type="button" className={s.tool} onPointerDown={palm.onPointerDown} onClick={palm.guard(() => { reset(); setPlay((p) => p + 1) })} aria-label="Mira cómo se hace">
                 <PlayIcon size={26} />
                 <span>Mira</span>
               </button>
-              <button type="button" className={s.tool} onClick={reset} disabled={!hasInk} aria-label="Borrar">
+              <button type="button" className={s.tool} onPointerDown={palm.onPointerDown} onClick={palm.guard(reset)} disabled={!hasInk} aria-label="Borrar">
                 <EraserIcon size={26} />
                 <span>Borrar</span>
               </button>
-              <button type="button" className={clsx(s.tool, s.done)} onClick={evaluate} disabled={!hasInk} aria-label="¡Listo!">
+              <button type="button" className={clsx(s.tool, s.done)} onPointerDown={palm.onPointerDown} onClick={palm.guard(evaluate)} disabled={!hasInk} aria-label="¡Listo!">
                 <CheckIcon size={30} strokeWidth={3.2} />
                 <span>¡Listo!</span>
               </button>
             </>
           ) : (
             <>
-              <button type="button" className={s.tool} onClick={reset} aria-label="Otra vez">
+              <button type="button" className={s.tool} onPointerDown={palm.onPointerDown} onClick={palm.guard(reset)} aria-label="Otra vez">
                 <RedoIcon size={26} />
                 <span>Otra vez</span>
               </button>
-              <button type="button" className={clsx(s.tool, s.done)} onClick={() => onDone({ stars: result.stars, score: result.score })} aria-label="Seguir">
+              <button type="button" className={clsx(s.tool, s.done)} onPointerDown={palm.onPointerDown} onClick={palm.guard(() => onDone({ stars: result.stars, score: result.score }))} aria-label="Seguir">
                 <CheckIcon size={30} strokeWidth={3.2} />
                 <span>Seguir</span>
               </button>

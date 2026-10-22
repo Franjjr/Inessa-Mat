@@ -18,8 +18,13 @@ export const TAP_SLOP_PX = 9
 export const OVERFLOW_RATIO = 0.18
 /** Number of alternative chips shown for a low-confidence digit. */
 export const ALT_CHIPS = 3
-/** Keep at most this many 'confirmed' samples per digit for personalisation (calibration/corrected always kept). */
-export const MAX_CONFIRMED_PER_DIGIT = 24
+/** Newest personal samples kept per digit and source. The sum (30) matches the recogniser's per-class index size,
+    so a frequent corrector never pushes out the calibration samples. Older ones stay in the database. */
+export const MAX_SAMPLES_PER_DIGIT = { calibration: 4, corrected: 10, confirmed: 16 } as const
+/** A cell that unmounts forgets its pending recognition after this grace time (confirm() may come just after). */
+export const UNMOUNT_FORGET_MS = 2500
+/** A finger on an ink surface after a pen was used: offer the keypad if the pen has not touched for this long. */
+export const PEN_IDLE_FALLBACK_MS = 3000
 /** Pending recognitions older than this are dropped (activity never called confirm/discard). */
 export const PENDING_TTL_MS = 10 * 60 * 1000
 

@@ -15,6 +15,7 @@ import { loadRecognizer, useInk } from './context'
 import { isScribble, strokesBBox } from './geometry'
 import { pointerRole } from './policy'
 import { useInkSurface } from './useInkSurface'
+import { usePalmGuard } from './usePalmGuard'
 import { ModelDigit } from './ModelDigit'
 import { EraserIcon } from './icons'
 import s from './CalibrationFlow.module.css'
@@ -29,6 +30,8 @@ export interface CalibrationFlowProps {
 
 const SEQUENCE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
 const PRAISE = ['¡Genial!', '¡Qué bonito!', '¡Ya lo tengo!', '¡Me encanta!', '¡Muy bien!', '¡Toma ya!']
+/** The model may still be loading when the child writes the first digit: wait this many 250 ms ticks for it. */
+const MODEL_WAIT_TICKS = 24
 
 export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }: CalibrationFlowProps) {
   const ink = useInk()
@@ -46,8 +49,12 @@ export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }:
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const idle = useRef<ReturnType<typeof setTimeout> | null>(null)
   const advance = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const waits = useRef(0)
+  /** Attempts at the current step that the recogniser saw as a scribble (asked once to write it again). */
+  const retries = useRef(0)
   const latest = useRef({ ink, step, childId })
   useLayoutEffect(() => { latest.current = { ink, step, childId } })
+  const palm = usePalmGuard()
 
   const digit = SEQUENCE[Math.floor(step / repeats) % SEQUENCE.length]
   const rep = step % repeats
@@ -78,13 +85,30 @@ export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }:
       advance.current = setTimeout(() => { clearPad(); setBubble(null) }, 1100)
       return
     }
-    const { ink: ctx, step: current } = latest.current
+    const { ink: ctx, step: current, childId: kid } = latest.current
     const target = SEQUENCE[Math.floor(current / repeats) % SEQUENCE.length]
+    if (!ctx.ready && ctx.recognizer && waits.current < MODEL_WAIT_TICKS) {
+      // the recogniser is still loading (first seconds of the app): keep the ink and try again shortly
+      waits.current++
+      idle.current = setTimeout(capture, 250)
+      return
+    }
+    waits.current = 0
     if (ctx.ready && ctx.recognizer) {
       let rec: DigitRecognition | null = null
       try { rec = ctx.recognizer.recognize(strokes, zone) } catch (err) { console.warn('[ink] calibration recognition failed', err) }
-      if (rec) ctx.learning.calibration(target, rec)
+      if (rec && (rec as { reason?: string }).reason === 'scribble' && retries.current < 1) {
+        // Not digit-like at all (a doodle?): ask once more instead of learning it as this digit.
+        retries.current++
+        setBubble('¡Uy! No lo he visto bien. ¿Otra vez?')
+        sfx.play('hint', { volume: 0.4 })
+        advance.current = setTimeout(() => { clearPad(); setBubble(null) }, 1300)
+        return
+      }
+      // Stored for the child being calibrated (onboarding may run before it is the active child).
+      if (rec) ctx.learning.calibration(target, rec, kid)
     }
+    retries.current = 0
     setSaved(true)
     setBubble(PRAISE[(current * 7 + target) % PRAISE.length])
     sfx.play('sparkle', { volume: 0.5 })
@@ -119,6 +143,10 @@ export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }:
         return true
       },
       onEraseAt() { clearPad() },
+      onBlockedWrite() {
+        // a pen has been used on this device, so fingers do not write (palm rejection)
+        setBubble('¡Escribe con el lápiz!')
+      },
     },
   })
 
@@ -158,7 +186,14 @@ export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }:
             <canvas ref={canvasRef} className={s.canvas} aria-hidden />
             {saved && <span className={s.tick} aria-hidden>✓</span>}
           </div>
-          <button type="button" className={s.clear} onClick={clearPad} disabled={!hasInk || saved} aria-label="Borrar">
+          <button
+            type="button"
+            className={s.clear}
+            onPointerDown={palm.onPointerDown}
+            onClick={palm.guard(clearPad)}
+            disabled={!hasInk || saved}
+            aria-label="Borrar"
+          >
             <EraserIcon size={24} />
             <span>Borrar</span>
           </button>
@@ -180,7 +215,7 @@ export function CalibrationFlow({ childId, companionName, onDone, repeats = 2 }:
             )
           })}
         </ol>
-        <Button variant="ghost" onClick={() => { clearTimers(); onDone() }}>Saltar</Button>
+        <Button variant="ghost" onPointerDown={palm.onPointerDown} onClick={palm.guard(() => { clearTimers(); onDone() })}>Saltar</Button>
       </footer>
     </div>
   )

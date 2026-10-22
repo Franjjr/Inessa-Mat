@@ -7,7 +7,10 @@ import { analyzeAdd, analyzeSub, digitAt, digitCount, fromDigits, toDigits } fro
 
 export interface Diagnosis {
   errorType: ErrorType
+  /** Every wrong column (to highlight gently). */
   wrongColumns: number[]
+  /** The wrong columns that show the diagnosed error itself (named in the feedback). Defaults to wrongColumns. */
+  focus?: number[]
 }
 
 /** Columns (0 = units) where the given digits differ from the expected value. Empty cells count as 0. */
@@ -60,22 +63,27 @@ export function diagnoseAdd(operands: readonly number[], given: readonly (number
     return { errorType: 'carry-wrong', wrongColumns: given.flatMap((d, i) => (d !== null && (d > 9 || d < 0) ? [i] : [])) }
   }
   const counts = new Map<ErrorType, number>()
-  const bump = (t: ErrorType) => counts.set(t, (counts.get(t) ?? 0) + 1)
+  const columnsOf = new Map<ErrorType, number[]>()
+  const bump = (t: ErrorType, i: number) => {
+    counts.set(t, (counts.get(t) ?? 0) + 1)
+    columnsOf.set(t, [...(columnsOf.get(t) ?? []), i])
+  }
   for (const i of wrong) {
     const g = given[i] ?? 0
     const cin = carries[i] ?? 0
     const raw = operands.reduce((s, op) => s + digitAt(op, i), 0)
     if (i >= opCols) {
-      bump(g === 0 ? 'carry-forgot' : 'carry-wrong')
+      bump(g === 0 ? 'carry-forgot' : 'carry-wrong', i)
       continue
     }
     const c = carriesGiven?.[i]
-    if (cin > 0 && g === raw % 10) bump('carry-forgot')
-    else if (raw + cin >= 10 && g === Math.floor((raw + cin) / 10)) bump('carry-wrong')
-    else if (c !== undefined && c !== null && c !== cin && g === (raw + c) % 10) bump('carry-wrong')
-    else bump('fact')
+    if (cin > 0 && g === raw % 10) bump('carry-forgot', i)
+    else if (raw + cin >= 10 && g === Math.floor((raw + cin) / 10)) bump('carry-wrong', i)
+    else if (c !== undefined && c !== null && c !== cin && g === (raw + c) % 10) bump('carry-wrong', i)
+    else bump('fact', i)
   }
-  return { errorType: pickType(counts, ['carry-forgot', 'carry-wrong', 'fact']), wrongColumns: wrong }
+  const errorType = pickType(counts, ['carry-forgot', 'carry-wrong', 'fact'])
+  return { errorType, wrongColumns: wrong, focus: columnsOf.get(errorType) ?? wrong }
 }
 
 // ---------------------------------------------------------------- subtraction
@@ -144,12 +152,20 @@ export function diagnoseMul(top: number, bottom: number, given: readonly (number
 
 // ---------------------------------------------------------------- division
 
-export type DivisionDetail = 'too-big' | 'too-small' | 'remainder' | 'bring-down' | 'digit' | 'other'
+/** too-big / too-small: quotient off by one or two · remainder: quotient right, remainder wrong · bring-down: the
+    leftover ten was not joined to the units · stopped: only the tens were shared (84 ÷ 4 → 2, 70 ÷ 7 → 1, forgetting
+    the 0) · reversed: quotient digits swapped (21 → 12) · operation: subtracted/added/multiplied instead · digit: one
+    quotient digit wrong (a table fact) · near: one-digit quotient that is not the nearest multiple. */
+export type DivisionDetail =
+  | 'too-big' | 'too-small' | 'remainder' | 'bring-down' | 'stopped' | 'reversed' | 'operation' | 'digit' | 'near' | 'other'
 
 export function diagnoseDivision(
   dividend: number, divisor: number, q: number, r: number,
 ): { errorType: ErrorType; detail: DivisionDetail } {
   const Q = Math.floor(dividend / divisor)
+  if (r === 0 && [dividend - divisor, dividend + divisor, dividend * divisor].includes(q)) {
+    return { errorType: 'operation', detail: 'operation' }
+  }
   if (r >= divisor) return { errorType: 'remainder-too-big', detail: 'remainder' }
   if (q === Q) return { errorType: 'fact', detail: 'remainder' }
   if (q > Q && q - Q <= 2) return { errorType: 'quotient-off', detail: 'too-big' }
@@ -163,8 +179,13 @@ export function diagnoseDivision(
     }
     const qd = toDigits(q)
     const Qd = toDigits(Q)
+    // Stopped after sharing the tens: the units digit of the quotient is missing (a cell left empty).
+    if (q >= 1 && q === Math.floor(Q / 10)) return { errorType: 'incomplete', detail: 'stopped' }
+    if (qd.length === Qd.length && qd.length > 1 && [...qd].reverse().every((d, i) => d === Qd[i])) {
+      return { errorType: 'misaligned', detail: 'reversed' }
+    }
     if (qd.length === Qd.length && qd.filter((d, i) => d !== Qd[i]).length === 1) return { errorType: 'fact', detail: 'digit' }
     return { errorType: 'other', detail: 'other' }
   }
-  return { errorType: 'fact', detail: 'digit' }
+  return { errorType: 'fact', detail: 'near' }
 }

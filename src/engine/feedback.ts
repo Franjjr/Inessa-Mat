@@ -65,7 +65,8 @@ export const FEEDBACK = {
   factAdded: (a: number, b: number) => `¡Ojo! Has sumado ${a} + ${b}. Multiplicar es hacer ${a} grupos de ${b}.`,
   divWrong: (dividend: number, divisor: number) =>
     `¡Casi! Piensa en la tabla del ${divisor}: ¿${divisor} por cuánto da ${dividend}?`,
-  divOperation: (divisor: number) => `¡Ojo! Aquí hay que repartir en grupos de ${divisor}, no sumar ni restar.`,
+  divOperation: (dividend: number, divisor: number) =>
+    `¡Ojo! Aquí hay que dividir: ¿cuántas veces cabe el ${divisor} en el ${dividend}?`,
   missingWrong: (known: number, product: number) =>
     `¡Casi! ¿${known} por cuánto da ${product}? Cuenta de ${known} en ${known} hasta llegar.`,
   missingProduct: (product: number) => `¡Ojo! El ${product} ya está escrito: busca el número que falta en la multiplicación.`,
@@ -84,6 +85,9 @@ export const FEEDBACK = {
     cols.length ? `¡Ojo con la mochila! Te has dejado la llevada en ${columnList(cols)}.` : '¡Ojo con la mochila! No te olvides de sumar la llevada.',
   carryWrong: 'En cada casa solo cabe una cifra: escribe las unidades y la decena salta a la casa de al lado.',
   carryWrongMul: 'Primero multiplica y después suma la llevada. ¡La llevada no se multiplica!',
+  /** Subtraction: a result cell holding two digits (e.g. "15"). */
+  oneDigitPerCell: 'En cada casa del resultado solo cabe una cifra. ¡Revisa la resta casa por casa!',
+  mulAdded: (bottom: number) => `¡Ojo! Has sumado los números. Aquí hay que multiplicar cada cifra por ${bottom}.`,
   addFact: (cols: number[]) => `¡Casi! Revisa la suma de ${columnList(cols)}.`,
   misaligned: 'Coloca las cifras empezando por la derecha: unidades debajo de unidades, decenas debajo de decenas.',
   smallerFromLarger: 'Arriba hay un número más pequeño: ¡pide ayuda a la vecina!',
@@ -98,6 +102,11 @@ export const FEEDBACK = {
   quotientTooSmall: '¡Todavía cabe una vez más! Prueba con uno más en el cociente.',
   remainderWrong: (dividend: number, used: number) => `¡El cociente está bien! Ahora revisa el resto: ${dividend} − ${used}.`,
   bringDown: 'Lo que sobra en las decenas se junta con las unidades: ¡bájalo y sigue repartiendo!',
+  divisionStopped: '¡No te pares! Después de las decenas, baja las unidades y sigue repartiendo. Si no cabe ninguna vez, escribe un 0.',
+  divisionReversed: '¡Casi! Las cifras del cociente van en orden: primero la de las decenas y, a su derecha, la de las unidades.',
+  divisionOperation: (dividend: number, divisor: number) => `¡Ojo! Aquí hay que dividir: repartir ${dividend} entre ${divisor}.`,
+  divisionNear: (divisor: number, dividend: number) =>
+    `¡Casi! Busca en la tabla del ${divisor} el número que más se acerca a ${dividend} sin pasarse.`,
   divisionFact: (divisor: number) => `¡Casi! Reparte cifra a cifra con la tabla del ${divisor}.`,
   divisionOther: 'Comprueba tu división: cociente × divisor + resto tiene que dar el dividendo.',
   wordOperation: {

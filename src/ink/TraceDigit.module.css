@@ -11,10 +11,12 @@
 .tip {
   margin: 6px auto 0;
   max-width: 34ch;
+  min-height: 2.6em;
   font-family: var(--font-read);
   font-size: var(--fs-md);
   color: var(--c-ink-soft);
 }
+.penHint { color: var(--c-primary-strong); font-weight: 700; }
 
 .stage {
   display: flex;

@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
-import { IDLE_MS } from './constants'
+import { IDLE_MS, PEN_SEEN_KEY } from './constants'
 import { InkProvider } from './InkProvider'
 import { NumberInput } from './NumberInput'
 import { useInkLearning } from './hooks'
@@ -132,5 +132,29 @@ describe('NumberInput · keyboard', () => {
     expect(onChange).toHaveBeenLastCalledWith(81)
     fireEvent.click(within(keypad).getByRole('button', { name: 'Comprobar' }))
     expect(onSubmit).toHaveBeenCalledWith(81)
+  })
+})
+
+describe('NumberInput · keypad and lost Pencil', () => {
+  afterEach(() => localStorage.clear())
+
+  it('a finger trying to write after a pen was used points to the keypad toggle', () => {
+    localStorage.setItem(PEN_SEEN_KEY, '2026-10-01')
+    const { rec, pad } = setup([{ digit: 4 }])
+    notePenContact(false, performance.now() - 10_000)
+    act(() => replayStrokes(pad, handwriteNumber('4', { x: 40, y: 0, w: 100, h: H }, { pointerType: 'touch' })))
+    expect(rec.calls).toHaveLength(0)
+    expect(screen.getByRole('status')).toHaveTextContent('¿Sin lápiz? ¡Toca aquí!')
+    fireEvent.click(screen.getByRole('button', { name: 'Usar el teclado de números' }))
+    expect(screen.getByRole('group', { name: 'Teclado de números' })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('keypadPosition="right" puts a 3×4 keypad beside the pad', () => {
+    render(<NumberInput value={null} onChange={() => {}} onSubmit={() => {}} keypadPosition="right" ariaLabel="r" />)
+    fireEvent.click(screen.getByRole('button', { name: 'Usar el teclado de números' }))
+    const keys = within(screen.getByRole('group', { name: 'Teclado de números' })).getAllByRole('button').map((b) => b.getAttribute('aria-label'))
+    expect(keys.slice(0, 3)).toEqual(['1', '2', '3']) // grid layout: 1 2 3 / 4 5 6 / 7 8 9 / ⌫ 0 ✓
+    expect(keys.slice(9)).toEqual(['Borrar', '0', 'Comprobar'])
   })
 })

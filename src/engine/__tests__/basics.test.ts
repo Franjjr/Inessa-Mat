@@ -170,7 +170,7 @@ describe('diagnose (direct)', () => {
     expect(diagnoseSub(586, 243, [null, 3, 4, 3]).errorType).toBe('misaligned')
     expect(smallerFromLargerValue(52, 17)).toBe(45)
     expect(diagnoseDivision(17, 5, 3, 7).errorType).toBe('remainder-too-big')
-    expect(diagnoseDivision(17, 5, 1, 2)).toEqual({ errorType: 'fact', detail: 'digit' })
+    expect(diagnoseDivision(17, 5, 1, 2)).toEqual({ errorType: 'fact', detail: 'near' })
   })
 })
 

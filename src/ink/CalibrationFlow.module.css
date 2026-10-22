@@ -103,6 +103,10 @@
   cursor: crosshair;
   transition: border-color var(--dur-med), box-shadow var(--dur-med);
 }
+/* portrait tablets: the pad wraps under the model, so it can be bigger */
+@media (orientation: portrait) and (min-width: 600px) {
+  .pad { width: clamp(240px, 36vw, 330px); }
+}
 .lineTop, .lineBase {
   position: absolute;
   left: 10%;

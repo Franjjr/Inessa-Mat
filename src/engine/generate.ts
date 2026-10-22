@@ -309,16 +309,26 @@ function planAdaptive(
     }
     chosenNew.push(it)
   }
+  // First pass: every chosen new item once, then the seen items in priority order (due/weak first).
   const out: { item: UniverseItem; isNew: boolean }[] = chosenNew.map((item) => ({ item, isNew: true }))
-  let i = 0
-  while (out.length < n && seen.length > 0) {
-    out.push({ item: seen[i % seen.length].item, isNew: false })
-    i++
+  for (const s of seen) {
+    if (out.length >= n) break
+    out.push({ item: s.item, isNew: false })
   }
-  let j = 0
-  while (out.length < n && chosenNew.length > 0) {
-    out.push({ item: chosenNew[j % chosenNew.length], isNew: true })
-    j++
+  // Repeats (small pools): share them between the most urgent seen items and the new ones (hard new facts first,
+  // they need the extra exposure), instead of hammering the same two known facts.
+  if (out.length < n && out.length > 0) {
+    const repeatNew = chosenNew
+      .map((item, k) => ({ item, k }))
+      .sort((x, y) => Number(isBudgeted(y.item.skill)) - Number(isBudgeted(x.item.skill)) || y.item.weight - x.item.weight || x.k - y.k)
+      .map(({ item }) => ({ item, isNew: true }))
+    const repeatSeen = seen.map((s) => ({ item: s.item, isNew: false }))
+    const cycle: { item: UniverseItem; isNew: boolean }[] = []
+    for (let k = 0; k < Math.max(repeatSeen.length, repeatNew.length); k++) {
+      if (k < repeatSeen.length) cycle.push(repeatSeen[k])
+      if (k < repeatNew.length) cycle.push(repeatNew[k])
+    }
+    for (let k = 0; out.length < n; k++) out.push(cycle[k % cycle.length])
   }
   if (out.length < n) {
     // Nothing seen and no new item allowed by the budget: fall back to the gentlest items available.
@@ -423,10 +433,14 @@ function buildSkip(n: number, rng: Rng, used: Set<string>): Exercise {
   }, used, rng)!
 }
 
+/** [groups, perGroup] (or [rows, cols]) for the manipulative kinds. factorRange bounds both numbers (the table, when
+    given, is the size of each group / row); otherwise small numbers that are easy to count on screen. */
 function smallPair(ctx: Ctx, rng: Rng, maxGroups: number, maxPer: number): [number, number] {
   const tables = (ctx.tables ?? []).filter((t) => t >= 2)
   const r = ctx.rangeExplicit ? range(Math.max(1, ctx.range[0]), ctx.range[1]) : range(2, maxGroups)
-  if (tables.length) return [pick(rng, r.length ? r : range(2, maxGroups)), pick(rng, tables)]
+  const count = r.length ? r : range(2, maxGroups)
+  if (tables.length) return [pick(rng, count), pick(rng, tables)]
+  if (ctx.rangeExplicit) return [pick(rng, count), pick(rng, count)]
   return [randInt(rng, 2, maxGroups), randInt(rng, 2, maxPer)]
 }
 

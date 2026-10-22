@@ -24,4 +24,13 @@ describe('render', () => {
     expect(touch.stroke).toBe(1)
     expect(touch.lineWidths[0]).toBeCloseTo(baseInkWidth(100, 'touch'))
   })
+
+  it('draws faded (ghost) pen strokes as one path so they do not look beaded', () => {
+    const calls = mockCanvas()
+    const c = document.createElement('canvas')
+    sizeCanvas(c, { width: 80, height: 100 }, 10, 1)
+    const strokes = handwrite(1, { x: 0, y: 0, w: 80, h: 100 })
+    renderInk(c, strokes, { color: '#2e1a47', margin: 10, dpr: 1, zoneHeight: 100, ghost: () => true })
+    expect(calls.stroke).toBe(strokes.length)
+  })
 })

@@ -42,10 +42,14 @@ export function clearCanvas(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasEle
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 }
 
-export function drawStroke(ctx: CanvasRenderingContext2D, stroke: InkStroke, style: InkStyle): void {
+/**
+ * Draws one stroke. Pen strokes vary their width with pressure; `pressure: false` draws a single path instead
+ * (needed for translucent strokes: overlapping per-segment caps would show as darker beads).
+ */
+export function drawStroke(ctx: CanvasRenderingContext2D, stroke: InkStroke, style: InkStyle & { pressure?: boolean }): void {
   const pts = stroke.points
   if (!pts.length) return
-  const usePressure = stroke.pointerType === 'pen'
+  const usePressure = stroke.pointerType === 'pen' && style.pressure !== false
   ctx.strokeStyle = style.color
   ctx.fillStyle = style.color
   ctx.lineCap = 'round'
@@ -107,8 +111,9 @@ export function renderInk(
   ctx.setTransform(style.dpr, 0, 0, style.dpr, style.margin * style.dpr, style.margin * style.dpr)
   for (const s of strokes) {
     // ghost strokes: the previous digit, faded while the child may be rewriting it
-    ctx.globalAlpha = style.ghost?.(s) ? 0.2 : 1
-    drawStroke(ctx, s, { ...style, width: baseInkWidth(style.zoneHeight, s.pointerType) * (style.widthScale ?? 1) })
+    const ghost = !!style.ghost?.(s)
+    ctx.globalAlpha = ghost ? 0.2 : 1
+    drawStroke(ctx, s, { ...style, width: baseInkWidth(style.zoneHeight, s.pointerType) * (style.widthScale ?? 1), pressure: !ghost })
   }
   ctx.globalAlpha = 1
 }

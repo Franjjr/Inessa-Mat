@@ -150,7 +150,8 @@
 .tool:disabled { opacity: .4; cursor: default; }
 .tool[aria-pressed='true'] { background: var(--c-primary-soft); }
 .erase { grid-column: 1; grid-row: 1; }
-.toggle { grid-column: 1; grid-row: 2; }
+.toggleWrap { grid-column: 1; grid-row: 2; position: relative; display: inline-flex; }
+.nudge { animation: nudge 900ms var(--ease-bounce) 2; border-color: var(--c-primary); }
 
 .check {
   grid-column: 2;
@@ -185,6 +186,9 @@
 .disabled .pad { opacity: .65; cursor: not-allowed; }
 
 .keypad { margin-top: 2px; }
+/* keypad beside the pad: the pad stays the vertical centre of the component (inline after "6 × 7 =") */
+.keypadRight { flex-direction: row; gap: var(--sp-5); }
+.keypadRight .keypad { margin-top: 0; }
 
 @keyframes digitIn {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-8deg); }
@@ -195,6 +199,11 @@
   0% { opacity: 0; transform: scale(.7); }
   100% { opacity: 1; transform: scale(1); }
 }
+@keyframes nudge {
+  0%, 100% { transform: scale(1); }
+  40% { transform: scale(1.18) rotate(-6deg); }
+  70% { transform: scale(.96) rotate(3deg); }
+}
 @keyframes wiggle {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px) rotate(-1deg); }
@@ -203,6 +212,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .digit { animation: none; }
-  .typedDigit, .st_wrong .pad { animation: none; }
+  .typedDigit, .st_wrong .pad, .nudge { animation: none; }
   .pad, .canvas, .check, .tool { transition: none; }
 }

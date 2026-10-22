@@ -28,6 +28,8 @@ export interface CellGroupApi {
   submit(): void
   /** The group shows an on-screen keypad right now (cells skip their own digit picker). */
   keypadVisible: boolean
+  /** A finger tried to write although a pen is in use: point the child to the keypad toggle. */
+  nudgeKeypad(): void
 }
 
 export const CellGroupContext = createContext<CellGroupApi | null>(null)

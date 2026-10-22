@@ -114,6 +114,7 @@ def main():
         'format': FORMAT,
         'version': FORMAT_VERSION,
         'modelId': f'digits-{digest}',
+        'arch': ck['cfg'].get('arch', 'v2'),
         'createdAt': dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
         'input': {'shape': [1, 28, 28], 'layout': 'chw', 'range': [0, 1]},
         'labels': LABELS,

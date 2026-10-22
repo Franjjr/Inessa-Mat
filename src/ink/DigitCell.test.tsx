@@ -1,10 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import type { DigitCellProps } from '@/types'
-import { CONTINUE_MS, IDLE_MS, PEN_SEEN_KEY } from './constants'
+import { CONTINUE_MS, IDLE_MS, PEN_SEEN_KEY, UNMOUNT_FORGET_MS } from './constants'
 import { InkProvider } from './InkProvider'
 import { DigitCell, type InkChangeInfo } from './DigitCell'
 import { useInkLearning } from './hooks'
+import { CellGroup } from './CellGroup'
+import { notePenContact } from './policy'
 import { scriptedRecognizer, type ScriptedAnswer } from './dev/scripted'
 import { replayStrokes, tap } from './dev/autoplay'
 import { fixedElementSize, mockCanvas } from './dev/testing'
@@ -219,5 +221,87 @@ describe('DigitCell · keyboard and props', () => {
     idle()
     expect(onChange).not.toHaveBeenCalled()
     expect(surface).toHaveAttribute('aria-invalid', 'true')
+  })
+})
+
+describe('DigitCell · lost Pencil (a finger after a pen was used)', () => {
+  beforeEach(() => localStorage.setItem(PEN_SEEN_KEY, '2026-10-01'))
+
+  it('a lone cell opens the digit picker when the pen has been idle for a while', () => {
+    const { onChange, surface } = setup([{ digit: 1 }])
+    notePenContact(false, performance.now() - 10_000)
+    act(() => tap(surface, 40, 40, 'touch'))
+    const dialog = screen.getByRole('dialog', { name: 'Elige un número' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Es un 6' }))
+    expect(onChange).toHaveBeenLastCalledWith(6, expect.objectContaining({ via: 'keypad' }))
+  })
+
+  it('never while the pen is busy: that finger is the palm', () => {
+    const { surface } = setup([{ digit: 1 }])
+    notePenContact(false, performance.now() - 200)
+    act(() => tap(surface, 40, 40, 'touch'))
+    act(() => replayStrokes(surface, handwrite(4, { x: 0, y: 0, w: W, h: H }, { pointerType: 'touch' })))
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('inside a group, a finger trying to write points to the keypad toggle', () => {
+    const rec = scriptedRecognizer([{ digit: 1 }])
+    render(
+      <InkProvider recognizer={rec}>
+        <CellGroup><DigitCell value={null} onChange={() => {}} ariaLabel="g" /></CellGroup>
+      </InkProvider>,
+    )
+    notePenContact(false, performance.now() - 10_000)
+    act(() => replayStrokes(screen.getByRole('textbox', { name: 'g' }), handwrite(4, { x: 0, y: 0, w: W, h: H }, { pointerType: 'touch' })))
+    expect(screen.getByRole('status')).toHaveTextContent('¿Sin lápiz? ¡Toca aquí!')
+    expect(rec.calls).toHaveLength(0)
+    act(() => { vi.advanceTimersByTime(5000) })
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+})
+
+describe('DigitCell · learning hygiene', () => {
+  async function mountWritten() {
+    const data = await import('@/data')
+    const add = vi.mocked(data.addInkSample)
+    add.mockClear()
+    const rec = scriptedRecognizer([{ digit: 5 }])
+    rec.recognize = ((orig) => (st, z) => ({ ...orig(st, z), embedding: [0.3, 0.1] }))(rec.recognize)
+    const Host = ({ show }: { show: boolean }) => (
+      <InkProvider recognizer={rec} childId="kid"><LearningProbe />{show && <DigitCell value={null} onChange={() => {}} ariaLabel="u" />}</InkProvider>
+    )
+    const utils = render(<Host show />)
+    write(screen.getByRole('textbox', { name: 'u' }), 5)
+    idle()
+    utils.rerender(<Host show={false} />)
+    return add
+  }
+
+  it('an unmounted cell does not leak its digit into a later confirm()', async () => {
+    const add = await mountWritten()
+    act(() => { vi.advanceTimersByTime(UNMOUNT_FORGET_MS + 50) })
+    act(() => learning.confirm())
+    expect(add).not.toHaveBeenCalled()
+  })
+
+  it('StrictMode (dev) remounts do not forget a fresh recognition', async () => {
+    const { StrictMode } = await import('react')
+    const data = await import('@/data')
+    const add = vi.mocked(data.addInkSample)
+    add.mockClear()
+    const rec = scriptedRecognizer([{ digit: 8 }])
+    rec.recognize = ((orig) => (st, z) => ({ ...orig(st, z), embedding: [0.5] }))(rec.recognize)
+    render(<StrictMode><InkProvider recognizer={rec} childId="kid"><LearningProbe /><DigitCell value={null} onChange={() => {}} ariaLabel="s" /></InkProvider></StrictMode>)
+    write(screen.getByRole('textbox', { name: 's' }), 8)
+    idle()
+    act(() => { vi.advanceTimersByTime(UNMOUNT_FORGET_MS + 50) })
+    act(() => learning.confirm())
+    expect(add).toHaveBeenCalledWith(expect.objectContaining({ digit: 8, source: 'confirmed' }))
+  })
+
+  it('confirm() right after the answer still counts, even if the cells unmount in the same update', async () => {
+    const add = await mountWritten()
+    act(() => learning.confirm())
+    expect(add).toHaveBeenCalledWith(expect.objectContaining({ digit: 5, source: 'confirmed' }))
   })
 })

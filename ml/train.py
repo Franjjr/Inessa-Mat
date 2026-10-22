@@ -1,6 +1,6 @@
 """Train the digit CNN on the cached datasets (run build_data.py first).
 
-Usage: python train.py --epochs 12 [--out cache/model.pt]
+Usage: python train.py --arch v3 --epochs 16 [--out cache/model.pt] [--init cache/old.pt --lr 5e-4 --epochs 4]
 """
 from __future__ import annotations
 
@@ -71,6 +71,7 @@ def main():
     ap.add_argument('--out', default=os.path.join(CACHE, 'model.pt'))
     ap.add_argument('--seed', type=int, default=0)
     ap.add_argument('--arch', default='v2')
+    ap.add_argument('--init', default='', help='start from this checkpoint (fine-tuning, e.g. with new data)')
     a = ap.parse_args()
     torch.manual_seed(a.seed)
     np.random.seed(a.seed)
@@ -91,6 +92,12 @@ def main():
             tests[k] = (to_tensor(X), torch.from_numpy(y))
 
     model = DigitNet(a.arch)
+    if a.init:
+        ck = torch.load(a.init, map_location='cpu')
+        if ck['cfg'].get('arch') != a.arch:
+            raise SystemExit(f"--init checkpoint is arch {ck['cfg'].get('arch')}, not {a.arch}")
+        model.load_state_dict(ck['state'])
+        print('initialised from', a.init, flush=True)
     opt = torch.optim.AdamW(model.parameters(), lr=a.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=a.lr, total_steps=a.epochs * steps, pct_start=0.15)
     names = list(srcs)

@@ -109,6 +109,12 @@ export function notePenActivity(t: number = clock()): void {
   lastPenContactAt = t
 }
 
+/** Milliseconds since the pen last touched the screen (Infinity if it never did in this session). */
+export function msSincePenContact(t: number = clock()): number {
+  if (penContact) return 0
+  return t - lastPenContactAt
+}
+
 /** A finger press within this time of pen contact is treated as the palm. */
 export const PALM_GUARD_MS = 300
 

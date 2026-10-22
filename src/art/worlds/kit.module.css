@@ -1,0 +1,97 @@
+/* Layout primitives for layered, responsive scenes.
+   A scene layer is a size container; each Stage keeps a fixed aspect ratio and either covers the container
+   (anchored bottom-centre, like preserveAspectRatio xMidYMax slice) or hugs one corner (like xMinYMax meet).
+   Static art lives in one SVG per stage (painted once). Animated sprites are small HTML boxes positioned in stage
+   percentages, so their transform/opacity animations stay on the compositor (cheap on iPad). */
+
+.stage {
+  position: absolute;
+  aspect-ratio: var(--aw) / var(--ah);
+  pointer-events: none;
+}
+
+/* Cover, anchored to the bottom centre. Fallback uses vh when container query units are unavailable. */
+.cover {
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: max(100%, calc(100vh * var(--aw) / var(--ah)));
+  width: max(100%, calc(100cqh * var(--aw) / var(--ah)));
+}
+
+/* Cover, anchored to the top centre (ceilings, skies). */
+.coverTop {
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: max(100%, calc(100vh * var(--aw) / var(--ah)));
+  width: max(100%, calc(100cqh * var(--aw) / var(--ah)));
+}
+
+/* Edge framing: as tall as the container but never wider than --ew of it (then it shrinks, keeping the corner). */
+.bl, .br, .tl, .tr {
+  width: min(var(--ew, 32%), calc(100vh * var(--aw) / var(--ah)));
+  width: min(var(--ew, 32%), calc(var(--eh, 100cqh) * var(--aw) / var(--ah)));
+}
+.bl { left: 0; bottom: 0; }
+.br { right: 0; bottom: 0; }
+.tl { left: 0; top: 0; }
+.tr { right: 0; top: 0; }
+
+.full {
+  inset: 0;
+  aspect-ratio: auto;
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+
+.sprite {
+  position: absolute;
+}
+.boxSvg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.wrap {
+  position: absolute;
+  inset: 0;
+}
+
+/* Falling / rising particle lanes: the lane box spans the travel distance and translates by its own height. */
+.lane {
+  position: absolute;
+  will-change: transform, opacity;
+}
+.particle {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.particle > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.fromTop { bottom: 100%; }
+.fromBottom { top: 100%; }
+
+/* Colour changes (vividness) ease in instead of snapping. */
+.tinted :is(path, circle, ellipse, rect, polygon, polyline, line, stop) {
+  transition: fill 1.4s ease, stroke 1.4s ease, stop-color 1.4s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tinted :is(path, circle, ellipse, rect, polygon, polyline, line, stop) { transition-duration: 0.3s; }
+}

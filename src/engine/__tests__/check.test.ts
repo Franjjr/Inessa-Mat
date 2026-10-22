@@ -301,7 +301,7 @@ describe('check — division (galera)', () => {
     const e = makeDivision(84, 4)
     expect(check(e, div(21, null)).correct).toBe(true)
     expect(check(e, num(21)).correct).toBe(true)
-    expect(check(e, div(12, 0))).toMatchObject({ errorType: 'other' })
+    expect(check(e, div(12, 0))).toMatchObject({ errorType: 'misaligned' }) // digits swapped (21 → 12)
     expect(check(e, div(22, 0))).toMatchObject({ errorType: 'quotient-off' })
     expect(check(e, div(31, 0))).toMatchObject({ errorType: 'fact' })
     expect(check(makeDivision(96, 3), div(12, 0)).errorType).toBe('fact')

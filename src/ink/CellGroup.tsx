@@ -10,6 +10,7 @@ import { computeOrder, neighbor, step, type CellOrder, type Direction, type Orde
 import { Keypad } from './Keypad'
 import { KeypadIcon, PencilIcon } from './icons'
 import { usePalmGuard } from './usePalmGuard'
+import { NudgeBubble, useNudge } from './Nudge'
 import s from './CellGroup.module.css'
 
 export interface CellGroupProps {
@@ -40,6 +41,7 @@ export function CellGroup({
   const [version, setVersion] = useState(0)
   const [toggled, setToggled] = useState(false)
   const palm = usePalmGuard()
+  const [nudging, nudge] = useNudge()
   const keypadVisible = keypad === 'show' || (keypad === 'auto' && (mode === 'keypad' || toggled))
 
   const latest = useRef({ order, onSubmit, autoAdvance })
@@ -107,9 +109,13 @@ export function CellGroup({
     else latest.current.onSubmit?.()
   }, [])
 
+  const showToggle = keypadToggle && keypad === 'auto' && mode !== 'keypad'
+  const canNudge = showToggle && !keypadVisible
+  const nudgeKeypad = useCallback(() => { if (canNudge) nudge() }, [canNudge, nudge])
+
   const api = useMemo<CellGroupApi>(
-    () => ({ register, currentId, setCurrent: setCurrentId, afterInput, move, tab, back, submit, keypadVisible }),
-    [register, currentId, afterInput, move, tab, back, submit, keypadVisible],
+    () => ({ register, currentId, setCurrent: setCurrentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad }),
+    [register, currentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad],
   )
 
   const target = () => {
@@ -122,8 +128,6 @@ export function CellGroup({
     if (!t) return
     if (!t[1].isEmpty()) { t[1].clear(); t[1].focus() } else api.back(t[0])
   }
-
-  const showToggle = keypadToggle && keypad === 'auto' && mode !== 'keypad'
 
   return (
     <CellGroupContext.Provider value={api}>
@@ -140,22 +144,25 @@ export function CellGroup({
               />
             )}
             {showToggle && (
-              <button
-                type="button"
-                className={s.toggle}
-                onMouseDown={(e) => e.preventDefault()}
-                onPointerDown={palm.onPointerDown}
-                onClick={palm.guard(() => {
-                  setToggled((t) => !t)
-                  const t = target()
-                  t?.[1].focus()
-                })}
-                aria-pressed={toggled}
-                aria-label={toggled ? 'Escribir a mano' : 'Usar el teclado de números'}
-                title={toggled ? 'Escribir a mano' : 'Teclado de números'}
-              >
-                {toggled ? <PencilIcon size={26} /> : <KeypadIcon size={24} />}
-              </button>
+              <span className={s.toggleWrap}>
+                {nudging && !toggled && <NudgeBubble side={keypadPosition === 'below' ? 'left' : 'top'} />}
+                <button
+                  type="button"
+                  className={clsx(s.toggle, nudging && !toggled && s.nudge)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onPointerDown={palm.onPointerDown}
+                  onClick={palm.guard(() => {
+                    setToggled((t) => !t)
+                    const t = target()
+                    t?.[1].focus()
+                  })}
+                  aria-pressed={toggled}
+                  aria-label={toggled ? 'Escribir a mano' : 'Usar el teclado de números'}
+                  title={toggled ? 'Escribir a mano' : 'Teclado de números'}
+                >
+                  {toggled ? <PencilIcon size={26} /> : <KeypadIcon size={24} />}
+                </button>
+              </span>
             )}
           </div>
         )}

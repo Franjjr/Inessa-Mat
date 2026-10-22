@@ -1,7 +1,7 @@
 /* Personal handwriting samples: conversion to the stored InkSample shape and selection of the set that is
-   pushed to the recogniser (all calibration + corrected samples, plus the most recent confirmed ones). */
+   pushed to the recogniser (the newest calibration, corrected and confirmed samples of each digit). */
 import type { DigitRecognition, InkSample } from '@/types'
-import { MAX_CONFIRMED_PER_DIGIT } from './constants'
+import { MAX_SAMPLES_PER_DIGIT } from './constants'
 
 /** Shape accepted by recognizer.setPersonalSamples (image28 lets the recogniser recompute embeddings after a model update). */
 export interface PersonalSampleLite { digit: number; embedding: number[]; image28?: string }
@@ -39,22 +39,40 @@ export function makeSample(childId: string, digit: number, rec: DigitRecognition
   }
 }
 
-/** Keeps the personal set small and fresh so kNN blending stays fast and adapts as handwriting matures. */
-export function selectPersonalSamples(samples: readonly InkSample[], maxConfirmedPerDigit = MAX_CONFIRMED_PER_DIGIT): PersonalSampleLite[] {
-  const valid = samples.filter(
-    (s) => s.digit >= 0 && s.digit <= 9 && ((Array.isArray(s.embedding) && s.embedding.length > 0) || !!s.image28),
-  )
-  const confirmed = valid
-    .filter((s) => s.source === 'confirmed')
-    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0))
-  const perDigit = new Map<number, number>()
-  const keptConfirmed = confirmed.filter((s) => {
-    const n = perDigit.get(s.digit) ?? 0
-    if (n >= maxConfirmedPerDigit) return false
-    perDigit.set(s.digit, n + 1)
+export type SampleCaps = { [K in InkSample['source']]: number }
+
+const isUsable = (s: InkSample) =>
+  Number.isInteger(s.digit) && s.digit >= 0 && s.digit <= 9 && ((Array.isArray(s.embedding) && s.embedding.length > 0) || !!s.image28)
+
+/**
+ * Keeps the personal set small and fresh so kNN blending stays fast and adapts as handwriting matures:
+ * the newest few samples per digit and source (see MAX_SAMPLES_PER_DIGIT), oldest first. The recogniser treats
+ * later samples as newer, so the order matters.
+ */
+export function selectSamples(samples: readonly InkSample[], caps: Partial<SampleCaps> = {}): InkSample[] {
+  const limit: SampleCaps = { ...MAX_SAMPLES_PER_DIGIT, ...caps }
+  const byAge = samples
+    .map((s, i) => ({ s, i }))
+    .filter(({ s }) => isUsable(s))
+    // newest first (stable for equal timestamps: later in the list = newer)
+    .sort((a, b) => (a.s.createdAt < b.s.createdAt ? 1 : a.s.createdAt > b.s.createdAt ? -1 : b.i - a.i))
+  const seen = new Set<string>()
+  const counts = new Map<string, number>()
+  const kept = byAge.filter(({ s }) => {
+    if (seen.has(s.id)) return false
+    seen.add(s.id)
+    const key = `${s.source}:${s.digit}`
+    const n = counts.get(key) ?? 0
+    if (n >= (limit[s.source] ?? 0)) return false
+    counts.set(key, n + 1)
     return true
   })
-  return [...valid.filter((s) => s.source !== 'confirmed'), ...keptConfirmed].map((s) =>
+  return kept.reverse().map(({ s }) => s)
+}
+
+/** Shape pushed to recognizer.setPersonalSamples (oldest first). */
+export function selectPersonalSamples(samples: readonly InkSample[], caps?: Partial<SampleCaps>): PersonalSampleLite[] {
+  return selectSamples(samples, caps).map((s) =>
     s.image28 ? { digit: s.digit, embedding: s.embedding ?? [], image28: s.image28 } : { digit: s.digit, embedding: s.embedding },
   )
 }

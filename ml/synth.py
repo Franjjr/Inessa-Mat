@@ -87,13 +87,18 @@ def d0(r: R) -> Strokes:
 def d1(r: R) -> Strokes:
     top = (0.3 + r.u(-0.03, 0.03), r.u(0.0, 0.03))
     bot = (0.3 + r.u(-0.06, 0.06), 1.0)
-    style = r.pick(['plain', 'flag', 'flagbase', 'longflag'], [0.3, 0.42, 0.13, 0.15])
+    style = r.pick(['plain', 'flag', 'flagbase', 'longflag', 'shallowflag'], [0.28, 0.36, 0.12, 0.14, 0.10])
     strokes: Strokes = []
     if style == 'plain':
         strokes.append(line(top, bot))
     else:
         if style == 'longflag':
             fl = (top[0] - r.u(0.18, 0.32), top[1] + r.u(0.22, 0.42))
+        elif style == 'shallowflag':
+            # long, fairly flat flag (24-40 deg below horizontal) over a vertical stem: the Spanish school "1"
+            # written quickly; the classic 1-vs-7 trap (a 7's bar is horizontal and its stem slants)
+            dx = r.u(0.24, 0.38)
+            fl = (top[0] - dx, top[1] + dx * r.u(0.45, 0.85))
         else:
             fl = (top[0] - r.u(0.08, 0.22), top[1] + r.u(0.08, 0.28))
         if r.c(0.3):  # slightly curved flag

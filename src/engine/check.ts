@@ -60,7 +60,8 @@ function showDigits(digits: readonly (number | null)[]): string {
   let top = -1
   digits.forEach((d, i) => { if (d !== null && d !== 0) top = i })
   if (top < 0) return digits.some((d) => d === 0) ? '0' : '?'
-  return digits.slice(0, top + 1).map((d) => (d === null ? '?' : String(d))).reverse().join('')
+  // A cell holding more than one digit ("15" written in one box) is shown in brackets so logs stay unambiguous.
+  return digits.slice(0, top + 1).map((d) => (d === null ? '?' : d >= 0 && d <= 9 ? String(d) : `[${d}]`)).reverse().join('')
 }
 
 const show = (n: number | null | undefined) => (n === null || n === undefined ? '?' : String(n))
@@ -100,7 +101,7 @@ function checkFactDiv(ex: FactDivExercise, answer: Answer): CheckResult {
   const given = String(v)
   if (v === ex.answer) return { correct: true, given, expected, feedback: praise(ex.id) }
   const ops = [ex.dividend - ex.divisor, ex.dividend + ex.divisor, ex.dividend * ex.divisor]
-  if (ops.includes(v)) return { correct: false, given, expected, errorType: 'operation', feedback: FEEDBACK.divOperation(ex.divisor) }
+  if (ops.includes(v)) return { correct: false, given, expected, errorType: 'operation', feedback: FEEDBACK.divOperation(ex.dividend, ex.divisor) }
   return { correct: false, given, expected, errorType: 'fact', feedback: FEEDBACK.divWrong(ex.dividend, ex.divisor) }
 }
 
@@ -176,7 +177,10 @@ function checkFamily(ex: FactFamilyExercise, answer: Answer): CheckResult {
   const expectedSet = [...new Set(expectedKeys)]
   const expected = expectedKeys.map(prettyFact).join('; ')
   if (answer.type !== 'facts') return wrongShape(expected)
-  const written = answer.facts.map((f, i) => ({ i, text: (f ?? '').trim() })).filter((f) => f.text !== '')
+  const facts: unknown[] = Array.isArray(answer.facts) ? answer.facts : []
+  const written = facts
+    .map((f, i) => ({ i, text: typeof f === 'string' ? f.trim() : f === null || f === undefined ? '' : String(f).trim() }))
+    .filter((f) => f.text !== '')
   if (written.length === 0) return incomplete('?', expected)
   const parsed = written.map((w) => ({ ...w, fact: parseFact(w.text) }))
   const given = parsed.map((p) => (p.fact ? prettyFact(factKey(p.fact)) : p.text)).join('; ')
@@ -247,7 +251,7 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   }
   const d = diagnoseAdd(ex.operands, input.digits, input.carries)
   const feedback =
-    d.errorType === 'carry-forgot' ? FEEDBACK.carryForgot(d.wrongColumns)
+    d.errorType === 'carry-forgot' ? FEEDBACK.carryForgot(d.focus ?? d.wrongColumns)
       : d.errorType === 'carry-wrong' ? FEEDBACK.carryWrong
         : d.errorType === 'misaligned' ? FEEDBACK.misaligned
           : FEEDBACK.addFact(d.wrongColumns)
@@ -262,7 +266,7 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const len = digitCount(ex.answer)
   const given = showDigits(input.digits)
   const big = bigCells(input.digits)
-  if (big.length) return { correct: false, given, expected, errorType: 'other', wrongColumns: big, feedback: FEEDBACK.carryWrong }
+  if (big.length) return { correct: false, given, expected, errorType: 'other', wrongColumns: big, feedback: FEEDBACK.oneDigitPerCell }
   const { empty, extra, value } = columnPrecheck(input, ex.answer, cols)
   if (empty.length === len && input.digits.every((x) => x === null || x === undefined)) return incomplete('?', expected)
   if (empty.length) return incomplete(given, expected, empty)
@@ -299,6 +303,7 @@ function checkColumnMul(ex: ColumnMulExercise, answer: Answer): CheckResult {
   const feedback =
     d.errorType === 'carry-forgot' ? FEEDBACK.carryForgot(d.wrongColumns.filter((c) => c >= 1).slice(0, 1))
       : d.errorType === 'carry-wrong' ? FEEDBACK.carryWrongMul
+        : d.errorType === 'operation' ? FEEDBACK.mulAdded(ex.bottom)
         : FEEDBACK.mulFact(d.wrongColumns.filter((c) => c < len).length ? d.wrongColumns.filter((c) => c < len) : d.wrongColumns)
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
@@ -334,8 +339,12 @@ function checkDivision(ex: DivisionExercise, answer: Answer): CheckResult {
         : d.detail === 'too-small' ? FEEDBACK.quotientTooSmall
           : d.detail === 'remainder' ? FEEDBACK.remainderWrong(ex.dividend, q * ex.divisor)
             : d.detail === 'bring-down' ? FEEDBACK.bringDown
-              : d.detail === 'digit' ? FEEDBACK.divisionFact(ex.divisor)
-                : FEEDBACK.divisionOther
+              : d.detail === 'stopped' ? FEEDBACK.divisionStopped
+                : d.detail === 'reversed' ? FEEDBACK.divisionReversed
+                  : d.detail === 'operation' ? FEEDBACK.divisionOperation(ex.dividend, ex.divisor)
+                    : d.detail === 'near' ? FEEDBACK.divisionNear(ex.divisor, ex.dividend)
+                      : d.detail === 'digit' ? FEEDBACK.divisionFact(ex.divisor)
+                        : FEEDBACK.divisionOther
   return { correct: false, given, expected, errorType: d.errorType, feedback }
 }
 

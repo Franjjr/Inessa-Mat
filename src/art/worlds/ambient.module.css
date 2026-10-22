@@ -1,0 +1,140 @@
+/* Gentle ambient loops for scenes. Only transform + opacity are animated (compositor friendly).
+   Per-element timing comes from custom properties: --d (duration), --dl (delay, usually negative to desync). */
+
+.twinkle { animation: twinkle var(--d, 3.2s) ease-in-out var(--dl, 0s) infinite; transform-origin: center; }
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.75); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+.glow { animation: glow var(--d, 3.6s) ease-in-out var(--dl, 0s) infinite; }
+@keyframes glow {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+.bob { animation: bob var(--d, 6s) ease-in-out var(--dl, 0s) infinite; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(var(--by, -5%)); }
+}
+
+.drift { animation: drift var(--d, 40s) ease-in-out var(--dl, 0s) infinite alternate; }
+@keyframes drift {
+  from { transform: translateX(calc(var(--dx, 8%) * -1)); }
+  to { transform: translateX(var(--dx, 8%)); }
+}
+
+.fall { animation: fall var(--d, 14s) linear var(--dl, 0s) infinite; }
+@keyframes fall {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+
+.rise { animation: rise var(--d, 8s) linear var(--dl, 0s) infinite; }
+@keyframes rise {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: var(--op, 1); }
+  75% { opacity: var(--op, 1); }
+  100% { transform: translateY(-100%); opacity: 0; }
+}
+
+/* Smoke / steam puff: grows while it rises (applied to the particle inside a .rise lane). */
+.puff { animation: puff var(--d, 8s) ease-out var(--dl, 0s) infinite; transform-origin: center; }
+@keyframes puff {
+  0% { transform: scale(0.45); }
+  100% { transform: scale(1.7); }
+}
+
+/* Particle side-to-side flutter (leaves, petals, snow) — runs inside a .fall lane. */
+.sway { animation: sway var(--sd, 3.4s) ease-in-out var(--dl, 0s) infinite alternate; transform-origin: center; }
+@keyframes sway {
+  from { transform: translateX(-120%) rotate(-28deg); }
+  to { transform: translateX(120%) rotate(32deg); }
+}
+
+.wobble { animation: wobble var(--sd, 2.6s) ease-in-out var(--dl, 0s) infinite alternate; transform-origin: center; }
+@keyframes wobble {
+  from { transform: translateX(-45%); }
+  to { transform: translateX(45%); }
+}
+
+.ripple { animation: ripple var(--d, 4.5s) ease-out var(--dl, 0s) infinite; transform-origin: center; }
+@keyframes ripple {
+  0% { transform: scale(0.25); opacity: 0; }
+  15% { opacity: 0.9; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+
+.shimmer { animation: shimmer var(--d, 4s) ease-in-out var(--dl, 0s) infinite; }
+@keyframes shimmer {
+  0%, 100% { opacity: 0; }
+  50% { opacity: var(--op, 0.7); }
+}
+
+.breathe { animation: breathe var(--d, 5s) ease-in-out var(--dl, 0s) infinite; transform-origin: center bottom; }
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+/* Curtains, banners, hanging lanterns: hinge at the top. */
+.swing { animation: swing var(--d, 6s) ease-in-out var(--dl, 0s) infinite alternate; transform-origin: 50% 0; }
+@keyframes swing {
+  from { transform: rotate(calc(var(--deg, 2deg) * -1)); }
+  to { transform: rotate(var(--deg, 2deg)); }
+}
+
+/* Sway from the base (plants, reeds, flowers). */
+.swayBase { animation: swayBase var(--d, 5s) ease-in-out var(--dl, 0s) infinite alternate; transform-origin: 50% 100%; }
+@keyframes swayBase {
+  from { transform: rotate(calc(var(--deg, 2.5deg) * -1)); }
+  to { transform: rotate(var(--deg, 2.5deg)); }
+}
+
+/* Flag waving: hinge at the pole (left edge). */
+.flag { animation: flag var(--d, 1.6s) ease-in-out var(--dl, 0s) infinite alternate; transform-origin: 0 50%; }
+@keyframes flag {
+  0% { transform: scaleX(1) skewY(0deg); }
+  50% { transform: scaleX(0.9) skewY(5deg); }
+  100% { transform: scaleX(1.02) skewY(-4deg); }
+}
+
+/* Butterfly / bird wings (SVG groups inside a small sprite). */
+.flap { animation: flap var(--d, 0.5s) ease-in-out var(--dl, 0s) infinite alternate; transform-box: fill-box; transform-origin: center; }
+@keyframes flap {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0.3); }
+}
+
+.flapY { animation: flapY var(--d, 0.7s) ease-in-out var(--dl, 0s) infinite alternate; transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes flapY {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(-0.4); }
+}
+
+/* Wander: a slow figure-eight for fireflies and ladybugs. */
+.wander { animation: wander var(--d, 12s) ease-in-out var(--dl, 0s) infinite; }
+@keyframes wander {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(var(--wx, 60%), calc(var(--wy, 40%) * -1)); }
+  50% { transform: translate(0, calc(var(--wy, 40%) * -0.4)); }
+  75% { transform: translate(calc(var(--wx, 60%) * -1), var(--wy, 40%)); }
+}
+
+.spin { animation: spin var(--d, 60s) linear var(--dl, 0s) infinite; transform-origin: center; }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .twinkle, .glow, .bob, .drift, .puff, .sway, .wobble, .ripple, .shimmer, .breathe, .swing, .swayBase, .flag,
+  .flap, .flapY, .wander, .spin {
+    animation: none !important;
+  }
+  .twinkle { opacity: 0.8; }
+  .shimmer, .ripple { opacity: 0; }
+  .fall, .rise { animation: none !important; display: none; }
+}

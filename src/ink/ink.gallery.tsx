@@ -1,6 +1,6 @@
-/* Gallery of the ink module: /dev/gallery?only=src/ink
-   Static looks (CellPreview), scripted demos that replay synthetic pen strokes through the real capture →
-   segmentation → display pipeline, and live entries with the real recogniser (used by tests/e2e/ink.spec.ts). */
+/* Gallery of the ink module: /dev/gallery?only=src/ink/ink.gallery
+   Static looks (CellPreview) and scripted demos that replay synthetic pen strokes through the real capture →
+   segmentation → display pipeline. The live entries with the real recogniser are in live.gallery.tsx. */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { InkProvider } from './InkProvider'
@@ -11,7 +11,7 @@ import { CellGroup } from './CellGroup'
 import { TraceDigit } from './TraceDigit'
 import { CalibrationDone, CalibrationFlow } from './CalibrationFlow'
 import { ModelDigit } from './ModelDigit'
-import { useInputMode, useRecognizer } from './hooks'
+import { useInputMode } from './hooks'
 import { CellPreview } from './dev/CellPreview'
 import { scriptedRecognizer, type ScriptedAnswer } from './dev/scripted'
 import { replayStrokes, tap } from './dev/autoplay'
@@ -34,9 +34,9 @@ const Row = ({ children, gap = 28 }: { children: ReactNode; gap?: number }) => (
   <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap, padding: '14px 8px 4px' }}>{children}</div>
 )
 
-function Scripted({ answers, children }: { answers: ScriptedAnswer[]; children: ReactNode }) {
+function Scripted({ answers, children, penSeen }: { answers: ScriptedAnswer[]; children: ReactNode; penSeen?: boolean }) {
   const rec = useMemo(() => scriptedRecognizer(answers), [answers])
-  return <InkProvider recognizer={rec}>{children}</InkProvider>
+  return <InkProvider recognizer={rec} penSeen={penSeen}>{children}</InkProvider>
 }
 
 /** Runs `fn` once after layout settles (fonts, gallery suspense). */
@@ -150,37 +150,6 @@ function FactCard({ children }: { children: ReactNode }) {
   )
 }
 
-function LiveCell() {
-  const [v, setV] = useState<number | null>(null)
-  const [info, setInfo] = useState('')
-  const { ready } = useRecognizer()
-  const { mode, penSeen } = useInputMode()
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} data-testid="ink-e2e-cell">
-      <DigitCell value={v} onChange={(d, i) => { setV(d); setInfo(i ? `${i.via} · ${Math.round(i.confidence * 100)}%` : '') }} size="lg" ariaLabel="prueba casilla" />
-      <div style={{ fontFamily: 'var(--font-read)', fontSize: 14, color: 'var(--c-ink-soft)', lineHeight: 1.6 }}>
-        <div>Valor: <output data-testid="ink-e2e-cell-value" style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--c-ink)' }}>{v ?? '–'}</output></div>
-        <div>{info || ' '}</div>
-        <div>modelo: <b data-testid="ink-e2e-ready">{ready ? 'listo' : 'cargando'}</b> · modo: {mode}{penSeen ? ' (lápiz)' : ''}</div>
-      </div>
-    </div>
-  )
-}
-
-function LiveNumber() {
-  const [v, setV] = useState<number | null>(null)
-  const [sent, setSent] = useState<string>('–')
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 24 }} data-testid="ink-e2e-number">
-      <NumberInput value={v} onChange={setV} onSubmit={(x) => setSent(x == null ? '∅' : String(x))} maxDigits={3} ariaLabel="prueba número" />
-      <div style={{ fontFamily: 'var(--font-read)', fontSize: 14, color: 'var(--c-ink-soft)', lineHeight: 1.7 }}>
-        <div>Valor: <output data-testid="ink-e2e-number-value" style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--c-ink)' }}>{v ?? '–'}</output></div>
-        <div>Enviado: <output data-testid="ink-e2e-number-sent">{sent}</output></div>
-      </div>
-    </div>
-  )
-}
-
 function TraceAutoplay({ digit }: { digit: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [done, setDone] = useState<string>('')
@@ -275,25 +244,35 @@ const entries: GalleryEntry[] = [
     ),
   },
   {
-    title: 'NumberInput · vacío y con teclado de números',
-    width: 640,
+    title: 'NumberInput · teclado de números a la derecha (keypadPosition="right")',
+    width: 900,
     render: () => (
       <Scripted answers={[{ digit: null }]}>
         <ForceKeypad>
-          <FactCard><NumberInput value={null} onChange={() => {}} onSubmit={() => {}} maxDigits={2} ariaLabel="demo teclado" /></FactCard>
+          <FactCard><NumberInput value={null} onChange={() => {}} onSubmit={() => {}} maxDigits={2} keypadPosition="right" ariaLabel="demo teclado" /></FactCard>
         </ForceKeypad>
       </Scripted>
     ),
   },
   {
-    title: 'Prueba con el modelo real · casilla',
-    width: 560,
-    render: () => <LiveCell />,
+    title: 'NumberInput · teclado debajo (pregunta encima)',
+    width: 640,
+    render: () => (
+      <Scripted answers={[{ digit: null }]}>
+        <ForceKeypad>
+          <KeypadBelowDemo />
+        </ForceKeypad>
+      </Scripted>
+    ),
   },
   {
-    title: 'Prueba con el modelo real · número',
-    width: 640,
-    render: () => <LiveNumber />,
+    title: 'Sin lápiz: un dedo intenta escribir (el lápiz ya se usó en este dispositivo)',
+    width: 1120,
+    render: () => (
+      <Scripted answers={[{ digit: null }]} penSeen>
+        <LostPencilDemo />
+      </Scripted>
+    ),
   },
   {
     title: 'Keypad',
@@ -345,6 +324,43 @@ function CalibrationAutoplay() {
     if (el) replayStrokes(el, handwrite(1, { x: 0, y: 0, w: el.clientWidth, h: el.clientHeight }, { fill: 0.7, seed: 12 }), { partial: 0.75 })
   }, 500)
   return <div ref={ref} style={{ height: 740, display: 'flex' }}><CalibrationFlow childId="gallery" companionName="Coco" onDone={() => {}} /></div>
+}
+
+function KeypadBelowDemo() {
+  const [v, setV] = useState<number | null>(48)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+      <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'var(--fs-2xl)', color: 'var(--c-ink)' }}>6 × 8 = ?</span>
+      <NumberInput value={v} onChange={setV} onSubmit={() => {}} maxDigits={2} ariaLabel="demo teclado debajo" />
+    </div>
+  )
+}
+
+/** A finger "writes" on a column-op cell and on a number pad while a pen is known: both point to the keypad. */
+function LostPencilDemo() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [cells, setCells] = useState<(number | null)[]>([null, null])
+  useAfterMount(() => {
+    // after the other demos' synthetic pen strokes (the hint never shows while the pen is in use)
+    const finger = (label: string, digit: number) => {
+      const el = surfaceOf(ref.current, label)
+      if (el) replayStrokes(el, handwrite(digit, { x: 0, y: 0, w: el.clientWidth, h: el.clientHeight }, { pointerType: 'touch', fill: 0.7 }))
+    }
+    finger('sin lápiz unidades', 4)
+    finger('sin lápiz número', 7)
+  }, 5200)
+  const set = (i: number) => (d: number | null) => setCells((c) => c.map((x, k) => (k === i ? d : x)))
+  return (
+    <div ref={ref} style={{ display: 'flex', alignItems: 'center', gap: 90, padding: '64px 24px 12px' }}>
+      <CellGroup order="reverse" keypadPosition="right">
+        <div style={{ display: 'flex', gap: 12 }}>
+          <DigitCell place="d" value={cells[0]} onChange={set(0)} ariaLabel="sin lápiz decenas" />
+          <DigitCell place="u" value={cells[1]} onChange={set(1)} ariaLabel="sin lápiz unidades" />
+        </div>
+      </CellGroup>
+      <NumberInput value={null} onChange={() => {}} onSubmit={() => {}} maxDigits={2} ariaLabel="sin lápiz número" />
+    </div>
+  )
 }
 
 /** Puts its subtree in keypad mode (as if the child chose "teclado de números" in settings). */

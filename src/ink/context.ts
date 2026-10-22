@@ -4,7 +4,7 @@ import type { AnswerInputPreference, DigitRecognition, DigitRecognizer, InkSampl
 import { addInkSample } from '@/data'
 import { createRecognizer } from './ml/recognizer'
 import { PENDING_TTL_MS } from './constants'
-import { hasEmbedding, makeSample, selectPersonalSamples, type PersonalSampleLite } from './learning'
+import { hasEmbedding, makeSample, selectPersonalSamples, selectSamples, type PersonalSampleLite } from './learning'
 import { detectTouchDevice, forgetPenSeen, readPenSeen, resolveInputMode } from './policy'
 
 /** What the ink UI needs from a recogniser (src/ink/ml/recognizer.ts provides it; tests/gallery may fake it). */
@@ -88,8 +88,12 @@ export class LearningStore {
     if (rec) this.store(digit, rec, 'corrected')
   }
 
-  calibration(digit: number, rec: DigitRecognition): boolean {
-    return this.store(digit, rec, 'calibration')
+  /**
+   * Stores a calibration sample. `childId` is the child being calibrated (onboarding may run before that child
+   * is the active one); it defaults to the store's child.
+   */
+  calibration(digit: number, rec: DigitRecognition, childId: string | null = this.childId): boolean {
+    return this.store(digit, rec, 'calibration', true, childId)
   }
 
   confirm(): void {
@@ -105,17 +109,21 @@ export class LearningStore {
     this.fixes = 0
   }
 
-  setSamples(list: InkSample[]): void {
-    this.samples = list
+  /** Replaces the in-memory set (e.g. loaded from the database); only the newest samples per digit are kept. */
+  setSamples(list: readonly InkSample[]): void {
+    this.samples = selectSamples(list)
     this.push()
   }
 
-  private store(digit: number, rec: DigitRecognition, source: InkSample['source'], push = true): boolean {
-    if (!hasEmbedding(rec) || digit < 0 || digit > 9) return false
-    const sample = makeSample(this.childId ?? 'local', digit, rec, source)
-    this.samples = [...this.samples, sample]
-    if (this.childId) addInkSample(sample).catch((err: unknown) => console.warn('[ink] could not store sample', err))
-    if (push) this.push()
+  private store(digit: number, rec: DigitRecognition, source: InkSample['source'], push = true, childId = this.childId): boolean {
+    if (!hasEmbedding(rec) || !Number.isInteger(digit) || digit < 0 || digit > 9) return false
+    const sample = makeSample(childId ?? 'local', digit, rec, source)
+    if (childId) addInkSample(sample).catch((err: unknown) => console.warn('[ink] could not store sample', err))
+    // Only the active child's samples personalise the shared recogniser (none active: the child being calibrated).
+    if (this.childId == null || childId === this.childId) {
+      this.samples = selectSamples([...this.samples, sample])
+      if (push) this.push()
+    }
     return true
   }
 

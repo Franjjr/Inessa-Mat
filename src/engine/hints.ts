@@ -4,7 +4,7 @@ import type {
   ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, Exercise, Hint, SkipCountExercise,
   WordProblemExercise,
 } from '@/types'
-import { analyzeSub, digitAt, digitCount } from './arith'
+import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName } from './feedback'
 import { strategyDetail } from './strategies'
 
@@ -110,7 +110,9 @@ function divisionHints(ex: DivisionExercise): Hint[] {
     const qt = Math.floor(t / d)
     const left = t - qt * d
     l1 = 'Reparte primero las decenas. Lo que sobre, júntalo con las unidades y sigue repartiendo.'
-    worked = `Decenas: ${t} ÷ ${d} = ${qt} y sobra ${left}. Júntalo con el ${u}: ${left * 10 + u} ÷ ${d} = ?`
+    worked = left > 0
+      ? `Decenas: ${t} ÷ ${d} = ${qt} y sobra ${left}. Júntalo con el ${u}: ${left * 10 + u} ÷ ${d} = ?`
+      : `Decenas: ${t} ÷ ${d} = ${qt} y no sobra nada. Ahora baja el ${u}: ${u} ÷ ${d} = ?`
   }
   return [
     hint(1, l1, 'none'),
@@ -129,14 +131,55 @@ function skipHints(ex: SkipCountExercise): Hint[] {
   ]
 }
 
+/* Word problems: level 1 asks what happens in the story, level 2 names the operation, level 3 writes it down.
+   The visuals reuse the column / division scaffolds with the same params as those exercises. */
 function wordHints(ex: WordProblemExercise): Hint[] {
   const [a, b] = ex.operands
   const l1 = 'Lee la historia despacio. ¿Qué pasa: se juntan cosas, se quitan, hay grupos iguales o se reparte?'
   switch (ex.op) {
-    case 'add': return [hint(1, l1, 'none'), hint(2, 'Se juntan dos cantidades: hay que sumar.', 'place-value', { a, b }), hint(3, `Escribe la operación: ${a} + ${b} = ?`, 'carry', { a, b })]
-    case 'sub': return [hint(1, l1, 'none'), hint(2, 'Se quita una cantidad (o se comparan): hay que restar.', 'borrow', { a, b }), hint(3, `Escribe la operación: ${a} − ${b} = ?`, 'borrow', { a, b })]
-    case 'mul': return [hint(1, l1, 'none'), hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar.`, 'groups', { groups: a, perGroup: b }), hint(3, `Escribe la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b })]
-    case 'div': return [hint(1, l1, 'none'), hint(2, `Hay que repartir ${a} en partes iguales: hay que dividir entre ${b}.`, 'share', { total: a, groups: b }), hint(3, `Escribe la operación: ${a} ÷ ${b} = ?`, 'share', { total: a, groups: b })]
+    case 'add': {
+      const digits = Math.max(digitCount(a), digitCount(b))
+      const carries = analyzeAdd([a, b]).carries
+      const first = carries.findIndex((c, i) => i > 0 && c > 0)
+      const params = { operands: [a, b], a, b, digits }
+      return [
+        hint(1, l1, 'none'),
+        hint(2, 'Se juntan dos cantidades: hay que sumar.', 'place-value', params),
+        hint(3, `Escribe la operación en columna: ${a} + ${b} = ?`, 'carry', { ...params, column: Math.max(0, first - 1), carry: first > 0 ? carries[first] : 0 }),
+      ]
+    }
+    case 'sub': {
+      const params = { a, b, digits: digitCount(a), column: Math.max(0, analyzeSub(a, b).borrowed.findIndex(Boolean)) }
+      return [
+        hint(1, l1, 'none'),
+        hint(2, 'Se quita una cantidad (o se comparan dos): hay que restar.', 'borrow', params),
+        hint(3, `Escribe la operación en columna: ${a} − ${b} = ?`, 'borrow', params),
+      ]
+    }
+    case 'mul': {
+      if (b >= 10) {
+        // 2-digit × 1-digit story: the column scaffold, 2-digit number on top.
+        const params = { top: b, bottom: a, tens: Math.floor(b / 10) * 10, units: b % 10 }
+        return [
+          hint(1, l1, 'none'),
+          hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar. Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
+          hint(3, `Escribe la operación con el ${b} arriba: ${b} × ${a} = ?`, 'carry', { ...params, column: 1, carry: Math.floor(((b % 10) * a) / 10) }),
+        ]
+      }
+      return [
+        hint(1, l1, 'none'),
+        hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar.`, 'groups', { groups: a, perGroup: b }),
+        hint(3, `Escribe la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b }),
+      ]
+    }
+    case 'div': {
+      const params = { total: a, groups: b, dividend: a, divisor: b }
+      return [
+        hint(1, l1, 'none'),
+        hint(2, `Hay que repartir ${a} en partes iguales: hay que dividir entre ${b}.`, 'share', params),
+        hint(3, `Escribe la operación: ${a} ÷ ${b} = ?`, 'share', params),
+      ]
+    }
   }
 }
 
@@ -159,7 +202,7 @@ export function hintsFor(ex: Exercise): Hint[] {
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
         hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
-        hint(3, `${seq}. ¿Cuántos números has dicho?`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
+        hint(3, `${seq}. ¿Cuántos números has dicho?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1 }),
       ]
     }
     case 'skip-count': return skipHints(ex)
@@ -172,10 +215,19 @@ export function hintsFor(ex: Exercise): Hint[] {
       ]
     }
     case 'array': {
+      const params = { rows: ex.rows, cols: ex.cols, emoji: ex.emoji }
+      // Small arrays: add row by row (what hint 2 just showed). Big ones: the fact's trick.
+      if (ex.rows <= 6) {
+        return [
+          hint(1, `Cuenta las filas y cuántos hay en cada fila: ${ex.rows} filas de ${ex.cols}.`, 'none'),
+          hint(2, `Cada fila tiene ${ex.cols}. Cuenta de ${ex.cols} en ${ex.cols}, fila a fila.`, 'array', params),
+          hint(3, `Fila a fila: ${Array.from({ length: ex.rows }, () => String(ex.cols)).join(' + ')} = ?`, 'array', params),
+        ]
+      }
       const d = strategyDetail(ex.rows, ex.cols)
       return [
         hint(1, `Cuenta las filas y cuántos hay en cada fila: ${ex.rows} filas de ${ex.cols}.`, 'none'),
-        hint(2, `Cada fila tiene ${ex.cols}. Cuenta de ${ex.cols} en ${ex.cols}, fila a fila.`, 'array', { rows: ex.rows, cols: ex.cols, emoji: ex.emoji }),
+        hint(2, `Cada fila tiene ${ex.cols}. Cuenta de ${ex.cols} en ${ex.cols}, fila a fila.`, 'array', params),
         hint(3, d.workedText, d.workedVisual, { ...d.visualParams, rows: ex.rows, cols: ex.cols }),
       ]
     }

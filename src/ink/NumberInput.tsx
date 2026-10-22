@@ -6,16 +6,17 @@ import clsx from 'clsx'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { DigitRecognition, InkStroke, NumberInputProps } from '@/types'
 import { sfx } from '@/audio'
-import { IDLE_MS, LOW_CONFIDENCE } from './constants'
+import { IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
 import { useInk } from './context'
 import { isScribble, overlapFraction, segmentStrokes, segmentZone, spreadCentres, strokeBBox, strokesNear, type BBox } from './geometry'
-import { pointerRole } from './policy'
+import { msSincePenContact, pointerRole } from './policy'
 import { useInkSurface } from './useInkSurface'
 import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
 import { Keypad } from './Keypad'
 import { CheckIcon, EraserIcon, KeypadIcon, PencilIcon } from './icons'
+import { NudgeBubble, useNudge } from './Nudge'
 import s from './NumberInput.module.css'
 
 export interface NumberInputExtraProps {
@@ -23,6 +24,11 @@ export interface NumberInputExtraProps {
   className?: string
   /** Show the "123" toggle that opens the on-screen keypad as a fallback (default true). */
   keypadToggle?: boolean
+  /**
+   * Where the on-screen keypad goes when it is shown (keypad mode or the toggle): 'below' (default, two rows of 5)
+   * or 'right' (3×4 grid beside the pad — keeps the pad centred, e.g. inline after "6 × 7 =").
+   */
+  keypadPosition?: 'below' | 'right'
 }
 
 interface SegView {
@@ -55,6 +61,7 @@ function placeholderFor(mode: string): string {
 export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const {
     value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true,
+    keypadPosition = 'below',
   } = props
   const ink = useInk()
   const uid = useId()
@@ -81,6 +88,12 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   const keypadVisible = ink.mode === 'keypad' || toggled
   const palm = usePalmGuard()
+  const [nudging, nudge] = useNudge()
+  /** A finger on the pad although a pen is in use (Pencil lost?): point to the keypad toggle. */
+  const fingerFallback = () => {
+    if (disabled || !keypadToggle || keypadVisible || ink.mode === 'keypad') return
+    if (msSincePenContact() >= PEN_IDLE_FALLBACK_MS) nudge()
+  }
 
   const emit = (v: number | null) => {
     if (v === lastEmitted.current) return
@@ -240,6 +253,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       onTap(info) {
         if (disabled) return
         const seg = segRef.current.find((x) => info.x >= x.bbox.minX - 12 && info.x <= x.bbox.maxX + 12)
+        if (!seg && info.role === 'tap') { fingerFallback(); return }
         if (!seg || idle.current) return
         if (seg.digit == null || seg.confidence < LOW_CONFIDENCE) { setPopover((p) => (p === seg.key ? null : seg.key)); return }
         if (info.role === 'write') {
@@ -247,6 +261,9 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           recognizeAll()
           sfx.play('erase', { volume: 0.4 })
         }
+      },
+      onBlockedWrite() {
+        fingerFallback()
       },
       onEraseAt(x, y) {
         const cap = surface.capture.current
@@ -279,7 +296,17 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     if (autoFocus && !disabled) padRef.current?.focus({ preventScroll: true })
   }, [])
 
-  useEffect(() => () => clearIdle(), [])
+  const mounted = useRef(false)
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      clearIdle()
+      // see DigitCell: forget this pad's pending recognitions shortly after it really unmounts
+      const { learning } = latest.current.ink
+      setTimeout(() => { if (!mounted.current) learning.forgetPrefix(`${uid}:`) }, UNMOUNT_FORGET_MS)
+    }
+  }, [])
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     const k = e.key
@@ -303,7 +330,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   return (
     <div
-      className={clsx(s.root, s[size], s[`st_${status}`], disabled && s.disabled, ink.bigCells && s.big, keypadVisible && s.withKeypad, className)}
+      className={clsx(
+        s.root, s[size], s[`st_${status}`], disabled && s.disabled, ink.bigCells && s.big,
+        keypadVisible && s.withKeypad, keypadVisible && keypadPosition === 'right' && s.keypadRight, className,
+      )}
       style={{ ['--digits' as string]: Math.max(1, maxDigits) } as CSSProperties}
       data-state={inkState}
       data-value={value ?? ''}
@@ -372,17 +402,20 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
             </button>
           )}
           {keypadToggle && ink.mode !== 'keypad' && (
-            <button
-              type="button"
-              className={clsx(s.tool, s.toggle)}
-              onMouseDown={(e) => e.preventDefault()}
-              onPointerDown={palm.onPointerDown}
-              onClick={palm.guard(() => { setToggled((t) => !t); padRef.current?.focus({ preventScroll: true }) })}
-              aria-pressed={toggled}
-              aria-label={toggled ? 'Escribir a mano' : 'Usar el teclado de números'}
-            >
-              {toggled ? <PencilIcon size={24} /> : <KeypadIcon size={22} />}
-            </button>
+            <span className={s.toggleWrap}>
+              {nudging && !keypadVisible && <NudgeBubble side="bottom" />}
+              <button
+                type="button"
+                className={clsx(s.tool, s.toggle, nudging && !keypadVisible && s.nudge)}
+                onMouseDown={(e) => e.preventDefault()}
+                onPointerDown={palm.onPointerDown}
+                onClick={palm.guard(() => { setToggled((t) => !t); padRef.current?.focus({ preventScroll: true }) })}
+                aria-pressed={toggled}
+                aria-label={toggled ? 'Escribir a mano' : 'Usar el teclado de números'}
+              >
+                {toggled ? <PencilIcon size={24} /> : <KeypadIcon size={22} />}
+              </button>
+            </span>
           )}
           {!keypadVisible && (
             <button
@@ -403,7 +436,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       {keypadVisible && (
         <Keypad
           className={s.keypad}
-          layout="wide"
+          layout={keypadPosition === 'right' ? 'grid' : 'wide'}
           size="sm"
           disabled={disabled}
           onDigit={(d) => typeDigit(d, 'keypad')}
