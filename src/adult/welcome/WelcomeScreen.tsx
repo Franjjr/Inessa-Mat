@@ -5,6 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { SUBJECTS } from '@/types'
 import { useAuth } from '@/data'
 import { Button } from '@/ui'
+import { DEFAULT_TITLE, useDocumentTitle } from '@/app/useDocumentTitle'
 import s from './welcome.module.css'
 
 const SHOTS = {
@@ -20,6 +21,7 @@ const SUBJECT_TEXT: Record<string, string> = {
 export default function WelcomeScreen() {
   const { status, backendAvailable, continueLocalOnly } = useAuth()
   const navigate = useNavigate()
+  useDocumentTitle(DEFAULT_TITLE)
 
   if (status === 'signed-in') return <Navigate to="/" replace />
 
@@ -86,7 +88,7 @@ export default function WelcomeScreen() {
                 src={SHOTS.home.src}
                 width={SHOTS.home.width}
                 height={SHOTS.home.height}
-                loading="lazy"
+                fetchPriority="high"
                 decoding="async"
                 alt="Pantalla de inicio del niño con Luna, Lumi y el siguiente paso de la aventura"
               />
@@ -105,7 +107,7 @@ export default function WelcomeScreen() {
           </article>
           <article className={`${s.sticker} ${s.trustCard} ${s.cBlue}`}>
             <span className={s.check} aria-hidden>✓</span>
-            <div><h3>Prueba sin cuenta</h3><p>Todo se queda en este dispositivo. Creas la cuenta cuando quieras.</p></div>
+            <div><h3>Prueba sin cuenta</h3><p>Sin cuenta, el progreso se guarda solo en este dispositivo. Creas la cuenta cuando quieras.</p></div>
           </article>
         </section>
 
@@ -147,7 +149,7 @@ export default function WelcomeScreen() {
           <div className={`${s.sticker} ${s.notFor}`}>
             <h3>Para quién no es</h3>
             <ul>
-              <li>Para quien busque sustituir al colegio o al profesor: Repasitos ayuda a repasar, no a enseñar desde cero.</li>
+              <li>Para quien busque sustituir al colegio o al profesor: Repasitos es un complemento para practicar, no un sustituto de las clases.</li>
             </ul>
           </div>
         </section>

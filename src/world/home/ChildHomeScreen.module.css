@@ -278,6 +278,10 @@
     overflow-x: auto;
     scrollbar-width: thin;
     justify-content: flex-start;
+    /* A right-edge fade says "there is more to swipe"; the padding keeps the last world clear of the fade at the end. */
+    padding-right: 48px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 48px), transparent);
   }
   .world { flex: 0 0 auto; min-width: 104px; }
 }

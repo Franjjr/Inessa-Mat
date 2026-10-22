@@ -12,7 +12,7 @@
   white-space: nowrap;
   box-shadow: var(--shadow-2);
   pointer-events: none;
-  animation: nudgeIn var(--dur-med) var(--ease-bounce) both;
+  animation: nudgeIn var(--dur-med) var(--ease-out) both;
 }
 .bubble::after {
   content: '';

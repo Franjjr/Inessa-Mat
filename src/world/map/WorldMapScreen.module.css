@@ -55,6 +55,10 @@
   height: max(100%, 96vw);
   min-height: 560px;
 }
+/* Phones: a taller stage spreads the nodes so their name tags do not stack on each other. */
+@media (max-width: 600px) {
+  .stage { height: max(100%, 200vh); }
+}
 .path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .pathBase, .pathDone {
   fill: none;
@@ -132,8 +136,13 @@
   white-space: nowrap;
 }
 .label {
-  /* A fixed width and at most two lines: a long name never climbs over the trunk of the path. */
-  width: 200px;
+  /* A fixed width (never wider than the phone screen) and at most two lines: a long name never climbs over the trunk
+     of the path. Near the left or right edge the label slides inwards so it stays inside the viewport. */
+  --w: min(200px, calc(100vw - 32px));
+  --cx: calc(var(--x, .5) * 100vw);
+  width: var(--w);
+  max-width: var(--w);
+  transform: translateX(max(calc(16px - var(--cx) + var(--w) / 2), min(0px, calc(100vw - 16px - var(--cx) - var(--w) / 2))));
   padding: 4px 12px;
   border: 2px solid var(--sticker-line);
   border-radius: var(--r-md);

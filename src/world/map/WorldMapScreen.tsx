@@ -145,7 +145,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                 type="button"
                 ref={isCurrent ? currentRef : undefined}
                 className={`${s.node} ${isCurrent ? s.current : ''} ${locked ? s.locked : ''} ${done ? s.done : ''}`}
-                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%` }}
+                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%`, ['--x' as string]: node.pos.x }}
                 aria-label={`${label}${stateText}`}
                 aria-disabled={locked || undefined}
                 onClick={() => openNode(node, locked)}

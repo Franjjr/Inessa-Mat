@@ -68,6 +68,21 @@ describe('natural voice', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('a 429 (rate limit) uses the device voice for that clip only, not for the whole session', async () => {
+    const fetchMock = vi.fn(async () => new Response('slow down', { status: 429 }))
+    vi.stubGlobal('fetch', fetchMock)
+    void speech.say('Uno')
+    await flush()
+    await flush()
+    expect(synth.spoken.map((u) => u.text)).toEqual(['Uno'])
+    synth.finish()
+    await flush()
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob([new Uint8Array(3)]), { headers: { 'content-type': 'audio/mpeg' } })))
+    await speech.say('Dos', { voice: 'companion' })
+    expect(FakeAudio.played).toHaveLength(1)
+    expect(synth.spoken.map((u) => u.text)).toEqual(['Uno'])
+  })
+
   it('falls back to the device voice when the clip cannot play', async () => {
     FakeAudio.failPlay = true
     vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob([new Uint8Array(3)]), { headers: { 'content-type': 'audio/mpeg' } })))

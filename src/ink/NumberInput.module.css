@@ -85,7 +85,7 @@
   line-height: 1;
   color: var(--c-ink);
   pointer-events: none;
-  animation: digitIn var(--dur-slow) var(--ease-bounce) both;
+  animation: digitIn var(--dur-slow) var(--ease-out) both;
 }
 .unknown { color: var(--c-ink-mute); }
 .unsure {
@@ -120,7 +120,7 @@
   color: var(--c-ink);
   pointer-events: none;
 }
-.typedDigit { display: inline-block; animation: typedIn var(--dur-med) var(--ease-bounce) both; }
+.typedDigit { display: inline-block; animation: typedIn var(--dur-med) var(--ease-out) both; }
 
 .anchor { position: absolute; pointer-events: none; }
 
@@ -151,7 +151,7 @@
 .tool[aria-pressed='true'] { background: var(--c-primary-soft); }
 .erase { grid-column: 1; grid-row: 1; }
 .toggleWrap { grid-column: 1; grid-row: 2; position: relative; display: inline-flex; }
-.nudge { animation: nudge 900ms var(--ease-bounce) 2; border-color: var(--c-primary); }
+.nudge { animation: nudge 900ms var(--ease-out) 2; border-color: var(--c-primary); }
 
 .check {
   grid-column: 2;

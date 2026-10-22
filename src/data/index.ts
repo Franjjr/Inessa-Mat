@@ -45,7 +45,7 @@ export { getChildSummary } from './dashboards'
 
 // ---------------------------------------------------------------- adult gate (PIN, stored hashed locally)
 /** verifyAdultPin resolves false when no PIN is set (check hasAdultPin first). */
-export { hasAdultPin, setAdultPin, verifyAdultPin } from './pin'
+export { hasAdultPin, setAdultPin, verifyAdultPin, readAdultGateLock, writeAdultGateLock } from './pin'
 
 // ---------------------------------------------------------------- sync
 export type { SyncStatus } from './sync'

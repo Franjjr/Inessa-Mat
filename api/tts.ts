@@ -1,7 +1,17 @@
 /* Vercel Function (Node runtime): GET /api/tts?v=<character>&t=<text> → MP3 spoken by an Azure neural voice.
    The Azure key stays on the server (AZURE_SPEECH_KEY / AZURE_SPEECH_REGION); the app falls back to the device voice
    whenever this fails. Responses are immutable for a given text and character, so the CDN and the service worker
-   cache them and each sentence is synthesised once. The F0 (free) Azure tier never bills: at its quota it refuses. */
+   cache them and each sentence is synthesised once.
+
+   Defences, from cheapest to strongest:
+   - Origin/Referer and Sec-Fetch-Site: only our own pages get audio. They are request headers any HTTP client can
+     forge, so they stop embedding by other sites and casual use, not a determined attacker.
+   - A per-IP limit in this instance's memory (RATE_LIMIT per RATE_WINDOW_MS). Each Vercel instance counts on its
+     own and restarts often, so it is only a partial brake.
+   - The real brake is the Azure F0 (free) quota: the F0 tier never bills, and at its quota Azure refuses (429/403),
+     which the app treats as "use the device voice". Keep the Azure resource on F0 and set a budget alert.
+   - Still to configure by the owner in the Vercel Firewall dashboard (not in this repo): a rate-limit rule on
+     /api/tts per IP. The coordinator proposes it; until it exists, the limits above are all there is. */
 
 type Character = 'lumi' | 'companion' | 'narrator' | 'guardian'
 
@@ -17,7 +27,11 @@ export const VOICES: Record<Character, { name: string; pitch: string; rate: stri
 
 const MAX_CHARS = 400
 /** Only our own pages may use the key: same-origin requests from these hosts. */
-const ALLOWED_HOSTS = /^(localhost|127\.0\.0\.1|(www\.)?repasitos\.es|(www\.)?wopr\.es|[a-z0-9-]+\.vercel\.app)$/
+const ALLOWED_HOSTS = /^(localhost|127\.0\.0\.1|(www\.)?repasitos\.es)$/
+/** Per-IP budget kept in this instance's memory: 120 requests per 10 minutes. A partial brake only (see above). */
+const RATE_LIMIT = 120
+const RATE_WINDOW_MS = 10 * 60_000
+const MAX_TRACKED_IPS = 10_000
 /** Letters (with Spanish accents), digits, spaces and ordinary punctuation. Nothing that could become markup. */
 const SAFE_TEXT = /^[\p{L}\p{N}\s.,;:¡!¿?'"«»()\-–—…%+×÷=/]+$/u
 
@@ -35,6 +49,9 @@ function fail(status: number, message: string): Response {
 }
 
 function allowedCaller(req: Request): boolean {
+  // Sec-Fetch-Site is sent by browsers on every request; when present it must say same-origin.
+  const fetchSite = req.headers.get('sec-fetch-site')
+  if (fetchSite !== null && fetchSite !== 'same-origin') return false
   const from = req.headers.get('origin') ?? req.headers.get('referer')
   if (!from) return false
   try {
@@ -42,6 +59,28 @@ function allowedCaller(req: Request): boolean {
   } catch {
     return false
   }
+}
+
+const hits = new Map<string, { start: number; count: number }>()
+
+/** Counts a request for this client IP. False when the IP is over RATE_LIMIT in the current window. */
+function withinRateLimit(req: Request, now = Date.now()): boolean {
+  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim() || 'unknown'
+  if (hits.size >= MAX_TRACKED_IPS) {
+    for (const [k, v] of hits) if (now - v.start >= RATE_WINDOW_MS) hits.delete(k)
+  }
+  const cur = hits.get(ip)
+  if (!cur || now - cur.start >= RATE_WINDOW_MS) {
+    hits.set(ip, { start: now, count: 1 })
+    return true
+  }
+  cur.count++
+  return cur.count <= RATE_LIMIT
+}
+
+/** Tests only. */
+export function __resetRateLimitForTests(): void {
+  hits.clear()
 }
 
 export function ssml(text: string, character: Character): string {
@@ -62,6 +101,7 @@ export function GET(req: Request): Promise<Response> {
 export async function handler(req: Request, env: Env): Promise<Response> {
   if (req.method !== 'GET') return fail(405, 'Method not allowed')
   if (!allowedCaller(req)) return fail(403, 'Forbidden')
+  if (!withinRateLimit(req)) return fail(429, 'Too many requests')
   const key = env.AZURE_SPEECH_KEY
   const region = env.AZURE_SPEECH_REGION
   if (!key || !region) return fail(503, 'Voice not configured')
@@ -70,7 +110,7 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   const text = (url.searchParams.get('t') ?? '').trim()
   const character = (url.searchParams.get('v') ?? 'lumi') as Character
   if (!text || text.length > MAX_CHARS || !SAFE_TEXT.test(text)) return fail(400, 'Bad text')
-  if (!(character in VOICES)) return fail(400, 'Bad voice')
+  if (!Object.hasOwn(VOICES, character)) return fail(400, 'Bad voice')
 
   const azure = await fetch(`https://${region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
     method: 'POST',
@@ -81,6 +121,8 @@ export async function handler(req: Request, env: Env): Promise<Response> {
       'User-Agent': 'repasitos',
     },
     body: ssml(text, character),
+    // A stalled Azure connection must not hold the function until the platform limit.
+    signal: AbortSignal.timeout(8000),
   }).catch(() => null)
 
   // Quota reached (F0) or a transient error: the app uses the device voice instead.

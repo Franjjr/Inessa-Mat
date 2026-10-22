@@ -5,6 +5,8 @@
   gap: var(--sp-3);
   width: 100%;
   padding: var(--sp-3) var(--sp-4);
+  /* Safe bottom margin: the bar never sits on the bottom edge of the screen (notches, home indicator). */
+  margin-bottom: max(var(--sp-3), env(safe-area-inset-bottom));
   background: var(--c-surface);
   border-radius: var(--r-lg);
   box-shadow: var(--shadow-1);
@@ -27,7 +29,7 @@
   line-height: 1.35;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-md);
-  animation: pop var(--dur-med) var(--ease-bounce);
+  animation: pop var(--dur-med) var(--ease-out);
 }
 .ok { background: var(--c-success-soft); color: #14532d; }
 .clue { background: var(--c-gold-soft); color: #78350f; }
@@ -39,6 +41,11 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .bubble { animation: none; }
+}
+
+/* The companion buddy sits in the bottom-right corner over this bar: keep the buttons clear of it. */
+@media (min-width: 761px) {
+  .bar > .side:last-child { margin-right: 200px; }
 }
 
 @media (max-width: 760px) {

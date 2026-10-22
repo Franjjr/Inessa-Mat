@@ -61,7 +61,7 @@
   display: grid;
   place-items: center;
   cursor: pointer;
-  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-bounce);
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -100,7 +100,7 @@
   font-size: var(--fs-md);
   color: var(--c-magic);
   text-align: center;
-  animation: pop var(--dur-med) var(--ease-bounce);
+  animation: pop var(--dur-med) var(--ease-out);
 }
 
 .answer {

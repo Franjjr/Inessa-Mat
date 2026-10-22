@@ -27,7 +27,7 @@ export function AlbumView({ pages, owned, total, initialPage }: AlbumViewProps) 
             <strong>{owned}</strong> de {total} cromos
           </p>
           <div className={s.meter} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={owned} aria-label="Cromos conseguidos">
-            <span className={s.meterFill} style={{ width: `${pct}%` }} />
+            <span className={s.meterFill} style={{ transform: `scaleX(${pct / 100})` }} />
           </div>
         </div>
 

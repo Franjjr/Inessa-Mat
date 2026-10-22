@@ -283,7 +283,7 @@
   font-size: var(--fs-lg);
   font-variant-numeric: tabular-nums;
   color: var(--c-ink);
-  transition: transform var(--dur-med) var(--ease-bounce), background var(--dur-med);
+  transition: transform var(--dur-med) var(--ease-out), background var(--dur-med);
 }
 
 .beadGiven {
@@ -327,7 +327,7 @@
   font-weight: 600;
   font-size: var(--fs-lg);
   font-variant-numeric: tabular-nums;
-  transition: transform var(--dur-med) var(--ease-bounce);
+  transition: transform var(--dur-med) var(--ease-out);
 }
 
 .linkGiven {

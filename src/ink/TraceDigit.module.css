@@ -58,10 +58,10 @@
   background: var(--c-gold-soft);
   box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c-gold) 45%, var(--c-surface));
   text-align: center;
-  animation: rise var(--dur-slow) var(--ease-bounce) both;
+  animation: rise var(--dur-slow) var(--ease-celebrate) both;
 }
 .stars { display: flex; justify-content: center; gap: 4px; }
-.star { display: inline-flex; animation: starIn var(--dur-slow) var(--ease-bounce) both; filter: grayscale(1) opacity(.35); }
+.star { display: inline-flex; animation: starIn var(--dur-slow) var(--ease-celebrate) both; filter: grayscale(1) opacity(.35); }
 .star.on { filter: none; }
 .msg { margin: 6px 0 0; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); color: var(--c-ink); }
 .hint { margin: 4px 0 0; font-family: var(--font-read); font-size: var(--fs-sm); color: var(--c-ink-soft); }

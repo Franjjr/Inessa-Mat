@@ -7,6 +7,8 @@ const data = vi.hoisted(() => ({
   verifyAdultPin: vi.fn(),
   setAdultPin: vi.fn(),
   clearAdultPin: vi.fn(),
+  readAdultGateLock: vi.fn(),
+  writeAdultGateLock: vi.fn(),
   signInWithPassword: vi.fn(),
   useAuth: vi.fn(),
 }))
@@ -38,6 +40,8 @@ describe('AdultGate', () => {
     data.useAuth.mockReturnValue({ status: 'local-only', user: null, backendAvailable: false, signInWithPassword: vi.fn() })
     data.clearAdultPin.mockResolvedValue(undefined)
     data.setAdultPin.mockResolvedValue(undefined)
+    data.readAdultGateLock.mockResolvedValue(null)
+    data.writeAdultGateLock.mockResolvedValue(undefined)
   })
 
   it('blocks the adult area while the PIN is wrong', async () => {
@@ -69,6 +73,33 @@ describe('AdultGate', () => {
     renderGate()
     expect(await screen.findByText(/Puedes volver a probar en/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1' })).toBeDisabled()
+  })
+
+  it('keeps the lock when only localStorage is cleared (the IndexedDB copy still holds it)', async () => {
+    data.hasAdultPin.mockResolvedValue(true)
+    data.verifyAdultPin.mockResolvedValue(false)
+    data.readAdultGateLock.mockResolvedValue({ failures: 0, lockedUntil: Date.now() + 25_000 })
+    renderGate()
+
+    expect(await screen.findByText(/Puedes volver a probar en/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '1' })).toBeDisabled()
+    expect(window.localStorage.getItem('numeria.adultGate.lock')).not.toBeNull()
+  })
+
+  it('mirrors the failure counter to IndexedDB and clears it on success', async () => {
+    data.hasAdultPin.mockResolvedValue(true)
+    data.verifyAdultPin.mockResolvedValueOnce(false).mockResolvedValueOnce(true)
+    renderGate()
+
+    await tapPin('0000')
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByText('Ese PIN no es correcto. Inténtalo otra vez.')).toBeInTheDocument()
+    expect(data.writeAdultGateLock).toHaveBeenLastCalledWith({ failures: 1, lockedUntil: 0 })
+
+    await tapPin('1234')
+    fireEvent.click(await screen.findByRole('button', { name: 'Entrar' }))
+    expect(await screen.findByText('Contenido de adultos')).toBeInTheDocument()
+    expect(data.writeAdultGateLock).toHaveBeenLastCalledWith({ failures: 0, lockedUntil: 0 })
   })
 
   it('lets the adult through with the right PIN', async () => {
@@ -165,11 +196,15 @@ describe('AdultGate', () => {
     expect(screen.queryByRole('button', { name: 'Comprobar' })).toBeNull()
   })
 
-  it('creates the question with two 2-digit factors', () => {
-    const q = makeMathQuestion(() => 0.5)
-    expect(q.a).toBeGreaterThanOrEqual(12)
-    expect(q.b).toBeLessThanOrEqual(19)
-    expect(q.answer).toBe(q.a * q.b)
+  it('creates the question with a 2-digit factor times a 3-digit one', () => {
+    for (const r of [0, 0.5, 0.999]) {
+      const q = makeMathQuestion(() => r)
+      expect(q.a).toBeGreaterThanOrEqual(23)
+      expect(q.a).toBeLessThanOrEqual(49)
+      expect(q.b).toBeGreaterThanOrEqual(101)
+      expect(q.b).toBeLessThanOrEqual(899)
+      expect(q.answer).toBe(q.a * q.b)
+    }
   })
 
   it('reaches the password route when signed in', async () => {

@@ -1,5 +1,5 @@
 /* Dev-only helpers (installed on window.__numeriaDev when import.meta.env.DEV):
-     seed()  → wipes local data and creates the demo child "Inessa" (local-only) with progress, mastery, attempts
+     seed()  → wipes local data and creates the demo child "Lía" (local-only) with progress, mastery, attempts
                and sessions so every screen has something to show (used by tools/shot.mjs --seed)
      reset() → wipes all local data (IndexedDB + Numeria localStorage keys)
    Everything is deterministic (seeded RNG) so screenshots are stable. */
@@ -129,7 +129,7 @@ export async function seedDemo(): Promise<{ childId: string }> {
   const child: ChildProfile = {
     id: DEMO_CHILD_ID,
     orgId: null,
-    nickname: 'Inessa',
+    nickname: 'Lía',
     gender: 'f',
     birthYear: 2018,
     grade: 2,

@@ -80,7 +80,7 @@
   border: var(--sticker-border);
   background: var(--c-yellow-soft, var(--c-gold-soft));
   color: var(--c-ink);
-  animation: pop var(--dur-slow) var(--ease-bounce) both;
+  animation: pop var(--dur-slow) var(--ease-celebrate) both;
 }
 
 .prize {

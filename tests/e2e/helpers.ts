@@ -10,7 +10,7 @@ export const PET_NAME = 'Luna'
 // Each Playwright test gets a fresh browser context, so IndexedDB and localStorage start empty ("new device").
 export const settle = (page: Page, ms = 250) => page.waitForTimeout(ms)
 
-/** Seeds the demo child "Inessa" (dev helper) and reloads so the app reads it. */
+/** Seeds the demo child "Lía" (dev helper) and reloads so the app reads it. */
 export async function seedDemo(page: Page, route = '/kids'): Promise<void> {
   await page.goto(route)
   await page.evaluate(async () => {

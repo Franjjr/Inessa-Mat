@@ -64,8 +64,8 @@ export default function NecklaceActivity({ config, onDone, onExit }: ActivityPro
       instructions={config.instructions}
       index={session.index}
       total={run.slots.length}
-      accent="var(--w3)"
-      accentSoft="var(--w3-soft)"
+      accent="var(--c-primary)"
+      accentSoft="var(--c-primary-soft)"
       onExit={onExit}
     >
       {ex && (

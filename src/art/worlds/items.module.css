@@ -26,7 +26,7 @@
 }
 
 /* Star pop when it becomes filled */
-.pop { animation: pop 620ms var(--ease-bounce, cubic-bezier(.34, 1.56, .64, 1)) both; transform-box: fill-box; transform-origin: center; }
+.pop { animation: pop 620ms var(--ease-celebrate) both; transform-box: fill-box; transform-origin: center; }
 @keyframes pop {
   0% { transform: scale(0.3) rotate(-30deg); }
   60% { transform: scale(1.22) rotate(8deg); }
@@ -42,7 +42,7 @@
 /* Chest */
 .lidOff { animation: lidOff 260ms ease-in both; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes lidOff { to { transform: scaleY(0.05); opacity: 0; } }
-.lidOn { animation: lidOn 520ms var(--ease-bounce, cubic-bezier(.34, 1.56, .64, 1)) 180ms both; transform-box: fill-box; transform-origin: 50% 100%; }
+.lidOn { animation: lidOn 520ms var(--ease-celebrate) 180ms both; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes lidOn {
   from { transform: scaleY(0.05); }
   to { transform: scaleY(1); }

@@ -44,7 +44,7 @@
   box-shadow: var(--shadow-1);
 }
 .pileItem { font-size: clamp(26px, 4.6vmin, 40px); line-height: 1; }
-.pileItem:last-child { animation: pop var(--dur-med) var(--ease-bounce); }
+.pileItem:last-child { animation: pop var(--dur-med) var(--ease-out); }
 
 .bins {
   display: grid;
@@ -67,7 +67,7 @@
   color: var(--c-ink);
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform var(--dur-fast) var(--ease-bounce), border-color var(--dur-fast), box-shadow var(--dur-med);
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast), box-shadow var(--dur-med);
   -webkit-tap-highlight-color: transparent;
 }
 .bin:active { transform: scale(.97); }

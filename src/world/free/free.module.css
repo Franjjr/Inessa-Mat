@@ -123,7 +123,7 @@
   gap: 4px;
   width: 100%;
   min-height: 92px;
-  padding: var(--sp-4) var(--sp-4) var(--sp-4) var(--sp-5);
+  padding: var(--sp-4);
   border: 0;
   border-radius: var(--r-lg);
   background: var(--c-surface);
@@ -135,24 +135,19 @@
   overflow: hidden;
 }
 
-.game::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  background: var(--world, var(--c-primary));
-}
-
 .game:active {
   transform: scale(0.99);
 }
 
 .gameWorld {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--world, var(--c-primary)) 16%, #fff);
   font-family: var(--font-read);
+  font-weight: 700;
   font-size: var(--fs-xs);
-  color: var(--c-ink-mute);
+  color: var(--c-ink-soft);
 }
 
 .gameTitle {

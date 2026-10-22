@@ -96,7 +96,7 @@
   color: var(--ink-pencil);
   line-height: 1;
   padding-bottom: 2px;
-  animation: pop var(--dur-med) var(--ease-bounce);
+  animation: pop var(--dur-med) var(--ease-out);
 }
 
 /* The subtraction line: a short ink stroke under the product, exactly as wide as the partial dividend. */
@@ -154,7 +154,7 @@
   font-family: var(--font-display);
   font-size: var(--fs-md);
   color: var(--c-magic);
-  animation: pop var(--dur-med) var(--ease-bounce);
+  animation: pop var(--dur-med) var(--ease-out);
 }
 
 .compact .galera { font-size: var(--fs-lg); }

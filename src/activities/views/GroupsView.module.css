@@ -63,7 +63,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  transition: transform var(--dur-fast) var(--ease-bounce), background var(--dur-fast);
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -71,7 +71,7 @@
 .item.on {
   background: var(--c-success-soft);
   box-shadow: inset 0 0 0 3px var(--c-success);
-  animation: bump var(--dur-med) var(--ease-bounce);
+  animation: bump var(--dur-med) var(--ease-out);
 }
 .item:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
 

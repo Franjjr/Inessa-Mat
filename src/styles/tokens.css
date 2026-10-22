@@ -88,7 +88,8 @@
   --cell-size-sm: clamp(44px, 6vmin, 64px);  /* carry / borrow cells */
 
   /* Motion */
-  --ease-bounce: cubic-bezier(.34, 1.56, .64, 1);
+  /* Overshoot curve: celebrations only (reward, cristal, chest, confetti). Everything else uses --ease-out. */
+  --ease-celebrate: cubic-bezier(.34, 1.56, .64, 1);
   --ease-out: cubic-bezier(.22, 1, .36, 1);
   --dur-fast: 140ms;
   --dur-med: 280ms;
