@@ -38,6 +38,8 @@ export const w8Galera = lesson('w8-galera', 'La casita de la división', [
 const d84 = { dividend: 84, divisor: 4 }
 const dClimb = { divisor: 4, quotient: 7 }
 const exactDivision: SkillSelector = { kinds: ['division'], divisionVariants: ['exact'] }
+/** Climbing only fits one-digit quotients (17 ÷ 5, 38 ÷ 6): the 'rem' pool, whose first digit is under the divisor. */
+const oneDigitQuotient: SkillSelector = { kinds: ['division'], divisionVariants: ['rem'] }
 
 const withDivMethod = (step: LessonStep, divMethod: DivMethod): LessonStep => ({ ...step, divMethod })
 
@@ -51,7 +53,7 @@ export const w8DivWays = lesson('w8-div-ways', 'Cuatro caminos para dividir', [
   show('div-parts', d84, 'Los cocientes se suman: 20 + 1 = 21. ¡Así no hay que hacer ninguna resta!'),
   withDivMethod(tryIt('div-parts', d84, '¡Pruébalo tú! Reparte por partes.', { ...exactDivision }), 'div-parts'),
   show('div-climb', dClimb, 'Camino 4: multiplicar hacia arriba. ¿Qué número por 4 da 28? Sube: 4, 8, 12… ¡son 7 veces!'),
-  withDivMethod(tryIt('div-climb', dClimb, '¡Pruébalo tú! Sube por la tabla del divisor.', exactDivision), 'climb'),
+  withDivMethod(tryIt('div-climb', dClimb, '¡Pruébalo tú! Sube por la tabla del divisor.', oneDigitQuotient), 'climb'),
   {
     visual: 'galera',
     params: d84,

@@ -141,10 +141,8 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
 })
 
 test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
-  // FIXME: the lesson walk-through does not finish in the browser yet (it stalls after the first step). The four
-  // methods are covered by the gallery journey and the unit tests; see the report.
-  test.fixme('the four division methods are tried and the child chooses the favourite', async ({ page }) => {
-    test.setTimeout(600_000)
+  test('the four division methods are tried and the child chooses the favourite', async ({ page }) => {
+    test.setTimeout(180_000)
     await seedDemo(page)
     // World 8 is reached by the demo child: its earlier nodes are marked as done, as after a long journey.
     await devEditProgress(page, { kind: 'worldDoneBeforeGuardian', worldId: 'w8' })
@@ -158,9 +156,10 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
     await page.goto('/play/w/w8/lesson-div-ways')
     await expect(page.getByRole('heading', { name: 'Cuatro caminos para dividir' })).toBeVisible({ timeout: 20_000 })
 
+    const seen = new Set<string>()
     for (let i = 0; i < 80; i++) {
       const done = page.getByRole('button', { name: '¡Lo he entendido!' })
-      if (await done.isEnabled().catch(() => false)) {
+      if (await ready(done)) {
         await done.click({ timeout: 5_000 }).catch(() => undefined)
         break
       }
@@ -168,6 +167,7 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       if (await pick.isVisible().catch(() => false)) {
         await pick.click()
         await expect(page.getByText('Anotado: tu método favorito es «La galera con restas».')).toBeVisible()
+        seen.add('choice')
         await shot(page, 'h9-lesson-choice')
         await continueLesson(page)
         continue
@@ -179,30 +179,38 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       }
       const parts = page.getByRole('region', { name: 'Repartir por partes' })
       if (await parts.isVisible().catch(() => false)) {
+        seen.add('parts')
         await solveParts(page)
         continue
       }
       const climb = page.getByRole('region', { name: 'Multiplicar hacia arriba' })
       if (await climb.isVisible().catch(() => false)) {
+        seen.add('climb')
         await solveClimb(page)
         continue
       }
       const next = page.getByRole('button', { name: 'Siguiente ›' })
-      if (await next.isEnabled().catch(() => false)) {
+      if (await ready(next)) {
         await next.click({ timeout: 5_000 }).catch(() => undefined)
         await settle(page, 350)
         continue
       }
       await settle(page, 400)
     }
-    await expect(page.getByText('Anotado: tu método favorito es «La galera con restas».')).toBeVisible({ timeout: 20_000 })
+    // The favourite was chosen and each method's try step shows its own exercise (a climb with a two-digit quotient would fall back to the galera).
+    expect([...seen].sort()).toEqual(['choice', 'climb', 'parts'])
   })
 })
+
+/** On screen and enabled, without waiting for it to appear (isEnabled alone waits for the element). */
+async function ready(locator: Locator): Promise<boolean> {
+  return (await locator.count()) > 0 && locator.first().isEnabled().catch(() => false)
+}
 
 /** Continues from a settled step: the lesson's own forward button, when there is one. */
 async function continueLesson(page: Page): Promise<void> {
   const next = page.getByRole('button', { name: 'Siguiente ›' })
-  if (await next.isEnabled({ timeout: 4_000 }).catch(() => false)) await next.click()
+  if (await ready(next)) await next.click()
   await settle(page, 350)
 }
 
