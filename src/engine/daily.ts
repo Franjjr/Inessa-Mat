@@ -13,6 +13,8 @@ import { makeArray } from './make'
 import { generate } from './generate'
 import { hintsFor } from './hints'
 import { fmt, numberWords } from './numeric'
+import { moneyStatement } from './money'
+import { measureStatement } from './measure'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -38,6 +40,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'double-chain': 20, 'fact-family': 25, 'column-add': 50, 'column-sub': 55, 'column-mul': 45,
   division: 60, 'word-problem': 60, 'bar-problem': 75, 'error-hunt': 50, 'check-calc': 45,
   'place-value': 30, compare: 15, order: 35, round: 20, 'number-line': 25, mental: 15, equation: 20,
+  money: 40, measure: 35,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -104,6 +107,8 @@ export function statementOf(ex: Exercise): string {
     case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     case 'bar-problem': return ex.text
     case 'error-hunt': return `${ex.top} ${ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'} ${ex.bottom} = ${ex.shown}`
+    case 'money': return moneyStatement(ex)
+    case 'measure': return measureStatement(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`

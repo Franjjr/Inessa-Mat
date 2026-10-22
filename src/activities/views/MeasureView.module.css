@@ -1,0 +1,97 @@
+/* Medida: the object, the equation of a conversion, the ruler and the estimate. */
+.objectEmoji {
+  font-size: 3.6rem;
+  line-height: 1;
+}
+
+.objectName {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.claim {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+  min-width: 0;
+  text-align: center;
+}
+
+.equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.given {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.equals {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.unit {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  white-space: nowrap;
+}
+
+/* The ruler: 30 cm to scale; the object is a sticker-coloured bar from its start to its end. */
+.ruler {
+  display: block;
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.rulerBody {
+  fill: var(--c-surface);
+  stroke: var(--c-line);
+  stroke-width: 3;
+}
+
+.tick {
+  stroke: var(--c-ink-soft);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.label {
+  font-family: var(--font-read);
+  font-size: 22px;
+  fill: var(--c-ink-soft);
+}
+
+.thing {
+  fill: var(--c-primary-soft);
+  stroke: var(--c-primary-strong);
+  stroke-width: 3;
+}
+
+.startMark {
+  stroke: var(--c-warn);
+  stroke-width: 3;
+  stroke-dasharray: 6 4;
+}

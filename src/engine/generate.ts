@@ -15,6 +15,9 @@ import { genCheckCalc, genErrorHunt } from './bugs'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
 import { buildEquation, buildMental, mentalSkillsOf } from './calc'
 import { buildNumericExercise, numericSkillsOf } from './numeric'
+import { buildMoney, MONEY_MODES } from './money'
+import { buildMeasure } from './measure'
+import { moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, checkSkill, conceptSkill, div2x1Skill, divSkill,
@@ -27,7 +30,7 @@ import { fillTemplate, templatesFor } from './wordProblems'
 export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
-  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation',
+  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -206,6 +209,16 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
+      break
+    case 'money':
+      for (const mode of MONEY_MODES) addItem(map, moneySkill(mode), kind, 1)
+      break
+    case 'measure':
+      for (const dim of ['length', 'mass', 'capacity'] as const) {
+        addItem(map, measureSkill('unit', dim), kind, 1)
+        addItem(map, measureSkill('convert', dim), kind, 1)
+      }
+      for (const skill of ['measure:ruler', 'measure:add', 'measure:estimate']) addItem(map, skill, kind, 1)
       break
     default: {
       const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
@@ -631,6 +644,8 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
     const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
     if (built) return built
   }
+  if (p.type === 'money') return buildMoney(p.mode, rng, used)
+  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)

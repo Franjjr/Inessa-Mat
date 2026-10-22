@@ -1,0 +1,354 @@
+/* Dinero (and the shared pieces of medida): the price, the tray, the purse, price cards and the euros/céntimos boxes.
+   Big targets (tap-min or larger), sticker borders from the design direction C tokens, phone width without overflow. */
+.stage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.unit {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  white-space: nowrap;
+}
+
+.equals {
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.bigAmount {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.ask {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+
+/* Choices: big buttons with a sticker border. */
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.choice {
+  min-height: 64px;
+  min-width: 140px;
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  max-width: 100%;
+}
+
+.choice:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.choiceOn {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
+/* The price, always on screen; never a total of what is in the tray. */
+.price {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  padding: var(--sp-3) var(--sp-5);
+  margin: 0 auto;
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-gold-soft);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  max-width: 100%;
+}
+
+.priceLabel {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.priceValue {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The tray: where the pieces go. Dashed while empty. */
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  gap: var(--sp-2);
+  min-height: 132px;
+  padding: var(--sp-3);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-xl);
+  background: var(--c-surface-2);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.trayEmpty {
+  border-style: dashed;
+}
+
+.trayHint {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+  text-align: center;
+}
+
+.trayPiece {
+  min-width: 56px;
+  min-height: 56px;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--r-md);
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.trayPiece:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.trayActions {
+  display: flex;
+  justify-content: center;
+}
+
+.undo {
+  min-height: 52px;
+  padding: 0 var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.undo:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* The purse: every piece, one tap (or drag) away. */
+.purse {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.purseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: var(--sp-2);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm, var(--shadow-1));
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 0;
+}
+
+.purseBtn:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.purseDrag {
+  opacity: 0.4;
+}
+
+/* The piece that follows the finger while dragging. */
+.ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  z-index: var(--z-toast);
+  opacity: 0.9;
+  filter: drop-shadow(0 6px 8px rgba(0, 0, 0, 0.25));
+}
+
+/* Story: a note next to the sentence. */
+.story {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  min-width: 0;
+}
+
+.storyNote {
+  flex: 0 0 auto;
+}
+
+.storyText {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  line-height: 1.4;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+/* Price cards (a shop): name, emoji and the price tag. */
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  max-width: 100%;
+  width: 176px;
+  padding: var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font: inherit;
+  color: var(--c-ink);
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.cardButton {
+  cursor: pointer;
+  touch-action: manipulation;
+  min-height: 150px;
+}
+
+.cardButton:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.cardOn {
+  background: var(--c-primary-soft);
+}
+
+.cardEmoji {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.cardName {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-gold-soft);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Euros and céntimos: two boxes with a comma between them. */
+.amountWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 100%;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.amountCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.comma {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  align-self: center;
+  padding-bottom: 1.2rem;
+}

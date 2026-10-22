@@ -11,6 +11,8 @@ import { compensationSteps, lineStops, partsResults, subtrahendParts } from './s
 import { hintsCalc } from './calc'
 import { hintsNumeric } from './numeric'
 import { barHints } from './bars'
+import { hintsMoney } from './money'
+import { hintsMeasure } from './measure'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
 import { TABLE_METHODS } from './methods'
@@ -368,6 +370,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'bar-problem': return barHints(ex)
     case 'error-hunt': return huntHints(ex)
     case 'check-calc': return checkHints(ex)
+    case 'money': return hintsMoney(ex) ?? []
+    case 'measure': return hintsMeasure(ex) ?? []
   }
 }
 

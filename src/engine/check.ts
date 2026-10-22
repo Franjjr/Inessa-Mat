@@ -18,6 +18,8 @@ import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './su
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
+import { checkMoney } from './money'
+import { checkMeasure } from './measure'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -555,5 +557,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
     case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
     case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
+    case 'money': return checkMoney(exercise, answer)
+    case 'measure': return checkMeasure(exercise, answer)
   }
 }

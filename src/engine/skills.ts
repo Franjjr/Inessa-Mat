@@ -16,8 +16,14 @@
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
    check:add|sub|div        comprobar (claim + the check operation)
    div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
+   money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
+   measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
+   measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
+   measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
 */
-import type { BarOp, DivisionExercise, ExerciseKind, MentalFamily, PlaceMode, SkillKey } from '@/types'
+import type {
+  BarOp, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode, SkillKey,
+} from '@/types'
 
 export type DivisionVariant = DivisionExercise['variant']
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
@@ -58,6 +64,8 @@ export type ParsedSkill =
   | { type: 'bar'; op: BarSkillOp }
   | { type: 'hunt'; op: HuntOp }
   | { type: 'check'; op: CheckOp }
+  | { type: 'money'; mode: MoneyMode }
+  | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
 
 // ---------------------------------------------------------------- builders
 
@@ -111,6 +119,12 @@ export function checkSkill(op: CheckOp): SkillKey {
 }
 export function div3x1Skill(variant: 'exact' | 'rem'): SkillKey {
   return `div:3x1:${variant}`
+}
+export function moneySkill(mode: MoneyMode): SkillKey {
+  return `money:${mode}`
+}
+export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension): SkillKey {
+  return `measure:${mode}:${dimension}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -169,6 +183,13 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
   if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
   if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
+  if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
+  if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)$/))) {
+    return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension }
+  }
+  if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
+  if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
+  if (key === 'measure:estimate') return { type: 'measure', mode: 'estimate', dimension: null }
   return null
 }
 
@@ -224,6 +245,8 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']
+    case 'money': return ['money']
+    case 'measure': return ['measure']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']

@@ -44,6 +44,8 @@ function showAnswer(a: Answer): string {
     case 'verdict': return `${a.ok === null ? '—' : a.ok ? 'bien' : 'mal'} · ${a.value ?? '—'}`
     case 'division-parts': return `${a.parts.map((v) => v ?? '—').join(' + ')} = ${a.quotient ?? '—'} resto ${a.remainder ?? '—'}`
     case 'climb': return `${a.products.map((v) => v ?? '—').join(' · ')} resto ${a.remainder ?? '—'}`
+    case 'choice': return a.value ?? '—'
+    case 'pieces': return a.pieces.length ? a.pieces.join(' + ') : '—'
   }
 }
 

@@ -59,4 +59,7 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'bar-problem': lazy(() => import('./views/BarProblemView')),
   'error-hunt': lazy(() => import('./views/ErrorHuntView')),
   'check-calc': lazy(() => import('./views/CheckCalcView')),
+  // ---- dinero and medida (3.º, block C) — src/activities/views/<name>.tsx
+  money: lazy(() => import('./views/MoneyView')),
+  measure: lazy(() => import('./views/MeasureView')),
 }
