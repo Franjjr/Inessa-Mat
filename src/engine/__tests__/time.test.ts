@@ -67,7 +67,8 @@ describe('face arithmetic', () => {
   it('gives the period from the 24 h hour', () => {
     expect(periodOf(6)).toBe('de la mañana')
     expect(periodOf(11)).toBe('de la mañana')
-    expect(periodOf(12)).toBe('de la tarde')
+    expect(periodOf(12)).toBe('del mediodía')
+    expect(periodOf(13)).toBe('de la tarde')
     expect(periodOf(20)).toBe('de la tarde')
     expect(periodOf(21)).toBe('de la noche')
     expect(periodOf(0)).toBe('de la noche')

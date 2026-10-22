@@ -2,7 +2,7 @@
    arithmetic of durations and the calendar words. Pure: no React, no I/O.
    «las tres y veinte», «las cinco menos diez», «las dos y media de la tarde».
    Conventions: the face hour is 1..12 (12 = the 12 of the clock); the 24 h hour is 0..23.
-   Periods: 6–11 de la mañana, 12–20 de la tarde, 21–5 de la noche (so 12:00 is «las doce de la tarde»). */
+   Periods: 6–11 de la mañana, 12 del mediodía, 13–20 de la tarde, 21–5 de la noche (12:30 is «las doce y media del mediodía»). */
 import type { ClockTime } from '@/types'
 import { numberWords } from './numeric'
 
@@ -15,7 +15,7 @@ export const MONTHS_30_31: { name: string; days: number }[] = [
   { name: 'octubre', days: 31 }, { name: 'noviembre', days: 30 }, { name: 'diciembre', days: 31 },
 ]
 
-export type DayPeriod = 'de la mañana' | 'de la tarde' | 'de la noche'
+export type DayPeriod = 'de la mañana' | 'del mediodía' | 'de la tarde' | 'de la noche'
 
 export const pad2 = (n: number): string => String(n).padStart(2, '0')
 
@@ -28,7 +28,8 @@ export function faceHour(h: number): number {
 /** Period of the day for a 24 h hour (the phrase says it: «de la tarde»). */
 export function periodOf(hour24: number): DayPeriod {
   if (hour24 >= 6 && hour24 < 12) return 'de la mañana'
-  if (hour24 >= 12 && hour24 < 21) return 'de la tarde'
+  if (hour24 === 12) return 'del mediodía'
+  if (hour24 >= 13 && hour24 < 21) return 'de la tarde'
   return 'de la noche'
 }
 

@@ -314,7 +314,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
       }
       return [
         hint(1, 'Las frases con «y» cuentan los minutos después de la hora; las de «menos», los que faltan para la siguiente.', 'clock'),
-        hint(2, '«De la mañana» es antes del mediodía; «de la tarde» va desde el mediodía hasta la noche; «de la noche» es el final del día.', 'clock'),
+        hint(2, '«De la mañana» es antes de las 12; «del mediodía», de las 12 a la 1; «de la tarde» va de la 1 hasta la noche; «de la noche» es el final del día.', 'clock'),
         hint(3, 'En el reloj de 24 horas, las horas de la tarde y de la noche siguen contando después de las 12. Escribe primero la hora y luego los minutos.', 'clock'),
       ]
     case 'time-duration':
