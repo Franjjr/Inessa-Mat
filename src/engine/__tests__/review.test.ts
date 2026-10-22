@@ -186,7 +186,7 @@ describe('robustness and hint consistency', () => {
     // "9 filas de 55 flores": a column scaffold, not 495 objects in a groups picture.
     const big = hintsFor(makeWordProblem('mul-flores', 'x', 'mul', 9, 55, 'flores'))
     expect(big[1]).toMatchObject({ visual: 'place-value', params: { top: 55, bottom: 9, tens: 50, units: 5 } })
-    expect(big[2]).toMatchObject({ visual: 'carry', text: 'Escribe la operación con el 55 arriba: 55 × 9 = ?', params: { carry: 4 } })
+    expect(big[2]).toMatchObject({ visual: 'carry', text: 'Piénsalo con el 55 arriba: 55 × 9 = ?', params: { carry: 4 } })
     expect(hintsFor(makeWordProblem('mul-setas', 'x', 'mul', 4, 6, 'setas'))[1]).toMatchObject({ visual: 'groups', params: { groups: 4, perGroup: 6 } })
     expect(hintsFor(makeWordProblem('div-hadas', 'x', 'div', 48, 4, 'estrellas'))[2].params).toEqual({ total: 48, groups: 4, dividend: 48, divisor: 4 })
   })

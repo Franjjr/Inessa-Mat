@@ -32,7 +32,7 @@ export const finale = story('finale', '¡La luz vuelve a Numeria!', [
     narrate('—¡VALIENTE! —dice {child} en voz alta.', 'fanfare'),
     narrate('¡Clac! El Gran Cofre de Numeria se abre despacito…', 'chest-open'),
     say('lumi', 'Dentro hay una sorpresa solo para ti… ¡y tu diploma de magia!', 'happy'),
-    say('companion', '¡Lo hemos conseguido, {child}! ¡Tú y yo! ¡Eres {cg:la mejor amiga|el mejor amigo|lo mejor} del mundo!', 'cheer'),
+    say('companion', '¡Lo hemos conseguido, {child}! ¡Tú y yo! ¡Eres {cg:la mejor amiga|el mejor amigo} del mundo!', 'cheer'),
   ]),
   scene('sky', [cast('companion', 'surprised', 'left'), cast('lumi', 'think', 'center')], [
     say('lumi', 'Por cierto… ¿veis esas islas a lo lejos, entre las nubes?', 'think'),

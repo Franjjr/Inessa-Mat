@@ -9,7 +9,7 @@ export const w5Arrival = story('w5-arrival', '¡Achís de tinta!', [
     say('octopus', '¡Hola! Ay… ay… ¡AAACHÍS!', 'surprised'),
   ]),
   scene('lake', [cast('lumi', 'surprised', 'left'), cast('companion', 'scared', 'center', 'ink'), cast('octopus', 'worried', 'right')], [
-    narrate('¡Splash! {pet} se queda {pg:cubierta|cubierto|cubierto} de tinta morada de la cabeza a los pies.', 'pop'),
+    narrate('¡Splash! {pet} se queda {pg:cubierta|cubierto} de tinta morada de la cabeza a los pies.', 'pop'),
     say('companion', '¡No veo nada! ¿Dónde está el lago? ¿Dónde estoy yo?', 'scared'),
   ]),
   scene('lake', [cast('lumi', 'talk', 'left'), cast('companion', 'worried', 'center', 'ink'), cast('octopus', 'sad', 'right')], [

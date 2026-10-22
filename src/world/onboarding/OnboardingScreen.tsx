@@ -39,7 +39,7 @@ interface Draft {
   petGender: GrammaticalGender
 }
 
-const EMPTY_DRAFT: Draft = { name: '', gender: 'n', colorway: 'default', petName: '', petGender: 'n' }
+const EMPTY_DRAFT: Draft = { name: '', gender: 'm', colorway: 'default', petName: '', petGender: 'm' }
 
 const COLORWAY_LABEL: Record<string, string> = {
   default: 'Original',
@@ -195,7 +195,6 @@ export default function OnboardingScreen() {
                 <Choices>
                   <ChoiceButton label="Como a una niña" selected={draft.gender === 'f'} onClick={() => { update({ gender: 'f' }); next() }} />
                   <ChoiceButton label="Como a un niño" selected={draft.gender === 'm'} onClick={() => { update({ gender: 'm' }); next() }} />
-                  <ChoiceButton label="Sin género, por favor" selected={draft.gender === 'n'} onClick={() => { update({ gender: 'n' }); next() }} />
                 </Choices>
               </Question>
             )}
@@ -289,11 +288,10 @@ export default function OnboardingScreen() {
             )}
 
             {step === 'companionGender' && (
-              <Question lumi={t('¿{pet} es niña, niño o no quiere decirlo?')}>
+              <Question lumi={t('¿{pet} es niña o niño?')}>
                 <Choices>
                   <ChoiceButton label="Es una niña" selected={draft.petGender === 'f'} onClick={() => { update({ petGender: 'f' }); next() }} />
                   <ChoiceButton label="Es un niño" selected={draft.petGender === 'm'} onClick={() => { update({ petGender: 'm' }); next() }} />
-                  <ChoiceButton label="Sin género" selected={draft.petGender === 'n'} onClick={() => { update({ petGender: 'n' }); next() }} />
                 </Choices>
               </Question>
             )}

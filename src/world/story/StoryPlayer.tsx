@@ -55,7 +55,7 @@ function buildBeats(story: StoryDef): Beat[] {
 function contextOf(child: ReturnType<typeof useActiveChild>['child']): TemplateContext {
   return child
     ? templateContext(child)
-    : { childName: FALLBACK_CHILD_NAME, childGender: 'n', petName: 'Bigotes', petGender: 'n', petSpecies: 'cat' }
+    : { childName: FALLBACK_CHILD_NAME, childGender: 'm', petName: 'Bigotes', petGender: 'm', petSpecies: 'cat' }
 }
 
 /** Stage figures scale with the height of the screen so phones and tablets both fit. */

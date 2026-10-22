@@ -4,7 +4,7 @@ import { COMPANION_SPECIES, DEFAULT_CHILD_SETTINGS } from '@/types'
 import { FALLBACK_CHILD_NAME, renderTemplate, templateContext, type TemplateContext } from '@/content'
 import { allCopy } from './helpers'
 
-const GENDERS: GrammaticalGender[] = ['f', 'm', 'n']
+const GENDERS: GrammaticalGender[] = ['f', 'm']
 
 const ctx = (over: Partial<TemplateContext> = {}): TemplateContext => ({
   childName: 'Inessa', childGender: 'f', petName: 'Bigotes', petGender: 'm', petSpecies: 'cat', ...over,
@@ -23,7 +23,6 @@ describe('renderTemplate', () => {
     expect(renderTemplate('¡Hola, {child}! Soy {pet}.', ctx())).toBe('¡Hola, Inessa! Soy Bigotes.')
     expect(renderTemplate('{pet_species} / {el_pet_species}', ctx({ petGender: 'f' }))).toBe('gatita / la gatita')
     expect(renderTemplate('{pet_species} / {el_pet_species}', ctx({ petGender: 'm' }))).toBe('gatito / el gatito')
-    expect(renderTemplate('{pet_species} / {el_pet_species}', ctx({ petGender: 'n' }))).toBe('gatito / el gatito')
   })
 
   it('contracts a/de + el and capitalises on request', () => {
@@ -37,17 +36,16 @@ describe('renderTemplate', () => {
   })
 
   it('picks gendered forms by child and by companion', () => {
-    const t = '{cg:Querida|Querido|Hola} {child}, tu {pg:amiga|amigo|compañero} {pet}'
+    const t = '{cg:Querida|Querido} {child}, tu {pg:amiga|amigo} {pet}'
     expect(renderTemplate(t, ctx({ childGender: 'f', petGender: 'f' }))).toBe('Querida Inessa, tu amiga Bigotes')
     expect(renderTemplate(t, ctx({ childGender: 'm', petGender: 'm' }))).toBe('Querido Inessa, tu amigo Bigotes')
-    expect(renderTemplate(t, ctx({ childGender: 'n', petGender: 'n' }))).toBe('Hola Inessa, tu compañero Bigotes')
   })
 
   it('supports placeholders nested inside gender options, and 1- or 2-option selectors', () => {
-    expect(renderTemplate('{cg:Querida {child}|Querido {child}|Hola, {child}}', ctx({ childGender: 'n' }))).toBe('Hola, Inessa')
-    expect(renderTemplate('{cg:lista|listo}', ctx({ childGender: 'n' }))).toBe('listo')
+    expect(renderTemplate('{cg:Querida {child}|Querido {child}}', ctx({ childGender: 'm' }))).toBe('Querido Inessa')
+    expect(renderTemplate('{cg:lista|listo}', ctx({ childGender: 'm' }))).toBe('listo')
     expect(renderTemplate('{cg:valiente}', ctx({ childGender: 'm' }))).toBe('valiente')
-    expect(renderTemplate('{pg:a||c}', ctx({ petGender: 'm' }))).toBe('')
+    expect(renderTemplate('{pg:a|}', ctx({ petGender: 'm' }))).toBe('')
   })
 
   it('never re-parses user values and keeps unknown placeholders visible', () => {
@@ -100,13 +98,11 @@ describe('every content template renders cleanly', () => {
     }
   }
 
-  it('neutral child options ({cg:…|…|N}) avoid gendered praise words', () => {
-    const GENDERED = /\b(lista|listo|guapa|guapo|campeona|campeón|maga|mago|niña|niño|querida|querido|sola|solo|solita|solito|experta|experto|heroína|héroe|amiga|amigo|artista)\b/i
+  it('gender selectors offer at most a feminine and a masculine form', () => {
     for (const { where, text } of copy) {
-      for (const m of text.matchAll(/\{cg:([^{}]*)\}/g)) {
+      for (const m of text.matchAll(/\{(?:cg|pg):([^{}]*)\}/g)) {
         const opts = m[1].split('|')
-        expect(opts, `${where}: give all three forms`).toHaveLength(3)
-        expect(opts[2], `${where}: "${opts[2]}"`).not.toMatch(GENDERED)
+        expect(opts.length, `${where}: "${m[0]}"`).toBeLessThanOrEqual(2)
       }
     }
   })

@@ -54,14 +54,14 @@ export default function ChildPickerScreen() {
           <li>
             <button type="button" className={s.add} onClick={() => navigate('/kids/new')}>
               <span className={s.plus} aria-hidden="true">+</span>
-              <span className={s.addText}>Añadir otro niño o niña</span>
+              <span className={s.addText}>Añadir otro niño</span>
             </button>
           </li>
         </ul>
 
         <footer className={s.footer}>
           <Button variant="ghost" size="sm" className={s.touch} onClick={() => navigate('/adult')}>
-            Soy familia o profesorado
+            Soy padre, madre o profesor
           </Button>
         </footer>
       </div>

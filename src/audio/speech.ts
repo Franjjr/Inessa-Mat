@@ -1,7 +1,7 @@
 /* Speech via the Web Speech API, tuned for Spanish (Spain) and for 7–8-year-olds.
    - Picks the best Spanish voice (es-ES first; "Mónica" on iPad), reloading when voices arrive late (iOS polls).
-   - Characters differ by pitch/rate: Lumi warm and clear, the companion bright and playful, the narrator neutral,
-     guardians deeper and slower.
+   - Characters differ only slightly by pitch/rate: system voices sound robotic when the pitch moves far from 1.
+   - The adult can pick the voice for this device (Ajustes); otherwise the best one is chosen automatically.
    - Queue by default; `interrupt: true` cuts in. say() always resolves (end, error, stop or watchdog), never rejects.
    - Text is cleaned and maths verbalised ("6 × 7 = 42" → "seis por siete son cuarenta y dos").
    - Music ducks while speaking. iOS needs a first speak() inside a gesture: a silent warm-up runs on the first tap.
@@ -13,15 +13,15 @@ import { onGesture, onVisibility, resumeQuietly } from './context'
 import { music } from './music'
 import { clamp } from './notes'
 import { chunkForSpeech, toSpeakable } from './speechText'
-import { isSpanish, pickBestVoice } from './voices'
+import { isSpanish, pickBestVoice, scoreVoice } from './voices'
 
 export type SpeechCharacter = NonNullable<SpeechOptions['voice']>
 
 export const CHARACTERS: Record<SpeechCharacter, { pitch: number; rate: number }> = {
-  lumi: { pitch: 1.12, rate: 0.92 },
-  companion: { pitch: 1.32, rate: 1.0 },
-  narrator: { pitch: 1.0, rate: 0.9 },
-  guardian: { pitch: 0.82, rate: 0.86 },
+  lumi: { pitch: 1.04, rate: 0.95 },
+  companion: { pitch: 1.1, rate: 1.0 },
+  narrator: { pitch: 1.0, rate: 0.95 },
+  guardian: { pitch: 0.94, rate: 0.9 },
 }
 
 const MAX_QUEUE = 4
@@ -122,8 +122,21 @@ function online(): boolean {
   return typeof navigator === 'undefined' || navigator.onLine !== false
 }
 
+const VOICE_KEY = 'numeria:voice'
+
+const voiceId = (v: SpeechSynthesisVoice) => v.voiceURI || v.name
+
+function preferredVoiceId(): string | null {
+  try { return localStorage.getItem(VOICE_KEY) } catch { return null }
+}
+
 function bestVoice(): SpeechSynthesisVoice | null {
   if (!voicesLoaded) refreshVoices()
+  const wanted = preferredVoiceId()
+  if (wanted && !badVoices.has(wanted)) {
+    const v = voices.find((x) => voiceId(x) === wanted && isSpanish(x))
+    if (v && (v.localService || online())) return v
+  }
   return pickBestVoice(voices, online(), badVoices)
 }
 
@@ -301,6 +314,27 @@ export const speech = {
     wire()
     const v = bestVoice()
     return v ? { name: v.name, lang: v.lang, local: v.localService } : null
+  },
+  /** Spanish voices on this device, best first (for the voice picker in Ajustes). */
+  voices(): { id: string; name: string; lang: string; local: boolean }[] {
+    wire()
+    if (!voicesLoaded) refreshVoices()
+    return voices
+      .filter(isSpanish)
+      .map((v) => ({ v, score: scoreVoice(v, true) }))
+      .sort((a, b) => b.score - a.score)
+      .map(({ v }) => ({ id: voiceId(v), name: v.name, lang: v.lang, local: v.localService }))
+  },
+  /** The voice the adult chose on this device (null = automatic). */
+  preferredVoice(): string | null {
+    return preferredVoiceId()
+  },
+  setPreferredVoice(id: string | null): void {
+    try {
+      if (id) localStorage.setItem(VOICE_KEY, id)
+      else localStorage.removeItem(VOICE_KEY)
+    } catch { /* storage blocked: stays automatic */ }
+    badVoices.delete(id ?? '')
   },
   /** Extra: true while a say() is in progress or queued. */
   speaking(): boolean {

@@ -3,7 +3,7 @@
 import { expect, test } from '@playwright/test'
 import { CHILD_NAME, createChildThroughOnboarding, tapStoryUntil } from '../helpers'
 
-test.describe('A · alta de la primera niña o niño', () => {
+test.describe('A · alta del primer perfil', () => {
   test('nuevo dispositivo → /kids → onboarding → prólogo → inicio', async ({ page }) => {
     await page.goto('/kids')
     await expect(page.getByRole('heading', { name: '¿Quién juega hoy?' })).toBeVisible()

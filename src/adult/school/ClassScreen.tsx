@@ -160,7 +160,7 @@ export default function ClassScreen() {
       <section className={adult.card} aria-labelledby="pupils-title">
         <h2 id="pupils-title" className={adult.subheading}>Alumnos</h2>
         {children.length === 0 ? (
-          <p className={adult.muted}>Cuando una familia una a su hijo o hija con el código, aparecerá aquí.</p>
+          <p className={adult.muted}>Cuando una familia una a su hijo con el código, aparecerá aquí.</p>
         ) : (
           <ul className={s.childList} aria-label="Alumnos de la clase">
             {children.map((c) => {

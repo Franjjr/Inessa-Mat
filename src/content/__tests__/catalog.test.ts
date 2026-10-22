@@ -20,13 +20,12 @@ describe('companions', () => {
     expect(companions.map((c) => c.species).sort()).toEqual([...COMPANION_SPECIES].sort())
     for (const c of companions) {
       expect(getCompanionDef(c.species)).toBe(c)
-      expect(c.noun).toHaveLength(3)
-      expect(c.articleNoun).toHaveLength(3)
+      expect(c.noun).toHaveLength(2)
+      expect(c.articleNoun).toHaveLength(2)
       c.articleNoun.forEach((a, i) => {
         expect(a.endsWith(c.noun[i]), c.species).toBe(true)
         expect(a, c.species).toMatch(/^(el|la) /)
       })
-      expect(c.articleNoun[2], `${c.species}: neutral uses the generic form`).toBe(c.articleNoun[1])
       expect(c.personality.length).toBeGreaterThan(10)
       expect(c.suggestedNames).toHaveLength(8)
       expect(new Set(c.suggestedNames).size).toBe(8)
@@ -37,7 +36,7 @@ describe('companions', () => {
   it('avoid unkind forms and do not reuse the names of the cast', () => {
     const all = companions.flatMap((c) => [...c.noun, ...c.articleNoun]).join(' ')
     expect(all).not.toMatch(/zorra|zorrita/)
-    expect(getCompanionDef('fox')!.noun).toEqual(['zorrito', 'zorrito', 'zorrito'])
+    expect(getCompanionDef('fox')!.noun).toEqual(['zorrito', 'zorrito'])
     const cast = /^(Lumi|Borrón|Nieve|Chispa|Iris|Aurora|Octavio|Inessa)$/
     for (const c of companions) for (const n of c.suggestedNames) expect(n, c.species).not.toMatch(cast)
   })

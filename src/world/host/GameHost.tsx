@@ -42,9 +42,9 @@ export function useBuddyBus(): BuddyBus | null {
 
 const FALLBACK_CONTEXT: TemplateContext = {
   childName: FALLBACK_CHILD_NAME,
-  childGender: 'n',
+  childGender: 'm',
   petName: 'Bigotes',
-  petGender: 'n',
+  petGender: 'm',
   petSpecies: 'cat',
 }
 

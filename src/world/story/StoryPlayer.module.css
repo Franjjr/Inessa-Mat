@@ -53,9 +53,11 @@
 
 .bubble {
   position: absolute;
-  left: 50%;
+  /* Centred with margins, not translateX: motion animates the transform (y) and would drop the centring. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
   bottom: 24px;
-  transform: translateX(-50%);
   width: min(760px, calc(100% - 32px));
   box-sizing: border-box;
   background: var(--c-surface);

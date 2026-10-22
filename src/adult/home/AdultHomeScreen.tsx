@@ -130,7 +130,7 @@ export default function AdultHomeScreen() {
             <Link to="/adult/join" className={s.tile}>
               <TileIcon kind="join" />
               <h3 className={s.tileTitle}>Unirse a una clase</h3>
-              <p className={s.tileText}>Si el colegio de tu hijo o hija usa Numeria, introduce aquí el código de su clase.</p>
+              <p className={s.tileText}>Si el colegio de tu hijo usa Numeria, introduce aquí el código de su clase.</p>
               <span className={s.tileFoot}>Introducir código →</span>
             </Link>
           )
@@ -144,7 +144,7 @@ export default function AdultHomeScreen() {
         <Link to="/legal/privacidad" className={s.tile}>
           <TileIcon kind="privacy" />
           <h3 className={s.tileTitle}>Privacidad y datos</h3>
-          <p className={s.tileText}>Qué datos guardamos de los peques, para qué, y cómo exportarlos o borrarlos.</p>
+          <p className={s.tileText}>Qué datos guardamos de los niños, para qué, y cómo exportarlos o borrarlos.</p>
           <span className={s.tileFoot}>Leer la política →</span>
         </Link>
       </section>

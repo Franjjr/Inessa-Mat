@@ -20,7 +20,7 @@ export const w1 = world({
     activityNode('groups', {
       kind: 'groups',
       title: 'Cuenta los grupos de las hadas',
-      instructions: 'Cuenta los grupos. Escribe la suma y después la multiplicación.',
+      instructions: 'Cuenta los grupos y escribe cuántos hay en total.',
       selector: { kinds: ['groups'], factorRange: [2, 5] },
       count: 6,
       params: { showSum: true },

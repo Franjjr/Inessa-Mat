@@ -64,8 +64,8 @@ async function renderNode(worldId: string, nodeId: string, prepare?: (childId: s
   counter += 1
   const child = await createChild({
     nickname: `Nodo${counter}`,
-    gender: 'n',
-    companion: { species: 'fox', name: 'Canela', gender: 'n', colorway: 'default', equipped: [] },
+    gender: 'm',
+    companion: { species: 'fox', name: 'Canela', gender: 'm', colorway: 'default', equipped: [] },
   })
   if (prepare) await prepare(child.id)
 

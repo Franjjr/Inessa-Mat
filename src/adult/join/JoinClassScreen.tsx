@@ -54,7 +54,7 @@ export default function JoinClassScreen() {
         <section className={adult.card}>
           <h2 className={adult.subheading}>Necesitas una cuenta de familia</h2>
           <p className={adult.lead}>
-            Para unir a tu hijo o hija a una clase, crea una cuenta o inicia sesión. Así el colegio sabe a quién vincular.
+            Para unir a tu hijo a una clase, crea una cuenta o inicia sesión. Así el colegio sabe a quién vincular.
           </p>
           <div className={adult.actions}>
             <Button onClick={() => navigate('/signup')} disabled={!backendAvailable}>Crear cuenta</Button>
@@ -92,7 +92,7 @@ export default function JoinClassScreen() {
           <span className={adult.noticeMark} aria-hidden>✓</span>
           <div className={adult.stack} style={{ gap: 4 }}>
             <strong>¡Listo! {joined.nickname} ya está en {joined.room.name}.</strong>
-            <span>Verás las misiones de la clase en su informe. Puedes unir a más peques con otro código.</span>
+            <span>Verás las misiones de la clase en su informe. Puedes unir a más niños con otro código.</span>
           </div>
         </section>
       )}
@@ -103,7 +103,7 @@ export default function JoinClassScreen() {
         <section className={adult.card}>
           <h2 className={adult.subheading}>Primero guarda el perfil en tu cuenta</h2>
           <p className={adult.lead}>
-            Para unir a un peque a una clase, su perfil tiene que estar en tu cuenta. Si todavía no lo tienes, créalo desde la zona de adultos.
+            Para unir a un niño a una clase, su perfil tiene que estar en tu cuenta. Si todavía no lo tienes, créalo desde la zona de adultos.
           </p>
           <div className={adult.actions}>
             <Button onClick={() => navigate('/adult')} variant="secondary">Volver a la zona de adultos</Button>
@@ -112,7 +112,7 @@ export default function JoinClassScreen() {
       ) : (
         <form className={adult.card} onSubmit={submit} noValidate aria-label="Unirse a una clase">
           <div className={adult.field}>
-            <label htmlFor="join-child" className={adult.label}>Perfil del peque</label>
+            <label htmlFor="join-child" className={adult.label}>Perfil del niño</label>
             <select
               id="join-child"
               className={`${adult.input} ${adult.select}`}
@@ -163,7 +163,7 @@ export default function JoinClassScreen() {
               aria-invalid={errors.consent ? true : undefined}
               aria-describedby="join-consent-text"
             />
-            <span id="join-consent-text">{consentText(selected?.nickname ?? 'tu hijo o hija', null)}</span>
+            <span id="join-consent-text">{consentText(selected?.nickname ?? 'tu hijo', null)}</span>
           </label>
           {errors.consent && <p className={adult.error}>{errors.consent}</p>}
 

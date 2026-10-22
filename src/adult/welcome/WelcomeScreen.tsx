@@ -29,7 +29,7 @@ export default function WelcomeScreen() {
             <h1 id="welcome-title" className={s.brand}>Numeria</h1>
             <p className={s.tagline}>Aventuras para aprender las tablas y las cuentas jugando.</p>
             <p className={s.intro}>
-              Numeria acompaña a niñas y niños de Primaria con las tablas de multiplicar, las sumas y restas de varias cifras,
+              Numeria acompaña a niños de Primaria con las tablas de multiplicar, las sumas y restas de varias cifras,
               las multiplicaciones y las divisiones. Escriben las respuestas con el lápiz, el dedo o el teclado, y van
               rescatando a su compañero animal en ocho mundos mágicos.
             </p>
@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
           <Card>
             <h2 className={adult.subheading}>Para familias</h2>
             <ul className={s.bullets}>
-              <li>Ves qué tablas domina cada peque y cuáles necesitan repaso.</li>
+              <li>Ves qué tablas domina cada niño y cuáles necesitan repaso.</li>
               <li>Decides el premio real del Gran Cofre cuando completa su aventura.</li>
               <li>Puedes exportar o borrar sus datos cuando quieras.</li>
             </ul>
@@ -50,7 +50,7 @@ export default function WelcomeScreen() {
             <ul className={s.bullets}>
               <li>Creas clases con un código para que las familias unan a sus hijos con consentimiento.</li>
               <li>Ves el progreso de la clase y asignas práctica sobre lo que toca esta semana.</li>
-              <li>Invitas a otros docentes a la clase sin compartir contraseñas.</li>
+              <li>Invitas a otros profesores a la clase sin compartir contraseñas.</li>
             </ul>
           </Card>
         </section>

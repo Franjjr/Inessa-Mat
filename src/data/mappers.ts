@@ -38,12 +38,15 @@ function iso(v: unknown, fallback: string = nowIso()): string {
 
 // ------------------------------------------------------------------------------------------------ children
 
+/** Nickname stored when a child has none (the child-facing copy uses its own fallback). */
+const FALLBACK_NICKNAME = 'Amigo'
+
 export function childToRow(c: ChildProfile): Row {
   return {
     id: c.id,
     org_id: c.orgId,
-    nickname: str(c.nickname.trim() || 'Peque', 40),
-    gender: c.gender === 'f' || c.gender === 'm' ? c.gender : 'n',
+    nickname: str(c.nickname.trim() || FALLBACK_NICKNAME, 40),
+    gender: c.gender === 'f' ? 'f' : 'm',
     birth_year: optInt(c.birthYear, 2005, 2035),
     grade: optInt(c.grade, 1, 6),
     companion: obj(c.companion),
@@ -60,13 +63,13 @@ export function childFromRow(r: Row): ChildProfile {
     id: String(r.id),
     orgId: (r.org_id as string | null) ?? null,
     nickname: String(r.nickname ?? ''),
-    gender: (r.gender as ChildProfile['gender']) ?? 'n',
+    gender: r.gender === 'f' ? 'f' : 'm', // legacy 'n' rows read as masculine
     ...(r.birth_year !== null && r.birth_year !== undefined ? { birthYear: Number(r.birth_year) } : {}),
     ...(r.grade !== null && r.grade !== undefined ? { grade: Number(r.grade) } : {}),
     companion: {
       species: companion.species ?? 'cat',
       name: companion.name ?? '',
-      gender: companion.gender ?? 'n',
+      gender: companion.gender === 'f' ? 'f' : 'm',
       colorway: companion.colorway ?? 'default',
       equipped: Array.isArray(companion.equipped) ? companion.equipped : [],
     },

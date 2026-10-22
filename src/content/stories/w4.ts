@@ -10,7 +10,7 @@ export const w4Arrival = story('w4-arrival', 'Un bloque de hielo', [
   ]),
   scene('mountain', [cast('lumi', 'worried', 'left'), cast('companion', 'scared', 'center', 'ice')], [
     narrate('{pet} baja rodando, rodando… y acaba dentro de un bloque de hielo.', 'whoosh'),
-    say('companion', '¡Brrr! ¡Qué frío! ¡Estoy {pg:congelada|congelado|congelado} como un polo de limón!', 'scared'),
+    say('companion', '¡Brrr! ¡Qué frío! ¡Estoy {pg:congelada|congelado} como un polo de limón!', 'scared'),
   ]),
   scene('mountain', [cast('lumi', 'talk', 'left'), cast('companion', 'worried', 'center', 'ice'), cast('polarbear', 'sad', 'right')], [
     say('polarbear', '¡Ay, mi tienda! Borrón me ha hecho una trastada: ha mezclado todos mis números.', 'sad'),

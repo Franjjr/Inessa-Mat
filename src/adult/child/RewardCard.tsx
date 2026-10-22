@@ -84,7 +84,7 @@ export function RewardCard({ childId, childName }: { childId: string; childName:
           {reward && !showForm && <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>Cambiar</Button>}
         </div>
         <p className={adult.muted}>
-          Al final de su aventura, {childName} abre el Gran Cofre y encuentra este premio real. Lo prepara la persona adulta.
+          Al final de su aventura, {childName} abre el Gran Cofre y encuentra este premio real. Lo prepara un adulto.
         </p>
       </div>
 

@@ -15,8 +15,8 @@ import s from './auth.module.css'
 import adult from '../shared/adult.module.css'
 
 const ORG_OPTIONS: { kind: OrgKind; title: string; text: string }[] = [
-  { kind: 'family', title: 'Familia', text: 'Para tus hijos e hijas. Cada peque tiene su perfil y su aventura.' },
-  { kind: 'school', title: 'Colegio', text: 'Para docentes. Clases con código, asignaciones y progreso de la clase.' },
+  { kind: 'family', title: 'Familia', text: 'Para tus hijos. Cada niño tiene su perfil y su aventura.' },
+  { kind: 'school', title: 'Colegio', text: 'Para profesores. Clases con código, asignaciones y progreso de la clase.' },
 ]
 
 const EMPTY: SignupInput = {
@@ -155,7 +155,7 @@ export default function SignupScreen() {
         {form.orgKind && (
           <TextField
             id="signup-org" label={orgLabel} value={form.orgName} onChange={(e) => set('orgName', e.target.value)}
-            error={errors.orgName} hint={form.orgKind === 'school' ? 'Así lo verán las familias al unirse a una clase.' : 'Solo lo veis las personas adultas de la familia.'}
+            error={errors.orgName} hint={form.orgKind === 'school' ? 'Así lo verán las familias al unirse a una clase.' : 'Solo lo veis los adultos de la familia.'}
           />
         )}
 
@@ -168,7 +168,7 @@ export default function SignupScreen() {
           />
           <span>
             He leído y acepto la <Link to="/legal/privacidad" target="_blank" rel="noreferrer">política de privacidad</Link>.
-            Entiendo que los datos de los menores los gestiono yo como persona adulta responsable.
+            Entiendo que los datos de los menores los gestiono yo como adulto responsable.
           </span>
         </label>
         {errors.acceptedPrivacy && <p className={adult.error}>{errors.acceptedPrivacy}</p>}

@@ -67,7 +67,7 @@ export default function SchoolScreen() {
         <section className={adult.card}>
           <h2 className={adult.subheading}>Esta cuenta es familiar</h2>
           <p className={adult.lead}>
-            Las clases son para cuentas de colegio. Si tu hijo o hija va a un colegio que usa Numeria, puedes unirlo a su clase
+            Las clases son para cuentas de colegio. Si tu hijo va a un colegio que usa Numeria, puedes unirlo a su clase
             con el código que te den.
           </p>
           <div className={adult.actions}>
@@ -127,7 +127,7 @@ export default function SchoolScreen() {
       <header className={adult.stack} style={{ gap: 6 }}>
         <h2 className={adult.heading}>{activeOrg.name}</h2>
         <p className={adult.lead}>
-          Cada clase tiene un código. Compártelo solo con las familias de esa clase: así cada una une a su hijo o hija
+          Cada clase tiene un código. Compártelo solo con las familias de esa clase: así cada familia une a su hijo
           con su consentimiento.
         </p>
       </header>

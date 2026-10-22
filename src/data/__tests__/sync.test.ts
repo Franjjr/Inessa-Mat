@@ -72,7 +72,7 @@ describe('push (outbox flush)', () => {
 
   it('never pushes local-only children', async () => {
     signIn('u1', []) // signed in without org → new children are local-only
-    await createChild({ nickname: 'Local', gender: 'n', companion: LUNA })
+    await createChild({ nickname: 'Local', gender: 'f', companion: LUNA })
     signIn('u1', [FAM])
     await runSync({ pull: false })
     expect(fake.rows('children')).toHaveLength(0)

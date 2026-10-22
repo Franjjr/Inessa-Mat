@@ -71,7 +71,7 @@ function cleanCompanion(c: ChildProfile['companion']): ChildProfile['companion']
   return {
     species: c.species,
     name,
-    gender: c.gender === 'f' || c.gender === 'm' ? c.gender : 'n',
+    gender: c.gender === 'f' ? 'f' : 'm',
     colorway: c.colorway || 'default',
     equipped: Array.isArray(c.equipped) ? [...new Set(c.equipped.map(String))] : [],
   }
@@ -83,7 +83,7 @@ export async function createChild(input: NewChildInput): Promise<ChildProfile> {
     id: uuid(),
     orgId: scopeOrgId(),
     nickname: cleanNickname(input.nickname),
-    gender: input.gender === 'f' || input.gender === 'm' ? input.gender : 'n',
+    gender: input.gender === 'f' ? 'f' : 'm',
     companion: cleanCompanion(input.companion),
     settings: { ...DEFAULT_CHILD_SETTINGS, ...(input.settings ?? {}) },
     createdAt: now,
@@ -147,7 +147,7 @@ export async function deleteChild(id: string): Promise<void> {
   if (cur.orgId && auth.status === 'signed-in') {
     const role = roleIn(cur.orgId, auth)
     if (role !== 'owner' && role !== 'admin') {
-      throw new DataError('permission', 'Solo la persona responsable de la familia o del colegio puede borrar perfiles.')
+      throw new DataError('permission', 'Solo el responsable de la familia o del colegio puede borrar perfiles.')
     }
   }
   await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta], async () => {

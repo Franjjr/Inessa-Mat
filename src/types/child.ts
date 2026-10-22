@@ -4,7 +4,7 @@ import type { GrammaticalGender, ID, ISODate } from './common'
 export type CompanionSpecies =
   | 'cat'      // gatito / gatita
   | 'dog'      // perrito / perrita
-  | 'fox'      // zorrito (always masculine noun; use the pet name + "tu amigo/amiga" for gender)
+  | 'fox'      // zorrito (always masculine noun; use the pet name + {pg:…} for gender)
   | 'bunny'    // conejito / conejita
   | 'panda'    // osito panda / osita panda
   | 'penguin'  // pingüino / pingüina
