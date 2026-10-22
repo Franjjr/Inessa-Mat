@@ -63,3 +63,32 @@ export async function casProgress(sb: SupabaseClient, childId: string, state: Pr
   if (!rows || rows.length === 0) return null
   return Number(rows[0].version)
 }
+
+/** Child ids erased in the given organizations (GDPR tombstones). Full list: erasures are rare and must never be
+ *  missed, so this is not cursor-based. */
+export async function fetchErasedChildIds(sb: SupabaseClient, orgIds: string[]): Promise<string[]> {
+  if (!orgIds.length) return []
+  const out: string[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const rows = await run<Row[]>(
+      sb.from('erased_children').select('child_id').in('org_id', orgIds).order('child_id', { ascending: true }).range(from, from + PAGE_SIZE - 1),
+    )
+    for (const r of rows ?? []) out.push(String(r.child_id))
+    if (!rows || rows.length < PAGE_SIZE) break
+  }
+  return out
+}
+
+/** Every row of a table whose `column` is one of `values`, read page by page (ordered by a unique column). */
+export async function selectAllIn(sb: SupabaseClient, table: string, column: string, values: string[], orderBy: string): Promise<Row[]> {
+  if (!values.length) return []
+  const out: Row[] = []
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const rows = await run<Row[]>(
+      sb.from(table).select('*').in(column, values).order(orderBy, { ascending: true }).range(from, from + PAGE_SIZE - 1),
+    )
+    out.push(...(rows ?? []))
+    if (!rows || rows.length < PAGE_SIZE) break
+  }
+  return out
+}

@@ -91,19 +91,22 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
       {guided && <p className={s.guide}>{host.t('Cuenta por filas: cada fila tiene lo mismo.')}</p>}
 
       <div className={s.stage}>
-        <div key={turnKey} className={`${s.grid} ${turned ? s.turned : ''}`} role="grid" aria-label={`${rows} filas de ${cols}`}
+        {/* A plain group of toggle buttons: each object is a button with aria-pressed (counted or not). The name is
+            its position in the grid on screen, so it never changes when the child counts it. */}
+        <div key={turnKey} className={`${s.grid} ${turned ? s.turned : ''}`} role="group" aria-label={`${rows} filas de ${cols}`}
           style={{ '--cols': cols, '--rows': rows } as CSSProperties}>
-          {cellsInView.map((i) => {
+          {cellsInView.map((i, k) => {
             const on = counted.has(i)
+            const row = Math.floor(k / cols) + 1
+            const col = (k % cols) + 1
             return (
               <button
                 key={i}
                 type="button"
-                role="gridcell"
                 className={`${s.tile} ${on ? s.on : ''}`}
                 onClick={() => toggle(i)}
                 aria-pressed={on}
-                aria-label={`${ex.emoji} ${on ? 'contado' : 'sin contar'}`}
+                aria-label={`${ex.emoji}, fila ${row}, columna ${col}`}
                 style={{ animationDelay: `${turned ? orderIndex(i) * 30 : 0}ms` }}
               >
                 <span aria-hidden>{ex.emoji}</span>

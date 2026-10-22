@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AttemptRecord, ProgressState } from '@/types'
 import {
-  createChild, getProgress, listChildren, recordAttempt, saveMastery, setChestReward, startSession, updateChild,
-  updateProgress,
+  createChild, getProgress, getRewards, listChildren, markRewardClaimed, recordAttempt, saveMastery, setChestReward, startSession,
+  updateChild, updateProgress,
 } from '@/data'
 import { db } from '../db'
 import { META, getMeta } from '../meta'
@@ -298,5 +298,24 @@ describe('pull', () => {
     await runSync({ pull: true })
     expect((await getProgress(c.id)).stickers).toEqual(['local', 'remote'])
     expect((fake.rows('progress')[0].state as ProgressState).stickers).toEqual(['local', 'remote'])
+  })
+})
+
+describe('rewards pull (sync-4)', () => {
+  it('a newer edit from a device that never saw the claim does not revert the claim, and the merge goes back up', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    const reward = await setChestReward(c.id, 'Gran Cofre')
+    await runSync({ pull: false })
+    await markRewardClaimed(reward.id)
+    await runSync({ pull: false }) // the server has the claim
+    // A copy written without the claim (before the server kept claims monotonic) arrives with a newer title edit.
+    const row = fake.rows('rewards')[0]
+    Object.assign(row, { title: 'Una tarde de cine', claimed_at: null, unlocked_at: null, updated_at: new Date(Date.now() + 60_000).toISOString(), synced_at: fake.serverNow() })
+    await runSync({ pull: true })
+    const local = (await getRewards(c.id))[0]
+    expect(local.title).toBe('Una tarde de cine')
+    expect(local.claimedAt).toBeTruthy()
+    expect(fake.rows('rewards')[0].claimed_at).toBeTruthy()
+    expect(await db.outbox.count()).toBe(0)
   })
 })

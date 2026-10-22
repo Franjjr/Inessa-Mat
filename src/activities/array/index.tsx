@@ -60,7 +60,8 @@ function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
       <p className={s.prompt}>
         {host.t(`Construye un rectángulo de ${ex.rows} filas y ${ex.cols} columnas. Toca cada hueco para poner un ${ex.emoji}.`)}
       </p>
-      <div className={s.frame} style={{ gridTemplateColumns: `repeat(${ex.cols}, minmax(0, 1fr))` }}>
+      <div className={s.frame} role="group" aria-label={`Rectángulo de ${ex.rows} filas y ${ex.cols} columnas`}
+        style={{ gridTemplateColumns: `repeat(${ex.cols}, minmax(0, 1fr))` }}>
         {filled.map((on, i) => (
           <button
             key={i}
@@ -68,7 +69,7 @@ function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
             className={`${s.slot} ${on ? s.on : ''}`}
             onClick={() => toggle(i)}
             aria-pressed={on}
-            aria-label={on ? `${ex.emoji} puesto, quitar` : 'hueco vacío'}
+            aria-label={`Fila ${Math.floor(i / ex.cols) + 1}, columna ${(i % ex.cols) + 1}`}
           >
             <span aria-hidden>{on ? ex.emoji : ''}</span>
           </button>

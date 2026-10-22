@@ -6,7 +6,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* safe: when the exercise is taller than the board (keypad open), it scrolls instead of being cut at the top. */
+  justify-content: safe center;
   gap: var(--sp-3);
   padding: var(--sp-4) var(--sp-5);
   box-sizing: border-box;
@@ -18,6 +19,7 @@
   width: 100%;
   max-width: 760px;
   min-height: 0;
+  flex-shrink: 0; /* never squeezed under the status line: the board scrolls instead */
 }
 
 .exercise {
@@ -26,6 +28,7 @@
 }
 
 .footer {
+  flex-shrink: 0;
   min-height: 56px;
   display: flex;
   align-items: center;

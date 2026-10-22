@@ -11,6 +11,7 @@ import FactView from '../views/FactView'
 import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
 import { shuffleWith } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import shared from '../facts/shared/shared.module.css'
 import s from './pixel.module.css'
 
@@ -85,23 +86,29 @@ export default function PixelActivity({ config, onDone, onExit }: ActivityProps)
   }, [])
 
   const session = useSession({ total: questions.length, thresholds: config.starThresholds })
+  // A wrong answer keeps its group hidden and the question comes back 2–4 questions later (PEDAGOGY 4).
+  const [run, setRun] = useState(() => startQueue(questions))
   // Groups without a usable fact are shown from the start; the others open when their question is answered.
   const [revealed, setRevealed] = useState<Set<string>>(() => {
     const asked = new Set(questions.map((q) => q.key))
     return new Set(keys.filter((k) => !asked.has(k)))
   })
 
-  const current = questions[session.index]
+  const slot = run.slots[session.index]
+  const current = slot?.item
   const activeKey = current?.key
 
   const handle = (o: ExerciseOutcome) => {
-    if (!current) return
-    host.reportAttempt({ exercise: current.ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
+    if (!current || !slot) return
+    if (!slot.retry) host.reportAttempt({ exercise: current.ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
     const ok = o.check.correct
     host.react(ok ? 'correct' : 'wrong', { errorType: o.check.errorType })
     if (ok) celebrate('small')
-    setRevealed((r) => new Set([...r, current.key]))
-    window.setTimeout(() => session.answered(ok), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
+    const requeued = ok || slot.retry ? null : requeueWrong(run, session.index, (q) => q.key)
+    if (requeued) setRun(requeued)
+    // The group opens when its question is answered, unless the question comes back for another try.
+    if (!requeued) setRevealed((r) => new Set([...r, current.key]))
+    window.setTimeout(() => session.answered(ok && !slot.retry, !!requeued), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
   }
 
   const cellEl = (ch: string, r: number, c: number) => {
@@ -165,7 +172,7 @@ export default function PixelActivity({ config, onDone, onExit }: ActivityProps)
       title={config.title}
       instructions={config.instructions}
       index={session.index}
-      total={questions.length}
+      total={run.slots.length}
       accent="var(--w6)"
       accentSoft="var(--w6-soft)"
       onExit={onExit}

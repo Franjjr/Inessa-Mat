@@ -8,6 +8,7 @@ import MissingFactorView from '../views/MissingFactorView'
 import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
 import { itemCount, useItems } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import shared from '../facts/shared/shared.module.css'
 import s from './missing.module.css'
 
@@ -20,7 +21,9 @@ export default function MissingActivity({ config, onDone, onExit }: ActivityProp
   const total = itemCount(config, 6)
   const items = useItems(config, total, host)
   const session = useSession({ total: items.length, thresholds: config.starThresholds })
-  const [lit, setLit] = useState<boolean[]>(() => items.map(() => false))
+  // Wrong answers come back 2–4 items later in the same run (PEDAGOGY 4); re-asks are not reported or scored.
+  const [run, setRun] = useState(() => startQueue(items))
+  const [lit, setLit] = useState<boolean[]>(() => run.slots.map(() => false))
 
   if (session.result) {
     return (
@@ -30,18 +33,21 @@ export default function MissingActivity({ config, onDone, onExit }: ActivityProp
     )
   }
 
-  const ex = items[session.index]
+  const slot = run.slots[session.index]
+  const ex = slot?.item
 
   const handle = (o: ExerciseOutcome) => {
     if (!ex) return
-    host.reportAttempt({ exercise: ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
+    if (!slot?.retry) host.reportAttempt({ exercise: ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
     const ok = o.check.correct
     if (ok) {
       sfx.play('star')
       setLit((l) => l.map((v, i) => (i === session.index ? true : v)))
     }
     host.react(ok ? 'correct' : 'wrong', { errorType: o.check.errorType })
-    window.setTimeout(() => session.answered(ok), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
+    const requeued = ok || slot?.retry ? null : requeueWrong(run, session.index)
+    if (requeued) setRun(requeued)
+    window.setTimeout(() => session.answered(ok && !slot?.retry, !!requeued), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
   }
 
   return (
@@ -49,13 +55,13 @@ export default function MissingActivity({ config, onDone, onExit }: ActivityProp
       title={config.title}
       instructions={config.instructions}
       index={session.index}
-      total={items.length}
+      total={run.slots.length}
       accent="var(--w2)"
       accentSoft="var(--w2-soft)"
       onExit={onExit}
     >
       <div className={s.locks} aria-label="Cerraduras del portón">
-        {items.map((_, i) => (
+        {run.slots.map((_, i) => (
           <motion.span
             key={i}
             className={`${s.gem} ${lit[i] ? s.gemLit : ''} ${i === session.index ? s.gemNow : ''}`}

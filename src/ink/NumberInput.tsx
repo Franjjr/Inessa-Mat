@@ -139,6 +139,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     const live = new Set(views.map((v) => v.key))
     for (const k of [...overrides.current.keys()]) if (!live.has(k)) overrides.current.delete(k)
     for (const v of views) if (v.digit != null && v.rec) ctx.learning.report(`${uid}:${v.key}`, v.digit, v.rec)
+    // Low-confidence digits must be confirmed (or rewritten) before the answer is graded.
+    for (const v of views) {
+      if (v.digit != null && v.confidence < LOW_CONFIDENCE) ctx.learning.doubt(`${uid}:${v.key}`, v.digit)
+    }
     setSegs(views)
     setInkState('done')
     const complete = views.length > 0 && views.every((v) => v.digit != null)
@@ -172,6 +176,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     if ((surface.capture.current?.strokes.length ?? 0) > 0) {
       surface.capture.current?.clear()
       overrides.current.clear()
+      latest.current.ink.learning.forgetPrefix(`${uid}:`)
       setSegs([])
       setInkState('none')
     }

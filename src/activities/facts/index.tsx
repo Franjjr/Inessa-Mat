@@ -5,6 +5,7 @@ import { strategyForFact } from '@/engine'
 import type { ActivityProps, ExerciseOutcome } from '@/types'
 import { useActivityHost } from '../host'
 import FactView from '../views/FactView'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import { ActivityFrame, ResultCard } from './shared/ActivityFrame'
 import { itemCount, useItems } from './shared/items'
 import { useSession } from './shared/session'
@@ -21,6 +22,8 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
   const items = useItems(config, total, host)
   const session = useSession({ total: items.length, thresholds: config.starThresholds })
   const [streak, setStreak] = useState(0)
+  // Planned items plus the re-asks of wrong answers (PEDAGOGY 4: a failed item comes back 2–4 items later).
+  const [queue, setQueue] = useState(() => startQueue(items))
 
   if (session.result) {
     return (
@@ -30,24 +33,30 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
     )
   }
 
-  const ex = items[session.index]
+  const slot = queue.slots[session.index]
+  const ex = slot?.item
   const trick = params.showTrick && ex?.kind === 'fact-mul' ? strategyForFact(ex.a, ex.b) : null
 
   const handle = (o: ExerciseOutcome) => {
-    if (!ex) return
-    host.reportAttempt({
-      exercise: ex,
-      check: o.check,
-      ms: o.ms,
-      inputMode: o.inputMode,
-      hintsUsed: o.hintsUsed,
-      recognitionFixes: o.recognitionFixes,
-    })
+    if (!ex || !slot) return
+    // A re-ask is practice: it is not reported again and does not count as a correct planned item.
+    if (!slot.retry) {
+      host.reportAttempt({
+        exercise: ex,
+        check: o.check,
+        ms: o.ms,
+        inputMode: o.inputMode,
+        hintsUsed: o.hintsUsed,
+        recognitionFixes: o.recognitionFixes,
+      })
+    }
     const ok = o.check.correct
+    const requeued = slot.retry ? null : requeueWrong(queue, session.index)
+    if (requeued) setQueue(requeued)
     const next = ok ? streak + 1 : 0
     setStreak(next)
     host.react(ok ? (next > 0 && next % 3 === 0 ? 'streak' : 'correct') : 'wrong', { errorType: o.check.errorType, streak: next })
-    window.setTimeout(() => session.answered(ok), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
+    window.setTimeout(() => session.answered(ok && !slot.retry, !!requeued), ok ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
   }
 
   return (
@@ -55,7 +64,7 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
       title={config.title}
       instructions={config.instructions}
       index={session.index}
-      total={items.length}
+      total={queue.slots.length}
       accent="var(--w6)"
       accentSoft="var(--w6-soft)"
       onExit={onExit}

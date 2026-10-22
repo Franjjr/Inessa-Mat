@@ -3,6 +3,7 @@ import Dexie from 'dexie'
 import type { AttemptRecord, SessionRecord } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
+import { isErasedChild } from './erasure'
 import { publicSession } from './mappers'
 import { enqueue } from './outbox'
 import { updateProgress } from './progress'
@@ -14,7 +15,8 @@ import { localDay, nextTimestamp, nowIso, uuid } from './util'
 export async function recordAttempt(attempt: AttemptRecord): Promise<void> {
   if (!attempt?.childId) throw new DataError('invalid', 'recordAttempt: childId is required')
   const row: AttemptRecord = { ...attempt, id: attempt.id || uuid(), createdAt: attempt.createdAt || nowIso() }
-  await db.transaction('rw', [db.attempts, db.children, db.outbox], async () => {
+  await db.transaction('rw', [db.attempts, db.children, db.outbox, db.meta], async () => {
+    if (await isErasedChild(row.childId)) return // erased child: nothing is kept on this device
     await db.attempts.put(row)
     await enqueue('attempts', row.id, row.childId)
   })
@@ -58,10 +60,13 @@ function activeMinutes(row: SessionRow, explicit: number | undefined): number {
 export async function startSession(childId: string): Promise<SessionRecord> {
   const now = nowIso()
   const row: SessionRow = { id: uuid(), childId, startedAt: now, endedAt: null, minutes: 0, summary: null, updatedAt: now }
-  await db.transaction('rw', [db.sessions, db.children, db.outbox], async () => {
+  const erased = await db.transaction('rw', [db.sessions, db.children, db.outbox, db.meta], async () => {
+    if (await isErasedChild(childId)) return true // erased child: the session is not kept
     await db.sessions.add(row)
     await enqueue('sessions', row.id, childId)
+    return false
   })
+  if (erased) return publicSession(row)
   lastTouch.set(row.id, Date.now())
   // Gentle streak display: remember the day (local time) the child played.
   const child = await db.children.get(childId)

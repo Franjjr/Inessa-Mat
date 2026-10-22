@@ -12,10 +12,11 @@ import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
 import { now } from '../facts/shared/flow'
 import { useItems } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
+import { mayRequeue } from '../shared/requeue'
 import shared from '../facts/shared/shared.module.css'
 import s from './memory.module.css'
 
-interface Pair { ex: FactMulExercise; product: number }
+interface Pair { ex: FactMulExercise; product: number; /** A missed pair coming back later in the run. */ retry?: boolean }
 interface Card { id: number; pair: number; side: 'fact' | 'product'; label: string }
 
 /** Keeps one exercise per product and per unordered pair of factors, so every product card is unambiguous. */
@@ -33,27 +34,49 @@ function uniquePairs(exs: FactMulExercise[], max: number): Pair[] {
   return out
 }
 
+/** The board: pairs in play, their cards (shuffled once, re-asks inserted at random places) and the re-asked facts. */
+interface Board { pairs: Pair[]; cards: Card[]; retried: string[] }
+
+/** Cards of the pairs, shuffled with the host RNG. */
+function shuffledCards(pairs: Pair[], rng: () => number): Card[] {
+  const all = pairs.flatMap((p, i): Card[] => [
+    { id: i * 2, pair: i, side: 'fact', label: `${p.ex.a} × ${p.ex.b}` },
+    { id: i * 2 + 1, pair: i, side: 'product', label: String(p.product) },
+  ])
+  const order = [...all]
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return order
+}
+
+/**
+ * A missed pair comes back as a new pair later on the board: its two cards are inserted at random places among the
+ * cards still on the board, so the board is not reshuffled. The fact is not reported again.
+ */
+function withRetry(board: Board, pairIndex: number, rng: () => number): Board {
+  const src = board.pairs[pairIndex]
+  const p = board.pairs.length
+  const cards = [...board.cards]
+  const fresh: Card[] = [
+    { id: p * 2, pair: p, side: 'fact', label: `${src.ex.a} × ${src.ex.b}` },
+    { id: p * 2 + 1, pair: p, side: 'product', label: String(src.product) },
+  ]
+  for (const card of fresh) cards.splice(Math.floor(rng() * (cards.length + 1)), 0, card)
+  return { pairs: [...board.pairs, { ex: src.ex, product: src.product, retry: true }], cards, retried: [...board.retried, src.ex.id] }
+}
+
 export default function MemoryActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const reduce = useReducedMotion()
   const want = Math.max(2, Math.min(config.count ?? 6, 8))
   const generated = useItems(config, want * 3, host)
-  const pairs = useMemo(() => uniquePairs(generated as FactMulExercise[], want), [generated, want])
-  const session = useSession({ total: pairs.length, thresholds: config.starThresholds })
-  const cards = useMemo<Card[]>(() => {
-    const all = pairs.flatMap((p, i): Card[] => [
-      { id: i * 2, pair: i, side: 'fact', label: `${p.ex.a} × ${p.ex.b}` },
-      { id: i * 2 + 1, pair: i, side: 'product', label: String(p.product) },
-    ])
-    const order = [...all]
-    for (let i = order.length - 1; i > 0; i--) {
-      const j = Math.floor(host.rng() * (i + 1))
-      ;[order[i], order[j]] = [order[j], order[i]]
-    }
-    return order
-    // The board is built once per activity run.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pairs])
+  const basePairs = useMemo(() => uniquePairs(generated as FactMulExercise[], want), [generated, want])
+  const session = useSession({ total: basePairs.length, thresholds: config.starThresholds })
+  // The board is built once per activity run; missed pairs are added to it later (see withRetry).
+  const [board, setBoard] = useState<Board>(() => ({ pairs: basePairs, cards: shuffledCards(basePairs, host.rng), retried: [] }))
+  const { pairs, cards } = board
 
   const [matched, setMatched] = useState<Set<number>>(() => new Set())
   const [selected, setSelected] = useState<Card | null>(null)
@@ -86,8 +109,11 @@ export default function MemoryActivity({ config, onDone, onExit }: ActivityProps
       const ms = Math.round(now() - pairStart)
       const value = Number(productCard.label)
       const res = check(pair.ex, { type: 'number', value })
-      host.reportAttempt({ exercise: pair.ex, check: res, ms, inputMode: 'tap', hintsUsed: 0 })
+      if (!pair.retry) host.reportAttempt({ exercise: pair.ex, check: res, ms, inputMode: 'tap', hintsUsed: 0 })
       const ok = !mistakes.has(factCard.pair)
+      // A pair that was missed (a wrong try first) comes back later on the board, once per run.
+      const again = !ok && !pair.retry && mayRequeue(board.retried, pair.ex.id)
+      if (again) setBoard((b) => withRetry(b, factCard.pair, host.rng))
       setMatched((m) => new Set([...m, factCard.pair]))
       setSelected(null)
       setClue(null)
@@ -95,13 +121,13 @@ export default function MemoryActivity({ config, onDone, onExit }: ActivityProps
       haptics.success()
       celebrate('small')
       host.react('correct')
-      window.setTimeout(() => session.answered(ok), 350)
+      window.setTimeout(() => session.answered(ok && !pair.retry, again), 350)
       return
     }
     // Wrong pair: the fact of the card that was chosen is the one to practise.
     const value = Number(productCard.label)
     const res = check(pair.ex, { type: 'number', value })
-    host.reportAttempt({ exercise: pair.ex, check: res, ms: Math.round(now() - pairStart), inputMode: 'tap', hintsUsed: 0 })
+    if (!pair.retry) host.reportAttempt({ exercise: pair.ex, check: res, ms: Math.round(now() - pairStart), inputMode: 'tap', hintsUsed: 0 })
     setMistakes((m) => new Set([...m, factCard.pair]))
     setShake({ ids: [selected.id, card.id], key: (shake?.key ?? 0) + 1 })
     setSelected(null)

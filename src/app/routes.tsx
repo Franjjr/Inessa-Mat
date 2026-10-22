@@ -31,7 +31,8 @@ const JoinClassScreen = lazy(() => import('@/adult/join/JoinClassScreen'))
 const SettingsScreen = lazy(() => import('@/adult/settings/SettingsScreen'))
 const PrivacyScreen = lazy(() => import('@/adult/legal/PrivacyScreen'))
 // dev
-const Gallery = lazy(() => import('@/dev/Gallery'))
+// Dev only: the conditional lets the production build drop the gallery and every *.gallery chunk.
+const Gallery = import.meta.env.DEV ? lazy(() => import('@/dev/Gallery')) : null
 
 /** Child area: requires a selected child profile on this device. */
 function RequireChild({ children }: { children: ReactNode }) {
@@ -76,7 +77,7 @@ export function AppRoutes() {
         <Route path="/adult/join" element={<Adult><JoinClassScreen /></Adult>} />
         <Route path="/adult/settings" element={<Adult><SettingsScreen /></Adult>} />
 
-        {import.meta.env.DEV && <Route path="/dev/gallery" element={<Gallery />} />}
+        {Gallery && <Route path="/dev/gallery" element={<Gallery />} />}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

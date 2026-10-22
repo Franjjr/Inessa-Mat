@@ -94,7 +94,7 @@ describe('ShopScreen', () => {
     renderShop()
 
     await user.click(card('Lazo'))
-    await user.click(screen.getByRole('button', { name: 'Quitármelo' }))
+    await user.click(screen.getByRole('button', { name: 'Quitárselo' }))
 
     expect(data.updateChild).toHaveBeenCalledWith(state.child!.id, {
       companion: expect.objectContaining({ equipped: [] }),

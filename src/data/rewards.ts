@@ -2,6 +2,7 @@
 import type { InkSample, Reward } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
+import { isErasedChild } from './erasure'
 import { publicReward } from './mappers'
 import { enqueue } from './outbox'
 import { getAuth } from './store'
@@ -21,7 +22,8 @@ export async function setChestReward(childId: string, title: string, description
   if (!t) throw new DataError('invalid', 'Escribe cuál será el premio.')
   if (t.length > 120) throw new DataError('invalid', 'El premio es demasiado largo (máximo 120 letras).')
   const d = description?.trim() ? description.trim().slice(0, 500) : null
-  return db.transaction('rw', [db.rewards, db.children, db.outbox], async () => {
+  return db.transaction('rw', [db.rewards, db.children, db.outbox, db.meta], async () => {
+    if (await isErasedChild(childId)) throw new DataError('not-found', 'No encontramos ese perfil.')
     const existing = (await db.rewards.where('childId').equals(childId).toArray()).find((r) => r.kind === 'chest')
     const row: RewardRow = existing
       ? { ...existing, title: t, description: d, updatedAt: nextTimestamp(existing.updatedAt) }
@@ -64,7 +66,8 @@ export async function addInkSample(sample: InkSample): Promise<void> {
     throw new DataError('invalid', 'addInkSample: invalid sample')
   }
   const row: InkSample = { ...sample, id: sample.id || uuid(), createdAt: sample.createdAt || nowIso() }
-  await db.transaction('rw', db.inkSamples, async () => {
+  await db.transaction('rw', [db.inkSamples, db.meta], async () => {
+    if (await isErasedChild(row.childId)) return // handwriting of an erased child is never kept
     await db.inkSamples.put(row)
     const same = await db.inkSamples.where('[childId+digit]').equals([row.childId, row.digit]).toArray()
     const excess = same.length - MAX_INK_SAMPLES_PER_DIGIT

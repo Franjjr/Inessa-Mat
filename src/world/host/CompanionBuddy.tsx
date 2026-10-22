@@ -56,14 +56,14 @@ export default function CompanionBuddy({ position = 'bottom-right', size = 120 }
   const petName = companion?.name?.trim() || (child ? templateContext(child).petName : FALLBACK_CHILD_NAME)
 
   return (
-    <div className={clsx(s.buddy, position === 'bottom-left' ? s.left : s.right)} aria-live="polite">
+    <div className={clsx(s.buddy, position === 'bottom-left' ? s.left : s.right)}>
       {event?.phrase && (
         <div key={`bubble-${event.id}`} className={s.bubble} role="status">
           <span className={s.speaker}>{petName}</span>
           <span className={s.text}>{event.phrase}</span>
         </div>
       )}
-      <div className={clsx(s.figures, event && !reduced && s.bounce)} key={`figures-${event?.id ?? 'idle'}`}>
+      <div className={clsx(s.figures, event && !reduced && s.bounce)} key={`figures-${event?.id ?? 'idle'}`} aria-hidden="true">
         <div className={s.companion}>
           <CompanionArt
             species={companion?.species ?? 'cat'}

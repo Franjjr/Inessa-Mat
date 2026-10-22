@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { NodeProgress, ProgressState, WorldProgress } from '@/types'
-import { lww, mergeProgress, normalizeProgress } from '../merge'
+import { lww, mergeProgress, mergeReward, normalizeProgress } from '../merge'
+import type { RewardRow } from '../types'
 import { deepEqual } from '../util'
 import { rng } from './helpers'
 
@@ -194,5 +195,87 @@ describe('lww', () => {
     const c = { id: 1, v: 'c', updatedAt: b.updatedAt }
     expect(lww(b, c)).toEqual(lww(c, b))
     expect(lww(undefined, a)).toBe(a)
+  })
+})
+
+describe('stars across devices (sync-1)', () => {
+  // A consistent base: stars equal the sum of the best stars of every node, as progression.ts keeps them.
+  const node = (stars: number) => ({ done: true, stars })
+  const base: ProgressState = {
+    childId: 'c', seasonId: 's1',
+    worlds: { w1: { unlocked: true, crystal: false, nodes: { a: node(3), b: node(3), c: node(3), d: node(3), e: node(3), f: node(3), g: node(2) } } },
+    stars: 20, starsSpent: 0, stickers: [], accessoriesOwned: [], chestOpened: false, daysPlayed: [], flags: {},
+    updatedAt: '2026-03-01T10:00:00.000Z',
+  }
+
+  it('adds up the stars two devices earned offline (no lost stars)', () => {
+    const tablet: ProgressState = {
+      ...base, stars: 23,
+      worlds: { w1: { ...base.worlds.w1, nodes: { ...base.worlds.w1.nodes, h: node(3) } } },
+      updatedAt: '2026-03-02T10:00:00.000Z',
+    }
+    const phone: ProgressState = {
+      ...base, stars: 23,
+      worlds: { w1: { ...base.worlds.w1, nodes: { ...base.worlds.w1.nodes, i: node(3) } } },
+      updatedAt: '2026-03-02T11:00:00.000Z',
+    }
+    const m = mergeProgress(tablet, phone)
+    expect(m.stars).toBe(26)
+    expect(Object.values(m.worlds.w1.nodes).reduce((sum, n) => sum + n.stars, 0)).toBe(m.stars)
+  })
+
+  it('does not inflate: the same node played on both devices counts once (its best result)', () => {
+    const tablet: ProgressState = { ...base, worlds: { w1: { ...base.worlds.w1, nodes: { ...base.worlds.w1.nodes, g: node(3) } } }, stars: 21 }
+    const phone: ProgressState = { ...base, worlds: { w1: { ...base.worlds.w1, nodes: { ...base.worlds.w1.nodes, g: node(2) } } }, stars: 20 }
+    const m = mergeProgress(tablet, phone)
+    expect(m.stars).toBe(21)
+    expect(m.worlds.w1.nodes.g.stars).toBe(3)
+  })
+
+  it('subtracts both purchases made offline (spendable = 20 - 5 - 6 = 9)', () => {
+    const tablet: ProgressState = { ...base, starsSpent: 5, accessoriesOwned: ['lollipop'] }
+    const phone: ProgressState = { ...base, starsSpent: 6, accessoriesOwned: ['bow'] }
+    const m = mergeProgress(tablet, phone)
+    expect(m.starsSpent).toBe(11)
+    expect(m.accessoriesOwned).toEqual(['bow', 'lollipop'])
+    expect(Math.max(0, m.stars - m.starsSpent)).toBe(9)
+  })
+
+  it('a purchase made on one device is kept when the other device saw nothing new', () => {
+    const tablet: ProgressState = { ...base, starsSpent: 5, accessoriesOwned: ['lollipop'] }
+    expect(mergeProgress(tablet, base).starsSpent).toBe(5)
+    expect(mergeProgress(base, tablet).starsSpent).toBe(5)
+  })
+})
+
+describe('rewards (sync-4)', () => {
+  const reward = (over: Partial<RewardRow> = {}): RewardRow => ({
+    id: 'r1', childId: 'c', kind: 'chest', worldId: null, title: 'Gran Cofre', description: null, createdBy: null,
+    unlockedAt: null, claimedAt: null, updatedAt: '2026-03-01T10:00:00.000Z', ...over,
+  })
+
+  it('a newer title edit from a device that never saw the claim keeps the claim', () => {
+    const claimed = reward({ claimedAt: '2026-03-02T10:00:00.000Z', unlockedAt: '2026-03-01T12:00:00.000Z', updatedAt: '2026-03-02T10:00:00.000Z' })
+    const edited = reward({ title: 'Una tarde de cine', updatedAt: '2026-03-03T09:00:00.000Z' })
+    const m = mergeReward(claimed, edited)
+    expect(m.title).toBe('Una tarde de cine')
+    expect(m.claimedAt).toBe('2026-03-02T10:00:00.000Z')
+    expect(m.unlockedAt).toBe('2026-03-01T12:00:00.000Z')
+    expect(m.updatedAt).toBe('2026-03-03T09:00:00.000Z')
+  })
+
+  it('keeps the earliest claim and unlock, whichever side has them', () => {
+    const a = reward({ claimedAt: '2026-03-05T10:00:00.000Z', unlockedAt: '2026-03-04T10:00:00.000Z' })
+    const b = reward({ claimedAt: '2026-03-02T10:00:00.000Z', updatedAt: '2026-03-06T10:00:00.000Z' })
+    const m = mergeReward(a, b)
+    expect(m.claimedAt).toBe('2026-03-02T10:00:00.000Z')
+    expect(m.unlockedAt).toBe('2026-03-04T10:00:00.000Z')
+  })
+
+  it('is commutative and idempotent', () => {
+    const a = reward({ claimedAt: '2026-03-02T10:00:00.000Z', updatedAt: '2026-03-02T10:00:00.000Z' })
+    const b = reward({ title: 'Otra', updatedAt: '2026-03-02T10:00:00.000Z' })
+    expect(mergeReward(a, b)).toEqual(mergeReward(b, a))
+    expect(mergeReward(mergeReward(a, b), b)).toEqual(mergeReward(a, b))
   })
 })

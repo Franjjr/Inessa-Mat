@@ -346,6 +346,9 @@ describe('bubbles', () => {
     await pass(1000)
     await user.click(screen.getByRole('button', { name: `Burbuja ${second.answer}` }))
     await pass(1000)
+    // The missed question comes back once more in the same run; the re-ask is practice only.
+    await user.click(screen.getByRole('button', { name: `Burbuja ${first.answer}` }))
+    await pass(1000)
     expect(host.reportAttempt).toHaveBeenCalledTimes(2)
     expect(host.reportAttempt.mock.calls[0][0].check.correct).toBe(false)
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
@@ -361,7 +364,8 @@ describe('bubbles', () => {
     expect(host.reportAttempt.mock.calls[0][0].exercise.answer).toBe(first.answer)
     expect(screen.getByRole('status').textContent).toContain(`${first.answer}`)
     await pass(1500)
-    expect(screen.getByText('2 / 2')).toBeTruthy()
+    // The timed-out question comes back later in the run: the run has three questions, two planned.
+    expect(screen.getByText('2 / 3')).toBeTruthy()
     expect(screen.getAllByRole('button', { name: /Burbuja/ }).length).toBeGreaterThan(0)
   })
 })

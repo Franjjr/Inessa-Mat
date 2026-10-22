@@ -114,8 +114,8 @@ describe('facts activity', () => {
     const onDone = vi.fn()
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
     render(wrap(host, <FactsActivity config={config} onDone={onDone} />))
-    for (let i = 0; i < 2; i++) {
-      // Two wrong answers finish an item (one clue in between), whatever the fact is.
+    // Each item is answered wrongly (two wrong tries finish it), so each comes back once more in the run.
+    for (let i = 0; i < 4; i++) {
       await act(async () => {
         await user.keyboard('0{Enter}')
         await user.keyboard('0{Enter}')
@@ -124,6 +124,7 @@ describe('facts activity', () => {
         vi.advanceTimersByTime(1500)
       })
     }
+    // Re-asks are practice: only the two planned items are reported.
     expect(host.reportAttempt).toHaveBeenCalledTimes(2)
     expect(screen.getByRole('button', { name: 'Seguir' })).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))

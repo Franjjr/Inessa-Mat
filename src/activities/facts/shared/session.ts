@@ -16,8 +16,9 @@ export interface Session {
   total: number
   /** Set once the run has ended; the activity shows the result card until the child presses continue. */
   result: ActivityResult | null
-  /** Record one finished item. Ends the run after the last one. */
-  answered: (ok: boolean) => void
+  /** Record one finished item. Ends the run after the last planned item (and after any re-asks scheduled by
+   *  `requeued`, see shared/requeue.ts: a re-ask extends the run by one item). */
+  answered: (ok: boolean, requeued?: boolean) => void
   /** Elapsed ms since the run started. */
   elapsed: () => number
   startedAt: number
@@ -31,16 +32,18 @@ export function useSession({ total, thresholds }: SessionOptions): Session {
   const indexRef = useRef(0)
   const correctRef = useRef(0)
   const endedRef = useRef(false)
+  const extraRef = useRef(0)
 
-  const answered = (ok: boolean) => {
+  const answered = (ok: boolean, requeued = false) => {
     if (endedRef.current) return
     if (ok) {
       correctRef.current += 1
       setCorrect(correctRef.current)
     }
+    if (requeued) extraRef.current += 1
     indexRef.current += 1
     setIndex(indexRef.current)
-    if (indexRef.current >= total) {
+    if (indexRef.current >= total + extraRef.current) {
       endedRef.current = true
       const ms = Math.round(now() - started.current)
       setResult({

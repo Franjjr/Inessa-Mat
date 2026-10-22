@@ -6,6 +6,7 @@ import { InkProvider } from '@/ink'
 import { applyAudioSettings, unlockAudio } from '@/audio'
 import { ToastHost } from '@/ui'
 import { AppRoutes } from './routes'
+import { ChunkErrorBoundary } from './ChunkErrorBoundary'
 
 /** Keeps audio settings and the handwriting recogniser in sync with the active child. */
 function ChildScopedProviders({ children }: { children: React.ReactNode }) {
@@ -32,7 +33,9 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ChildScopedProviders>
-          <AppRoutes />
+          <ChunkErrorBoundary>
+            <AppRoutes />
+          </ChunkErrorBoundary>
           <ToastHost />
         </ChildScopedProviders>
       </AuthProvider>

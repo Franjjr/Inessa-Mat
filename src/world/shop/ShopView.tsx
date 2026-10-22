@@ -55,7 +55,7 @@ export function ShopView({
   const action = (() => {
     if (!picked) return null
     const { status, accessory } = picked
-    if (status === 'equipped') return <Button size="lg" variant="secondary" onClick={() => onUnequip(accessory.id)} disabled={busy}>Quitármelo</Button>
+    if (status === 'equipped') return <Button size="lg" variant="secondary" onClick={() => onUnequip(accessory.id)} disabled={busy}>Quitárselo</Button>
     if (status === 'owned') return <Button size="lg" variant="success" onClick={() => onEquip(accessory.id)} disabled={busy}>Ponérselo</Button>
     if (status === 'buyable') {
       return (

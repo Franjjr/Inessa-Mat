@@ -50,6 +50,12 @@ interface Pending { digit: number; rec: DigitRecognition; at: number }
 export class LearningStore {
   private pending = new Map<string, Pending>()
   private fixes = 0
+  /** Digits read with low confidence and not yet confirmed or rewritten by the child, by cell key. */
+  private doubts = new Map<string, number>()
+  private promptOpen = false
+  private listeners = new Set<() => void>()
+  /** Changes on every doubt change: subscribers read it through useSyncExternalStore. */
+  version = 0
   samples: InkSample[] = []
   childId: string | null = null
   recognizer: Recognizer | null = null
@@ -59,6 +65,8 @@ export class LearningStore {
     this.childId = childId
     this.recognizer = recognizer
     this.discard()
+    this.doubts.clear()
+    this.promptOpen = false
     this.setSamples([])
   }
 
@@ -70,10 +78,77 @@ export class LearningStore {
 
   forget(key: string): void {
     this.pending.delete(key)
+    this.settle(key)
   }
 
   forgetPrefix(prefix: string): void {
     for (const k of [...this.pending.keys()]) if (k.startsWith(prefix)) this.pending.delete(k)
+    for (const k of [...this.doubts.keys()]) if (k.startsWith(prefix)) this.settle(k)
+  }
+
+  /** A digit was read below LOW_CONFIDENCE: the child must confirm it (or rewrite it) before the answer is graded. */
+  doubt(key: string, digit: number): void {
+    if (this.doubts.get(key) === digit) return
+    this.doubts.set(key, digit)
+    this.changed()
+  }
+
+  /** The child confirmed or rewrote this cell: its digit is no longer in doubt. */
+  settle(key: string): void {
+    if (!this.doubts.delete(key)) return
+    if (this.doubts.size === 0) this.promptOpen = false
+    this.changed()
+  }
+
+  /** Number of digits still in doubt (0 = every digit is certain, so the answer may be graded). */
+  uncertain(): number {
+    return this.doubts.size
+  }
+
+  /** The digits still in doubt, in the order they were written. */
+  uncertainDigits(): number[] {
+    return [...this.doubts.values()]
+  }
+
+  /** The child said the digits are right ("Sí, es así"): they count as certain now. */
+  confirmDoubts(): void {
+    if (this.doubts.size === 0 && !this.promptOpen) return
+    this.doubts.clear()
+    this.promptOpen = false
+    this.changed()
+  }
+
+  /**
+   * Called when the child tries to grade while a digit is in doubt. Opens the "¿Has escrito…?" prompt and returns
+   * true: the caller must not grade the answer.
+   */
+  requestConfirm(): boolean {
+    if (this.doubts.size === 0) return false
+    if (!this.promptOpen) {
+      this.promptOpen = true
+      this.changed()
+    }
+    return true
+  }
+
+  isPromptOpen(): boolean {
+    return this.promptOpen
+  }
+
+  dismissPrompt(): void {
+    if (!this.promptOpen) return
+    this.promptOpen = false
+    this.changed()
+  }
+
+  subscribe = (listener: () => void): (() => void) => {
+    this.listeners.add(listener)
+    return () => { this.listeners.delete(listener) }
+  }
+
+  private changed(): void {
+    this.version++
+    for (const fn of [...this.listeners]) fn()
   }
 
   countFix(): void {

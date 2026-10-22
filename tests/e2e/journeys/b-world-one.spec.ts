@@ -2,7 +2,7 @@
    with the keyboard), collects the reward and sees progress on the map (done nodes and stars). */
 import { expect, test, type Page } from '@playwright/test'
 import {
-  answerFor, continueFromReward, createChildThroughOnboarding, settle, tapButton, tapStoryUntilButton, typeAnswer,
+  answerFor, continueFromReward, createChildThroughOnboarding, settle, tapButton, tapStoryUntilButton, typeAnswer, UNCOUNTED,
 } from '../helpers'
 
 /** Plays a lesson from its first step to the end. Plain steps advance with "Siguiente ›"; "try it yourself" steps
@@ -20,11 +20,11 @@ async function playLesson(page: Page): Promise<void> {
       await settle(page, 350)
       continue
     }
-    const toCount = page.locator('[aria-label$="sin contar"]')
+    const toCount = page.locator(UNCOUNTED)
     const total = await toCount.count()
     if (total > 0) {
       for (let k = 0; k < total; k++) {
-        await page.locator('[aria-label$="sin contar"]').first().click()
+        await page.locator(UNCOUNTED).first().click()
         await settle(page, 120)
       }
       const field = page.getByRole('textbox').first()
@@ -66,7 +66,7 @@ async function playGroupsActivity(page: Page): Promise<void> {
       await settle(page, 200)
       continue
     }
-    const counted = page.locator('[aria-label$="sin contar"]').first()
+    const counted = page.locator(UNCOUNTED).first()
     if (await counted.isVisible().catch(() => false)) {
       await counted.click()
       await settle(page, 100)

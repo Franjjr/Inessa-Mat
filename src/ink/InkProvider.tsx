@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { AnswerInputPreference } from '@/types'
 import { listInkSamples, updateChild, useActiveChild } from '@/data'
 import { InkContext, LearningStore, getSharedRecognizer, loadRecognizer, type InkContextValue, type Recognizer } from './context'
+import { DoubtPrompt } from './DoubtPrompt'
 import { detectTouchDevice, forgetPenSeen, persistPenSeen, trackPenEvent, readPenSeen, resolveInputMode } from './policy'
 
 export interface InkProviderProps {
@@ -120,5 +121,10 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
     provided: true,
   }), [recognizer, ready, childId, mode, preference, setPreferred, isTouchDevice, penSeen, forgetPen, noteKeyboard, bigCells, handedness, learning])
 
-  return <InkContext.Provider value={value}>{children}</InkContext.Provider>
+  return (
+    <InkContext.Provider value={value}>
+      {children}
+      <DoubtPrompt />
+    </InkContext.Provider>
+  )
 }

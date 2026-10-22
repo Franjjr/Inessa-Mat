@@ -96,6 +96,29 @@ describe('OnboardingScreen', () => {
     expect(created?.grade).toBeUndefined()
   })
 
+  it('reads the review question without a gendered adjective (girl and female companion)', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/kids/new']}>
+        <Routes>
+          <Route path="/kids/new" element={<OnboardingScreen />} />
+          <Route path="/play" element={<div>HOME</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.type(await screen.findByLabelText('Tu nombre'), 'Inessa')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Como a una niña' }))
+    await user.click(await screen.findByRole('button', { name: '3º de Primaria' }))
+    await user.click(await screen.findByRole('button', { name: /Gatito/ }))
+    await user.click(await screen.findByRole('button', { name: /Original/ }))
+    await user.type(await screen.findByLabelText('Nombre del compañero'), 'Lola')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Es una niña' }))
+    expect(await screen.findByText(/Todo listo, Inessa y Lola/)).toBeInTheDocument()
+    expect(screen.queryByText(/ya están listos/)).not.toBeInTheDocument()
+  })
+
   it('creates one profile even when "¡Vamos!" is tapped twice quickly', async () => {
     const user = userEvent.setup()
     render(

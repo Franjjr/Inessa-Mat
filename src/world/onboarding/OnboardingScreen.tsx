@@ -299,7 +299,7 @@ export default function OnboardingScreen() {
             )}
 
             {step === 'review' && species && (
-              <Question lumi={t('¡{child} y {pet} ya están listos! ¿Empezamos la aventura?')} petSpecies={species} colorway={draft.colorway}>
+              <Question lumi={t('¡Todo listo, {child} y {pet}! ¿Empezamos la aventura?')} petSpecies={species} colorway={draft.colorway}>
                 <Button size="lg" variant="gold" onClick={() => void create()} disabled={busy}>
                   ¡Vamos!
                 </Button>

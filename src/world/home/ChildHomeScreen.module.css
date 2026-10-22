@@ -101,7 +101,18 @@
 .continue:focus-visible { outline: 4px solid var(--c-gold); outline-offset: 4px; }
 .continueKicker { font-family: var(--font-read); font-size: var(--fs-sm); opacity: .9; }
 .continueTitle { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); line-height: 1.1; }
-.continueCta { margin-top: var(--sp-2); font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); color: var(--c-gold); }
+/* Gold text on the purple gradient is ~2.6:1 (too low). The gold becomes a light pill with dark ink (well above 4.5:1). */
+.continueCta {
+  align-self: flex-start;
+  margin-top: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-gold-soft);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+}
 
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
 .tile {

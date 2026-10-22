@@ -13,6 +13,7 @@ const PKS: Record<string, string[]> = {
   memberships: ['org_id', 'user_id'], organizations: ['id'], profiles: ['id'],
 }
 const LWW = new Set(['children', 'skill_mastery', 'rewards'])
+const CHILD_SCOPED = new Set(['progress', 'skill_mastery', 'attempts', 'sessions', 'rewards'])
 
 export interface Call {
   table: string
@@ -59,6 +60,10 @@ export class FakeSupabase {
   /** What a server-side trigger would do with an incoming row. Returns null when the write is skipped. */
   applyWrite(table: string, incoming: Row, existing: Row | undefined): Row | null {
     const row: Row = { ...(existing ?? {}), ...incoming }
+    // 0002_erasure_tombstones_rewards.sql: an erased child can never be written again; its data has no parent row (FK).
+    const erased = new Set(this.rows('erased_children').map((r) => String(r.child_id)))
+    if (table === 'children' && erased.has(String(incoming.id))) throw { message: 'child was erased', code: '42501' }
+    if (CHILD_SCOPED.has(table) && erased.has(String(incoming.child_id))) throw { message: 'insert or update violates foreign key constraint', code: '23503' }
     if (existing && LWW.has(table) && Date.parse(String(incoming.updated_at)) < Date.parse(String(existing.updated_at))) return null
     if (table === 'children' && existing?.deleted_at) row.deleted_at = existing.deleted_at // tombstones are permanent
     if (table === 'progress') row.version = existing ? Number(existing.version) + 1 : 1

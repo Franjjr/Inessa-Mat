@@ -35,20 +35,31 @@
     diario.
   - Zona de adultos: inicio de sesión, PIN, informe con el mapa de calor de las tablas, colegio con clases y códigos,
     ajustes y privacidad.
-- **Pruebas completas** (52 recorridos, todos en verde) con Playwright simulando iPad (horizontal y vertical), tablet Android y ordenador: crear niño,
+- **Pruebas completas** (52 recorridos, todos en verde tras la revisión final) con Playwright simulando iPad (horizontal y vertical), tablet Android y ordenador: crear niño,
   jugar el mundo 1, superar al guardián, comprar en la tienda, zona de adultos y uso sin conexión.
-- Estado del código: **1589 pruebas automáticas pasan**, el TypeScript compila sin errores y el build de producción
+- **Revisión final adversarial** (matemáticas, seguridad, sincronización, tablet, español, accesibilidad): 17 fallos
+  confirmados y **todos corregidos** (borrado RGPD que otro dispositivo deshacía, pantalla en blanco tras publicar,
+  estrellas entre dispositivos, premio del cofre, atajo del PIN, contraste, ventanas emergentes, español…). Además:
+  los fallos se vuelven a preguntar más tarde en la sesión y, si la app duda de lo que ha leído, pregunta «¿Has
+  escrito un 7?» antes de corregir, para que un error de lectura no cuente como error de matemáticas.
+- Estado del código: **1648 pruebas automáticas pasan** (más 192 de seguridad de la base de datos), el TypeScript compila sin errores y el build de producción
   funciona.
 
 **Lo que falta después**
 
-1. Revisión final adversarial (matemáticas, seguridad de la base de datos, sincronización sin conexión, iPad,
-   textos en español, accesibilidad) y los pendientes de la lista técnica de abajo.
-2. **Prueba en aparatos reales** (iPad con Pencil y tablet Android): escritura, rechazo de la palma, voz española,
+1. **Prueba en aparatos reales** (iPad con Pencil y tablet Android): escritura, rechazo de la palma, voz española,
    vibración, instalación como app. Esto no se puede simular.
-3. Pasar `dev` a `main` y publicar en Vercel.
+2. Pasar `dev` a `main` y publicar en Vercel.
 
 **Tus pasos pendientes (cuando quieras)**
+
+- **Nuevo: aplicar la migración 0002 en Supabase** antes de probar en producción. Pega el contenido completo de
+  `supabase/migrations/0002_erasure_tombstones_rewards.sql` en el SQL Editor y pulsa Run (debe responder “Success.
+  No rows returned”; se puede repetir sin problema). Qué hace: (1) al borrar a un niño por RGPD el servidor guarda una
+  “lápida” solo con su identificador, para que los demás dispositivos de la familia borren sus datos y nadie pueda
+  volver a crearlo; (2) un premio ya recogido no se puede “desrecoger” desde otro dispositivo. No cambia datos
+  existentes.
+- Una vez publicada la app, **no cambies los precios de los accesorios**: las estrellas gastadas se calculan con ellos.
 
 - ~~Pegar el SQL en Supabase~~ ✅ hecho. Falta el paso 4 de `docs/SUPABASE_SETUP.md` (URL de inicio de sesión),
   cuando tengamos la dirección de Vercel.
@@ -126,7 +137,14 @@ Fixed by the integrator after QA: array grids overflowing (ArrayView sizes tiles
 React keys in CompanionBuddy), race nodes receive personal records, lesson try steps own their feedback (no second
 «Siguiente»).
 
+Final adversarial review: `docs/handoff/reports/final-review.json` (17 confirmed, all fixed: data/security in
+`src/data` + migration 0002 with 33 new RLS checks; requeue of missed items in `src/activities/shared/requeue.ts`;
+handwriting doubt gate in `src/ink` (LearningStore doubts + DoubtPrompt) used by both answer flows; Modal focus trap;
+ChunkErrorBoundary + vite:preloadError reload; `--c-ink-mute` darkened to AA; gallery excluded from production).
+
 Integrator TODO:
+- Requeue not applied to `maze` (fixed path) and `wheel` (one slot per number): decide a mechanic if wanted.
+- Erasures done before migration 0002 have no tombstone: insert their ids into `public.erased_children` by hand.
 - Unify the back control: DailyReview uses a «Salir» pill, album/shop/chest/free use a chevron.
 - ink: allow DigitCell borderless variant (galera notebook look) and NumberInput min width < 240px.
 - Copy: free-play title «Piedras con llevadas».

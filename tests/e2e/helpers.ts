@@ -184,6 +184,10 @@ export async function nodeFinished(page: Page): Promise<boolean> {
  *  - objects to group or count are tapped ("sin colocar", "sin contar"), then "¡Ya están!" is pressed,
  *  - the total or the missing number is written on the keyboard (from the prompt, the input label or the equation),
  *  - "Siguiente", "Ver el hechizo" or "Probar otra vez" move on. */
+/** Objects still to count: groups label them "… sin contar"; array grids name each object by its position and use
+ *  aria-pressed for the counted state. */
+export const UNCOUNTED = '[aria-label$="sin contar"], section[aria-label="Filas y columnas"] [role="group"] > button[aria-pressed="false"]'
+
 export async function driveExercises(page: Page, finished: () => Promise<boolean>, maxSteps = 400): Promise<void> {
   for (let i = 0; i < maxSteps; i++) {
     if (await finished()) return
@@ -205,7 +209,7 @@ export async function driveExercises(page: Page, finished: () => Promise<boolean
       await settle(page, 200)
       continue
     }
-    const counted = page.locator('[aria-label$="sin contar"]').first()
+    const counted = page.locator(UNCOUNTED).first()
     if (await counted.isVisible().catch(() => false)) {
       await counted.click()
       await settle(page, 100)

@@ -1,0 +1,232 @@
+{
+  "confirmed": [
+    {
+      "id": "security-2",
+      "severity": "high",
+      "title": "GDPR erase_child is undone by a sibling device: the hard delete leaves no tombstone and the child row is re-inserted on the next push",
+      "files": [
+        "src/data/dashboards.ts",
+        "src/data/sync.ts",
+        "src/data/children.ts",
+        "supabase/migrations/0001_init.sql"
+      ],
+      "evidence": "dashboards.ts:47-70 eraseChild calls the RPC erase_child (hard delete of the children row, which cascades), then deletes local rows only on the erasing device and writes no tombstone. sync.ts:292-303 applyChildren only iterates rows the server returns and never removes a local child that is missing on the server, so other devices keep the child live. children.ts:136 and :171 (updateChild, deleteChild) enqueue 'children' upserts, and pushUpsertTable (sync.ts) sends them with onConflict 'id'. With no existing row this becomes an INSERT, and 0001_init.sql:802-804 children_insert is `with check (public.is_org_member(org_id))`, which any family member passes. Verified in a scratch Postgres 16 (pgserver, stub + 0001_init.sql + helpers, not committed): owner ana creates child, guardian abu is added, ana runs erase_child (0 rows left), abu runs `insert ... on conflict (id) do update` with the child's id (the upsert shape the sync engine sends): result 'child rows: 1', FINAL rows = 1. So the erased nickname, companion, gender, grade and birth_year are stored again after erasure. Any pending or later child edit on another family device does this. Progress and attempts then also push again once the child row exists.",
+      "fix": "Keep an erased-id blocklist server-side (e.g. erased_children table checked in a BEFORE INSERT trigger on children, or a tombstone row kept with deleted_at and no personal fields) so a re-insert of an erased id is rejected. On the client, make eraseChild write a tombstone first or keep a local erased-id set, and have pullAll delete local children that are absent from the server while the server cursor is complete. Add an RLS test: re-insert of an erased id must fail.",
+      "verifier": "Confirmed by code reading, not by rerunning the scratch Postgres test. erase_child (supabase/migrations/0001_init.sql:1080-1098) hard-deletes the children row and writes no tombstone. tg_children_guard (lines 585-606) has no check for erased ids on INSERT. children_insert (line 802-803) is only is_org_member(org_id), which a guardian passes. On the client, applyChildren (src/data/sync.ts:292-307) only iterates returned rows and never removes absent local children. pushUpsertTable (sync.ts:121-145) sends a children upsert with onConflict 'id', which becomes an INSERT when the row is gone. updateChild and deleteChild enqueue children upserts (children.ts:136, 171). The result is that a sibling device's child edit re-creates the erased child row. The HANDOFF open list does not cover this. The tombstone pattern used for soft delete (lines 599-601) is not applied to erase."
+    },
+    {
+      "id": "sync-2",
+      "severity": "high",
+      "title": "Open tab after a deploy loses its lazy routes and the whole app goes blank",
+      "files": [
+        "vite.config.ts (VitePWA registerType 'autoUpdate')",
+        "dist/sw.js (self.skipWaiting(), s.clientsClaim(), cleanupOutdatedCaches)",
+        "dist/registerSW.js (plain register, no reload on controllerchange)",
+        "src/app/routes.tsx:9-29,51",
+        "src/app/App.tsx",
+        "src/main.tsx"
+      ],
+      "evidence": "Built sw.js calls skipWaiting() and clientsClaim() and purges outdated precache entries. registerSW.js only calls navigator.serviceWorker.register and never reloads. Every screen except the entry is React.lazy (routes.tsx:9-29), wrapped only in a Suspense fallback (routes.tsx:51). No ErrorBoundary exists in src (grep finds only SafeVisual.tsx), and there is no vite:preloadError handler. Result: a tab left open across a deploy keeps running the old bundle. When it navigates to a route whose chunk hash changed, the old chunk is gone from the precache and from the server, the dynamic import rejects, and React unmounts the whole tree (blank screen) until a manual reload. The app is a fullscreen PWA that tablets keep open, so every deploy with changed route chunks hits this.",
+      "fix": "Add a top-level ErrorBoundary around AppRoutes that reloads once on chunk-load failure (match /Failed to fetch dynamically imported module|Importing a module script failed|ChunkLoadError/ and window.location.reload() guarded by sessionStorage), and listen for window 'vite:preloadError' (preventDefault + reload). Optionally use registerType 'prompt' and reload when the user accepts, or add a controllerchange listener that reloads once.",
+      "verifier": "Confirmed. dist/sw.js calls skipWaiting(), clientsClaim() and cleanupOutdatedCaches(). dist/registerSW.js is a plain register with no reload. There is no ErrorBoundary, no vite:preloadError handler and no controllerchange listener anywhere in src (grep empty). routes.tsx lazy-loads every screen except the entry under a single Suspense with no error boundary. A tab left open across a deploy that navigates to a changed chunk will fail the dynamic import and unmount the tree. Not listed in HANDOFF."
+    },
+    {
+      "id": "sync-3",
+      "severity": "high",
+      "title": "Erasing a child on the server leaves the child and its data on other family devices, and their pending edits resurrect it",
+      "files": [
+        "src/data/dashboards.ts:47-74 (eraseChild)",
+        "src/data/sync.ts:292-306 (applyChildren)",
+        "src/data/sync.ts:391-420 (pullAll)",
+        "src/data/sync.ts:121-148 (pushUpsertTable)",
+        "src/data/sync.ts:84 (PUSH_ORDER)",
+        "supabase/migrations/0001_init.sql:1080-1098 (erase_child, hard delete, no tombstone)"
+      ],
+      "evidence": "erase_child runs a hard `delete from public.children` with no tombstone. Pull only returns changed rows (remote.ts selectChanged by synced_at), and applyChildren never removes a local child that is absent from the server, so other devices keep the child, progress, attempts and sessions forever. Scratch test (scratchpad/sync/erase-and-claim.test.ts): the server row and cascaded rows are removed, then runSync({pull:true}) on the device leaves the child live and the local attempt count at 1. Then a rename on that device (a pending children outbox entry) syncs: pushUpsertTable upserts children with no existence check, and the server row is recreated (fake server nicknames ['Inés'], expected 0 rows). Any learning data queued in the same flush (children are pushed first) would be re-uploaded after the erasure. The erasing device's eraseChild only cleans its own Dexie.",
+      "fix": "Erasure needs a server-side tombstone that syncs (for example, keep a row with deleted_at and purge later, or an erased_children table pulled by devices and checked before every children/progress/attempts upsert), and clients must apply it locally (dropLocalChildData) on pull. Also reject upserts for erased ids on the server (RLS or trigger check against the erased list).",
+      "verifier": "Confirmed. The erase_child RPC in supabase/migrations/0001_init.sql:1080-1098 does a hard delete with no tombstone. dashboards.ts:47-74 only cleans the local Dexie. applyChildren (sync.ts:292-306) never removes absent rows. Scratch run: after a server-side erase and runSync pull, the child stays live on the device with attempts still counted. A later rename from that device recreates the server row (fake server nicknames ['Inés'], expected 0 rows). The soft-delete tombstone path (children.ts:170, trigger at 0001_init.sql:599-600) does not cover the GDPR hard delete. Not listed in HANDOFF."
+    },
+    {
+      "id": "a11y-1",
+      "severity": "high",
+      "title": "Shop purchase dialog traps no focus, ignores Escape, and leaves keyboard focus behind the backdrop",
+      "files": [
+        "src/ui/index.tsx:67-75 (Modal)",
+        "src/world/shop/ShopView.tsx:146 (Modal used for 'Comprar')",
+        "src/adult/shared/ConfirmModal.tsx (same Modal)"
+      ],
+      "evidence": "Repro (Playwright, desktop 1440x900, seeded child, scratch script scratchpad/shop2.mjs): on /play/shop click 'Lazo' then 'Comprar por 6 estrellas'. The dialog '¿Comprar Lazo?' opens (role=dialog, aria-modal) but document.activeElement stays on the trigger button behind the backdrop (inDialog=false). Tab moves to 'Pirueta', 'Lazo', 'Globo' (all outside the dialog). Escape does not close the dialog (still open after Escape). Modal has no focus move on open, no focus trap, no Escape handler, no focus restore. ConfirmModal reuses this Modal for adult confirmations.",
+      "fix": "In Modal: on open move focus to the first control inside the dialog (or the dialog itself with tabIndex=-1), trap Tab/Shift+Tab inside it, close on Escape (when dismissable), and restore focus to the opener on close.",
+      "verifier": "Confirmed in src/ui/index.tsx:67-75: Modal has no keydown/Escape handler, no focus move on open, no focus trap and no focus restore (grep for Escape/keydown/focus/autoFocus across src finds nothing in the Modal). HANDOFF has no focus/a11y entry. Affects ShopView.tsx:146 and ConfirmModal (used by SchoolScreen.tsx:190). Keyboard and AT users can't dismiss with Escape and focus stays behind the backdrop."
+    },
+    {
+      "id": "maths-2",
+      "severity": "medium",
+      "title": "Handwriting misreads are graded and penalised as maths errors",
+      "files": [
+        "src/activities/groups/flow.ts:69-82",
+        "src/world/host/GameHost.tsx:177-186",
+        "src/engine/mastery.ts:48",
+        "docs/PEDAGOGY.md:principle 7"
+      ],
+      "evidence": "PEDAGOGY principle 7 and mastery.ts:48 say a misread digit is logged as errorType 'recognition' and never lowers mastery. In production nothing produces that type: grep finds 'recognition' only in types, describe.ts, summary.ts and the dev seed src/data/dev.ts:104. flow.submit grades only the first submission (guard `if (!graded.current)`, flow.ts:75-76), so a misread that makes the first answer wrong is reported as the first check's errorType ('fact', 'carry-forgot'...). AnswerBar's 'Revisar' button (AnswerBar.tsx:53) re-submits, but the second attempt's recognitionFixes are never reported. GameHost.tsx:181-186 passes check.errorType straight to updateMastery, so the skill drops two Leitner boxes and the adult dashboard counts a calculation error. Repro: write a digit that the recognizer reads wrongly, press Comprobar, read the outcome: errorType is not 'recognition' and mastery.box = max(0, box-2).",
+      "fix": "Report recognition when the cell's recognition was corrected or uncertain, or when the first-submission digits differ from the final corrected digits. Let flow.ts report the final graded outcome (or merge recognitionFixes from later submissions) and map such attempts to errorType 'recognition' before updateMastery.",
+      "verifier": "Confirmed. Nothing in src (outside tests, types, the dev seed and summary aggregation) sets errorType 'recognition' (grep of src/engine and src/world shows no producer), so the PEDAGOGY principle 7 rule is never applied. GameHost.tsx:181-186 passes only check.errorType to updateMastery and ignores recognitionFixes for mastery. groups/flow.ts:4 and :75-76 deliberately keep the first submission as the graded outcome, so a first-try misread that yields a wrong answer is graded as a calculation error and drops the box by 2. Not in HANDOFF open list."
+    },
+    {
+      "id": "maths-3",
+      "severity": "medium",
+      "title": "Failed items are not re-asked in the same session (PEDAGOGY 4 unimplemented)",
+      "files": [
+        "docs/PEDAGOGY.md:principle 4",
+        "src/activities/facts/shared/items.ts:19-26",
+        "src/engine/mastery.ts:2"
+      ],
+      "evidence": "PEDAGOGY principle 4 says 'A failed item comes back 2–4 items later in the same session, then again in later sessions.' useItems (items.ts:20) generates the whole list once with useState and never changes it. A grep for requeue, queue, setItems and reinsert in src/activities and src/world finds nothing. The mastery header (mastery.ts:2) says box0 is due 'now (same session)', but dueAt only feeds the next session's warm-up (session.ts dueSkills), so a missed fact is not asked again in the current run. Repro: in any fact activity, answer one item wrongly; the same fact never reappears in that run.",
+      "fix": "Keep a per-run queue in the activity host. On a wrong answer, re-insert the same exercise 2–4 positions later (or a same-skill variant, not an identical id), and leave the item out of the run-length count so the planned number of items still holds.",
+      "verifier": "Confirmed. useItems (facts/shared/items.ts:20) builds the list once with useState, and session.ts:27-42 advances a linear index only. The flow's 'retry' phase (flow.ts:146-149) re-asks the same item within that item only, up to MAX_TRIES=2, not 2-4 items later. A grep of src/activities and src/world finds no requeue or reinsert logic. PEDAGOGY.md:14 states the rule explicitly. HANDOFF.md has no entry for it."
+    },
+    {
+      "id": "security-1",
+      "severity": "medium",
+      "title": "Adult PIN gate can be bypassed by a child via the maths fallback, which has no attempt limit and ignores the 30 s lock",
+      "files": [
+        "src/adult/gate/AdultGate.tsx",
+        "src/data/pin.ts"
+      ],
+      "evidence": "AdultGate.tsx:208-216: the 'forgot-maths' branch of submit() never increments `failures`, never checks `locked`, and on a wrong answer only re-rolls the question (setQuestion(makeMathQuestion())). The lock is checked only in the 'enter' branch (line 142: `if (locked) return`). Line 330: the 'He olvidado el PIN' button is rendered in enter mode with only `disabled={busy}`, so it stays clickable during the 30 s lock. Line 345: the forgot-maths NumberPad uses `disabled={busy}`, not `locked`. startForgot (line 250-258) sends local-only devices (no account) to forgot-maths. A correct answer clears the PIN (clearAdultPin, pin.ts) and then opens setup, where the child types a new PIN twice and unlock() opens /adult/**. Repro (no account, local-only mode): enter 5 wrong PINs, wait or not, click 'He olvidado el PIN', then type the product of the two displayed 2-digit numbers (12-19 x 12-19). Each wrong answer gives a new question with no cap, so guessing is unlimited. Impact: the adult area includes profile deletion (ChildReportScreen eraseChild), settings and the privacy page. HANDOFF does not list this. The lock fix recorded in docs/handoff/reports/adult.review.json covers only the enter path.",
+      "fix": "Apply the same failure counter and LOCK_MS to forgot-maths (or drop the maths fallback on devices without an account). Disable the forgot button and the forgot-maths keypad while locked. Put the lock check in submit() for every mode, not only enter.",
+      "verifier": "Confirmed in src/adult/gate/AdultGate.tsx. The forgot-maths branch of submit() (lines 208-221) has no locked check and never increments failures. The 'He olvidado el PIN' button (line 329) and the forgot-maths NumberPad (lines 340-347) are gated only by busy, so both stay usable during the 30 s lock. Each wrong answer just re-rolls the question, so guessing is unlimited. A correct answer calls clearAdultPin (line 215) and opens setup. The lock check at line 142 is only in the enter branch. HANDOFF and adult.review.json (line 11) do not list this path; they only say the PIN is per device and not a security boundary against a determined adult. Severity is lowered from high: the bypass needs a 2-digit by 2-digit multiplication, which a child can solve with a calculator app, but the code path is clearly unguarded and the adult area includes profile deletion."
+    },
+    {
+      "id": "security-3",
+      "severity": "medium",
+      "title": "GDPR export (Art. 15) is built from local IndexedDB only and omits cloud data, while the file says it is a full copy",
+      "files": [
+        "src/data/dashboards.ts",
+        "src/data/sync.ts"
+      ],
+      "evidence": "dashboards.ts:77-101 exportChildData reads only db.* (Dexie) and returns the blob. The notice it writes says 'Si usas una cuenta, la copia de la nube contiene los mismos datos sincronizados', which is not true in general. sync.ts:242 FIRST_PULL_DAYS = 90, and sync.ts:386-387 pull attempts and sessions only from the last 90 days when a child first appears on a device. So an export made on a second or reinstalled family device has no older attempts or sessions that exist on the server. Server-only data that the family can read (class enrolments, school-side progress written by staff, assignments not cached) is also absent.",
+      "fix": "Build the export from the server when signed in and online (full history via the RPC or paged selects, with class enrolments and assignments), and fall back to the local copy with a visible note when offline. Correct the notice text to say what is included.",
+      "verifier": "Confirmed. exportChildData (src/data/dashboards.ts:77-108) reads only the Dexie tables (db.*), with no server call. The sole caller is ChildReportScreen.tsx:95. The notice text (lines 94-96) says the cloud copy holds the same data, which is not true in general. sync.ts:242 and 386-387 limit the first pull for a child that is new to a device to the last 90 days for sessions and attempts, so a second or reinstalled device exports a truncated history. Class enrolments and server-side assignments are not in the export. The opening sentence does say 'guardados en este dispositivo', so the defect is the misleading second sentence and the incomplete Art. 15 export rather than a silent lie. Not listed in HANDOFF."
+    },
+    {
+      "id": "sync-1",
+      "severity": "medium",
+      "title": "Star totals and starsSpent merge with max, losing or inflating offline progress across devices",
+      "files": [
+        "src/data/merge.ts:128-129",
+        "src/data/progress.ts:32",
+        "src/content/progression.ts:149",
+        "src/content/progression.ts:220"
+      ],
+      "evidence": "merge.ts:128-129 uses maxNum for `stars` and `starsSpent`. But progression.ts:149 computes `stars: progress.stars + (best - prevBest)` and progression.ts:220 computes `starsSpent: progress.starsSpent + price`, so both are running sums per device. Scratch test (scratchpad/sync/stars-merge.test.ts, run with the repo vitest binary) shows: device A completes node 1 for 3 stars and device B completes node 2 for 3 stars, both offline from the same base. mergeProgress gives stars=3 while the merged per-node stars sum to 6 (expected 6). Second case: base stars=20, A buys lollipop (5), B buys bow (6), both offline. Merged starsSpent=6, both accessories owned, spendable=14 (expected 9). The child keeps 5 stars she never paid for, and 3 earned stars vanish. This is the sync path used by pushProgress and applyProgressRows, so it runs on every multi-device merge.",
+      "fix": "Do not merge counters with max. Either recompute `stars` from the merged per-node stars (sum of best per node) and derive starsSpent from the union of owned accessories (sum of their prices), or store per-event ledger entries (node best-star deltas and purchases keyed by id) and merge by union. Keep max only for per-node best values. Update merge.test.ts property tests accordingly.",
+      "verifier": "Confirmed. merge.ts:128-129 and mergeProgress use maxNum for stars and starsSpent, but progression.ts:149 (stars += best - prevBest) and progression.ts:220 (starsSpent += price) make both per-device running sums. Scratch run with repo vitest: merged.stars=3 vs per-node sum 6, and spendable=14 vs expected 9 after offline purchases of lollipop (5) and bow (6). The code comment at progress.ts:32 documents max as intended, so the design is wrong, not a misreading. Severity lowered from high: it needs concurrent offline edits on two devices and affects only the star currency, not learning data or money."
+    },
+    {
+      "id": "sync-4",
+      "severity": "medium",
+      "title": "A reward claim can be reverted by an unrelated later edit on another device (whole-row LWW)",
+      "files": [
+        "src/data/rewards.ts:36-46 (patchReward, markRewardClaimed)",
+        "src/data/sync.ts:364-374 (applyRewardRows)",
+        "supabase/migrations/0001_init.sql (rewards_20_lww -> tg_sync_lww)"
+      ],
+      "evidence": "Rewards are synced as whole rows under last-writer-wins on updated_at. markRewardClaimed sets claimedAt on device A and bumps updatedAt. Device B, which has not pulled that claim, edits the prize title later and pushes its copy with claimed_at null and a newer updated_at. Scratch test (scratchpad/sync/erase-and-claim.test.ts): the server row had claimed_at set, then after B's edit, device A's pull replaces the row and claimedAt becomes null on both sides. The child can claim the Gran Cofre again, and the claim history is gone. Field-level or monotonic merge for claimedAt/unlockedAt (earliest non-null wins) would avoid it.",
+      "fix": "Merge reward rows field by field: claimedAt and unlockedAt use the earliest non-null value (monotonic), while title and description use LWW. Apply the same rule in the server trigger for rewards, or send only the changed fields in the upsert.",
+      "verifier": "Confirmed. rewards.ts:53-55 sets claimedAt and bumps updatedAt. applyRewardRows (sync.ts:364-374) is whole-row LWW on updatedAt. Scratch run: the server claimed_at was set, then a newer unrelated title edit from a device that never saw the claim cleared it on the server and locally (claimedAt null on both). A child can then re-claim the same prize. Impact is limited to a duplicate prize claim and lost claim history, so medium. Not listed in HANDOFF."
+    },
+    {
+      "id": "spanish-1",
+      "severity": "medium",
+      "title": "Shop button says \"Quitármelo\" (wrong pronoun) for removing an accessory from the companion",
+      "files": [
+        "/Users/mac13/Desktop/Inessa-Mat/src/world/shop/ShopView.tsx",
+        "/Users/mac13/Desktop/Inessa-Mat/src/world/shop/ShopScreen.test.tsx"
+      ],
+      "evidence": "ShopView.tsx:58: `if (status === 'equipped') return <Button ... onClick={() => onUnequip(accessory.id)} ...>Quitármelo</Button>`. The accessory is worn by the companion, not the child, so \"me\" is wrong; the correct clitic is \"Quitárselo\". The sibling label at ShopView.tsx:59 \"Ponérselo\" is already correct. ShopScreen.test.tsx:97 asserts the wrong label (`getByRole('button', { name: 'Quitármelo' })`), so the test must change with the fix. Repro: open the shop for any child, pick an accessory that is already equipped on the companion, and the action button reads \"Quitármelo\".",
+      "fix": "Change the label at ShopView.tsx:58 to \"Quitárselo\" and update the name in ShopScreen.test.tsx:97 to match.",
+      "verifier": "Confirmed. ShopView.tsx:58 renders 'Quitármelo' for the equipped branch, where the accessory is worn by the companion, so the clitic should be 'Quitárselo'. The sibling 'Ponérselo' at line 59 is correct. ShopScreen.test.tsx:97 asserts the wrong label. docs/HANDOFF.md has no mention of it."
+    },
+    {
+      "id": "spanish-2",
+      "severity": "medium",
+      "title": "Onboarding copy \"ya están listos\" does not agree with a girl and a female companion",
+      "files": [
+        "/Users/mac13/Desktop/Inessa-Mat/src/world/onboarding/OnboardingScreen.tsx"
+      ],
+      "evidence": "OnboardingScreen.tsx:302: `<Question lumi={t('¡{child} y {pet} ya están listos! ¿Empezamos la aventura?')} ...>`. The adjective \"listos\" is hard-coded masculine plural and is not gender-selected. Rendering with the scratch harness (renderTemplate with childGender 'f' and petGender 'f', e.g. Inessa + Lola) gives \"¡Inessa y Lola ya están listos!\", which should read \"listas\". Girl plus male pet is accepted Spanish, so the bug appears only in the female-female case, but the project rule (src/types/content.ts: 'N must read naturally' and gender agreement via {cg}/{pg}) is broken here. Scratch output: /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/gendered2.txt.",
+      "fix": "Remove the gendered adjective, for example '¡Todo listo, {child} y {pet}! ¿Empezamos la aventura?', or pick the adjective with a gender-aware option based on child and pet genders.",
+      "verifier": "Confirmed. OnboardingScreen.tsx:302 uses a fixed template '¡{child} y {pet} ya están listos!' with no gender token, so 'listos' is always masculine plural. For a girl and a female companion the agreement should be 'listas'. Grep finds no gender-selected variant of this string. The defect only shows in the female-female case, which is why it is medium and not higher. HANDOFF has no mention of it. Scratch output gendered2.txt does not include this string, so the repro is from the code, not from that file."
+    },
+    {
+      "id": "a11y-2",
+      "severity": "medium",
+      "title": "Muted ink token fails 4.5:1 for small body text (3.85:1 on white, 3.52:1 on surface-2)",
+      "files": [
+        "src/styles/tokens.css:27 (--c-ink-mute: #8b7aa8)",
+        "src/world/shop/shop.module.css:147 (card slot labels)",
+        "src/world/free/free.module.css:92,155",
+        "src/adult/gate/AdultGate hint (.hint in adult.module.css, PIN instructions)",
+        "src/world/home/ChildHomeScreen.module.css:77 (.hornTitle)",
+        "46 uses of var(--c-ink-mute) across src"
+      ],
+      "evidence": "Computed contrast with scratch script scratchpad/contrast.mjs: text colour rgb(139,122,168) on #fff = 3.86:1 at 13.9–16.7px (fails WCAG 1.4.3 4.5:1). Affected text: shop slot names 'Cabeza', 'En la mano' (13.9px, bg #f5f3ff gives 3.52:1), free-play world names 'Bosque', 'Río', adult PIN hint 'Crea un PIN para entrar aquí…' (16.7px), 'Cuerno de Lumi'.",
+      "fix": "Darken --c-ink-mute to at least #6f5f8f (about 5.5:1 on white and 4.9:1 on #f5f3ff) or use --c-ink-soft (#5b4a75) for any text; keep #8b7aa8 only for decorative borders/dividers.",
+      "verifier": "Computed with WCAG formula: #8b7aa8 on #ffffff = 3.86:1 and on #f5f3ff = 3.52:1, both below 4.5:1 for small text. --c-ink-mute is used for text in free.module.css:92,155 and shop.module.css:147. Not listed in HANDOFF. Proposed #6f5f8f gives 5.66:1 on white and 5.16:1 on #f5f3ff, so the fix holds."
+    },
+    {
+      "id": "a11y-3",
+      "severity": "medium",
+      "title": "Gold continue CTA on purple gradient is about 2.6:1 contrast",
+      "files": [
+        "src/world/home/ChildHomeScreen.module.css:103 (.continueCta color var(--c-gold))",
+        "src/world/home/ChildHomeScreen.module.css:~90 (.continue gradient linear-gradient(135deg, var(--c-primary), var(--c-magic)))"
+      ],
+      "evidence": "'Seguir la aventura' (20.4px, weight 600) is rgb(245,158,11) on the card background. Pixel sampling of the button screenshot at 1180x820 (scratchpad/cta.mjs) gives 2.63:1 as the best-case background sample, with the purple (#7c3aed) region around the text at about 2.6:1 by luminance calculation. Below 3:1 even as large text, and below 4.5:1 for normal text. The primary 'continue' action of the child home screen is affected.",
+      "fix": "Use white (or a near-white) for this CTA on the purple gradient, or move the CTA onto a light pill (e.g. background var(--c-gold-soft) with dark ink) so the text reaches 4.5:1.",
+      "verifier": "Confirmed: .continueCta (ChildHomeScreen.module.css:103, color var(--c-gold)) sits inside the .continue button (ChildHomeScreen.tsx:114-119) whose background is linear-gradient(135deg, --c-primary, --c-magic). Computed gold #f59e0b vs #7c3aed = 2.65:1 and vs #c026d3 = 2.19:1, both below 3:1, and weight 600 at ~20px does not qualify as large text. Not in HANDOFF."
+    },
+    {
+      "id": "a11y-4",
+      "severity": "medium",
+      "title": "Array-grid activity uses invalid ARIA: role=grid without rows, role=gridcell with aria-pressed",
+      "files": [
+        "src/activities/views/ArrayView.tsx:94-108"
+      ],
+      "evidence": "Code: <div role=\"grid\"> wraps <button role=\"gridcell\" aria-pressed={on} aria-label=\"🍎 contado\"> with no role=row parents. ARIA 1.2 requires row children of grid and gridcell does not support aria-pressed, so assistive tech gets a grid with an invalid tree and an unsupported state. The counter (line 119, aria-live=polite) also re-announces every toggle.",
+      "fix": "Drop role=grid/gridcell and use a plain group of toggle buttons (role=group with aria-label) with aria-pressed, or wrap cells in role=row and use role=gridcell with a read-only state label instead of aria-pressed.",
+      "verifier": "Confirmed in src/activities/views/ArrayView.tsx:94-108: role=grid has no role=row children, and role=gridcell carries aria-pressed, which ARIA 1.2 does not support on gridcell. Invalid ARIA tree and state for AT users."
+    },
+    {
+      "id": "a11y-5",
+      "severity": "medium",
+      "title": "Build-the-rectangle slots are indistinguishable for screen-reader and keyboard users",
+      "files": [
+        "src/activities/array/index.tsx:64-74"
+      ],
+      "evidence": "Each empty slot is a button named 'hueco vacío' with no row/column (Tab trace on /play/w/w1/array, scratchpad/kb.mjs: 12 consecutive identical 'hueco vacío' buttons). The name also changes on toggle ('🍎 puesto, quitar') while aria-pressed is set, so the toggle state is announced twice and the name changes; there is no way to know which slot is which.",
+      "fix": "Name each slot by position, e.g. 'Fila 2, columna 3, vacío', keep a constant name and rely on aria-pressed, and add an aria-describedby for the grid size.",
+      "verifier": "Confirmed in src/activities/array/index.tsx:64-74: every empty slot is a button labelled the constant string 'hueco vacío' with no position, and the label changes on toggle while aria-pressed is also set. Users cannot tell slots apart by name, and the state is announced twice."
+    },
+    {
+      "id": "a11y-6",
+      "severity": "medium",
+      "title": "Nested live regions in the companion buddy announce the same phrase twice",
+      "files": [
+        "src/world/host/CompanionBuddy.tsx:59 (wrapper aria-live=polite)",
+        "src/world/host/CompanionBuddy.tsx:61 (bubble role=status)"
+      ],
+      "evidence": "The wrapper <div className=buddy aria-live=\"polite\"> contains the bubble <div role=\"status\"> that renders {event.phrase}. Both are live regions that contain the same text, and the wrapper also contains the animated figures, so every companion change re-announces the subtree. Verified from the DOM structure; not tested with a real screen reader.",
+      "fix": "Remove aria-live from the wrapper and keep a single role=status on the bubble; mark the figures aria-hidden.",
+      "verifier": "DOM structure confirmed in src/world/host/CompanionBuddy.tsx:59-61: a wrapper with aria-live=polite contains a role=status bubble with the same phrase. Real nested live regions. The actual double-announcement impact with a screen reader was not tested, so severity is kept at medium, not higher."
+    }
+  ],
+  "rejected": [
+    {
+      "id": "maths-1",
+      "title": "add:4d:c4 skill silently generates 3-carry sums"
+    }
+  ]
+}

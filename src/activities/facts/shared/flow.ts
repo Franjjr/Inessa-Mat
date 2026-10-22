@@ -85,6 +85,8 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true }: Fl
   const text = useCallback((s: string | undefined, fallback: string) => host.t(s ?? fallback), [host])
 
   return {
+    /** True (and the "¿Has escrito…?" prompt opens) while a digit is still in doubt: the answer is not graded. */
+    held: () => learning.requestConfirm(),
     hints,
     hintsShown,
     hintsUsed: hintsUsed.current,
@@ -127,7 +129,7 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
   const [attemptKey, setAttemptKey] = useState(0)
 
   const submit = (answer: Answer) => {
-    if (core.isDone()) return
+    if (core.isDone() || core.held()) return
     const res = check(exercise, answer)
     setLast(res)
     if (res.correct) {
@@ -239,7 +241,7 @@ export function useSlotFlow(opts: SlotOptions): SlotView {
 
   const submit = (value: number | null) => {
     const cur = s.current
-    if (core.isDone() || value === null || cur.current < 0) return
+    if (core.isDone() || value === null || cur.current < 0 || core.held()) return
     const i = cur.current
     const values = [...cur.values]
     const closed = [...cur.closed]

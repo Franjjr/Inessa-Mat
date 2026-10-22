@@ -3,6 +3,8 @@
      upserts:      children, mastery, sessions, rewards — last-writer-wins on updatedAt (server trigger guards it)
      append-only:  attempts — insert … on conflict do nothing (idempotent re-sends)
      progress:     monotonic merge + compare-and-swap on the server row version
+     erasures:     GDPR tombstones (erased_children) pulled first; an erased child is dropped here and never pushed again
+     rewards:      field-level merge: claimedAt / unlockedAt never go back (see mergeReward)
    Triggers: sign-in / org switch, 'online', tab visible, a local write (debounced), every 3 minutes; exponential
    backoff after failures. Only one tab syncs at a time (Web Locks when available). */
 import { useSyncExternalStore } from 'react'
@@ -15,10 +17,11 @@ import {
   attemptFromRow, attemptToRow, childFromRow, childToRow, masteryFromRow, masteryToRow, progressFromRow, rewardFromRow,
   rewardToRow, sessionFromRow, sessionToRow,
 } from './mappers'
-import { mergeProgress } from './merge'
+import { eraseLocalChild, isErasedChild } from './erasure'
+import { mergeProgress, mergeReward } from './merge'
 import { META, getMeta, setMeta } from './meta'
 import { ackEntry, enqueue, failEntry, onEnqueued, parseMasteryKey } from './outbox'
-import { PAGE_SIZE, casProgress, fetchProgress, insertProgress, selectChanged, upsertRows, type Row } from './remote'
+import { PAGE_SIZE, casProgress, fetchErasedChildIds, fetchProgress, insertProgress, selectChanged, upsertRows, type Row } from './remote'
 import { getAuth, memberOrgIds, scopeOrgId, subscribeAuth, type AuthSnapshot } from './store'
 import { getSupabase, isBackendAvailable } from './supabase'
 import type { OutboxEntry, SyncTable } from './types'
@@ -210,10 +213,13 @@ async function pushAll(sb: SupabaseClient, auth: AuthSnapshot): Promise<void> {
   kids.forEach((c, i) => {
     if (c) orgOf.set(ids[i], c.orgId)
   })
+  const erased = new Set<string>()
+  for (const id of ids) if (await isErasedChild(id)) erased.add(id)
   for (const e of entries) {
-    if (!orgOf.has(e.childId)) await ackEntry(e) // child no longer on this device
+    if (!orgOf.has(e.childId) || erased.has(e.childId)) await ackEntry(e) // gone from this device, or erased
   }
   const eligible = entries.filter((e) => {
+    if (erased.has(e.childId)) return false
     const org = orgOf.get(e.childId)
     return Boolean(org && orgs.has(org))
   })
@@ -293,6 +299,7 @@ async function applyChildren(rows: Row[]): Promise<void> {
   await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta], async () => {
     for (const r of rows) {
       const remote = childFromRow(r)
+      if (await isErasedChild(remote.id)) continue // erased: never bring it back
       const local = await db.children.get(remote.id)
       if (local?.deletedAt && !remote.deletedAt) continue // our tombstone wins (it is queued for push)
       const tombstone = Boolean(remote.deletedAt && !local?.deletedAt)
@@ -361,14 +368,24 @@ async function applyAttemptRows(rows: Row[]): Promise<void> {
   })
 }
 
+/** Rewards merge field by field (mergeReward): a claim or unlock is never reverted by an edit that did not see it. */
 async function applyRewardRows(rows: Row[]): Promise<void> {
-  await db.transaction('rw', [db.rewards, db.outbox], async () => {
+  await db.transaction('rw', [db.rewards, db.children, db.outbox, db.meta], async () => {
     for (const r of rows) {
       const remote = rewardFromRow(r)
+      if (await isErasedChild(remote.childId)) continue
       const local = await db.rewards.get(remote.id)
-      if (local && !isAfter(remote.updatedAt, local.updatedAt)) continue
-      await db.rewards.put(remote)
-      await db.outbox.where('[table+key]').equals(['rewards', remote.id]).delete()
+      if (!local) {
+        await db.rewards.put(remote)
+        continue
+      }
+      const merged = mergeReward(local, remote)
+      if (!deepEqual(merged, local)) await db.rewards.put(merged)
+      if (deepEqual(merged, remote)) {
+        await db.outbox.where('[table+key]').equals(['rewards', remote.id]).delete() // the server already has all of it
+      } else {
+        await enqueue('rewards', remote.id, merged.childId) // this device knows more (a claim): send the merge back
+      }
     }
   })
 }
@@ -388,9 +405,20 @@ const LEARNING_PULLS: PullSpec[] = [
   { table: 'rewards', remote: 'rewards', apply: applyRewardRows },
 ]
 
+/** Applies the family's GDPR tombstones before anything else, so a child erased on another device disappears here
+ *  and cannot be re-created by the children pull or by a queued change. */
+async function pullErasures(sb: SupabaseClient, auth: AuthSnapshot): Promise<void> {
+  const ids = await fetchErasedChildIds(sb, [...memberOrgIds(auth)])
+  for (const id of ids) {
+    if ((await isErasedChild(id)) && !(await db.children.get(id)) && !(await db.outbox.where('childId').equals(id).count())) continue
+    await eraseLocalChild(id)
+  }
+}
+
 async function pullAll(sb: SupabaseClient, auth: AuthSnapshot): Promise<void> {
   const orgId = scopeOrgId(auth)
   if (!orgId) return
+  await pullErasures(sb, auth)
   const knownBefore = new Set((await db.children.where('orgId').equals(orgId).primaryKeys()) as string[])
 
   const childCursorKey = META.cursor(orgId, 'children')
@@ -658,6 +686,7 @@ export async function pushChildNow(childId: string): Promise<void> {
   const auth = getAuth()
   const sb = await getSupabase()
   if (!sb || auth.status !== 'signed-in') return
+  if (await isErasedChild(childId)) return
   const entries = await db.outbox.where('childId').equals(childId).and((e) => e.table === 'children').toArray()
   if (entries.length) await pushUpsertTable(sb, 'children', entries)
 }

@@ -136,10 +136,28 @@ export function AdultGate({ children }: { children: ReactNode }) {
     setUnlocked(true)
   }
 
+  // One failure counter and one lock for every way of proving "I am an adult" on this device: the PIN and the
+  // maths fallback share them, so the fallback cannot be used to keep guessing while the PIN is locked.
+  const registerFailure = (wrongText: string) => {
+    const next = failures + 1
+    if (next >= MAX_FAILURES) {
+      const until = Date.now() + LOCK_MS
+      setLockedUntil(until)
+      writeLockState({ failures: 0, lockedUntil: until })
+      setNow(Date.now())
+      setFailures(0)
+      setMode('enter')
+      setMessage({ tone: 'error', text: 'Demasiados intentos seguidos. Espera 30 segundos antes de volver a probar.' })
+    } else {
+      setFailures(next)
+      writeLockState({ failures: next, lockedUntil: 0 })
+      setMessage({ tone: 'error', text: wrongText })
+    }
+  }
+
   const submit = async () => {
-    if (busy) return
+    if (busy || locked) return
     if (mode === 'enter') {
-      if (locked) return
       if (digits.length < 4) {
         setMessage({ tone: 'info', text: 'Escribe tu PIN (entre 4 y 8 números).' })
         return
@@ -153,20 +171,8 @@ export function AdultGate({ children }: { children: ReactNode }) {
           unlock()
           return
         }
-        const next = failures + 1
-        setFailures(next)
         setDigits('')
-        if (next >= MAX_FAILURES) {
-          const until = Date.now() + LOCK_MS
-          setLockedUntil(until)
-          writeLockState({ failures: 0, lockedUntil: until })
-          setNow(Date.now())
-          setFailures(0)
-          setMessage({ tone: 'error', text: 'Demasiados intentos seguidos. Espera 30 segundos antes de volver a probar.' })
-        } else {
-          writeLockState({ failures: next, lockedUntil: 0 })
-          setMessage({ tone: 'error', text: 'Ese PIN no es correcto. Inténtalo otra vez.' })
-        }
+        registerFailure('Ese PIN no es correcto. Inténtalo otra vez.')
       } catch {
         setMessage({ tone: 'error', text: 'No hemos podido comprobar el PIN. Vuelve a intentarlo.' })
       } finally {
@@ -209,12 +215,13 @@ export function AdultGate({ children }: { children: ReactNode }) {
       if (Number(digits) !== question.answer) {
         setDigits('')
         setQuestion(makeMathQuestion())
-        setMessage({ tone: 'error', text: 'Ese resultado no es correcto. Te hemos puesto otra cuenta.' })
+        registerFailure('Ese resultado no es correcto. Te hemos puesto otra cuenta.')
         return
       }
       await clearAdultPin()
       setDigits('')
       setFirstPin('')
+      writeLockState({ failures: 0, lockedUntil: 0 })
       setFailures(0)
       setMode('setup')
       setMessage({ tone: 'ok', text: 'Muy bien. Ahora crea un PIN nuevo.' })
@@ -312,6 +319,7 @@ export function AdultGate({ children }: { children: ReactNode }) {
               {message.text}
             </p>
           )}
+          {locked && <p className={adult.hint} aria-live="polite">Puedes volver a probar en {secondsLeft} segundos.</p>}
 
           {(mode === 'enter' || mode === 'setup' || mode === 'confirm') && (
             <>
@@ -324,9 +332,8 @@ export function AdultGate({ children }: { children: ReactNode }) {
                 submitDisabled={busy || locked}
                 disabled={busy || locked}
               />
-              {locked && <p className={adult.hint} aria-live="polite">Puedes volver a probar en {secondsLeft} segundos.</p>}
               {mode === 'enter' && (
-                <button type="button" className={s.linkButton} onClick={startForgot} disabled={busy}>
+                <button type="button" className={s.linkButton} onClick={startForgot} disabled={busy || locked}>
                   He olvidado el PIN
                 </button>
               )}
@@ -342,8 +349,8 @@ export function AdultGate({ children }: { children: ReactNode }) {
                 onBackspace={backspace}
                 onSubmit={() => void submit()}
                 submitLabel="Comprobar"
-                submitDisabled={busy}
-                disabled={busy}
+                submitDisabled={busy || locked}
+                disabled={busy || locked}
               />
             </>
           )}

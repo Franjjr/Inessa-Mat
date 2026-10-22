@@ -2,7 +2,7 @@
    gentle clue (the bubble wobbles). Timed games give each fact a soft timer that the family can switch off. */
 import clsx from 'clsx'
 import { motion, useReducedMotion } from 'motion/react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { check, generate } from '@/engine'
 import { haptics, sfx } from '@/audio'
 import { celebrate } from '@/fx'
@@ -12,6 +12,7 @@ import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
 import { now } from '../facts/shared/flow'
 import { shuffleWith } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import { speakFact } from '../facts/shared/speak'
 import shared from '../facts/shared/shared.module.css'
 import s from './bubbles.module.css'
@@ -54,13 +55,17 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const session = useSession({ total: questions.length, thresholds: config.starThresholds })
+  // Wrong first taps come back 2–4 questions later in the same run (PEDAGOGY 4); re-asks are not reported or scored.
+  const [run, setRun] = useState(() => startQueue(questions))
+  const requeuedRef = useRef(false)
   const [answeredFirst, setAnsweredFirst] = useState(false)
   const [popped, setPopped] = useState<number | null>(null)
   const [wobble, setWobble] = useState<{ value: number; key: number } | null>(null)
   const [clue, setClue] = useState<string | null>(null)
   const [start, setStart] = useState(() => now())
   const [timeLeft, setTimeLeft] = useState(TIMER_MS)
-  const q = questions[session.index]
+  const slot = run.slots[session.index]
+  const q = slot?.item
 
   // Fresh state for every question.
   useEffect(() => {
@@ -70,6 +75,7 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     setClue(null)
     setStart(now())
     setTimeLeft(TIMER_MS)
+    requeuedRef.current = false
     if (q && host.prefs.voice) speakFact(q.ex.a, q.ex.b, '×', q.ex.answer)
   }, [session.index]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -84,7 +90,10 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
   useEffect(() => {
     if (!timed || !q || popped !== null || timeLeft > 0) return
     const res = check(q.ex, { type: 'number', value: null })
-    host.reportAttempt({ exercise: q.ex, check: res, ms: Math.round(now() - start), inputMode: 'tap', hintsUsed: 0 })
+    if (!slot?.retry) host.reportAttempt({ exercise: q.ex, check: res, ms: Math.round(now() - start), inputMode: 'tap', hintsUsed: 0 })
+    const rq = slot?.retry ? null : requeueWrong(run, session.index)
+    if (rq) setRun(rq)
+    requeuedRef.current = !!rq
     setPopped(TIMED_OUT)
     setClue(`¡Se fueron volando! La respuesta era ${q.ex.answer}.`)
     // Kept out of the effect above on purpose: changing `popped` must not cancel the advance.
@@ -93,7 +102,7 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
   const timedOut = popped === TIMED_OUT
   useEffect(() => {
     if (!timedOut) return
-    const id = window.setTimeout(() => session.answered(false), ADVANCE_MS * 2)
+    const id = window.setTimeout(() => session.answered(false, requeuedRef.current), ADVANCE_MS * 2)
     return () => window.clearTimeout(id)
     // `session.answered` only reads refs, so a stale closure is safe; `session` changes identity every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -114,7 +123,7 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     const res = check(q.ex, { type: 'number', value })
     // The first tap decides the attempt: it is logged once, whatever happens next.
     if (!answeredFirst) {
-      host.reportAttempt({ exercise: q.ex, check: res, ms, inputMode: 'tap', hintsUsed: 0 })
+      if (!slot?.retry) host.reportAttempt({ exercise: q.ex, check: res, ms, inputMode: 'tap', hintsUsed: 0 })
       setAnsweredFirst(true)
     }
     if (res.correct) {
@@ -124,7 +133,9 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
       celebrate('small')
       host.react('correct')
       const ok = !answeredFirst
-      window.setTimeout(() => session.answered(ok), ADVANCE_MS)
+      const rq = ok || slot?.retry ? null : requeueWrong(run, session.index)
+      if (rq) setRun(rq)
+      window.setTimeout(() => session.answered(ok && !slot?.retry, !!rq), ADVANCE_MS)
       return
     }
     sfx.play('wrong')
@@ -140,7 +151,7 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
       title={config.title}
       instructions={config.instructions}
       index={session.index}
-      total={questions.length}
+      total={run.slots.length}
       accent="var(--w2)"
       accentSoft="var(--w2-soft)"
       onExit={onExit}

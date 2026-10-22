@@ -131,6 +131,40 @@ describe('AdultGate', () => {
     expect(data.clearAdultPin).not.toHaveBeenCalled()
   })
 
+  it('counts wrong maths answers with the PIN attempts and locks the fallback too', async () => {
+    data.hasAdultPin.mockResolvedValue(true)
+    data.verifyAdultPin.mockResolvedValue(false)
+    const first = renderGate()
+    // Three wrong PINs, then the maths fallback: two wrong answers make five failures in total.
+    for (let i = 0; i < 3; i++) {
+      await tapPin('0000')
+      fireEvent.click(await screen.findByRole('button', { name: 'Entrar' }))
+      await waitFor(() => expect(data.verifyAdultPin).toHaveBeenCalledTimes(i + 1))
+    }
+    fireEvent.click(await screen.findByRole('button', { name: 'He olvidado el PIN' }))
+    await screen.findByText(/× .* = \?/)
+    for (let j = 0; j < 2; j++) {
+      await tapPin('1')
+      fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
+    }
+
+    // The lock applies: the message, the countdown, and no way to reach the maths or forgot buttons.
+    expect(await screen.findByText(/Demasiados intentos seguidos/)).toBeInTheDocument()
+    expect(screen.getByText(/Puedes volver a probar en/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'He olvidado el PIN' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '1' })).toBeDisabled()
+    expect(data.clearAdultPin).not.toHaveBeenCalled()
+    expect(isAdultAreaUnlocked()).toBe(false)
+
+    // A reload keeps the lock, and a locked gate ignores submit (Enter key) too.
+    first.unmount()
+    renderGate()
+    expect(await screen.findByText(/Puedes volver a probar en/)).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Enter' })
+    expect(data.verifyAdultPin).toHaveBeenCalledTimes(3)
+    expect(screen.queryByRole('button', { name: 'Comprobar' })).toBeNull()
+  })
+
   it('creates the question with two 2-digit factors', () => {
     const q = makeMathQuestion(() => 0.5)
     expect(q.a).toBeGreaterThanOrEqual(12)

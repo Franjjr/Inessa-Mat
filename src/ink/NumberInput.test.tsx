@@ -158,3 +158,28 @@ describe('NumberInput · keypad and lost Pencil', () => {
     expect(keys.slice(9)).toEqual(['Borrar', '0', 'Comprobar'])
   })
 })
+
+describe('NumberInput · a low-confidence digit is in doubt until confirmed', () => {
+  it('a doubtful digit is held for confirmation; a confident one is not', () => {
+    const { pad } = setup([{ digit: 4, confidence: 0.95 }, { digit: 7, confidence: 0.4 }])
+    write(pad, '47')
+    idle()
+    expect(learning.uncertain()).toBe(1)
+    expect(learning.uncertainDigits()).toEqual([7])
+    act(() => { expect(learning.requestConfirm()).toBe(true) })
+    act(() => learning.confirmDoubts())
+    expect(learning.uncertain()).toBe(0)
+  })
+
+  it('a rewritten number clears the doubt for the pad', () => {
+    const { pad } = setup([{ digit: 7, confidence: 0.4 }, { digit: 7, confidence: 0.95 }])
+    write(pad, '7')
+    idle()
+    expect(learning.uncertain()).toBe(1)
+    // A new handwritten number replaces the old ink: its recognition decides again.
+    act(() => { fireEvent.keyDown(pad, { key: 'Backspace' }) })
+    write(pad, '7')
+    idle()
+    expect(learning.uncertain()).toBe(0)
+  })
+})

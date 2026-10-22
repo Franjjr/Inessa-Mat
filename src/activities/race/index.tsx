@@ -8,6 +8,7 @@ import FactView from '../views/FactView'
 import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
 import { formatClock, itemCount, useItems } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import shared from '../facts/shared/shared.module.css'
 import s from './race.module.css'
 
@@ -28,6 +29,8 @@ export default function RaceActivity({ config, onDone, onExit }: ActivityProps) 
   const total = itemCount(config, 10)
   const items = useItems(config, total, host)
   const session = useSession({ total: items.length, thresholds: config.starThresholds })
+  // Wrong answers come back 2–4 items later in the same run (PEDAGOGY 4); re-asks are not reported or scored.
+  const [run, setRun] = useState(() => startQueue(items))
   const [clock, setClock] = useState(0)
 
   // Tick the clock only while the race runs and the family wants timers.
@@ -60,16 +63,19 @@ export default function RaceActivity({ config, onDone, onExit }: ActivityProps) 
     )
   }
 
-  const ex = items[session.index]
-  const progress = items.length ? session.index / items.length : 0
+  const slot = run.slots[session.index]
+  const ex = slot?.item
+  const progress = run.slots.length ? session.index / run.slots.length : 0
   // Ghost: where you would be if you kept the pace of your best time.
   const ghost = best !== undefined && timed ? Math.min(1, clock / best) : null
 
   const handle = (o: ExerciseOutcome) => {
     if (!ex) return
-    host.reportAttempt({ exercise: ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
+    if (!slot?.retry) host.reportAttempt({ exercise: ex, check: o.check, ms: o.ms, inputMode: o.inputMode, hintsUsed: o.hintsUsed, recognitionFixes: o.recognitionFixes })
     host.react(o.check.correct ? 'correct' : 'wrong', { errorType: o.check.errorType })
-    window.setTimeout(() => session.answered(o.check.correct), o.check.correct ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
+    const requeued = o.check.correct || slot?.retry ? null : requeueWrong(run, session.index)
+    if (requeued) setRun(requeued)
+    window.setTimeout(() => session.answered(o.check.correct && !slot?.retry, !!requeued), o.check.correct ? ADVANCE_OK_MS : ADVANCE_WRONG_MS)
   }
 
   return (
@@ -77,7 +83,7 @@ export default function RaceActivity({ config, onDone, onExit }: ActivityProps) 
       title={config.title}
       instructions={config.instructions}
       index={session.index}
-      total={items.length}
+      total={run.slots.length}
       accent="var(--c-gold)"
       accentSoft="var(--c-gold-soft)"
       onExit={onExit}

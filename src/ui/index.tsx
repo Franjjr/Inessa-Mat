@@ -1,6 +1,6 @@
 /* Shared UI kit — owned by the integrator. Use these instead of re-styling buttons/cards/modals per module. */
 import clsx from 'clsx'
-import { useEffect, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import s from './ui.module.css'
@@ -64,11 +64,55 @@ export function TopBar({ title, back, left, right }: { title?: ReactNode; back?:
   )
 }
 
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
 export function Modal({ open, onClose, title, children, dismissable = true }: { open: boolean; onClose?: () => void; title?: ReactNode; children: ReactNode; dismissable?: boolean }) {
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  // Focus moves into the dialog, Tab stays inside it, Escape closes it, and focus returns to the opener on close.
+  useEffect(() => {
+    if (!open) return
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const dialog = dialogRef.current
+    const focusables = () => Array.from(dialog?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])
+    ;(focusables()[0] ?? dialog)?.focus()
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && dismissable) {
+        e.preventDefault()
+        closeRef.current?.()
+        return
+      }
+      if (e.key !== 'Tab' || !dialog) return
+      const items = focusables()
+      if (items.length === 0) {
+        e.preventDefault()
+        dialog.focus()
+        return
+      }
+      const first = items[0]
+      const last = items[items.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey && (active === first || !dialog.contains(active))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && (active === last || !dialog.contains(active))) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      if (opener?.isConnected) opener.focus()
+    }
+  }, [open, dismissable])
+
   if (!open) return null
   return createPortal(
     <div className={s.backdrop} onClick={() => dismissable && onClose?.()} role="presentation">
-      <div className={s.modal} role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
+      <div ref={dialogRef} className={s.modal} role="dialog" aria-modal="true" tabIndex={-1} onClick={(e) => e.stopPropagation()}>
         {title && <h2 className={s.modalTitle}>{title}</h2>}
         {children}
       </div>

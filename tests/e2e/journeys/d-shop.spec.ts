@@ -20,13 +20,13 @@ test.describe('D · tienda de accesorios', () => {
     // The piece stays selected after buying (tiles toggle their selection), so 'Ponérselo' is already offered.
     await expect(page.getByLabel('Tienes 15 estrellas para gastar')).toBeVisible()
     await page.getByRole('button', { name: 'Ponérselo' }).click()
-    await expect(page.getByRole('button', { name: 'Quitármelo' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Quitárselo' })).toBeVisible()
 
     // Equipped state survives a reload (it is stored with the profile).
     await page.reload()
     await page.getByRole('button', { name: /Piruleta/ }).first().click()
-    await expect(page.getByRole('button', { name: 'Quitármelo' })).toBeVisible()
-    await page.getByRole('button', { name: 'Quitármelo' }).click()
+    await expect(page.getByRole('button', { name: 'Quitárselo' })).toBeVisible()
+    await page.getByRole('button', { name: 'Quitárselo' }).click()
     await expect(page.getByRole('button', { name: 'Ponérselo' })).toBeVisible()
   })
 })
