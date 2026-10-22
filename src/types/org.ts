@@ -91,6 +91,16 @@ export interface ChildSummary {
     preferred: import('./exercise').SubMethod
     byMethod: { method: import('./exercise').SubMethod; attempts: number; correct: number }[]
   }
+  /** Division methods over the last 30 days (undefined = no data). */
+  divisionMethods?: {
+    preferred: import('./exercise').DivMethod
+    byMethod: { method: import('./exercise').DivMethod; attempts: number; correct: number }[]
+  }
+  /** Tables tricks over the last 30 days (undefined = no data). */
+  tableTricks?: {
+    preferred: import('./exercise').TableMethod | null
+    byMethod: { method: import('./exercise').TableMethod; attempts: number; correct: number }[]
+  }
 }
 
 export interface ClassOverview {

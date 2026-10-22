@@ -17,6 +17,7 @@ export const w3 = world({
   nodes: [
     storyNode('arrival', 'Las mariquitas luminosas', 'w3-arrival'),
     lessonNode('lesson-five', 'Truco 1: el 5 y uno más', 'w3-five'),
+    lessonNode('lesson-tricks', 'Los trucos de Lumi', 'w3-tricks'),
     activityNode('necklace', {
       kind: 'necklace',
       title: 'Patas de mariquita',

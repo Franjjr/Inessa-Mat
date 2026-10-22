@@ -1,15 +1,14 @@
 /* A "choose" step: the child picks one of a few options (the favourite subtraction method). The pick is shown until
    the child moves on; the lesson player saves it through the host. */
-import type { SubMethod } from '@/types'
 import { useActivityHost } from '@/activities/host'
 import { Button } from '@/ui'
 import s from './ChoiceSlot.module.css'
 
 export interface ChoiceSlotProps {
-  choices: { label: string; value: SubMethod }[]
+  choices: { label: string; value: string }[]
   /** The option already picked on this step, if any. */
-  picked?: SubMethod
-  onPick: (value: SubMethod) => void
+  picked?: string
+  onPick: (value: string) => void
 }
 
 export default function ChoiceSlot({ choices, picked, onPick }: ChoiceSlotProps) {

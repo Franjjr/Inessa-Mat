@@ -5,7 +5,7 @@ import { MotionConfig, motion } from 'motion/react'
 import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
-import type { LessonDef, SubMethod } from '@/types'
+import type { LessonDef, LessonStep, SubMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
 import { LESSON_VISUALS } from './visuals'
@@ -15,6 +15,11 @@ import ChoiceSlot from './ChoiceSlot'
 import { computeRuns, isAnswerStep, keyAction, stageCharacter, voiceFor } from './navigation'
 import { usePortrait, useReducedMotionFlag } from './useLessonMedia'
 import styles from './LessonPlayer.module.css'
+
+/** Which favourite a choose step saves: the subtraction method unless the step says otherwise. */
+function preferenceOf(step: LessonStep | undefined): 'subMethod' | 'divMethod' | 'tableMethod' {
+  return step?.preference ?? 'subMethod'
+}
 
 export interface LessonPlayerProps {
   lesson: LessonDef
@@ -48,7 +53,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const outcome = settled.get(current)
   /** A "choose" step: the child picks one option (saved through the host) before going on. */
   const isChoose = !!step && step.interaction === 'choose' && !!step.choices?.length
-  const [picks, setPicks] = useState<ReadonlyMap<number, SubMethod>>(() => new Map())
+  const [picks, setPicks] = useState<ReadonlyMap<number, string>>(() => new Map())
   const canContinue = total === 0 || (!isTry && !isChoose) || outcome !== undefined
   const isLast = current >= total - 1
   const speaker = step?.speaker
@@ -92,11 +97,11 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   }, [current])
 
   // Choosing settles the step at once and saves the pick as the child's preference.
-  const pick = useCallback((value: SubMethod) => {
+  const pick = useCallback((value: string) => {
     setPicks((prev) => new Map(prev).set(current, value))
-    host.setPreference?.('subMethod', value)
+    host.setPreference?.(preferenceOf(lesson.steps[current]), value as SubMethod)
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, true)))
-  }, [current, host])
+  }, [current, host, lesson.steps])
 
   // Keyboard: arrows and Page keys move, Escape exits, Enter continues when nothing else has focus.
   useEffect(() => {
@@ -168,7 +173,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>

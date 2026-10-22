@@ -1,7 +1,7 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { season1 } from '@/content'
-import { factGrid, isSubMethod, normaliseSubMethod } from '@/engine'
-import type { AttemptRecord, ChildProfile, ChildSummary, MasteryMap, ProgressState, SessionRecord, SubMethod } from '@/types'
+import { factGrid, isDivMethod, isSubMethod, isTableMethod, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
+import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
 
 /** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
 export interface MethodTally {
@@ -36,6 +36,8 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
   }
   const accuracy = stats && stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 1000) / 1000 : null
   const subtraction = (stats?.methods ?? []).filter((m) => isSubMethod(m.method))
+  const division = (stats?.methods ?? []).filter((m) => isDivMethod(m.method))
+  const tricks = (stats?.methods ?? []).filter((m) => isTableMethod(m.method))
   return {
     childId: child.id,
     nickname: child.nickname,
@@ -50,6 +52,14 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     subtractionMethods: {
       preferred: normaliseSubMethod(child.settings?.subMethod),
       byMethod: subtraction.map((m) => ({ method: m.method as SubMethod, attempts: m.attempts, correct: m.correct })),
+    },
+    divisionMethods: {
+      preferred: normaliseDivMethod(child.settings?.divMethod),
+      byMethod: division.map((m) => ({ method: m.method as DivMethod, attempts: m.attempts, correct: m.correct })),
+    },
+    tableTricks: {
+      preferred: normaliseTableMethod(child.settings?.tableMethod),
+      byMethod: tricks.map((m) => ({ method: m.method as TableMethod, attempts: m.attempts, correct: m.correct })),
     },
   }
 }

@@ -14,7 +14,7 @@ import { generate } from './generate'
 import { hintsFor } from './hints'
 import { fmt, numberWords } from './numeric'
 import { createRng, hashString } from './rng'
-import { isEasyFact, isFactSkill, isMentalSkill, parseSkill, wordSkill, type WordOp } from './skills'
+import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
 export const DAILY_MINUTES = 15
 /** Most brand-new hard facts (not in the easy 1/2/5/10 set) introduced in one session (PEDAGOGY 4, E6). */
@@ -36,9 +36,11 @@ export const SCAFFOLD_WINDOW_DAYS = 7
 export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'fact-mul': 12, 'fact-div': 15, 'missing-factor': 12, 'skip-count': 20, groups: 20, array: 20,
   'double-chain': 20, 'fact-family': 25, 'column-add': 50, 'column-sub': 55, 'column-mul': 45,
-  division: 60, 'word-problem': 60,
+  division: 60, 'word-problem': 60, 'bar-problem': 75, 'error-hunt': 50, 'check-calc': 45,
   'place-value': 30, compare: 15, order: 35, round: 20, 'number-line': 25, mental: 15, equation: 20,
 }
+/** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
+const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 /** Reading the feedback and pressing «Siguiente», per item. */
 export const ITEM_OVERHEAD_SECONDS = 5
 export const EXAMPLE_SECONDS = 60
@@ -100,6 +102,11 @@ export function statementOf(ex: Exercise): string {
     case 'round': return `Redondea ${fmt(ex.value)} a las ${ex.to === 10 ? 'decenas' : 'centenas'}`
     case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
     case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
+    case 'bar-problem': return ex.text
+    case 'error-hunt': return `${ex.top} ${ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'} ${ex.bottom} = ${ex.shown}`
+    case 'check-calc': return ex.op === 'add'
+      ? `${ex.left} + ${ex.right} = ${ex.claimed}`
+      : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
     default: return ex.skill
   }
 }
@@ -147,7 +154,7 @@ function urgencyOrder(mastery: MasteryMap, now: Date): SkillMastery[] {
     return due && weak ? 0 : due ? 1 : weak ? 2 : 3
   }
   return Object.values(mastery)
-    .filter((m): m is SkillMastery => !!m && parseSkill(m.skill) !== null && familyOf(m.skill) !== 'concept' && familyOf(m.skill) !== 'word')
+    .filter((m): m is SkillMastery => !!m && parseSkill(m.skill) !== null && !['concept', 'word', 'bar'].includes(familyOf(m.skill)))
     .sort((x, y) =>
       rank(x) - rank(y) || x.box - y.box
       || (x.dueAt ?? '').localeCompare(y.dueAt ?? '') || x.skill.localeCompare(y.skill))
@@ -196,6 +203,12 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
     if (p.type === 'div' || p.type === 'div2x1') count.div += m.box
   }
   return (Object.keys(count) as WordOp[]).sort((a, b) => count[b] - count[a] || a.localeCompare(b))[0]
+}
+
+/** The operation of the problem block: the two-step topic asks two-step bars, the others the operation of the topic. */
+function barOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): BarSkillOp {
+  if (topic?.id === 'prob-dos-pasos') return 'two'
+  return wordOpFor(topic, mastery)
 }
 
 export interface PlanInput {
@@ -284,10 +297,18 @@ export function planDailySession(input: PlanInput): DailyPlan {
     const ex = make(base.exercise.skill, rng)
     if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: base.scaffold, isNew: false })
   }
+  // The «encuentra el error» of the mix: the column operation the child is weakest at (never seen counts as weakest).
+  const huntNow = HUNT_OPS.map((op) => huntSkill(op)).sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
+  const hunt = make(huntNow, rng, ['error-hunt'])
+  if (hunt) {
+    if (mixItems.length >= MIX_MAX) mixItems.pop()
+    mixItems.push({ exercise: hunt, block: 'mix', scaffold: false, isNew: false })
+  }
+
   // Fill: when the items are short (facts), the mix goes on with the same urgent skills until the practice fills
   // the session. Fillers never introduce a new fact (they come from the mix pool).
   const secondsOf = (items: DailyItem[]) => items.reduce((sum, i) => sum + estimateSeconds(i), 0)
-  const fixedSeconds = secondsOf(warmup) + secondsOf(newItems) + secondsOf(mixItems) + ITEM_SECONDS['word-problem'] + ITEM_OVERHEAD_SECONDS
+  const fixedSeconds = secondsOf(warmup) + secondsOf(newItems) + secondsOf(mixItems) + ITEM_SECONDS['bar-problem'] + ITEM_OVERHEAD_SECONDS
   let fillSeconds = fixedSeconds
   for (let k = 0; pool.length > 0 && fillSeconds < PRACTICE_TARGET_SECONDS && k < FILL_MAX; k++) {
     const s = pool[k % pool.length]
@@ -300,8 +321,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
 
   // 4. Problema: one word problem of the operation the child is working on.
   const problem: DailyItem[] = []
-  const wex = make(wordSkill(wordOpFor(topic, mastery)), rng, ['word-problem'])
-  if (wex) problem.push({ exercise: wex, block: 'problem', scaffold: false, isNew: false })
+  const bex = make(barSkill(barOpFor(topic, mastery)), rng, ['bar-problem'])
+  if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
 
   const blocks: DailyPlan['blocks'] = [
     { id: 'warmup', items: warmup },

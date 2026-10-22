@@ -8,8 +8,8 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { haptics, sfx } from '@/audio'
 import { celebrate } from '@/fx'
 import { useInkLearning, useInputMode } from '@/ink'
-import { check, hintsFor } from '@/engine'
-import type { Answer, CheckResult, Exercise, ExerciseOutcome, Hint, InputMode } from '@/types'
+import { TABLE_METHODS, check, hintsFor } from '@/engine'
+import type { Answer, CheckResult, Exercise, ExerciseOutcome, Hint, InputMode, TableMethod } from '@/types'
 import { useActivityHost } from '../../host'
 
 export const MAX_TRIES = 2
@@ -23,14 +23,23 @@ export interface FlowOptions {
   guided?: boolean
   /** Offer the "Pista" button (default true). */
   allowHints?: boolean
+  /** The child's favourite trick: the first hint names it when it applies to the fact, and the attempt records it. */
+  tableMethod?: TableMethod | null
+}
+
+/** The trick used on this fact (the favourite, when it applies to a multiplication fact), for the attempt log. */
+export function trickUsed(exercise: Exercise, tableMethod?: TableMethod | null): TableMethod | undefined {
+  if (!tableMethod || exercise.kind !== 'fact-mul') return undefined
+  const trick = TABLE_METHODS.find((t) => t.id === tableMethod)
+  return trick && trick.applies(exercise.a, exercise.b) ? tableMethod : undefined
 }
 
 /** Shared bookkeeping: hint escalation, learning store and the single final outcome. */
-function useCore({ exercise, onAnswered, guided = false, allowHints = true }: FlowOptions) {
+function useCore({ exercise, onAnswered, guided = false, allowHints = true, tableMethod }: FlowOptions) {
   const host = useActivityHost()
   const { mode } = useInputMode()
   const learning = useInkLearning()
-  const hints: Hint[] = useMemo(() => hintsFor(exercise), [exercise])
+  const hints: Hint[] = useMemo(() => hintsFor(exercise, undefined, { tableMethod }), [exercise, tableMethod])
   const [hintsShown, setHintsShown] = useState(guided ? 1 : 0)
   const hintsUsed = useRef(0)
   const fixes = useRef(0)
@@ -62,6 +71,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true }: Fl
     if (done.current) return
     done.current = true
     const m = modeRef.current
+    const trick = trickUsed(exercise, tableMethod)
     const total = fixes.current + learning.recognitionFixes()
     if (res.correct) {
       if (isHandwritten(m)) learning.confirm()
@@ -79,8 +89,9 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true }: Fl
       inputMode: m,
       hintsUsed: hintsUsed.current,
       recognitionFixes: total,
+      ...(trick ? { method: trick } : {}),
     })
-  }, [learning])
+  }, [learning, exercise, tableMethod])
 
   const text = useCallback((s: string | undefined, fallback: string) => host.t(s ?? fallback), [host])
 

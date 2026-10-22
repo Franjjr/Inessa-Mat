@@ -9,6 +9,7 @@ import {
   NineTrickVisual, PatternUnitsVisual,
 } from './tables'
 import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from './division'
+import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -40,6 +41,9 @@ export const LESSON_VISUALS: VisualRegistry = {
   'fact-family': FactFamilyVisual,
   galera: GaleraVisual,
   'division-check': DivisionCheckVisual,
+  'bar-model': BarModelVisual,
+  'div-parts': DivPartsVisual,
+  'div-climb': DivClimbVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

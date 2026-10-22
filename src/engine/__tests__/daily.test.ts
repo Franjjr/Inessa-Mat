@@ -129,10 +129,10 @@ describe('planDailySession', () => {
     }
   })
 
-  it('the problem block is a word problem of the operation the topic teaches', () => {
+  it('the problem block is a bar problem of the operation the topic teaches', () => {
     const plan = planDailySession({ child, mastery: midYearMastery(), attempts: [], syllabus: GRADE3_SYLLABUS, now })
     const problem = plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise
-    expect(problem.kind).toBe('word-problem')
+    expect(problem.kind).toBe('bar-problem')
   })
 
   it('same child and day give the same plan; another day can differ', () => {

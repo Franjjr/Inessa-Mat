@@ -21,7 +21,7 @@ export const defaultActivityHost: ActivityHost = {
   rng: fallbackRng,
   mastery: {},
   t: (s) => s.replace(/\{child\}/g, 'Inessa').replace(/\{pet\}/g, 'Bigotes'),
-  prefs: { timedActivities: true, bigCells: false, voice: false, handedness: 'right', subMethod: 'borrow' },
+  prefs: { timedActivities: true, bigCells: false, voice: false, handedness: 'right', subMethod: 'borrow', divMethod: 'galera', tableMethod: null },
 }
 
 const ActivityHostContext = createContext<ActivityHost>(defaultActivityHost)

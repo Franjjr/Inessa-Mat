@@ -62,8 +62,14 @@ export function describeSkill(skill: SkillKey): string {
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
     case 'equation': return 'Signo igual: los dos lados valen lo mismo'
+    case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
+    case 'bar': return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
+    case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
+    case 'check': return `Comprobar resultados de ${HUNT_TEXT[p.op === 'div' ? 'mul' : p.op]}`
   }
 }
+
+const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }
 
 const ERROR_TEXT: Record<ErrorType, string> = {
   'fact': 'Resultado de la tabla o cálculo básico incorrecto',
@@ -78,6 +84,10 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'operation': 'Elige la operación equivocada',
   'incomplete': 'Deja casillas sin completar',
   'recognition': 'La letra se reconoció mal (no es un error de cálculo)',
+  'bar-placement': 'Pone una cantidad en la parte equivocada de la barra',
+  'place-value': 'Escribe una cifra en una columna que no le toca (valor posicional)',
+  'step': 'Se equivoca en el primer paso de un problema de dos pasos',
+  'false-alarm': 'Dice que hay un error cuando la cuenta está bien',
   'other': 'Otro tipo de error',
 }
 

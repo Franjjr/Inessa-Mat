@@ -1,5 +1,5 @@
 import type { GrammaticalGender, ID, ISODate } from './common'
-import type { SubMethod } from './exercise'
+import type { DivMethod, SubMethod, TableMethod } from './exercise'
 
 /** The 8 companion animals a child can pick during setup. Art lives in src/art/companions. */
 export type CompanionSpecies =
@@ -60,6 +60,10 @@ export interface ChildSettings {
   subjects: SubjectId[]
   /** Favourite subtraction method: the column/parts/line exercises use it. Chosen by the child in the lesson, editable by the adult. */
   subMethod: SubMethod
+  /** Favourite division method: the division exercises use it. Chosen by the child in «Cuatro caminos para dividir», editable by the adult. */
+  divMethod: DivMethod
+  /** Favourite trick for the tables (null = none chosen yet). Chosen in «Los trucos de Lumi», editable by the adult. */
+  tableMethod: TableMethod | null
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
@@ -74,6 +78,8 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   bigCells: false,
   subjects: ['math'],
   subMethod: 'borrow',
+  divMethod: 'galera',
+  tableMethod: null,
 }
 
 export interface ChildProfile {

@@ -1,5 +1,5 @@
 import type { ActivityConfig } from './content'
-import type { AttemptInput, CheckResult, Exercise, ErrorType, SubMethod } from './exercise'
+import type { AttemptInput, CheckResult, DivMethod, Exercise, ErrorType, SubMethod, TableMethod } from './exercise'
 import type { InputMode } from './common'
 
 export interface ActivityResult {
@@ -36,6 +36,10 @@ export interface ExerciseViewProps {
   compact?: boolean
   /** Column subtraction method (default 'borrow'). Ignored by the other exercise kinds. */
   method?: SubMethod
+  /** Division method (default 'galera'). Ignored by the other exercise kinds. */
+  divMethod?: DivMethod
+  /** Favourite trick for the tables: used by the hint of the fact when it applies (see methods.ts). */
+  tableMethod?: TableMethod | null
 }
 
 export interface ExerciseOutcome {
@@ -67,9 +71,12 @@ export interface ActivityHost {
   /** Child-facing text rendering (template placeholders). */
   t: (template: string) => string
   /** Child-level preferences relevant to activities. */
-  prefs: { timedActivities: boolean; bigCells: boolean; voice: boolean; handedness: 'left' | 'right'; subMethod: SubMethod }
-  /** Saves one child setting (used by the lesson where the child picks her favourite method). Optional in tests. */
-  setPreference?: (key: 'subMethod', value: SubMethod) => void
+  prefs: {
+    timedActivities: boolean; bigCells: boolean; voice: boolean; handedness: 'left' | 'right'; subMethod: SubMethod
+    divMethod: DivMethod; tableMethod: TableMethod | null
+  }
+  /** Saves one child setting (used by the lessons where the child picks her favourite method). Optional in tests. */
+  setPreference?: (key: 'subMethod' | 'divMethod' | 'tableMethod', value: SubMethod | DivMethod | TableMethod) => void
 }
 
 export type { Exercise, CheckResult }

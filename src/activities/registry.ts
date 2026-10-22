@@ -28,6 +28,8 @@ export const activityRegistry: Record<ActivityKind, LazyActivity> = {
   share: lazy(() => import('./share')),
   word: lazy(() => import('./word')),
   board: lazy(() => import('./board')),
+  // ---- Activities C — src/activities/exercises (bars, encuentra el error, comprobar, by selector)
+  exercises: lazy(() => import('./exercises')),
 }
 
 export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
@@ -54,4 +56,7 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'number-line': lazy(() => import('./views/NumberLineView')),
   mental: lazy(() => import('./views/MentalView')),
   equation: lazy(() => import('./views/EquationView')),
+  'bar-problem': lazy(() => import('./views/BarProblemView')),
+  'error-hunt': lazy(() => import('./views/ErrorHuntView')),
+  'check-calc': lazy(() => import('./views/CheckCalcView')),
 }

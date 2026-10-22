@@ -1,0 +1,119 @@
+/* Shared by the checking views: encuentra el error and comprobar. */
+.view {
+  --bug-cell: clamp(40px, 9vw, 60px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+.compact { gap: var(--sp-3); }
+
+.prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+/* The written calculation, digits on a grid so the columns line up. */
+.calc {
+  display: grid;
+  grid-template-rows: auto auto auto auto;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  gap: 6px 0;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-4) var(--sp-5);
+  max-width: 100%;
+  overflow-x: auto;
+}
+.digit {
+  width: var(--bug-cell);
+  height: var(--bug-cell);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-num, var(--font-display));
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  color: var(--c-ink);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+.hit {
+  border-radius: var(--r-md);
+  border: 3px dashed var(--c-line);
+  background: var(--c-surface-2);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.hit:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+.picked { border: 3px solid var(--c-primary); background: var(--c-primary-soft); }
+.line {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-ink);
+  width: 100%;
+}
+
+.verdicts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+
+.fix {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.hint {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.claim {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-5);
+  line-height: 1.3;
+}
+
+.answer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.answerLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  min-width: 9ch;
+}
+.checkExpr {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+@media (max-width: 480px) {
+  .verdicts { grid-template-columns: 1fr; }
+}

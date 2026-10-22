@@ -34,6 +34,9 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'fact-family': { a: 6, b: 7 },
   galera: { dividend: 84, divisor: 4 },
   'division-check': { dividend: 17, divisor: 5 },
+  'bar-model': { a: 5, b: 3, total: 8 },
+  'div-parts': { dividend: 84, divisor: 4 },
+  'div-climb': { divisor: 4, quotient: 7 },
 }
 
 const STATES = 5

@@ -95,18 +95,26 @@ export const GRADE3_SYLLABUS: Syllabus = {
         { id: 'div-exacta', name: 'División exacta de 2 cifras entre 1', skills: ['div:2x1:exact'], status: 'disponible', rungs: { numeros: 'La galera paso a paso', uso: 'Problemas de repartir' } },
         { id: 'div-resto', name: 'División con resto', skills: ['div:2x1:rem'], status: 'disponible', rungs: { numeros: 'La prueba: divisor × cociente + resto', uso: 'Problemas de repartir con sobrante' } },
         { id: 'div-larga', name: 'División larga (bajar cifras)', skills: ['div:2x1:long'], status: 'disponible', rungs: { numeros: 'Bajar una cifra cada vez', uso: 'Problemas de repartir' } },
-        pending('div-3x1', 'Dividir 3 cifras entre 1', 'Falta el generador de dividendo de 3 cifras.'),
+        { id: 'div-3x1', name: 'Dividir 3 cifras entre 1', skills: ['div:3x1:exact', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera con tres cifras: bajar una cifra cada vez', uso: 'Comprobar con la prueba: divisor × cociente + resto' } },
       ],
     },
     {
       id: 'problemas',
       name: 'Problemas',
       topics: [
-        { id: 'prob-sumar', name: 'Problemas de juntar', skills: ['word:add'], status: 'disponible', rungs: { dibujo: 'Barra con las dos partes', uso: 'Escribir la operación' } },
-        { id: 'prob-restar', name: 'Problemas de quitar y comparar', skills: ['word:sub'], status: 'disponible', rungs: { dibujo: 'Barra con la parte que se quita', uso: 'Escribir la operación' } },
-        { id: 'prob-multiplicar', name: 'Problemas de grupos', skills: ['word:mul'], status: 'disponible', rungs: { dibujo: 'Grupos iguales', uso: 'Escribir la operación' } },
-        { id: 'prob-dividir', name: 'Problemas de repartir', skills: ['word:div'], status: 'disponible', rungs: { dibujo: 'Reparto en cestas', uso: 'Escribir la operación' } },
-        pending('prob-dos-pasos', 'Problemas de dos pasos', 'Falta un generador de dos operaciones.'),
+        { id: 'prob-sumar', name: 'Problemas de juntar', skills: ['bar:add', 'word:add'], status: 'disponible', rungs: { dibujo: 'Barra con las dos partes y el total', uso: 'Escribir la operación' } },
+        { id: 'prob-restar', name: 'Problemas de quitar y comparar', skills: ['bar:sub', 'word:sub'], status: 'disponible', rungs: { dibujo: 'Barra con la parte que se quita o la diferencia', uso: 'Escribir la operación' } },
+        { id: 'prob-multiplicar', name: 'Problemas de grupos', skills: ['bar:mul', 'word:mul'], status: 'disponible', rungs: { dibujo: 'Barras iguales, una por grupo', uso: 'Escribir la operación' } },
+        { id: 'prob-dividir', name: 'Problemas de repartir', skills: ['bar:div', 'word:div'], status: 'disponible', rungs: { dibujo: 'Barra entera repartida en partes iguales', uso: 'Escribir la operación' } },
+        { id: 'prob-dos-pasos', name: 'Problemas de dos pasos', skills: ['bar:two'], status: 'disponible', rungs: { dibujo: 'Dos barras: primero una cuenta, luego otra', uso: 'Dos operaciones seguidas' } },
+      ],
+    },
+    {
+      id: 'comprobar',
+      name: 'Comprobar y encontrar errores',
+      topics: [
+        { id: 'encuentra-error', name: 'Encuentra el error', skills: ['hunt:add', 'hunt:sub', 'hunt:mul'], status: 'disponible', rungs: { concreto: 'Mirar la cuenta columna a columna', dibujo: 'Marcar la columna donde falla', numeros: 'Decidir si está bien y corregirla', uso: 'Revisar las cuentas de un problema' } },
+        { id: 'comprobar-resultado', name: 'Comprobar un resultado', skills: ['check:add', 'check:sub', 'check:div'], status: 'disponible', rungs: { numeros: 'La operación contraria: sumar para la resta, multiplicar para la división', uso: 'Comprobar antes de dar un resultado' } },
       ],
     },
     {

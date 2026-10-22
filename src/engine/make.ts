@@ -7,7 +7,7 @@ import type {
 } from '@/types'
 import { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitCount } from './arith'
 import {
-  addSkill, conceptSkill, div2x1Skill, divSkill, mul2x1Skill, mulSkill, skipSkill, subSkill, wordSkill, type WordOp,
+  addSkill, conceptSkill, div2x1Skill, div3x1Skill, divSkill, mul2x1Skill, mulSkill, skipSkill, subSkill, wordSkill, type WordOp,
 } from './skills'
 
 const clampDifficulty = (n: number) => Math.max(1, Math.min(5, Math.round(n)))
@@ -122,6 +122,17 @@ export function makeDivision(dividend: number, divisor: number): DivisionExercis
   return {
     id: `division:${dividend}/${divisor}`, kind: 'division', skill: div2x1Skill(variant),
     difficulty: variant === 'exact' ? 2 : variant === 'rem' ? 3 : 5, dividend, divisor, quotient, remainder, variant,
+  }
+}
+
+/** A 3-digit dividend by a 1-digit divisor (3.º): exact, or with a remainder. The galera shows every step. */
+export function makeDivision3(dividend: number, divisor: number): DivisionExercise {
+  const quotient = Math.floor(dividend / divisor)
+  const remainder = dividend - quotient * divisor
+  const variant = remainder === 0 ? 'exact' : 'rem'
+  return {
+    id: `division:${dividend}/${divisor}`, kind: 'division', skill: div3x1Skill(variant),
+    difficulty: remainder === 0 ? 3 : 4, dividend, divisor, quotient, remainder, variant,
   }
 }
 

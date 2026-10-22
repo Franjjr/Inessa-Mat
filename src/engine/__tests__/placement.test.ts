@@ -11,7 +11,7 @@ describe('buildPlacement (prueba inicial)', () => {
     const blocks = new Set(items.map((i) => i.block))
     expect([...blocks].sort()).toEqual(['dividir', 'numeros', 'problemas', 'sumas-restas', 'tablas'].sort())
     expect(items.filter((i) => i.block === 'tablas').length).toBe(4)
-    expect(items.filter((i) => i.block === 'problemas').every((i) => i.exercise.kind === 'word-problem')).toBe(true)
+    expect(items.filter((i) => i.block === 'problemas').every((i) => i.exercise.kind === 'bar-problem')).toBe(true)
   })
 
   it('is deterministic for a seed, and its items are real exercises with answers', () => {
