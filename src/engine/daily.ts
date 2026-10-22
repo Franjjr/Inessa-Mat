@@ -12,13 +12,16 @@ import { availableSkills, currentTopic, type Syllabus, type SyllabusTopic } from
 import { makeArray } from './make'
 import { generate } from './generate'
 import { hintsFor } from './hints'
+import { fmt, numberWords } from './numeric'
 import { createRng, hashString } from './rng'
-import { isEasyFact, isFactSkill, parseSkill, wordSkill, type WordOp } from './skills'
+import { isEasyFact, isFactSkill, isMentalSkill, parseSkill, wordSkill, type WordOp } from './skills'
 
 export const DAILY_MINUTES = 15
 /** Most brand-new hard facts (not in the easy 1/2/5/10 set) introduced in one session (PEDAGOGY 4, E6). */
 export const NEW_FACT_BUDGET = 3
 export const WARMUP_MAX = 4
+/** Most cálculo mental items in the warm-up (learnt skills only; PLAN_DOCENTE §5, item 12). */
+export const MENTAL_WARMUP_MAX = 2
 export const NEW_MAX = 6
 export const NEW_MIN = 4
 export const MIX_MAX = 8
@@ -26,7 +29,7 @@ export const MIX_MIN = 6
 /** The items must fill this much of the session (PLAN_DOCENTE §3: at least 12 of 15 minutes are exercises). */
 export const PRACTICE_TARGET_SECONDS = 12 * 60
 /** Most extra mix items added to reach PRACTICE_TARGET_SECONDS when the items are short. */
-export const FILL_MAX = 6
+export const FILL_MAX = 8
 /** Days a failure keeps asking for the visual support. */
 export const SCAFFOLD_WINDOW_DAYS = 7
 /** Estimated seconds per item, realistic for an 8-year-old writing the answer (used to check the 12-minute rule). */
@@ -34,6 +37,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'fact-mul': 12, 'fact-div': 15, 'missing-factor': 12, 'skip-count': 20, groups: 20, array: 20,
   'double-chain': 20, 'fact-family': 25, 'column-add': 50, 'column-sub': 55, 'column-mul': 45,
   division: 60, 'word-problem': 60,
+  'place-value': 30, compare: 15, order: 35, round: 20, 'number-line': 25, mental: 15, equation: 20,
 }
 /** Reading the feedback and pressing «Siguiente», per item. */
 export const ITEM_OVERHEAD_SECONDS = 5
@@ -85,6 +89,17 @@ export function statementOf(ex: Exercise): string {
     case 'column-mul': return `${ex.top} × ${ex.bottom}`
     case 'division': return `${ex.dividend} : ${ex.divisor} = ?`
     case 'word-problem': return ex.text
+    case 'mental': return ex.prompt
+    // The statements below name the question, never the answer (a blocks item shows no digits to read).
+    case 'place-value':
+      return ex.mode === 'blocks' ? 'Cuenta los bloques y escribe el número'
+        : ex.mode === 'expanded' ? `Descompón ${fmt(ex.value)} en partes`
+          : `Escribe con cifras: ${numberWords(ex.value)}`
+    case 'compare': return `Compara ${fmt(ex.left)} y ${fmt(ex.right)}`
+    case 'order': return `Ordena ${ex.values.map(fmt).join(', ')}`
+    case 'round': return `Redondea ${fmt(ex.value)} a las ${ex.to === 10 ? 'decenas' : 'centenas'}`
+    case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
+    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     default: return ex.skill
   }
 }
@@ -210,11 +225,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
     return ex ?? null
   }
 
-  // 1. Calentamiento: learnt facts not seen today, the most urgent first. Never introduces a fact.
-  const warmSkills = urgencyOrder(mastery, now)
-    .filter((m) => isFactSkill(m.skill) && m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today)
-    .slice(0, WARMUP_MAX)
-    .map((m) => m.skill)
+  // 1. Calentamiento: learnt cálculo mental and facts not seen today, the most urgent first. Never introduces a skill.
+  const seenBeforeToday = (m: SkillMastery) => m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today
+  const dueWarm = urgencyOrder(mastery, now).filter(seenBeforeToday)
+  const mentalWarm = dueWarm.filter((m) => isMentalSkill(m.skill)).slice(0, MENTAL_WARMUP_MAX).map((m) => m.skill)
+  const warmSkills = [...mentalWarm, ...dueWarm.filter((m) => isFactSkill(m.skill)).map((m) => m.skill)].slice(0, WARMUP_MAX)
   const warmup: DailyItem[] = []
   for (const s of warmSkills) {
     const ex = make(s, rng)

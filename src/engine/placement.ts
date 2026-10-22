@@ -24,7 +24,7 @@ export interface PlacementItem {
   exercise: Exercise
 }
 
-export const PLACEMENT_COUNT = 14
+export const PLACEMENT_COUNT = 17
 
 export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
   const p = parseSkill(skill)
@@ -35,6 +35,7 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'mul': return 'tablas'
     case 'div': case 'div2x1': return 'dividir'
     case 'word': return 'problemas'
+    case 'place': case 'compare': case 'order': case 'round': case 'line': return 'numeros'
     default: return null
   }
 }
@@ -48,7 +49,7 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
   }))
   const divFacts = shuffle(rng, [2, 3, 4, 5, 6, 7, 8, 9].flatMap((d) => [2, 3, 4, 5, 6, 7, 8, 9].map((q) => divSkill(d * q, d))))
   const plan: { block: PlacementBlockId; skills: SkillKey[] }[] = [
-    { block: 'numeros', skills: ['concept:placevalue', 'concept:placevalue'] },
+    { block: 'numeros', skills: ['concept:placevalue', 'concept:placevalue', 'num:place:expanded', 'num:compare', 'num:round:10'] },
     { block: 'sumas-restas', skills: ['add:3d:c0', 'add:3d:c1', 'sub:3d:b0', 'sub:3d:b1'] },
     { block: 'tablas', skills: facts.slice(0, 4) },
     { block: 'dividir', skills: [divFacts[0], 'div:2x1:exact'] },

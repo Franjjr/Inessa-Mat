@@ -8,6 +8,8 @@ import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName } from './feedback'
 import { strategyDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
+import { hintsCalc } from './calc'
+import { hintsNumeric } from './numeric'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
@@ -317,6 +319,13 @@ export function hintsFor(ex: Exercise, method?: SubMethod): Hint[] {
     case 'column-mul': return columnMulHints(ex)
     case 'division': return divisionHints(ex)
     case 'word-problem': return wordHints(ex)
+    case 'place-value':
+    case 'compare':
+    case 'order':
+    case 'round':
+    case 'number-line': return hintsNumeric(ex) ?? []
+    case 'mental':
+    case 'equation': return hintsCalc(ex) ?? []
   }
 }
 

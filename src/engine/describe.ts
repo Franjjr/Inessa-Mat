@@ -14,6 +14,23 @@ const CONCEPT_TEXT: Record<string, string> = {
   placevalue: 'Valor posicional (unidades, decenas, centenas, millares)',
 }
 
+const PLACE_TEXT: Record<string, string> = {
+  blocks: 'Números con bloques de millar, centena, decena y unidad',
+  expanded: 'Descomponer números (4 325 = 4 000 + 300 + 20 + 5)',
+  words: 'Leer y escribir números hasta 9 999',
+}
+
+const MENTAL_TEXT: Record<string, string> = {
+  dobles: 'Dobles (de cabeza)',
+  mitades: 'Mitades (de cabeza)',
+  completar10: 'Completar hasta 10 y 100',
+  completar100: 'Completar hasta 100',
+  completar1000: 'Completar hasta 1 000',
+  decenas: 'Sumar y restar decenas',
+  centenas: 'Sumar y restar centenas',
+  compensar: 'Compensar (+9 = +10 − 1)',
+}
+
 const WORD_TEXT: Record<string, string> = {
   add: 'Problemas de sumar',
   sub: 'Problemas de restar',
@@ -38,6 +55,13 @@ export function describeSkill(skill: SkillKey): string {
           : 'Divisiones de 2 cifras bajando cifras (nivel experto)'
     case 'concept': return CONCEPT_TEXT[p.name]
     case 'word': return WORD_TEXT[p.op]
+    case 'place': return PLACE_TEXT[p.mode]
+    case 'compare': return 'Comparar números hasta 9 999 con < > ='
+    case 'order': return 'Ordenar números hasta 9 999'
+    case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : 'centenas'}`
+    case 'line': return `Recta numérica: saltos de ${p.step}`
+    case 'mental': return MENTAL_TEXT[p.family]
+    case 'equation': return 'Signo igual: los dos lados valen lo mismo'
   }
 }
 

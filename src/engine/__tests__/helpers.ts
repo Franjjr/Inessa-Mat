@@ -66,8 +66,14 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'division', quotient: ex.quotient, remainder: ex.remainder }
     case 'word-problem':
       return ex.remainder ? { type: 'division', quotient: ex.answer, remainder: ex.remainder } : { type: 'number', value: ex.answer }
+    case 'compare':
+      return { type: 'sign', sign: ex.answer }
+    case 'order':
+      return { type: 'numbers', values: [...ex.answer] }
+    case 'place-value':
+      return Array.isArray(ex.answer) ? { type: 'numbers', values: [...ex.answer] } : { type: 'number', value: ex.answer }
     default:
-      return { type: 'number', value: ex.answer }
+      return { type: 'number', value: ex.answer as number }
   }
 }
 

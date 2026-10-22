@@ -4,8 +4,8 @@
 import type { GalleryEntry } from '@/dev/Gallery'
 import type { Answer, Exercise } from '@/types'
 import {
-  check, createRng, describeError, generate, hintsFor, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision,
-  makeFactFamily, makeFactMul, strategyForFact,
+  check, createRng, describeError, fmt, generate, hintsFor, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision,
+  makeFactFamily, makeFactMul, numberWords, strategyForFact,
 } from './index'
 import s from './engine.gallery.module.css'
 
@@ -19,6 +19,13 @@ function show(ex: Exercise): string {
     case 'column-mul': return `${ex.top} × ${ex.bottom}`
     case 'division': return `${ex.dividend} ÷ ${ex.divisor}`
     case 'fact-family': return `${ex.a}, ${ex.b} y ${ex.product}`
+    case 'place-value': return ex.mode === 'expanded' ? fmt(ex.value) : ex.mode === 'words' ? numberWords(ex.value) : `${fmt(ex.value)} (bloques)`
+    case 'compare': return `${fmt(ex.left)} ? ${fmt(ex.right)}`
+    case 'order': return ex.values.map(fmt).join(' · ') + (ex.direction === 'asc' ? ' (de menor a mayor)' : ' (de mayor a menor)')
+    case 'round': return `${fmt(ex.value)} a las ${ex.to === 10 ? 'decenas' : 'centenas'}`
+    case 'number-line': return ex.mode === 'tick' ? `recta de ${ex.step}: marca ${ex.blank + 1} vacía` : `recta de ${ex.step}: desde ${fmt(ex.start ?? 0)}`
+    case 'mental': return ex.prompt
+    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     default: return ex.id
   }
 }
@@ -31,6 +38,7 @@ function showAnswer(a: Answer): string {
     case 'steps': return `${a.values.map((v) => v ?? '—').join(' · ')}${a.total !== undefined ? ` = ${a.total ?? '—'}` : ''}`
     case 'facts': return a.facts.join(' · ')
     case 'numbers': return a.values.join(', ')
+    case 'sign': return a.sign ?? '—'
   }
 }
 
@@ -153,11 +161,40 @@ function Problems() {
   )
 }
 
+/** Numbers up to 9 999, cálculo mental and signo igual: a few generated items with their three hints. */
+function Numeros() {
+  const rng = createRng(3031)
+  const kinds = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation'] as const
+  return (
+    <div className={s.hintGrid}>
+      {kinds.map((kind) => {
+        const [ex] = generate({ kinds: [kind] }, 1, { rng })
+        if (!ex) return null
+        return (
+          <section key={`${kind}:${ex.id}`} className={s.hintCard} data-kind={kind}>
+            <h3 className={s.h3}>{show(ex)}</h3>
+            <p className={s.problemAnswer}>Respuesta: <b>{Array.isArray((ex as { answer?: unknown }).answer) ? ((ex as { answer: number[] }).answer).join(' · ') : String((ex as { answer?: unknown }).answer ?? '')}</b></p>
+            <ol className={s.steps}>
+              {hintsFor(ex).map((h) => (
+                <li key={h.level} className={s.step} data-level={h.level}>
+                  <span className={s.level}>{h.level}</span>
+                  <span>{SAMPLE(h.text)}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )
+      })}
+    </div>
+  )
+}
+
 const entries: GalleryEntry[] = [
   { title: 'Trucos de Lumi · tablas del 6, 7 y 8 (strategyForFact)', render: () => <Tricks />, width: 1120 },
   { title: 'Errores que son pistas (check → errorType + feedback)', render: () => <Diagnoses />, width: 1120 },
   { title: 'Pistas progresivas (hintsFor)', render: () => <Hints />, width: 1120 },
   { title: 'Problemas de Numeria (generate word-problem)', render: () => <Problems />, width: 1120 },
+  { title: 'Números hasta 9 999, cálculo mental y signo igual (3.º)', render: () => <Numeros />, width: 1120 },
 ]
 
 export default entries

@@ -37,6 +37,7 @@ export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placem
 export {
   addSkill, allMulFactSkills, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, isMulFactSkill,
   isValidSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  placeSkill, roundSkill, lineSkill, mentalSkill, isMentalSkill, NUMERIC_KINDS, MENTAL_FAMILIES, PLACE_MODES,
 } from './skills'
 export type { ConceptName, DivisionVariant, ParsedSkill, WordOp } from './skills'
 /** Build exercises from fixed numbers (e.g. a guardian's Hechizo del Cristal: makeExercise('column-add', 2486, 1357)). */
@@ -58,3 +59,6 @@ export { columnName } from './feedback'
 export { DEFAULT_METHOD, isSubMethod, methodLabel, methodsOf, METHODS, normaliseSubMethod, SUB_METHODS } from './methods'
 export type { MethodInfo, MethodOp } from './methods'
 export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
+/** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */
+export { expandedParts, fmt, numberWords, placeName, roundTo } from './numeric'
+export { mentalHints, holds } from './calc'

@@ -11,9 +11,11 @@ import {
   makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
 } from './make'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
+import { buildEquation, buildMental, mentalSkillsOf } from './calc'
+import { buildNumericExercise, numericSkillsOf } from './numeric'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
-  DIVISION_VARIANTS, addSkill, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, kindsForSkill,
+  DIVISION_VARIANTS, NUMERIC_KINDS, addSkill, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, kindsForSkill,
   mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
@@ -22,6 +24,7 @@ import { fillTemplate, templatesFor } from './wordProblems'
 export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -190,6 +193,10 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
       break
+    default: {
+      const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
+      for (const skill of skills) addItem(map, skill, kind, 1)
+    }
   }
   return [...map.values()]
 }
@@ -583,6 +590,13 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  if (NUMERIC_KINDS.includes(kind)) {
+    // Numbers up to 9 999 and cálculo mental: their own generators (src/engine/numeric.ts, calc.ts).
+    if (p.type === 'mental') return buildMental(p.family, rng, used)
+    if (p.type === 'equation') return buildEquation(rng, used)
+    const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
+    if (built) return built
+  }
   switch (p.type) {
     case 'mul':
       return buildFact(kind, p, ctx, rng, used)

@@ -12,6 +12,12 @@ import type { ID, InputMode } from './common'
  *   mul:2x1:c0|c1        2-digit × 1-digit, without / with carry
  *   div:2x1:exact|rem|long   2-digit ÷ 1-digit: digit-by-digit exact, with remainder (1-digit quotient), long (bring down)
  *   concept:groups | concept:array | concept:commutative | concept:share | concept:family | concept:placevalue
+ *   num:place:blocks|expanded|words   numbers up to 9 999: blocks, expanded form, reading the words
+ *   num:compare | num:order           compare with < > = ; order 3–4 numbers
+ *   num:round:10|100                  round to decenas or centenas
+ *   num:line:10|100|1000              number line with jumps (tick missing, or jump from a point)
+ *   mental:<family>                   cálculo mental exprés (dobles, mitades, completar10|100|1000, decenas, centenas, compensar)
+ *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
  */
 export type SkillKey = string
 
@@ -29,6 +35,13 @@ export type ExerciseKind =
   | 'column-mul'      // vertical 2-digit × 1-digit
   | 'division'        // Spanish "galera" layout: dividend | divisor, quotient + remainder
   | 'word-problem'    // short story problem resolving to one operation
+  | 'place-value'     // numbers up to 9 999: blocks → expanded form → words (num:place:*)
+  | 'compare'         // two numbers, the child taps < > = (num:compare)
+  | 'order'           // 3–4 numbers written in order (num:order)
+  | 'round'           // round to decenas or centenas (num:round:*)
+  | 'number-line'     // number line with jumps of 10, 100 or 1 000 (num:line:*)
+  | 'mental'          // cálculo mental exprés, short answer (mental:*)
+  | 'equation'        // signo igual flexible (eq:flex)
 
 interface ExerciseBase {
   id: ID
@@ -78,6 +91,43 @@ export interface DivisionExercise extends ExerciseBase {
   /** 'exact' digit-by-digit, 'rem' one-digit quotient with remainder, 'long' requires bringing down. */
   variant: 'exact' | 'rem' | 'long'
 }
+export type PlaceMode = 'blocks' | 'expanded' | 'words'
+export type MentalFamily = 'dobles' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar'
+/** A term of an equation side: a number, an operator, or null for the blank the child fills. */
+export type EqTerm = number | '+' | '−' | null
+
+export interface PlaceValueExercise extends ExerciseBase {
+  kind: 'place-value'; mode: PlaceMode; value: number
+  /** Expanded form, thousands first, zeros included: 4 025 → [4000, 0, 20, 5]. */
+  parts: number[]
+  /** Answer: the number (blocks, words) or the four parts (expanded). */
+  answer: number | number[]
+}
+export interface CompareExercise extends ExerciseBase { kind: 'compare'; left: number; right: number; answer: '<' | '>' | '=' }
+export interface OrderExercise extends ExerciseBase {
+  kind: 'order'; values: number[] /* as shown */; direction: 'asc' | 'desc'; answer: number[] /* in the order to write */
+}
+export interface RoundExercise extends ExerciseBase { kind: 'round'; value: number; to: 10 | 100; answer: number }
+export interface NumberLineExercise extends ExerciseBase {
+  kind: 'number-line'
+  mode: 'tick' | 'jump'
+  step: 10 | 100 | 1000
+  /** Five labelled marks, consecutive multiples of step. */
+  ticks: number[]
+  /** tick mode: index in ticks of the blank mark. */
+  blank: number
+  /** jump mode: the point the child starts from (not on a labelled mark) and the jump (+step or −step). */
+  start: number | null
+  jump: number
+  answer: number
+}
+export interface MentalExercise extends ExerciseBase {
+  kind: 'mental'; family: MentalFamily; prompt: string; a: number; b: number; answer: number
+}
+export interface EquationExercise extends ExerciseBase {
+  kind: 'equation'; left: EqTerm[]; right: EqTerm[]; answer: number
+}
+
 export interface WordProblemExercise extends ExerciseBase {
   kind: 'word-problem'
   /** Template string (see content/template.ts) — may use {child} {pet} etc. */
@@ -94,6 +144,8 @@ export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
   | ColumnMulExercise | DivisionExercise | WordProblemExercise
+  | PlaceValueExercise | CompareExercise | OrderExercise | RoundExercise | NumberLineExercise | MentalExercise
+  | EquationExercise
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -106,6 +158,7 @@ export type Answer =
   | { type: 'steps'; method: 'parts' | 'line'; values: (number | null)[]; total?: number | null }   // resta por partes / saltos
   | { type: 'division'; quotient: number | null; remainder: number | null }
   | { type: 'facts'; facts: string[] }                                     // fact-family, e.g. '6x7=42', '42/6=7'
+  | { type: 'sign'; sign: '<' | '>' | '=' | null }                          // compare: the sign the child tapped
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per

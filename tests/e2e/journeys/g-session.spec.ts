@@ -19,6 +19,39 @@ test.describe('Mi sesión de hoy', () => {
     await settle(page, 300)
   })
 
+  test('the new topic (numbers up to 9 999) shows its worked example, then blocks the child counts and writes', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/sesion')
+    await expect(page.getByText(/Hoy aprendemos/)).toBeVisible()
+    await page.getByRole('button', { name: '¡Empezar!' }).click()
+    // The warm-up facts come first; the example of the new topic (blocks) opens «Lo nuevo».
+    const example = page.getByRole('button', { name: /Entendido/ })
+    for (let i = 0; i < 40 && (await example.count()) === 0; i++) {
+      await page.keyboard.type('1')
+      await page.keyboard.press('Enter')
+      await settle(page, 150)
+      const next = page.getByRole('button', { name: /Siguiente/ })
+      if (await next.count()) await next.first().click()
+    }
+    await expect(page.getByText('Cuenta los bloques y escribe el número')).toBeVisible()
+    await example.click()
+    // The blocks item: the child counts the tiles in each class (the groups say how many) and writes the number.
+    await expect(page.getByRole('textbox', { name: 'Número de los bloques' })).toBeVisible()
+    const digits = await page.evaluate(() => {
+      const counts = Object.fromEntries(
+        [...document.querySelectorAll<HTMLElement>('[title]')]
+          .map((el) => /^(\d+) (millares|centenas|decenas|unidades)$/.exec(el.title))
+          .filter((m): m is RegExpExecArray => m !== null)
+          .map((m) => [m[2], Number(m[1])]),
+      )
+      return `${counts.millares ?? 0}${counts.centenas ?? 0}${counts.decenas ?? 0}${counts.unidades ?? 0}`.replace(/^0+(?=\d)/, '')
+    })
+    await page.keyboard.type(digits)
+    await page.getByRole('button', { name: '✓ Comprobar' }).click()
+    await expect(page.getByRole("button", { name: /Siguiente/ })).toBeVisible()
+    await settle(page, 300)
+  })
+
   test('the session can be paused and left without losing the day', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/sesion')
@@ -31,11 +64,11 @@ test.describe('Mi sesión de hoy', () => {
 })
 
 test.describe('Prueba inicial', () => {
-  test('starts with fourteen questions, shows no right or wrong feedback and says thanks', async ({ page }) => {
+  test('starts with seventeen questions, shows no right or wrong feedback and says thanks', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/prueba')
     await expect(page.getByRole('heading', { name: 'Prueba inicial' })).toBeVisible()
-    await expect(page.getByText(/· 1 de 14/)).toBeVisible()
+    await expect(page.getByText(/· 1 de 17/)).toBeVisible()
     await settle(page, 300)
   })
 })

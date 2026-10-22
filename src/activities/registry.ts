@@ -46,4 +46,12 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'column-mul': lazy(() => import('./views/ColumnView')),
   division: lazy(() => import('./views/DivisionView')),
   'word-problem': lazy(() => import('./views/WordProblemView')),
+  // ---- numbers up to 9 999, cálculo mental and signo igual (3.º, block A) — src/activities/views/<name>.tsx
+  'place-value': lazy(() => import('./views/PlaceValueView')),
+  compare: lazy(() => import('./views/CompareView')),
+  order: lazy(() => import('./views/OrderView')),
+  round: lazy(() => import('./views/RoundView')),
+  'number-line': lazy(() => import('./views/NumberLineView')),
+  mental: lazy(() => import('./views/MentalView')),
+  equation: lazy(() => import('./views/EquationView')),
 }

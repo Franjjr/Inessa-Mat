@@ -13,6 +13,8 @@ import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from
 import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
 import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
+import { checkCalc } from './calc'
+import { checkNumeric } from './numeric'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -482,5 +484,12 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'column-mul': return checkColumnMul(exercise, answer)
     case 'division': return checkDivision(exercise, answer)
     case 'word-problem': return checkWord(exercise, answer)
+    case 'place-value':
+    case 'compare':
+    case 'order':
+    case 'round':
+    case 'number-line': return checkNumeric(exercise, answer)
+    case 'mental':
+    case 'equation': return checkCalc(exercise, answer) ?? wrongShape(expectedText(exercise))
   }
 }

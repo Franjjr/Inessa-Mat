@@ -51,10 +51,10 @@ export const GRADE3_SYLLABUS: Syllabus = {
       id: 'numeros',
       name: 'Números hasta 9 999',
       topics: [
-        pending('leer-escribir-9999', 'Leer y escribir hasta 9 999', 'Falta una vista de lectura y escritura de números.'),
-        pending('descomponer-9999', 'Descomponer (4 325 = 4 000 + 300 + 20 + 5)', 'Falta una vista de descomposición con bloques.'),
-        pending('comparar-ordenar-9999', 'Comparar y ordenar', 'Falta una vista con signos < > =.'),
-        pending('redondear', 'Redondear a decenas y centenas', 'Falta una vista de recta numérica.'),
+        { id: 'descomponer-9999', name: 'Descomponer (4 325 = 4 000 + 300 + 20 + 5)', skills: ['num:place:blocks', 'num:place:expanded'], status: 'disponible', rungs: { concreto: 'Bloques de millar, centena, decena y unidad', numeros: 'Las partes escritas: 4 000 + 300 + 20 + 5' } },
+        { id: 'leer-escribir-9999', name: 'Leer y escribir hasta 9 999', skills: ['num:place:words'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: 'El número en palabras, sin cifras' } },
+        { id: 'comparar-ordenar-9999', name: 'Comparar y ordenar', skills: ['num:compare', 'num:order'], status: 'disponible', rungs: { dibujo: 'Columnas de valor posicional, casa por casa', numeros: 'Signos < > = y orden de menor a mayor' } },
+        { id: 'redondear', name: 'Redondear a decenas y centenas', skills: ['num:round:10', 'num:round:100'], status: 'disponible', rungs: { dibujo: 'La recta con la decena o centena más cercana', numeros: 'Mirar la cifra de al lado' } },
       ],
     },
     {
@@ -69,6 +69,7 @@ export const GRADE3_SYLLABUS: Syllabus = {
         { id: 'resta-3d-prestando', name: 'Resta de 3 cifras pidiendo prestado', skills: ['sub:3d:b1', 'sub:3d:b2'], status: 'disponible', rungs: { concreto: 'Cambiar una decena por 10 unidades', dibujo: 'Cruces en los dígitos', numeros: 'La cuenta en columna', uso: 'Problemas de comparar' } },
         { id: 'resta-con-ceros', name: 'Resta con ceros en medio', skills: ['sub:3d:z', 'sub:4d:z'], status: 'disponible', rungs: { concreto: 'Cambiar una centena por 10 decenas', dibujo: 'Cruces en los ceros', numeros: 'La cuenta en columna con ceros', uso: 'Problemas de quitar' } },
         { id: 'resta-4d', name: 'Resta de 4 cifras', skills: ['sub:4d:b0', 'sub:4d:b1', 'sub:4d:b2', 'sub:4d:b3'], status: 'disponible', rungs: { numeros: 'La cuenta en columna de 4 cifras', uso: 'Comprobar con una suma' } },
+        { id: 'igualdad', name: 'Signo igual: los dos lados valen lo mismo', skills: ['eq:flex'], status: 'disponible', rungs: { concreto: 'Balanza con dos platillos', numeros: '5 + 3 = __ + 6 y 7 = 3 + __' } },
       ],
     },
     {
@@ -111,7 +112,12 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'calculo-mental',
       name: 'Cálculo mental',
-      topics: [pending('mental-dobles', 'Dobles y mitades de decenas', 'Falta una actividad sin escritura.'), pending('mental-completar', 'Completar a 10 y a 100', 'Falta una actividad sin escritura.')],
+      topics: [
+        { id: 'dobles-mitades', name: 'Dobles y mitades', skills: ['mental:dobles', 'mental:mitades'], status: 'disponible', rungs: { concreto: 'Dos montones iguales', numeros: 'El doble de 35 = 30 + 30 + 5 + 5' } },
+        { id: 'completar', name: 'Completar a 10, 100 y 1 000', skills: ['mental:completar10', 'mental:completar100', 'mental:completar1000'], status: 'disponible', rungs: { dibujo: 'La recta: cuánto falta para el número redondo', numeros: 'Contar hasta el número redondo' } },
+        { id: 'decenas-centenas', name: 'Sumar y restar decenas y centenas', skills: ['mental:decenas', 'mental:centenas', 'num:line:10', 'num:line:100', 'num:line:1000'], status: 'disponible', rungs: { concreto: 'Bloques de decenas y centenas', dibujo: 'Saltos de 10, 100 y 1 000 en la recta', numeros: '340 + 200 = 540' } },
+        { id: 'compensar', name: 'Compensar (+9 = +10 − 1)', skills: ['mental:compensar'], status: 'disponible', rungs: { numeros: '48 + 9 = 48 + 10 − 1' } },
+      ],
     },
     {
       id: 'fracciones',

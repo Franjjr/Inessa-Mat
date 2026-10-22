@@ -9,8 +9,11 @@
    div:2x1:exact|rem|long
    concept:groups|array|commutative|share|family|placevalue
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
+   num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
+   mental:dobles|mitades|completar10|completar100|completar1000|decenas|centenas|compensar           (cálculo mental)
+   eq:flex                                                                                          (signo igual flexible)
 */
-import type { DivisionExercise, ExerciseKind, SkillKey } from '@/types'
+import type { DivisionExercise, ExerciseKind, MentalFamily, PlaceMode, SkillKey } from '@/types'
 
 export type DivisionVariant = DivisionExercise['variant']
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
@@ -19,6 +22,10 @@ export type WordOp = 'add' | 'sub' | 'mul' | 'div'
 export const CONCEPTS: ConceptName[] = ['groups', 'array', 'commutative', 'share', 'family', 'placevalue']
 export const WORD_OPS: WordOp[] = ['add', 'sub', 'mul', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
+export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
+export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar']
+export const ROUND_TARGETS = [10, 100] as const
+export const LINE_STEPS = [10, 100, 1000] as const
 
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
@@ -30,6 +37,13 @@ export type ParsedSkill =
   | { type: 'div2x1'; variant: DivisionVariant }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
+  | { type: 'place'; mode: PlaceMode }
+  | { type: 'compare' }
+  | { type: 'order' }
+  | { type: 'round'; to: 10 | 100 }
+  | { type: 'line'; step: 10 | 100 | 1000 }
+  | { type: 'mental'; family: MentalFamily }
+  | { type: 'equation' }
 
 // ---------------------------------------------------------------- builders
 
@@ -59,6 +73,18 @@ export function conceptSkill(name: ConceptName): SkillKey {
 }
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
+}
+export function placeSkill(mode: PlaceMode): SkillKey {
+  return `num:place:${mode}`
+}
+export function roundSkill(to: 10 | 100): SkillKey {
+  return `num:round:${to}`
+}
+export function lineSkill(step: 10 | 100 | 1000): SkillKey {
+  return `num:line:${step}`
+}
+export function mentalSkill(family: MentalFamily): SkillKey {
+  return `mental:${family}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -103,8 +129,26 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
+  if ((m = key.match(/^num:place:(blocks|expanded|words)$/))) return { type: 'place', mode: m[1] as PlaceMode }
+  if (key === 'num:compare') return { type: 'compare' }
+  if (key === 'num:order') return { type: 'order' }
+  if ((m = key.match(/^num:round:(10|100)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 }
+  if ((m = key.match(/^num:line:(10|100|1000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 }
+  if ((m = key.match(/^mental:(\w+)$/))) {
+    const family = m[1] as MentalFamily
+    return MENTAL_FAMILIES.includes(family) ? { type: 'mental', family } : null
+  }
+  if (key === 'eq:flex') return { type: 'equation' }
   return null
 }
+
+/** Cálculo mental skills (the warm-up of the daily session takes them). */
+export function isMentalSkill(key: SkillKey): boolean {
+  return parseSkill(key)?.type === 'mental'
+}
+
+/** Skills whose exercises are judged as one short answer (not in columns): the kinds added for 3.º numbers and mental. */
+export const NUMERIC_KINDS: ExerciseKind[] = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation']
 
 export function isValidSkill(key: SkillKey): boolean {
   return parseSkill(key) !== null
@@ -157,6 +201,13 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
       }
       break
     case 'word': return ['word-problem']
+    case 'place': return ['place-value']
+    case 'compare': return ['compare']
+    case 'order': return ['order']
+    case 'round': return ['round']
+    case 'line': return ['number-line']
+    case 'mental': return ['mental']
+    case 'equation': return ['equation']
   }
   /* c8 ignore next */
   return []

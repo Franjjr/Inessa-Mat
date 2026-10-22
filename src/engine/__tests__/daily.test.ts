@@ -44,7 +44,7 @@ const midYearMastery = () => masteredBefore('tabla-3')
 describe('planDailySession', () => {
   it('a child with no history gets a short plan: no warm-up of earlier days, a new topic, a problem', () => {
     const plan = planDailySession({ child, mastery: {}, attempts: [], syllabus: GRADE3_SYLLABUS, now })
-    expect(plan.topic?.id).toBe('suma-2d')
+    expect(plan.topic?.id).toBe('descomponer-9999')
     expect(plan.blocks.find((b) => b.id === 'warmup')!.items).toHaveLength(0)
     const next = plan.blocks.find((b) => b.id === 'new')!.items
     expect(next.length).toBeGreaterThanOrEqual(4)
@@ -157,8 +157,13 @@ describe('planDailySession', () => {
   })
 
   it('currentTopic follows the curriculum order and skips pending topics', () => {
-    expect(currentTopic(GRADE3_SYLLABUS, {})?.id).toBe('suma-2d')
-    const mastery: MasteryMap = {}
+    expect(currentTopic(GRADE3_SYLLABUS, {})?.id).toBe('descomponer-9999')
+    // Numbers up to 9 999 come first in the curriculum: once they are learnt, the sums of 2 figures follow.
+    const topics = allTopics(GRADE3_SYLLABUS)
+    const numbers: MasteryMap = {}
+    for (const t of topics.slice(0, topics.findIndex((x) => x.id === 'suma-2d'))) for (const s of t.skills) numbers[s] = m(s, 2)
+    expect(currentTopic(GRADE3_SYLLABUS, numbers)?.id).toBe('suma-2d')
+    const mastery: MasteryMap = { ...numbers }
     for (const s of ['add:2d:c0', 'add:2d:c1']) mastery[s] = m(s, 2)
     expect(currentTopic(GRADE3_SYLLABUS, mastery)?.id).toBe('suma-3d-sin-llevar')
   })
