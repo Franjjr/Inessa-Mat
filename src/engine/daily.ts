@@ -38,6 +38,8 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'double-chain': 20, 'fact-family': 25, 'column-add': 50, 'column-sub': 55, 'column-mul': 45,
   division: 60, 'word-problem': 60, 'bar-problem': 75, 'error-hunt': 50, 'check-calc': 45,
   'place-value': 30, compare: 15, order: 35, round: 20, 'number-line': 25, mental: 15, equation: 20,
+  'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
+  'angle-tap': 35, perimeter: 45, 'shape-count': 20,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -103,6 +105,14 @@ export function statementOf(ex: Exercise): string {
     case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
     case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     case 'bar-problem': return ex.text
+    case 'fraction-shade': return `Colorea ${ex.numerator} de ${ex.denominator} partes`
+    case 'fraction-read': return 'Escribe la fracción que está coloreada'
+    case 'fraction-of': return ex.story ?? `Calcula ${ex.numerator}/${ex.denominator} de ${fmt(ex.total)}`
+    case 'fraction-equal': return 'Toca las figuras que no están partidas en partes iguales'
+    case 'shape-choice': return ex.question
+    case 'angle-tap': return 'Toca las esquinas que son ángulos rectos'
+    case 'perimeter': return ex.text ?? 'Suma los lados para hallar el contorno'
+    case 'shape-count': return ex.ask === 'sides' ? '¿Cuántos lados tiene?' : '¿Cuántas esquinas tiene?'
     case 'error-hunt': return `${ex.top} ${ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'} ${ex.bottom} = ${ex.shown}`
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`

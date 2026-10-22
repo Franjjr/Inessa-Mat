@@ -1,0 +1,519 @@
+/* Geometría (3.º de Primaria, block E; docs/curriculum/PLAN_DOCENTE.md §1.10 and §5.11). Polygons (names, sides and
+   corners, in any orientation and irregular), lines (recta, curva, poligonal; paralelas, perpendiculares), angles
+   (recto, menor, mayor; the right angles tapped in a figure), circle vs circunferencia, simple solids (names, rolling,
+   flat faces) and perimeter by adding the sides (drawing first, then a garden problem).
+   Figures are data (src/types/exercise.ts); src/activities/views/FigureSvg.tsx draws them. Hints never state the answer.
+   Pure: no React. */
+import type {
+  AngleTapExercise, Answer, AngleFigure, CheckResult, CircleFigure, ErrorType, Hint, LineFigure, LinesFigure, PerimeterExercise,
+  PolygonFigure, Rng, ShapeChoiceExercise, ShapeCountExercise, SolidFigure, SolidName,
+} from '@/types'
+import { pick, randInt, shuffle } from './rng'
+import { geoSkill, type GeoOp } from './skills'
+
+// ---------------------------------------------------------------- polygons
+
+export type PolygonName = 'triangle' | 'square' | 'rectangle' | 'pentagon' | 'hexagon'
+export const POLYGON_NAMES: PolygonName[] = ['triangle', 'square', 'rectangle', 'pentagon', 'hexagon']
+export const POLYGON_WORD: Record<PolygonName, string> = {
+  triangle: 'triángulo', square: 'cuadrado', rectangle: 'rectángulo', pentagon: 'pentágono', hexagon: 'hexágono',
+}
+export const POLYGON_SIDES: Record<PolygonName, number> = { triangle: 3, square: 4, rectangle: 4, pentagon: 5, hexagon: 6 }
+
+const round2 = (n: number) => Math.round(n * 100) / 100
+
+/** Turns the points around the origin by deg (rounded to hundredths). */
+export function rotatePoints(points: [number, number][], deg: number): [number, number][] {
+  const t = (deg * Math.PI) / 180
+  const c = Math.cos(t)
+  const s = Math.sin(t)
+  return points.map(([x, y]) => [round2(x * c - y * s), round2(x * s + y * c)])
+}
+
+/** Length of each side: side i joins point i and point i + 1. */
+export function sideLengths(points: readonly [number, number][]): number[] {
+  return points.map((p, i) => {
+    const q = points[(i + 1) % points.length]
+    return Math.hypot(q[0] - p[0], q[1] - p[1])
+  })
+}
+
+/** True when every turn goes the same way (a convex polygon with no straight corners). */
+export function isConvex(points: readonly [number, number][]): boolean {
+  const n = points.length
+  let sign = 0
+  for (let i = 0; i < n; i++) {
+    const a = points[i]
+    const b = points[(i + 1) % n]
+    const c = points[(i + 2) % n]
+    const cross = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0])
+    if (Math.abs(cross) < 1e-9) return false
+    const s = Math.sign(cross)
+    if (sign === 0) sign = s
+    else if (s !== sign) return false
+  }
+  return sign !== 0
+}
+
+/** Indexes of the corners whose inside angle is exactly a right angle: the two sides are perpendicular (dot product 0)
+    and the corner turns the way the polygon turns (a concave corner of 270° is not a right angle). Exact coordinates. */
+export function rightCorners(points: readonly [number, number][]): number[] {
+  const out: number[] = []
+  const n = points.length
+  let area = 0
+  for (let i = 0; i < n; i++) {
+    const a = points[i]
+    const b = points[(i + 1) % n]
+    area += a[0] * b[1] - b[0] * a[1]
+  }
+  const orientation = Math.sign(area)
+  for (let i = 0; i < n; i++) {
+    const p = points[i]
+    const prev = points[(i - 1 + n) % n]
+    const next = points[(i + 1) % n]
+    const dot = (prev[0] - p[0]) * (next[0] - p[0]) + (prev[1] - p[1]) * (next[1] - p[1])
+    const turn = (p[0] - prev[0]) * (next[1] - p[1]) - (p[1] - prev[1]) * (next[0] - p[0])
+    if (dot === 0 && Math.sign(turn) === orientation) out.push(i)
+  }
+  return out
+}
+
+/** A polygon of the given kind: random size, random orientation, and irregular when it can be (the child must not learn
+    only the textbook pose). Always convex. */
+export function polygonPoints(name: PolygonName, rng: Rng): [number, number][] {
+  const n = POLYGON_SIDES[name]
+  for (let attempt = 0; attempt < 300; attempt++) {
+    let pts: [number, number][]
+    if (name === 'triangle') {
+      const a = 50 + rng() * 110
+      const b = 50 + rng() * 110
+      if (360 - a - b < 50) continue
+      const angles = [0, a, a + b]
+      pts = angles.map((t) => {
+        const r = 0.7 + rng() * 0.3
+        return [Math.cos((t * Math.PI) / 180) * r, Math.sin((t * Math.PI) / 180) * r] as [number, number]
+      })
+    } else if (name === 'square') {
+      pts = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+    } else if (name === 'rectangle') {
+      // width 2 and a height of 0.5 to 0.7: always clearly longer one way (never a square).
+      const h = pick(rng, [0.5, 0.6, 0.7])
+      pts = [[-1, -h / 2], [1, -h / 2], [1, h / 2], [-1, h / 2]]
+    } else {
+      const step = 360 / n
+      pts = Array.from({ length: n }, (_, i) => {
+        const t = ((i * step + (rng() - 0.5) * step * 0.3) * Math.PI) / 180
+        const r = 0.85 + rng() * 0.15
+        return [Math.cos(t) * r, Math.sin(t) * r] as [number, number]
+      })
+    }
+    const scaled = pts.map(([x, y]) => [x * 40, y * 40] as [number, number])
+    const turned = rotatePoints(scaled, rng() * 360)
+    if (turned.length === n && isConvex(turned)) return turned
+  }
+  throw new Error(`geometry: no convex ${name} could be built`)
+}
+
+/** The polygon figure of a kind, drawn in free coordinates. */
+export function polygonFigure(name: PolygonName, rng: Rng): PolygonFigure {
+  return { type: 'polygon', points: polygonPoints(name, rng) }
+}
+
+// ---------------------------------------------------------------- shared helpers
+
+const DIFFICULTY_GEO = 2
+const wrongShape = (expected: string): CheckResult => ({ correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' })
+const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
+
+/** Options: the right answer and three others, shuffled. Returns the options and the index of the right one. */
+function optionsWith(rng: Rng, right: string, others: string[]): { options: string[]; answer: number } {
+  const distinct = [...new Set(others.filter((o) => o !== right))].slice(0, 3)
+  const options = shuffle(rng, [right, ...distinct])
+  return { options, answer: options.indexOf(right) }
+}
+
+// ---------------------------------------------------------------- polygon names and counts
+
+/** «¿Qué figura es?»: the name of a polygon (triángulo, cuadrado, rectángulo, pentágono, hexágono). */
+export function genPolygonName(rng: Rng): ShapeChoiceExercise {
+  const name = pick(rng, POLYGON_NAMES)
+  const figure = polygonFigure(name, rng)
+  const right = POLYGON_WORD[name]
+  const others = shuffle(rng, POLYGON_NAMES.filter((x) => x !== name)).map((x) => POLYGON_WORD[x])
+  const { options, answer } = optionsWith(rng, right, others)
+  const quad = POLYGON_SIDES[name] === 4
+  return {
+    id: `shape-choice:poly-name:${name}:${figure.points.map((p) => p.join(',')).join(';')}`,
+    kind: 'shape-choice', skill: geoSkill('poly:name'), difficulty: DIFFICULTY_GEO,
+    question: '¿Qué figura es?', figures: [figure], options, answer,
+    hints: [
+      'Cuenta los lados tocándolos con el dedo, uno a uno.',
+      quad
+        ? 'Con cuatro lados, mira si son todos iguales o si dos son más largos que los otros dos.'
+        : 'Mira si todos los lados son iguales o si alguno es más largo que los demás.',
+      'Triángulo: 3 lados. Cuadrado y rectángulo: 4. Pentágono: 5. Hexágono: 6. Con 4 lados, el cuadrado tiene los cuatro iguales.',
+    ],
+  }
+}
+
+/** «¿Cuántos lados tiene?» (or esquinas: the same number). */
+export function genPolygonSides(rng: Rng): ShapeCountExercise {
+  const name = pick(rng, POLYGON_NAMES)
+  const figure = polygonFigure(name, rng)
+  return {
+    id: `shape-count:${name}:${figure.points.map((p) => p.join(',')).join(';')}`,
+    kind: 'shape-count', skill: geoSkill('poly:sides'), difficulty: DIFFICULTY_GEO,
+    figure, ask: pick(rng, ['sides', 'vertices'] as const), answer: POLYGON_SIDES[name],
+  }
+}
+
+// ---------------------------------------------------------------- lines and angles
+
+/** «¿Qué tipo de línea es?»: recta, curva or poligonal. */
+export function genLineType(rng: Rng): ShapeChoiceExercise {
+  const kind = pick(rng, ['straight', 'curve', 'broken'] as const)
+  let points: [number, number][]
+  if (kind === 'straight') {
+    points = [[randInt(rng, 6, 14), randInt(rng, 15, 85)], [randInt(rng, 86, 94), randInt(rng, 15, 85)]]
+  } else if (kind === 'curve') {
+    points = [[randInt(rng, 6, 12), randInt(rng, 70, 90)], [randInt(rng, 44, 56), randInt(rng, 0, 8)], [randInt(rng, 88, 94), randInt(rng, 70, 90)]]
+  } else {
+    points = [[randInt(rng, 6, 12), randInt(rng, 60, 80)], [randInt(rng, 26, 34), randInt(rng, 10, 25)], [randInt(rng, 50, 60), randInt(rng, 70, 85)], [randInt(rng, 86, 94), randInt(rng, 10, 30)]]
+  }
+  const figure: LineFigure = { type: 'line', kind, points }
+  const right = { straight: 'recta', curve: 'curva', broken: 'poligonal' }[kind]
+  const { options, answer } = optionsWith(rng, right, ['recta', 'curva', 'poligonal'])
+  return {
+    id: `shape-choice:line-type:${kind}:${points.map((p) => p.join(',')).join(';')}`,
+    kind: 'shape-choice', skill: geoSkill('line:type'), difficulty: DIFFICULTY_GEO,
+    question: '¿Qué tipo de línea es?', figures: [figure], options, answer,
+    hints: [
+      'Mira si la línea tiene esquinas, si se dobla o si va siempre derecha.',
+      'Una línea poligonal está hecha de rectas unidas: se ven las esquinas.',
+      'Una recta no se dobla. Una curva se dobla sin esquinas. Una poligonal tiene esquinas y trozos rectos.',
+    ],
+  }
+}
+
+/** «¿Cómo son estas dos rectas?»: paralelas (never meet), perpendiculares (a right-angle cross) or they cross otherwise. */
+export function genLineRelation(rng: Rng): ShapeChoiceExercise {
+  const rel = pick(rng, ['paralelas', 'perpendiculares', 'se cruzan'] as const)
+  let segments: [[number, number], [number, number]][]
+  if (rel === 'paralelas') {
+    const y = randInt(rng, 22, 36)
+    const gap = randInt(rng, 24, 34)
+    segments = [[[10, y], [90, y]], [[10, y + gap], [90, y + gap]]]
+  } else if (rel === 'perpendiculares') {
+    const x = randInt(rng, 40, 60)
+    segments = [[[10, 50], [90, 50]], [[x, 14], [x, 86]]]
+  } else {
+    const x1 = randInt(rng, 20, 40)
+    const x2 = randInt(rng, 60, 80)
+    segments = [[[10, 50], [90, 50]], [[x1, 14], [x2, 86]]]
+  }
+  const theta = randInt(rng, 0, 359)
+  const turned = segments.map((seg) => rotatePoints(seg, theta) as [[number, number], [number, number]]) as [[number, number], [number, number]][]
+  const figure: LinesFigure = { type: 'lines', segments: turned }
+  const { options, answer } = optionsWith(rng, rel, ['paralelas', 'perpendiculares', 'se cruzan'])
+  return {
+    id: `shape-choice:line-rel:${rel}:${theta}:${segments.map((s) => s.flat().join(',')).join(';')}`,
+    kind: 'shape-choice', skill: geoSkill('line:rel'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Cómo son estas dos rectas?', figures: [figure], options, answer,
+    hints: [
+      'Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?',
+      'Si se cruzan formando una esquina recta, como la cruz de sumar, son perpendiculares.',
+      'Si nunca se cruzan y siempre están a la misma distancia, son paralelas. Si se cruzan de otra forma, se cruzan.',
+    ],
+  }
+}
+
+/** «¿Este ángulo es recto, menor o mayor que un recto?» */
+export function genAngleType(rng: Rng): ShapeChoiceExercise {
+  const cls = pick(rng, ['recto', 'menor', 'mayor'] as const)
+  const deg = cls === 'recto' ? 90 : cls === 'menor' ? randInt(rng, 25, 75) : randInt(rng, 105, 155)
+  const figure: AngleFigure = { type: 'angle', deg, rotation: randInt(rng, 0, 359) }
+  const words = { recto: 'recto', menor: 'menor que un recto', mayor: 'mayor que un recto' } as const
+  const { options, answer } = optionsWith(rng, words[cls], ['recto', 'menor que un recto', 'mayor que un recto'])
+  return {
+    id: `shape-choice:angle-type:${deg}:${figure.rotation}`,
+    kind: 'shape-choice', skill: geoSkill('angle:type'), difficulty: DIFFICULTY_GEO,
+    question: '¿Este ángulo es recto, menor o mayor que un recto?', figures: [figure], options, answer,
+    hints: [
+      'Compara el ángulo con la esquina de una hoja de papel: ¿encaja justo, o se abre más, o se abre menos?',
+      'Si las dos líneas se abren más que la esquina del papel, el ángulo es mayor que un recto.',
+      'Si se abren menos que la esquina del papel, es menor que un recto.',
+    ],
+  }
+}
+
+/** «Toca las esquinas que son ángulos rectos»: rectangles, right triangles, L-shapes and oblique triangles. */
+export function genAngleTap(rng: Rng): AngleTapExercise {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const kind = pick(rng, ['rect', 'right-triangle', 'l-shape', 'oblique'] as const)
+    let pts: [number, number][]
+    if (kind === 'rect') {
+      const a = randInt(rng, 3, 9)
+      const b = randInt(rng, 2, 8)
+      if (a === b) continue
+      pts = [[0, 0], [a, 0], [a, b], [0, b]]
+    } else if (kind === 'right-triangle') {
+      pts = [[0, 0], [randInt(rng, 3, 9), 0], [0, randInt(rng, 3, 8)]]
+    } else if (kind === 'l-shape') {
+      const W = randInt(rng, 4, 10)
+      const H = randInt(rng, 4, 10)
+      const cw = randInt(rng, 1, W - 2)
+      const ch = randInt(rng, 1, H - 2)
+      pts = [[0, 0], [W, 0], [W, H - ch], [W - cw, H - ch], [W - cw, H], [0, H]]
+    } else {
+      const a = randInt(rng, 4, 9)
+      const x = randInt(rng, 1, a - 1)
+      pts = [[0, 0], [a, 0], [x, randInt(rng, 3, 8)]]
+    }
+    const right = rightCorners(pts)
+    if (kind === 'oblique' && right.length > 0) continue
+    const turned = rotatePoints(pts.map(([x, y]) => [x * 12, y * 12] as [number, number]), randInt(rng, 0, 359))
+    return {
+      id: `angle-tap:${kind}:${turned.map((p) => p.join(',')).join(';')}`,
+      kind: 'angle-tap', skill: geoSkill('angle:tap'), difficulty: DIFFICULTY_GEO + 1,
+      figure: { type: 'polygon', points: turned }, rightCorners: right,
+    }
+  }
+  throw new Error('geometry: no angle figure could be built')
+}
+
+// ---------------------------------------------------------------- circle and solids
+
+/** «¿Es un círculo o una circunferencia?»: the line that goes round (circunferencia) or the whole surface (círculo). */
+export function genCircle(rng: Rng): ShapeChoiceExercise {
+  const filled = rng() < 0.5
+  const figure: CircleFigure = { type: 'circle', filled }
+  const right = filled ? 'círculo' : 'circunferencia'
+  const { options, answer } = optionsWith(rng, right, ['círculo', 'circunferencia'])
+  return {
+    id: `shape-choice:circle:${filled ? 'd' : 'l'}`,
+    kind: 'shape-choice', skill: geoSkill('circle'), difficulty: DIFFICULTY_GEO,
+    question: '¿Es un círculo o una circunferencia?', figures: [figure], options, answer,
+    hints: [
+      'Mira si la figura está pintada por dentro o si solo tiene la línea del borde.',
+      'Piensa en dos cosas distintas: la línea que rodea, sin relleno, y toda la superficie de dentro.',
+      'La circunferencia es solo la línea que rodea la figura. El círculo es toda la superficie de dentro, con su borde.',
+    ],
+  }
+}
+
+export const SOLID_WORD: Record<SolidName, string> = {
+  cubo: 'cubo', prisma: 'prisma', piramide: 'pirámide', cilindro: 'cilindro', cono: 'cono', esfera: 'esfera',
+}
+/** Flat faces («caras planas») of the solids a 3.º child meets; null = not asked (curved surfaces). */
+export const SOLID_FLAT_FACES: Partial<Record<SolidName, number>> = { cubo: 6, prisma: 5, piramide: 5 }
+/** Whether the solid rolls on a flat table (its curved part lets it roll). */
+export const SOLID_ROLLS: Record<SolidName, boolean> = { cubo: false, prisma: false, piramide: false, cilindro: true, cono: true, esfera: true }
+
+const SOLID_HINT_NAME = [
+  'Mira si tiene caras planas, partes redondas o las dos cosas.',
+  'Una esfera no tiene caras ni esquinas: es como una pelota.',
+  'Cubo: caras cuadradas. Prisma: dos caras iguales y caras de lados. Pirámide: una punta y caras triangulares. Cilindro: dos tapas redondas. Cono: una punta y una base redonda.',
+]
+
+/** «¿Qué cuerpo es?» */
+export function genSolidName(rng: Rng): ShapeChoiceExercise {
+  const solid = pick(rng, ['cubo', 'prisma', 'piramide', 'cilindro', 'cono', 'esfera'] as SolidName[])
+  const figure: SolidFigure = { type: 'solid', name: solid }
+  const { options, answer } = optionsWith(rng, SOLID_WORD[solid], shuffle(rng, Object.values(SOLID_WORD)))
+  return {
+    id: `shape-choice:solid-name:${solid}`,
+    kind: 'shape-choice', skill: geoSkill('solid:name'), difficulty: DIFFICULTY_GEO,
+    question: '¿Qué cuerpo es?', figures: [figure], options, answer, hints: [...SOLID_HINT_NAME] as [string, string, string],
+  }
+}
+
+/** «¿Rueda?»: a sphere and a cylinder roll; a cube, a prism and a pyramid do not. */
+export function genSolidRoll(rng: Rng): ShapeChoiceExercise {
+  const solid = pick(rng, ['cubo', 'prisma', 'piramide', 'cilindro', 'esfera'] as SolidName[])
+  const figure: SolidFigure = { type: 'solid', name: solid }
+  const right = SOLID_ROLLS[solid] ? 'Sí, rueda' : 'No, no rueda'
+  const { options, answer } = optionsWith(rng, right, ['Sí, rueda', 'No, no rueda'])
+  return {
+    id: `shape-choice:solid-roll:${solid}`,
+    kind: 'shape-choice', skill: geoSkill('solid:roll'), difficulty: DIFFICULTY_GEO,
+    question: '¿Rueda este cuerpo si lo empujas?', figures: [figure], options, answer,
+    hints: [
+      'Imagina que lo pones en una mesa inclinada: ¿se queda quieto o se va rodando?',
+      'Las partes redondas ruedan. Las caras planas se quedan quietas sobre la mesa.',
+      'Si tiene una superficie curva por donde se desliza, rueda. Si solo tiene caras planas y esquinas, no.',
+    ],
+  }
+}
+
+/** «¿Cuántas caras planas tiene?» for the solids with flat faces only. */
+export function genSolidFaces(rng: Rng): ShapeChoiceExercise {
+  const solid = pick(rng, Object.keys(SOLID_FLAT_FACES) as SolidName[])
+  const count = SOLID_FLAT_FACES[solid] as number
+  const figure: SolidFigure = { type: 'solid', name: solid }
+  const others = shuffle(rng, [4, 5, 6, 7, 8].filter((x) => x !== count)).map(String)
+  const { options, answer } = optionsWith(rng, String(count), others)
+  return {
+    id: `shape-choice:solid-faces:${solid}`,
+    kind: 'shape-choice', skill: geoSkill('solid:faces'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Cuántas caras planas tiene?', figures: [figure], options, answer,
+    hints: [
+      'Cuenta las caras una a una: la de arriba, la de abajo y las de los lados.',
+      'Imagina que el cuerpo está apoyado sobre una cara: ¿cuántas caras planas ves en total?',
+      'Un cubo tiene caras cuadradas por todas partes. Un prisma tiene dos bases iguales y caras de lado. Una pirámide tiene su base y las caras que llegan a la punta.',
+    ],
+  }
+}
+
+// ---------------------------------------------------------------- perimeter
+
+/** The perimeter by adding the sides: a rectilinear figure with its lengths written on it (drawing), or a rectangle garden
+    in a sentence (story). */
+export function genPerimeter(rng: Rng, mode: 'drawing' | 'story'): PerimeterExercise {
+  if (mode === 'story') {
+    const w = randInt(rng, 4, 20)
+    let h = randInt(rng, 3, 15)
+    if (h === w) h = w > 3 ? w - 1 : w + 1
+    const points: [number, number][] = [[0, 0], [w, 0], [w, h], [0, h]]
+    const sides = [w, h, w, h]
+    return {
+      id: `perimeter:story:${w}x${h}`,
+      kind: 'perimeter', skill: geoSkill('perimeter'), difficulty: 3,
+      mode, figure: { type: 'polygon', points }, sides, unit: 'm',
+      text: `Un jardín tiene forma de rectángulo. Mide ${w} metros de largo y ${h} metros de ancho. ¿Cuántos metros de valla hacen falta para rodearlo?`,
+      answer: 2 * (w + h),
+    }
+  }
+  const unit = pick(rng, ['cm', 'm'])
+  let points: [number, number][]
+  if (rng() < 0.5) {
+    const w = randInt(rng, 3, 14)
+    const h = randInt(rng, 2, 10)
+    points = [[0, 0], [w, 0], [w, h], [0, h]]
+  } else {
+    const W = randInt(rng, 5, 12)
+    const H = randInt(rng, 5, 12)
+    const cw = randInt(rng, 2, W - 2)
+    const ch = randInt(rng, 2, H - 2)
+    points = [[0, 0], [W, 0], [W, H - ch], [W - cw, H - ch], [W - cw, H], [0, H]]
+  }
+  const sides = sideLengths(points)
+  return {
+    id: `perimeter:drawing:${points.map((p) => p.join(',')).join(';')}:${unit}`,
+    kind: 'perimeter', skill: geoSkill('perimeter'), difficulty: 2,
+    mode, figure: { type: 'polygon', points, labels: sides.map((l) => `${l} ${unit}`) }, sides, unit, text: null,
+    answer: sides.reduce((s, l) => s + l, 0),
+  }
+}
+
+// ---------------------------------------------------------------- dispatch
+
+/** A geometry exercise for one skill (the perimeter mode comes from the ladder: drawing first, then the story). */
+export function genGeometry(op: GeoOp, rng: Rng, perimeterMode: 'drawing' | 'story' = 'drawing'): ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise {
+  switch (op) {
+    case 'poly:name': return genPolygonName(rng)
+    case 'poly:sides': return genPolygonSides(rng)
+    case 'line:type': return genLineType(rng)
+    case 'line:rel': return genLineRelation(rng)
+    case 'angle:type': return genAngleType(rng)
+    case 'angle:tap': return genAngleTap(rng)
+    case 'circle': return genCircle(rng)
+    case 'solid:name': return genSolidName(rng)
+    case 'solid:roll': return genSolidRoll(rng)
+    case 'solid:faces': return genSolidFaces(rng)
+    case 'perimeter': return genPerimeter(rng, perimeterMode)
+  }
+}
+
+// ---------------------------------------------------------------- grading
+
+const MISS = {
+  right: '¡Muy bien! Lo has visto en la figura.',
+  incomplete: 'Elige una respuesta antes de comprobar.',
+  name: 'Mira otra vez la figura con calma.',
+  cornerNotRight: 'Esa esquina no encaja con la de un papel: mírala otra vez.',
+  cornerMissed: 'Te falta alguna esquina recta: compara cada esquina con la de un papel.',
+  count: 'Cuenta las esquinas una a una, sin repetir ninguna.',
+  perimeterOne: 'Te falta sumar un lado: suma todos los lados, uno a uno.',
+  perimeter: 'Suma la medida de cada lado, uno detrás de otro.',
+  perimeterStory: 'En un rectángulo hay dos lados largos y dos cortos: súmalos todos.',
+}
+
+/** Grades a shape-choice: the option tapped against the right one. */
+export function checkShapeChoice(ex: ShapeChoiceExercise, answer: Answer): CheckResult {
+  const expected = ex.options[ex.answer]
+  if (answer.type !== 'choice') return wrongShape(expected)
+  if (answer.index === null || answer.index === undefined) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: MISS.incomplete }
+  const given = ex.options[answer.index] ?? '?'
+  if (answer.index === ex.answer) return { correct: true, given, expected, feedback: MISS.right }
+  const errorType: ErrorType = ex.skill.startsWith('frac:') ? 'fraction-count' : 'geo-name'
+  return { correct: false, given, expected, errorType, feedback: `${MISS.name} ${ex.hints[0]}` }
+}
+
+/** Grades angle-tap: the corners tapped against the right-angle corners (none may be tapped by mistake). */
+export function checkAngleTap(ex: AngleTapExercise, answer: Answer): CheckResult {
+  const expected = ex.rightCorners.length ? ex.rightCorners.map((i) => i + 1).join(', ') : 'ninguna'
+  if (answer.type !== 'marks') return wrongShape(expected)
+  const marked = [...new Set(answer.marked)].filter((i) => Number.isInteger(i) && i >= 0 && i < ex.figure.points.length).sort((a, b) => a - b)
+  const given = marked.length ? marked.map((i) => i + 1).join(', ') : 'ninguna'
+  const same = marked.length === ex.rightCorners.length && marked.every((v, i) => v === ex.rightCorners[i])
+  if (same) return { correct: true, given, expected, feedback: MISS.right }
+  const wrongTap = marked.some((i) => !ex.rightCorners.includes(i))
+  return { correct: false, given, expected, errorType: 'geo-name', feedback: wrongTap ? MISS.cornerNotRight : MISS.cornerMissed }
+}
+
+/** Grades a count of sides or corners. */
+export function checkShapeCount(ex: ShapeCountExercise, answer: Answer): CheckResult {
+  const expected = String(ex.answer)
+  if (answer.type !== 'number') return wrongShape(expected)
+  if (answer.value === null || answer.value === undefined) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: MISS.incomplete }
+  const given = String(answer.value)
+  if (answer.value === ex.answer) return { correct: true, given, expected, feedback: MISS.right }
+  return { correct: false, given, expected, errorType: 'other', feedback: MISS.count }
+}
+
+/** Grades a perimeter: the sum of the sides. A sum that left one side out is tagged geo-perimeter. */
+export function checkPerimeter(ex: PerimeterExercise, answer: Answer): CheckResult {
+  const expected = String(ex.answer)
+  if (answer.type !== 'number') return wrongShape(expected)
+  if (answer.value === null || answer.value === undefined) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: MISS.incomplete }
+  const given = `${answer.value} ${ex.unit}`
+  if (answer.value === ex.answer) return { correct: true, given, expected, feedback: MISS.right }
+  const leftOut = ex.sides.some((s) => ex.answer - s === answer.value)
+  const feedback = leftOut ? MISS.perimeterOne : ex.mode === 'story' ? MISS.perimeterStory : MISS.perimeter
+  return { correct: false, given, expected, errorType: leftOut ? 'geo-perimeter' : 'other', feedback }
+}
+
+// ---------------------------------------------------------------- hints
+
+const ANGLE_TAP_HINTS: [string, string, string] = [
+  'Un ángulo recto es como la esquina de una hoja de papel.',
+  'Mira cada esquina: ¿entra justo en la esquina de un papel, sin que sobre ni falte?',
+  'Compara cada esquina con la de un papel y toca solo las que encajan.',
+]
+const SIDES_HINTS: [string, string, string] = [
+  'Cuenta las esquinas una a una, sin repetir ninguna.',
+  'Cada esquina une dos lados: uno entra y otro sale.',
+  'Un polígono tiene tantos lados como esquinas. Cuenta marcando con el dedo.',
+]
+
+/** Hints of the geometry exercises: the strategy, then the step; never the answer. */
+export function geometryHints(ex: ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise): Hint[] {
+  switch (ex.kind) {
+    case 'shape-choice': return ex.hints.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
+    case 'shape-count': return SIDES_HINTS.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
+    case 'angle-tap': return ANGLE_TAP_HINTS.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
+    case 'perimeter':
+      if (ex.mode === 'story') {
+        return [
+          hint(1, 'Dar una vuelta entera al jardín es el perímetro: suma los lados que lo rodean.'),
+          hint(2, 'Un rectángulo tiene dos lados largos y dos cortos: los iguales van por parejas.'),
+          hint(3, `Suma largo, ancho, largo y ancho: ${ex.sides[0]} + ${ex.sides[1]} + ${ex.sides[2]} + ${ex.sides[3]} = ?`),
+        ]
+      }
+      return [
+        hint(1, 'El contorno es el camino alrededor de la figura: hay que sumar todos sus lados.'),
+        hint(2, 'Lee la medida de cada lado y ve sumándolas de una en una.'),
+        hint(3, `Suma así: ${ex.sides.join(' + ')} = ?`),
+      ]
+  }
+}

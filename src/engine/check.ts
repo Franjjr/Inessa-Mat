@@ -18,6 +18,8 @@ import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './su
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
+import { checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
+import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -555,5 +557,14 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
     case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
     case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
+    // fracciones and geometría (block E)
+    case 'fraction-shade': return checkFractionShade(exercise, answer)
+    case 'fraction-read': return checkFractionRead(exercise, answer)
+    case 'fraction-of': return checkFractionOf(exercise, answer)
+    case 'fraction-equal': return checkFractionEqual(exercise, answer)
+    case 'shape-choice': return checkShapeChoice(exercise, answer)
+    case 'angle-tap': return checkAngleTap(exercise, answer)
+    case 'perimeter': return checkPerimeter(exercise, answer)
+    case 'shape-count': return checkShapeCount(exercise, answer)
   }
 }

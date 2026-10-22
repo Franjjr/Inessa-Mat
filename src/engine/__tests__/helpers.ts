@@ -72,6 +72,20 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'numbers', values: [...ex.answer] }
     case 'place-value':
       return Array.isArray(ex.answer) ? { type: 'numbers', values: [...ex.answer] } : { type: 'number', value: ex.answer }
+    case 'fraction-shade':
+      return { type: 'shade', chosen: Array.from({ length: ex.numerator }, (_, i) => i) }
+    case 'fraction-read':
+      return { type: 'fraction', numerator: ex.numerator, denominator: ex.denominator }
+    case 'fraction-equal':
+      return { type: 'marks', marked: [...ex.unequal] }
+    case 'angle-tap':
+      return { type: 'marks', marked: [...ex.rightCorners] }
+    case 'shape-choice':
+      return { type: 'choice', index: ex.answer }
+    case 'fraction-of':
+    case 'perimeter':
+    case 'shape-count':
+      return { type: 'number', value: ex.answer }
     default:
       return { type: 'number', value: ex.answer as number }
   }

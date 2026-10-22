@@ -15,10 +15,12 @@ import { genCheckCalc, genErrorHunt } from './bugs'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
 import { buildEquation, buildMental, mentalSkillsOf } from './calc'
 import { buildNumericExercise, numericSkillsOf } from './numeric'
+import { genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade } from './fractions'
+import { genGeometry } from './geometry'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
-  CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, checkSkill, conceptSkill, div2x1Skill, divSkill,
-  huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
+  divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
   type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
@@ -28,6 +30,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation',
+  'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -206,6 +209,10 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
+      break
+    case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal':
+    case 'shape-choice': case 'angle-tap': case 'perimeter': case 'shape-count':
+      for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
       break
     default: {
       const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
@@ -620,6 +627,26 @@ function buildWord(p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exerc
   return retry(make, used, rng, 24) ?? makeWordProblem('add-peces', fillTemplate('En el río nadan {a} peces dorados y {b} peces azules. ¿Cuántos peces hay en total?', 245, 132), 'add', 245, 132, 'peces')
 }
 
+/** Fractions and geometry (blocks E). The ladder: fraction of a quantity and perimeter start with the drawing and
+    move to the numbers (or the story) once the skill is learnt (mastery box 2 or more). */
+function buildBlock(skill: SkillKey, p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
+  const learnt = (ctx.mastery?.[skill]?.box ?? -1) >= 2
+  if (p.type === 'fraction') {
+    switch (p.op) {
+      case 'shade': return retry(() => genFractionShade(rng, p.d), used, rng)!
+      case 'read': return retry(() => genFractionRead(rng, p.d), used, rng)!
+      case 'name': return retry(() => genFractionName(rng, p.d), used, rng)!
+      case 'of': return retry(() => genFractionOf(rng, p.d, learnt ? 'numbers' : 'drawing', pick(rng, ['🍬', '🌸'] as const)), used, rng)!
+      case 'equal': return retry(() => genFractionEqual(rng), used, rng)!
+      case 'compare': return retry(() => genFractionCompare(rng), used, rng)!
+    }
+  }
+  if (p.type === 'geo') {
+    return retry(() => genGeometry(p.op, rng, learnt ? 'story' : 'drawing') as Exercise, used, rng)!
+  }
+  throw new Error(`engine.generate: '${skill}' is not a fraction or geometry skill`)
+}
+
 export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
@@ -631,6 +658,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
     const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
     if (built) return built
   }
+  if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)

@@ -22,6 +22,10 @@ import type { ID, InputMode } from './common'
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
  *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
  *   div:3x1:exact|rem         3-digit dividend ÷ 1-digit divisor
+ *   frac:shade:D|read:D|name:D|of:D  fractions with denominator D (2|3|4|5|6|8|10|12): colour, read, name, fraction of a quantity
+ *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
+ *   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
+ *                                    geometry (3.º, block E): polygons, lines, angles, circle, solids, perimeter
  */
 export type SkillKey = string
 
@@ -49,6 +53,14 @@ export type ExerciseKind =
   | 'bar-problem'     // story problem solved on a bar diagram (with the bar first, then without it)
   | 'error-hunt'      // encuentra el error: a worked column calculation; the child decides and fixes it
   | 'check-calc'      // comprobar: a claimed result; the child writes the check operation and decides
+  | 'fraction-shade'  // colour n parts of a figure split in d equal parts (frac:shade:D)
+  | 'fraction-read'   // write the fraction that is coloured: numerator over denominator (frac:read:D)
+  | 'fraction-of'     // a fraction of a quantity: with the objects in groups first, then with numbers (frac:of:D)
+  | 'fraction-equal'  // tap the figures that are NOT split in equal parts (frac:equal)
+  | 'shape-choice'    // a figure and a question with options: name, line type, angle, solid, fraction name or compare
+  | 'angle-tap'       // tap the corners of a figure that are right angles (geo:angle:tap)
+  | 'perimeter'       // perimeter of a figure with its side lengths, or a garden problem (geo:perimeter)
+  | 'shape-count'     // how many sides (or corners) a polygon has (geo:poly:sides)
 
 interface ExerciseBase {
   id: ID
@@ -216,12 +228,92 @@ export interface CheckCalcExercise extends ExerciseBase {
   errorType: ErrorType | null
 }
 
+// ---------------------------------------------------------------- fractions and geometry (3.º, block E)
+// Engine: src/engine/fractions.ts and src/engine/geometry.ts. Figures are data; src/activities/views/FigureSvg.tsx draws them.
+
+/** A figure split into parts (fractions). weights = relative size of each part; all equal = a fair split. */
+export interface FractionFigure {
+  type: 'fraction'
+  shape: 'circle' | 'rect' | 'bar'
+  weights: number[]
+  /** Parts already coloured (indexes, 0 = first part). */
+  colored: number[]
+  /** rect and bar: 'x' = the cuts run side by side (columns), 'y' = one above the other (rows). */
+  axis: 'x' | 'y'
+}
+/** A closed polygon in free coordinates (the view fits it to the box). labels: text on each side, side i joins point i and i+1. */
+export interface PolygonFigure { type: 'polygon'; points: [number, number][]; labels?: string[] }
+export interface CircleFigure { type: 'circle'; filled: boolean }
+/** straight: 2 points; curve: 3 points (the middle one is the control point); broken: the points joined in order. */
+export interface LineFigure { type: 'line'; kind: 'straight' | 'curve' | 'broken'; points: [number, number][] }
+/** Two straight segments, each two points. */
+export interface LinesFigure { type: 'lines'; segments: [[number, number], [number, number]][] }
+/** An angle with its vertex at the centre: one ray horizontal, the other `deg` degrees from it; the whole turned by `rotation`. */
+export interface AngleFigure { type: 'angle'; deg: number; rotation: number }
+export type SolidName = 'cubo' | 'prisma' | 'piramide' | 'cilindro' | 'cono' | 'esfera'
+export interface SolidFigure { type: 'solid'; name: SolidName }
+export type Figure = FractionFigure | PolygonFigure | CircleFigure | LineFigure | LinesFigure | AngleFigure | SolidFigure
+
+export interface FractionShadeExercise extends ExerciseBase {
+  kind: 'fraction-shade'; numerator: number; denominator: number; figure: FractionFigure
+}
+export interface FractionReadExercise extends ExerciseBase {
+  kind: 'fraction-read'; numerator: number; denominator: number; figure: FractionFigure
+}
+export interface FractionOfExercise extends ExerciseBase {
+  kind: 'fraction-of'
+  numerator: number; denominator: number
+  /** The whole quantity (a multiple of the denominator). */
+  total: number
+  /** drawing: the objects in equal groups, the child counts; numbers: only the calculation. */
+  mode: 'drawing' | 'numbers'
+  emoji: string
+  /** Short story around the calculation (numbers mode, sometimes); null = bare fraction. */
+  story: string | null
+  answer: number
+}
+export interface FractionEqualExercise extends ExerciseBase {
+  kind: 'fraction-equal'; figures: FractionFigure[]
+  /** Indexes of the figures that are not split in equal parts (the ones to tap). */
+  unequal: number[]
+}
+export interface ShapeChoiceExercise extends ExerciseBase {
+  kind: 'shape-choice'
+  question: string
+  figures: Figure[]
+  options: string[]
+  /** Index in options. */
+  answer: number
+  /** Hints, from the strategy (level 1) to the worked step (level 3). Never the answer. */
+  hints: [string, string, string]
+}
+export interface AngleTapExercise extends ExerciseBase {
+  kind: 'angle-tap'; figure: PolygonFigure
+  /** Corners (indexes into figure.points) that are right angles. May be empty. */
+  rightCorners: number[]
+}
+export interface PerimeterExercise extends ExerciseBase {
+  kind: 'perimeter'
+  mode: 'drawing' | 'story'
+  figure: PolygonFigure
+  /** The side lengths in order (the figure carries them as labels in drawing mode). */
+  sides: number[]
+  unit: string
+  /** Story text (story mode). */
+  text: string | null
+  answer: number
+}
+export interface ShapeCountExercise extends ExerciseBase {
+  kind: 'shape-count'; figure: PolygonFigure; ask: 'sides' | 'vertices'; answer: number
+}
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
   | ColumnMulExercise | DivisionExercise | WordProblemExercise | BarProblemExercise | ErrorHuntExercise | CheckCalcExercise
   | PlaceValueExercise | CompareExercise | OrderExercise | RoundExercise | NumberLineExercise | MentalExercise
-  | EquationExercise
+  | EquationExercise | FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise
+  | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -240,6 +332,10 @@ export type Answer =
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
   | { type: 'division-parts'; parts: (number | null)[]; quotient: number | null; remainder: number | null } // repartir por partes
   | { type: 'climb'; products: (number | null)[]; remainder: number | null } // multiplicar hacia arriba
+  | { type: 'shade'; chosen: number[] }                                    // fraction-shade: the parts the child coloured
+  | { type: 'fraction'; numerator: number | null; denominator: number | null } // fraction-read: written over and under
+  | { type: 'choice'; index: number | null }                               // shape-choice: the option tapped
+  | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
@@ -275,6 +371,10 @@ export type ErrorType =
   | 'place-value'          // a digit written in the wrong column (valor posicional), or a shifted result
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
+  | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round
+  | 'fraction-count'       // counted the coloured parts or the parts of the whole wrongly (numerator or denominator)
+  | 'geo-name'             // confused a figure, a line, an angle or a solid with another one
+  | 'geo-perimeter'        // the perimeter did not add every side
   | 'other'
 
 export interface CheckResult {

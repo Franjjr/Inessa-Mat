@@ -16,8 +16,24 @@
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
    check:add|sub|div        comprobar (claim + the check operation)
    div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
+   frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
+   frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
+   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
+                              geometry (block E, geometría): see src/engine/geometry.ts
 */
 import type { BarOp, DivisionExercise, ExerciseKind, MentalFamily, PlaceMode, SkillKey } from '@/types'
+
+/* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
+export const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12] as const
+export type FractionDenominator = (typeof FRACTION_DENOMINATORS)[number]
+export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare'
+export type GeoOp =
+  | 'poly:name' | 'poly:sides' | 'line:type' | 'line:rel' | 'angle:type' | 'angle:tap' | 'circle'
+  | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter'
+export const GEO_OPS: GeoOp[] = [
+  'poly:name', 'poly:sides', 'line:type', 'line:rel', 'angle:type', 'angle:tap', 'circle',
+  'solid:name', 'solid:roll', 'solid:faces', 'perimeter',
+]
 
 export type DivisionVariant = DivisionExercise['variant']
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
@@ -58,6 +74,9 @@ export type ParsedSkill =
   | { type: 'bar'; op: BarSkillOp }
   | { type: 'hunt'; op: HuntOp }
   | { type: 'check'; op: CheckOp }
+  | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
+  | { type: 'fraction'; op: 'equal' | 'compare' }
+  | { type: 'geo'; op: GeoOp }
 
 // ---------------------------------------------------------------- builders
 
@@ -111,6 +130,13 @@ export function checkSkill(op: CheckOp): SkillKey {
 }
 export function div3x1Skill(variant: 'exact' | 'rem'): SkillKey {
   return `div:3x1:${variant}`
+}
+/** frac:shade|read|name|of with a denominator; frac:equal and frac:compare without one. */
+export function fractionSkill(op: FractionOp, d?: number): SkillKey {
+  return op === 'equal' || op === 'compare' ? `frac:${op}` : `frac:${op}:${d}`
+}
+export function geoSkill(op: GeoOp): SkillKey {
+  return `geo:${op}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -169,7 +195,31 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
   if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
   if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
+  if ((m = key.match(/^frac:(shade|read|name|of):(\d+)$/))) {
+    const d = Number(m[2])
+    return (FRACTION_DENOMINATORS as readonly number[]).includes(d) ? { type: 'fraction', op: m[1] as 'shade' | 'read' | 'name' | 'of', d } : null
+  }
+  if ((m = key.match(/^frac:(equal|compare)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' }
+  if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
   return null
+}
+
+/** Skill keys practised by one of the fraction and geometry kinds (free play, and the universe of a selector). */
+export function blockSkillsOf(kind: ExerciseKind): SkillKey[] {
+  switch (kind) {
+    case 'fraction-shade': return FRACTION_DENOMINATORS.map((d) => fractionSkill('shade', d))
+    case 'fraction-read': return FRACTION_DENOMINATORS.map((d) => fractionSkill('read', d))
+    case 'fraction-of': return FRACTION_DENOMINATORS.map((d) => fractionSkill('of', d))
+    case 'fraction-equal': return [fractionSkill('equal')]
+    case 'shape-choice': return [
+      ...FRACTION_DENOMINATORS.map((d) => fractionSkill('name', d)), fractionSkill('compare'),
+      ...GEO_OPS.filter((op) => !['poly:sides', 'angle:tap', 'perimeter'].includes(op)).map(geoSkill),
+    ]
+    case 'angle-tap': return [geoSkill('angle:tap')]
+    case 'perimeter': return [geoSkill('perimeter')]
+    case 'shape-count': return [geoSkill('poly:sides')]
+    default: return []
+  }
 }
 
 /** Cálculo mental skills (the warm-up of the daily session takes them). */
@@ -224,6 +274,23 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']
+    case 'fraction':
+      switch (p.op) {
+        case 'shade': return ['fraction-shade']
+        case 'read': return ['fraction-read']
+        case 'name': return ['shape-choice']
+        case 'of': return ['fraction-of']
+        case 'equal': return ['fraction-equal']
+        case 'compare': return ['shape-choice']
+      }
+      break
+    case 'geo':
+      switch (p.op) {
+        case 'poly:sides': return ['shape-count']
+        case 'angle:tap': return ['angle-tap']
+        case 'perimeter': return ['perimeter']
+        default: return ['shape-choice']
+      }
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']

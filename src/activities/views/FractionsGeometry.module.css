@@ -1,0 +1,213 @@
+/* Shared look of the fraction and geometry views (block E): big figures, tappable parts, sticker answer buttons.
+   Tablet first: every tap target is at least 64px; the layout wraps and never widens the page (phone 390 px). */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.instructions {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.figureRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.figureCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-3);
+  min-width: 0;
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.figureCardOn {
+  background: var(--c-magic-soft);
+}
+
+.figure {
+  display: block;
+  width: min(100%, 300px);
+  height: auto;
+  max-height: 42vh;
+  min-width: 0;
+  overflow: visible;
+}
+
+.figureSmall {
+  width: min(100%, 200px);
+}
+
+.part {
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: fill 120ms ease;
+}
+
+.part:focus-visible,
+.corner:focus-visible {
+  outline: 4px solid var(--c-primary);
+  outline-offset: 4px;
+}
+
+.corner {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.label {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  fill: var(--c-ink);
+}
+
+.optionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.option {
+  min-height: 72px;
+  min-width: 120px;
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.optionOn {
+  background: var(--c-magic-soft);
+}
+
+.fractionEntry {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.fractionBar {
+  width: 120px;
+  max-width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--sticker-line, var(--c-ink));
+}
+
+.fractionRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.bigText {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.groups {
+  display: grid;
+  gap: var(--sp-3);
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+  gap: 4px;
+  min-height: 84px;
+  padding: var(--sp-2);
+  background: var(--c-surface);
+  border: 3px dashed var(--c-line);
+  border-radius: var(--r-lg);
+  font-size: clamp(22px, 3.2vmin + 8px, 34px);
+  line-height: 1.15;
+}
+
+.groupOn {
+  background: var(--c-magic-soft);
+  border: 3px solid var(--c-magic);
+}
+
+.objects {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.inputRow {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+
+.figureBox {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+}
+
+.bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

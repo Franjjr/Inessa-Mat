@@ -1,11 +1,16 @@
 /* Temario de 3.º de Primaria (matemáticas) como datos. Orden curricular de la app; el trimestre queda sin fijar
    (undefined) hasta confirmar la programación del colegio (docs/curriculum/PLAN_DOCENTE.md §9).
    Solo entran como «disponible» las destrezas para las que ya hay ejercicios; el resto queda «pendiente». */
-import { divSkill, mulSkill } from '@/engine/skills'
+import { divSkill, fractionSkill, geoSkill, mulSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusTopic } from './model'
 
 const TABLE_ORDER = [2, 5, 10, 3, 4, 6, 8, 7, 9] as const
+
+/** Fraction skills for several operations and denominators (frac:<op>:<d>). */
+function fractionFamily(ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): SkillKey[] {
+  return ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
+}
 
 /** Multiplication facts of one table (1..10), normalised keys (mul:AxB, A <= B). */
 export function tableSkills(t: number): SkillKey[] {
@@ -130,7 +135,12 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'fracciones',
       name: 'Fracciones',
-      topics: [pending('fracciones-mitad-cuarto', 'Mitades, tercios y cuartos', 'Falta la vista de fracciones con dibujo.'), pending('fraccion-cantidad', 'Fracción de una cantidad (¼ de 20)', 'Falta el generador de fracciones.')],
+      topics: [
+        { id: 'fracciones-mitad-cuarto', name: 'Mitades, tercios y cuartos', skills: [...fractionFamily(['shade', 'read', 'name'], [2, 3, 4]), fractionSkill('equal')], status: 'disponible', rungs: { concreto: 'Colorear partes de un círculo, un rectángulo o una barra', dibujo: 'Leer la fracción: arriba las partes de color, abajo todas', numeros: 'Escribir la fracción con dos números', uso: 'Decir su nombre: un medio, dos tercios, tres cuartos' } },
+        { id: 'fraccion-cantidad', name: 'Fracción de una cantidad (¼ de 20)', skills: fractionFamily(['of'], [2, 3, 4]), status: 'disponible', rungs: { concreto: '20 objetos en grupos iguales', dibujo: 'Contar los objetos de un grupo', numeros: '¼ de 20 = 20 ÷ 4', uso: 'Problemas: reparto de caramelos o flores' } },
+        { id: 'fracciones-comparar', name: 'Comparar fracciones con dibujos', skills: [fractionSkill('compare')], status: 'disponible', rungs: { dibujo: 'Dos barras de la misma longitud, una partida y otra coloreada', numeros: '½ y ¼: ¿cuál es mayor?' } },
+        { id: 'fracciones-mas-partes', name: 'Fracciones de 5, 6, 8, 10 y 12 partes', skills: fractionFamily(['shade', 'read', 'name'], [5, 6, 8, 10, 12]), status: 'disponible', rungs: { dibujo: 'Figuras partidas en más partes iguales', numeros: 'Leer y escribir fracciones con denominador hasta 12' } },
+      ],
     },
     {
       id: 'dinero',
@@ -150,7 +160,13 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'geometria',
       name: 'Geometría',
-      topics: [pending('geometria-figuras', 'Figuras, ángulos rectos y perímetro', 'Falta la vista de figuras.')],
+      topics: [
+        { id: 'poligonos', name: 'Polígonos: nombre, lados y esquinas', skills: [geoSkill('poly:name'), geoSkill('poly:sides')], status: 'disponible', rungs: { concreto: 'Figuras de cartón de distintas formas y giros', dibujo: 'Contar lados y esquinas marcándolos', numeros: 'Triángulo 3, cuadrado y rectángulo 4, pentágono 5, hexágono 6' } },
+        { id: 'rectas', name: 'Rectas, curvas, paralelas y perpendiculares', skills: [geoSkill('line:type'), geoSkill('line:rel')], status: 'disponible', rungs: { concreto: 'Dos tiras de papel que se cruzan o no', dibujo: 'La línea que se prolonga sin fin', numeros: 'Paralelas nunca se cruzan; perpendiculares forman cruz' } },
+        { id: 'angulos-rectos', name: 'Ángulos rectos', skills: [geoSkill('angle:type'), geoSkill('angle:tap')], status: 'disponible', rungs: { concreto: 'La esquina de una hoja de papel', dibujo: 'Comparar cada ángulo con la esquina del papel', uso: 'Encontrar las esquinas rectas de una habitación' } },
+        { id: 'circulo-cuerpos', name: 'Círculo, circunferencia y cuerpos', skills: [geoSkill('circle'), geoSkill('solid:name'), geoSkill('solid:roll'), geoSkill('solid:faces')], status: 'disponible', rungs: { concreto: 'Pelotas, cajas, latas y conos', dibujo: 'Caras planas y partes redondas', numeros: 'Cuántas caras planas tiene cada cuerpo' } },
+        { id: 'perimetro', name: 'Perímetro: sumar los lados', skills: [geoSkill('perimeter')], status: 'disponible', rungs: { dibujo: 'Figuras con la medida de cada lado', uso: '¿Cuántos metros de valla hacen falta para rodear el jardín?' } },
+      ],
     },
   ],
 }

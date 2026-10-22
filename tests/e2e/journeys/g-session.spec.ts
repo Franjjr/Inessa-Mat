@@ -64,11 +64,11 @@ test.describe('Mi sesión de hoy', () => {
 })
 
 test.describe('Prueba inicial', () => {
-  test('starts with seventeen questions, shows no right or wrong feedback and says thanks', async ({ page }) => {
+  test('starts with nineteen questions, shows no right or wrong feedback and says thanks', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/prueba')
     await expect(page.getByRole('heading', { name: 'Prueba inicial' })).toBeVisible()
-    await expect(page.getByText(/· 1 de 17/)).toBeVisible()
+    await expect(page.getByText(/· 1 de 19/)).toBeVisible()
     await settle(page, 300)
   })
 })

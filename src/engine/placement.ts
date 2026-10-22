@@ -9,7 +9,7 @@ import { allMulFactSkills, divSkill, parseSkill } from './skills'
 /** Attempts of the placement carry this activity name in their context. */
 export const PLACEMENT_ACTIVITY = 'prueba-inicial'
 
-export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas'
+export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas' | 'fracciones-geometria'
 
 export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'numeros', label: 'Números' },
@@ -17,6 +17,7 @@ export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'tablas', label: 'Tablas' },
   { id: 'dividir', label: 'División' },
   { id: 'problemas', label: 'Problemas' },
+  { id: 'fracciones-geometria', label: 'Fracciones y figuras' },
 ]
 
 export interface PlacementItem {
@@ -24,7 +25,7 @@ export interface PlacementItem {
   exercise: Exercise
 }
 
-export const PLACEMENT_COUNT = 17
+export const PLACEMENT_COUNT = 19
 
 export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
   const p = parseSkill(skill)
@@ -35,6 +36,7 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'mul': return 'tablas'
     case 'div': case 'div2x1': case 'div3x1': return 'dividir'
     case 'word': case 'bar': return 'problemas'
+    case 'fraction': case 'geo': return 'fracciones-geometria'
     case 'place': case 'compare': case 'order': case 'round': case 'line': return 'numeros'
     default: return null
   }
@@ -54,6 +56,7 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
     { block: 'tablas', skills: facts.slice(0, 4) },
     { block: 'dividir', skills: [divFacts[0], 'div:3x1:rem'] },
     { block: 'problemas', skills: ['bar:add', 'bar:sub'] },
+    { block: 'fracciones-geometria', skills: ['frac:read:4', 'geo:poly:name'] },
   ]
   const out: PlacementItem[] = []
   for (const { block, skills } of plan) {

@@ -44,6 +44,10 @@ function showAnswer(a: Answer): string {
     case 'verdict': return `${a.ok === null ? '—' : a.ok ? 'bien' : 'mal'} · ${a.value ?? '—'}`
     case 'division-parts': return `${a.parts.map((v) => v ?? '—').join(' + ')} = ${a.quotient ?? '—'} resto ${a.remainder ?? '—'}`
     case 'climb': return `${a.products.map((v) => v ?? '—').join(' · ')} resto ${a.remainder ?? '—'}`
+    case 'shade': return `${a.chosen.length} partes`
+    case 'fraction': return `${a.numerator ?? '—'}/${a.denominator ?? '—'}`
+    case 'choice': return a.index === null ? '—' : `opción ${a.index + 1}`
+    case 'marks': return a.marked.length ? a.marked.map((i) => i + 1).join(', ') : 'ninguna'
   }
 }
 
