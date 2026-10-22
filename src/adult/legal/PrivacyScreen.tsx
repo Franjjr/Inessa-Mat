@@ -32,7 +32,7 @@ export default function PrivacyScreen() {
 
         <h2>1. Quién es responsable</h2>
         <p>
-          Responsable del tratamiento: <Todo>NOMBRE LEGAL DEL TITULAR</Todo>, <Todo>DIRECCIÓN</Todo>. Correo de privacidad:{' '}
+          Responsable del tratamiento: Fran Julian, <Todo>DIRECCIÓN</Todo>. Correo de privacidad:{' '}
           <Todo>CORREO DE PRIVACIDAD</Todo>.
         </p>
         <p>
