@@ -291,6 +291,7 @@ function ConvertToCents({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
         <span className={m.equals}>son</span>
       </div>
       <div className={m.row}>
+        <span className={m.unit}>céntimos:</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -302,7 +303,6 @@ function ConvertToCents({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
           placeholder="?"
           autoFocus
         />
-        <span className={m.unit}>céntimos</span>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit(value)} canCheck={value !== null} />
     </>

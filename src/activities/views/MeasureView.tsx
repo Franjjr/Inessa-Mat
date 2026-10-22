@@ -87,7 +87,8 @@ function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFl
       <p className={s.instructions}>{ex.toBig ? 'Pasa a la unidad grande.' : 'Pasa a la unidad pequeña.'}</p>
       <div className={r.equation}>
         <span className={r.given}>{ex.given.charAt(0).toUpperCase() + ex.given.slice(1)}</span>
-        <span className={r.equals} aria-hidden>=</span>
+        {/* The unit goes before the box: after it would sit beside the pad's own ✓ button. */}
+        <span className={r.unit}>en {ex.unit}:</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -99,7 +100,6 @@ function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFl
           placeholder="?"
           autoFocus
         />
-        <span className={r.unit}>{ex.unit}</span>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
     </>
@@ -149,6 +149,7 @@ function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }
       </p>
       <Ruler max={ex.max} start={ex.start} end={ex.end} />
       <div className={m.row}>
+        <span className={r.unit}>En cm:</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -160,7 +161,6 @@ function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }
           placeholder="?"
           autoFocus
         />
-        <span className={r.unit}>cm</span>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
     </>
@@ -179,6 +179,7 @@ function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
     <>
       <p className={m.storyText}>{text}</p>
       <div className={m.row}>
+        <span className={r.unit}>En {ex.unit}:</span>
         <NumberInput
           value={value}
           onChange={setValue}
@@ -190,7 +191,6 @@ function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
           placeholder="?"
           autoFocus
         />
-        <span className={r.unit}>{ex.unit}</span>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
     </>
