@@ -58,6 +58,18 @@
   --w7: #ea580c; --w7-soft: #ffedd5;   /* Forja del Dragón */
   --w8: #a16207; --w8-soft: #fef9c3;   /* Castillo del Reparto */
 
+  /* Direction C «lúdica y colorista» (docs/design/proposals/c-ludica-colorista): sticker panels with a thick ink
+     outline and a hard offset shadow, and soft colour fills per section. */
+  --sticker-line: var(--c-ink);
+  --sticker-border: 3px solid var(--sticker-line);
+  --sticker-shadow: 5px 6px 0 var(--sticker-line);
+  --sticker-shadow-sm: 3px 4px 0 var(--sticker-line);
+  --c-yellow: #facc15;
+  --c-yellow-soft: #fef9c3;
+  --c-green-soft: #dcfce7;
+  --c-blue-soft: #dbeafe;
+  --c-pink-soft: #fce7f3;
+
   /* Shape */
   --r-sm: 10px;
   --r-md: 16px;
