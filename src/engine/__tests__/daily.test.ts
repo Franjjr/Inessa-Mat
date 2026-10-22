@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { GRADE3_SYLLABUS, allTopics, currentTopic } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, allTopics, currentTopic, teachingOrder } from '@/content/syllabus'
 import {
   DAILY_MINUTES, NEW_FACT_BUDGET, estimateSeconds, planDailySession, scaffoldedSkills, statementOf,
 } from '../daily'
 import { newMastery } from '../mastery'
-import { isEasyFact, isFactSkill, mulSkill, parseSkill } from '../skills'
+import { isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
 import { createRng } from '../rng'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -29,7 +29,7 @@ function m(skill: string, box: number, opts: { dueDays?: number; seenDays?: numb
 /** A child who has mastered every available topic before `topicId` and has seen a few facts of it. */
 function masteredBefore(topicId: string): MasteryMap {
   const mastery: MasteryMap = {}
-  for (const t of allTopics(GRADE3_SYLLABUS)) {
+  for (const t of teachingOrder(GRADE3_SYLLABUS)) {
     if (t.id === topicId) break
     for (const s of t.skills) mastery[s] = m(s, 3, { dueDays: 1, seenDays: -2 })
   }
@@ -106,7 +106,8 @@ describe('planDailySession', () => {
     const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
     const warm = plan.blocks.find((b) => b.id === 'warmup')!.items
     expect(warm.length).toBeGreaterThan(0)
-    expect(warm.every((i) => i.exercise.kind === 'fact-mul' || i.exercise.kind === 'fact-div')).toBe(true)
+    // facts, or the cálculo mental learnt in etapa 1 (completar a 10, 100 y 1 000)
+    expect(warm.every((i) => isFactSkill(i.exercise.skill) || isMentalSkill(i.exercise.skill))).toBe(true)
     for (const i of warm) {
       expect(mastery[i.exercise.skill]).toBeDefined()
       expect(i.exercise.skill).not.toBe('mul:6x6')
@@ -156,10 +157,10 @@ describe('planDailySession', () => {
     expect(plan.example!.steps.length).toBeGreaterThan(0)
   })
 
-  it('currentTopic follows the curriculum order and skips pending topics', () => {
+  it('currentTopic follows the teaching order of the stages and skips pending topics', () => {
     expect(currentTopic(GRADE3_SYLLABUS, {})?.id).toBe('descomponer-9999')
-    // Numbers up to 9 999 come first in the curriculum: once they are learnt, the sums of 2 figures follow.
-    const topics = allTopics(GRADE3_SYLLABUS)
+    // Etapa 1 (numbers, easy tables, coins) comes first: once it is learnt, the sums of 2 figures follow.
+    const topics = teachingOrder(GRADE3_SYLLABUS)
     const numbers: MasteryMap = {}
     for (const t of topics.slice(0, topics.findIndex((x) => x.id === 'suma-2d'))) for (const s of t.skills) numbers[s] = m(s, 2)
     expect(currentTopic(GRADE3_SYLLABUS, numbers)?.id).toBe('suma-2d')

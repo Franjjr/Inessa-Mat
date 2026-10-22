@@ -12,7 +12,7 @@ export const w8 = world({
   crystalName: 'dorado',
   predicament: 'net',
   hook: '¡Borrón ha atrapado a {pet} con una red!',
-  skillsSummary: 'Dividir: repartos, familias de números, la división en galera y el resto',
+  skillsSummary: 'Dividir: repartos, familias de números, la división en galera y el resto; fracciones de muchas partes',
   path: [[0.12, 0.84], [0.36, 0.86], [0.56, 0.74], [0.38, 0.58], [0.16, 0.5], [0.24, 0.26], [0.46, 0.3], [0.68, 0.44], [0.86, 0.3], [0.7, 0.12]],
   nodes: [
     storyNode('arrival', 'La red de Borrón', 'w8-arrival'),
@@ -61,6 +61,13 @@ export const w8 = world({
       },
       count: 4,
       params: { guided: true },
+    }),
+    activityNode('castle-flags', {
+      kind: 'exercises',
+      title: 'Las banderas del castillo',
+      instructions: 'Cada bandera está partida en muchas partes iguales. Lee la fracción coloreada.',
+      selector: { skills: ['frac:read:6', 'frac:read:8', 'frac:shade:5', 'frac:name:10', 'frac:read:12'] },
+      count: 5,
     }),
     guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),
   ],

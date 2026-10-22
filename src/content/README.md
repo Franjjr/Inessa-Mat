@@ -20,7 +20,8 @@ meta.ts           optional teach-back activity, season-2 teaser, diploma + chest
 
 ## Worlds and nodes
 
-Each world has 10 nodes (the contract allows 7–10): `arrival` story → lessons / activities (3–5 activities of ≥ 3 kinds) → an optional
+Each world has 7–13 nodes: `arrival` story → lessons / activities (3–7 activities of ≥ 3 kinds, the last ones are the
+`exercises` stops of the world's stage of the temario, see `GRADE3_STAGES`) → an optional
 `mid` story (Borrón appears) → `guardian` (always last, id `guardian`). Node ids are stable strings
 (`arrival`, `lesson-groups`, `column-carry`, …) — progress is stored by them, never rename.
 `pos` (0..1, x → right, y → down) is laid out evenly along a smooth, non-crossing path; tests guarantee ≥ 120 px

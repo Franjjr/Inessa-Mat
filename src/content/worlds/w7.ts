@@ -12,7 +12,7 @@ export const w7 = world({
   crystalName: 'naranja',
   predicament: 'cage',
   hook: '¡{pet} se ha quedado {pg:encerrada|encerrado} en un farolillo!',
-  skillsSummary: 'Multiplicar 2 cifras × 1 cifra: por trocitos, en columna y con llevadas',
+  skillsSummary: 'Multiplicar 2 cifras × 1 cifra: por trocitos, en columna y con llevadas; reloj digital y duraciones, masa, capacidad y perímetro',
   path: [[0.12, 0.86], [0.14, 0.58], [0.2, 0.28], [0.38, 0.18], [0.46, 0.46], [0.5, 0.78], [0.68, 0.86], [0.78, 0.58], [0.8, 0.3], [0.86, 0.13]],
   nodes: [
     storyNode('arrival', 'El farolillo de la forja', 'w7-arrival'),
@@ -62,6 +62,20 @@ export const w7 = world({
       params: { chooseOp: true },
     }),
     reviewNode('review', 'Repaso mágico'),
+    activityNode('forge-time', {
+      kind: 'exercises',
+      title: 'Los turnos de la forja',
+      instructions: 'El dragón trabaja por turnos. Lee la hora digital y calcula cuánto dura cada turno.',
+      selector: { skills: ['clock:convert:day', 'time:end', 'time:elapsed'] },
+      count: 4,
+    }),
+    activityNode('forge-measure', {
+      kind: 'exercises',
+      title: 'Pesar y medir el metal',
+      instructions: 'Pesa, llena y mide. Pasa las medidas a la misma unidad antes de sumar.',
+      selector: { skills: ['measure:unit:mass', 'measure:unit:capacity', 'measure:convert:mass', 'measure:add', 'measure:estimate', 'geo:perimeter', 'frac:compare'] },
+      count: 5,
+    }),
     guardianNode('El desafío de la dragona Chispa', 'w7-guardian'),
   ],
 })

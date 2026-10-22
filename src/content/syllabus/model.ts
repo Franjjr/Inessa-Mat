@@ -28,9 +28,26 @@ export interface SyllabusBlock {
   topics: SyllabusTopic[]
 }
 
+/**
+ * A stage of the teaching order: the topics taught together, in order, in one world of the adventure. Stages run in
+ * sequence and mix blocks (a spiral: numbers and sums with coins and the clock, then tables with shapes…), so the
+ * blocks stay for the adult report and the stages decide what comes next.
+ */
+export interface SyllabusStage {
+  id: string
+  /** Trimester of the stage (the app's own progressive order, not a school's). */
+  term: 1 | 2 | 3
+  /** The world of the adventure that goes with this stage (its guardian is the stage test). */
+  worldId: string
+  /** Topic ids in teaching order. */
+  topics: string[]
+}
+
 export interface Syllabus {
   id: string
   /** Primary school year (1..6). */
   course: number
   blocks: SyllabusBlock[]
+  /** Teaching order. Topics missing from every stage are taught after the stages, in block order. */
+  stages?: SyllabusStage[]
 }

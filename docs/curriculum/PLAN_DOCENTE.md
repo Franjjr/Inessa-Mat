@@ -99,6 +99,12 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
 - Los minijuegos solo si **la mecánica es la matemática** (el laberinto de múltiplos sí; un juego de azar o de
   reconocimiento sin pensar, no).
 - Lumi, el compañero y el cofre se quedan: motivan sin quitar tiempo de práctica.
+- **Hecho (octubre de 2026):** el índice del libro del colegio (Vicens Vives, Comunidad Zoom 3) no está publicado,
+  así que seguimos un **orden progresivo propio en espiral**: 8 etapas, una por mundo, 3 por trimestre (3 + 3 + 2).
+  Cada mundo conserva su tema (grupos, sumas, tabla del 6, restas, tabla del 8, tabla del 7, multiplicar, dividir)
+  y suma las paradas de su etapa (dinero, reloj, medida, fracciones, figuras). El guardián termina con una ronda de
+  la etapa: es la prueba de bloque. La sesión diaria sigue el mismo orden (`GRADE3_STAGES` en
+  `src/content/syllabus/grade3.ts`).
 
 ## 8. Orden de trabajo propuesto
 

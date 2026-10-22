@@ -75,7 +75,7 @@ describe('CompareView', () => {
 describe('PlaceValueView', () => {
   it('expanded form: one box per part, with the place names', () => {
     render(<PlaceValueView exercise={makePlaceValue(4325, 'expanded')} onAnswered={() => {}} showFeedback={false} />)
-    expect(box(/Valor de las millares/)).toBeTruthy()
+    expect(box(/Valor de los millares/)).toBeTruthy()
     expect(box(/Valor de las unidades/)).toBeTruthy()
   })
 
@@ -83,7 +83,7 @@ describe('PlaceValueView', () => {
     const user = userEvent.setup()
     const onAnswered = vi.fn()
     render(<PlaceValueView exercise={makePlaceValue(4025, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
-    await user.type(box(/Valor de las millares/), '4000')
+    await user.type(box(/Valor de los millares/), '4000')
     await user.type(box(/Valor de las centenas/), '0')
     await user.type(box(/Valor de las decenas/), '20')
     await user.type(box(/Valor de las unidades/), '5')
@@ -95,7 +95,7 @@ describe('PlaceValueView', () => {
     const user = userEvent.setup()
     const onAnswered = vi.fn()
     render(<PlaceValueView exercise={makePlaceValue(4325, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
-    await user.type(box(/Valor de las millares/), '4000')
+    await user.type(box(/Valor de los millares/), '4000')
     await user.type(box(/Valor de las centenas/), '30')
     await user.type(box(/Valor de las decenas/), '20')
     await user.type(box(/Valor de las unidades/), '5')

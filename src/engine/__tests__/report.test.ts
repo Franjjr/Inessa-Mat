@@ -1,7 +1,7 @@
 /* Informe del adulto: temario progress, mistakes by kind, placement runs and recall. */
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ErrorType, MasteryMap, SkillMastery } from '@/types'
-import { GRADE3_SYLLABUS, allTopics } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -21,16 +21,17 @@ const newestFirst = (list: AttemptRecord[]) => list.slice().sort((x, y) => y.cre
 describe('syllabusReport', () => {
   it('a new child: nothing mastered, the first topic is the current one and is «sin empezar»', () => {
     const r = syllabusReport(GRADE3_SYLLABUS, {})
-    const first = allTopics(GRADE3_SYLLABUS).find((t) => t.status === 'disponible' && t.skills.length > 0)!
+    const first = teachingOrder(GRADE3_SYLLABUS).find((t) => t.status === 'disponible' && t.skills.length > 0)!
     expect(r.mastered).toBe(0)
     expect(r.available).toBeGreaterThan(10)
     expect(r.current?.topicName).toBe(first.name)
     const topic = r.blocks.flatMap((b) => b.topics).find((t) => t.id === first.id)!
     expect(topic).toMatchObject({ state: 'sin-empezar', current: true, progress: 0 })
+    expect(r.current?.stage).toEqual({ number: 1, total: 8, term: 1, worldId: 'w1' })
   })
 
   it('mastered topics count, the next one is current, a seen one is «trabajando»', () => {
-    const topics = allTopics(GRADE3_SYLLABUS).filter((t) => t.status === 'disponible' && t.skills.length > 0)
+    const topics = teachingOrder(GRADE3_SYLLABUS).filter((t) => t.status === 'disponible' && t.skills.length > 0)
     const mastery: MasteryMap = {}
     const put = (skill: string, box: SkillMastery['box']) => {
       const m: SkillMastery = { ...newMastery(skill, now), box, attempts: 3, correct: 3 }

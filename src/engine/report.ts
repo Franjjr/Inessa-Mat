@@ -2,7 +2,7 @@
    (grouped by kind, with what to do at home) and how the tests went (each prueba inicial and the recall of what was
    learnt weeks ago). Pure: reads the mastery map and the attempts (newest first), no React, no I/O. */
 import type { AttemptRecord, ErrorType, MasteryMap } from '@/types'
-import { currentTopic, isTopicMastered, topicProgress, type Syllabus } from '@/content/syllabus'
+import { currentTopic, isTopicMastered, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
 import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf, type PlacementBlockId } from './placement'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -30,7 +30,8 @@ export interface BlockReport {
 }
 
 export interface SyllabusReport {
-  current: { blockName: string; topicName: string } | null
+  /** The topic the daily session teaches now, with its stage (1-based number, trimester and world of the adventure). */
+  current: { blockName: string; topicName: string; stage: { number: number; total: number; term: number; worldId: string } | null } | null
   blocks: BlockReport[]
   mastered: number
   available: number
@@ -45,7 +46,15 @@ export function syllabusReport(syllabus: Syllabus, mastery: MasteryMap, term?: n
       const pending = t.status !== 'disponible' || t.skills.length === 0
       const seen = t.skills.some((s) => mastery[s])
       const state: TopicState = pending ? 'pendiente' : isTopicMastered(t, mastery) ? 'dominado' : seen ? 'trabajando' : 'sin-empezar'
-      if (now?.id === t.id) current = { blockName: b.name, topicName: t.name }
+      if (now?.id === t.id) {
+        const st = stageOfTopic(syllabus, t.id)
+        const stages = syllabus.stages ?? []
+        current = {
+          blockName: b.name,
+          topicName: t.name,
+          stage: st ? { number: stages.indexOf(st) + 1, total: stages.length, term: st.term, worldId: st.worldId } : null,
+        }
+      }
       return { id: t.id, name: t.name, state, progress: pending ? 0 : topicProgress(t, mastery), current: now?.id === t.id }
     })
     return {

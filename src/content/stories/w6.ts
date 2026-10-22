@@ -19,6 +19,7 @@ export const w6Arrival = story('w6-arrival', 'Un jardín sin colores', [
     say('lumi', '¿{cg:Segura|Seguro}? Mira bien… ¡ya te sabes casi toda!', 'happy'),
     say('fairy', 'Si pintas mi jardín con la tabla del 7, el cristal rosa será tuyo.', 'talk'),
     say('companion', '¡Y píntame a mí también, porfa! ¡Con muchos colores!', 'sad'),
+    say('lumi', 'Los parterres del jardín están partidos en partes iguales. ¡Son fracciones!', 'happy'),
   ]),
 ])
 

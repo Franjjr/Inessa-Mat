@@ -12,7 +12,7 @@ export const w3 = world({
   crystalName: 'rojo',
   predicament: 'stuck',
   hook: '¡{pet} no puede salir de un túnel diminuto!',
-  skillsSummary: 'La tabla del 6: el 5 y uno más, los pares que riman y el factor que falta',
+  skillsSummary: 'La tabla del 6: el 5 y uno más, los pares que riman y el factor que falta; polígonos y rectas',
   path: [[0.12, 0.84], [0.48, 0.88], [0.84, 0.74], [0.86, 0.4], [0.62, 0.16], [0.3, 0.16], [0.14, 0.42], [0.3, 0.62], [0.56, 0.6], [0.64, 0.4]],
   nodes: [
     storyNode('arrival', 'Las mariquitas luminosas', 'w3-arrival'),
@@ -57,6 +57,13 @@ export const w3 = world({
       instructions: '¡Que no se te olviden las sumas! Cuidado con las llevadas.',
       selector: { kinds: ['column-add'], skills: ['add:3d:c2', 'add:4d:c2'] },
       count: 2,
+    }),
+    activityNode('cave-shapes', {
+      kind: 'exercises',
+      title: 'Las formas de la cueva',
+      instructions: 'Las piedras de la cueva tienen formas. Cuenta los lados y mira bien las líneas.',
+      selector: { skills: ['geo:poly:name', 'geo:poly:sides', 'geo:line:type', 'geo:line:rel'] },
+      count: 5,
     }),
     guardianNode('El desafío de la Reina Mariquita', 'w3-guardian'),
   ],

@@ -4,16 +4,17 @@ import {
   FINALE_STORY_ID, PROLOGUE_STORY_ID, getGuardian, getLesson, getNode, getStory, getWorld, guardians, lessons, season1,
   stories, SPELL_CODES,
 } from '@/content'
+import { isValidSkill } from '@/engine'
 import { allActivities, allCopy, allSelectors, wordCount } from './helpers'
 
-/** Worlds that gained method content (see the node count test). */
-const MAX_NODES: Record<string, number> = { w3: 11, w4: 12, w8: 11 }
+/** Node cap per world: 10 planned nodes, plus the method content (w3, w4, w8) and the stops of each world's stage
+    of the temario (money, clock, measure, fractions, shapes). */
+const MAX_NODES: Record<string, number> = { w1: 12, w2: 12, w3: 12, w4: 13, w5: 12, w6: 12, w7: 12, w8: 12 }
 const EXERCISE_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
 ]
 const CHARACTERS: CharacterId[] = ['lumi', 'companion', 'borron', 'owl', 'frog', 'ladybug', 'polarbear', 'octopus', 'fairy', 'dragon', 'queen', 'narrator']
-const SKILL_RE = /^(mul:([1-9]|10)x([1-9]|10)|div:\d+\/\d+|skip:\d+|add:[34]d:c[0-4]|add:2d:c[0-2]|sub:[34]d:(b[0-3]|z)|sub:2d:b[01]|mul:2x1:c[01]|div:2x1:(exact|rem|long)|div:3x1:(exact|rem)|concept:(groups|array|commutative|share|family|placevalue)|word:(add|sub|mul|div)|bar:(add|sub|mul|div|two)|hunt:(add|sub|mul)|check:(add|sub|div))$/
 
 /** Required params of every lesson visual (src/types/content.ts). */
 const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
@@ -51,7 +52,7 @@ function checkSelector(where: string, sel: SkillSelector) {
   const ctx = `${where}: ${JSON.stringify(sel)}`
   expect(sel.kinds?.length || sel.skills?.length, ctx).toBeTruthy()
   for (const k of sel.kinds ?? []) expect(EXERCISE_KINDS, ctx).toContain(k)
-  for (const s of sel.skills ?? []) expect(s, ctx).toMatch(SKILL_RE)
+  for (const s of sel.skills ?? []) expect(isValidSkill(s), `${ctx}: ${s}`).toBe(true)
   for (const t of sel.tables ?? []) expect(Number.isInteger(t) && t >= 1 && t <= 10, ctx).toBe(true)
   if (sel.factorRange) {
     const [lo, hi] = sel.factorRange
@@ -110,11 +111,9 @@ describe('season 1 structure', () => {
     expect(season1.worlds.map((w) => w.background)).toEqual(['forest', 'river', 'cave', 'mountain', 'lake', 'rainbow-garden', 'volcano', 'castle'])
   })
 
-  it('every world has 7–10 nodes (11–12 where the new methods are): arrival story first, guardian last, 3–5 varied activities', () => {
+  it('every world has 7–13 nodes: arrival story first, guardian last, 3–7 varied activities', () => {
     for (const w of season1.worlds) {
       expect(w.nodes.length, w.id).toBeGreaterThanOrEqual(7)
-      // w4 keeps «Cuatro caminos para restar» and adds «Dibujar la historia» (the bars). w3 adds «Los trucos de Lumi»,
-      // w8 «Cuatro caminos para dividir». Every other world keeps the planning cap of 10 nodes.
       expect(w.nodes.length, w.id).toBeLessThanOrEqual(MAX_NODES[w.id] ?? 10)
       expect(w.nodes[0].kind, w.id).toBe('story')
       expect(w.nodes[0].ref, w.id).toBe(`${w.id}-arrival`)
@@ -123,7 +122,7 @@ describe('season 1 structure', () => {
       expect(w.nodes.some((n) => n.kind === 'lesson'), w.id).toBe(true)
       const acts = w.nodes.filter((n) => n.kind === 'activity')
       expect(acts.length, w.id).toBeGreaterThanOrEqual(3)
-      expect(acts.length, w.id).toBeLessThanOrEqual(5)
+      expect(acts.length, w.id).toBeLessThanOrEqual(7)
       expect(new Set(acts.map((n) => n.activity!.kind)).size, `${w.id} varied kinds`).toBeGreaterThanOrEqual(3)
     }
   })

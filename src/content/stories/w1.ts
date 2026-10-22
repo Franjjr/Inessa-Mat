@@ -20,6 +20,7 @@ export const w1Arrival = story('w1-arrival', 'Las lianas de las hadas', [
     say('owl', 'Para contar grupos iguales existe un hechizo rapidísimo. Se llama MULTIPLICAR.', 'happy'),
     say('owl', 'Apréndelo, {child}, y te daré el cristal verde. Con su magia soltaremos a {pet}.', 'talk'),
     say('companion', '¡Tú puedes, {child}! ¡Yo te espero aquí colgando!', 'happy'),
+    say('lumi', 'En este bosque también hay un mercadillo. ¡Contaremos monedas y números muy grandes!', 'happy'),
   ]),
 ])
 

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { GRADE3_SYLLABUS, allTopics, availableSkills } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, allTopics, availableSkills, teachingOrder } from '@/content/syllabus'
 import { buildPlacement, newMastery, parseSkill, PLACEMENT_COUNT, placementBlockOf, planDailySession, isValidSkill } from '@/engine'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -15,7 +15,7 @@ const child: ChildProfile = {
 /** Every topic before `topicId` mastered (box 3), the rest unseen. */
 function masteredBefore(topicId: string): MasteryMap {
   const mastery: MasteryMap = {}
-  for (const t of allTopics(GRADE3_SYLLABUS)) {
+  for (const t of teachingOrder(GRADE3_SYLLABUS)) {
     if (t.id === topicId) break
     for (const s of t.skills) {
       const m: SkillMastery = { ...newMastery(s, now), box: 3, attempts: 5, correct: 5, lastSeenAt: '2026-10-20T10:00:00.000Z', dueAt: '2026-10-29T10:00:00.000Z' }

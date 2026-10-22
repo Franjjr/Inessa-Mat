@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Answer, ChildProfile, Exercise, MasteryMap, MoneyMode } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { allTopics, availableSkills, GRADE3_SYLLABUS } from '@/content/syllabus'
+import { availableSkills, GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import {
   buildMoney, check, checkMoney, createRng, describeSkill, euros, hintsFor, kindsForSkill, moneyStatement, parseSkill,
   PIECES, pieceName, planDailySession, splitCents, MONEY_MODES,
@@ -220,7 +220,7 @@ describe('dinero and medida in the daily plan', () => {
   /** Every skill of the topics before `topicId` mastered (box 3), so that topic is the one taught today. */
   function masteredBefore(topicId: string): MasteryMap {
     const mastery: MasteryMap = {}
-    for (const t of allTopics(GRADE3_SYLLABUS)) {
+    for (const t of teachingOrder(GRADE3_SYLLABUS)) {
       if (t.id === topicId) break
       for (const s of t.skills) mastery[s] = { ...newMastery(s, now), box: 3, attempts: 5, correct: 5, dueAt: null, lastSeenAt: null }
     }

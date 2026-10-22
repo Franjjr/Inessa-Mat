@@ -1,9 +1,11 @@
-/* Temario de 3.º de Primaria (matemáticas) como datos. Orden curricular de la app; el trimestre queda sin fijar
-   (undefined) hasta confirmar la programación del colegio (docs/curriculum/PLAN_DOCENTE.md §9).
-   Solo entran como «disponible» las destrezas para las que ya hay ejercicios; el resto queda «pendiente». */
+/* Temario de 3.º de Primaria (matemáticas) como datos. Los bloques agrupan los temas para el informe del adulto; el
+   orden de enseñanza es el de las etapas (GRADE3_STAGES): una por mundo, tres trimestres, en espiral (cada etapa
+   mezcla números u operaciones con dinero, reloj, medida, fracciones o figuras). Es un orden progresivo propio: el
+   índice del libro del colegio no está publicado (docs/curriculum/PLAN_DOCENTE.md §9). Solo entran como
+   «disponible» las destrezas para las que ya hay ejercicios; el resto queda «pendiente». */
 import { divSkill, fractionSkill, geoSkill, mulSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
-import type { Syllabus, SyllabusTopic } from './model'
+import type { Syllabus, SyllabusStage, SyllabusTopic } from './model'
 
 const TABLE_ORDER = [2, 5, 10, 3, 4, 6, 8, 7, 9] as const
 
@@ -48,7 +50,32 @@ const pending = (id: string, name: string, pendingNote: string, rungs: SyllabusT
   pendingNote,
 })
 
-export const GRADE3_SYLLABUS: Syllabus = {
+/** Teaching order: eight stages, one per world, three trimesters. Every topic of the blocks appears exactly once. */
+// «Encuentra el error» waits for etapa 7: its items include column multiplication.
+export const GRADE3_STAGES: SyllabusStage[] = [
+  // 1.er trimestre
+  { id: 'etapa-1', term: 1, worldId: 'w1', topics: ['descomponer-9999', 'leer-escribir-9999', 'comparar-ordenar-9999', 'tabla-2', 'tabla-5', 'tabla-10', 'completar', 'monedas-billetes'] },
+  { id: 'etapa-2', term: 1, worldId: 'w2', topics: ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'redondear', 'decenas-centenas', 'igualdad', 'prob-sumar', 'reloj-en-punto-media-cuarto'] },
+  { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'prob-multiplicar', 'poligonos', 'rectas'] },
+  // 2.º trimestre
+  { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio'] },
+  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos'] },
+  { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos'] },
+  // 3.er trimestre
+  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error'] },
+  { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes'] },
+]
+
+/** Each topic takes the trimester of its stage. */
+function withStageTerms(syllabus: Syllabus): Syllabus {
+  const termOf = new Map((syllabus.stages ?? []).flatMap((st) => st.topics.map((id) => [id, st.term] as const)))
+  return {
+    ...syllabus,
+    blocks: syllabus.blocks.map((b) => ({ ...b, topics: b.topics.map((t) => ({ ...t, term: t.term ?? termOf.get(t.id) })) })),
+  }
+}
+
+export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
   id: 'matematicas-3-primaria',
   course: 3,
   blocks: [
@@ -185,4 +212,5 @@ export const GRADE3_SYLLABUS: Syllabus = {
       ],
     },
   ],
-}
+  stages: GRADE3_STAGES,
+})

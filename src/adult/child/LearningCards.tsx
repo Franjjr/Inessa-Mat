@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMastery, listAttempts, updateProgress } from '@/data'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
+import { getWorld } from '@/content'
 import {
   describeError, errorReport, placementRuns, recallReport, syllabusReport, PLACEMENT_COUNT,
   type ErrorReport, type PlacementRun, type RecallReport, type SyllabusReport, type TopicState,
@@ -80,6 +81,8 @@ export function LearningSection({ childId, childName, progress }: { childId: str
 
 // ------------------------------------------------------------------------------------------------ temario
 
+const TERM_TEXT: Record<number, string> = { 1: '1.er trimestre', 2: '2.º trimestre', 3: '3.er trimestre' }
+
 const STATE_TEXT: Record<TopicState, string> = {
   'dominado': 'Dominado',
   'trabajando': 'Trabajando',
@@ -99,6 +102,13 @@ export function TemarioCard({ report, childName }: { report: SyllabusReport; chi
           ? <>Ahora está con <strong className={adult.strong}>{report.current.topicName}</strong> ({report.current.blockName.toLowerCase()}). La sesión de cada día empieza por ahí y repasa lo anterior.</>
           : `${childName} domina todos los temas que ya se pueden practicar. La sesión de cada día repasa lo aprendido.`}
       </p>
+      {report.current?.stage && (
+        <p className={adult.muted}>
+          Etapa {report.current.stage.number} de {report.current.stage.total} · {TERM_TEXT[report.current.stage.term]}
+          {getWorld(report.current.stage.worldId) ? ` · en la aventura, ${getWorld(report.current.stage.worldId)!.name}` : ''}.
+          Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas, fracciones o figuras.
+        </p>
+      )}
       <p className={adult.muted}>Un tema está dominado cuando acierta con soltura casi todos sus ejercicios, más de una vez.</p>
       <ul className={s.blockList} aria-label="Bloques del temario">
         {report.blocks.map((b) => (

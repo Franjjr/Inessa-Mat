@@ -166,6 +166,14 @@ export async function answerForVisibleInput(page: Page, field: Locator): Promise
   const aria = (await field.getAttribute('aria-label')) ?? ''
   const fromLabel = answerFor(aria)
   if (fromLabel !== null) return fromLabel
+  // Descomponer (4 325 = 4 000 + 300 + 20 + 5): the value of one place of the number on screen.
+  const place = aria.match(/^Valor de (?:los|las) (millares|centenas|decenas|unidades)$/)
+  if (place) {
+    const shown = await page.locator('section[aria-label="Números hasta 9 999"] p').nth(1).innerText().catch(() => '')
+    const n = Number(shown.replace(/\D/g, ''))
+    const size = { millares: 1000, centenas: 100, decenas: 10, unidades: 1 }[place[1] as 'millares']
+    return Math.floor(n / size) % 10 * size
+  }
   return solveVisibleEquation(page)
 }
 
@@ -215,8 +223,12 @@ export async function driveExercises(page: Page, finished: () => Promise<boolean
       await settle(page, 100)
       continue
     }
-    const field = page.getByRole('textbox').first()
-    if (await field.isVisible().catch(() => false) && (await field.inputValue().catch(() => '')) === '') {
+    if (await answerChoice(page)) {
+      await settle(page, 300)
+      continue
+    }
+    const field = await firstEmptyTextbox(page)
+    if (field) {
       const value = await answerFromPrompt(page) ?? (await answerForVisibleInput(page, field))
       if (value === null) throw new Error(`cannot solve the exercise "${(await field.getAttribute('aria-label')) ?? ''}"`)
       await typeAnswer(page, field, value)
@@ -226,6 +238,42 @@ export async function driveExercises(page: Page, finished: () => Promise<boolean
     await settle(page, 300)
   }
   throw new Error('exercises did not finish')
+}
+
+/** The first visible answer box still empty (a view can show several, e.g. the parts of a number). */
+async function firstEmptyTextbox(page: Page): Promise<Locator | null> {
+  const boxes = page.getByRole('textbox')
+  const n = await boxes.count()
+  for (let i = 0; i < n; i++) {
+    const box = boxes.nth(i)
+    if (!(await box.isVisible().catch(() => false))) continue
+    // A real <input> has a value; the writing pad is a role=textbox with no digit while it is empty («?», «Escribe con el dedo»).
+    const value = await box.inputValue().catch(async () => ((await box.innerText().catch(() => '')) ?? '').replace(/\D/g, ''))
+    if (value === '') return box
+  }
+  return null
+}
+
+/** Exercises answered with a button and «Comprobar»: the sign between two numbers, and the value of a coin or note.
+ *  Returns true when it answered. */
+export async function answerChoice(page: Page): Promise<boolean> {
+  const check = page.getByRole('button', { name: /Comprobar/ }).last()
+  const compare = page.locator('section[aria-label="Comparar números"]')
+  if (await compare.isVisible().catch(() => false) && await check.isEnabled().catch(() => false) === false) {
+    const [a, b] = (await compare.locator('span span').allInnerTexts()).map((t) => Number(t.replace(/\D/g, '')))
+    await compare.getByRole('button', { name: a < b ? 'menor que' : a > b ? 'mayor que' : 'igual a' }).click()
+    await check.click()
+    return true
+  }
+  const piece = page.getByRole('img', { name: /^(Moneda|Billete) de / }).first()
+  const options = page.getByRole('group', { name: 'Valor' })
+  if (await piece.isVisible().catch(() => false) && await options.isVisible().catch(() => false) && await check.isEnabled().catch(() => false) === false) {
+    const name = ((await piece.getAttribute('aria-label')) ?? '').replace(/^(Moneda|Billete) de /, '')
+    await options.getByRole('button', { name, exact: true }).click()
+    await check.click()
+    return true
+  }
+  return false
 }
 
 /** Counting prompts: "Hay 2 grupos de 3", "Haz 5 grupos de 4", "Hay 6 filas de 2". */

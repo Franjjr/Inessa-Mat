@@ -12,7 +12,7 @@ export const w4 = world({
   crystalName: 'celeste',
   predicament: 'ice',
   hook: '¡{pet} está {pg:congelada|congelado} en un bloque de hielo!',
-  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, me llevo una, por partes, la recta, ceros y prueba de la resta',
+  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, me llevo una, por partes, la recta, ceros y prueba de la resta; euros y céntimos, pagar y el cambio',
   path: [[0.12, 0.86], [0.42, 0.88], [0.6, 0.84], [0.76, 0.8], [0.86, 0.62], [0.62, 0.54], [0.32, 0.56], [0.15, 0.4], [0.34, 0.26], [0.62, 0.3], [0.56, 0.12]],
   nodes: [
     storyNode('arrival', 'Un bloque de hielo', 'w4-arrival'),
@@ -57,6 +57,13 @@ export const w4 = world({
       instructions: 'Repaso de la Cueva: busca las parejas de la tabla del 6.',
       selector: { kinds: ['fact-mul'], tables: [6], factorRange: [2, 9] },
       count: 6,
+    }),
+    activityNode('mountain-shop', {
+      kind: 'exercises',
+      title: 'La tienda del refugio',
+      instructions: 'En el refugio se compra con euros y céntimos. Paga justo y calcula el cambio.',
+      selector: { skills: ['money:convert', 'money:pay', 'money:change'] },
+      count: 4,
     }),
     guardianNode('El desafío de la osa Nieve', 'w4-guardian'),
   ],

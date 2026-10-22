@@ -19,6 +19,7 @@ export const w8Arrival = story('w8-arrival', 'La red de Borrón', [
     say('lumi', '¡Y es la multiplicación al revés! Todo lo que has aprendido te va a ayudar.', 'happy'),
     say('queen', 'Reparte con justicia y el cristal dorado será tuyo.', 'happy'),
     say('companion', '¡Tú puedes, {child}! ¡Yo, mientras, me columpio en la red! ¡Uiii!', 'happy'),
+    say('lumi', 'Las banderas del castillo están partidas en muchas partes iguales. ¡Mira cuántas!', 'happy'),
   ]),
 ])
 
