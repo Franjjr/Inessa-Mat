@@ -1,0 +1,20 @@
+{
+  "module": "world-core",
+  "summary": "Built the child journey for world-core: child picker, onboarding (one question per screen, calibration skippable, prologue), home, world map with predicament and lock states, node dispatcher with progress saving and rewards, StoryPlayer, GameHostProvider (the real ActivityHost) and CompanionBuddy. Typecheck is clean project-wide, and 57 tests in src/world pass. Screenshots of home and map on iPad landscape look right; onboarding works but needs a backing panel behind the form.",
+  "publicApi": "Default exports: ChildPickerScreen (src/world/picker/ChildPickerScreen.tsx), OnboardingScreen (src/world/onboarding/OnboardingScreen.tsx), ChildHomeScreen (src/world/home/ChildHomeScreen.tsx), WorldMapScreen (src/world/map/WorldMapScreen.tsx), NodeScreen (src/world/node/NodeScreen.tsx), StoryPlayer (src/world/story/StoryPlayer.tsx), CompanionBuddy (src/world/host/CompanionBuddy.tsx). Named export: GameHostProvider (src/world/host/GameHost.tsx, also default), plus useBuddyBus and the ReactionEvent type from the same file. Test-only helper: src/world/host/testing.ts (useLocalOnlyAuth, flushTimers).",
+  "tests": "npx vitest run src/world: 15 files, 57 tests passed. npm run typecheck: 0 errors project-wide. Screenshots: shots/world-home-ipad.png, shots/world-map-ipad.png, shots/onboarding-ipad.png (all iPad landscape, via tools/shot.mjs with CHROMIUM_PATH set to the ms-playwright chromium_headless_shell-1243 binary, because the hardcoded Linux path fails on macOS). Gallery entry: src/world/story/StoryPlayer.gallery.tsx.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Onboarding: the background scene (castle, floating islands) sits behind the name field and the disabled Siguiente button; a translucent card behind the form would improve contrast. Not yet captured on iPad portrait or Android.",
+    "Map: the 'Aquí' current-node tag and the guardian predicament were not visually verified in the seeded screenshot; only the path and node states were seen. Portrait and Android captures not taken.",
+    "Home: the 'Familia' ghost button sits on the light string decoration at the top edge; low contrast on some screens.",
+    "Galleries for picker/home/map/onboarding were not added (only StoryPlayer has a gallery entry); visual checks were done via real routes with --seed.",
+    "Tests mock '@/activities' (in GameHost.test.tsx and NodeScreen.test.tsx) because src/activities/lesson/LessonPlayer.module.css is missing, which breaks the index import. Remove the mock once the lessons module lands.",
+    "CompanionBuddy remounts its figures per reaction (keyed wrapper) so the bounce restarts; a cheaper approach would key only the animation class.",
+    "StoryPlayer predicament rescue value is scene_index / (scenes - 1); the content may want an explicit rescue marker per scene."
+  ],
+  "contractRequests": [
+    "tools/shot.mjs: hardcoded Linux Chromium executablePath fails on macOS. Works when CHROMIUM_PATH is set; the default should be platform-aware (Playwright default when unset).",
+    "src/art/index.ts does not re-export COLORWAYS / Colorway / ACCESSORY_IDS from src/art/characters. Onboarding uses COMPANION_COLORWAYS from @/content instead; no change required."
+  ]
+}

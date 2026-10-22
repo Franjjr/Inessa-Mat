@@ -1,0 +1,80 @@
+/* Wheel: a spinning SVG ring with the table in the hub and a pointer at the top. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.wheelWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.wheel {
+  width: clamp(200px, 40vmin, 330px);
+  height: auto;
+  overflow: visible;
+}
+
+.rim {
+  fill: var(--c-surface);
+  stroke: var(--c-line);
+  stroke-width: 10;
+  filter: drop-shadow(0 6px 0 rgba(46, 26, 71, .08));
+}
+
+.slot {
+  fill: var(--c-surface-2);
+  stroke: var(--c-primary-soft);
+  stroke-width: 3;
+}
+
+.slotCurrent {
+  fill: var(--c-magic-soft);
+  stroke: var(--c-magic);
+  stroke-width: 5;
+}
+
+.slotDone {
+  fill: var(--c-gold-soft);
+  stroke: var(--c-gold);
+}
+
+.num {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 22px;
+  fill: var(--c-ink);
+}
+
+.hub {
+  fill: var(--c-magic);
+  stroke: #fff;
+  stroke-width: 6;
+}
+
+.hubNum {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  fill: #fff;
+}
+
+.pointer {
+  fill: var(--c-gold);
+  stroke: var(--c-ink);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.caption {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}

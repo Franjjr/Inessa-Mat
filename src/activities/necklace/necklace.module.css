@@ -1,0 +1,17 @@
+/* Necklace: a thread behind the beads. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.string {
+  width: min(92%, 640px);
+  height: 6px;
+  margin: 0 auto -26px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, var(--c-ink-mute) 12%, var(--c-ink-mute) 88%, transparent);
+  opacity: .5;
+}

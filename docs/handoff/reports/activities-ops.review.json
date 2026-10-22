@@ -1,0 +1,21 @@
+{
+  "module": "activities-ops",
+  "summary": "Fixed the DivisionView galera layout, which the previous agent flagged as broken. The bracket (vertical line in a fixed 34px gutter), the top bar and the quotient cell now render correctly at iPad landscape, with the quotient sitting under the bar. The divisor sits above the bar. Digit columns are fixed-width so subtraction rows align under the dividend. Tests pass (13/13) and the filtered typecheck shows no errors for my folders. I did not change the activity logic, the galera maths or the tests.",
+  "publicApi": "Unchanged. DivisionView default export and the extra optional proof prop; galera.ts exports galeraSteps, quotientOf, remainderOf.",
+  "tests": "npx vitest run src/activities/views src/activities/groups src/activities/division: 4 files, 13 passed. npm run typecheck filtered to activities/(views|groups|division|array|column|share|word|board): no output (zero errors).",
+  "typecheckClean": true,
+  "openIssues": [
+    "Galera: the product under the first step (e.g. the 6 under 6) is right-aligned to the digit column and sits slightly off-centre; step 2 onward (subtraction rows with 2-digit spans, remainder under the brought-down digit) was not visually verified in a filled state, only the initial gallery state.",
+    "Galera not yet captured at 820x1180 portrait or 1280x800 Android. The gallery capture only shows the first entry of each file.",
+    "ArrayView, WordProblemView, ColumnView multiplication, groups and the activity portrait/Android variants were not visually reviewed in this pass.",
+    "share and board have no unit tests; keyboard-only flow is covered only for ColumnView and DivisionView.",
+    "Design choice to confirm: the product under each galera step is printed rather than written by the child; the integrator may want it as a writable cell later.",
+    "Do not ship the division activity until the filled-state galera and Android/portrait captures have been checked."
+  ],
+  "contractRequests": [
+    "None. No shared contracts were changed."
+  ],
+  "notesForOtherModules": [
+    "DivisionView layout now depends on the --cell-size token from @/ink (DigitCell). Changing that token changes galera column width."
+  ]
+}

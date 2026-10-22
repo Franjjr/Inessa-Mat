@@ -1,0 +1,105 @@
+.root {
+  background:
+    radial-gradient(120% 80% at 50% 0%, var(--guardian-soft, var(--c-primary-soft)) 0%, transparent 70%),
+    var(--c-bg);
+}
+
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-4) var(--sp-6);
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 620px;
+  text-align: center;
+}
+
+.speech {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  line-height: 1.45;
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+.rule {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.counter {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-line);
+  transition: background var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-bounce);
+}
+
+.dotDone { background: var(--guardian, var(--c-primary)); }
+.dotNow { background: var(--c-surface); box-shadow: 0 0 0 3px var(--guardian, var(--c-primary)); transform: scale(1.25); }
+
+.card {
+  width: 100%;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+  padding: var(--sp-5);
+}
+
+.spellHead {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.spellTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  color: var(--c-ink);
+}
+
+.spellText {
+  margin: 0;
+  max-width: 720px;
+  padding: var(--sp-4) var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--c-magic-soft);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  color: var(--c-ink);
+  text-align: center;
+  text-wrap: balance;
+}

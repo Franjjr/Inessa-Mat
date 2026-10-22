@@ -1,0 +1,19 @@
+{
+  "module": "activities-facts",
+  "summary": "Implemented all 11 times-table minigames (facts, race, missing, wheel, necklace, chain, family, maze, pixel, memory, bubbles) and the 5 exercise views (FactView, MissingFactorView, SkipCountView, DoubleChainView, FactFamilyView). Each activity default-exports an ActivityProps component, generates items via @/engine, reports every attempt through useActivityHost().reportAttempt, and finishes with a ResultCard giving starsFor stars. Views use @/ink NumberInput and useInkLearning, with escalating hints, engine clues and a single final onAnswered per exercise. Visually verified the views gallery and the calm-practice activity on iPad; the other activities have galleries but were not visually reviewed.",
+  "publicApi": "Default exports: src/activities/{facts,race,missing,wheel,necklace,chain,family,maze,pixel,memory,bubbles}/index.tsx (ActivityProps). Views, default exports of ExerciseViewProps: src/activities/views/{FactView (fact-mul, fact-div), MissingFactorView, SkipCountView, DoubleChainView, FactFamilyView}.tsx. Shared helpers, not public: src/activities/facts/shared/{flow.ts, items.ts, session.ts, HintPanel.tsx, SequenceBoard.tsx, ActivityFrame.tsx (ActivityFrame, ResultCard), speak.ts}. Maze builder: src/activities/maze/grid.ts. No changes to contract files.",
+  "tests": "npx vitest run src/activities/facts src/activities/views: 3 files, 11 tests passed. Covers keyboard answer, one retry then reveal, hint escalation, missing factor, skip-count beads, and the facts activity reporting attempts and finishing via onDone. npm run typecheck filtered to my paths: 0 errors. Galleries: views/facts.gallery.tsx and facts/facts.gallery.tsx (11 activities). Screenshots: shots/facts-views-ipad.png and shots/facts-acts-ipad.png.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Only the calm-practice activity and the views were visually reviewed. The other 10 activities have galleries and typecheck but were not screenshot-reviewed on iPad or Android, and the maze, pixel and bubbles layouts in particular need a look.",
+    "Tests cover the views and one activity only; there are no tests yet for race, maze, memory, bubbles, pixel, wheel, necklace, chain, family or missing.",
+    "Known issue: FactView in a narrow container (under ~560px) overflows, because NumberInput has a minimum width of about 240px plus its side buttons. The app's cards are min(100%,720px) so this should not occur in-app, but the gallery frame was widened to show it.",
+    "race: the personal record must arrive as config.params.records (ms, fastest first). The world host needs to pass NodeProgress.records there, otherwise the ghost and record text are not shown. The item count is capped at 12 per session, while content gives race count 20.",
+    "Bubbles, when timedActivities is on, has a 12 s soft timer; a timeout logs the fact as a wrong attempt. Confirm this is acceptable pedagogically or make it untimed-only.",
+    "The maze uses only right/down moves and the goal gem needs no tap, so the session ends on the last number tap."
+  ],
+  "contractRequests": [
+    "World host should pass NodeProgress.records (ms array, fastest first) in ActivityConfig.params.records for race nodes, so the ghost pace and the personal-record text work.",
+    "Consider adding an ErrorType for 'forgot to bring down' in division (currently 'other'). Not needed by my modules."
+  ]
+}

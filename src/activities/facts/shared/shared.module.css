@@ -1,0 +1,438 @@
+/* Shared look of the facts minigames: frame, equation rows, hints, clues, sequences and result cards. */
+
+.frame {
+  --accent: var(--c-magic);
+  --accent-soft: var(--c-magic-soft);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: var(--sp-3) clamp(16px, 3vw, 40px) var(--sp-5);
+  box-sizing: border-box;
+  color: var(--c-ink);
+  font-family: var(--font-read);
+  overflow: hidden;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  line-height: 1.1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progressPill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  white-space: nowrap;
+}
+
+.progressBar {
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-line);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--c-gold));
+  transition: width var(--dur-med) var(--ease-out);
+}
+
+.instructions {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+}
+
+.card {
+  position: relative;
+  width: min(100%, 720px);
+  box-sizing: border-box;
+  padding: clamp(16px, 3vw, 32px);
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-2);
+}
+
+/* ---- equation rows: "6 × 7 =" with the answer box in place -------------------------------------- */
+
+.equation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 18px);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-num);
+  line-height: 1;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sign {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.equationCompact {
+  font-size: clamp(30px, 4vmin + 4px, 44px);
+}
+
+/* ---- hints ------------------------------------------------------------------------------------- */
+
+.hintBtn {
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border: 2px dashed var(--accent);
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.hintBtn:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.hintBtn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.hintBox {
+  width: min(100%, 680px);
+  box-sizing: border-box;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--accent-soft);
+  border: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.hintLevel {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--c-ink-soft);
+}
+
+.hintText {
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.35;
+}
+
+.hintVisual {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+}
+
+.group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  max-width: 220px;
+}
+
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+}
+
+.dotGrid {
+  display: grid;
+  gap: 6px;
+  justify-content: center;
+}
+
+.chip {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0 10px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.chipHot {
+  background: var(--accent);
+  color: #fff;
+}
+
+.arrow {
+  color: var(--c-ink-mute);
+  font-family: var(--font-display);
+}
+
+/* ---- clue (gentle feedback) -------------------------------------------------------------------- */
+
+.clue {
+  width: min(100%, 680px);
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  background: var(--c-warn-soft);
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+  line-height: 1.35;
+  text-align: center;
+}
+
+.clueOk {
+  background: var(--c-success-soft);
+}
+
+.clueReveal {
+  background: var(--c-gold-soft);
+}
+
+/* ---- sequences: beads (skip counting) and chain links (doubling) ---------------------------------- */
+
+.sequence {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(8px, 1.6vw, 16px);
+  max-width: 100%;
+}
+
+.bead {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: clamp(56px, 8vmin, 76px);
+  height: clamp(56px, 8vmin, 76px);
+  padding: 0 6px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--c-surface-2) 60%, var(--c-line) 100%);
+  box-shadow: inset 0 -4px 0 rgba(46, 26, 71, .10), var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+  transition: transform var(--dur-med) var(--ease-bounce), background var(--dur-med);
+}
+
+.beadGiven {
+  color: var(--c-ink);
+}
+
+.beadOpen {
+  background: var(--c-surface);
+  border: 3px dashed var(--accent);
+  color: var(--c-ink-mute);
+  box-shadow: none;
+}
+
+.beadCurrent {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 0 7px var(--accent), var(--shadow-2);
+}
+
+.beadFilled {
+  background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--accent-soft) 60%, color-mix(in srgb, var(--accent) 60%, #fff) 100%);
+  color: var(--c-ink);
+}
+
+.beadRevealed {
+  background: var(--c-gold-soft);
+}
+
+.link {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: clamp(64px, 9vmin, 96px);
+  min-height: clamp(56px, 8vmin, 72px);
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  border: 4px solid var(--c-line);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  transition: transform var(--dur-med) var(--ease-bounce);
+}
+
+.linkGiven {
+  background: var(--c-surface-2);
+  border-color: var(--accent-soft);
+}
+
+.linkOpen {
+  border-style: dashed;
+  border-color: var(--accent);
+  color: var(--c-ink-mute);
+}
+
+.linkCurrent {
+  transform: scale(1.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 5px var(--accent-soft), var(--shadow-2);
+}
+
+.linkFilled {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.linkRevealed {
+  border-color: var(--c-gold);
+  background: var(--c-gold-soft);
+}
+
+.bridge {
+  width: clamp(10px, 2vmin, 18px);
+  height: 6px;
+  border-radius: 3px;
+  background: var(--c-line);
+  align-self: center;
+}
+
+/* ---- result card --------------------------------------------------------------------------------- */
+
+.result {
+  width: min(100%, 560px);
+  box-sizing: border-box;
+  text-align: center;
+  padding: clamp(20px, 4vw, 40px);
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-2);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: var(--sp-4);
+  justify-items: center;
+}
+
+.resultTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xl);
+  color: var(--c-ink);
+}
+
+.resultStars {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.resultText {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.resultStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+
+.statPill {
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+
+.btnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  justify-content: center;
+  align-items: center;
+}
+
+.sparkleLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progressFill,
+  .bead,
+  .link {
+    transition: none;
+  }
+}

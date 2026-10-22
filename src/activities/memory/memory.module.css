@@ -1,0 +1,61 @@
+/* Memory: a board of fact cards and product cards. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.board {
+  display: grid;
+  gap: clamp(8px, 1.6vmin, 14px);
+  width: min(100%, 680px);
+  align-self: center;
+}
+
+.card {
+  min-height: var(--tap-min);
+  min-height: clamp(72px, 13vmin, 110px);
+  border: 0;
+  border-radius: var(--r-lg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(20px, 4.4vmin, 34px);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 5px 0 rgba(46, 26, 71, .14), var(--shadow-1);
+}
+
+.card:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.fact {
+  background: linear-gradient(160deg, #fff, var(--w7-soft));
+  border: 3px solid var(--w7);
+}
+
+.product {
+  background: linear-gradient(160deg, #fff, var(--c-gold-soft));
+  border: 3px solid var(--c-gold);
+}
+
+.picked {
+  box-shadow: 0 0 0 5px var(--c-magic-soft), 0 0 0 8px var(--c-magic), var(--shadow-2);
+}
+
+.done {
+  background: var(--c-success-soft);
+  border-color: var(--c-success);
+  color: var(--c-success);
+  cursor: default;
+}
+
+.quiet {
+  opacity: .85;
+}

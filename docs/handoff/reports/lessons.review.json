@@ -1,0 +1,32 @@
+{
+  "module": "lessons",
+  "summary": "Reviewed the whole lessons module (player, navigation, try slot, safe visual, 22 visuals, tests, gallery) against src/types, the content lessons w1–w8, and the activity host contract. Fixed the real defects I found: a missing final carry in column addition, a no-op expression in the 5+1 visual, a test blind spot that let a crashing visual pass silently, and a too-small gallery card. Lesson tests and the filtered typecheck are clean. Still open: visual labels are not routed through host.t, and I did not capture the real routes or all portrait/landscape screens.",
+  "publicApi": "LessonPlayer default export with props { lesson, onDone, onExit? } unchanged. LESSON_VISUALS and LESSON_VISUAL_IDS in visuals/index.tsx unchanged. Re-exported from src/activities/index.tsx.",
+  "tests": "npx vitest run src/activities/lesson: 3 files, 65 passed, 0 failed (after the fixes). npm run typecheck filtered on activities/lesson: 0 errors. Gallery captured: shots/lesson-gallery-ipad.png (before the gallery card resize). Maths of all 22 visuals and the w1–w8 lesson texts were checked by hand against their params (e.g. 352−127, 503−128, 4352−1728, 47×6, 84÷4, 17÷5, 7×9, 8-table and 6-table known facts); no wrong numbers found.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual labels in src/activities/lesson/visuals/*.tsx are literal Spanish strings, not host.t(). Only a few need child-name templating, but the house rule says child copy goes through host.t. Not changed (about 200 strings; would need a hook in each visual).",
+    "Try step: going Back to a solved try step remounts TrySlot idle with Siguiente enabled, so the exercise can be skipped on revisit. Acceptable for a lesson, but a solved state would be more honest.",
+    "SubCheckVisual (w4 sub-check) shows no check panel on phase 0 while its text describes the check. Small copy/visual mismatch, left as is.",
+    "Carry/column visuals were only reviewed in the gallery at the 560px-era size; real-route screenshots at 1180x820, 820x1180 and 1280x800 for each lesson (especially the 4-digit carry, 4-digit borrow and galera on portrait) were NOT captured. Layout at those sizes is unverified.",
+    "Galera draws a rule under the divisor as well as under the dividend; this is a stylised casita, not the classic single-rule layout. Design call for the integrator.",
+    "host.reportAttempt from TrySlot still needs the integrator to confirm that lesson practice attempts should update mastery (from the earlier open issue).",
+    "Tests check that SafeVisual crashes are caught by console.error spy (now asserted in every Season 1 lesson playthrough), but they do not check the visual's on-screen content beyond rendering a non-null container."
+  ],
+  "contractRequests": [
+    "Confirm that lesson 'try' attempts should call host.reportAttempt and therefore update mastery (TrySlot.tsx). No change was made to the contract."
+  ],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/lesson/visuals/addition.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/lesson/visuals/multiplication.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/lesson/LessonPlayer.test.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/lesson/lesson.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/lesson-gallery-ipad.png"
+  ],
+  "screenshots": [
+    "/Users/mac13/Desktop/Inessa-Mat/shots/lesson-gallery-ipad.png"
+  ],
+  "notesForOtherModules": [
+    "LessonPlayer props and exports are unchanged. The fixes are internal to the lesson module."
+  ]
+}

@@ -1,0 +1,239 @@
+/* Screen: the certificate scales to the width. Print: only the sheet, A4 landscape, no margins. */
+.root {
+  background: var(--c-bg);
+  padding-bottom: var(--sp-6);
+}
+
+.toolbar { position: relative; }
+
+.previewWrap {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+.note {
+  margin: var(--sp-3) 0 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+}
+
+.locked {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  padding: var(--sp-6);
+  text-align: center;
+}
+
+.lockedText {
+  margin: 0;
+  max-width: 560px;
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+/* ---- the sheet -------------------------------------------------------------------------------- */
+.sheet {
+  position: relative;
+  width: min(100%, 1040px);
+  aspect-ratio: 297 / 210;
+  background: #fffdf7;
+  color: var(--c-ink);
+  box-shadow: var(--shadow-2);
+  border-radius: 12px;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.frame {
+  position: absolute;
+  inset: 3.2%;
+  border: 0.9cqw solid #f59e0b;
+  border-radius: 2.4cqw;
+  outline: 0.35cqw solid #7c3aed;
+  outline-offset: -2.6cqw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.6cqw;
+  padding: 3cqw 6cqw;
+  text-align: center;
+  background:
+    radial-gradient(70% 60% at 50% 0%, #fef3c7 0%, transparent 70%),
+    radial-gradient(60% 50% at 50% 100%, #ede9fe 0%, transparent 70%),
+    #fffdf7;
+}
+
+.corner {
+  position: absolute;
+  width: 6cqw;
+  height: 6cqw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.corner[data-corner='tl'] { left: 3.5cqw; top: 3.5cqw; }
+.corner[data-corner='tr'] { right: 3.5cqw; top: 3.5cqw; }
+.corner[data-corner='bl'] { left: 3.5cqw; bottom: 3.5cqw; }
+.corner[data-corner='br'] { right: 3.5cqw; bottom: 3.5cqw; }
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6cqw;
+}
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.1cqw;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: #7c3aed;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 7.4cqw;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  color: #6d28d9;
+}
+
+.subtitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 2.6cqw;
+  color: #92400e;
+}
+
+.givenTo {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: 2.2cqw;
+  color: var(--c-ink-soft);
+}
+
+.name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6.2cqw;
+  line-height: 1.05;
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+.body {
+  margin: 0;
+  max-width: 78cqw;
+  font-family: var(--font-read);
+  font-size: 2.3cqw;
+  line-height: 1.45;
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+.foot {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  margin-top: 1.4cqw;
+}
+
+.companion,
+.signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6cqw;
+}
+
+.companionName {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2cqw;
+  color: var(--c-ink-soft);
+}
+
+.date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4cqw;
+  padding-bottom: 2cqw;
+}
+
+.dateLabel {
+  font-family: var(--font-read);
+  font-size: 1.8cqw;
+  color: var(--c-ink-mute);
+}
+
+.dateValue {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 2.4cqw;
+  color: var(--c-ink);
+  border-top: 0.25cqw solid var(--c-line);
+  padding-top: 0.6cqw;
+}
+
+.signLine {
+  font-family: var(--font-read);
+  font-size: 1.9cqw;
+  color: var(--c-ink-soft);
+  border-top: 0.25cqw solid var(--c-line);
+  padding-top: 0.6cqw;
+}
+
+/* ---- print ------------------------------------------------------------------------------------ */
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+@media print {
+  :global(#root) {
+    visibility: hidden;
+  }
+  .printSheet {
+    visibility: visible;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 297mm;
+    height: 210mm;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    aspect-ratio: auto;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .printSheet * {
+    visibility: visible;
+  }
+  .printSheet .frame {
+    inset: 8mm;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet { transition: none; }
+}

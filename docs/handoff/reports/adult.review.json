@@ -1,0 +1,20 @@
+{
+  "module": "adult",
+  "summary": "Reviewed src/adult (about 4,550 lines, 5 test files). Typecheck is clean for the whole project, including src/adult. I fixed one real security gap: the PIN lockout (5 wrong tries, then a 30 s pause) lived only in component state, so a page reload reset it and allowed unlimited brute force. The failure count and lock are now persisted per device in localStorage, with try/catch and an in-memory fallback. I added a test for this. Tests pass (31 of 31). The gallery was re-captured and renders correctly on iPad. Protected screens (report, school, class, settings, join) were not captured on real routes because they sit behind the PIN gate, so that visual review is still open.",
+  "publicApi": "Unchanged. Default exports for all routes in src/app/routes.tsx. Named gate exports: isAdultAreaUnlocked, lockAdultArea, makeMathQuestion, __resetAdultGateForTests, ADULT_SESSION_MS.",
+  "tests": "npx vitest run src/adult: 5 files, 31 passed (was 30; added \"keeps the lock after five wrong PINs even when the page is reloaded\"). npm run typecheck: exit 0, zero errors under src/adult. Gallery captured: shots/adult-gallery-r2.png (iPad, full). Log: scratchpad vitest2.log.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Protected adult screens (report, school, class, settings, join) still have no real-route or gallery capture with a PIN set. Needs a capture pass.",
+    "The maths fallback in AdultGate (two 2-digit factors, 12-19) can be passed with a calculator, so it is weak. It only clears the PIN in local-only mode. Acceptable per brief but should be stated to the owner.",
+    "PrivacyScreen still has visible placeholders (controller, address, privacy email, Supabase region, DPA link, retention, security measures, voice service, update date). Must be completed and legally reviewed before publishing.",
+    "The PIN lock is per device only (localStorage). A child with another device or cleared site data can reset it. The 4-8 digit PIN is local-only, not a security boundary against a determined adult user.",
+    "The ghost button 'Crear cuenta' on the welcome screen is faint on the white card (open from the earlier review).",
+    "Home tiles still use single letters as icons (open from the earlier review).",
+    "Sign-out must call lockAdultArea on every sign-out path (open from the earlier review)."
+  ],
+  "contractRequests": [],
+  "notesForOtherModules": [
+    "AdultGate now writes the localStorage key 'numeria.adultGate.lock' (JSON with failures and lockedUntil). Clearing site data removes it, which is expected."
+  ]
+}

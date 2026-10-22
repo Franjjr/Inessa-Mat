@@ -1,0 +1,169 @@
+.shell { --board-gap: 6px; }
+
+.race {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: var(--sp-4);
+  align-items: start;
+  width: 100%;
+  min-height: 0;
+}
+
+.track {
+  display: grid;
+  gap: var(--board-gap);
+  aspect-ratio: 5 / 4;
+  width: 100%;
+  max-height: calc(100dvh - 180px);
+  padding: var(--sp-3);
+  border-radius: var(--r-xl);
+  background: linear-gradient(160deg, #ecfdf5, #ede9fe 60%, #fdf2f8);
+  box-shadow: var(--shadow-2);
+  box-sizing: border-box;
+}
+
+.square {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border-radius: var(--r-md);
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(46, 26, 71, .12);
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+  font-size: clamp(14px, 2.4vmin, 22px);
+  font-variant-numeric: tabular-nums;
+}
+.start { background: var(--c-success-soft); }
+.castle { background: var(--c-gold-soft); }
+.special { background: var(--c-magic-soft); box-shadow: inset 0 0 0 3px #f0abfc, 0 3px 0 rgba(46, 26, 71, .12); }
+
+.num { position: absolute; top: 4px; left: 6px; font-size: clamp(12px, 1.8vmin, 16px); }
+.spEmoji { position: absolute; top: 2px; right: 4px; font-size: clamp(14px, 2.4vmin, 20px); }
+
+.tokens {
+  position: absolute;
+  inset: auto 0 4px 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  pointer-events: none;
+}
+.me {
+  font-size: clamp(22px, 3.6vmin, 32px);
+  line-height: 1;
+  filter: drop-shadow(0 2px 0 rgba(46, 26, 71, .2));
+  animation: bob 1.6s ease-in-out infinite;
+}
+.opp { display: inline-flex; line-height: 0; }
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.dieBox {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.die {
+  width: 84px;
+  height: 84px;
+  flex: none;
+  border: 0;
+  border-radius: var(--r-lg);
+  background: #fff;
+  box-shadow: var(--shadow-2);
+  font-size: 44px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
+  transition: transform var(--dur-fast) var(--ease-bounce);
+}
+.die:disabled { cursor: default; opacity: .9; }
+.die:not(:disabled):active { transform: scale(.95); }
+.die:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
+.rolling { animation: shake .6s ease-in-out; }
+.dieHint {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.qText {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.msg {
+  margin: 0;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-primary-soft);
+  color: var(--c-ink);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.35;
+}
+
+.end {
+  display: grid;
+  place-items: center;
+  flex: 1;
+}
+.endCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-6) var(--sp-5);
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-2);
+  text-align: center;
+  max-width: 520px;
+}
+.endIcon { font-size: 72px; line-height: 1; }
+.endTitle { margin: 0; font-family: var(--font-display); font-size: var(--fs-xl); }
+.endText { margin: 0; font-family: var(--font-read); font-size: var(--fs-md); color: var(--c-ink-soft); }
+.endStars { margin: 0; font-size: 36px; color: var(--c-gold); letter-spacing: 4px; }
+
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes shake {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-14deg); }
+  40% { transform: rotate(12deg); }
+  60% { transform: rotate(-8deg); }
+  80% { transform: rotate(6deg); }
+}
+
+/* Portrait tablets and phones: the track above, the side panel below. */
+@media (max-width: 760px) {
+  .race { grid-template-columns: minmax(0, 1fr); }
+  .track { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .me, .rolling { animation: none; }
+  .die { transition: none; }
+}

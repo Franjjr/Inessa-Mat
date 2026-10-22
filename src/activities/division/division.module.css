@@ -1,0 +1,15 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+}
+
+.intro {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+  text-align: center;
+}

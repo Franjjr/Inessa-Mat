@@ -1,6 +1,150 @@
-// PLACEHOLDER — replace with the real implementation (see docs/ARCHITECTURE.md).
-import { Placeholder } from '@/ui'
+/* Exercise view "array": r rows × c columns of objects. Tap the objects to count, then write the total.
+   With `mirror`, after a correct answer the array turns over (rows ↔ columns) to show the mirror rule. */
+import { useState } from 'react'
+import type { ArrayExercise, ExerciseViewProps } from '@/types'
+import { useActivityHost } from '@/activities/host'
+import { NumberInput } from '@/ink'
+import { sfx } from '@/audio'
+import { celebrate } from '@/fx'
+import { AnswerBar } from '../groups/AnswerBar'
+import { useAnswerFlow } from '../groups/flow'
+import s from './ArrayView.module.css'
 
-export default function ArrayView(_props: unknown) {
-  return <Placeholder name="ArrayView" />
+export interface ArrayViewProps extends ExerciseViewProps {
+  /** After a correct answer, turn the array over and show that the total does not change. */
+  mirror?: boolean
+}
+
+export default function ArrayView(props: ArrayViewProps) {
+  const { exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, mirror } = props
+  if (exercise.kind !== 'array') return null
+  return (
+    <ArrayRound
+      key={exercise.id}
+      ex={exercise}
+      onAnswered={onAnswered}
+      guided={guided}
+      allowHints={allowHints}
+      showFeedback={showFeedback}
+      compact={compact}
+      mirror={mirror}
+    />
+  )
+}
+
+interface RoundProps extends Omit<ArrayViewProps, 'exercise'> {
+  ex: ArrayExercise
+}
+
+function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = true, compact, mirror }: RoundProps) {
+  const host = useActivityHost()
+  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
+  const [value, setValue] = useState<number | null>(null)
+  const [counted, setCounted] = useState<Set<number>>(() => new Set())
+  const [turned, setTurned] = useState(false)
+  const [turnKey, setTurnKey] = useState(0)
+
+  const rows = turned ? ex.cols : ex.rows
+  const cols = turned ? ex.rows : ex.cols
+  const cells = Array.from({ length: ex.rows * ex.cols }, (_, i) => i)
+  const orderIndex = (i: number) => {
+    // Index of the cell in the currently displayed grid, reading order (rows × cols of the view).
+    const r = Math.floor(i / ex.cols)
+    const c = i % ex.cols
+    return turned ? c * ex.rows + r : i
+  }
+  const cellsInView = turned
+    ? cells.slice().sort((a, b) => orderIndex(a) - orderIndex(b))
+    : cells
+
+  const toggle = (i: number) => {
+    setCounted((prev) => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else {
+        next.add(i)
+        sfx.play('tap', { volume: 0.5 })
+      }
+      return next
+    })
+  }
+
+  const submitValue = (v: number) => {
+    const c = flow.submit({ type: 'number', value: v })
+    if (!c.correct) return
+    celebrate('small')
+    if (mirror) {
+      setTurned(true)
+      setTurnKey((k) => k + 1)
+    }
+  }
+  const check = () => {
+    if (value !== null) submitValue(value)
+  }
+  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+
+  return (
+    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Filas y columnas">
+      <p className={s.prompt}>
+        {host.t(`Hay ${ex.rows} filas de ${ex.cols}. ¿Cuántos ${ex.emoji} hay en total?`)}
+      </p>
+      {guided && <p className={s.guide}>{host.t('Cuenta por filas: cada fila tiene lo mismo.')}</p>}
+
+      <div className={s.stage}>
+        <div key={turnKey} className={`${s.grid} ${turned ? s.turned : ''}`} role="grid" aria-label={`${rows} filas de ${cols}`}
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          {cellsInView.map((i) => {
+            const on = counted.has(i)
+            return (
+              <button
+                key={i}
+                type="button"
+                role="gridcell"
+                className={`${s.tile} ${on ? s.on : ''}`}
+                onClick={() => toggle(i)}
+                aria-pressed={on}
+                aria-label={`${ex.emoji} ${on ? 'contado' : 'sin contar'}`}
+                style={{ animationDelay: `${turned ? orderIndex(i) * 30 : 0}ms` }}
+              >
+                <span aria-hidden>{ex.emoji}</span>
+              </button>
+            )
+          })}
+        </div>
+        <p className={s.dims}>
+          {host.t(`${rows} filas × ${cols} columnas`)}
+        </p>
+      </div>
+
+      <div className={s.counter} aria-live="polite">
+        <span className={s.counterNum}>{counted.size}</span>
+        <span className={s.counterOf}>/ {ex.rows * ex.cols}</span>
+      </div>
+
+      {turned && flow.result?.correct && (
+        <p className={s.mirrorNote}>
+          {host.t(`¡Mira! Al girarlo sigue habiendo ${ex.answer}. ¡Es la regla del espejo!`)}
+        </p>
+      )}
+
+      <div className={s.answer}>
+        <span className={s.answerLabel}>{host.t('Total:')}</span>
+        <NumberInput
+          value={value}
+          onChange={setValue}
+          onSubmit={(v) => {
+            setValue(v)
+            if (v !== null) submitValue(v)
+          }}
+          maxDigits={3}
+          size="lg"
+          status={status}
+          ariaLabel="Total de objetos"
+          placeholder="?"
+        />
+      </div>
+
+      <AnswerBar flow={flow} onCheck={check} canCheck={value !== null} />
+    </section>
+  )
 }

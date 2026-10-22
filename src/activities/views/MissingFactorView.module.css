@@ -1,0 +1,43 @@
+/* Missing factor: the blank is a dashed box that becomes the answer box. */
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  color: var(--c-ink);
+  font-family: var(--font-read);
+}
+
+.compact {
+  gap: var(--sp-3);
+}
+
+.answer {
+  min-width: 96px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  text-align: center;
+  color: var(--c-success);
+  background: var(--c-success-soft);
+}
+
+.answerRevealed {
+  color: var(--c-ink);
+  background: var(--c-gold-soft);
+}
+
+.below {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}

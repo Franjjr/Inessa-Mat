@@ -1,0 +1,39 @@
+{
+  "module": "world-core",
+  "summary": "Reviewed and fixed the world-core child journey. Fixes: onboarding could create two profiles on a fast double tap on \"¡Vamos!\", and a failed progress unlock left an orphan child; the form now sits on a translucent card; StoryPlayer keyboard handling (Enter on Salir/Saltar advanced instead of activating, duplicate stage and window handlers, held keys raced through the story) is corrected; header and nav buttons on home, map, picker, onboarding and story are now 56px (the shared sm button is 44px). A regression test for the double-tap was added. Typecheck is clean for src/world and all 57 world tests pass (plus the new onboarding test). Screenshots of home, map and onboarding on iPad landscape look right.",
+  "publicApi": "Unchanged from the original report: default exports ChildPickerScreen, OnboardingScreen, ChildHomeScreen, WorldMapScreen, NodeScreen, StoryPlayer, CompanionBuddy; named GameHostProvider, useBuddyBus, ReactionEvent from src/world/host/GameHost.tsx.",
+  "tests": "npx vitest run src/world: 15 files, 57 tests passed after the main edits; onboarding suite re-run after adding the double-tap test: 3 of 3 passed. npm run typecheck filtered to src/world: zero errors. Screenshots (shots/): world-home-ipad.png, world-map-ipad.png, onboarding-ipad.png, captured via tools/shot.mjs with CHROMIUM_PATH set. Not re-run after the last edits: the full src/world suite, the Android and portrait captures.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Home: the 'Familia' ghost button still sits on the light string decoration at the top edge; low contrast on the iPad capture.",
+    "Onboarding: the disabled Siguiente button is grey-on-light and reads weakly; consider a clearer disabled style.",
+    "Map: the guardian predicament and 'Aquí' tag are visible in the capture, but portrait and Android captures were not taken.",
+    "Galleries for picker, home, map and onboarding were not added (only StoryPlayer has one).",
+    "Tests still mock '@/activities' in GameHost.test.tsx and NodeScreen.test.tsx; remove once the lessons module lands.",
+    "CompanionBuddy remounts the figures per reaction (keyed wrapper); cheaper to key only the animation class.",
+    "StoryPlayer predicament rescue value is scene_index / (scenes - 1); content may want an explicit rescue marker per scene.",
+    "Other agents or the user edited OnboardingScreen.tsx, OnboardingScreen.module.css, OnboardingScreen.test.tsx, WorldMapScreen.tsx, ChildPickerScreen.tsx and StoryPlayer.tsx on disk during this review. My patches were applied to their current content with uniqueness checks; the external changes were not reverted and were not reviewed in full."
+  ],
+  "contractRequests": [
+    "tools/shot.mjs: hardcoded Linux Chromium executablePath fails on macOS (still open; CHROMIUM_PATH workaround needed).",
+    "src/art/index.ts does not re-export COLORWAYS / Colorway / ACCESSORY_IDS (no change needed; onboarding uses COMPANION_COLORWAYS from @/content)."
+  ],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/onboarding/OnboardingScreen.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/onboarding/OnboardingScreen.module.css",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/onboarding/OnboardingScreen.test.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/story/StoryPlayer.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/story/StoryPlayer.module.css",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/home/ChildHomeScreen.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/home/ChildHomeScreen.module.css",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/map/WorldMapScreen.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/map/WorldMapScreen.module.css",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/picker/ChildPickerScreen.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/world/picker/ChildPickerScreen.module.css"
+  ],
+  "screenshots": [
+    "/Users/mac13/Desktop/Inessa-Mat/shots/world-home-ipad.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/world-map-ipad.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/onboarding-ipad.png"
+  ]
+}

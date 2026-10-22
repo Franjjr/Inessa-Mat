@@ -1,0 +1,172 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+  overflow-y: auto;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(90% 70% at 50% 35%, #fffbeb 0%, var(--reward-soft, #fef3c7) 55%, rgba(124, 58, 237, 0.35) 100%);
+  backdrop-filter: blur(2px);
+}
+
+.sheet {
+  position: relative;
+  width: min(100%, 640px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-6) var(--sp-5) var(--sp-5);
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-2);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-2xl);
+  line-height: 1.1;
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+.subtitle {
+  margin: calc(var(--sp-1) * -1) 0 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.stars {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+}
+
+.flight {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--sp-4);
+  width: 100%;
+  min-height: 200px;
+}
+
+.flyingCrystal {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+}
+
+.hornWrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.word {
+  display: flex;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 6.4vmin, 56px);
+  height: clamp(48px, 7.4vmin, 64px);
+  border-radius: var(--r-sm);
+  border: 3px dashed var(--c-line);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+  background: var(--c-surface-2);
+}
+
+.tileFilled {
+  border: 3px solid var(--reward, var(--c-gold));
+  background: var(--reward-soft, var(--c-gold-soft));
+}
+
+.letterNote {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+
+.stickers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+}
+
+.stickerTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--c-magic);
+}
+
+.stickerRow {
+  display: flex;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sticker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 128px;
+  padding: var(--sp-3);
+  border-radius: var(--r-lg);
+  background: var(--c-magic-soft);
+  box-shadow: var(--shadow-1);
+}
+
+.stickerEmoji {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.stickerName {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  text-wrap: balance;
+}
+
+.continue {
+  margin-top: var(--sp-2);
+  max-width: 420px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop { backdrop-filter: none; }
+}

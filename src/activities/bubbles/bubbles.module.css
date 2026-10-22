@@ -1,0 +1,87 @@
+/* Bubbles: a field of floating answer bubbles under the fact. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.stage {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.question {
+  position: relative;
+  z-index: 1;
+}
+
+.field {
+  position: relative;
+  flex: 1;
+  width: min(100%, 760px);
+  min-height: clamp(220px, 40vh, 360px);
+}
+
+.bubble {
+  position: absolute;
+  translate: -50% -50%;
+  width: clamp(76px, 13vmin, 112px);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, #fff 0 12%, rgba(255, 255, 255, .55) 30%, rgba(147, 197, 253, .75) 70%, rgba(59, 130, 246, .55) 100%);
+  box-shadow: inset 0 -6px 12px rgba(37, 99, 235, .18), 0 6px 14px rgba(37, 99, 235, .22);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 4.8vmin, 40px);
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bubble:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 4px;
+}
+
+.bubble:disabled {
+  cursor: default;
+}
+
+.gone {
+  pointer-events: none;
+}
+
+.timer {
+  width: min(100%, 520px);
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-line);
+  overflow: hidden;
+}
+
+.timer > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--w2), var(--c-gold));
+  transition: width 250ms linear;
+}
+
+.quiet {
+  opacity: .85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer > span {
+    transition: none;
+  }
+}

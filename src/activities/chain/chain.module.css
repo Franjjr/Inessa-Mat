@@ -1,0 +1,21 @@
+/* Doubling chain: the rule line above the links. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.rule {
+  margin: 0;
+  align-self: center;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--c-gold-soft);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  text-align: center;
+}

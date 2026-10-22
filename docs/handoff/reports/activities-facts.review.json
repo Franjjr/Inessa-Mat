@@ -1,0 +1,16 @@
+{
+  "module": "activities-facts",
+  "summary": "Reviewed the 11 times-table minigames and 5 exercise views. Fixed one real freeze bug in bubbles (a timed-out bubble question never advanced), padded the bubble distractors for small facts, and added behaviour tests for the ten activities that had none. Typecheck is clean for my paths and all 18 tests pass. Visual review was only partial: calm practice and missing-factor were checked on iPad; the other eight activities were not screenshot-reviewed.",
+  "publicApi": "Unchanged. Default exports from src/activities/{facts,race,missing,wheel,necklace,chain,family,maze,pixel,memory,bubbles}/index.tsx (ActivityProps) and src/activities/views/{FactView,MissingFactorView,SkipCountView,DoubleChainView,FactFamilyView}.tsx (ExerciseViewProps). bubbles/index.tsx also still exports the helper distractors(a, b), now padded to at least 6 candidates.",
+  "tests": "npx vitest run src/activities/facts: 2 files, 18 tests passed (11 original + 7 new in src/activities/facts/__tests__/minigames.test.tsx, which covers missing, wheel, necklace, chain, family, maze, race, pixel, memory and bubbles, including the timeout path). npm run typecheck filtered to my paths: 0 errors. Screenshots: shots/facts-acts-ipad.png (calm practice, looks clean) and shots/facts-views-ipad.png; shots/fa-race.png actually captured the missing-factor entry, so the race entry is still unseen.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual review incomplete: race, wheel, necklace, chain, family, maze, pixel, memory and bubbles layouts were not checked on iPad or Android. Gallery entries cannot be captured individually; --full does not extend the page, and scrollIntoView by caption text hit the wrong entry.",
+    "bubbles timeout fix is covered by a test but was not confirmed to fail on the old code.",
+    "memory: the wrong-card shake animation does not re-trigger when the same card is wrong twice in a row (animate value unchanged).",
+    "pixel: if the picture yields zero questions the session never ends (useSession total 0). Content should never produce this, but there is no guard.",
+    "wheel: dead code (turns is always 0 because the result card returns early).",
+    "maze/grid.ts: the header comment says every non-path cell is a non-multiple, but decoy multiples are placed on unreachable cells. The comment or the code should be corrected.",
+    "race: the world host must pass NodeProgress.records in params.records for the ghost and record text to work (open contract request from the earlier report, unchanged)."
+  ]
+}

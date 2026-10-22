@@ -1,0 +1,234 @@
+/* Shared look of the lesson visuals. Colours come from tokens; numbers use the display font. */
+
+.stage {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  box-sizing: border-box;
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  container-type: size;
+}
+
+.eq {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  line-height: 1.2;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+}
+
+.eqBig {
+  font-size: var(--fs-num);
+  font-weight: 700;
+}
+
+.muted {
+  color: var(--c-ink-soft);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  text-align: center;
+}
+
+.hl {
+  color: var(--c-magic);
+}
+
+.ok {
+  color: var(--c-success);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 52px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+  box-sizing: border-box;
+}
+
+.chipOn {
+  background: var(--c-magic-soft);
+  border-color: var(--c-magic);
+  color: var(--c-magic);
+}
+
+.chipGold {
+  background: var(--c-gold-soft);
+  border-color: var(--c-gold);
+}
+
+.tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-magic-soft);
+  color: var(--c-magic);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.panel {
+  width: 100%;
+  max-width: 720px;
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  border: 2px solid var(--c-line);
+  padding: var(--sp-4);
+  box-sizing: border-box;
+}
+
+/* Column arithmetic (addition, subtraction, multiplication) */
+.grid {
+  display: grid;
+  justify-items: center;
+  align-items: center;
+  row-gap: 6px;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.cell {
+  width: var(--col-w, 64px);
+  height: var(--col-h, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-num);
+  font-weight: 600;
+  color: var(--c-ink);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.cellEmpty {
+  border: 2px dashed var(--c-line);
+  border-radius: var(--r-sm);
+}
+
+.carry {
+  width: calc(var(--col-w, 64px) * 0.6);
+  height: calc(var(--col-h, 64px) * 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--c-magic-soft);
+  color: var(--c-magic);
+  border: 2px solid var(--c-magic);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  box-sizing: border-box;
+}
+
+.carryGlow {
+  box-shadow: 0 0 0 4px rgba(192, 38, 211, 0.25);
+}
+
+.work {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+  white-space: nowrap;
+  text-align: center;
+}
+
+.sign {
+  font-size: var(--fs-num);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+.line {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-ink);
+  width: 100%;
+}
+
+/* Place-value houses */
+.house {
+  width: clamp(64px, 16cqi, 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.roof {
+  width: 100%;
+  height: clamp(28px, 7cqi, 48px);
+}
+
+.body {
+  width: 100%;
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  border: 3px solid;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0 10px;
+  box-sizing: border-box;
+}
+
+.houseName {
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+}
+
+.houseDigit {
+  font-size: clamp(36px, 9cqi, 64px);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* Dot / object grids */
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.emoji {
+  font-size: 30px;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage * {
+    transition: none !important;
+  }
+}

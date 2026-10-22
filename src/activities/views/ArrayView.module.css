@@ -1,0 +1,123 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  text-align: center;
+}
+
+.guide {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  max-width: 100%;
+}
+
+.grid {
+  display: grid;
+  gap: 6px;
+  width: min(560px, 74vw);
+  max-height: min(52vh, 420px);
+  aspect-ratio: auto;
+}
+
+.tile {
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+  font-size: clamp(22px, 4.4vmin, 40px);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-bounce);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.tile:active { transform: scale(.92); }
+.tile.on { background: var(--c-success-soft); box-shadow: inset 0 0 0 3px var(--c-success); }
+.tile:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+
+/* Turning over: tiles flip in reading order of the new layout. */
+.turned .tile { animation: flip var(--dur-med) var(--ease-out) both; }
+
+.dims {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+}
+
+.counter {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  color: var(--c-ink-soft);
+}
+.counterNum {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  color: var(--c-primary-strong);
+  font-variant-numeric: tabular-nums;
+}
+.counterOf { font-size: var(--fs-md); }
+
+.mirrorNote {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-magic);
+  text-align: center;
+  animation: pop var(--dur-med) var(--ease-bounce);
+}
+
+.answer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.answerLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.compact .grid { width: min(380px, 60vw); }
+
+@keyframes flip {
+  from { transform: rotateY(90deg); opacity: 0; }
+  to { transform: rotateY(0); opacity: 1; }
+}
+@keyframes pop {
+  from { transform: scale(.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .turned .tile, .mirrorNote { animation: none; }
+  .tile { transition: none; }
+}

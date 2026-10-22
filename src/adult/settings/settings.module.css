@@ -1,0 +1,10 @@
+.kv { display: grid; grid-template-columns: minmax(0, 140px) minmax(0, 1fr); gap: var(--sp-2) var(--sp-4); font-size: var(--fs-md); }
+.kvKey { color: var(--c-ink-mute); font-size: var(--fs-sm); }
+.kvVal { color: var(--c-ink); overflow-wrap: anywhere; }
+.members { list-style: none; margin: 0; padding: 0; }
+.member { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-3); padding: var(--sp-3) 0; border-bottom: 2px solid var(--c-surface-2); }
+.member:last-child { border-bottom: 0; }
+.inviteBox { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4); border-radius: var(--r-md); background: var(--c-primary-soft); }
+.linkText { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); overflow-wrap: anywhere; color: var(--c-ink); background: var(--c-surface); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); }
+.pinGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--sp-4); }
+@media (max-width: 560px) { .kv { grid-template-columns: minmax(0, 1fr); } }

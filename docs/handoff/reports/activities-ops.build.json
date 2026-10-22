@@ -1,0 +1,62 @@
+{
+  "module": "activities-ops",
+  "summary": "Built the operations minigames (groups, array, column, division, share, word, board) and their five exercise views (GroupsView, ArrayView, ColumnView, DivisionView, WordProblemView), with shared answer flow, answer bar, run hook and shell. Typecheck is clean for all my files and 13 unit tests pass. Visual review is partial: the galera (DivisionView) layout is NOT finished (bracket and top bar invisible, subtraction rows misaligned under the dividend, quotient cell offset below the divisor line).",
+  "publicApi": "Default exports: src/activities/{groups,array,column,division,share,word,board}/index.tsx (ActivityProps). Views (ExerciseViewProps): views/GroupsView.tsx (extra showSum), views/ArrayView.tsx (extra mirror), views/ColumnView.tsx (extra proof), views/DivisionView.tsx (extra proof), views/WordProblemView.tsx (extra chooseOp). Shared helpers inside groups/: flow.ts (useAnswerFlow), AnswerBar.tsx, OpsShell.tsx (OpsShell, NoRounds), useOpsRun.ts. division/galera.ts exports galeraSteps, quotientOf, remainderOf.",
+  "tests": "npx vitest run src/activities/views src/activities/groups src/activities/division: 4 files, 13 tests passed (galera steps 84/4, 17/5, 72/3, 41/4, exhaustive 2-digit check; ColumnView units-first focus, carries not graded, borrow marks optional; DivisionView step gating and 72/3 outcome; useOpsRun reports each attempt and ends with stars). npm run typecheck: no errors in my folders; the only remaining errors are in src/world, src/activities/memory and src/activities/lesson/visuals (other agents).",
+  "typecheckClean": true,
+  "openIssues": [
+    "DivisionView galera layout is visibly broken in shots/division-ipad.png: the bracket (vertical line right of the dividend) and the quotient top bar do not render, subtraction rows are not aligned under their dividend digits, and the quotient cell sits below the divisor line. Needs a layout pass (grid rows/columns and the bracket element) before it is usable.",
+    "Screenshots reviewed: shots/ops-views-ipad.png (groups view, good), shots/column-ipad.png (column subtraction with borrow marks, good), shots/board-ipad.png (board race, good). Gallery captures only show the first entry of each gallery file (the page is not scrolled in the capture), so ArrayView, WordProblemView, ColumnView multiplication and the activity portrait/android variants were not visually reviewed.",
+    "Not yet visually checked on Android 1280x800 or iPad portrait for most views; the --full capture does not include later gallery entries.",
+    "share and board activities have no unit tests; keyboard-only flow is covered only for ColumnView and DivisionView entries.",
+    "DivisionView.module.css / galera layout will also need a check at 820x1180 with Pencil-size cells.",
+    "Design choice to confirm: the product under each galera step is printed (not written by the child); only quotient and remainder cells are handwritten. Workbook shows the product as written work, so the integrator may want it as a writable cell in a later pass.",
+    "Design choice: ColumnView focus order is units result, optional carry above the next column, then its result; carries/borrow marks are never graded.",
+    "Design choice: the first submission is the graded outcome; later re-checks only change the feedback. onAnswered fires on Siguiente (or on submit when showFeedback is false).",
+    "groups/index.tsx build phase shows its own Spanish copy via host.t; the GroupsView showSum prop only prints the repeated addition as a reading aid and does not require a separate written step."
+  ],
+  "contractRequests": [
+    "None required by the views and activities; all contracts used as documented (ExerciseViewProps, ActivityProps, ActivityHost, @/ink, @/engine, @/audio, @/fx, @/art, ExerciseView from @/activities for the board)."
+  ],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/flow.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/AnswerBar.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/OpsShell.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/useOpsRun.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/run.test.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/groups/groups.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/array/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/array/array.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/column/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/column/column.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/division/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/division/galera.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/division/galera.test.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/division/division.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/share/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/share/share.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/word/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/word/word.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/board/index.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/board/board.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/GroupsView.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/ArrayView.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/ColumnView.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/DivisionView.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/WordProblemView.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/ColumnView.test.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/DivisionView.test.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/activities/views/OpsViews.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/ops-views-ipad.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/column-ipad.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/board-ipad.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/division-ipad.png"
+  ],
+  "notesForOtherModules": [
+    "Activities call ExerciseView from @/activities inside the board race (fact kinds); the facts module's views must accept ExerciseViewProps with showFeedback, allowHints and call onAnswered once.",
+    "Views never report attempts themselves; the activity reports through useActivityHost().reportAttempt. The guardian (world-meta) should report its own attempts when it renders these views directly.",
+    "Extra optional view props (showSum, mirror, proof, chooseOp) are not in ExerciseViewProps; the registry still type-checks because they are optional.",
+    "The galera layout in DivisionView is not yet visually acceptable; do not ship the division activity until it is fixed."
+  ]
+}
