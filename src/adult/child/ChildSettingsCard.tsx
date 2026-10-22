@@ -1,5 +1,6 @@
 /* Per-child learning settings. Sound, music and voice live in Settings (they are device-level habits). */
 import { useState } from 'react'
+import { SUB_METHODS, normaliseSubMethod } from '@/engine'
 import { updateChild } from '@/data'
 import type { ChildProfile, ChildSettings } from '@/types'
 import { toast } from '@/ui'
@@ -10,7 +11,7 @@ import s from './child.module.css'
 
 export function ChildSettingsCard({ child }: { child: ChildProfile }) {
   const [error, setError] = useState<string | null>(null)
-  const settings = child.settings
+  const settings = { ...child.settings, subMethod: normaliseSubMethod(child.settings.subMethod) }
 
   const change = async (patch: Partial<ChildSettings>) => {
     setError(null)
@@ -95,6 +96,26 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
               onClick={() => void change({ inputPreference: value })}
             >
               {text}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={adult.stack}>
+        <span className={adult.label} id="sub-method-label">Método favorito para restar</span>
+        <p className={adult.hint}>Las restas de la app usan este método. El niño puede cambiarlo en su lección «Cuatro caminos para restar».</p>
+        <div className={s.segGroup} role="radiogroup" aria-labelledby="sub-method-label">
+          {SUB_METHODS.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.subMethod === m.id}
+              className={adult.segment}
+              title={m.summary}
+              onClick={() => void change({ subMethod: m.id })}
+            >
+              {m.label}
             </button>
           ))}
         </div>

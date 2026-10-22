@@ -5,13 +5,14 @@ import { MotionConfig, motion } from 'motion/react'
 import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
-import type { LessonDef } from '@/types'
+import type { LessonDef, SubMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
 import { LESSON_VISUALS } from './visuals'
 import { SafeVisual } from './SafeVisual'
 import TrySlot from './TrySlot'
-import { computeRuns, keyAction, stageCharacter, voiceFor } from './navigation'
+import ChoiceSlot from './ChoiceSlot'
+import { computeRuns, isAnswerStep, keyAction, stageCharacter, voiceFor } from './navigation'
 import { usePortrait, useReducedMotionFlag } from './useLessonMedia'
 import styles from './LessonPlayer.module.css'
 
@@ -45,13 +46,16 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const run = runs[current]
   const isTry = !!step && step.interaction === 'try' && !!step.trySelector
   const outcome = settled.get(current)
-  const canContinue = total === 0 || !isTry || outcome !== undefined
+  /** A "choose" step: the child picks one option (saved through the host) before going on. */
+  const isChoose = !!step && step.interaction === 'choose' && !!step.choices?.length
+  const [picks, setPicks] = useState<ReadonlyMap<number, SubMethod>>(() => new Map())
+  const canContinue = total === 0 || (!isTry && !isChoose) || outcome !== undefined
   const isLast = current >= total - 1
   const speaker = step?.speaker
   const voice = voiceFor(speaker)
   const text = step ? host.t(step.text) : ''
   const stageId = stageCharacter(speaker)
-  const Visual = step && !isTry ? LESSON_VISUALS[step.visual] : undefined
+  const Visual = step && !isAnswerStep(step) ? LESSON_VISUALS[step.visual] : undefined
 
   // Voice: read each step aloud when it appears (the speech module ignores the call when voice is off).
   useEffect(() => {
@@ -86,6 +90,13 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const settle = useCallback((solvedNow: boolean) => {
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
   }, [current])
+
+  // Choosing settles the step at once and saves the pick as the child's preference.
+  const pick = useCallback((value: SubMethod) => {
+    setPicks((prev) => new Map(prev).set(current, value))
+    host.setPreference?.('subMethod', value)
+    setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, true)))
+  }, [current, host])
 
   // Keyboard: arrows and Page keys move, Escape exits, Enter continues when nothing else has focus.
   useEffect(() => {
@@ -157,7 +168,11 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} />
+                </SafeVisual>
+              ) : isChoose && step.choices ? (
+                <SafeVisual>
+                  <ChoiceSlot choices={step.choices.map((c) => ({ label: c.label, value: c.value }))} picked={picks.get(current)} onPick={pick} />
                 </SafeVisual>
               ) : Visual ? (
                 <SafeVisual>

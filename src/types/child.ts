@@ -1,4 +1,5 @@
 import type { GrammaticalGender, ID, ISODate } from './common'
+import type { SubMethod } from './exercise'
 
 /** The 8 companion animals a child can pick during setup. Art lives in src/art/companions. */
 export type CompanionSpecies =
@@ -57,6 +58,8 @@ export interface ChildSettings {
   bigCells: boolean
   /** Subjects the adult has enabled for this child (adult area). The child only sees these. */
   subjects: SubjectId[]
+  /** Favourite subtraction method: the column/parts/line exercises use it. Chosen by the child in the lesson, editable by the adult. */
+  subMethod: SubMethod
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
@@ -70,6 +73,7 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   handedness: 'right',
   bigCells: false,
   subjects: ['math'],
+  subMethod: 'borrow',
 }
 
 export interface ChildProfile {

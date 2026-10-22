@@ -52,6 +52,7 @@ export function useOpsRun(exercises: Exercise[], config: ActivityConfig, onDone:
         inputMode: outcome.inputMode,
         hintsUsed: outcome.hintsUsed,
         recognitionFixes: outcome.recognitionFixes,
+        method: outcome.method,
       })
       if (ok) st.correct += 1
     }

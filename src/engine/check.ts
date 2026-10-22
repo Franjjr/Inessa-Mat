@@ -10,7 +10,8 @@ import type {
 } from '@/types'
 import { digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
-import { FEEDBACK, praise, praiseFact } from './feedback'
+import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
+import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
 
 // ---------------------------------------------------------------- answer normalisation
@@ -258,8 +259,71 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
 
+/* Subtraction methods: the written steps. Marks in the column (pedir prestado arriba, me llevo una abajo) are graded
+   only where the child writes them: an empty mark is not wrong, a written one must match the step the method needs. */
+const SUB_STEP_FEEDBACK = {
+  borrowMark: (col: number) => `¡Casi! Revisa la cifra que has tachado en las ${columnName(col)}: al prestar, la vecina se queda con una menos.`,
+  carryMark: (col: number) => `¡Casi! Revisa la cifra de abajo de las ${columnName(col)}: le sumas 1 cuando la columna de la derecha se lleva.`,
+  partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
+  partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
+  lineWrong: (step: number, from: number, to: number) => `¡Casi! El salto ${step} va de ${from} hacia ${to}: cuenta hacia delante, sin pasarte.`,
+  lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
+  lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
+} as const
+
+/** Columns (units = 0) where a written subtraction mark does not match what the method needs at that point. */
+function markErrors(ex: ColumnSubExercise, answer: Extract<Answer, { type: 'digits' }>): number[] {
+  if (!answer.carries) return []
+  const expected = answer.method === 'carry' ? compensationSteps(ex.minuend, ex.subtrahend).marks : borrowMarks(ex.minuend, ex.subtrahend)
+  const wrong: number[] = []
+  for (let i = 1; i < expected.length; i++) {
+    const written = answer.carries[i]
+    if (!isNum(written)) continue
+    if (written !== expected[i]) wrong.push(i)
+  }
+  return wrong
+}
+
+function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckResult {
+  const expected = String(ex.answer)
+  const parts = subtrahendParts(ex.subtrahend)
+  const given = values.slice(0, parts.length).map((v) => (isNum(v) ? String(v) : '?')).join(' · ')
+  if (parts.some((_, k) => !isNum(values[k]))) return incomplete(given, expected)
+  let from = ex.minuend
+  for (let k = 0; k < parts.length; k++) {
+    const v = values[k] as number
+    if (v !== from - parts[k]) {
+      return { correct: false, given, expected, errorType: 'fact', feedback: SUB_STEP_FEEDBACK.partsWrong(k + 1, from, parts[k]) }
+    }
+    from = v
+  }
+  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.partsCorrect }
+}
+
+function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: number | null | undefined): CheckResult {
+  const expected = String(ex.answer)
+  const stops = lineStops(ex.subtrahend, ex.minuend)
+  const given = values.slice(0, stops.length).map((v) => (isNum(v) ? String(v) : '?')).join(' → ') + (isNum(total) ? ` = ${total}` : '')
+  if (stops.some((_, k) => !isNum(values[k])) || !isNum(total)) return incomplete(given, expected)
+  let at = ex.subtrahend
+  for (let k = 0; k < stops.length; k++) {
+    const v = values[k] as number
+    if (v <= at || v >= ex.minuend) {
+      return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineWrong(k + 1, at, ex.minuend) }
+    }
+    at = v
+  }
+  if (total !== ex.answer) return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineTotal }
+  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
+}
+
 function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
+  if (answer.type === 'steps') {
+    return answer.method === 'parts'
+      ? checkSubParts(ex, answer.values)
+      : checkSubLine(ex, answer.values, answer.total)
+  }
   const input = digitsFrom(answer)
   if (!input) return wrongShape(expected)
   const cols = digitCount(ex.minuend)
@@ -270,8 +334,12 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const { empty, extra, value } = columnPrecheck(input, ex.answer, cols)
   if (empty.length === len && input.digits.every((x) => x === null || x === undefined)) return incomplete('?', expected)
   if (empty.length) return incomplete(given, expected, empty)
-  // Any correct result is right, whatever borrowing method was used: borrow cells are scratch and never graded.
   if (!extra && value === ex.answer) {
+    const marks = answer.type === 'digits' ? markErrors(ex, answer) : []
+    if (marks.length) {
+      const msg = answer.type === 'digits' && answer.method === 'carry' ? SUB_STEP_FEEDBACK.carryMark : SUB_STEP_FEEDBACK.borrowMark
+      return { correct: false, given, expected, errorType: 'borrow-forgot', wrongColumns: marks, feedback: msg(marks[0]) }
+    }
     return { correct: true, given, expected, feedback: FEEDBACK.subCorrect(ex.borrowed.filter(Boolean).length, ex.id) }
   }
   const d = diagnoseSub(ex.minuend, ex.subtrahend, input.digits)

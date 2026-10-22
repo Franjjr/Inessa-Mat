@@ -12,11 +12,12 @@ export const w4 = world({
   crystalName: 'celeste',
   predicament: 'ice',
   hook: '¡{pet} está {pg:congelada|congelado} en un bloque de hielo!',
-  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, ceros y prueba de la resta',
-  path: [[0.12, 0.86], [0.42, 0.88], [0.76, 0.8], [0.86, 0.62], [0.62, 0.54], [0.32, 0.56], [0.15, 0.4], [0.34, 0.26], [0.62, 0.3], [0.56, 0.12]],
+  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, me llevo una, por partes, la recta, ceros y prueba de la resta',
+  path: [[0.12, 0.86], [0.42, 0.88], [0.6, 0.84], [0.76, 0.8], [0.86, 0.62], [0.62, 0.54], [0.32, 0.56], [0.15, 0.4], [0.34, 0.26], [0.62, 0.3], [0.56, 0.12]],
   nodes: [
     storyNode('arrival', 'Un bloque de hielo', 'w4-arrival'),
     lessonNode('lesson-borrow', 'Restar en la montaña', 'w4-borrow'),
+    lessonNode('lesson-four-ways', 'Cuatro caminos para restar', 'w4-four-ways'),
     activityNode('column-3d', {
       kind: 'column',
       title: 'Restas de 3 cifras',

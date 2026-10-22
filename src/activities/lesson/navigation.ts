@@ -22,18 +22,23 @@ function stableParams(p: LessonStep['params']): string {
   return Object.keys(p).sort().map((k) => `${k}=${String(p[k])}`).join('&')
 }
 
-/** Splits the steps into runs. "Try" steps always form a run of their own (their visual is not drawn). */
+/** Steps the child answers (a try or a choice) form a run of their own: their visual is not drawn. */
+export function isAnswerStep(step: LessonStep | undefined): boolean {
+  return step?.interaction === 'try' || step?.interaction === 'choose'
+}
+
+/** Splits the steps into runs. "Try" and "choose" steps always form a run of their own. */
 export function computeRuns(steps: readonly LessonStep[]): StepRun[] {
   const runs: StepRun[] = []
   let i = 0
   while (i < steps.length) {
-    if (steps[i].interaction === 'try') {
+    if (isAnswerStep(steps[i])) {
       runs.push({ start: i, length: 1, phase: 0 })
       i++
       continue
     }
     let j = i + 1
-    while (j < steps.length && steps[j].interaction !== 'try' && sameVisual(steps[i], steps[j])) j++
+    while (j < steps.length && !isAnswerStep(steps[j]) && sameVisual(steps[i], steps[j])) j++
     for (let k = i; k < j; k++) runs.push({ start: i, length: j - i, phase: k - i })
     i = j
   }

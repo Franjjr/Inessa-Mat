@@ -1,5 +1,5 @@
 /* Engine-level option/result types. Re-exported unchanged from src/engine/index.ts (the public contract). */
-import type { ActivityKind, ErrorType, InputMode, MasteryMap, Rng, SkillKey } from '@/types'
+import type { ErrorType, InputMode, MasteryMap, Rng, SkillKey } from '@/types'
 
 export interface GenerateOptions {
   rng?: Rng
@@ -21,12 +21,8 @@ export interface AttemptForMastery {
 
 export interface SessionPlan {
   minutes: number
-  /** Short oral-style warm-up: due facts first. */
-  warmup: SkillKey[]
   /** Next story node to continue, if any. */
   next: { worldId: string; nodeId: string } | null
   /** Mixed review of weak/due skills (spaced repetition). */
   review: SkillKey[]
-  /** Fun closing game. */
-  game: ActivityKind
 }

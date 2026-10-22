@@ -7,7 +7,8 @@ import { ChestArt, Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, C
 import {
   crystalsOf, isWorldUnlocked, nextNode, season1, getNode, getWorld, renderTemplate, templateContext,
 } from '@/content'
-import { dueSkills } from '@/engine'
+import { DAILY_MINUTES, dueSkills } from '@/engine'
+import { GRADE3_SYLLABUS, currentTopic } from '@/content/syllabus'
 import { useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
@@ -60,6 +61,7 @@ export default function ChildHomeScreen() {
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season1.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
+  const sessionTopic = currentTopic(GRADE3_SYLLABUS, mastery ?? {})?.name ?? null
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -132,7 +134,23 @@ export default function ChildHomeScreen() {
         </div>
 
         <div className={s.right}>
-          <button type="button" className={s.next} onClick={() => navigate(continueTo)}>
+          {/* The placement test comes first: the daily session starts where it says. */}
+          {(!progress.flags?.placement || progress.flags?.placementRequested) && (
+            <button type="button" className={`${s.next} ${s.placement}`} onClick={() => navigate('/play/prueba')}>
+              <span className={s.nextKicker}>Antes de empezar · unos 10 min</span>
+              <span className={s.nextTitle}>Prueba inicial</span>
+              <span className={s.nextText}>Sin pistas: así sabemos por dónde empezar.</span>
+              <span className={s.nextCta}>¡Hacer la prueba!</span>
+            </button>
+          )}
+          <button type="button" className={`${s.next} ${s.session}`} onClick={() => navigate('/play/sesion')}>
+            <span className={s.nextKicker}>Mi sesión de hoy · {DAILY_MINUTES} min</span>
+            <span className={s.nextTitle}>{sessionTopic ?? 'Matemáticas de hoy'}</span>
+            <span className={s.nextText}>Calentamiento, lo nuevo, mezcla y un problema.</span>
+            <span className={s.nextCta}>¡Empezar!</span>
+          </button>
+
+          <button type="button" className={`${s.next} ${s.adventure}`} onClick={() => navigate(continueTo)}>
             <span className={s.nextKicker}>
               {nextWorld ? `${renderTemplate(nextWorld.name, ctx)} · Paso siguiente` : 'Tu aventura'}
             </span>

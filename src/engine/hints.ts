@@ -2,11 +2,12 @@
    one step and leaves the final answer for the child ("= ?"). Params feed the HintVisual renderer. */
 import type {
   ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, Exercise, Hint, SkipCountExercise,
-  WordProblemExercise,
+  SubMethod, WordProblemExercise,
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName } from './feedback'
 import { strategyDetail } from './strategies'
+import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
@@ -75,6 +76,74 @@ function columnSubHints(ex: ColumnSubExercise): Hint[] {
       : 'La vecina presta 1 decena: tú ganas 10 y ella se queda con una menos. ¡Táchala!', 'borrow', { ...params, column: i }),
     hint(3, worked, 'borrow', { ...params, column: i }),
   ]
+}
+
+/* «Me llevo una abajo»: the same first column as «pedir prestado», but the ten goes to the top number and the 1 to the
+   bottom number of the next column. The hints name the intermediate numbers only, never the difference. */
+function carrySubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const { borrows, adjusted } = compensationSteps(m, s)
+  const i = borrows.findIndex(Boolean)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  if (i < 0) {
+    return [
+      hint(1, 'Empieza por las unidades y resta casa por casa: arriba menos abajo.', 'none'),
+      hint(2, 'Mira las casas: unidades con unidades, decenas con decenas…', 'place-value', params),
+      hint(3, `Unidades: ${digitAt(m, 0)} − ${digitAt(s, 0)} = ?`, 'borrow', { ...params, column: 0 }),
+    ]
+  }
+  const next = i + 1
+  const top = digitAt(m, i) + 10
+  return [
+    hint(1, 'Si arriba hay menos que abajo: ¡me llevo una! Súmale 10 al de arriba, y a la cifra de abajo de la casa de al lado súmale 1.', 'none'),
+    hint(2, `Cuando la cifra de arriba es menor, no te quedes parado: ${columnName(i)} arriba suman 10 y la casa de al lado de abajo cuenta 1 más.`, 'borrow', { ...params, column: i }),
+    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en las ${columnName(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
+  ]
+}
+
+/* «Por partes»: the subtrahend is split into its non-zero parts and taken away one at a time. The worked hint shows
+   the first result only; the last one is left to the child. */
+function partsSubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const parts = subtrahendParts(s)
+  const results = partsResults(m, s)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  const split = parts.join(' + ')
+  const worked = parts.length > 1
+    ? `${m} − ${parts[0]} = ${results[0]}. Ahora quita ${parts[1]}: ${results[0]} − ${parts[1]} = ?`
+    : `${m} − ${parts[0]} = ?`
+  return [
+    hint(1, `Separa el número de abajo en partes: ${s} = ${split}. Quita una parte cada vez.`, 'none'),
+    hint(2, `Empieza por la parte más grande: ${m} − ${parts[0]} = ?`, 'place-value', params),
+    hint(3, worked, 'place-value', params),
+  ]
+}
+
+/* «Saltos en la recta»: count forward from the subtrahend, first to a round number. The worked hint names the first
+   jump's length (an intermediate), never the total. */
+function lineSubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const stops = lineStops(s, m)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  const first = stops[0]
+  return [
+    hint(1, `Empieza en ${s} y cuenta hacia delante hasta ${m}. Salta primero a un número redondo.`, 'none'),
+    hint(2, first !== undefined
+      ? `Desde ${s}, el primer salto cae en ${first}. ¿Cuánto hay de ${s} a ${first}?`
+      : `Desde ${s} salta hasta ${m}: ¿cuántos saltos de 10 caben en el camino?`, 'none'),
+    hint(3, first !== undefined
+      ? `De ${s} a ${first} hay ${first - s}. Sigue contando: ¿cuánto hay de ${first} al siguiente salto?`
+      : `Cuenta de ${s} hacia ${m} con saltos de 10 y de 1. ¿Cuántos has dado?`, 'none', params),
+  ]
+}
+
+function subtractionHints(ex: ColumnSubExercise, method: SubMethod | undefined): Hint[] {
+  switch (method) {
+    case 'carry': return carrySubHints(ex)
+    case 'parts': return partsSubHints(ex)
+    case 'line': return lineSubHints(ex)
+    default: return columnSubHints(ex)
+  }
 }
 
 function columnMulHints(ex: ColumnMulExercise): Hint[] {
@@ -184,7 +253,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
 }
 
 /** Progressive hints (level 1 strategy → level 3 worked step) for this exercise. */
-export function hintsFor(ex: Exercise): Hint[] {
+export function hintsFor(ex: Exercise, method?: SubMethod): Hint[] {
   switch (ex.kind) {
     case 'fact-mul': return factHints(ex.a, ex.b)
     case 'fact-div': {
@@ -244,7 +313,7 @@ export function hintsFor(ex: Exercise): Hint[] {
         hint(3, `${ex.a} × ${ex.b} = ${ex.product}. Con el espejo: ${ex.b} × ${ex.a} = ${ex.product}. Ahora reparte: ${ex.product} ÷ ${ex.a} = ?`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
       ]
     case 'column-add': return columnAddHints(ex)
-    case 'column-sub': return columnSubHints(ex)
+    case 'column-sub': return subtractionHints(ex, method)
     case 'column-mul': return columnMulHints(ex)
     case 'division': return divisionHints(ex)
     case 'word-problem': return wordHints(ex)

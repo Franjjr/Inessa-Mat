@@ -48,12 +48,18 @@ describe('check — correct answers are always accepted', () => {
     expect(check(add, dig([5, 2, 2, 1, 3])).correct).toBe(false)
   })
 
-  it('subtraction accepts the correct result whatever the borrowing method (scratch cells never graded)', () => {
+  it('subtraction accepts the correct result whatever the borrowing method; empty steps are never wrong', () => {
     const ex = makeColumnSub(503, 128)
-    // Regrouping scratch, compensation ("llevando") scratch, or none at all: all correct.
+    // The written lender marks (9 in the zero, 4 in the hundreds) are right; the units mark is not a step; none at all.
     expect(check(ex, dig([5, 7, 3], [13, 9, 4])).correct).toBe(true)
-    expect(check(ex, dig([5, 7, 3], [1, 1, 0])).correct).toBe(true)
     expect(check(ex, dig([5, 7, 3])).correct).toBe(true)
+  })
+
+  it('a written subtraction step that does not match the method is graded, at its column', () => {
+    const ex = makeColumnSub(503, 128)
+    const r = check(ex, dig([5, 7, 3], [1, 1, 0]))
+    expect(r.correct).toBe(false)
+    expect(r.wrongColumns).toEqual([1, 2])
   })
 })
 

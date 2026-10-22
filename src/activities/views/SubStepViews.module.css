@@ -1,0 +1,127 @@
+/* Layout of the subtraction step views: by parts (resta por partes) and the number line (saltos). */
+.view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.compact { gap: var(--sp-3); }
+
+.prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+.model {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-variant-numeric: tabular-nums;
+  min-width: min(100%, 320px);
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1.2vmin, 14px);
+}
+
+.from,
+.part,
+.landing {
+  min-width: 2.2em;
+  text-align: right;
+  color: var(--c-ink-soft);
+}
+
+.sign {
+  color: var(--c-primary-strong);
+  font-weight: 600;
+}
+
+.number {
+  display: inline-flex;
+  gap: clamp(4px, 0.8vmin, 8px);
+}
+
+.digit {
+  display: grid;
+  place-items: center;
+}
+
+.jumps {
+  list-style: none;
+  margin: 0;
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-variant-numeric: tabular-nums;
+}
+
+.jump {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1.2vmin, 14px);
+}
+
+.arrow {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+  white-space: nowrap;
+}
+
+.chip {
+  padding: 2px 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-primary-soft, var(--c-surface));
+  color: var(--c-primary-strong);
+  font-weight: 600;
+}
+
+.total {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view * { transition: none; }
+}

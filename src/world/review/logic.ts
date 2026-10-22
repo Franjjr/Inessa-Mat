@@ -24,7 +24,8 @@ export function buildReviewSession(input: {
   const planned = planSession({ child, progress, mastery, now }).review
   const skills = [...new Set([...due, ...planned])]
   if (skills.length === 0) return { exercises: [], dueCount: 0 }
-  const exercises = generate(selectorForSkills(skills), input.size ?? REVIEW_SIZE, { rng, mastery, now })
+  // adaptive: due and weak skills first, instead of the same weight for every skill (E5)
+  const exercises = generate({ ...selectorForSkills(skills), adaptive: true }, input.size ?? REVIEW_SIZE, { rng, mastery, now })
   return { exercises, dueCount: due.length }
 }
 

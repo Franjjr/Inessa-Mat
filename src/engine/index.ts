@@ -20,8 +20,16 @@ export { strategyForFact } from './strategies'
 export { dueSkills, factGrid, fluencyThresholdMs, newMastery, starsFor, updateMastery } from './mastery'
 /** Spanish descriptions for adult dashboards. */
 export { describeError, describeSkill } from './describe'
-/** Daily session plan and review selectors. */
+/** Review plan and selectors (daily review), and the 15-minute daily session plan (blocks, scaffolding). */
 export { planSession, selectorForSkills } from './session'
+export {
+  DAILY_BLOCK_LABEL, DAILY_MINUTES, EXAMPLE_SECONDS, ITEM_SECONDS, NEW_FACT_BUDGET, estimateSeconds, planDailySession,
+  scaffoldedSkills, statementOf,
+} from './daily'
+export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
+/** Prueba inicial: items, block mapping and the summary for the adult report. */
+export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
+export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 
 // ---------------------------------------------------------------- extra helpers (engine extensions)
 
@@ -37,7 +45,7 @@ export {
   makeFactFamily, makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
 } from './make'
 /** Column arithmetic analysis (digits units-first). */
-export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, fromDigits, toDigits } from './arith'
+export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitCount, fromDigits, toDigits } from './arith'
 /** Fact-family parsing ("6 × 7 = 42", "42 : 6 = 7"...). */
 export { parseFact } from './check'
 export { strategyDetail } from './strategies'
@@ -46,3 +54,7 @@ export { intervalMs, LEITNER_INTERVAL_DAYS } from './mastery'
 export { WORD_TEMPLATES } from './wordProblems'
 export type { WordTemplate } from './wordProblems'
 export { columnName } from './feedback'
+/** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
+export { DEFAULT_METHOD, isSubMethod, methodLabel, methodsOf, METHODS, normaliseSubMethod, SUB_METHODS } from './methods'
+export type { MethodInfo, MethodOp } from './methods'
+export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'

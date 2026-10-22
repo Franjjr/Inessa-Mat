@@ -28,6 +28,7 @@ function showAnswer(a: Answer): string {
     case 'number': return String(a.value ?? '—')
     case 'digits': return a.digits.map((d) => (d === null ? '·' : d > 9 ? `[${d}]` : String(d))).reverse().join('')
     case 'division': return `${a.quotient ?? '—'} resto ${a.remainder ?? '—'}`
+    case 'steps': return `${a.values.map((v) => v ?? '—').join(' · ')}${a.total !== undefined ? ` = ${a.total ?? '—'}` : ''}`
     case 'facts': return a.facts.join(' · ')
     case 'numbers': return a.values.join(', ')
   }

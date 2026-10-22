@@ -102,9 +102,17 @@ export type Exercise =
 export type Answer =
   | { type: 'number'; value: number | null }
   | { type: 'numbers'; values: (number | null)[] }                       // skip-count, double-chain
-  | { type: 'digits'; digits: (number | null)[]; carries?: (number | null)[] } // column ops; digits[0] = units
+  | { type: 'digits'; digits: (number | null)[]; carries?: (number | null)[]; method?: SubMethod } // column ops; digits[0] = units. carries = written steps (resta: marks)
+  | { type: 'steps'; method: 'parts' | 'line'; values: (number | null)[]; total?: number | null }   // resta por partes / saltos
   | { type: 'division'; quotient: number | null; remainder: number | null }
   | { type: 'facts'; facts: string[] }                                     // fact-family, e.g. '6x7=42', '42/6=7'
+
+/**
+ * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
+ * operation). 'borrow' = pedir prestado arriba (default), 'carry' = me llevo una abajo (compensación),
+ * 'parts' = por partes (352 − 100 − 20 − 7), 'line' = saltos en la recta numérica (contar hacia delante).
+ */
+export type SubMethod = 'borrow' | 'carry' | 'parts' | 'line'
 
 export type ErrorType =
   | 'fact'                 // wrong times-table fact (or wrong single-digit addition/subtraction inside a column)
@@ -183,4 +191,6 @@ export interface AttemptInput {
   hintsUsed: number
   /** Number of times the child corrected a misread digit before submitting. */
   recognitionFixes?: number
+  /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
+  method?: string
 }

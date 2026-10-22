@@ -1,7 +1,14 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { season1 } from '@/content'
-import { factGrid } from '@/engine'
-import type { AttemptRecord, ChildProfile, ChildSummary, MasteryMap, ProgressState, SessionRecord } from '@/types'
+import { factGrid, isSubMethod, normaliseSubMethod } from '@/engine'
+import type { AttemptRecord, ChildProfile, ChildSummary, MasteryMap, ProgressState, SessionRecord, SubMethod } from '@/types'
+
+/** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
+export interface MethodTally {
+  method: string
+  attempts: number
+  correct: number
+}
 
 export interface ChildStats {
   attempts: number
@@ -9,6 +16,7 @@ export interface ChildStats {
   minutes: number
   lastPlayedAt: string | null
   topErrors: { errorType: string; count: number }[]
+  methods?: MethodTally[]
 }
 
 function naturalWorldOrder(ids: string[]): string[] {
@@ -27,6 +35,7 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     else currentWorld = order.find((id) => worlds[id]?.unlocked && !worlds[id]?.crystal) ?? last ?? null
   }
   const accuracy = stats && stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 1000) / 1000 : null
+  const subtraction = (stats?.methods ?? []).filter((m) => isSubMethod(m.method))
   return {
     childId: child.id,
     nickname: child.nickname,
@@ -38,6 +47,10 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     factGrid: factGrid(mastery),
     topErrors: stats?.topErrors ?? [],
     lastPlayedAt: stats?.lastPlayedAt ?? null,
+    subtractionMethods: {
+      preferred: normaliseSubMethod(child.settings?.subMethod),
+      byMethod: subtraction.map((m) => ({ method: m.method as SubMethod, attempts: m.attempts, correct: m.correct })),
+    },
   }
 }
 
@@ -53,7 +66,17 @@ export function statsFromLocal(attempts7: AttemptRecord[], attempts30: AttemptRe
     .map(([errorType, count]) => ({ errorType, count }))
     .sort((a, b) => b.count - a.count || a.errorType.localeCompare(b.errorType))
     .slice(0, 5)
+  const tally = new Map<string, MethodTally>()
+  for (const a of attempts30) {
+    const method = a.context?.method
+    if (!method || a.errorType === 'recognition') continue
+    const t = tally.get(method) ?? { method, attempts: 0, correct: 0 }
+    t.attempts += 1
+    if (a.correct) t.correct += 1
+    tally.set(method, t)
+  }
   return {
+    methods: [...tally.values()],
     attempts: counted.length,
     correct: counted.filter((a) => a.correct).length,
     minutes: sessions7.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0),

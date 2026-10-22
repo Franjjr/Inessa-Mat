@@ -23,6 +23,9 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   borrow: ['a', 'b'],
   'zero-borrow': ['a', 'b'],
   'sub-check': ['a', 'b'],
+  'sub-carry': ['a', 'b'],
+  'sub-parts': ['a', 'b'],
+  'sub-line': ['a', 'b'],
   'five-plus-one': ['b'],
   'even-six-rhyme': [],
   'double-chain': ['start', 'steps'],
@@ -98,7 +101,8 @@ describe('season 1 structure', () => {
   it('every world has 7–10 nodes: arrival story first, guardian last, 3–5 varied activities', () => {
     for (const w of season1.worlds) {
       expect(w.nodes.length, w.id).toBeGreaterThanOrEqual(7)
-      expect(w.nodes.length, w.id).toBeLessThanOrEqual(10)
+      // w4 adds the «Cuatro caminos para restar» lesson: 11 nodes, the largest world on the map.
+      expect(w.nodes.length, w.id).toBeLessThanOrEqual(w.id === 'w4' ? 11 : 10)
       expect(w.nodes[0].kind, w.id).toBe('story')
       expect(w.nodes[0].ref, w.id).toBe(`${w.id}-arrival`)
       expect(w.nodes[w.nodes.length - 1].kind, w.id).toBe('guardian')
@@ -297,7 +301,8 @@ describe('lessons', () => {
   it('use the visuals with exactly the documented params, Lumi narration and some try steps', () => {
     for (const l of lessons) {
       expect(l.steps.length, l.id).toBeGreaterThanOrEqual(4)
-      expect(l.steps.length, l.id).toBeLessThanOrEqual(12)
+      // «Cuatro caminos para restar» shows four methods (two steps and a try each) and the choice: 14 steps.
+      expect(l.steps.length, l.id).toBeLessThanOrEqual(l.id === 'w4-four-ways' ? 14 : 12)
       const tries = l.steps.filter((s) => s.interaction === 'try')
       expect(tries.length, `${l.id} has try steps`).toBeGreaterThanOrEqual(1)
       expect(l.steps[l.steps.length - 1].interaction === 'try' || l.steps.length > 1).toBe(true)

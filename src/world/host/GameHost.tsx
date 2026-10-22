@@ -8,8 +8,8 @@ import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
 import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, updateMastery } from '@/engine'
-import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, useActiveChild } from '@/data'
+import { createRng, normaliseSubMethod, updateMastery } from '@/engine'
+import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
   ActivityHost, AttemptRecord, ChildProfile, ErrorType, MasteryMap, ReactionKind, Rng, SessionRecord,
@@ -82,6 +82,7 @@ function prefsOf(child: ChildProfile | null) {
     bigCells: s.bigCells,
     voice: s.voice,
     handedness: s.handedness,
+    subMethod: normaliseSubMethod(s.subMethod),
   }
 }
 
@@ -174,7 +175,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     const reportAttempt: ActivityHost['reportAttempt'] = (attempt) => {
       const c = childRef.current
       if (!c) return
-      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes } = attempt
+      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method } = attempt
       const skill = exercise.skill
       const now = new Date()
       const prev = masteryRef.current[skill]
@@ -208,6 +209,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
           ...(nodeId ? { nodeId } : {}),
           ...(activity ? { activity } : {}),
           ...(worldId ? {} : { free: true }),
+          ...(method ? { method } : {}),
         },
         createdAt: now.toISOString(),
       }
@@ -229,6 +231,12 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
       listenersRef.current.forEach((l) => l(event))
     }
 
+    const setPreference: NonNullable<ActivityHost['setPreference']> = (key, value) => {
+      const c = childRef.current
+      if (!c) return
+      updateChild(c.id, { settings: { ...c.settings, [key]: value } }).catch((e) => reportError('setPreference', e))
+    }
+
     return {
       reportAttempt,
       react,
@@ -236,11 +244,12 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
       get mastery() { return masteryRef.current },
       t,
       prefs: prefsOf(child),
+      setPreference,
     }
     // The child's name and genders feed t(); the ids decide persistence and seeds.
   }, [childId, worldId, nodeId, activity, child?.nickname, child?.gender, child?.companion?.name,
     child?.companion?.gender, child?.companion?.species, child?.settings?.timedActivities,
-    child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness])
+    child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness, child?.settings?.subMethod])
 
   return (
     <BuddyBusContext.Provider value={bus}>

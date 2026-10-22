@@ -301,3 +301,8 @@
 
 /* The family door sits over the string lights: give it a solid surface so it reads on any background. */
 .family.family { color: var(--c-primary-strong); padding: 0 var(--sp-4); }
+
+/* «Mi sesión de hoy» is the main entry: mint sticker, above the adventure (which keeps its pink). */
+.session { background: var(--c-green-soft, #dcfce7); }
+.placement { background: var(--c-yellow-soft, #fef9c3); }
+.adventure { background: var(--c-pink-soft, #fce7f3); }

@@ -1,5 +1,6 @@
 import type { SkillSelector } from './exercise'
 import type { CompanionSpecies } from './child'
+import type { SubMethod } from './exercise'
 
 /**
  * TemplateString: Spanish copy with placeholders, rendered by content/template.ts → renderTemplate(text, ctx).
@@ -83,6 +84,9 @@ export type LessonVisualId =
   | 'fact-family'       // params: { a, b }
   | 'galera'            // params: { dividend, divisor }
   | 'division-check'    // params: { dividend, divisor }
+  | 'sub-carry'         // params: { a, b } — subtraction "me llevo una abajo": the subtrahend's next digit gets +1
+  | 'sub-parts'         // params: { a, b } — subtraction by parts: a − hundreds − tens − units
+  | 'sub-line'          // params: { a, b } — subtraction on the number line: jumps from b up to a
 
 export interface LessonStep {
   visual: LessonVisualId
@@ -90,9 +94,14 @@ export interface LessonStep {
   /** What Lumi says on this step. */
   text: TemplateString
   speaker?: CharacterId
-  /** 'tap' = tap to continue; 'try' = child must solve one mini exercise (generated from selector) to continue. */
-  interaction?: 'tap' | 'try'
+  /** 'tap' = tap to continue; 'try' = child must solve one mini exercise (generated from selector) to continue;
+   *  'choose' = the child picks one of `choices` (the pick is saved through the host, e.g. the favourite method). */
+  interaction?: 'tap' | 'try' | 'choose'
   trySelector?: SkillSelector
+  /** 'try' steps: the subtraction method the exercise must be solved with. */
+  method?: SubMethod
+  /** 'choose' steps: the options. */
+  choices?: { label: TemplateString; value: SubMethod }[]
 }
 
 export interface LessonDef {

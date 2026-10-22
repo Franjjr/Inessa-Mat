@@ -14,6 +14,8 @@ const NodeScreen = lazy(() => import('@/world/node/NodeScreen'))
 // world-meta
 const FreePlayScreen = lazy(() => import('@/world/free/FreePlayScreen'))
 const DailyReviewScreen = lazy(() => import('@/world/review/DailyReviewScreen'))
+const DailySessionScreen = lazy(() => import('@/world/session/DailySessionScreen'))
+const PlacementScreen = lazy(() => import('@/world/placement/PlacementScreen'))
 const AlbumScreen = lazy(() => import('@/world/album/AlbumScreen'))
 const ShopScreen = lazy(() => import('@/world/shop/ShopScreen'))
 const ChestScreen = lazy(() => import('@/world/chest/ChestScreen'))
@@ -65,6 +67,8 @@ export function AppRoutes() {
         <Route path="/play/w/:worldId/:nodeId" element={<RequireChild><NodeScreen /></RequireChild>} />
         <Route path="/play/free" element={<RequireChild><FreePlayScreen /></RequireChild>} />
         <Route path="/play/review" element={<RequireChild><DailyReviewScreen /></RequireChild>} />
+        <Route path="/play/sesion" element={<RequireChild><DailySessionScreen /></RequireChild>} />
+        <Route path="/play/prueba" element={<RequireChild><PlacementScreen /></RequireChild>} />
         <Route path="/play/album" element={<RequireChild><AlbumScreen /></RequireChild>} />
         <Route path="/play/shop" element={<RequireChild><ShopScreen /></RequireChild>} />
         <Route path="/play/chest" element={<RequireChild><ChestScreen /></RequireChild>} />

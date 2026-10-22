@@ -3,7 +3,7 @@
 import type { LessonVisualId } from '@/types'
 import { SplitMultiplyVisual, ColumnMulVisual, FivePlusOneVisual, ArrayRotateVisual, GroupsVisual, SquareRhymeVisual } from './multiplication'
 import { CarryVisual, PlaceValueVisual } from './addition'
-import { BorrowVisual, SubCheckVisual, ZeroBorrowVisual } from './subtraction'
+import { BorrowVisual, SubCarryVisual, SubCheckVisual, SubLineVisual, SubPartsVisual, ZeroBorrowVisual } from './subtraction'
 import {
   DoubleChainVisual, EasyTablesVisual, EvenSixRhymeVisual, FiveSixSevenEightVisual, KnownFactsVisual,
   NineTrickVisual, PatternUnitsVisual,
@@ -23,6 +23,9 @@ export const LESSON_VISUALS: VisualRegistry = {
   borrow: BorrowVisual,
   'zero-borrow': ZeroBorrowVisual,
   'sub-check': SubCheckVisual,
+  'sub-carry': SubCarryVisual,
+  'sub-parts': SubPartsVisual,
+  'sub-line': SubLineVisual,
   'five-plus-one': FivePlusOneVisual,
   'even-six-rhyme': EvenSixRhymeVisual,
   'double-chain': DoubleChainVisual,

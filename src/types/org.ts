@@ -86,6 +86,11 @@ export interface ChildSummary {
   factGrid: number[][]
   topErrors: { errorType: string; count: number }[]
   lastPlayedAt: ISODate | null
+  /** Subtraction methods over the last 30 days: the child's favourite and the results per method (undefined = no data). */
+  subtractionMethods?: {
+    preferred: import('./exercise').SubMethod
+    byMethod: { method: import('./exercise').SubMethod; attempts: number; correct: number }[]
+  }
 }
 
 export interface ClassOverview {

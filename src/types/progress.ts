@@ -39,7 +39,8 @@ export interface AttemptRecord {
   errorType?: ErrorType | null
   recognitionFixes?: number
   /** Where the attempt happened. */
-  context: { worldId?: string; nodeId?: string; activity?: string; free?: boolean }
+  /** method: the method used when the operation has several (e.g. 'borrow', 'parts'); see src/engine/methods.ts. */
+  context: { worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string }
   createdAt: ISODate
 }
 

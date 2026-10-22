@@ -19,6 +19,8 @@ import { downloadBlob, slug } from '../shared/download'
 import { errorMessage } from '../shared/messages'
 import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { ChildSettingsCard } from './ChildSettingsCard'
+import { SubtractionMethodsCard } from './SubtractionMethodsCard'
+import { PlacementCard } from './PlacementCard'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -236,6 +238,8 @@ export default function ChildReportScreen() {
             )}
           </section>
 
+          <SubtractionMethodsCard info={summary.subtractionMethods} />
+
           <section className={adult.card} aria-labelledby="worlds-title">
             <div className={adult.cardHead}>
               <h2 id="worlds-title" className={adult.subheading}>Mundos</h2>
@@ -255,6 +259,8 @@ export default function ChildReportScreen() {
           </section>
         </div>
       </div>
+
+      <PlacementCard childId={childId} childName={name} progress={progress} />
 
       <RewardCard childId={childId} childName={name} />
 

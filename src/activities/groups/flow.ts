@@ -16,6 +16,10 @@ export interface AnswerFlowOptions {
   showFeedback?: boolean
   /** Offer the hint button (default true). */
   allowHints?: boolean
+  /** Hints of a specific method (e.g. subtraction by parts). Default: the hints of the exercise. */
+  hints?: Hint[]
+  /** Method the child is using; it goes into the graded outcome and the attempt log. */
+  method?: string
 }
 
 export interface AnswerFlow {
@@ -46,7 +50,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const allowHints = opts.allowHints ?? true
 
   const startedAt = useRef(now())
-  const hints = useMemo(() => hintsFor(exercise), [exercise])
+  const hints = useMemo(() => opts.hints ?? hintsFor(exercise), [exercise, opts.hints])
   const hintsRef = useRef(0)
   const [hintsShown, setHintsShown] = useState(0)
   const [result, setResult] = useState<CheckResult | null>(null)
@@ -90,12 +94,13 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
         inputMode: mode,
         hintsUsed: hintsRef.current,
         recognitionFixes: fixes.current,
+        ...(opts.method ? { method: opts.method } : {}),
       }
     }
     setSubmitted(true)
     if (!showFeedback) report()
     return c
-  }, [exercise, learning, mode, report, showFeedback])
+  }, [exercise, learning, mode, report, showFeedback, opts.method])
 
   const finish = useCallback(() => report(), [report])
 

@@ -1,5 +1,5 @@
 import type { ActivityConfig } from './content'
-import type { AttemptInput, CheckResult, Exercise, ErrorType } from './exercise'
+import type { AttemptInput, CheckResult, Exercise, ErrorType, SubMethod } from './exercise'
 import type { InputMode } from './common'
 
 export interface ActivityResult {
@@ -34,6 +34,8 @@ export interface ExerciseViewProps {
   showFeedback?: boolean
   /** Compact layout for grids of several exercises. */
   compact?: boolean
+  /** Column subtraction method (default 'borrow'). Ignored by the other exercise kinds. */
+  method?: SubMethod
 }
 
 export interface ExerciseOutcome {
@@ -42,6 +44,8 @@ export interface ExerciseOutcome {
   inputMode: InputMode
   hintsUsed: number
   recognitionFixes: number
+  /** Method used (see AttemptInput.method). */
+  method?: string
 }
 
 /** Companion / Lumi reactions an activity can request. */
@@ -63,7 +67,9 @@ export interface ActivityHost {
   /** Child-facing text rendering (template placeholders). */
   t: (template: string) => string
   /** Child-level preferences relevant to activities. */
-  prefs: { timedActivities: boolean; bigCells: boolean; voice: boolean; handedness: 'left' | 'right' }
+  prefs: { timedActivities: boolean; bigCells: boolean; voice: boolean; handedness: 'left' | 'right'; subMethod: SubMethod }
+  /** Saves one child setting (used by the lesson where the child picks her favourite method). Optional in tests. */
+  setPreference?: (key: 'subMethod', value: SubMethod) => void
 }
 
 export type { Exercise, CheckResult }
