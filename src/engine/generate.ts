@@ -7,21 +7,24 @@
 import type { Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillSelector } from '@/types'
 import { digitCount } from './arith'
 import {
-  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDoubleChain, makeFactDiv, makeFactFamily,
-  makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
+  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDivision3, makeDoubleChain, makeFactDiv,
+  makeFactFamily, makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
 } from './make'
+import { BAR_OPS, genBarProblem } from './bars'
+import { genCheckCalc, genErrorHunt } from './bugs'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
-  DIVISION_VARIANTS, addSkill, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, kindsForSkill,
-  mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill, type DivisionVariant, type ParsedSkill, type WordOp,
+  CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, addSkill, barSkill, checkSkill, conceptSkill, div2x1Skill, divSkill,
+  huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
 import { fillTemplate, templatesFor } from './wordProblems'
 
 export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
-  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -29,6 +32,8 @@ export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '�
 type Regroup = NonNullable<SkillSelector['regroup']>
 
 export interface Ctx {
+  /** Mastery of the child: a bar problem the child has mastered comes without the drawing (the ladder). */
+  mastery?: MasteryMap
   tables?: number[]
   range: [number, number]
   rangeExplicit: boolean
@@ -186,6 +191,15 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'division':
       for (const v of ctx.variants) addItem(map, div2x1Skill(v), kind, 1)
+      break
+    case 'bar-problem':
+      for (const op of BAR_OPS) addItem(map, barSkill(op), kind, 1)
+      break
+    case 'error-hunt':
+      for (const op of HUNT_OPS) addItem(map, huntSkill(op), kind, 1)
+      break
+    case 'check-calc':
+      for (const op of CHECK_OPS) addItem(map, checkSkill(op), kind, 1)
       break
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
@@ -512,6 +526,26 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
   return retry(() => { const [dd, dv] = genDivision(rng, variant, TABLES_2_9(ctx)); return makeDivision(dd, dv) }, used, rng)!
 }
 
+/** A bar problem. The ladder: until the child has mastered the bar of the operation, the drawing is shown. */
+function buildBar(op: BarSkillOp, skill: SkillKey, ctx: Ctx, rng: Rng): Exercise {
+  const withBar = (ctx.mastery?.[skill]?.box ?? -1) < 2
+  return genBarProblem(op, rng, withBar)
+}
+
+/** A 3-digit dividend (100..999) by a 1-digit divisor: exact (no remainder) or with a remainder. */
+export function genDivision3(rng: Rng, withRemainder: boolean): [number, number] {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const d = randInt(rng, 2, 9)
+    const r = withRemainder ? randInt(rng, 1, d - 1) : 0
+    const qMin = Math.ceil((100 - r) / d)
+    const qMax = Math.floor((999 - r) / d)
+    if (qMax < qMin) continue
+    const q = randInt(rng, Math.max(qMin, 11), qMax)
+    return [d * q + r, d]
+  }
+  return [372, 4]
+}
+
 function buildWord(p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
   const op: WordOp = p.type === 'word' ? p.op : p.type === 'add' ? 'add' : p.type === 'sub' ? 'sub' : p.type === 'mul2x1' ? 'mul' : 'div'
   const tables = TABLES_2_9(ctx)
@@ -583,6 +617,15 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
+  if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
+  if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
+  if (p.type === 'div3x1') {
+    return retry(() => {
+      const [dd, dv] = genDivision3(rng, p.variant === 'rem')
+      return makeDivision3(dd, dv)
+    }, used, rng)!
+  }
   switch (p.type) {
     case 'mul':
       return buildFact(kind, p, ctx, rng, used)
@@ -628,7 +671,7 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
   if (n === 0) return []
   const rng = opts.rng ?? createRng(seedFor(selector, opts.now))
   const now = opts.now ?? new Date()
-  const ctx = resolveContext(selector)
+  const ctx: Ctx = { ...resolveContext(selector), mastery: opts.mastery }
   let groups = buildGroups(selector, ctx)
   if (groups.length === 0) groups = [{ items: kindUniverse('fact-mul', ctx) }]
   const avoid = new Set(opts.avoidIds ?? [])

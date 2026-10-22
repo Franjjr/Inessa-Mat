@@ -31,6 +31,11 @@ function showAnswer(a: Answer): string {
     case 'steps': return `${a.values.map((v) => v ?? '—').join(' · ')}${a.total !== undefined ? ` = ${a.total ?? '—'}` : ''}`
     case 'facts': return a.facts.join(' · ')
     case 'numbers': return a.values.join(', ')
+    case 'bar': return `${a.results.map((r) => r ?? '—').join(' · ')} (${a.ops.map((o) => o ?? '—').join(' ')})`
+    case 'hunt': return `${a.ok === null ? '—' : a.ok ? 'bien' : 'error'}${a.column !== null ? ` columna ${a.column + 1}` : ''}${a.value !== null ? ` = ${a.value}` : ''}`
+    case 'verdict': return `${a.ok === null ? '—' : a.ok ? 'bien' : 'mal'} · ${a.value ?? '—'}`
+    case 'division-parts': return `${a.parts.map((v) => v ?? '—').join(' + ')} = ${a.quotient ?? '—'} resto ${a.remainder ?? '—'}`
+    case 'climb': return `${a.products.map((v) => v ?? '—').join(' · ')} resto ${a.remainder ?? '—'}`
   }
 }
 

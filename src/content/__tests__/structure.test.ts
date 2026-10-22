@@ -6,12 +6,14 @@ import {
 } from '@/content'
 import { allActivities, allCopy, allSelectors, wordCount } from './helpers'
 
+/** Worlds that gained method content (see the node count test). */
+const MAX_NODES: Record<string, number> = { w3: 11, w4: 12, w8: 11 }
 const EXERCISE_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
-  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
 ]
 const CHARACTERS: CharacterId[] = ['lumi', 'companion', 'borron', 'owl', 'frog', 'ladybug', 'polarbear', 'octopus', 'fairy', 'dragon', 'queen', 'narrator']
-const SKILL_RE = /^(mul:([1-9]|10)x([1-9]|10)|div:\d+\/\d+|skip:\d+|add:[34]d:c[0-4]|add:2d:c[0-2]|sub:[34]d:(b[0-3]|z)|sub:2d:b[01]|mul:2x1:c[01]|div:2x1:(exact|rem|long)|concept:(groups|array|commutative|share|family|placevalue)|word:(add|sub|mul|div))$/
+const SKILL_RE = /^(mul:([1-9]|10)x([1-9]|10)|div:\d+\/\d+|skip:\d+|add:[34]d:c[0-4]|add:2d:c[0-2]|sub:[34]d:(b[0-3]|z)|sub:2d:b[01]|mul:2x1:c[01]|div:2x1:(exact|rem|long)|div:3x1:(exact|rem)|concept:(groups|array|commutative|share|family|placevalue)|word:(add|sub|mul|div)|bar:(add|sub|mul|div|two)|hunt:(add|sub|mul)|check:(add|sub|div))$/
 
 /** Required params of every lesson visual (src/types/content.ts). */
 const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
@@ -40,6 +42,9 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'fact-family': ['a', 'b'],
   galera: ['dividend', 'divisor'],
   'division-check': ['dividend', 'divisor'],
+  'bar-model': ['a', 'b', 'total'],
+  'div-parts': ['dividend', 'divisor'],
+  'div-climb': ['divisor', 'quotient'],
 }
 
 function checkSelector(where: string, sel: SkillSelector) {
@@ -63,13 +68,20 @@ function checkSelector(where: string, sel: SkillSelector) {
     expect(sel.digits !== undefined || sel.skills?.length, `${ctx} needs digits or skills`).toBeTruthy()
   }
   if (kinds.includes('division')) expect(sel.divisionVariants?.length || sel.skills?.length, `${ctx} needs variants`).toBeTruthy()
+  if (kinds.includes('bar-problem') || kinds.includes('error-hunt') || kinds.includes('check-calc')) {
+    expect(sel.skills?.length, `${ctx} new kinds use explicit skills`).toBeTruthy()
+  }
   if (kinds.includes('word-problem')) expect(sel.skills?.length, `${ctx} word problems use explicit skills`).toBeTruthy()
   if (sel.skills?.length && kinds.length) {
     // explicit skills must be producible by the listed kinds
     for (const s of sel.skills) {
       const ok =
         (s.startsWith('mul:') && !s.startsWith('mul:2x1') && kinds.some((k) => ['fact-mul', 'missing-factor', 'double-chain'].includes(k))) ||
-        (s.startsWith('div:') && !s.startsWith('div:2x1') && kinds.includes('fact-div')) ||
+        (s.startsWith('div:') && !s.startsWith('div:2x1') && !s.startsWith('div:3x1') && kinds.includes('fact-div')) ||
+        (s.startsWith('div:3x1') && kinds.includes('division')) ||
+        (s.startsWith('bar:') && kinds.includes('bar-problem')) ||
+        (s.startsWith('hunt:') && kinds.includes('error-hunt')) ||
+        (s.startsWith('check:') && kinds.includes('check-calc')) ||
         (s.startsWith('add:') && kinds.some((k) => k === 'column-add' || k === 'word-problem')) ||
         (s.startsWith('sub:') && kinds.some((k) => k === 'column-sub' || k === 'word-problem')) ||
         (s.startsWith('mul:2x1') && kinds.some((k) => k === 'column-mul' || k === 'word-problem')) ||
@@ -98,11 +110,12 @@ describe('season 1 structure', () => {
     expect(season1.worlds.map((w) => w.background)).toEqual(['forest', 'river', 'cave', 'mountain', 'lake', 'rainbow-garden', 'volcano', 'castle'])
   })
 
-  it('every world has 7–10 nodes: arrival story first, guardian last, 3–5 varied activities', () => {
+  it('every world has 7–10 nodes (11–12 where the new methods are): arrival story first, guardian last, 3–5 varied activities', () => {
     for (const w of season1.worlds) {
       expect(w.nodes.length, w.id).toBeGreaterThanOrEqual(7)
-      // w4 adds the «Cuatro caminos para restar» lesson: 11 nodes, the largest world on the map.
-      expect(w.nodes.length, w.id).toBeLessThanOrEqual(w.id === 'w4' ? 11 : 10)
+      // w4 keeps «Cuatro caminos para restar» and adds «Dibujar la historia» (the bars). w3 adds «Los trucos de Lumi»,
+      // w8 «Cuatro caminos para dividir». Every other world keeps the planning cap of 10 nodes.
+      expect(w.nodes.length, w.id).toBeLessThanOrEqual(MAX_NODES[w.id] ?? 10)
       expect(w.nodes[0].kind, w.id).toBe('story')
       expect(w.nodes[0].ref, w.id).toBe(`${w.id}-arrival`)
       expect(w.nodes[w.nodes.length - 1].kind, w.id).toBe('guardian')
@@ -210,6 +223,7 @@ describe('activities', () => {
     share: { emoji: 'string', container: 'string' },
     word: { chooseOp: 'boolean' },
     board: { squares: 'number', opponent: 'string', specials: 'other' },
+    exercises: { guided: 'boolean' },
   }
 
   it('every activity has a title, instructions, a selector and a sensible count', () => {

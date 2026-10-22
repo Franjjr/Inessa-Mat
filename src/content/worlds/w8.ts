@@ -41,6 +41,7 @@ export const w8 = world({
       params: { showTrick: true },
     }),
     lessonNode('lesson-galera', 'La casita de la división', 'w8-galera'),
+    lessonNode('lesson-div-ways', 'Cuatro caminos para dividir', 'w8-div-ways'),
     activityNode('division', {
       kind: 'division',
       title: 'Divisiones exactas y con resto',
@@ -51,11 +52,14 @@ export const w8 = world({
     }),
     storyNode('mid', 'Borrón mira desde la torre', 'w8-mid'),
     activityNode('division-expert', {
-      kind: 'division',
+      kind: 'exercises',
       title: 'El reto de la torre ⭐',
-      instructions: 'Como en 72 ÷ 3: lo que sobra en las decenas se junta con las unidades.',
-      selector: { kinds: ['division'], divisionVariants: ['long'] },
-      count: 3,
+      instructions: 'Divide con 2 o 3 cifras: baja una cifra cada vez. Y comprueba: ¿está bien esa cuenta?',
+      selector: {
+        kinds: ['division', 'check-calc', 'error-hunt'],
+        skills: ['div:2x1:long', 'div:3x1:exact', 'div:3x1:rem', 'check:sub', 'check:div', 'hunt:add', 'hunt:sub'],
+      },
+      count: 4,
       params: { guided: true },
     }),
     guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),

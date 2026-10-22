@@ -1,21 +1,27 @@
 /* Progressive hints: level 1 recalls the strategy (text only), level 2 shows a visual scaffold, level 3 works
    one step and leaves the final answer for the child ("= ?"). Params feed the HintVisual renderer. */
 import type {
-  ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, Exercise, Hint, SkipCountExercise,
-  SubMethod, WordProblemExercise,
+  ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, DivMethod, Exercise, Hint, SkipCountExercise,
+  SubMethod, TableMethod, WordProblemExercise,
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName } from './feedback'
 import { strategyDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
+import { barHints } from './bars'
+import { checkHints, huntHints } from './bugs'
+import { divisionParts } from './divParts'
+import { TABLE_METHODS } from './methods'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
 
-function factHints(a: number, b: number): Hint[] {
+/** The favourite trick (when it applies to the fact) replaces the first hint; the visual and the worked step stay. */
+function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint[] {
   const d = strategyDetail(a, b)
+  const trick = tableMethod ? TABLE_METHODS.find((t) => t.id === tableMethod && t.applies(a, b)) : undefined
   return [
-    hint(1, d.strategy.text, 'none'),
+    hint(1, trick ? trick.hint : d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
     hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
@@ -162,7 +168,34 @@ function columnMulHints(ex: ColumnMulExercise): Hint[] {
   ]
 }
 
-function divisionHints(ex: DivisionExercise): Hint[] {
+/* «Repartir por partes»: the dividend in its parts; the first part is the step the hint names (never the total). */
+function partsDivisionHints(ex: DivisionExercise): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  const steps = divisionParts(n, d)
+  const params = { total: n, groups: d, dividend: n, divisor: d }
+  return [
+    hint(1, 'Parte el número en partes fáciles: centenas, decenas y unidades. Reparte cada parte y después suma.', 'none'),
+    hint(2, `Parte el ${n}: ${steps.map((s) => s.part).join(' + ')}. Reparte cada parte entre ${d}.`, 'place-value', params),
+    hint(3, `Empieza por la parte más grande: ${steps[0].partial} ÷ ${d} = ?`, 'share', params),
+  ]
+}
+
+/* «Multiplicar hacia arriba»: the child climbs the multiples; the hints say how, not where it stops. */
+function climbDivisionHints(ex: DivisionExercise): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  return [
+    hint(1, `Pregúntate: ¿qué número por ${d} da ${n}, o se acerca sin pasarse?`, 'none'),
+    hint(2, `Sube de ${d} en ${d}: cada fila suma ${d} más. Para cuando la fila llegue a ${n} o lo pase.`, 'none'),
+    hint(3, `Escribe la fila siguiente: ${d} × el número de la fila = ? ¿Pasa de ${n}?`, 'none'),
+  ]
+}
+
+const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo el cociente.'
+
+function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
+  if (method === 'div-parts') return partsDivisionHints(ex)
+  if (method === 'climb' && ex.quotient < 10) return climbDivisionHints(ex)
+  const short = method === 'galera-short'
   const { dividend: n, divisor: d, quotient: q } = ex
   const t = Math.floor(n / 10)
   const u = n % 10
@@ -171,7 +204,7 @@ function divisionHints(ex: DivisionExercise): Hint[] {
   let worked: string
   if (q < 10) {
     l1 = `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`
-    worked = `${d} × ${q} = ${d * q}. Sobran ${n} − ${d * q} = ?`
+    worked = `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}. ¿En qué fila vas?`
   } else if (ex.variant === 'exact') {
     l1 = 'Primero reparte las decenas y después las unidades.'
     worked = `Decenas: ${t} ÷ ${d} = ${Math.floor(t / d)}. Ahora las unidades: ${u} ÷ ${d} = ?`
@@ -184,7 +217,7 @@ function divisionHints(ex: DivisionExercise): Hint[] {
       : `Decenas: ${t} ÷ ${d} = ${qt} y no sobra nada. Ahora baja el ${u}: ${u} ÷ ${d} = ?`
   }
   return [
-    hint(1, l1, 'none'),
+    hint(1, short ? SHORT_GALERA_HINT : l1, 'none'),
     hint(2, `Reparte ${n} en ${d} grupos iguales. Lo que no se pueda repartir es el resto.`, 'share', params),
     hint(3, worked, 'share', params),
   ]
@@ -252,10 +285,16 @@ function wordHints(ex: WordProblemExercise): Hint[] {
   }
 }
 
+/** The methods the child is using, when they change the hints (see methods.ts). */
+export interface HintOptions {
+  divMethod?: DivMethod
+  tableMethod?: TableMethod | null
+}
+
 /** Progressive hints (level 1 strategy → level 3 worked step) for this exercise. */
-export function hintsFor(ex: Exercise, method?: SubMethod): Hint[] {
+export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions = {}): Hint[] {
   switch (ex.kind) {
-    case 'fact-mul': return factHints(ex.a, ex.b)
+    case 'fact-mul': return factHints(ex.a, ex.b, options.tableMethod)
     case 'fact-div': {
       const { dividend: p, divisor: d, answer: q } = ex
       const seq = Array.from({ length: Math.min(q, 10) }, (_, i) => d * (i + 1)).join(', ')
@@ -315,8 +354,11 @@ export function hintsFor(ex: Exercise, method?: SubMethod): Hint[] {
     case 'column-add': return columnAddHints(ex)
     case 'column-sub': return subtractionHints(ex, method)
     case 'column-mul': return columnMulHints(ex)
-    case 'division': return divisionHints(ex)
+    case 'division': return divisionHints(ex, options.divMethod)
     case 'word-problem': return wordHints(ex)
+    case 'bar-problem': return barHints(ex)
+    case 'error-hunt': return huntHints(ex)
+    case 'check-calc': return checkHints(ex)
   }
 }
 

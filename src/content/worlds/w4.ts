@@ -18,6 +18,7 @@ export const w4 = world({
     storyNode('arrival', 'Un bloque de hielo', 'w4-arrival'),
     lessonNode('lesson-borrow', 'Restar en la montaña', 'w4-borrow'),
     lessonNode('lesson-four-ways', 'Cuatro caminos para restar', 'w4-four-ways'),
+    lessonNode('lesson-bars', 'Dibujar la historia', 'w4-bars'),
     activityNode('column-3d', {
       kind: 'column',
       title: 'Restas de 3 cifras',
@@ -44,10 +45,10 @@ export const w4 = world({
       params: { proof: true },
     }),
     activityNode('word', {
-      kind: 'word',
+      kind: 'exercises',
       title: 'El problema de Nieve',
-      instructions: 'Lee despacio. ¿Cuántas quedan? Piensa si hay que quitar.',
-      selector: { kinds: ['word-problem'], skills: ['sub:3d:b1', 'sub:3d:b2', 'sub:4d:b1', 'sub:4d:b2'] },
+      instructions: 'Lee despacio. Si ayuda, dibuja la barra. ¿Cuántas quedan? Piensa si hay que quitar.',
+      selector: { kinds: ['word-problem', 'bar-problem'], skills: ['sub:3d:b1', 'sub:3d:b2', 'sub:4d:b1', 'sub:4d:b2', 'bar:sub'] },
       count: 3,
     }),
     activityNode('memory', {

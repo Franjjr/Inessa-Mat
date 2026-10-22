@@ -6,8 +6,11 @@
 import type {
   Answer, CheckResult, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, DoubleChainExercise,
   Exercise, FactDivExercise, FactFamilyExercise, FactMulExercise, MissingFactorExercise, SkipCountExercise,
-  WordProblemExercise,
+  WordProblemExercise, BarProblemExercise, ErrorHuntExercise, CheckCalcExercise,
 } from '@/types'
+import { checkBar } from './bars'
+import { checkCheckCalc, checkErrorHunt } from './bugs'
+import { climbProducts, divisionParts } from './divParts'
 import { digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
 import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
@@ -416,6 +419,64 @@ function checkDivision(ex: DivisionExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, feedback }
 }
 
+/* «Repartir por partes» and «Multiplicar hacia arriba»: the written steps. The total and the remainder count at the end;
+   a part that is written wrong is named (the step), never the right number. */
+const DIV_METHOD_FEEDBACK = {
+  partWrong: (step: number, partial: number, divisor: number) =>
+    `¡Casi! Revisa el paso ${step}: ¿cuántas veces cabe el ${divisor} en ${partial}?`,
+  partsIncomplete: 'Escribe el cociente de cada parte y después el total.',
+  partsTotal: 'Ya tienes bien las partes. Ahora suma sus cocientes: ese es el cociente.',
+  climbWrong: (row: number, divisor: number) => `¡Casi! Revisa la fila ${row}: ¿cuánto es ${divisor} por ${row}?`,
+  climbIncomplete: 'Sigue subiendo: escribe la siguiente fila hasta pasarte del dividendo.',
+  climbOver: 'Te has pasado: para en la primera fila que llega o pasa del dividendo.',
+  remainder: 'El cociente está bien: ahora revisa el resto.',
+}
+
+function checkDivisionParts(ex: DivisionExercise, answer: Extract<Answer, { type: 'division-parts' }>): CheckResult {
+  const steps = divisionParts(ex.dividend, ex.divisor)
+  const expected = showDivision(ex.quotient, ex.remainder)
+  const written = steps.map((_, k) => answer.parts[k] ?? null)
+  const given = written.map((v) => show(v)).join(' + ') + (answer.quotient === null ? '' : ` = ${answer.quotient}`)
+  if (written.some((v) => v === null) || answer.quotient === null) return incomplete(given, expected)
+  for (let k = 0; k < steps.length; k++) {
+    if (written[k] !== steps[k].quotient) {
+      return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.partWrong(k + 1, steps[k].partial, ex.divisor) }
+    }
+  }
+  const total = steps.reduce((sum, s) => sum + s.quotient, 0)
+  if (answer.quotient !== total) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
+  if (answer.remainder === null) return incomplete(given, expected)
+  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+}
+
+function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb' }>): CheckResult {
+  const products = climbProducts(ex.dividend, ex.divisor)
+  const stop = products.findIndex((p) => p >= ex.dividend)
+  const expected = showDivision(ex.quotient, ex.remainder)
+  const written = answer.products
+  const filled = written.map((v, k) => (v === null || v === undefined ? -1 : k)).filter((k) => k >= 0)
+  const given = written.filter((v) => v !== null && v !== undefined).join(' · ')
+  if (filled.length === 0) return incomplete('?', expected)
+  for (const k of filled) {
+    if (written[k] !== products[k]) {
+      return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.climbWrong(k + 1, ex.divisor) }
+    }
+  }
+  if (filled[filled.length - 1] > stop) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.climbOver }
+  if (!filled.includes(stop)) return incomplete(given, expected)
+  if (answer.remainder === null || answer.remainder === undefined) return incomplete(given, expected)
+  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+}
+
+/** A division may come as the galera answer, the parts or the climb, whatever method the view used. */
+function checkDivisionAny(ex: DivisionExercise, answer: Answer): CheckResult {
+  if (answer.type === 'division-parts') return checkDivisionParts(ex, answer)
+  if (answer.type === 'climb') return checkClimb(ex, answer)
+  return checkDivision(ex, answer)
+}
+
 // ---------------------------------------------------------------- word problems
 
 function opValue(op: WordProblemExercise['op'], a: number, b: number): number | null {
@@ -480,7 +541,10 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'column-add': return checkColumnAdd(exercise, answer)
     case 'column-sub': return checkColumnSub(exercise, answer)
     case 'column-mul': return checkColumnMul(exercise, answer)
-    case 'division': return checkDivision(exercise, answer)
+    case 'division': return checkDivisionAny(exercise, answer)
     case 'word-problem': return checkWord(exercise, answer)
+    case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
+    case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
+    case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
   }
 }

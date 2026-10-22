@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
 import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, normaliseSubMethod, updateMastery } from '@/engine'
+import { createRng, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
@@ -83,6 +83,8 @@ function prefsOf(child: ChildProfile | null) {
     voice: s.voice,
     handedness: s.handedness,
     subMethod: normaliseSubMethod(s.subMethod),
+    divMethod: normaliseDivMethod(s.divMethod),
+    tableMethod: normaliseTableMethod(s.tableMethod),
   }
 }
 
@@ -249,7 +251,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     // The child's name and genders feed t(); the ids decide persistence and seeds.
   }, [childId, worldId, nodeId, activity, child?.nickname, child?.gender, child?.companion?.name,
     child?.companion?.gender, child?.companion?.species, child?.settings?.timedActivities,
-    child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness, child?.settings?.subMethod])
+    child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness, child?.settings?.subMethod, child?.settings?.divMethod, child?.settings?.tableMethod])
 
   return (
     <BuddyBusContext.Provider value={bus}>

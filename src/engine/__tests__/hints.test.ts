@@ -119,7 +119,9 @@ describe('hintsFor', () => {
 
   it('division hints adapt to the variant', () => {
     expect(hintsFor(makeDivision(17, 5))[0].text).toContain('tabla del 5')
-    expect(hintsFor(makeDivision(17, 5))[2].text).toContain('17 − 15 = ?')
+    // The worked step names the table to count in, not the product (5 × 3 = 15 would give the quotient away).
+    expect(hintsFor(makeDivision(17, 5))[2].text).toContain('Cuenta de 5 en 5')
+    expect(hintsFor(makeDivision(17, 5))[2].text).not.toContain('15')
     expect(hintsFor(makeDivision(84, 4))[2].text).toContain('8 ÷ 4 = 2')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('sobra 1')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('12 ÷ 3 = ?')

@@ -35,17 +35,17 @@ export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placem
 
 /** Skill-key builders/parsers (format documented in skills.ts). */
 export {
-  addSkill, allMulFactSkills, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, isMulFactSkill,
-  isValidSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  addSkill, allMulFactSkills, barSkill, checkSkill, conceptSkill, div2x1Skill, div3x1Skill, divSkill, huntSkill, isEasyFact,
+  isFactSkill, isMulFactSkill, isValidSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
 } from './skills'
-export type { ConceptName, DivisionVariant, ParsedSkill, WordOp } from './skills'
+export type { BarSkillOp, CheckOp, ConceptName, DivisionVariant, HuntOp, ParsedSkill, WordOp } from './skills'
 /** Build exercises from fixed numbers (e.g. a guardian's Hechizo del Cristal: makeExercise('column-add', 2486, 1357)). */
 export {
-  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDoubleChain, makeExercise, makeFactDiv,
-  makeFactFamily, makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
+  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDivision3, makeDoubleChain, makeExercise,
+  makeFactDiv, makeFactFamily, makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
 } from './make'
 /** Column arithmetic analysis (digits units-first). */
-export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitCount, fromDigits, toDigits } from './arith'
+export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitAt, digitCount, fromDigits, toDigits } from './arith'
 /** Fact-family parsing ("6 × 7 = 42", "42 : 6 = 7"...). */
 export { parseFact } from './check'
 export { strategyDetail } from './strategies'
@@ -55,6 +55,16 @@ export { WORD_TEMPLATES } from './wordProblems'
 export type { WordTemplate } from './wordProblems'
 export { columnName } from './feedback'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
-export { DEFAULT_METHOD, isSubMethod, methodLabel, methodsOf, METHODS, normaliseSubMethod, SUB_METHODS } from './methods'
-export type { MethodInfo, MethodOp } from './methods'
+export {
+  DEFAULT_METHOD, DIV_METHODS, isDivMethod, isSubMethod, isTableMethod, methodLabel, methodsOf, METHODS, normaliseDivMethod,
+  normaliseSubMethod, normaliseTableMethod, SUB_METHODS, TABLE_METHODS, tricksFor,
+} from './methods'
+export type { MethodInfo, MethodOp, TableTrick } from './methods'
+/** Problemas con barras: the generator, the grading and the hints (see bars.ts). */
+export { BAR_OPS, barChips, barHints, checkBar, genBarProblem } from './bars'
+/** Encuentra el error and comprobar (see bugs.ts). */
+export { checkCheckCalc, checkErrorHunt, checkHints, genCheckCalc, genErrorHunt, huntHints } from './bugs'
+/** Division methods written as steps: repartir por partes and multiplicar hacia arriba (see divParts.ts). */
+export { climbProducts, climbQuotient, divisionParts, divisionPartsResult } from './divParts'
+export type { PartsStep } from './divParts'
 export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'

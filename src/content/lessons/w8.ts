@@ -1,5 +1,7 @@
 /* World 8 lessons: dividing is fair sharing and multiplication backwards (fact families); the galera, the remainder
    and the division check. */
+import { DIV_METHODS } from '@/engine/methods'
+import type { DivMethod, LessonStep, SkillSelector } from '@/types'
 import { lesson, show, tryIt } from './dsl'
 
 const share12 = { total: 12, groups: 3, emoji: '💎' }
@@ -29,4 +31,33 @@ export const w8Galera = lesson('w8-galera', 'La casita de la división', [
   show('division-check', g17, 'La prueba: cociente × divisor + resto = dividendo. 3 × 5 + 2 = 17.'),
   tryIt('galera', g17, '¡Te toca! ¿Cuánto sobra?', { kinds: ['division'], divisionVariants: ['rem'] }),
   show('galera', { dividend: 72, divisor: 3 }, 'Si en tu cole colocáis la división de otra forma, ¡hazlo como en el cole!'),
+])
+
+/* «Cuatro caminos para dividir» (the division methods, like the subtraction ones): the same 84 ÷ 4 by four routes, a
+   try with each one and the choice of the favourite (saved as ChildSettings.divMethod). */
+const d84 = { dividend: 84, divisor: 4 }
+const dClimb = { divisor: 4, quotient: 7 }
+const exactDivision: SkillSelector = { kinds: ['division'], divisionVariants: ['exact'] }
+
+const withDivMethod = (step: LessonStep, divMethod: DivMethod): LessonStep => ({ ...step, divMethod })
+
+export const w8DivWays = lesson('w8-div-ways', 'Cuatro caminos para dividir', [
+  show('galera', d84, 'Para dividir hay varios caminos. Los verás con el mismo ejemplo: 84 ÷ 4.'),
+  show('galera', d84, 'Camino 1: la galera con restas. Escribes cada resta debajo del paso: 8 − 8 = 0, 4 − 4 = 0.'),
+  withDivMethod(tryIt('galera', d84, '¡Pruébalo tú! La galera con las restas.', { ...exactDivision }), 'galera'),
+  show('galera', d84, 'Camino 2: la galera sin restas. Solo escribes el cociente y lo que sobra. Las restas, de cabeza.'),
+  withDivMethod(tryIt('galera', d84, '¡Pruébalo tú! La galera sin restas.', { ...exactDivision }), 'galera-short'),
+  show('div-parts', d84, 'Camino 3: repartir por partes. 84 = 80 + 4. 80 ÷ 4 = 20 y 4 ÷ 4 = 1.'),
+  show('div-parts', d84, 'Los cocientes se suman: 20 + 1 = 21. ¡Así no hay que hacer ninguna resta!'),
+  withDivMethod(tryIt('div-parts', d84, '¡Pruébalo tú! Reparte por partes.', { ...exactDivision }), 'div-parts'),
+  show('div-climb', dClimb, 'Camino 4: multiplicar hacia arriba. ¿Qué número por 4 da 28? Sube: 4, 8, 12… ¡son 7 veces!'),
+  withDivMethod(tryIt('div-climb', dClimb, '¡Pruébalo tú! Sube por la tabla del divisor.', exactDivision), 'climb'),
+  {
+    visual: 'galera',
+    params: d84,
+    text: '¿Cuál te ha resultado más fácil? Elígelo: será tu método favorito para dividir.',
+    interaction: 'choose',
+    preference: 'divMethod',
+    choices: DIV_METHODS.map((m) => ({ label: m.label, value: m.id })),
+  },
 ])

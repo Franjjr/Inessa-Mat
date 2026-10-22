@@ -33,8 +33,8 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'concept': return p.name === 'placevalue' ? 'numeros' : null
     case 'add': case 'sub': return 'sumas-restas'
     case 'mul': return 'tablas'
-    case 'div': case 'div2x1': return 'dividir'
-    case 'word': return 'problemas'
+    case 'div': case 'div2x1': case 'div3x1': return 'dividir'
+    case 'word': case 'bar': return 'problemas'
     default: return null
   }
 }
@@ -51,8 +51,8 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
     { block: 'numeros', skills: ['concept:placevalue', 'concept:placevalue'] },
     { block: 'sumas-restas', skills: ['add:3d:c0', 'add:3d:c1', 'sub:3d:b0', 'sub:3d:b1'] },
     { block: 'tablas', skills: facts.slice(0, 4) },
-    { block: 'dividir', skills: [divFacts[0], 'div:2x1:exact'] },
-    { block: 'problemas', skills: ['word:add', 'word:sub'] },
+    { block: 'dividir', skills: [divFacts[0], 'div:3x1:rem'] },
+    { block: 'problemas', skills: ['bar:add', 'bar:sub'] },
   ]
   const out: PlacementItem[] = []
   for (const { block, skills } of plan) {

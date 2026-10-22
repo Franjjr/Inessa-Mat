@@ -9,15 +9,25 @@
    div:2x1:exact|rem|long
    concept:groups|array|commutative|share|family|placevalue
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
+   bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
+   hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
+   check:add|sub|div        comprobar (claim + the check operation)
+   div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
 */
-import type { DivisionExercise, ExerciseKind, SkillKey } from '@/types'
+import type { BarOp, DivisionExercise, ExerciseKind, SkillKey } from '@/types'
 
 export type DivisionVariant = DivisionExercise['variant']
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
 export type WordOp = 'add' | 'sub' | 'mul' | 'div'
+export type BarSkillOp = BarOp | 'two'
+export type HuntOp = 'add' | 'sub' | 'mul'
+export type CheckOp = 'add' | 'sub' | 'div'
 
 export const CONCEPTS: ConceptName[] = ['groups', 'array', 'commutative', 'share', 'family', 'placevalue']
 export const WORD_OPS: WordOp[] = ['add', 'sub', 'mul', 'div']
+export const BAR_SKILL_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two']
+export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
+export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
 
 export type ParsedSkill =
@@ -28,8 +38,12 @@ export type ParsedSkill =
   | { type: 'sub'; digits: 2 | 3 | 4; borrows: number | null; zero: boolean }
   | { type: 'mul2x1'; carry: boolean }
   | { type: 'div2x1'; variant: DivisionVariant }
+  | { type: 'div3x1'; variant: 'exact' | 'rem' }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
+  | { type: 'bar'; op: BarSkillOp }
+  | { type: 'hunt'; op: HuntOp }
+  | { type: 'check'; op: CheckOp }
 
 // ---------------------------------------------------------------- builders
 
@@ -59,6 +73,18 @@ export function conceptSkill(name: ConceptName): SkillKey {
 }
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
+}
+export function barSkill(op: BarSkillOp): SkillKey {
+  return `bar:${op}`
+}
+export function huntSkill(op: HuntOp): SkillKey {
+  return `hunt:${op}`
+}
+export function checkSkill(op: CheckOp): SkillKey {
+  return `check:${op}`
+}
+export function div3x1Skill(variant: 'exact' | 'rem'): SkillKey {
+  return `div:3x1:${variant}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -103,6 +129,10 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
+  if ((m = key.match(/^div:3x1:(exact|rem)$/))) return { type: 'div3x1', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
+  if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
+  if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
   return null
 }
 
@@ -146,6 +176,10 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'sub': return ['column-sub', 'word-problem']
     case 'mul2x1': return ['column-mul', 'word-problem']
     case 'div2x1': return ['division', 'word-problem']
+    case 'div3x1': return ['division']
+    case 'bar': return ['bar-problem']
+    case 'hunt': return ['error-hunt']
+    case 'check': return ['check-calc']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']

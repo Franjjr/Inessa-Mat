@@ -12,6 +12,10 @@ import type { ID, InputMode } from './common'
  *   mul:2x1:c0|c1        2-digit × 1-digit, without / with carry
  *   div:2x1:exact|rem|long   2-digit ÷ 1-digit: digit-by-digit exact, with remainder (1-digit quotient), long (bring down)
  *   concept:groups | concept:array | concept:commutative | concept:share | concept:family | concept:placevalue
+ *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
+ *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
+ *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
+ *   div:3x1:exact|rem         3-digit dividend ÷ 1-digit divisor
  */
 export type SkillKey = string
 
@@ -29,6 +33,9 @@ export type ExerciseKind =
   | 'column-mul'      // vertical 2-digit × 1-digit
   | 'division'        // Spanish "galera" layout: dividend | divisor, quotient + remainder
   | 'word-problem'    // short story problem resolving to one operation
+  | 'bar-problem'     // story problem solved on a bar diagram (with the bar first, then without it)
+  | 'error-hunt'      // encuentra el error: a worked column calculation; the child decides and fixes it
+  | 'check-calc'      // comprobar: a claimed result; the child writes the check operation and decides
 
 interface ExerciseBase {
   id: ID
@@ -90,10 +97,79 @@ export interface WordProblemExercise extends ExerciseBase {
   unit: string
 }
 
+export type BarOp = 'add' | 'sub' | 'mul' | 'div'
+export type BarProblemKind = 'change' | 'compare' | 'combine' | 'share' | 'two-step'
+
+/** One piece of a bar diagram. value null = the unknown (no chip for it; the answer goes there). */
+export interface BarSlot {
+  id: string
+  /** Child-facing name written on the piece ('Tenía', 'Le dan', 'Total'). */
+  name: string
+  /** Which bar of the drawing (0 = the first; two-step problems have one bar per step). */
+  row: number
+  /** segment = a piece of the bar; total = the bracket over the whole bar; count = how many groups (a badge). */
+  kind: 'segment' | 'total' | 'count'
+  value: number | null
+}
+
+/** One operation of the solution. The result of the last step is the answer. */
+export interface BarStep { op: BarOp; a: number; b: number; result: number }
+
+export interface BarProblemExercise extends ExerciseBase {
+  kind: 'bar-problem'
+  /** Template string (may use {child}, {pet}). */
+  text: string
+  problem: BarProblemKind
+  /** true: the child first places the numbers on the bar. false: the same problem without the drawing. */
+  withBar: boolean
+  bar: BarSlot[]
+  /** Number of bars drawn (rows of the diagram). */
+  rows: number
+  steps: BarStep[]
+  answer: number
+  /** Unit word for the answer line. */
+  unit: string
+}
+
+/** encuentra el error: operands and the claimed result of a column calculation. */
+export interface ErrorHuntExercise extends ExerciseBase {
+  kind: 'error-hunt'
+  op: 'add' | 'sub' | 'mul'
+  /** Top row (sub: the minuend; mul: the 2- or 3-digit number). */
+  top: number
+  /** Bottom row (the subtrahend; mul: the single digit). */
+  bottom: number
+  /** The result written in the calculation (may be wrong). */
+  shown: number
+  /** The right result. */
+  answer: number
+  /** Column (0 = units) where the written result first differs from the right one; null when it is right. */
+  wrongColumn: number | null
+  /** The error the calculation carries, tagged for the report; null when the calculation is right. */
+  errorType: ErrorType | null
+}
+
+/** comprobar: a claim «left op right = claimed» and the check the child writes. */
+export interface CheckCalcExercise extends ExerciseBase {
+  kind: 'check-calc'
+  op: 'add' | 'sub' | 'div'
+  left: number
+  right: number
+  claimed: number
+  /** Division only: the remainder claimed (left = right × claimed + remainder). */
+  remainder?: number
+  /** The number the check gives, the answer of the exercise: claimed − right (add), claimed + right (sub), right × claimed + remainder (div). */
+  answer: number
+  /** Whether the claim is true. */
+  ok: boolean
+  /** The error the claim carries when it is false, tagged for the report; null when true. */
+  errorType: ErrorType | null
+}
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
-  | ColumnMulExercise | DivisionExercise | WordProblemExercise
+  | ColumnMulExercise | DivisionExercise | WordProblemExercise | BarProblemExercise | ErrorHuntExercise | CheckCalcExercise
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -106,6 +182,11 @@ export type Answer =
   | { type: 'steps'; method: 'parts' | 'line'; values: (number | null)[]; total?: number | null }   // resta por partes / saltos
   | { type: 'division'; quotient: number | null; remainder: number | null }
   | { type: 'facts'; facts: string[] }                                     // fact-family, e.g. '6x7=42', '42/6=7'
+  | { type: 'bar'; placed: (number | null)[]; ops: (BarOp | null)[]; results: (number | null)[] } // bar: per slot, per step
+  | { type: 'hunt'; ok: boolean | null; column: number | null; value: number | null }  // encuentra el error
+  | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
+  | { type: 'division-parts'; parts: (number | null)[]; quotient: number | null; remainder: number | null } // repartir por partes
+  | { type: 'climb'; products: (number | null)[]; remainder: number | null } // multiplicar hacia arriba
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
@@ -113,6 +194,16 @@ export type Answer =
  * 'parts' = por partes (352 − 100 − 20 − 7), 'line' = saltos en la recta numérica (contar hacia delante).
  */
 export type SubMethod = 'borrow' | 'carry' | 'parts' | 'line'
+
+/**
+ * Division methods a child can learn (src/engine/methods.ts). 'galera' = the galera with the subtractions written,
+ * 'galera-short' = the galera without them (la galera sin restas), 'div-parts' = repartir por partes
+ * (84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4), 'climb' = multiplicar hacia arriba («¿qué número por 4 da 28?»).
+ */
+export type DivMethod = 'galera' | 'galera-short' | 'div-parts' | 'climb'
+
+/** Tables tricks a child can pick as the favourite strategy (the Lumi tricks, src/engine/methods.ts). */
+export type TableMethod = 'double' | 'double-double' | 'half-ten' | 'ten-minus-one' | 'five-plus-one' | 'mirror'
 
 export type ErrorType =
   | 'fact'                 // wrong times-table fact (or wrong single-digit addition/subtraction inside a column)
@@ -127,6 +218,10 @@ export type ErrorType =
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
   | 'recognition'          // child said the handwriting was misread (not a maths error!)
+  | 'bar-placement'        // a quantity put on the wrong piece of the bar
+  | 'place-value'          // a digit written in the wrong column (valor posicional), or a shifted result
+  | 'step'                 // the first step of a two-step problem is wrong
+  | 'false-alarm'          // the child said there was an error in a right calculation
   | 'other'
 
 export interface CheckResult {

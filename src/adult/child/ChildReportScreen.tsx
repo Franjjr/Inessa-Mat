@@ -20,6 +20,7 @@ import { errorMessage } from '../shared/messages'
 import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
+import { OtherMethodsCard } from './OtherMethodsCard'
 import { PlacementCard } from './PlacementCard'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
@@ -239,6 +240,7 @@ export default function ChildReportScreen() {
           </section>
 
           <SubtractionMethodsCard info={summary.subtractionMethods} />
+          <OtherMethodsCard division={summary.divisionMethods} tables={summary.tableTricks} />
 
           <section className={adult.card} aria-labelledby="worlds-title">
             <div className={adult.cardHead}>

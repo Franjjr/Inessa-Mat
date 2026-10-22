@@ -62,3 +62,13 @@ export const w4FourWays = lesson('w4-four-ways', 'Cuatro caminos para restar', [
     choices: SUB_METHODS.map((m) => ({ label: m.label, value: m.id })),
   },
 ])
+
+/* «Dibujar la historia»: the bar diagram for problems. The child first sees the drawing for each kind (juntar, quitar,
+   comparar, repartir) and then solves it with the bar; the drawing is taken away once the bar is mastered. */
+
+export const w4Bars = lesson('w4-bars', 'Dibujar la historia', [
+  show('bar-model', { a: 5, b: 3, total: 8 }, 'Para un problema puedes dibujar una barra. Cada parte es una cantidad y el total es la barra entera.'),
+  show('bar-model', { a: 5, b: 3, total: 8 }, 'Si Ana tiene 5 canicas y Luis tiene 3, las dos juntas son 5 + 3 = 8. Juntar es sumar.'),
+  show('bar-model', { a: 9, b: 4, total: 13 }, 'Y si de 13 quitas 4, lo que queda es 13 − 4 = 9. Quitar es restar.'),
+  tryIt('bar-model', { a: 5, b: 3, total: 8 }, '¡Te toca! Pon los números en la barra y elige la operación.', { kinds: ['bar-problem'], skills: ['bar:add'] }),
+])

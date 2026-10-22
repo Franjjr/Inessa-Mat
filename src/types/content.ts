@@ -1,6 +1,6 @@
 import type { SkillSelector } from './exercise'
 import type { CompanionSpecies } from './child'
-import type { SubMethod } from './exercise'
+import type { DivMethod, SubMethod } from './exercise'
 
 /**
  * TemplateString: Spanish copy with placeholders, rendered by content/template.ts → renderTemplate(text, ctx).
@@ -87,6 +87,9 @@ export type LessonVisualId =
   | 'sub-carry'         // params: { a, b } — subtraction "me llevo una abajo": the subtrahend's next digit gets +1
   | 'sub-parts'         // params: { a, b } — subtraction by parts: a − hundreds − tens − units
   | 'sub-line'          // params: { a, b } — subtraction on the number line: jumps from b up to a
+  | 'bar-model'         // params: { a, b, total } — part-part-whole bar (a and b are the parts, total the whole)
+  | 'div-parts'         // params: { dividend, divisor } — repartir por partes: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4
+  | 'div-climb'         // params: { divisor, quotient } — multiplicar hacia arriba: the multiples of the divisor
 
 export interface LessonStep {
   visual: LessonVisualId
@@ -100,8 +103,12 @@ export interface LessonStep {
   trySelector?: SkillSelector
   /** 'try' steps: the subtraction method the exercise must be solved with. */
   method?: SubMethod
+  /** 'try' steps: the division method the exercise must be solved with. */
+  divMethod?: DivMethod
   /** 'choose' steps: the options. */
-  choices?: { label: TemplateString; value: SubMethod }[]
+  choices?: { label: TemplateString; value: string }[]
+  /** 'choose' steps: which favourite the pick is saved as (default subMethod). */
+  preference?: 'subMethod' | 'divMethod' | 'tableMethod'
 }
 
 export interface LessonDef {
@@ -115,6 +122,8 @@ export type ActivityKind =
   | 'facts' | 'race' | 'missing' | 'wheel' | 'necklace' | 'chain' | 'family' | 'maze' | 'pixel' | 'memory' | 'bubbles'
   // Activities B (structured ops & manipulatives)
   | 'groups' | 'array' | 'column' | 'division' | 'share' | 'word' | 'board'
+  // Activities C (mixed exercise kinds: bars, encuentra el error, comprobar)
+  | 'exercises'
 
 export interface ActivityConfig {
   kind: ActivityKind

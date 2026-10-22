@@ -38,6 +38,8 @@ export function ExerciseStep({ exercise, allowHints, okLabel, wrongLabel, feedba
       inputMode: o.inputMode,
       hintsUsed: o.hintsUsed,
       recognitionFixes: o.recognitionFixes,
+      // The method the child used (subtraction, division or the tables trick): the adult report counts it.
+      ...(o.method ? { method: o.method } : {}),
     }
     if (report) host.reportAttempt(attempt)
     host.react(o.check.correct ? 'correct' : 'wrong', { errorType: o.check.errorType })
@@ -57,6 +59,9 @@ export function ExerciseStep({ exercise, allowHints, okLabel, wrongLabel, feedba
         onAnswered={handleAnswered}
         allowHints={allowHints}
         showFeedback={false}
+        method={host.prefs.subMethod}
+        divMethod={host.prefs.divMethod}
+        tableMethod={host.prefs.tableMethod}
       />
       {outcome && (
         <div className={s.feedback} data-tone={ok ? 'good' : 'clue'} role="status">

@@ -51,6 +51,7 @@ const KIND_LABEL: Record<ActivityKind, string> = {
   necklace: 'Collar de cuentas', chain: 'Cadena de dobles', family: 'Familias de números', maze: 'Laberinto',
   pixel: 'Dibujo secreto', memory: 'Memoria', bubbles: 'Burbujas', groups: 'Grupos', array: 'Filas y columnas',
   column: 'Cuentas en columna', division: 'Repartos', share: 'Repartir', word: 'Problemas', board: 'Carrera al castillo',
+  exercises: 'Ejercicios',
 }
 
 export function kindLabel(kind: ActivityKind): string {
