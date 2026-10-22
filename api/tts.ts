@@ -6,11 +6,13 @@ export const config = { runtime: 'edge' }
 
 type Character = 'lumi' | 'companion' | 'narrator' | 'guardian'
 
-/** Spanish (Spain) neural voices per character. Small prosody changes only: big ones sound artificial. */
+/** Spanish (Spain) neural voices per character, chosen by the owner by ear (Ximena Multilingual for Lumi and the
+    narrator, Irene for the companion). Small prosody changes only: big ones sound artificial. When a voice changes,
+    bump VOICE_REVISION in src/audio/neuralVoice.ts so devices fetch the new clips instead of their cached ones. */
 export const VOICES: Record<Character, { name: string; pitch: string; rate: string }> = {
-  lumi: { name: 'es-ES-ElviraNeural', pitch: '+3%', rate: '-4%' },
-  companion: { name: 'es-ES-XimenaNeural', pitch: '+6%', rate: '0%' },
-  narrator: { name: 'es-ES-ElviraNeural', pitch: '0%', rate: '-6%' },
+  lumi: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-4%' },
+  companion: { name: 'es-ES-IreneNeural', pitch: '0%', rate: '0%' },
+  narrator: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-6%' },
   guardian: { name: 'es-ES-AlvaroNeural', pitch: '-3%', rate: '-8%' },
 }
 
@@ -45,8 +47,11 @@ function allowedCaller(req: Request): boolean {
 
 export function ssml(text: string, character: Character): string {
   const v = VOICES[character]
-  return `<speak version="1.0" xml:lang="es-ES" xmlns="http://www.w3.org/2001/10/synthesis">` +
-    `<voice name="${v.name}"><prosody pitch="${v.pitch}" rate="${v.rate}">${escapeXml(text)}</prosody></voice></speak>`
+  // Multilingual voices guess the language from the text: <lang> pins Spanish from Spain (accent and numbers).
+  const body = `<prosody pitch="${v.pitch}" rate="${v.rate}">${escapeXml(text)}</prosody>`
+  const spoken = v.name.includes('Multilingual') ? `<lang xml:lang="es-ES">${body}</lang>` : body
+  return `<speak version="1.0" xml:lang="es-ES" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts">` +
+    `<voice name="${v.name}">${spoken}</voice></speak>`
 }
 
 export default async function handler(req: Request, env: Env = process.env as Env): Promise<Response> {

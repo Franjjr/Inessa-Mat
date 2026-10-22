@@ -8,6 +8,8 @@ import { onGesture } from './context'
 import type { SpeechCharacter } from './speech'
 
 const FETCH_TIMEOUT_MS = 3500
+/** Part of every clip URL: bump it when a voice in api/tts.ts changes, so cached clips of the old voice are not reused. */
+const VOICE_REVISION = 1
 /** 50 ms of silence as a WAV data URI (8 kHz, 8-bit mono), to unlock the shared element on iOS. */
 function silence(): string {
   const n = 400
@@ -66,7 +68,7 @@ export function neuralAvailable(): boolean {
 }
 
 export function clipUrl(text: string, character: SpeechCharacter): string {
-  return `/api/tts?v=${character}&t=${encodeURIComponent(text)}`
+  return `/api/tts?v=${character}&r=${VOICE_REVISION}&t=${encodeURIComponent(text)}`
 }
 
 /** Object URL of the clip, or null when it cannot be had quickly. Cached per text and character for the session. */

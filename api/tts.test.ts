@@ -34,7 +34,8 @@ describe('/api/tts', () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
     expect(url).toBe('https://westeurope.tts.speech.microsoft.com/cognitiveservices/v1')
     expect((init.headers as Record<string, string>)['Ocp-Apim-Subscription-Key']).toBe('secret-key')
-    expect(String(init.body)).toContain('es-ES-ElviraNeural')
+    expect(String(init.body)).toContain('es-ES-XimenaMultilingualNeural')
+    expect(String(init.body)).toContain('<lang xml:lang="es-ES">')
     expect(await res.text()).not.toContain('secret-key')
   })
 

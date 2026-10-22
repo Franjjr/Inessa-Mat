@@ -48,7 +48,7 @@ describe('natural voice', () => {
     const fetchMock = vi.fn(async (_url: string) => new Response(new Blob([new Uint8Array(5)]), { headers: { "content-type": "audio/mpeg" } }))
     vi.stubGlobal('fetch', fetchMock)
     await speech.say('6 × 7 = 42', { voice: 'companion' })
-    expect(String(fetchMock.mock.calls[0][0])).toBe(`/api/tts?v=companion&t=${encodeURIComponent('seis por siete son cuarenta y dos')}`)
+    expect(String(fetchMock.mock.calls[0][0])).toBe(`/api/tts?v=companion&r=1&t=${encodeURIComponent('seis por siete son cuarenta y dos')}`)
     expect(FakeAudio.played).toHaveLength(1)
     expect(FakeAudio.played[0]).toMatch(/^blob:/)
     expect(synth.spoken).toHaveLength(0)
