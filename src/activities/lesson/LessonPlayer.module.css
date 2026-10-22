@@ -1,0 +1,191 @@
+/* Lesson player layout. Landscape (iPad, Android, desktop): visual board left, Lumi and the bubble right.
+   Portrait (iPad upright): visual board on top, Lumi and the bubble below. */
+
+.player {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, var(--c-magic-soft), transparent 60%),
+    radial-gradient(900px 500px at 110% 110%, var(--c-primary-soft), transparent 60%),
+    var(--c-bg);
+  color: var(--c-ink);
+  overflow: hidden;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+.top > :first-child { justify-self: start; }
+.top > :last-child { justify-self: end; }
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stage {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  box-sizing: border-box;
+}
+
+.board {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+  border: 2px solid var(--c-line);
+  overflow: hidden;
+  display: flex;
+}
+
+.frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+}
+
+.frame > * {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.speaker {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.avatar {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.bubble {
+  position: relative;
+  max-width: 100%;
+  box-sizing: border-box;
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-4) var(--sp-5);
+  max-height: 40%;
+  overflow: auto;
+}
+
+.text {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  color: var(--c-ink);
+  animation: textIn var(--dur-med) var(--ease-out) both;
+}
+
+@keyframes textIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+}
+
+.progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-line);
+  transition: width var(--dur-med) var(--ease-out), background var(--dur-med);
+}
+
+.dotDone {
+  background: var(--c-primary);
+}
+
+.dotActive {
+  width: 34px;
+  background: var(--c-magic);
+}
+
+.empty {
+  grid-row: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Portrait: stack the board above Lumi */
+@media (orientation: portrait) {
+  .stage {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .speaker {
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .speakerPortrait .bubble {
+    flex: 1 1 auto;
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 720px) {
+  .title { font-size: var(--fs-md); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text { animation: none; }
+  .dot { transition: none; }
+}

@@ -12,6 +12,8 @@ export interface StrategyDetail {
   /** Worked step that leaves only the final answer for the child (hint level 3). */
   workedText: string
   workedVisual: HintVisual
+  /** Params for the worked-step visual when it differs from the level-2 one (the 'mirror' reuses the Cave's visual). */
+  workedParams?: Record<string, number>
   /** For 'mirror': the oriented fact whose trick is being reused. */
   mirrorOf?: [number, number]
 }
@@ -84,7 +86,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
     const n = a === 5 ? b : a
     const seq = Array.from({ length: n - 1 }, (_, i) => 5 * (i + 1)).join(', ')
     return {
-      strategy: { id: 'five', text: `La del 5 acaba en 0 o en 5: es la mitad de ${n} × 10 = ${n * 10}.`, visual: 'skip-count' },
+      strategy: { id: 'five', text: `La del 5 acaba en 0 o en 5: calcula ${n} × 10 = ${n * 10} y toma la mitad.`, visual: 'skip-count' },
       visualParams: { step: 5, count: n },
       visualText: `Cuenta de 5 en 5, ${n} saltos.`,
       workedText: `${seq}, ? (cuenta ${n} saltos de 5)`,
@@ -122,6 +124,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
       visualText: `Gira las filas: ${a} filas de 6 son lo mismo que 6 filas de ${a}.`,
       workedText: inner.workedText,
       workedVisual: inner.workedVisual,
+      workedParams: inner.visualParams,
       mirrorOf: [6, a],
     }
   }

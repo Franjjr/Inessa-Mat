@@ -5,6 +5,7 @@ import { initialProgress } from '@/content'
 import type { MasteryMap, ProgressState, SkillMastery } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
+import { isErasedChild } from './erasure'
 import { publicMastery } from './mappers'
 import { enqueue, masteryKey } from './outbox'
 import type { MasteryRow } from './types'
@@ -29,11 +30,13 @@ export async function getProgress(childId: string): Promise<ProgressState> {
 }
 
 /** Atomic read-modify-write; the updater must be pure. `updatedAt` is maintained here.
- *  Never decrease `stars` (it is the total earned): record spending in `starsSpent` — merges across devices keep
- *  the maximum of every counter. */
+ *  Never decrease `stars` (it is the total earned): record spending in `starsSpent`. Merges across devices derive the
+ *  totals from the merged facts (see merge.ts), so both counters add up what each device earned or bought offline.
+ *  Erased children store nothing. */
 export async function updateProgress(childId: string, updater: (s: ProgressState) => ProgressState): Promise<ProgressState> {
-  return db.transaction('rw', [db.progress, db.children, db.outbox], async () => {
+  return db.transaction('rw', [db.progress, db.children, db.outbox, db.meta], async () => {
     const cur = (await db.progress.get(childId)) ?? initialProgress(childId)
+    if (await isErasedChild(childId)) return cur
     const draft = structuredClone(cur)
     const result = updater(draft)
     if (!result || typeof result !== 'object') throw new DataError('invalid', 'updateProgress: the updater must return a ProgressState')
@@ -64,7 +67,8 @@ export async function getMastery(childId: string): Promise<MasteryMap> {
 
 export async function saveMastery(childId: string, items: SkillMastery[]): Promise<void> {
   if (!items.length) return
-  await db.transaction('rw', [db.mastery, db.children, db.outbox], async () => {
+  await db.transaction('rw', [db.mastery, db.children, db.outbox, db.meta], async () => {
+    if (await isErasedChild(childId)) return
     for (const item of items) {
       if (!item?.skill) continue
       const prev = await db.mastery.get([childId, item.skill])

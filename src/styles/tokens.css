@@ -24,7 +24,7 @@
   /* Brand */
   --c-ink: #2e1a47;           /* main text */
   --c-ink-soft: #5b4a75;
-  --c-ink-mute: #8b7aa8;
+  --c-ink-mute: #6f5f8f;      /* 5.2:1 on surface-2, AA for small text */
   --c-bg: #faf5ff;
   --c-surface: #ffffff;
   --c-surface-2: #f5f3ff;

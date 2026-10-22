@@ -1,0 +1,80 @@
+/* Maze: a square grid of tap cells, with the trail, the unicorn and the gem. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.board {
+  display: grid;
+  gap: clamp(4px, 1vmin, 8px);
+  width: min(100%, 520px, 62vh);
+  aspect-ratio: 1;
+  align-self: center;
+  padding: clamp(8px, 1.4vmin, 14px);
+  box-sizing: border-box;
+  border-radius: var(--r-xl);
+  background: linear-gradient(160deg, #e7f9e9, #f5fff5);
+  box-shadow: var(--shadow-2);
+}
+
+.cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  box-shadow: 0 3px 0 rgba(46, 26, 71, .10);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(18px, 4.6vmin, 36px);
+  font-variant-numeric: tabular-nums;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cell:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.visited {
+  background: var(--w1-soft);
+  color: var(--w1);
+}
+
+.here {
+  background: var(--c-gold-soft);
+  box-shadow: 0 0 0 4px var(--c-gold), 0 3px 0 rgba(46, 26, 71, .12);
+  font-size: clamp(24px, 6vmin, 44px);
+}
+
+.hintCell {
+  animation: glow 1.4s ease-in-out infinite;
+}
+
+.start,
+.gem {
+  background: var(--c-surface-2);
+  font-size: clamp(24px, 6vmin, 40px);
+}
+
+.quiet {
+  opacity: .8;
+}
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, .0), 0 3px 0 rgba(46, 26, 71, .10); }
+  50% { box-shadow: 0 0 0 5px rgba(245, 158, 11, .55), 0 3px 0 rgba(46, 26, 71, .10); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hintCell { animation: none; outline: 3px dashed var(--c-gold); }
+}

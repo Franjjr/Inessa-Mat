@@ -13,6 +13,8 @@ export const META = {
   cursor: (orgId: string, table: string) => `sync.cursor:${orgId}:${table}`,
   progressVersion: (childId: string) => `sync.progressVersion:${childId}`,
   assignmentsCache: (childId: string) => `cache.assignments:${childId}`,
+  /** Set (true) once the child was erased (GDPR): the device never stores or uploads anything for that id again. */
+  erased: (childId: string) => `erased:${childId}`,
 } as const
 
 export async function getMeta<T>(key: string): Promise<T | undefined> {

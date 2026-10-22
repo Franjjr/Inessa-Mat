@@ -1,0 +1,64 @@
+/* A try step on the lesson board: the exercise (scaled to fit) above a status line. Nothing may be clipped. */
+.wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* safe: when the exercise is taller than the board (keypad open), it scrolls instead of being cut at the top. */
+  justify-content: safe center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+/* Box that takes the scaled height of the exercise, so the layout follows the visual size. */
+.fit {
+  width: 100%;
+  max-width: 760px;
+  min-height: 0;
+  flex-shrink: 0; /* never squeezed under the status line: the board scrolls instead */
+}
+
+.exercise {
+  width: 100%;
+  transform-origin: top center;
+}
+
+.footer {
+  flex-shrink: 0;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.good {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  color: var(--c-success);
+}
+
+.hint {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+.retry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exercise { transition: none; }
+}

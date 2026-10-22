@@ -1,0 +1,31 @@
+{
+  "module": "activities-ops",
+  "viewed": [
+    "Galera DivisionView filled state, iPad landscape (1180x820 element capture): 84÷4, 17÷5, 72÷3 (bring-down), 347÷3 (3 digits with remainder), 705÷6 (zero partial, remainder 3)",
+    "Galera 84÷4 with Comprobar correct state (green cells, Siguiente shown)",
+    "Not yet viewed: galera at iPad portrait 820x1180 and Android 1280x800; ColumnView, ArrayView, WordProblemView, GroupsView, share and board visual captures"
+  ],
+  "fixed": [
+    "src/activities/views/DivisionView.tsx: galera rewritten so each printed product is one digit per dividend column, right-aligned under its partial dividend (partial length computed from the partial, so bring-down steps like 15 span two columns)",
+    "src/activities/views/DivisionView.tsx: subtraction line spans exactly the partial's columns; remainder sits under the last digit used",
+    "src/activities/views/DivisionView.tsx: divisor now sits above the first quotient column; top bar starts at the vertical bracket line",
+    "src/activities/views/DivisionView.module.css: squared school-paper background, ink-coloured bracket, top bar and subtraction lines (was purple), pencil-grey printed products at dividend digit size, justify-self fix so the empty subtraction line is visible",
+    "src/activities/division/DivisionView.tsx: deleted; stale duplicate that imported a missing CSS module and was not used anywhere",
+    "src/activities/views/OpsViews.gallery.tsx: added galera gallery entries for 72÷3, 347÷3 (remainder), 512÷4 (exact), 705÷6 (zero partial), 418÷9 (remainder); galera entries framed at 960px",
+    "src/activities/share/share.test.tsx: new tests (fair sharing invariant at every step, answer step opens, tapping an object returns it)",
+    "src/activities/board/board.test.tsx: new tests (board renders 12 squares with child and opponent pieces, rolling the die opens the question)"
+  ],
+  "tests": "npx vitest run on src/activities/views, groups, division, share, board: 6 files, 17 tests passed (13 previous + 4 new). npm run typecheck filtered to my folders: no errors.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Galera at iPad portrait (820x1180) and Android (1280x800) not captured yet; the 3-digit layout is about 610px wide, so it should fit, but this is unverified.",
+    "Galera step cells are still DigitCell boxes with purple focus borders; they read as tiles rather than handwriting on paper. Restyling the cells needs an override in @/ink, which is not my module.",
+    "Printed products are not writable; the workbook shows the product as written work. This is a design decision for the integrator.",
+    "ColumnView (add/sub/mul with carries at Pencil size), ArrayView, WordProblemView (read-aloud button), GroupsView, share and board start/mid/result states were not visually captured in this pass. The read-aloud button was not verified.",
+    "Board tests only cover the start screen and the roll; the result screen and special squares are untested.",
+    "Gallery shot tool captures only the element of one entry; full-page captures do not include later gallery entries."
+  ],
+  "contractRequests": [
+    "ink: DigitCell result cells are boxed tiles with a purple focus border. A notebook look would need a className-level or variant hook to render borderless handwriting cells on squared paper. The galera uses className only on the wrapper, so it cannot restyle the inner surface."
+  ]
+}

@@ -6,7 +6,7 @@ import { EarPair, Nose, Tail, anchors, chibiFace } from './common'
 export const bunny: SpeciesDef = {
   label: 'Conejito',
   palettes: {
-    default: { fur: '#ffffff', ink: '#9a86bd', light: '#f5f3ff', inner: '#fbcfe8', nose: '#f472b6', mark: '#ede9fe', eye: '#3b0764' },
+    default: { fur: '#f3efff', ink: '#6b5a9c', light: '#faf8ff', inner: '#fbcfe8', nose: '#f472b6', mark: '#ddd6fe', eye: '#3b0764' },
     sunny: { fur: '#fef3c7', ink: '#c2410c', light: '#fffbeb', inner: '#fecdd3', nose: '#fb7185', mark: '#fde68a', eye: '#431407' },
     berry: { fur: '#fbcfe8', ink: '#be185d', light: '#fdf2f8', inner: '#f9a8d4', nose: '#db2777', mark: '#fce7f3', eye: '#500724' },
     mint: { fur: '#d1fae5', ink: '#059669', light: '#f0fdf4', inner: '#fbcfe8', nose: '#f472b6', mark: '#a7f3d0', eye: '#022c22' },

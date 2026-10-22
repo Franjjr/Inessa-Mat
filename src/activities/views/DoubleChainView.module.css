@@ -1,0 +1,36 @@
+/* Doubling chain: the links and the input under them. */
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-5);
+  width: 100%;
+  color: var(--c-ink);
+  font-family: var(--font-read);
+}
+
+.compact {
+  gap: var(--sp-3);
+}
+
+.inputRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.below {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}

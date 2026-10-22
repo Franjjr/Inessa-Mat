@@ -1,0 +1,53 @@
+/* Single multiplication / division fact: "6 × 7 =" with the answer box in line. */
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  font-family: var(--font-read);
+  color: var(--c-ink);
+}
+
+.compact {
+  gap: var(--sp-3);
+}
+
+.answer {
+  min-width: 96px;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-md);
+  text-align: center;
+  color: var(--c-success);
+  background: var(--c-success-soft);
+  animation: reveal var(--dur-med) var(--ease-bounce);
+}
+
+.answerRevealed {
+  color: var(--c-ink);
+  background: var(--c-gold-soft);
+}
+
+.below {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+@keyframes reveal {
+  from { transform: scale(.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .answer { animation: none; }
+}

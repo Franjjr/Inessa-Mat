@@ -16,7 +16,7 @@ function factHints(a: number, b: number): Hint[] {
   return [
     hint(1, d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
-    hint(3, d.workedText, d.workedVisual, { ...d.visualParams, a, b }),
+    hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
 }
 

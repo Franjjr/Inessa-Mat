@@ -1,0 +1,75 @@
+/* Race: a lane with your unicorn and the ghost of your record pace. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.track {
+  width: min(100%, 760px);
+  align-self: center;
+  padding: 0 var(--sp-3);
+}
+
+.lane {
+  position: relative;
+  height: 64px;
+  border-radius: var(--r-pill);
+  background: repeating-linear-gradient(90deg, var(--c-surface) 0 28px, var(--c-surface-2) 28px 56px);
+  box-shadow: inset 0 3px 0 rgba(46, 26, 71, .08), var(--shadow-1);
+  border: 3px solid var(--c-line);
+}
+
+.runner,
+.ghost {
+  position: absolute;
+  top: 50%;
+  translate: -50% -50%;
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 3px 2px rgba(46, 26, 71, .2));
+}
+
+.ghost {
+  opacity: .45;
+  filter: grayscale(.4);
+}
+
+.finish {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  font-size: 32px;
+}
+
+.clock {
+  min-width: 96px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-gold-soft);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.record {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner,
+  .ghost {
+    transition: none;
+  }
+}

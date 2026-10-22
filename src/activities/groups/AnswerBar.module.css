@@ -1,0 +1,47 @@
+.bar {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.side {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  justify-content: flex-end;
+}
+.side:first-child { justify-content: flex-start; }
+
+.message { min-width: 0; }
+
+.bubble {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  animation: pop var(--dur-med) var(--ease-bounce);
+}
+.ok { background: var(--c-success-soft); color: #14532d; }
+.clue { background: var(--c-gold-soft); color: #78350f; }
+.hint { background: var(--c-primary-soft); color: var(--c-ink); }
+
+@keyframes pop {
+  from { transform: scale(.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble { animation: none; }
+}
+
+@media (max-width: 760px) {
+  .bar { grid-template-columns: 1fr; }
+  .side, .side:first-child { justify-content: center; }
+}

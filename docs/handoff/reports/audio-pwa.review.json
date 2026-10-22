@@ -1,0 +1,20 @@
+{
+  "module": "audio-pwa",
+  "summary": "Senior review of the audio-pwa build. I read the engine (context.ts), SFX recipes and player (sfx.ts), speech (speech.ts, speechText.ts, voices.ts, spanishNumbers.ts), haptics, music (music.ts), and celebrations (celebrate.ts, palettes.ts, fx.module.css). The architecture holds up: lazy AudioContext after a gesture, iOS and Chrome unlock paths, duck and hidden-tab handling, voice stealing, and cleanup of nodes and canvas. I made three real fixes and added regression coverage. Spoken maths and number agreement were probed on about 25 child-copy strings and read correctly except for one ordinal bug, now fixed. Gallery screenshot on iPad looks clean. I changed no contract files and no files outside src/audio and src/fx.",
+  "publicApi": "Unchanged from the builder's report. src/audio/index.ts exports unlockAudio(), applyAudioSettings({sound,music,voice}), setMasterVolume(v), audioState(), and re-exports sfx, music, speech, haptics. src/fx/index.ts exports celebrate(kind, opts?), type CelebrationKind, stopCelebrations(). Only doc comments changed in the public files (sfx.setVolume default is 1, music.setVolume default 0.28).",
+  "tests": "npx vitest run src/audio src/fx: 9 files, 160 tests passed (was 159). New tests: (1) sfx 'keeps every sound inside safe gain limits at full volume' checks that every voice envelope stays within 0..1, never goes negative, for all 24 sounds; (2) speechText 'Eres la 1º' gives 'la primera' and 'Vas el 2º' gives 'el segundo'. npm run typecheck filtered to src/audio and src/fx: zero errors. Gallery captured with a local copy of tools/shot.mjs pointing at the Mac Playwright chromium_headless_shell-1243, saved to shots/audio-ipad-review.png, viewed and judged acceptable. tools/shot.mjs itself is unchanged; its hardcoded Linux path still fails on this Mac.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Real-device checks are still open: iOS Mónica voice selection, Android haptics, and actual listening levels. These cannot be tested in this container.",
+    "The speech ordinal fix covers la/las before 1º-10º; ordinals above 10 fall back to cardinals.",
+    "src/audio/sfx.ts changed on disk during this session after I had read it. My doc-comment edit is present. I did not identify any other change and did not revert anything.",
+    "Contract requests still need the integrator: viewport meta in index.html, workbox navigateFallbackDenylist for /dev/ in vite.config.ts, optional iOS icon precache, and the hardcoded executablePath in tools/shot.mjs.",
+    "Vite still warns that the main chunk is over 500 kB. This is not from audio code, and the dev gallery chunks still ship in production unless excluded."
+  ],
+  "contractRequests": [
+    "index.html: remove maximum-scale=1.0 and user-scalable=no from the viewport meta (WCAG 1.4.4, low-vision families). Keep viewport-fit=cover and width=device-width.",
+    "vite.config.ts workbox: add navigateFallbackDenylist: [/^\\/dev\\//] so /dev/gallery is not served by the service-worker fallback in production. Consider excluding src/**/*.gallery chunks from the production build.",
+    "vite.config.ts workbox: globPatterns already covers woff, models and icons. Optionally add 'favicon.svg' and 'icons/apple-touch-icon.png' to includeAssets so the iOS home-screen icon works offline.",
+    "tools/shot.mjs: replace the hardcoded executablePath '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' with the Playwright default (omit executablePath) or an env var, so screenshots run on any machine."
+  ]
+}

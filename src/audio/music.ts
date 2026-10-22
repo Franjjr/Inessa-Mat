@@ -415,7 +415,7 @@ export const music = {
     ducked = on
     applyDuck()
   },
-  /** Extra: music volume 0..1 (default 0.3 — quiet). */
+  /** Extra: music volume 0..1 (default 0.28 — quiet; see DEFAULT_LEVELS in context.ts). */
   setVolume(v: number): void {
     setLevel('music', v)
   },

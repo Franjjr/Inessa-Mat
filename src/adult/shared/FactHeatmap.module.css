@@ -1,0 +1,92 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+.row {
+  display: grid;
+  grid-template-columns: minmax(18px, 1.4fr) repeat(10, minmax(0, 1fr));
+  gap: 4px;
+}
+.corner, .head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  color: var(--c-ink-mute);
+}
+.cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  min-width: 0;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.product {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(11px, 1.6vmin, 16px);
+  line-height: 1;
+  color: var(--c-ink);
+}
+.glyph {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(10px, 1.3vmin, 13px);
+  line-height: 1;
+}
+.mastered { background: var(--c-success-soft); border-color: #86efac; }
+.mastered .glyph { color: #15803d; }
+.learning { background: var(--c-gold-soft); border-color: #fcd34d; }
+.learning .glyph { color: #92400e; }
+.struggling { background: var(--c-warn-soft); border-color: #fdba74; }
+.struggling .glyph { color: #9a3412; }
+.unseen { background: var(--c-surface-2); border: 2px dashed var(--c-line); }
+.unseen .glyph, .unseen .product { color: var(--c-ink-mute); }
+
+.compact .row { gap: 2px; }
+.compact .cell { border-radius: 4px; border-width: 1px; }
+.compact .glyph { display: none; }
+.compact .head { font-size: 9px; }
+
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+.legendItem { display: inline-flex; align-items: center; gap: 8px; }
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid transparent;
+}
+.swatch.mastered { color: #15803d; }
+.swatch.learning { color: #92400e; }
+.swatch.struggling { color: #9a3412; }
+.swatch.unseen { border: 2px dashed var(--c-line); color: var(--c-ink-mute); }

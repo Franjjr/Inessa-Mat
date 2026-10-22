@@ -1,0 +1,8 @@
+/* Necklace: the beads come from the shared sequence board (SkipCountView). */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}

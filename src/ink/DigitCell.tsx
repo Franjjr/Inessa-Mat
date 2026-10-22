@@ -188,6 +188,9 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     setRec(r)
     setPhase(unsure ? 'unsure' : 'recognized')
     ctx.learning.report(uid, r.digit, r)
+    // A low-confidence read must be confirmed (or rewritten) before the answer is graded.
+    if (unsure) ctx.learning.doubt(uid, r.digit)
+    else ctx.learning.settle(uid)
     emit(r.digit, { confidence: r.confidence, via })
     sfx.play('pop', { volume: 0.3 })
   }
@@ -209,6 +212,8 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
       learning.report(uid, d, r)
     }
     if (isFix) learning.countFix()
+    // Picking a digit is the child's own answer for this cell (also when it is the digit read): no doubt left.
+    learning.settle(uid)
     setRec(r ? { ...r, digit: d, confidence: 1 } : null)
     setPhase('recognized')
     const info: InkChangeInfo = { confidence: 1, via: lastVia.current, recognitionFix: isFix || undefined }

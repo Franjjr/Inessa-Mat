@@ -72,6 +72,8 @@ describe('toSpeakable', () => {
     expect(toSpeakable('100 %')).toBe('cien por ciento')
     expect(toSpeakable('Sumas de 3-4 cifras')).toBe('Sumas de tres a cuatro cifras')
     expect(toSpeakable('3º de Primaria')).toBe('tercero de Primaria')
+    expect(toSpeakable('Eres la 1º')).toBe('Eres la primera')
+    expect(toSpeakable('Vas el 2º')).toBe('Vas el segundo')
   })
 
   it('keeps Spanish punctuation that drives intonation', () => {

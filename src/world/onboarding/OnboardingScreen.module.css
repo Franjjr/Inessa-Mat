@@ -1,0 +1,156 @@
+/* Onboarding: one big question per screen. Big targets, calm colours, Lumi on the left. */
+.screen.screen { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.top {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
+}
+.top > :last-child { justify-self: end; }
+.top > :first-child { justify-self: start; }
+.dots { display: flex; gap: 8px; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c-line); transition: background var(--dur-med); }
+.dotOn { background: var(--c-primary); }
+.calibTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); color: var(--c-ink); text-align: center; }
+
+.step {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 100%);
+  margin: 0 auto;
+  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+/* Child-sized tap target for header buttons (the shared sm button is 44px). */
+.touch.touch { min-height: 56px; min-width: 56px; }
+.calib { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.question { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+.ask { display: flex; align-items: flex-end; gap: var(--sp-3); width: 100%; max-width: 720px; }
+.lumiArt { flex: none; }
+.bubble {
+  position: relative;
+  flex: 1;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+  padding: var(--sp-4) var(--sp-5);
+  margin-bottom: 20px;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  bottom: 26px;
+  width: 22px;
+  height: 22px;
+  background: var(--c-surface);
+  transform: rotate(45deg);
+  border-radius: 4px;
+}
+.bubbleText { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-lg); line-height: 1.3; color: var(--c-ink); }
+.petPreview { display: flex; justify-content: center; }
+.answers { width: 100%; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--sp-3); width: 100%; max-width: 760px; }
+.choice {
+  min-height: 84px;
+  padding: var(--sp-3) var(--sp-5);
+  border: 3px solid transparent;
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1), 0 4px 0 var(--c-line);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.choice:active { transform: translateY(3px); }
+.choice:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 3px; }
+.selected { border-color: var(--c-primary) !important; background: var(--c-primary-soft); }
+
+.species, .colorways { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); width: 100%; max-width: 820px; }
+.speciesCard, .colorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--sp-3);
+  border: 3px solid transparent;
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  cursor: pointer;
+  font: inherit;
+  color: var(--c-ink);
+  transition: transform var(--dur-fast) var(--ease-out);
+  min-height: 56px;
+}
+.speciesCard:active, .colorCard:active { transform: scale(.97); }
+.speciesCard:focus-visible, .colorCard:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 3px; }
+.speciesName { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); text-align: center; }
+
+/* The form sits on a light card so the scene behind it never fights the field or the disabled button. */
+.form {
+  display: flex; flex-direction: column; gap: var(--sp-3); width: min(520px, 100%); align-items: stretch;
+  padding: var(--sp-5); box-sizing: border-box;
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-2);
+}
+.label { font-family: var(--font-display); font-size: var(--fs-sm); color: var(--c-ink-soft); }
+
+/* Disabled "Siguiente": a clearly inactive dashed pill instead of a faded primary button. */
+.next.next:disabled {
+  filter: none;
+  opacity: 1;
+  background: var(--c-surface);
+  color: var(--c-ink-mute);
+  box-shadow: none;
+  border: 3px dashed var(--c-ink-mute);
+  cursor: not-allowed;
+}
+.input {
+  min-height: 64px;
+  padding: 0 var(--sp-4);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+}
+.input:focus { outline: none; border-color: var(--c-primary); box-shadow: 0 0 0 4px var(--c-primary-soft); }
+
+.suggestions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); }
+.chip {
+  min-height: 52px;
+  padding: 0 var(--sp-4);
+  border: 3px solid transparent;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+.chip:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 3px; }
+
+@media (max-width: 640px) {
+  .species, .colorways { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot, .choice, .speciesCard, .colorCard { transition: none; }
+}

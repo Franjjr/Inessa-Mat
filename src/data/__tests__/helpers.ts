@@ -11,7 +11,8 @@ export const LUNA: Companion = { species: 'cat', name: 'Luna', gender: 'f', colo
 export async function resetAll(fake?: FakeSupabase): Promise<void> {
   __resetAccountForTests()
   __resetSyncForTests()
-  __setSupabaseForTests(fake ? fake.asClient() : undefined)
+  // Default to a build without backend so tests never depend on a developer's .env.local keys.
+  __setSupabaseForTests(fake ? fake.asClient() : null)
   await wipeLocalDatabase()
   resetAuthStore()
 }

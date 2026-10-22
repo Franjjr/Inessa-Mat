@@ -1,0 +1,28 @@
+/* Layout for welcome, sign-in and sign-up. */
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-5);
+  align-items: start;
+}
+@media (min-width: 900px) {
+  .shell { grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: var(--sp-6); }
+}
+.form { display: flex; flex-direction: column; gap: var(--sp-4); }
+.choices { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.afterPanel { display: flex; flex-direction: column; gap: var(--sp-4); }
+.aside { display: flex; flex-direction: column; gap: var(--sp-4); }
+.footerLinks { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); align-items: center; }
+.checkRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  color: var(--c-ink-soft);
+}
+.checkRow input { width: 26px; height: 26px; margin: 2px 0 0; flex: none; accent-color: var(--c-primary); }
+.checkRow a { color: var(--c-primary-strong); font-weight: 700; }
+.link { color: var(--c-primary-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.orgChoices { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
+.confirmBox { display: flex; flex-direction: column; gap: var(--sp-4); align-items: flex-start; }

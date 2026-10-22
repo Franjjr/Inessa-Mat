@@ -1,0 +1,34 @@
+/* Missing factor: a row of crystals in the door lock, lit one by one. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.locks {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.gem {
+  display: inline-block;
+  width: 26px;
+  height: 34px;
+  border-radius: 50% 50% 46% 46% / 40% 40% 60% 60%;
+  background: var(--c-line);
+  box-shadow: inset 0 -3px 0 rgba(46, 26, 71, .12);
+}
+
+.gemLit {
+  background: linear-gradient(160deg, #fff7d1, var(--c-gold));
+  box-shadow: 0 0 0 3px var(--c-gold-soft), 0 0 14px rgba(245, 158, 11, .6);
+}
+
+.gemNow {
+  outline: 3px dashed var(--w2);
+  outline-offset: 4px;
+}

@@ -1,6 +1,49 @@
-// PLACEHOLDER — replace with the real implementation (see docs/ARCHITECTURE.md).
-import { Placeholder } from '@/ui'
+/* Route /play/diploma: the diploma once all 8 crystals are won. Printing uses the A4 landscape print sheet. */
+import { useNavigate } from 'react-router-dom'
+import { crystalsOf } from '@/content'
+import { useActiveChild, useProgress } from '@/data'
+import { Button, Screen, Spinner, TopBar } from '@/ui'
+import { DiplomaCertificate } from './DiplomaCertificate'
+import s from './diploma.module.css'
 
-export default function DiplomaScreen(_props: unknown) {
-  return <Placeholder name="DiplomaScreen" />
+export default function DiplomaScreen() {
+  const navigate = useNavigate()
+  const { child } = useActiveChild()
+  const progress = useProgress(child?.id)
+
+  if (!child || !progress) return <Spinner label="Preparando el diploma…" />
+
+  const earned = progress.diplomaEarnedAt
+  if (!earned) {
+    const left = crystalsOf(progress).filter((c) => !c).length
+    return (
+      <Screen className={s.root} background="var(--c-bg)">
+        <TopBar back="/play" title="Mi diploma" />
+        <div className={s.locked}>
+          <p className={s.lockedText}>
+            {left === 1
+              ? `Te falta 1 cristal para conseguir tu diploma, ${child.nickname}.`
+              : `Te faltan ${left} cristales para conseguir tu diploma, ${child.nickname}.`}
+          </p>
+          <Button variant="magic" size="lg" onClick={() => navigate('/play')}>Volver al mapa</Button>
+        </div>
+      </Screen>
+    )
+  }
+
+  return (
+    <Screen className={s.root} background="var(--c-bg)">
+      <div className={s.toolbar}>
+        <TopBar
+          back="/play"
+          title="Mi diploma"
+          right={<Button variant="primary" size="sm" onClick={() => window.print()}>Imprimir</Button>}
+        />
+      </div>
+      <div className={s.previewWrap}>
+        <DiplomaCertificate child={child} date={earned} className={s.printSheet} />
+      </div>
+      <p className={s.note}>Se imprime en papel A4 horizontal.</p>
+    </Screen>
+  )
 }

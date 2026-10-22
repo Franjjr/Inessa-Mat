@@ -1,0 +1,147 @@
+/* World map: a header, a one-line hook strip and a scrolling stage with the path and the nodes. */
+.screen.screen { overflow: hidden; height: 100dvh; }
+
+.top {
+  position: relative;
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: max(10px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
+}
+.titleBox { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+.kicker { font-family: var(--font-read); font-size: var(--fs-xs); color: var(--c-ink-soft); }
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .9);
+}
+.crystalBox { min-width: 96px; display: flex; flex-direction: column; align-items: center; }
+.crystalText { font-family: var(--font-display); font-size: var(--fs-xs); color: var(--c-ink-soft); }
+
+.hook {
+  position: relative;
+  z-index: var(--z-hud);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin: 0 max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+}
+.hookText { font-family: var(--font-read); font-weight: 700; font-size: var(--fs-sm); color: var(--c-ink); line-height: 1.3; }
+
+.scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+/* Tall enough to scroll on tablets; never shorter than the visible area. */
+.stage {
+  position: relative;
+  width: 100%;
+  height: max(100%, 96vw);
+  min-height: 560px;
+}
+.path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.pathBase, .pathDone {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.pathBase { stroke: rgba(46, 26, 71, .22); stroke-width: 10; stroke-dasharray: 2 16; }
+.pathDone { stroke: var(--c-primary); stroke-width: 14; stroke-dasharray: none; }
+
+.node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 96px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--c-ink);
+  -webkit-tap-highlight-color: transparent;
+}
+.node:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 6px; border-radius: 24px; }
+.node:active .badge { transform: scale(.94); }
+.badge { position: relative; display: inline-flex; transition: transform var(--dur-fast) var(--ease-out); }
+.locked { cursor: pointer; }
+.locked .badge { filter: grayscale(.7) opacity(.6); }
+
+.current .badge::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 4px solid var(--c-gold);
+  animation: ring 1.8s var(--ease-out) infinite;
+}
+@keyframes ring {
+  0% { transform: scale(.85); opacity: .9; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.here {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 12px;
+  border-radius: var(--r-pill);
+  background: var(--c-gold);
+  color: #3b1d00;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.guardianTag {
+  position: absolute;
+  top: -12px;
+  right: -36px;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-magic);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.label {
+  max-width: 180px;
+  padding: 4px 12px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, .92);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-sm);
+  line-height: 1.15;
+  text-align: center;
+}
+.locked .label { color: #5f4f7d; }
+.stars { display: inline-flex; gap: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .current .badge::after { animation: none; }
+  .badge { transition: none; }
+}
+
+/* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
+.touch.touch { min-height: 56px; min-width: 56px; }

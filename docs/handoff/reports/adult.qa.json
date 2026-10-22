@@ -1,0 +1,32 @@
+{
+  "module": "adult",
+  "viewed": [
+    "Adult home (PIN set via real gate) — iPad 1180x820, Android 1280x800, desktop 1440x900 (viewport + full)",
+    "Child report /adult/child/{id} — iPad (top section: stats, 10x10 heatmap, frequent errors, world list), Android and desktop (top section)",
+    "School screen /adult/school — iPad, shows account-required panel (no school account in dev)",
+    "Join class /adult/join — iPad, shows family-account-required panel",
+    "Settings /adult/settings — iPad (account, sound/voice, PIN card top), Android and desktop (top)",
+    "Welcome /welcome — iPad, Android, desktop (full)",
+    "Login /login — captured on iPad, Android, desktop (full), not individually re-read",
+    "Privacy /legal/privacidad — iPad (top), Android, desktop (full)"
+  ],
+  "fixed": [
+    "src/adult/home/AdultHomeScreen.tsx — replaced single-letter tile icons (C, A, P) with proper inline line SVG icons (class, join, settings, privacy) in a TileIcon component; decorative, aria-hidden.",
+    "src/adult/welcome/WelcomeScreen.tsx — 'Crear cuenta' changed from variant=ghost to variant=secondary (visible outline on the white card).",
+    "src/adult/settings/SettingsScreen.tsx — sign-out now calls lockAdultArea() BEFORE awaiting signOut(), so the adult area locks even if the request fails; errors still surface on the settings card.",
+    "Re-verified: npx vitest run src/adult → 5 files, 31 tests passing. npm run typecheck shows zero lines mentioning src/adult."
+  ],
+  "tests": "npx vitest run src/adult: 5 files, 31/31 passed. npm run typecheck: no src/adult errors. No new tests were added in this pass (the fixes are visual/one-line ordering); the existing gate lock test still covers the PIN flow. Capture method: a Playwright script in the session scratchpad sets PIN 1234 through the real gate keyboard flow, then walks adult routes via history.pushState in one SPA session.",
+  "typecheckClean": true,
+  "openIssues": [
+    "NOT CAPTURED: the class screen (/adult/class/:id) and the school dashboard with real classes, codes, heatmap and assignments. Both require a signed-in school organisation; no school account exists in the dev environment. Needs seeded org/class data or a dev helper.",
+    "NOT CAPTURED: lower sections of the child report (reward card Gran Cofre, per-child settings, calibration reset, GDPR export, delete). Full-page captures were taken but the bottom of the page was not reviewed; visually re-check at iPad portrait too.",
+    "NOT CAPTURED: signup and login validation error states (empty/invalid fields) on each device; only the default states were captured.",
+    "NOT CAPTURED: iPad portrait (820x1180) for any adult screen.",
+    "PrivacyScreen placeholders are visible and marked [COMPLETAR]/[REVISAR]: [NOMBRE LEGAL DEL TITULAR], [DIRECCIÓN], [CORREO DE PRIVACIDAD], [FECHA], [REVISAR con asesoría antes de publicar] (school-processor clause), plus the placeholders in the retention, security, Supabase region, DPA link and voice-service sections (not re-listed here). Owner must fill and have them legally reviewed before publishing.",
+    "The AdultGate maths fallback (two 2-digit factors) can be solved with a calculator; it is weak but only used in local-only mode.",
+    "The PIN lockout is per device (localStorage) and the PIN is not an account boundary; state this to the owner.",
+    "Sign-out failure now leaves the adult area locked, so the error message on the settings card is only visible after re-entering the PIN. Acceptable but worth knowing.",
+    "Home 'Crear cuenta' banner button in local-only mode still uses the primary variant (intentional: it is the main action there)."
+  ]
+}

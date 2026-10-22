@@ -24,7 +24,7 @@ const entries: GalleryEntry[] = [
   {
     title: 'accessory grid',
     render: () => (
-      <div style={{ display: 'grid', gridTemplateColumns: `90px repeat(8, 104px)`, gap: 2, alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `90px repeat(8, 104px)`, columnGap: 2, rowGap: 14, alignItems: 'center' }}>
         <div />
         {COMPANION_SPECIES.map((sp) => <div key={sp} style={label}>{sp}</div>)}
         {ACCESSORY_IDS.map((id) => (

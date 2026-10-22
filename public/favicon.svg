@@ -1,14 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-  <!-- Numeria favicon: Lumi's violet with a golden magic star (placeholder until the final app icon from art-worlds). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="32" height="32">
+  
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8b5cf6"/>
-      <stop offset="1" stop-color="#c026d3"/>
+    <linearGradient id="favicong" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7c3aed"/>
+      <stop offset="0.55" stop-color="#a21caf"/>
+      <stop offset="1" stop-color="#db2777"/>
     </linearGradient>
+    <radialGradient id="faviconh" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f5d0fe" stop-opacity=".75"/>
+      <stop offset="1" stop-color="#f5d0fe" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect x="1" y="1" width="46" height="46" rx="13" fill="url(#bg)"/>
-  <path d="M24 9.5l4.1 8.6 9.4 1.2-6.9 6.5 1.8 9.3L24 30.6l-8.4 4.5 1.8-9.3-6.9-6.5 9.4-1.2z" fill="#fbbf24" stroke="#b45309" stroke-width="2.2" stroke-linejoin="round"/>
-  <path d="M21 17.5l1.6-3.2" stroke="#fff7d6" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M38.5 33.5c.4 1.7 1.1 2.4 2.8 2.8-1.7.4-2.4 1.1-2.8 2.8-.4-1.7-1.1-2.4-2.8-2.8 1.7-.4 2.4-1.1 2.8-2.8z" fill="#fff"/>
-  <path d="M9.5 34c.3 1.2.8 1.7 2 2-1.2.3-1.7.8-2 2-.3-1.2-.8-1.7-2-2 1.2-.3 1.7-.8 2-2z" fill="#fff" opacity=".85"/>
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="url(#favicong)"/>
+  <clipPath id="faviconc"><rect x="0" y="0" width="512" height="512" rx="112"/></clipPath>
+  <g clip-path="url(#faviconc)">
+  <circle cx="256" cy="236" r="210" fill="url(#faviconh)"/>
+  
+  <g transform="translate(34.6 50.9) scale(2.05)">
+  <g stroke="#4c1d95" stroke-width="5.1"><circle cx="74" cy="46" r="20" fill="#fca5a5"/><circle cx="57" cy="68" r="20" fill="#fdba74"/><circle cx="47" cy="94" r="20" fill="#fde68a"/><circle cx="44" cy="122" r="20" fill="#86efac"/><circle cx="44" cy="150" r="20" fill="#93c5fd"/><circle cx="45" cy="178" r="20" fill="#a5b4fc"/><circle cx="47" cy="206" r="20" fill="#d8b4fe"/><circle cx="50" cy="234" r="20" fill="#f9a8d4"/><circle cx="54" cy="262" r="20" fill="#fdba74"/></g>
+  <path d="M68 128 C62 160 58 190 57 230 C56 250 56 270 56 300 L152 300 C150 270 149 250 148 230 C140 196 132 168 128 148 Z" fill="none" stroke="#4c1d95" stroke-width="8.5" stroke-linejoin="round"/>
+  <ellipse cx="102" cy="100" rx="52" ry="48" fill="none" stroke="#4c1d95" stroke-width="8.5"/>
+  <ellipse cx="140" cy="128" rx="36" ry="27" fill="none" stroke="#4c1d95" stroke-width="8.5"/>
+  <path d="M68 128 C62 160 58 190 57 230 C56 250 56 270 56 300 L152 300 C150 270 149 250 148 230 C140 196 132 168 128 148 Z" fill="#ffffff"/>
+  <ellipse cx="102" cy="100" rx="52" ry="48" fill="#ffffff"/>
+  <ellipse cx="140" cy="128" rx="36" ry="27" fill="#fdf2f8"/>
+  <path d="M70 68 Q62 28 92 46 Z" fill="#ffffff" stroke="#4c1d95" stroke-width="5.1" stroke-linejoin="round"/>
+  <path d="M74 62 Q70 38 87 48 Z" fill="#fbcfe8"/>
+  <path d="M98 58 L132 4 L120 62 Z" fill="#fde68a" stroke="#b45309" stroke-width="5.1" stroke-linejoin="round"/>
+  <path d="M104 48 L124 42 M110 34 L127 28 M116 22 L129 17" stroke="#b45309" stroke-width="3.825" stroke-linecap="round"/>
+  <circle cx="88" cy="58" r="11" fill="#fca5a5" stroke="#4c1d95" stroke-width="4.675000000000001"/>
+  <circle cx="76" cy="66" r="10" fill="#d8b4fe" stroke="#4c1d95" stroke-width="4.675000000000001"/>
+  <ellipse cx="116" cy="96" rx="8" ry="10.5" fill="#3b0764"/>
+  <circle cx="119" cy="91" r="3.2" fill="#ffffff"/>
+  <circle cx="113" cy="101" r="1.6" fill="#ffffff"/>
+  <path d="M106 83 L102 78 M111 81 L109 75 M117 81 L118 75" stroke="#3b0764" stroke-width="3.57" stroke-linecap="round"/>
+  <ellipse cx="128" cy="117" rx="9" ry="5.5" fill="#f9a8d4" opacity=".9"/>
+  <ellipse cx="160" cy="122" rx="3" ry="4" fill="#be185d"/>
+  <path d="M138 140 Q150 149 163 139" fill="none" stroke="#4c1d95" stroke-width="4.675000000000001" stroke-linecap="round"/></g>
+  </g>
 </svg>

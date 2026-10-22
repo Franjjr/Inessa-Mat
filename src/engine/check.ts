@@ -388,9 +388,18 @@ function checkWord(ex: WordProblemExercise, answer: Answer): CheckResult {
 
 // ---------------------------------------------------------------- dispatcher
 
+/** The expected answer as text, for logs when the child's answer has no usable shape. */
+function expectedText(ex: Exercise): string {
+  if (ex.kind === 'division') return showDivision(ex.quotient, ex.remainder)
+  if (ex.kind === 'fact-family') return ex.answer.map(prettyFact).join('; ')
+  const a: unknown = (ex as { answer?: unknown }).answer
+  if (Array.isArray(a)) return a.join(', ')
+  return a === undefined ? '' : String(a)
+}
+
 /** Check an answer and diagnose the error type. Pure and deterministic. */
 export function check(exercise: Exercise, answer: Answer): CheckResult {
-  if (!answer || typeof answer !== 'object') return wrongShape('')
+  if (!answer || typeof answer !== 'object') return wrongShape(expectedText(exercise))
   switch (exercise.kind) {
     case 'fact-mul': return checkFactMul(exercise, answer)
     case 'fact-div': return checkFactDiv(exercise, answer)

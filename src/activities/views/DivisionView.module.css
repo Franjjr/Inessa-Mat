@@ -1,0 +1,168 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+}
+
+.prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+/* The galera is drawn on squared school paper (cuadrícula azul), with ink-like lines for the casita. Every digit
+   column has the same width, so the printed products and the subtraction lines sit exactly under their digits. */
+.galera {
+  --galera-col: calc(var(--cell-size) + 14px);
+  --galera-gutter: 34px;
+  --paper-line: color-mix(in srgb, var(--pv-u) 15%, var(--c-surface));
+  --ink-pencil: var(--c-ink-soft);
+  display: inline-grid;
+  align-items: center;
+  justify-items: center;
+  column-gap: 0;
+  row-gap: 6px;
+  padding: var(--sp-4) var(--sp-5);
+  background-color: var(--c-surface);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  width: var(--galera-col);
+  min-width: 0;
+}
+
+/* The vertical line of the casita: it runs down the gutter, right of the dividend, in ink. */
+.bracket {
+  justify-self: center;
+  align-self: stretch;
+  width: 4px;
+  background: var(--c-ink);
+  border-radius: var(--r-pill);
+}
+
+/* Quotient digits sit below the top bar, never on it. */
+.quotient { padding-top: 12px; }
+
+/* The top bar under the divisor: starts exactly at the vertical line and runs right, in ink. */
+.topBar {
+  justify-self: stretch;
+  align-self: start;
+  height: 4px;
+  margin-top: -2px;
+  margin-left: calc(var(--galera-gutter) / 2 - 2px);
+  background: var(--c-ink);
+  border-radius: var(--r-pill);
+}
+
+.divisor {
+  display: grid;
+  place-items: end start;
+  white-space: nowrap;
+  padding-left: var(--sp-3);
+  padding-bottom: 6px;
+}
+.divisorNum { font-weight: 600; color: var(--c-ink); }
+
+.brought {
+  border-radius: var(--r-md);
+  box-shadow: 0 0 0 3px var(--c-gold);
+}
+
+/* Printed product: one pencil-grey digit per column, same size as the dividend digits. */
+.product {
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  font-weight: 600;
+  color: var(--ink-pencil);
+  line-height: 1;
+  padding-bottom: 2px;
+  animation: pop var(--dur-med) var(--ease-bounce);
+}
+
+/* The subtraction line: a short ink stroke under the product, exactly as wide as the partial dividend. */
+.subLine {
+  justify-self: stretch;
+  height: 4px;
+  align-self: center;
+  border-radius: var(--r-pill);
+  background: var(--c-ink);
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(640px, 100%);
+}
+
+.stepText {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface-2);
+  animation: pop var(--dur-med) var(--ease-out);
+}
+.stepActive {
+  background: var(--c-gold-soft);
+  color: var(--c-ink);
+  font-weight: 600;
+}
+
+.stepNum {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+}
+
+.magic {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--c-magic);
+  animation: pop var(--dur-med) var(--ease-bounce);
+}
+
+.compact .galera { font-size: var(--fs-lg); }
+
+@keyframes pop {
+  from { transform: scale(.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .product, .stepText, .magic { animation: none; }
+}

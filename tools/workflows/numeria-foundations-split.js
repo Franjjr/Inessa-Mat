@@ -13,7 +13,7 @@ You are one of several expert agents building "Numeria", a Spanish maths adventu
 2-digit x 1-digit multiplication and division. It will also be SOLD to families and schools, so quality must be
 production-grade. Main devices: iPad + Apple Pencil (first), then Android tablet + stylus, plus computers with keyboard.
 
-Repo: /home/user/inessa-mat (Vite 8 + React 19 + TypeScript strict, path alias @/ -> src/). FIRST read:
+Repo: /Users/mac13/Desktop/Inessa-Mat (Vite 8 + React 19 + TypeScript strict, path alias @/ -> src/). FIRST read:
 docs/ARCHITECTURE.md, docs/PEDAGOGY.md, docs/STORY.md, every file in src/types/, src/ui/index.tsx, and the public
 entry file of your module and of the modules you depend on. The printed workbook this app grows from is
 docs/reference/ (build.py contains all its Spanish texts, lessons and exercises; the PDF is there too).
@@ -384,7 +384,7 @@ const REPORT_SCHEMA = {
 const CONTINUE_NOTE = `
 IMPORTANT — CONTINUATION: a previous agent started this module and was interrupted by the orchestrator (to free a
 concurrency slot, not because of a problem) before it could finish. Its work so far is ON DISK. Do NOT start over and
-do not delete its work: first inspect what exists (your files, tests, notes, git diff, logs under /tmp/claude-0/ and
+do not delete its work: first inspect what exists (your files, tests, notes, git diff, logs under /tmp/ and
 ml/, and background processes such as training runs — check 'ps aux'), decide what is finished, then complete the
 full specification below to the same quality bar and produce the final report.
 `

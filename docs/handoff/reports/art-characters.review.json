@@ -1,0 +1,24 @@
+{
+  "module": "art-characters",
+  "summary": "Reviewed the art-characters module after the previous build. Re-ran tests and the filtered typecheck, and re-read the three existing gallery screenshots. Made one fix: the default bunny colourway was white fur with a pale lilac outline (#9a86bd) on a white background, so it was low contrast. The fur is now #f3efff with a darker outline (#6b5a9c). The other open issues are not fixed. The screenshot tool cannot run on this macOS machine, so the bunny change is not visually re-captured. The user's three messages contained only image coordinate multipliers with no text, so I did not act on them.",
+  "publicApi": "Unchanged from the previous report: Character, CompanionArt, LumiHorn, POSES, CHARACTER_IDS, COLORWAYS, normalizeColorway, Colorway, ACCESSORY_IDS, accessorySlot, isAccessoryId, AccessoryId, AccessorySlot.",
+  "tests": "npx vitest run src/art/characters src/art/companions: 3 files, 588 tests passed (after the bunny edit). npm run typecheck filtered to src/art/(characters|companions): 0 lines of errors.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual review is still incomplete. The pose sheets and the full species x colourway sheet have not been captured or judged. The bunny fix is unverified visually.",
+    "The unicorn horn overlaps the wizard-hat and beanie in the accessory grid. This is a drawing issue in species/unicorn.tsx or the accessory anchors and was not changed.",
+    "tools/shot.mjs hardcodes /opt/pw-browsers/chromium-1194/chrome-linux/chrome, which fails on macOS. It belongs to whoever owns tools/. Fixing it needs an env override or a macOS path.",
+    "The screenshots in /Users/mac13/Desktop/Inessa-Mat/shots/ (art-chars.png, art-companions.png, art-acc.png, plus audio-ipad.png, which is not from this module) are untracked. Delete them or gitignore shots/ before commit.",
+    "The user's messages containing only image coordinate multipliers (three in this run) are unclear. Ask the user what they want pointed out."
+  ],
+  "contractRequests": [],
+  "notesForOtherModules": [
+    "tools/shot.mjs needs a macOS-compatible Chromium path or an env override before screenshots work on this machine."
+  ],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/species/bunny.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-chars.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-companions.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-acc.png"
+  ]
+}

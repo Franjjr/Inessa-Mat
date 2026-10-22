@@ -1,0 +1,12 @@
+{
+  "module": "lessons",
+  "summary": "LessonPlayer and all 22 LessonVisualIds are implemented in src/activities/lesson. Tests pass (65), and typecheck shows zero lesson errors. Visual review is partial.",
+  "publicApi": "LessonPlayer default export with props lesson, onDone, onExit (unchanged). LESSON_VISUALS registry in visuals/index.tsx.",
+  "tests": "npx vitest run src/activities/lesson: 65 passed, 0 failed. Typecheck: 0 errors in src/activities/lesson.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Gallery figures are fixed 560x400, so the array Girar button and the demo controls overflow. Carry, borrow, galera, share and the full player are not yet reviewed at 1180x820, 820x1180 or 1280x800.",
+    "Visual labels are literal Spanish strings, not host.t.",
+    "Try steps call host.reportAttempt, which updates mastery; integrator should confirm."
+  ]
+}

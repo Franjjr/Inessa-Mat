@@ -106,8 +106,9 @@ export function toSpeakable(input: string): string {
   // Ranges "3-4" → "tres a cuatro".
   s = s.replace(/(\d+)-(\d+)/g, (_m, a: string, b: string) => `${numWords(a, 'm')} a ${numWords(b, 'm')}`)
 
-  // Ordinals: 1º, 2ª, 3.º
-  s = s.replace(/(\d+)\.?\s?([ºª°])/g, (_m, n: string, o: string) => ordinalToSpanish(Number(n), o === 'ª'))
+  // Ordinals: 1º, 2ª, 3.º. A feminine article ("la 1º") or ª makes the ordinal agree ("la primera").
+  s = s.replace(/(^|\s)((?:la|las)\s+)?(\d+)\.?\s?([ºª°])/gi, (_m, pre: string, art: string | undefined, n: string, o: string) =>
+    `${pre}${art ?? ''}${ordinalToSpanish(Number(n), o === 'ª' || !!art)}`)
 
   // Numbers followed by a unit or currency.
   s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)\s?(€|%|cm|km|kg|ml|min|m|g|l|h|s)(?![\p{L}\d])/gu, (_m, n: string, u: string) => {

@@ -1,12 +1,13 @@
 # Numeria · Supabase backend
 
-One SQL file sets up everything: `migrations/0001_init.sql`.
+Migrations run in order: `migrations/0001_init.sql` (the schema), then `migrations/0002_erasure_tombstones_rewards.sql`
+(GDPR erasure tombstones and monotonic reward claims). Each one is idempotent and must be applied on top of the previous.
 
 ## Apply it to a project
 
 1. Supabase dashboard → **SQL Editor** → **New query**.
-2. Paste the whole content of `migrations/0001_init.sql` and press **Run** → *Success. No rows returned*.
-3. The script is idempotent: running it again on the same project is safe.
+2. Paste the whole content of each migration not yet applied, in order, and press **Run** → *Success. No rows returned*.
+3. The scripts are idempotent: running them again on the same project is safe.
 
 The app needs only the public URL and anon (publishable) key at build time:
 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`. Without them the app runs fully local-only.

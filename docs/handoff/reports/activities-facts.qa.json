@@ -1,0 +1,50 @@
+{
+  "module": "activities-facts",
+  "viewed": [
+    "Practica tranquila (facts) iPad: wrong-clue, wrong-hint (hint panel + clue), result card; start and mid frames captured on iPad landscape, iPad portrait and Android (all 3 devices, 11 minigames plus 5 views).",
+    "Race iPad landscape: wrong-clue, result card (new record); Android mid-game.",
+    "Wheel iPad landscape mid-game (before and after the upright-number fix; spring takes about 1 s to settle).",
+    "Necklace iPad landscape wrong-hint, iPad portrait mid, Android mid.",
+    "Chain iPad landscape wrong-hint.",
+    "Family iPad landscape mid (overflow found, then fixed and re-captured), iPad portrait mid (overflow found, then fixed and re-captured).",
+    "Maze iPad landscape mid and wrong-clue, Android mid.",
+    "Memory iPad landscape mid, wrong-clue (wrong pair clue) and result card.",
+    "Pixel iPad landscape mid and result card (result layout changed to side by side and re-captured).",
+    "Bubbles iPad landscape mid and iPad portrait start (the start frame was taken after a wrong bubble because of a script timing bug, so it shows the clue).",
+    "Missing-factor: all three devices captured (start, mid, wrong-clue, wrong-hint, result) but only the summary JSON was checked, not every frame individually.",
+    "Screenshots live in /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/shots/ as <activity>-<device>-<start|mid|wrong-clue|wrong-hint|result>.png (devices ipad, ipad-portrait, android). The playthrough script is /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/play/play.mjs (answers with the keyboard, one deliberate wrong answer, then the right one)."
+  ],
+  "fixed": [
+    "pixel: the legend no longer prints the product numbers; they gave away the answer (a child could copy 56 from 'morado · 56').",
+    "pixel: a picture with no usable fact now shows the result card at once and calls onDone (total 0) instead of never ending.",
+    "pixel: on wide screens the result shows the revealed picture beside the result card (column below 900px).",
+    "memory: a repeated wrong card now shakes again. The shake is keyed by a counter per wrong try (the old code kept the same animate value, and the key came from Date.now()).",
+    "wheel: removed the dead `turns` code (it was always 0 because the result card returns early).",
+    "wheel: each number counter-rotates with the wheel, so the numbers read upright while it turns (they were upside down before).",
+    "ResultCard (shared): 0 of 0 no longer shows '¡Todo bien!'.",
+    "necklace: removed an invisible decorative string div and its CSS.",
+    "family: the top number of the triangle moved inside the triangle (it overlapped its edges). The card is 860px wide, with the triangle beside the rows at viewports of 1000px or more and stacked below that. The rows had overflowed the card's right edge by about 40px on iPad landscape and by a lot in portrait; both are fixed and re-captured.",
+    "family: an open row now shows a visible dashed blank instead of a tiny dot.",
+    "maze/grid.ts: the header comment is accurate against the code (decoys sit only on cells no right/down move reaches). Verified and locked with the new src/activities/maze/grid.test.ts (4 table/size shapes, 40 seeds each).",
+    "Tests added in src/activities/facts/__tests__/minigames.test.tsx: a memory test for the shake key changing on a repeated wrong card, and a pixel test for an empty picture finishing. The memory test checks the key, not the visual animation itself."
+  ],
+  "tests": "npx vitest run src/activities/facts src/activities/maze: 3 files, 29 tests passed (before the changes there were 18 in src/activities/facts; the 11 new ones are grid.test.ts (8) and the two new minigame tests (2) plus the earlier ones). npm run typecheck (whole repo): exit 0, 0 errors. Playthroughs: all 33 runs (11 activities x 3 devices) reached the result card with no page errors (the results are in /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/play/log-*.txt and rerun*.txt). Family and pixel were re-run after their layout fixes.",
+  "typecheckClean": true,
+  "openIssues": [
+    "FactView (FactView/MissingFactor/SkipCount/DoubleChain/FactFamily all use the ink NumberInput): not fully fixed. Measured: no overflow at container widths of 430 to 520px (the equation wraps above the input). Overflow starts below about 420px (at 360px the input is clipped on the left and the check button runs off the right). Cause: NumberInput's .pad has a 240px minimum width (--padW floor), and the tools and check add about 170px. This is ink-owned, so it needs a change in src/ink. Tablets (cards of at least 656px) are not affected.",
+    "FactView clue duplicates hint 1: after a wrong answer the engine feedback ('¡Casi! Prueba el truco: <strategy>') repeats the text of Pista 1 when that hint is open. Copy/engine-owned; not changed.",
+    "race: the personal-record text and the ghost pace need the world host to pass NodeProgress.records as params.records (still open, see contractRequests). Without it the race shows 'Este es tu primer tiempo' every time.",
+    "bubbles: the host's default prefs have timedActivities = true, so each bubble gets 12 s. PEDAGOGY says time pressure is optional and parents can turn it off, but the default is on for 7–8 year olds. Decide the default at host/adult level.",
+    "chain (DoubleChainView): the links are drawn as ovals with a number, so they read as beads and not as a chain. Art/visual polish; not changed.",
+    "necklace and facts hint panels use the activity accent (w3 is reddish), so a hint can look like an error. Colour choice for the integrator/art to review; not changed.",
+    "race at the start: the ghost and the runner overlap, so the lane looks cluttered on the first item. Not changed.",
+    "missing-factor: screenshots exist for all three devices, but each frame was not individually inspected; the JSON result was checked and the flow completes.",
+    "The playthrough script uses a fixed gallery figure stretched to the device viewport (position fixed, 100dvh). It approximates the in-app full-screen layout but is not the real route /play/w/... (which needs seeded progress)."
+  ],
+  "contractRequests": [
+    "ink (NumberInput): let .pad shrink below its 240px minimum (--padW floor) so FactView and the other exercise views fit containers narrower than about 420px. Not needed for tablets.",
+    "world-host: pass NodeProgress.records (ms array, fastest first) as ActivityConfig.params.records for race nodes, so the ghost pace and the personal-record text work (still open from the earlier report).",
+    "host/adult defaults: timedActivities defaults to true; consider false by default for ages 7–8 (PEDAGOGY 8: time pressure optional).",
+    "engine (feedback copy): the wrong-answer clue for a fact repeats the strategy text of hint 1, so the two read the same when both show. Optional copy change."
+  ]
+}

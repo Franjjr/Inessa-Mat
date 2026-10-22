@@ -40,6 +40,14 @@ export interface InkLearning {
   discard(): void
   /** Alternative chips picked since the last confirm/discard (read it before confirm/discard → ExerciseOutcome.recognitionFixes). */
   recognitionFixes(): number
+  /** Digits read with low confidence that the child has not confirmed or rewritten yet (0 = answer may be graded). */
+  uncertain(): number
+  /** The digits still in doubt, in the order they were written. */
+  uncertainDigits(): number[]
+  /** "Sí, es así": the child confirms the digits in doubt. */
+  confirmDoubts(): void
+  /** Call before grading: returns true (and shows the "¿Has escrito…?" prompt) when a digit is still in doubt. */
+  requestConfirm(): boolean
 }
 
 export function useInkLearning(): InkLearning {
@@ -47,5 +55,12 @@ export function useInkLearning(): InkLearning {
   const confirm = useCallback(() => learning.confirm(), [learning])
   const discard = useCallback(() => learning.discard(), [learning])
   const recognitionFixes = useCallback(() => learning.recognitionFixes(), [learning])
-  return useMemo(() => ({ confirm, discard, recognitionFixes }), [confirm, discard, recognitionFixes])
+  const uncertain = useCallback(() => learning.uncertain(), [learning])
+  const uncertainDigits = useCallback(() => learning.uncertainDigits(), [learning])
+  const confirmDoubts = useCallback(() => learning.confirmDoubts(), [learning])
+  const requestConfirm = useCallback(() => learning.requestConfirm(), [learning])
+  return useMemo(
+    () => ({ confirm, discard, recognitionFixes, uncertain, uncertainDigits, confirmDoubts, requestConfirm }),
+    [confirm, discard, recognitionFixes, uncertain, uncertainDigits, confirmDoubts, requestConfirm],
+  )
 }

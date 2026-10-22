@@ -184,7 +184,14 @@ async function handleAuthEvent(event: string, session: Session | null, gen: numb
     await loadAccountFor(session.user, gen)
     return
   }
-  if (event === 'SIGNED_OUT') return handleSignedOut()
+  if (event === 'SIGNED_OUT') {
+    // The event is deferred: it can arrive after a newer sign-in already loaded the account. Act only if there is
+    // still no session.
+    const sb = await getSupabase()
+    const current = sb ? (await sb.auth.getSession()).data.session : null
+    if (current) return
+    return handleSignedOut()
+  }
   if (event === 'INITIAL_SESSION') return handleNoSession(gen)
 }
 
@@ -310,6 +317,7 @@ export async function updatePassword(newPassword: string): Promise<void> {
 }
 
 export async function signOut(): Promise<void> {
+  await pendingActiveOrgWrite
   const sb = await getSupabase()
   try {
     await sb?.auth.signOut({ scope: 'local' })
@@ -326,13 +334,19 @@ export function continueLocalOnly(): void {
   setAuth({ status: 'local-only' })
 }
 
+/** The active-org choice is persisted fire-and-forget; signOut waits for it so a quick sign-out never loses it. */
+let pendingActiveOrgWrite: Promise<unknown> = Promise.resolve()
+
 export function setActiveOrg(orgId: string): void {
   const a = getAuth()
   const org = a.organizations.find((o) => o.id === orgId)
   if (!org || !a.user) return
   setAuth({ activeOrg: org })
-  void setMeta(META.activeOrg(a.user.id), org.id)
-  void getMeta<CachedAccount>(META.authCache(a.user.id)).then((c) => (c ? setMeta(META.authCache(a.user!.id), { ...c, activeOrgId: org.id }) : undefined))
+  const userId = a.user.id
+  pendingActiveOrgWrite = Promise.all([
+    setMeta(META.activeOrg(userId), org.id),
+    getMeta<CachedAccount>(META.authCache(userId)).then((c) => (c ? setMeta(META.authCache(userId), { ...c, activeOrgId: org.id }) : undefined)),
+  ]).catch(() => undefined)
 }
 
 async function reloadAccount(): Promise<void> {

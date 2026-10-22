@@ -1,0 +1,108 @@
+.screen.screen { background: var(--c-bg); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.bg.bg { position: fixed; }
+.inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  width: min(1040px, 100%);
+  margin: 0 auto;
+  padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+.header { text-align: center; padding-top: var(--sp-4); }
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-2xl);
+  color: var(--c-ink);
+  text-shadow: 0 2px 0 rgba(255, 255, 255, .9);
+}
+.sub {
+  margin: var(--sp-2) auto 0;
+  max-width: 560px;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-5);
+  align-content: center;
+  flex: 1;
+}
+.card, .add {
+  width: 100%;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5);
+  border: 0;
+  border-radius: var(--r-xl);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
+  box-shadow: var(--shadow-2);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+}
+.card:active, .add:active { transform: translateY(4px) scale(.99); box-shadow: var(--shadow-press); }
+.card:focus-visible, .add:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 4px; }
+.art { display: inline-flex; }
+.name { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); }
+.pet { font-family: var(--font-read); font-size: var(--fs-sm); color: var(--c-ink-soft); text-align: center; }
+.play {
+  margin-top: var(--sp-2);
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-5);
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  box-shadow: 0 5px 0 #5b21b6;
+}
+
+.add {
+  background: transparent;
+  box-shadow: none;
+  border: 3px dashed var(--c-line);
+  color: var(--c-primary);
+}
+.plus {
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--c-primary-soft);
+  font-family: var(--font-display);
+  font-size: 44px;
+  line-height: 1;
+}
+.addText { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md); }
+
+.footer { display: flex; justify-content: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .card, .add { transition: none; }
+}
+
+/* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
+.touch.touch { min-height: 56px; min-width: 56px; }

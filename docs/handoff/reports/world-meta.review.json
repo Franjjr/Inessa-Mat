@@ -1,0 +1,14 @@
+{
+  "module": "world-meta",
+  "summary": "Partial senior review of world-meta. Typecheck is clean for all my folders and all 45 tests in 11 files pass. I reviewed GuardianChallenge and DiplomaScreen, and captured the diploma gallery and the locked /play/diploma route on iPad. I made no code changes in this pass. The review is not complete: most screens still lack a critical visual check.",
+  "publicApi": "Unchanged from the module report: default exports for GuardianChallenge, RewardOverlay, DailyReview, DailyReviewScreen, FreePlayScreen, AlbumScreen, ShopScreen, ChestScreen and DiplomaScreen, plus the logic and view helpers listed in the report.",
+  "tests": "npx vitest run over src/world/{guardian,rewards,album,shop,chest,diploma,free,review}: 11 files, 45 tests, all passing. npm run typecheck filtered to src/world/(guardian|rewards|album|shop|chest|diploma|free|review): zero errors. Screenshots: shots/review-diploma-gallery.png (certificate looks polished: frame, name, date, companion characters, no clipping issues in the sheet itself) and shots/review-diploma-route.png (locked state for a child with 7 crystals missing, reads well with a clear back control and a magenta CTA).",
+  "typecheckClean": true,
+  "openIssues": [
+    "Print layout not verified: the @page A4 landscape and @media print rules exist in diploma.module.css, but no print preview (page.pdf or emulateMedia print) was captured.",
+    "Not yet captured or judged: AlbumView, ChestView open state, ShopView/CompanionArt equip flow on Android/portrait, GuardianChallenge intro and rounds, RewardOverlay after the backdrop change, DailyReview empty state, FreePlayScreen empty state, and all /play/* real routes with --seed on Android and portrait.",
+    "Read GuardianChallenge.tsx logic: pass and fail thresholds look correct (rounds total checked with roundsPassed, spell path gives a single extra exercise, retry restarts a fresh set). Not covered by a dedicated test in this pass; existing tests should be confirmed to exercise both branches.",
+    "Product decision still open: ChestScreen lets the child press 'Ya tengo mi premio' to mark the adult's reward claimed; the adult may need to do that instead.",
+    "RewardOverlay crystal flight falls back to a 1.4 s timer when no layout is measurable; not verified on a real device."
+  ]
+}

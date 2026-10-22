@@ -3,6 +3,7 @@ import type { ErrorType, SkillKey } from '@/types'
 import { parseSkill } from './skills'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
+const prestamos = (n: number) => (n === 0 ? 'sin préstamos' : n === 1 ? 'con 1 préstamo' : `con ${n} préstamos`)
 
 const CONCEPT_TEXT: Record<string, string> = {
   groups: 'Multiplicar es sumar grupos iguales',
@@ -29,7 +30,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'div': return `${p.p} ÷ ${p.d}`
     case 'skip': return `Contar de ${p.n} en ${p.n}`
     case 'add': return `Sumas de ${p.digits} cifras ${llevadas(p.carries)}`
-    case 'sub': return p.zero ? `Restas de ${p.digits} cifras con ceros` : `Restas de ${p.digits} cifras ${llevadas(p.borrows ?? 0)}`
+    case 'sub': return p.zero ? `Restas de ${p.digits} cifras con ceros` : `Restas de ${p.digits} cifras ${prestamos(p.borrows ?? 0)}`
     case 'mul2x1': return `Multiplicaciones de 2 cifras × 1 cifra ${p.carry ? 'con llevada' : 'sin llevadas'}`
     case 'div2x1':
       return p.variant === 'exact' ? 'Divisiones de 2 cifras entre 1 cifra (exactas)'

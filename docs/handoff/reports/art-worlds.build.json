@@ -1,0 +1,17 @@
+{
+  "module": "art-worlds",
+  "summary": "Continuation of art-worlds. On disk I found the module already substantially built: src/art/worlds/index.ts re-exports the real components (stubs.tsx is gone); all 10 WorldBackground scenes under scenes/; Predicament with all 9 kinds and rescue 0..1 plus release animation; Crystal, StarIcon, ChestArt, Sparkles, NodeIcon; app icons (public/icons/icon.svg, icon-maskable.svg, icon-192.png, icon-512.png, icon-512-maskable.png, apple-touch-icon.png) and public/favicon.svg, built by src/art/worlds/icons/build-icons.mjs. I did not rewrite anything. This pass verified the state, ran the checks, and took screenshots. No code changes were made.",
+  "publicApi": "Exports from src/art/worlds/index.ts: Predicament({kind,rescue,children}), WorldBackground({id,vividness,className,children}), Crystal({color,state,size,label}) with CrystalProps/CrystalState, StarIcon({filled,size}) with StarIconProps, ChestArt({open,size}) with ChestArtProps, Sparkles({active,color,count}) with SparklesProps, NodeIcon({kind,size,done,locked,color}) with NodeIconProps.",
+  "tests": "npm run typecheck: exit 0, 0 TS errors repo-wide. npx vitest run src/art/worlds: 4 files, 109 tests passed. Tests cover all 10 background ids (vividness 0/0.5/1), all 9 predicament kinds at rescue 0/0.5/1, Crystal states, StarIcon pop, ChestArt closed/open, Sparkles count clamp, NodeIcon kinds x done/locked, color helpers.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual review is partial. Looked at and accepted: Items gallery (crystals 8 worlds x locked/empty/glow/collected, large crystals, unknown colour, stars), WorldBackground home at vividness 1/0.5/0 in landscape and portrait, Predicament bubble/net/ice at rescue 0/0.5/1. Not yet viewed: remaining 8 backgrounds (sky, forest, river, cave, mountain, lake, rainbow-garden, volcano, castle), the rest of the predicament kinds (fog, vines, cage, ink, stuck, none), ChestArt, Sparkles, NodeIcon, and the app icon PNGs. Full-page capture with --full did not reveal lower sections of the gallery, so those need a scrolled or per-section capture.",
+    "Environment issue: tools/shot.mjs hardcodes /opt/pw-browsers/chromium-1194/chrome-linux/chrome, which does not exist on this macOS machine, so every shot fails. Workaround used: a scratch copy at /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/shot.mjs that uses the ms-playwright chromium-1243 build. The shared tool should be made platform-aware.",
+    "Screenshots were written to /Users/mac13/Desktop/Inessa-Mat/shots/ (worlds-gallery-ipad.png, worlds-gallery-android.png, worlds-gallery-phone.png, worlds-gallery-ipad-full.png, worlds-backgrounds-ipad.png, worlds-predicament-ipad.png). This folder sits outside the owned paths, so the integrator may want to gitignore it or delete it.",
+    "Icon PNGs were not re-rendered or visually checked in this pass. The build script assumes the Linux Chromium path, so rerunning it on macOS needs the same path fix.",
+    "The gallery route /dev/gallery?only=art/worlds shows only the Items gallery in the viewport. Use only=WorldBackground or only=Predicament to reach the other galleries."
+  ],
+  "contractRequests": [
+    "tools/shot.mjs should resolve the Chromium executable per platform (for example via the Playwright API or an env var), since the hardcoded linux path breaks every screenshot on macOS."
+  ]
+}

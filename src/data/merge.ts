@@ -1,12 +1,19 @@
 /* Conflict resolution. Progress merges MONOTONICALLY so a child never loses anything she earned on another device:
-     unlocks / crystals / nodes done / chest / flags → OR        stars (per node and totals), starsSpent → max
+     unlocks / crystals / nodes done / chest / flags → OR        per node stars → max (capped at 3)
+     stars, starsSpent → max of (both sides, what the merged nodes / owned accessories imply)
      stickers / accessories / days played → union (sorted)       letters → kept (deterministic pick on conflict)
      best times → min                                            completion dates → earliest
      lastNode → from the most recently updated side               updatedAt → max
+   Stars are a running total on each device (progression.ts adds the best-result delta of a node; buying an accessory
+   adds its price to starsSpent). Two devices that played offline must ADD their deltas, so the merged totals are
+   derived from the merged facts (sum of per-node best stars, sum of prices of the union of owned accessories) instead
+   of taking the max of two partial totals. The stored totals stay as a floor for content that is no longer known.
    mergeProgress is commutative, associative and idempotent on its output (property-tested in merge.test.ts).
+   Rewards: claimedAt / unlockedAt → earliest non-null (never reverted); other fields → last-writer-wins (mergeReward).
    Other synced rows use last-writer-wins on updatedAt (lww). */
-import { MAX_RECORDS as CONTENT_MAX_RECORDS } from '@/content'
+import { MAX_RECORDS as CONTENT_MAX_RECORDS, getAccessory } from '@/content'
 import type { NodeProgress, ProgressState, WorldProgress } from '@/types'
+import type { RewardRow } from './types'
 import { stableStringify } from './util'
 
 const MAX_RECORDS = CONTENT_MAX_RECORDS ?? 5
@@ -110,10 +117,25 @@ function newerSide(a: ProgressState, b: ProgressState): ProgressState {
   return ta > tb ? a : b
 }
 
+/** Stars earned in total: every node counts its best result once (see progression.ts applyNodeResult). */
+export function starsFromNodes(worlds: Record<string, WorldProgress>): number {
+  let total = 0
+  for (const w of Object.values(worlds)) {
+    for (const n of Object.values(w?.nodes ?? {})) total += Math.min(3, maxNum(n?.stars, 0))
+  }
+  return total
+}
+
+/** Stars spent on the accessories the child owns (each purchase costs the accessory's price once). */
+export function starsSpentFromAccessories(owned: readonly string[]): number {
+  return owned.reduce((sum, id) => sum + (getAccessory(id)?.price ?? 0), 0)
+}
+
 export function mergeProgress(a: ProgressState, b: ProgressState): ProgressState {
   const worlds: Record<string, WorldProgress> = {}
   const worldIds = new Set([...Object.keys(a.worlds ?? {}), ...Object.keys(b.worlds ?? {})])
   for (const id of [...worldIds].sort()) worlds[id] = mergeWorld(a.worlds?.[id], b.worlds?.[id])
+  const accessoriesOwned = union(a.accessoriesOwned, b.accessoriesOwned)
 
   const flags: Record<string, boolean> = {}
   const flagKeys = new Set([...Object.keys(a.flags ?? {}), ...Object.keys(b.flags ?? {})])
@@ -125,10 +147,10 @@ export function mergeProgress(a: ProgressState, b: ProgressState): ProgressState
     childId: firstSorted(a.childId, b.childId),
     seasonId: firstSorted(a.seasonId, b.seasonId),
     worlds,
-    stars: maxNum(a.stars, b.stars),
-    starsSpent: maxNum(a.starsSpent, b.starsSpent),
+    stars: Math.max(maxNum(a.stars, b.stars), starsFromNodes(worlds)),
+    starsSpent: Math.max(maxNum(a.starsSpent, b.starsSpent), starsSpentFromAccessories(accessoriesOwned)),
     stickers: union(a.stickers, b.stickers),
-    accessoriesOwned: union(a.accessoriesOwned, b.accessoriesOwned),
+    accessoriesOwned,
     chestOpened: orTrue(a.chestOpened, b.chestOpened),
     daysPlayed: union(a.daysPlayed, b.daysPlayed),
     flags,
@@ -137,6 +159,18 @@ export function mergeProgress(a: ProgressState, b: ProgressState): ProgressState
   setIf(out, 'diplomaEarnedAt', earliest(a.diplomaEarnedAt, b.diplomaEarnedAt))
   setIf(out, 'lastNode', newer.lastNode ?? older.lastNode)
   return out
+}
+
+/** Merge two copies of one reward. Claims and unlocks never go back (earliest non-null wins, so a claim survives an
+ *  edit from a device that has not seen it); the other fields follow the newer edit. */
+export function mergeReward(a: RewardRow, b: RewardRow): RewardRow {
+  const newer = lww(a, b) as RewardRow
+  return {
+    ...newer,
+    unlockedAt: earliest(a.unlockedAt ?? undefined, b.unlockedAt ?? undefined) ?? null,
+    claimedAt: earliest(a.claimedAt ?? undefined, b.claimedAt ?? undefined) ?? null,
+    updatedAt: latest(a.updatedAt, b.updatedAt),
+  }
 }
 
 /** Canonical form of a state (what merging it with itself yields). */

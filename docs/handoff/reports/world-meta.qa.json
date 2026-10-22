@@ -1,0 +1,29 @@
+{
+  "module": "world-meta",
+  "viewed": [
+    "GuardianChallenge intro (Búho, iPad gallery): owl, Spanish copy and 'Si aciertas 7 de 8' rule read clearly; CTA is large (tap target fine).",
+    "AlbumScreen (seeded child, iPad landscape): 5 of 27 stickers, world tabs scroll horizontally and clip at the right edge (intended affordance), mystery sticker hint 'Consigue 3 estrellas en «Filas de flores»' is clear.",
+    "ShopScreen (seeded child, iPad landscape and iPad portrait): Luna preview with 'Toca un accesorio para probarlo' empty state, star balance pill, locked/unlocked states readable; grid is clean in portrait.",
+    "ChestScreen locked state (seeded child, iPad landscape): 1 of 8 crystals, VALIENTE letter slots, clear copy; composition is calm and legible.",
+    "FreePlayScreen (seeded child, iPad landscape): times-table tiles and game cards with world colour bars; readable and tappable.",
+    "DailyReviewScreen (seeded child, iPad landscape and Android landscape): 8-item session with 'Pista 0 de 3' and handwriting/keypad inputs; layout centred and clear.",
+    "RewardOverlay, DiplomaCertificate and the locked diploma route were reviewed in the previous pass (see docs/handoff/reports/world-meta.review.json); not re-captured here."
+  ],
+  "fixed": [
+    "None. No code changes in this pass: every screen captured so far was judged acceptable for its purpose, and no real layout, overflow, contrast or copy defect needed a fix in an owned file."
+  ],
+  "tests": "\"npx vitest run over src/world/{guardian,rewards,album,shop,chest,diploma,free,review}: 11 files, 45 tests passed. Filtered npm run typecheck for these folders: zero errors. Guardian pass/fail threshold tests already exist in src/world/guardian/logic.test.ts (roundsPassed at passMin-1 false / passMin true for every guardian, owl 7 of 8 example). No new test added because no bug was fixed.\"",
+  "typecheckClean": true,
+  "openIssues": [
+    "Coverage incomplete: NOT yet captured in this pass: GuardianChallenge rounds, spell, pass and fail stages (the gallery only has intro); RewardOverlay after the backdrop CSS change (node, crystal flight into LumiHorn, season); ChestView open state with the adult reward; DiplomaCertificate print preview (page.pdf or emulateMedia print, A4 landscape, one page); AlbumView on Android and portrait; DailyReview with due items vs empty state; FreePlay empty state for a new child.",
+    "Shot paths (absolute, scratchpad): /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/shots/ guardian-intro-ipad-full.png, album-ipad.png, shop-ipad.png, shop-ipad-portrait.png, chest-ipad.png, free-ipad.png, review-ipad.png, review-android.png (plus album/chest/shop/free/review -android and -ipad-portrait variants).",
+    "Minor, not fixed: DailyReview and the other child screens use a 'Salir' text pill while Album, Shop, Chest and FreePlay use a back chevron; the mismatch is between TopBar usages in owned files and should be unified by the integrator or ui owner.",
+    "Minor copy (content owner, not mine): free-play game title 'Piedras con llevadas' reads awkwardly for 7-8 year olds; needs a contract request to the content/activities owner.",
+    "Product decision open: ChestScreen lets the child press 'Ya tengo mi premio' to mark the adult's reward claimed. The adult may need to be the one who does it.",
+    "RewardOverlay crystal flight falls back to a 1.4 s timer when no layout is measurable; not verified on a real device."
+  ],
+  "contractRequests": [
+    "content/activities owner: review the free-play game title 'Piedras con llevadas' (Spanish naturalness for ages 7-8).",
+    "integrator: decide whether DailyReview should use the same back-chevron TopBar as the other world-meta screens, or whether 'Salir' is intended there."
+  ]
+}

@@ -1,0 +1,35 @@
+/* Práctica tranquila: calm layout, trick card above the item. */
+.center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4);
+}
+
+.trick {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  align-self: center;
+  max-width: 680px;
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-pill);
+  background: var(--c-magic-soft);
+  color: var(--c-ink);
+  font-size: var(--fs-md);
+  text-align: center;
+}
+
+.trickLabel {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-magic);
+  color: #fff;
+}

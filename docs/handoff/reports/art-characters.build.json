@@ -1,0 +1,39 @@
+{
+  "module": "art-characters",
+  "summary": "Continued the interrupted art-characters build. On disk: the 10 characters (lumi, borron, owl, frog, ladybug, polarbear, octopus, fairy, dragon, queen) in src/art/characters/cast, shared pose/face/frame/extras/horn layers, the LumiHorn HUD, the 8 companion species with 4 colourways, and the 18 accessories in src/art/companions. stubs.tsx was already gone. This session I verified the state, checked the spec items and captured screenshots. The only code change was a row gap in Accessories.gallery.tsx so hats no longer collide with the row above. Not finished: a full pose-by-pose visual review of every gallery. Only the top part of the character gallery and the accessory grid were inspected.",
+  "publicApi": "Exports from src/art/characters/index.ts: Character (CharacterProps), CompanionArt (CompanionArtProps), LumiHorn({crystals: boolean[8], size}), POSES, CHARACTER_IDS, COLORWAYS, normalizeColorway, Colorway, ACCESSORY_IDS, accessorySlot, isAccessoryId, AccessoryId, AccessorySlot.",
+  "tests": "npx vitest run src/art/characters src/art/companions: 3 files, 588 tests passed before the gallery edit. After the gallery edit, npx vitest run src/art/companions: 474 passed. npm run typecheck | grep src/art/(characters|companions): zero errors.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual review is incomplete. Only the top of the character gallery and the accessory grid were captured and checked. The full companion species x colourway sheet and the pose sheets still need a critical look.",
+    "Bunny default colourway is very pale lilac/white on white, which is low contrast at 48px.",
+    "The unicorn's horn overlaps wizard-hat and beanie in the accessory grid. This is a drawing issue, not just a gallery spacing one.",
+    "The screenshot tool tools/shot.mjs hardcodes a Linux Chromium path (/opt/pw-browsers/...), which fails on this macOS machine. I used a temporary copy that points at the cached chromium_headless_shell-1243 binary and deleted it afterwards. tools/shot.mjs itself is unchanged, and the fix belongs to whoever owns tools/.",
+    "Screenshots were written to /Users/mac13/Desktop/Inessa-Mat/shots/ (art-chars.png, art-companions.png, art-acc.png). That directory is new in the repo root and should be deleted or gitignored before commit.",
+    "The user sent two messages containing only image coordinate multipliers and no text. I could not tell what they wanted pointed out, so I did not act on them."
+  ],
+  "notesForOtherModules": [
+    "The screenshot tool needs a macOS-compatible launch path or an env override for the Chromium binary."
+  ],
+  "contractRequests": [],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/characters/index.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/characters/Character.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/characters/LumiHorn.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/characters/cast/index.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/characters/Characters.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/CompanionArt.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/accessories.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/species/index.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/Accessories.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/src/art/companions/Companions.gallery.tsx",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-chars.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-companions.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-acc.png"
+  ],
+  "screenshots": [
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-chars.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-companions.png",
+    "/Users/mac13/Desktop/Inessa-Mat/shots/art-acc.png"
+  ]
+}

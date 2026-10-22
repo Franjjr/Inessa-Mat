@@ -1,0 +1,23 @@
+{
+  "module": "adult",
+  "summary": "Implemented the grown-ups' area (src/adult/**): welcome, login/signup (Supabase email+password, magic link, password reset, invite acceptance, claim of local-only profiles), the adult PIN gate (setup, entry, 5-try lockout, password reset when signed in, maths fallback in local-only mode, 20-minute in-memory session), the adult home, the child report (10x10 heatmap with state labels, frequent errors via describeError, 7-day time and accuracy, world progress, Gran Cofre reward, per-child settings, calibration reset, GDPR JSON export, delete), school and class screens (create/archive classes, join-code copy and regenerate, class heatmap, pupils removal, assignments with presets), join-class consent flow, settings (account, members/invites, sound/music/voice per child, PIN change, sign-out) and a privacy policy with visible placeholders. Visual checks were limited: gallery and /welcome were captured and reviewed; protected screens (report, school, settings) were not captured on real routes because the adult PIN gate blocks them and no PIN automation was run.",
+  "publicApi": "Default exports for every route in src/app/routes.tsx: WelcomeScreen (adult/welcome), LoginScreen and SignupScreen (adult/auth), AdultGate (adult/gate), AdultHomeScreen (adult/home), ChildReportScreen (adult/child), SchoolScreen and ClassScreen (adult/school), JoinClassScreen (adult/join), SettingsScreen (adult/settings), PrivacyScreen (adult/legal). Extra named exports from the gate: isAdultAreaUnlocked, lockAdultArea (call on sign-out, already used by settings), makeMathQuestion, __resetAdultGateForTests. Shared helpers live in src/adult/shared (AdultPage, FactHeatmap, NumberPad, ConfirmModal, SyncBadge, ClaimLocalPanel, heatmap model, format, messages, download, clipboard). No new exports from other modules.",
+  "tests": "npx vitest run src/adult: 5 files, 30 tests passed (AdultGate blocks/unlocks with PIN and setup flow; ChildReportScreen renders the 10x10 heatmap from a seeded summary and explains errors; signup validation and submit; JoinClassScreen consent and code flow with mocked @/data; heatmap, format, message and preset logic). npx tsc -p tsconfig.app.json --noEmit: zero errors under src/adult (the only remaining project errors are in src/activities, owned by other agents). Gallery captured: node tools/shot.mjs \"/dev/gallery?only=src/adult\" shots/adult-gallery.png --device ipad --full. Route capture: shots/adult-welcome-ipad.png and shots/adult-welcome-android.png (both written; the iPad one reviewed).",
+  "typecheckClean": true,
+  "openIssues": [
+    "Protected adult screens (report, school, class, settings, join) were not captured on real routes or in the gallery; the PIN gate blocks them, so a PIN must be created first. Needs a capture pass with a PIN set.",
+    "AdultGate maths fallback (two 2-digit numbers) is a weak check: a 10-11 year old with a calculator could pass it. It is only the local-only fallback the brief asked for.",
+    "PrivacyScreen contains placeholders (controller name, address, privacy email, Supabase region, DPA link, retention, security measures, voice-service behaviour, update date). Marked visibly in the page; must be completed and legally reviewed before publishing.",
+    "The 'Crear cuenta' ghost button on the welcome screen is faint on a white card; could be strengthened.",
+    "ChildReportScreen and ClassScreen show the 55-fact summary using the box thresholds in src/adult/shared/heatmap.ts (struggling = box 0-1, learning = 2-4, mastered = 5). If the engine changes box semantics, update that file.",
+    "Sign-out calls lockAdultArea (from src/adult/gate/AdultGate.tsx); if other code paths sign out, they should lock the gate too.",
+    "Home tiles use single letters (C, A, P) as icons; a proper icon set would look more polished."
+  ],
+  "contractRequests": [
+    "None. Everything used is from @/data, @/ui, @/art, @/engine, @/content and @/types as they currently exist. Note: @/data does not export signIn/signUp/magic link/reset/claimLocalData directly; they are used through useAuth(), which works fine, so no contract change is needed."
+  ],
+  "notesForOtherModules": [
+    "The adult gate keeps its unlocked state in memory (module variable). Reloading the page asks for the PIN again, which is intended.",
+    "The gate exports lockAdultArea(); call it on any sign-out path so the adult area locks."
+  ]
+}

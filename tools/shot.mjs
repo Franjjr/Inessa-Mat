@@ -8,6 +8,8 @@
    --seed   calls window.__numeriaDev.seed() (dev helper from src/data) to create a demo child, then reloads
    --eval   runs JS in the page after load (e.g. to set state), then waits again
    --click  clicks a selector after load (repeatable)
+   --full   unclamps 100dvh scroll containers so the whole page is captured
+   --element "css"  screenshots only the first matching element (e.g. '[data-gallery*="Carrera"]')
  Prints console errors from the page so you notice runtime crashes.
 */
 import { chromium } from '@playwright/test'
@@ -36,7 +38,7 @@ const device = DEVICES[opt('device', 'ipad')] ?? DEVICES.ipad
 const base = opt('base', 'http://localhost:5173')
 const wait = Number(opt('wait', '900'))
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
+const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {})
 const ctx = await browser.newContext({ ...device, locale: 'es-ES' })
 const page = await ctx.newPage()
 page.on('console', (m) => { if (m.type() === 'error') console.log('[console.error]', m.text()) })
@@ -51,6 +53,12 @@ const ev = opt('eval', null)
 if (ev) { await page.evaluate(ev); await page.waitForTimeout(300) }
 for (const sel of clicks) { await page.click(sel); await page.waitForTimeout(300) }
 await page.waitForTimeout(wait)
-await page.screenshot({ path: out, fullPage: flag('full') })
+if (flag('full')) {
+  await page.addStyleTag({ content: 'html,body,#root,.scrollable{height:auto!important;max-height:none!important;overflow:visible!important}' })
+  await page.waitForTimeout(200)
+}
+const element = opt('element', null)
+if (element) await page.locator(element).first().screenshot({ path: out })
+else await page.screenshot({ path: out, fullPage: flag('full') })
 console.log('saved', out)
 await browser.close()

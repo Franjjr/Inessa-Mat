@@ -1,0 +1,21 @@
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+}
+
+.story {
+  margin: 0;
+  max-width: 680px;
+  padding: var(--sp-3) var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--c-magic-soft);
+  color: var(--c-ink);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.4;
+  text-align: center;
+  border: 2px solid #f0abfc;
+}

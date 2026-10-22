@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   check, createRng, generate, hintsFor, makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision,
-  makeFactDiv, makeFactFamily, makeMissingFactor, makeWordProblem, newMastery,
+  makeFactDiv, makeFactFamily, makeFactMul, makeMissingFactor, makeWordProblem, newMastery, strategyForFact,
 } from '@/engine'
 import { genDivision } from '@/engine/numbers'
 import type { Answer, DivisionExercise, GroupsExercise, ArrayExercise, MasteryMap } from '@/types'
@@ -197,5 +197,25 @@ describe('robustness and hint consistency', () => {
   it('long division hint when nothing is left over in the tens (fixed spells like 85 ÷ 4)', () => {
     const t = hintsFor(makeDivision(85, 4))[2].text
     expect(t).toBe('Decenas: 8 ÷ 4 = 2 y no sobra nada. Ahora baja el 5: 5 ÷ 4 = ?')
+  })
+})
+
+describe('senior review, round 2', () => {
+  it('the mirror of a Cave fact (7 × 6) shows the Cave visual with the table orientation (6, 7) at the worked step', () => {
+    const h = hintsFor(makeFactMul(7, 6))
+    expect(h[1]).toMatchObject({ visual: 'mirror', params: { a: 7, b: 6 } })
+    expect(h[2]).toMatchObject({ visual: 'dots-five-plus-one', params: { a: 6, b: 7 } })
+    expect(h[2].text).toBe('5 × 7 = 35. Y una fila más: 35 + 7 = ?')
+  })
+
+  it('the 5 trick is worded as a calculation, not as an equality', () => {
+    expect(strategyForFact(5, 6).text).toBe('La del 5 acaba en 0 o en 5: calcula 6 × 10 = 60 y toma la mitad.')
+  })
+
+  it('a missing or malformed answer still reports the real expected answer in the log', () => {
+    expect(check(makeFactMul(7, 6), null as unknown as Answer).expected).toBe('42')
+    expect(check(makeFactMul(7, 6), { type: 'facts', facts: [] }).expected).toBe('42')
+    expect(check(makeDivision(84, 4), null as unknown as Answer).expected).toBe('21 resto 0')
+    expect(check(makeFactFamily(6, 7), null as unknown as Answer).expected).toBe('6×7=42; 7×6=42; 42÷6=7; 42÷7=6')
   })
 })

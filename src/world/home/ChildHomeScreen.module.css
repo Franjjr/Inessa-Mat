@@ -1,0 +1,195 @@
+/* Home: a friendly two-column stage on tablets, one column on phones. Scrolls only when it must. */
+.screen.screen { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+.top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: max(14px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) var(--sp-2) max(16px, env(safe-area-inset-left));
+}
+.hello { display: flex; flex-direction: column; line-height: 1.05; }
+.helloSmall { font-family: var(--font-read); font-size: var(--fs-sm); color: var(--c-ink-soft); }
+.helloName { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-2xl); color: var(--c-ink); }
+.topRight { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+
+.sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+}
+.syncDot { width: 10px; height: 10px; border-radius: 50%; background: var(--c-success); }
+.toneBusy .syncDot { background: var(--c-gold); animation: pulse 1.2s ease-in-out infinite; }
+.toneWarn .syncDot { background: var(--c-warn); }
+@keyframes pulse { 50% { transform: scale(.6); opacity: .5; } }
+
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: var(--sp-5);
+  align-items: center;
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) var(--sp-4) max(16px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+
+.stage { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+.friends { display: flex; align-items: flex-end; justify-content: center; }
+.companion { position: relative; display: flex; flex-direction: column; align-items: center; margin-right: -24px; z-index: 1; }
+.companionName {
+  margin-top: -6px;
+  padding: 4px 16px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+.lumi { display: flex; }
+
+.horn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-3) var(--sp-5) var(--sp-3) var(--sp-3);
+}
+.hornText { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.hornTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--c-ink-mute); }
+.hornCount { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-lg); color: var(--c-ink); }
+
+.side { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
+
+.continue {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 132px;
+  padding: var(--sp-5) var(--sp-6);
+  border: 0;
+  border-radius: var(--r-xl);
+  background: linear-gradient(135deg, var(--c-primary), var(--c-magic));
+  color: #fff;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 7px 0 #5b21b6, var(--shadow-2);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast);
+}
+.continue:active { transform: translateY(5px); box-shadow: 0 2px 0 #5b21b6; }
+.continue:focus-visible { outline: 4px solid var(--c-gold); outline-offset: 4px; }
+.continueKicker { font-family: var(--font-read); font-size: var(--fs-sm); opacity: .9; }
+.continueTitle { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); line-height: 1.1; }
+/* Gold text on the purple gradient is ~2.6:1 (too low). The gold becomes a light pill with dark ink (well above 4.5:1). */
+.continueCta {
+  align-self: flex-start;
+  margin-top: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-gold-soft);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+}
+
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 104px;
+  padding: var(--sp-3) var(--sp-4);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--tone-soft, var(--c-surface));
+  box-shadow: var(--shadow-1);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.tile:active { transform: scale(.97); }
+.tile:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
+.tileArt { min-height: 0; display: inline-flex; }
+.tileLabel { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--tone, var(--c-ink)); }
+.tileHint { font-family: var(--font-read); font-size: var(--fs-xs); color: var(--c-ink-soft); }
+.primary { --tone: var(--c-primary-strong); --tone-soft: var(--c-primary-soft); }
+.magic { --tone: #86198f; --tone-soft: var(--c-magic-soft); }
+.gold { --tone: #92400e; --tone-soft: var(--c-gold-soft); }
+.success { --tone: #166534; --tone-soft: var(--c-success-soft); }
+
+.worlds {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--tap-min);
+  padding: 4px 14px 4px 6px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font: inherit;
+  cursor: pointer;
+}
+.chipName { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--c-ink); }
+.chipLocked { opacity: .72; cursor: default; filter: grayscale(.5); }
+.chipDone { box-shadow: 0 0 0 3px var(--c-gold-soft), var(--shadow-1); }
+
+/* Narrow screens: lay the worlds out in two even rows instead of leaving one orphan chip on the second line. */
+@media (max-width: 1000px) {
+  .worlds { display: grid; grid-template-columns: repeat(4, max-content); justify-content: center; }
+}
+
+/* Phones and small portrait screens: one column. */
+@media (max-width: 760px) {
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toneBusy .syncDot { animation: none; }
+  .continue, .tile { transition: none; }
+}
+
+/* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
+.touch.touch { min-height: 56px; min-width: 56px; }
+
+/* The family door sits over the string lights: give it a solid surface so it reads on any background. */
+.family.family {
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  color: var(--c-primary-strong);
+  padding: 0 var(--sp-4);
+}

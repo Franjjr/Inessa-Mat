@@ -83,10 +83,10 @@ function iconSvg({ variant }) {
   const maskable = variant === 'maskable'
   const fav = variant === 'favicon'
   const id = variant
-  // Unicorn placement: head centred, neck running off the bottom edge.
-  const s = maskable ? 1.42 : fav ? 2.05 : 1.76
+  // Unicorn placement: head centred. Maskable keeps the neck inside the 80% safe circle (r 205).
+  const s = maskable ? 1.26 : fav ? 2.05 : 1.76
   const tx = 256 - 108 * s
-  const ty = (maskable ? 488 : 506) - 222 * s
+  const ty = (maskable ? 468 : 506) - 222 * s
   const halo = `<circle cx="256" cy="${maskable ? 250 : 236}" r="${maskable ? 170 : 210}" fill="url(#${id}h)"/>`
   const deco = fav
     ? ''
@@ -116,7 +116,8 @@ writeFileSync(out('public/icons/icon-maskable.svg'), maskable)
 writeFileSync(out('public/favicon.svg'), favicon)
 
 const { chromium } = await import(resolve(root, 'node_modules/@playwright/test/index.mjs'))
-const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
+// CHROME_PATH overrides the browser; otherwise use the Chromium that Playwright installed for this platform.
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined })
 const page = await browser.newPage({ deviceScaleFactor: 1 })
 async function render(svg, size, file) {
   await page.setViewportSize({ width: size, height: size })

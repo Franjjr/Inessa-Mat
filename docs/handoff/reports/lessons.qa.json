@@ -1,0 +1,40 @@
+{
+  "module": "lessons",
+  "viewed": [
+    "w2-carry 4-digit try step on iPad landscape (real route /play/w/w2/lesson-carry, after solving the 3-digit try)",
+    "w2-carry 3-digit try step solved, then Back, on iPad landscape (real route)",
+    "w4-borrow gallery element on iPad landscape, iPad portrait and Android (gallery frame; portrait bottom clipped by gallery frame sizing, not a real-route bug)",
+    "w7-carry, w2-carry gallery elements on the three devices (first step only)",
+    "w8-galera first step on iPad landscape, before and after the grid fix"
+  ],
+  "fixed": [
+    "TrySlot.tsx: a solved try step stays solved when the child goes Back. LessonPlayer now stores the settled outcome per step (solved or given up) and passes it to TrySlot, which shows '¡Muy bien, {child}!' or the given-up message with no exercise re-offered.",
+    "TrySlot.tsx + TrySlot.module.css: the exercise was clipped at top and its status line fell outside the board on iPad landscape. The exercise is now scaled to fit the board (never below 0.8, for 56px tap targets), the status line sits below it, and nothing is clipped.",
+    "division.tsx (galera): the dividend and divisor auto-placed into the same grid column and overlapped ('84' over '4'). Each galera cell now has an explicit grid column and row: dividend (1,1), bar (2, rows 1-2), divisor (3,1), remainder (1,2), quotient (3,2).",
+    "lesson.gallery.tsx: all 16 Season 1 lessons (w1 to w8) are in the gallery, with frames sized to the current viewport so the device shots reflect real sizes.",
+    "TrySlot.test.ts (new): fitScale unit tests. LessonPlayer.test.tsx: two regression tests (solved step stays solved after Back; given-up step stays given up after Back)."
+  ],
+  "tests": "npx vitest run src/activities/lesson: 4 files, 70 passed, 0 failed (was 65). npm run typecheck filtered on activities/lesson: 0 errors.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Real-route coverage is partial: only w2-carry was played end to end on the real route. w3 to w8 lessons are locked for the seeded child, so they were only checked in the gallery (element shots at 1180x820 and the portrait and Android viewports). Full real-route checks for 4-digit borrow (w4-borrow) and 2x1 multiplication (w7-carry, w7-split) on portrait and Android are still open.",
+    "Gallery portrait shots are clipped at the bottom because the lesson player uses 100dvh and the gallery frame is smaller than the viewport. This is a gallery artefact, not a real-route bug, but it hides the Atrás/Siguiente row in those shots.",
+    "Two Siguiente buttons after a try answer: the in-exercise purple 'Siguiente' (ExerciseView, not owned here) must be pressed first, then the lesson footer 'Siguiente' enables. Confusing for a 7-year-old; ExerciseView should not show a Siguiente inside a lesson try step, or the lesson should accept the answer directly.",
+    "Visual labels in src/activities/lesson/visuals/*.tsx are literal Spanish strings, not host.t(). Not changed.",
+    "The galera now draws a rule under the divisor as well as under the dividend (the casita look). This is a stylised layout; the integrator should decide whether that matches the printed workbook.",
+    "TrySlot scales ExerciseView with CSS transform (not zoom). Pen/ink hit-testing inside the scaled exercise has not been verified with a real Apple Pencil on iPad; it should be checked on device."
+  ],
+  "contractRequests": [
+    "Confirm that lesson try attempts should call host.reportAttempt and so update mastery (TrySlot.tsx). No contract change made.",
+    "ExerciseView (not lesson-owned): inside a lesson try step, the child sees a Siguiente after answering, and only then does the lesson footer Siguiente enable. Consider a host option (e.g. a prop like onAnswered-immediate) so the lesson can continue on a correct answer without a second Siguiente."
+  ],
+  "screenshots": [
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/walk/carry-ipad-05.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/walk/carry-back-c.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/walk/fix-ipad-try.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/walk/fix-back.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/walk/carry4-show.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/galera-fix.png",
+    "/private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/el-w4-borrow-ipad-portrait.png"
+  ]
+}

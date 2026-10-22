@@ -524,12 +524,13 @@ const stuck: KindArt = {
     </g>
   ),
   front: ({ r, releasing }) => (
-    <g>
-      <g className={clsx(s.fb, releasing ? s.fly : s.smooth)} style={releasing ? vars({ '--tx': '-150px', '--ty': '30px', '--rot': '-120deg' }) : { transform: `translateX(${-r * 34}px) rotate(${-r * 12}deg)` }}>
+    // Rocks are scaled toward the centre so the outer boulders stay inside the 256-unit overlay box.
+    <g transform="translate(100 100) scale(0.72) translate(-100 -100)">
+      <g className={clsx(s.fb, releasing ? s.fly : s.smooth)} style={releasing ? vars({ '--tx': '-150px', '--ty': '30px', '--rot': '-120deg' }) : { transform: `translateX(${-r * 8}px) rotate(${-r * 12}deg)` }}>
         <Boulder cx={6} cy={150} rad={66} seed={29} />
         <Boulder cx={-26} cy={70} rad={40} seed={31} />
       </g>
-      <g className={clsx(s.fb, releasing ? s.fly : s.smooth)} style={releasing ? vars({ '--tx': '150px', '--ty': '30px', '--rot': '120deg' }) : { transform: `translateX(${r * 34}px) rotate(${r * 12}deg)` }}>
+      <g className={clsx(s.fb, releasing ? s.fly : s.smooth)} style={releasing ? vars({ '--tx': '150px', '--ty': '30px', '--rot': '120deg' }) : { transform: `translateX(${r * 8}px) rotate(${r * 12}deg)` }}>
         <Boulder cx={196} cy={146} rad={64} seed={37} flip />
         <Boulder cx={222} cy={64} rad={36} seed={41} flip />
       </g>

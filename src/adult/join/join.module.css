@@ -1,0 +1,13 @@
+.consent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: var(--c-ink-soft);
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-surface-2);
+}
+.consent input { width: 26px; height: 26px; margin: 2px 0 0; flex: none; accent-color: var(--c-primary); }
+.success { align-items: center; }
