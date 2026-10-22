@@ -33,3 +33,19 @@
   background: var(--c-magic);
   color: #fff;
 }
+
+/* "Ver el truco": the trick is asked for (counts as a hint), so its text never gives the answer away up front. */
+.trickAsk {
+  align-self: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-5);
+  border: var(--sticker-border);
+  border-radius: var(--r-pill);
+  background: var(--c-yellow-soft);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  cursor: pointer;
+}

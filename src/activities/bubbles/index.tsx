@@ -76,7 +76,8 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     setStart(now())
     setTimeLeft(TIMER_MS)
     requeuedRef.current = false
-    if (q && host.prefs.voice) speakFact(q.ex.a, q.ex.b, '×', q.ex.answer)
+    // Read the question only: saying the product would answer it.
+    if (q && host.prefs.voice) speakFact(q.ex.a, q.ex.b, '×')
   }, [session.index]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Soft timer (only when the family allows timed games).

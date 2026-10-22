@@ -25,6 +25,8 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
   // Planned items plus the re-asks of wrong answers (PEDAGOGY 4: a failed item comes back 2–4 items later).
   const [queue, setQueue] = useState(() => startQueue(items))
 
+  // The trick is asked for, never shown up front: some trick texts contain the product (e.g. 7 × 8 = 56).
+  const [trickFor, setTrickFor] = useState<number | null>(null)
   if (session.result) {
     return (
       <div className={s.center}>
@@ -36,6 +38,7 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
   const slot = queue.slots[session.index]
   const ex = slot?.item
   const trick = params.showTrick && ex?.kind === 'fact-mul' ? strategyForFact(ex.a, ex.b) : null
+  const trickOpen = trickFor === session.index
 
   const handle = (o: ExerciseOutcome) => {
     if (!ex || !slot) return
@@ -46,7 +49,7 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
         check: o.check,
         ms: o.ms,
         inputMode: o.inputMode,
-        hintsUsed: o.hintsUsed,
+        hintsUsed: o.hintsUsed + (trickOpen ? 1 : 0),
         recognitionFixes: o.recognitionFixes,
       })
     }
@@ -70,7 +73,12 @@ export default function FactsActivity({ config, onDone, onExit }: ActivityProps)
       onExit={onExit}
       badge={params.helper === 'borron' ? <span className={shared.statPill}>Ayuda a Borrón</span> : undefined}
     >
-      {trick && (
+      {trick && !trickOpen && (
+        <button type="button" className={s.trickAsk} onClick={() => setTrickFor(session.index)}>
+          💡 {host.t('Ver el truco')}
+        </button>
+      )}
+      {trick && trickOpen && (
         <motion.div key={`trick-${session.index}`} className={s.trick} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
           <span className={s.trickLabel}>Truco</span>
           <span>{host.t(trick.text)}</span>

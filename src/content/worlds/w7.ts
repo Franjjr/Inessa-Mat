@@ -39,7 +39,7 @@ export const w7 = world({
       title: 'Carrera al Castillo',
       instructions: 'Tira el dado y di el resultado de tu casilla. ¡Gana quien llegue antes al castillo!',
       selector: { kinds: ['fact-mul'], tables: [6, 7, 8], factorRange: [2, 9] },
-      count: 1,
+      count: 20, // one question per turn: enough turns to reach the castle
       params: {
         squares: 30,
         opponent: 'lumi',
