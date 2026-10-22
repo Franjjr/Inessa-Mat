@@ -1,0 +1,63 @@
+/* World 8 — El Castillo del Reparto: division as fair sharing and multiplication backwards (fact families),
+   division facts, the galera (exact, with remainder) and the optional-feeling "expert" long division. */
+import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
+
+export const w8 = world({
+  id: 'w8',
+  index: 8,
+  name: 'El Castillo del Reparto',
+  shortName: 'Castillo',
+  background: 'castle',
+  guardian: 'queen',
+  crystalName: 'dorado',
+  predicament: 'net',
+  hook: '¡Borrón ha atrapado a {pet} con una red!',
+  skillsSummary: 'Dividir: repartos, familias de números, la división en galera y el resto',
+  path: [[0.12, 0.84], [0.36, 0.86], [0.56, 0.74], [0.38, 0.58], [0.16, 0.5], [0.24, 0.26], [0.46, 0.3], [0.68, 0.44], [0.86, 0.3], [0.7, 0.12]],
+  nodes: [
+    storyNode('arrival', 'La red de Borrón', 'w8-arrival'),
+    lessonNode('lesson-share', 'Dividir es repartir', 'w8-share'),
+    activityNode('share', {
+      kind: 'share',
+      title: 'Repartos de la reina',
+      instructions: 'Reparte a partes iguales. ¡A todos lo mismo!',
+      selector: { kinds: ['fact-div'], tables: [2, 3, 4, 5], factorRange: [2, 5] },
+      count: 4,
+      params: { emoji: '💎', container: '🧺' },
+    }),
+    activityNode('family', {
+      kind: 'family',
+      title: 'Familias de números',
+      instructions: 'Escribe las 4 operaciones de cada familia: dos multiplicaciones y dos divisiones.',
+      selector: { kinds: ['fact-family'], tables: [6, 7, 8], factorRange: [2, 9] },
+      count: 3,
+    }),
+    activityNode('facts', {
+      kind: 'facts',
+      title: 'Divide con las tablas',
+      instructions: 'Piensa en la multiplicación: ¿qué número multiplicado me da…?',
+      selector: { kinds: ['fact-div'], tables: [6, 7, 8], factorRange: [2, 9] },
+      count: 10,
+      params: { showTrick: true },
+    }),
+    lessonNode('lesson-galera', 'La casita de la división', 'w8-galera'),
+    activityNode('division', {
+      kind: 'division',
+      title: 'Divisiones exactas y con resto',
+      instructions: 'Primero las decenas, después las unidades. ¿Sobra algo? ¡Ese es el resto!',
+      selector: { kinds: ['division'], divisionVariants: ['exact', 'rem'] },
+      count: 6,
+      params: { guided: true, proof: true },
+    }),
+    storyNode('mid', 'Borrón mira desde la torre', 'w8-mid'),
+    activityNode('division-expert', {
+      kind: 'division',
+      title: 'El reto de la torre ⭐',
+      instructions: 'Como en 72 ÷ 3: lo que sobra en las decenas se junta con las unidades.',
+      selector: { kinds: ['division'], divisionVariants: ['long'] },
+      count: 3,
+      params: { guided: true },
+    }),
+    guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),
+  ],
+})

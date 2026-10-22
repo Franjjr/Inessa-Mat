@@ -1,0 +1,306 @@
+{
+ "format": "numeria-seq-cnn",
+ "version": 1,
+ "modelId": "digits-bfa3be125a",
+ "createdAt": "2026-10-22T00:04:17+00:00",
+ "input": {
+  "shape": [
+   1,
+   28,
+   28
+  ],
+  "layout": "chw",
+  "range": [
+   0,
+   1
+  ]
+ },
+ "labels": [
+  "0",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "reject"
+ ],
+ "rejectIndex": 10,
+ "embeddingSize": 64,
+ "preprocess": {
+  "size": 28,
+  "box": 20.0,
+  "lineWidth": 2.6,
+  "minInkPx": 3.0,
+  "minInkFrac": 0.06,
+  "maxComShift": 4.0,
+  "strayMaxFrac": 0.12,
+  "strayGapFrac": 0.2
+ },
+ "weights": {
+  "file": "model.bin",
+  "byteLength": 244780,
+  "dtype": "float32",
+  "endianness": "little"
+ },
+ "layers": [
+  {
+   "type": "conv2d",
+   "name": "conv1",
+   "inShape": [
+    1,
+    28,
+    28
+   ],
+   "outShape": [
+    16,
+    28,
+    28
+   ],
+   "kernel": [
+    5,
+    5
+   ],
+   "stride": 1,
+   "padding": 2,
+   "activation": "relu",
+   "weight": {
+    "offset": 0,
+    "shape": [
+     16,
+     1,
+     5,
+     5
+    ],
+    "dtype": "float32"
+   },
+   "bias": {
+    "offset": 1600,
+    "shape": [
+     16
+    ],
+    "dtype": "float32"
+   }
+  },
+  {
+   "type": "maxpool2d",
+   "inShape": [
+    16,
+    28,
+    28
+   ],
+   "outShape": [
+    16,
+    14,
+    14
+   ],
+   "size": 2,
+   "stride": 2
+  },
+  {
+   "type": "conv2d",
+   "name": "conv2",
+   "inShape": [
+    16,
+    14,
+    14
+   ],
+   "outShape": [
+    32,
+    14,
+    14
+   ],
+   "kernel": [
+    3,
+    3
+   ],
+   "stride": 1,
+   "padding": 1,
+   "activation": "relu",
+   "weight": {
+    "offset": 1664,
+    "shape": [
+     32,
+     16,
+     3,
+     3
+    ],
+    "dtype": "float32"
+   },
+   "bias": {
+    "offset": 20096,
+    "shape": [
+     32
+    ],
+    "dtype": "float32"
+   }
+  },
+  {
+   "type": "maxpool2d",
+   "inShape": [
+    32,
+    14,
+    14
+   ],
+   "outShape": [
+    32,
+    7,
+    7
+   ],
+   "size": 2,
+   "stride": 2
+  },
+  {
+   "type": "conv2d",
+   "name": "conv3",
+   "inShape": [
+    32,
+    7,
+    7
+   ],
+   "outShape": [
+    64,
+    7,
+    7
+   ],
+   "kernel": [
+    3,
+    3
+   ],
+   "stride": 1,
+   "padding": 1,
+   "activation": "relu",
+   "weight": {
+    "offset": 20224,
+    "shape": [
+     64,
+     32,
+     3,
+     3
+    ],
+    "dtype": "float32"
+   },
+   "bias": {
+    "offset": 93952,
+    "shape": [
+     64
+    ],
+    "dtype": "float32"
+   }
+  },
+  {
+   "type": "maxpool2d",
+   "inShape": [
+    64,
+    7,
+    7
+   ],
+   "outShape": [
+    64,
+    3,
+    3
+   ],
+   "size": 2,
+   "stride": 2
+  },
+  {
+   "type": "flatten",
+   "inShape": [
+    64,
+    3,
+    3
+   ],
+   "outShape": [
+    576
+   ]
+  },
+  {
+   "type": "dense",
+   "name": "fc1",
+   "inShape": [
+    576
+   ],
+   "outShape": [
+    64
+   ],
+   "activation": "relu",
+   "embedding": true,
+   "weight": {
+    "offset": 94208,
+    "shape": [
+     64,
+     576
+    ],
+    "dtype": "float32"
+   },
+   "bias": {
+    "offset": 241664,
+    "shape": [
+     64
+    ],
+    "dtype": "float32"
+   }
+  },
+  {
+   "type": "dense",
+   "name": "fc2",
+   "inShape": [
+    64
+   ],
+   "outShape": [
+    11
+   ],
+   "activation": "none",
+   "weight": {
+    "offset": 241920,
+    "shape": [
+     11,
+     64
+    ],
+    "dtype": "float32"
+   },
+   "bias": {
+    "offset": 244736,
+    "shape": [
+     11
+    ],
+    "dtype": "float32"
+   }
+  },
+  {
+   "type": "softmax",
+   "inShape": [
+    11
+   ],
+   "outShape": [
+    11
+   ]
+  }
+ ],
+ "metrics": {
+  "mnist_restroked": {
+   "accuracy_digits_pct": 98.86,
+   "app_accuracy_pct": 98.75,
+   "app_null_rate_pct": 0.23
+  },
+  "mnist_raw": {
+   "accuracy_digits_pct": 99.36,
+   "app_accuracy_pct": 99.12,
+   "app_null_rate_pct": 0.3
+  },
+  "heldout_fonts": {
+   "accuracy_digits_pct": 98.896,
+   "app_accuracy_pct": 98.875,
+   "app_null_rate_pct": 0.021
+  },
+  "synthetic_strokes": {
+   "accuracy_digits_pct": 99.962,
+   "app_accuracy_pct": 99.962,
+   "app_null_rate_pct": 0.0,
+   "nondigit_rejected_pct": 99.579
+  }
+ }
+}

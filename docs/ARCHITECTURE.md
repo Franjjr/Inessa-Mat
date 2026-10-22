@@ -25,9 +25,9 @@ If you believe a new npm dependency is essential, do not install it — explain 
 | `src/content/**` | **content** | Season 1 data (worlds, nodes, stories, lessons, guardians), companions, accessories, stickers, phrases, templating, progression |
 | `src/art/characters/**`, `src/art/companions/**` | **art-characters** | Lumi, Borrón, 8 guardians, 8 companion species with poses + accessories, LumiHorn |
 | `src/art/worlds/**` | **art-worlds** | 10 backgrounds, predicaments, crystals, stars, chest, sparkles, map decorations, app icons (`public/icons`) |
-| `src/art/index.ts` | both art agents | Each replaces only its own export lines |
+| `src/art/characters/index.ts` / `src/art/worlds/index.ts` | respective art agent | `src/art/index.ts` is integrator-owned and re-exports both |
 | `src/data/**`, `supabase/**` | **data** | Dexie schema, repositories, sync engine, Supabase client/auth, SQL migrations + RLS, dev seed helper |
-| `src/audio/**`, PWA assets in `public/` (except icons/models) | **audio-pwa** | SFX synth, generative music, speech, haptics |
+| `src/audio/**`, `src/fx/**`, PWA assets in `public/` (except icons/models) | **audio-pwa** | SFX synth, generative music, speech, haptics, celebrations (`@/fx`) |
 | `src/activities/<facts…bubbles>/**`, `src/activities/views/{Fact,MissingFactor,SkipCount,DoubleChain,FactFamily}View.tsx` | **activities-facts** | |
 | `src/activities/<groups…board>/**`, `src/activities/views/{Groups,Array,Column,Division,WordProblem}View.tsx` | **activities-ops** | |
 | `src/activities/lesson/**` | **lessons** | LessonPlayer + all lesson visuals |
@@ -50,7 +50,8 @@ All shared types are in `src/types/*.ts` — read them first. Public entry point
 - `@/content` — see `src/content/index.ts` (season1, getWorld/Node/Story/Lesson/Guardian, companions, accessories,
   stickers, renderTemplate, templateContext, pickPhrase, initialProgress, isNodeUnlocked, nextNode, applyNodeResult…).
 - `@/ink` — InkProvider, useInputMode, DigitCell, NumberInput, Keypad, CalibrationFlow, useRecognizer, TraceDigit.
-- `@/art` — Character, CompanionArt, Predicament, WorldBackground, Crystal, StarIcon, ChestArt, Sparkles, LumiHorn.
+- `@/art` — Character, CompanionArt, LumiHorn, Predicament, WorldBackground, Crystal, StarIcon, ChestArt, Sparkles, NodeIcon.
+- `@/fx` — celebrate(kind) confetti/star bursts.
 - `@/audio` — sfx, music, speech, haptics, unlockAudio, applyAudioSettings.
 - `@/data` — auth/orgs/children/progress/mastery/attempts/sessions/rewards/ink samples/classes/dashboards/sync.
 - `@/activities` — ActivityRunner, ExerciseView, LessonPlayer, useActivityHost, ActivityHostProvider.

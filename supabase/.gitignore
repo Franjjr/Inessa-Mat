@@ -1,0 +1,3 @@
+# Local Postgres used by tests/run.sh
+.venv/
+__pycache__/

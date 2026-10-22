@@ -1,0 +1,39 @@
+/* The root behaves like the old stub (absolute, fills its positioned parent, children are direct children) so
+   consumer classNames keep working. The scene paints underneath via an isolated stacking context. */
+.root {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  transition: background-color 1.4s ease;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  container-type: size;
+  contain: strict;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Borrón's fog: veil + drifting banks + swirls. Opacity follows (1 - vividness). */
+.fog {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.6s ease, visibility 0s linear 0s;
+}
+.fogGone {
+  visibility: hidden;
+  transition: opacity 1.6s ease, visibility 0s linear 1.6s;
+}
+.veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(226, 228, 236, 0.16) 0%, rgba(214, 216, 228, 0.3) 62%, rgba(206, 208, 222, 0.42) 100%);
+}

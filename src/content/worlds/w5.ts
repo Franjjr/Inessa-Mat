@@ -1,0 +1,62 @@
+/* World 5 — El Lago del Ocho: the 8 table (double, double, double; the units pattern; 5-6-7-8), mixed with the 6
+   (+ a review of column subtraction). */
+import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
+
+export const w5 = world({
+  id: 'w5',
+  index: 5,
+  name: 'El Lago del Ocho',
+  shortName: 'Lago',
+  background: 'lake',
+  guardian: 'octopus',
+  crystalName: 'violeta',
+  predicament: 'ink',
+  hook: '¡Octavio ha llenado de tinta a {pet}!',
+  skillsSummary: 'La tabla del 8: doble, doble y doble, y mezcla con la del 6',
+  path: [[0.12, 0.56], [0.2, 0.82], [0.46, 0.88], [0.74, 0.82], [0.87, 0.58], [0.8, 0.3], [0.56, 0.14], [0.3, 0.2], [0.25, 0.42], [0.48, 0.5]],
+  nodes: [
+    storyNode('arrival', '¡Achís de tinta!', 'w5-arrival'),
+    lessonNode('lesson-double', 'Doble, doble y doble', 'w5-double'),
+    activityNode('chain', {
+      kind: 'chain',
+      title: 'Doble, doble y doble',
+      instructions: 'Dobla tres veces. ¡El último número es el resultado!',
+      selector: { kinds: ['double-chain'], tables: [8] },
+      count: 5,
+    }),
+    activityNode('wheel', {
+      kind: 'wheel',
+      title: 'La rueda del 8',
+      instructions: 'Multiplica por 8 cada número de la rueda.',
+      selector: { kinds: ['fact-mul'], tables: [8], factorRange: [2, 9] },
+      count: 8,
+      params: { center: 8, numbers: [4, 7, 3, 9, 6, 8, 2, 5] },
+    }),
+    lessonNode('lesson-pattern', 'Los secretos del 8', 'w5-pattern'),
+    storyNode('mid', 'Los dorsales de la carrera', 'w5-mid'),
+    activityNode('maze', {
+      kind: 'maze',
+      title: 'El laberinto del lago',
+      instructions: 'Del unicornio al cristal: pisa solo números de la tabla del 8. A la derecha o hacia abajo.',
+      selector: { kinds: ['fact-mul'], tables: [8] },
+      count: 1,
+      params: { table: 8, rows: 6, cols: 6 },
+    }),
+    activityNode('bubbles', {
+      kind: 'bubbles',
+      title: 'Mezcla del 6 y del 8',
+      instructions: 'Explota la burbuja que tiene el resultado correcto.',
+      selector: { kinds: ['fact-mul'], tables: [6, 8], factorRange: [3, 9] },
+      count: 10,
+      params: { choices: 4 },
+    }),
+    activityNode('review-mountain', {
+      kind: 'column',
+      title: 'Repaso de la montaña',
+      instructions: '¡Que no se te olviden las restas! Cuidado con los ceros.',
+      selector: { kinds: ['column-sub'], skills: ['sub:3d:b2', 'sub:4d:z'] },
+      count: 2,
+    }),
+    guardianNode('El desafío del pulpo Octavio', 'w5-guardian'),
+  ],
+})
