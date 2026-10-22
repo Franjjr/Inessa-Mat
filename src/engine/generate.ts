@@ -230,6 +230,12 @@ function buildGroups(sel: SkillSelector, ctx: Ctx): Group[] {
 
 // ---------------------------------------------------------------- planning
 
+/** The kinds a planned skill may be built as (its own group's kinds, else its natural kind). */
+function kindsOf(skill: SkillKey, groups: Group[]): ExerciseKind[] {
+  const found = groups.flatMap((g) => g.items.filter((it) => it.skill === skill).flatMap((it) => it.kinds))
+  return found.length ? found : kindsForSkill(skill)
+}
+
 /** Ids an item can produce (only enumerable for fact kinds) — used to steer away from avoidIds. */
 function possibleIds(skill: SkillKey, kind: ExerciseKind): string[] | null {
   const p = parseSkill(skill)
@@ -275,7 +281,8 @@ function planUniform(rng: Rng, items: UniverseItem[], n: number): UniverseItem[]
   return out
 }
 
-interface NewBudget { hardFacts: number }
+/** Per call: how many brand-new hard facts may still be introduced, and which ones were introduced by any kind. */
+interface NewBudget { hardFacts: number; introduced: Set<SkillKey> }
 
 function isBudgeted(skill: SkillKey): boolean {
   return isFactSkill(skill) && !isEasyFact(skill)
@@ -306,6 +313,7 @@ function planAdaptive(
     if (isBudgeted(it.skill)) {
       if (budget.hardFacts <= 0) continue
       budget.hardFacts--
+      budget.introduced.add(it.skill)
     }
     chosenNew.push(it)
   }
@@ -331,9 +339,12 @@ function planAdaptive(
     for (let k = 0; out.length < n; k++) out.push(cycle[k % cycle.length])
   }
   if (out.length < n) {
-    // Nothing seen and no new item allowed by the budget: fall back to the gentlest items available.
-    const easy = items.filter((it) => !isBudgeted(it.skill))
-    for (const item of planUniform(rng, easy.length ? easy : items, n - out.length)) out.push({ item, isNew: !mastery[item.skill] })
+    // Nothing seen and no new item allowed by the budget: practise what is allowed (easy facts, or hard facts
+    // already introduced by another kind in this call). Never a new hard fact beyond the budget.
+    const reachable = items.filter((it) => !isBudgeted(it.skill) || !!mastery[it.skill] || budget.introduced.has(it.skill))
+    if (reachable.length) {
+      for (const item of planUniform(rng, reachable, n - out.length)) out.push({ item, isNew: !mastery[item.skill] })
+    }
   }
   return out
 }
@@ -626,7 +637,7 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
   const shares = groups.map(() => Math.floor(n / groups.length))
   for (const gi of shuffle(rng, range(0, groups.length - 1)).slice(0, n - shares.reduce((s, x) => s + x, 0))) shares[gi]++
 
-  const budget: NewBudget = { hardFacts: 3 }
+  const budget: NewBudget = { hardFacts: 3, introduced: new Set() }
   const planned: Planned[] = []
   groups.forEach((g, gi) => {
     const share = shares[gi]
@@ -638,6 +649,12 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
       : planUniform(rng, items, share).map((item) => ({ item, isNew: false }))
     for (const { item, isNew } of chosen) planned.push({ skill: item.skill, kind: pick(rng, item.kinds), isNew })
   })
+  // A kind with nothing allowed left still has to deliver its share: repeat what was planned (never a new fact).
+  const planCount = planned.length
+  for (let k = 0; planCount > 0 && planned.length < n; k++) {
+    const again = planned[k % planCount]
+    planned.push({ ...again, kind: pick(rng, kindsOf(again.skill, groups)), isNew: false })
+  }
 
   const used = new Set(avoid)
   const out: Exercise[] = []

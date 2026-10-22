@@ -223,6 +223,22 @@ describe('sfx player', () => {
     spy.mockRestore()
   })
 
+  it('keeps every sound inside safe gain limits at full volume (0..1 per voice, ends at silence)', () => {
+    const ctx = ready()
+    for (const name of SFX_NAMES) {
+      advanceMs(1000)
+      const nodes = playAndCapture(ctx, name, { volume: 1 })
+      const voices = nodes.filter((n): n is MockGain => n instanceof MockGain && n.gain.events.length > 0)
+      expect(voices.length, name).toBeGreaterThan(0)
+      for (const g of voices) {
+        const values = g.gain.events.filter((e) => e.type !== 'cancel').map((e) => e.value)
+        expect(Math.min(...values), name).toBeGreaterThanOrEqual(0)
+        expect(g.gain.max(), name).toBeLessThanOrEqual(1)
+      }
+      ctx.advance(3)
+    }
+  })
+
   it('never throws for unknown names', () => {
     ready()
     expect(() => sfx.play('nope' as SfxName)).not.toThrow()

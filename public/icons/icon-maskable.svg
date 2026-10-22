@@ -16,7 +16,7 @@
   <g>
   <circle cx="256" cy="250" r="170" fill="url(#maskableh)"/>
   <path transform="translate(128 128) scale(0.44)" d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0 Z" fill="#ffffff" opacity="0.95"/><path transform="translate(356 156) scale(0.28)" d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0 Z" fill="#fde68a" opacity="1"/><polygon points="392.0,376.0 396.2,386.2 407.2,387.1 398.8,394.2 401.4,404.9 392.0,399.2 382.6,404.9 385.2,394.2 376.8,387.1 387.8,386.2" fill="#fde68a" stroke="#f59e0b" stroke-width="3.52" stroke-linejoin="round"/><path transform="translate(128 328) scale(0.24)" d="M50 0 C54 38 62 46 100 50 C62 54 54 62 50 100 C46 62 38 54 0 50 C38 46 46 38 50 0 Z" fill="#ffffff" opacity="0.8"/>
-  <g transform="translate(102.6 172.8) scale(1.42)">
+  <g transform="translate(119.9 188.3) scale(1.26)">
   <g stroke="#4c1d95" stroke-width="3.5999999999999996"><circle cx="74" cy="46" r="20" fill="#fca5a5"/><circle cx="57" cy="68" r="20" fill="#fdba74"/><circle cx="47" cy="94" r="20" fill="#fde68a"/><circle cx="44" cy="122" r="20" fill="#86efac"/><circle cx="44" cy="150" r="20" fill="#93c5fd"/><circle cx="45" cy="178" r="20" fill="#a5b4fc"/><circle cx="47" cy="206" r="20" fill="#d8b4fe"/><circle cx="50" cy="234" r="20" fill="#f9a8d4"/><circle cx="54" cy="262" r="20" fill="#fdba74"/></g>
   <path d="M68 128 C62 160 58 190 57 230 C56 250 56 270 56 300 L152 300 C150 270 149 250 148 230 C140 196 132 168 128 148 Z" fill="none" stroke="#4c1d95" stroke-width="6" stroke-linejoin="round"/>
   <ellipse cx="102" cy="100" rx="52" ry="48" fill="none" stroke="#4c1d95" stroke-width="6"/>

@@ -1,0 +1,26 @@
+{
+  "module": "content",
+  "summary": "Senior review of src/content (Season 1 data and pure functions). I read the build report, the index contract, src/types/content.ts and child.ts, progression.ts, template.ts, guardians.ts, a sample story (w1) and the test list. I found no contract mismatch, no broken refs, no leftover TODO/console calls and no article errors (\"a el\"/\"de el\") in the copy. I made no source changes: nothing I checked was broken. Verification is limited to the typecheck and tests below. The visual gallery check could not run (see openIssues).",
+  "publicApi": "Unchanged from the build report: season1, getWorld, getNode, getStory, getLesson, getGuardian, PROLOGUE_STORY_ID, FINALE_STORY_ID, companions, getCompanionDef, accessories, stickers, templateContext, renderTemplate, pickPhrase, initialProgress, isNodeUnlocked, nextNode, applyNodeResult, startingWorldForGrade, plus the extras exported from index.ts (buyAccessory, canBuyAccessory, crystalsOf, lettersOf, newStickers, spendableStars, unlockThroughWorld, localDay, COMPLETION_STARS, MAX_RECORDS, guardianForWorld, nextWorldId, SPELL_CODES, ERROR_PHRASES, PHRASES, pickPhraseFor, TEMPLATE_PLACEHOLDERS, FALLBACK_CHILD_NAME, CHEST_TEXT, DIPLOMA_TEXT, SEASON2_TEASER, TEACH_BACK_ACTIVITY and more).",
+  "tests": "npx vitest run src/content: 5 files, 76 tests passed, 0 skipped. This includes engine.integration.test.ts, which runs for real because the engine is no longer a stub (not skipped). npm run typecheck filtered to src/content: zero errors.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual verification not done: tools/shot.mjs fails in this environment because Playwright's chromium is missing at /opt/pw-browsers/chromium-1194/chrome-linux/chrome. The gallery at /dev/gallery?only=src/content therefore could not be captured or reviewed by me. The build agent's earlier review is not re-checked. Fix: install or point to the Chromium build, then re-run the shot.",
+    "Copy review was sampled, not exhaustive: I read the w1 story and the w1 to w8 guardians, not every line of every story. Phrase tone and the w2 to w8 stories are covered only by the automated structure and copy tests (line length, punctuation, no 'a el').",
+    "docs/HANDOFF.md was not read: it sits outside this module's review step."
+  ],
+  "files": [
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/index.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/progression.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/template.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/guardians.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/stories/w1.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/src/content/__tests__/engine.integration.test.ts",
+    "/Users/mac13/Desktop/Inessa-Mat/docs/handoff/reports/content.build.json"
+  ],
+  "contractRequests": [],
+  "notesForOtherModules": [
+    "Progression rule to know: applyNodeResult pays guardian crystals only on passed:true or when a letter is passed; stars alone never pass a guardian.",
+    "Activity and review nodes count as done with at least 1 star or passed:true; stories and lessons always give 3 stars."
+  ]
+}

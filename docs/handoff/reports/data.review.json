@@ -1,0 +1,12 @@
+{
+  "module": "data",
+  "tests": "vitest src/data: 68 of 68 passed on three runs. RLS suite: 159 passed, 0 failed. Typecheck clean.",
+  "summary": "Senior review of the data module. Already built and committed. Unit tests, typecheck and RLS suite re-run and green. Fixed one flaky test (active org persistence race) in src/data/__tests__/account.test.ts. No contract mismatches found.",
+  "publicApi": "Unchanged from src/data/index.ts.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Gallery screenshot not captured: tools/shot.mjs hardcodes a Linux Chromium path.",
+    "Live Supabase project not exercised from this sandbox.",
+    "docs/HANDOFF.md still lists data as build interrupted; integrator should update it."
+  ]
+}

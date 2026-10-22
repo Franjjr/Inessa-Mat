@@ -1,0 +1,19 @@
+{
+  "module": "art-worlds",
+  "summary": "Senior review pass on art-worlds. The module was already built and passes its checks, so I did not change any component code. I fixed the icon build script so it no longer hardcodes a Linux Chromium path, and I regenerated the icon outputs with it. I captured and inspected the WorldBackground gallery for six of the ten scenes (home, sky, forest, volcano, cave, castle) at vividness 1, 0.5 and 0. All six look correct and the fog drain reads clearly. I did not inspect river, mountain, lake or rainbow-garden visually, nor the predicament kinds beyond the earlier pass, ChestArt, Sparkles or NodeIcon.",
+  "publicApi": "Unchanged. src/art/worlds/index.ts exports Predicament, WorldBackground, Crystal, StarIcon, ChestArt, Sparkles and NodeIcon, with the CrystalProps, CrystalState, StarIconProps, ChestArtProps, SparklesProps and NodeIconProps types.",
+  "tests": "npm run typecheck piped through grep for art/worlds: no matching lines (grep exit 1), so zero errors for owned files. npx vitest run src/art/worlds: 4 files, 109 tests passed (run before the build script edit; the script is not covered by tests). Visual: captured with node tools/shot.mjs \"/dev/gallery?only=WorldBackground&bg=<id>&frame=landscape\" --device ipad using CHROMIUM_PATH pointing at the ms-playwright chromium-1243 binary. Viewed shots/worlds-bg-home, sky, forest, volcano, cave, castle (the home shot is named worlds-bg-ipad.png). Viewed public/icons/icon-512.png, icon-512-maskable.png and apple-touch-icon.png: all render correctly.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Visual review still incomplete: river, mountain, lake and rainbow-garden backgrounds, the remaining predicament kinds (fog, vines, cage, ink, stuck) at rescue 0/0.5/1, ChestArt, Sparkles and NodeIcon have not been looked at in this pass.",
+    "public/favicon.svg was regenerated from the build script. The committed version was an older placeholder (48px violet with a star), so the diff replaces it with the real Lumi-style 32px icon. This is intended, but the integrator should review it in the diff.",
+    "The regenerated PNGs under public/icons/ differ from the committed ones. This is expected because the build now reruns, but the integrator should confirm the new icons are the ones to ship.",
+    "The maskable icon's neck runs past the bottom edge of the 80% safe-zone circle, so some launchers will crop the neck. Acceptable for a bust, but a tighter layout would be safer.",
+    "Screenshots live in /Users/mac13/Desktop/Inessa-Mat/shots/, which is outside the owned paths. Add shots/ to .gitignore or delete it before committing.",
+    "tools/shot.mjs is not owned by this module. It needs CHROMIUM_PATH set to the ms-playwright chromium-1243 binary on this machine, and it still fails without it. It should pick the browser per platform by default."
+  ],
+  "contractRequests": [
+    "tools/shot.mjs should resolve the Chromium executable per platform by default, through the Playwright API or a documented env var. On this macOS machine it fails with a missing chromium_headless_shell-1194 path unless CHROMIUM_PATH is set.",
+    "Add shots/ to .gitignore, since screenshot outputs land there."
+  ]
+}

@@ -345,7 +345,7 @@ export function activeSfxVoices(): number {
 export const sfx = {
   play: playSfx,
   setEnabled: setSfxEnabled,
-  /** Extra: effects volume 0..1 (default 0.85). */
+  /** Extra: effects volume 0..1 (default 1; the fixed makeup gain lives in context.ts). */
   setVolume(v: number): void {
     setLevel('sfx', v)
   },

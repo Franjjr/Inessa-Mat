@@ -127,6 +127,7 @@ describe('auth', () => {
     expect(getAuth().activeOrg?.kind).toBe('family') // creating a second org does not switch
     setActiveOrg(school.id)
     expect(getAuth().activeOrg?.id).toBe(school.id)
+    await flushTimers(20) // the choice is persisted fire-and-forget; let the IndexedDB write land before signing out
     await signOut()
     await signInWithPassword('ana@correo.es', 'secreto123')
     expect(getAuth().activeOrg?.id).toBe(school.id)

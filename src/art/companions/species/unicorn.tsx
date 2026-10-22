@@ -38,6 +38,13 @@ export const babyUnicorn: SpeciesDef = {
     return (
       <g>
         <ellipse cx={100} cy={110} rx={22} ry={14} fill={p.light} />
+        {/* horn sits under the head accessories, so hats and caps cover its base instead of being pierced */}
+        {HORN.rings.map((d, i) => (
+          <g key={i}>
+            <path d={d} fill={p.mark} {...ol(p.markInk ?? p.ink, 3.6)} />
+            <path d={HORN.highlights[i].d} stroke="#ffffff" strokeWidth={HORN.highlights[i].w} strokeLinecap="round" />
+          </g>
+        ))}
         <g {...ol(p.ink, 3.6)}>
           <circle cx={64} cy={58} r={11} fill={m[1]} />
           <circle cx={78} cy={46} r={12} fill={m[0]} />
@@ -50,16 +57,6 @@ export const babyUnicorn: SpeciesDef = {
     <g fill={p.nose}>
       <ellipse cx={93} cy={106} rx={2.2} ry={1.6} />
       <ellipse cx={107} cy={106} rx={2.2} ry={1.6} />
-    </g>
-  ),
-  overHat: ({ p }) => (
-    <g>
-      {HORN.rings.map((d, i) => (
-        <g key={i}>
-          <path d={d} fill={p.mark} {...ol(p.markInk ?? p.ink, 3.6)} />
-          <path d={HORN.highlights[i].d} stroke="#ffffff" strokeWidth={HORN.highlights[i].w} strokeLinecap="round" />
-        </g>
-      ))}
     </g>
   ),
   behind: (c) => {

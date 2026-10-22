@@ -1,0 +1,20 @@
+{
+  "module": "engine",
+  "summary": "Senior review of src/engine. The module was already complete and largely sound. I checked the maths, diagnoses, hints, Spanish copy, mastery rules and generation budget against the spec and PEDAGOGY.md, and fixed four real defects plus one wording issue. Fixes: (1) the mirror fact 7×6 used the wrong visual parameters at hint level 3; (2) the \"5\" trick text read as an equality; (3) check() with a null or malformed answer returned an empty expected string in logs; (4) the brand-new-fact budget (max 3 per call) could be exceeded when a later kind had only hard facts; (5) adult subtraction labels said \"llevadas\" where \"préstamos\" is correct. Added regression tests. Typecheck is clean for src/engine and all 189 engine tests pass.",
+  "publicApi": "Unchanged contract: createRng, generate, check, hintsFor, strategyForFact, newMastery, updateMastery, dueSkills, fluencyThresholdMs, starsFor, factGrid, describeSkill, describeError, planSession, selectorForSkills, plus the types GenerateOptions, AttemptForMastery, SessionPlan. The StrategyDetail interface (internal to strategies.ts) gained an optional workedParams field. No exports were removed.",
+  "tests": "npx vitest run src/engine: 189 passed (was 185; 4 new). npm run typecheck filtered to src/engine: zero errors. Coverage could not be measured because @vitest/coverage-v8 is not installed and I did not install packages. Engine gallery captured on iPad (shots/engine-review.png) and reviewed: layout and Spanish copy look clean.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Coverage is not measured (tool missing). The ~95% line-coverage target is unverified.",
+    "Adaptive mix: for a child with very few seen skills (1-2), the new-item share exceeds ~30% by design (target = n - 2*seen). Left as is; the choice protects a brand-new child from repetition-only sessions.",
+    "Word problems never include division with a remainder (only exact or long variants are generated). checkWord also accepts a plain number for a remainder word problem without checking the remainder. Low risk because the generator does not produce remainder word problems.",
+    "'long' division exercises always have a zero remainder (the pool is remainder 0 only). This is a documented limitation.",
+    "feedback copy contains {child} and {pet} placeholders that the activities layer must render with renderTemplate; activities are not built yet, so this is unverified end to end.",
+    "wordCorrect says 'Son 1 <unit>' when the answer is 1 (singular grammar); not generated in practice."
+  ],
+  "contractRequests": [],
+  "notesForOtherModules": [
+    "Feedback strings in src/engine/feedback.ts contain {child} and {pet} placeholders. The activities and content layers must render them with renderTemplate before display.",
+    "hintsFor level-3 params for the 7×6 mirror now use the 6×7 orientation (a:6,b:7) with the dots-five-plus-one visual. The visual renderer should expect that convention."
+  ]
+}

@@ -36,7 +36,7 @@ const device = DEVICES[opt('device', 'ipad')] ?? DEVICES.ipad
 const base = opt('base', 'http://localhost:5173')
 const wait = Number(opt('wait', '900'))
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
+const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {})
 const ctx = await browser.newContext({ ...device, locale: 'es-ES' })
 const page = await ctx.newPage()
 page.on('console', (m) => { if (m.type() === 'error') console.log('[console.error]', m.text()) })

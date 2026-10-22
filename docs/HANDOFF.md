@@ -1,6 +1,6 @@
 # Numeria · Estado del proyecto y cómo continuar
 
-Última actualización: 22-10-2026. Rama de trabajo: `dev`. `main` solo tiene el esqueleto inicial.
+Última actualización: 22-10-2026 (2.ª sesión, en el Mac de Fran: `/Users/mac13/Desktop/Inessa-Mat`). Rama de trabajo: `dev`.
 
 ## Para Fran (resumen)
 
@@ -20,15 +20,13 @@
 - **Base de datos Supabase** (`supabase/migrations/0001_init.sql`): verificada con **159 pruebas de seguridad**
   sobre un Postgres real. **Ya aplicada en tu proyecto de Supabase (22-10-2026, “Success. No rows returned”).**
   Si más adelante cambia, se puede volver a ejecutar sin problemas.
-- Estado del código: **1378 pruebas automáticas pasan** y el TypeScript compila sin errores.
-
-**A medias (se pararon a petición tuya; el código está guardado y casi terminado)**
-
-- Datos y sincronización (cliente Dexie + Supabase + modo sin conexión): falta cerrar y revisar.
-- Personajes (Lumi, Borrón, guardianes, 8 compañeros con accesorios) y escenarios (fondos, trampas, cristales,
-  cofre, iconos): falta cerrar y revisar.
-- Sonido, voz y confeti: falta cerrar y revisar.
-- Las revisiones del motor y del contenido.
+- **Datos y sincronización** (Dexie + Supabase + modo sin conexión): terminado y revisado.
+- **Personajes y escenarios** (Lumi, Borrón, guardianes, 8 compañeros con accesorios, fondos, trampas, cristales,
+  cofre, iconos de la app): terminados, revisados y con revisión visual completa (unicornio, rocas e icono corregidos).
+- **Sonido, voz y confeti**: terminado y revisado; la app funciona sin conexión.
+- **Motor y contenido**: revisados (5 correcciones en el motor; el contenido estaba bien).
+- Estado del código: **1382 pruebas automáticas pasan**, el TypeScript compila sin errores y el build de producción
+  funciona.
 
 **Lo que falta después**
 
@@ -42,8 +40,6 @@
 
 - ~~Pegar el SQL en Supabase~~ ✅ hecho. Falta el paso 4 de `docs/SUPABASE_SETUP.md` (URL de inicio de sesión),
   cuando tengamos la dirección de Vercel.
-- Opcional: permitir `yronrdmbgtdcxhfvfjdx.supabase.co` en la red del entorno (Edit → Network access → Allowed
-  domains) para que Claude pueda probar contra tu Supabase real.
 - Vercel, más adelante: importar el repositorio y añadir las 2 variables (paso 5 de la guía).
 
 Datos públicos del proyecto Supabase (es seguro guardarlos, van dentro de la app):
@@ -58,7 +54,7 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_0D1gISNU_rHPTwjXS6mZGQ_SLCBer5_
 ### Arranque
 
 ```bash
-cd /home/user/inessa-mat            # o donde esté el clon; trabajar en la rama dev
+cd /Users/mac13/Desktop/Inessa-Mat   # trabajar en la rama dev
 git checkout dev && npm install
 printf 'VITE_SUPABASE_URL=https://yronrdmbgtdcxhfvfjdx.supabase.co\nVITE_SUPABASE_ANON_KEY=sb_publishable_0D1gISNU_rHPTwjXS6mZGQ_SLCBer5_\n' > .env.local   # opcional
 nohup npx vite --host 0.0.0.0 --port 5173 > /tmp/vite.log 2>&1 &    # servidor para capturas (tools/shot.mjs)
@@ -66,21 +62,21 @@ npm run typecheck && npx vitest run
 bash supabase/tests/run.sh          # 159 checks RLS (crea supabase/.venv con pgserver)
 ```
 
-The container's network blocks `*.supabase.co` unless the user allows it (see above). `download.pytorch.org`
-is blocked; PyPI works.
+On this Mac `*.supabase.co` is reachable. Screenshots: `node tools/shot.mjs` uses Playwright's own Chromium
+(`npx playwright install chromium` once; `CHROMIUM_PATH` overrides). Output goes to `shots/` (gitignored).
 
 ### Module status (ownership in docs/ARCHITECTURE.md)
 
 | Module | Status | Next action |
 |---|---|---|
-| engine | built ✅ (161 tests, ~99.7% coverage) · review interrupted | run review (mode `review`, report `docs/handoff/reports/engine.build.json`) |
-| ink | built ✅ + reviewed ✅ (115 unit + 3 e2e) | — (later: real-device check of palm rejection on iPad/Android) |
-| content | built ✅ · review interrupted | run review (report `docs/handoff/reports/content.build.json`) |
-| ml | model exported (`public/models/digits`, modelId digits-bfa3be125a, metrics in `ml/metrics.json`) · continuation interrupted while training arch v3 (epoch 7/16 was MNIST 99.1 / fonts 98.4 / synth 99.9) | optional: mode `continue` (needs ml/.venv + data again: see ml/README.md), then review |
-| data | build interrupted, substantial; SQL verified (159 checks) and APPLIED to the user's Supabase project | mode `continue`, then review |
-| art-characters | build interrupted, substantial | mode `continue`, then review |
-| art-worlds | build interrupted, substantial | mode `continue`, then review |
-| audio-pwa | build interrupted, substantial | mode `continue`, then review |
+| engine | built ✅ + reviewed ✅ (189 tests) | — |
+| ink | built ✅ + reviewed ✅ (115 unit + 3 e2e) | later: real-device check of palm rejection on iPad/Android |
+| content | built ✅ + reviewed ✅ (76 tests) | — |
+| ml | model exported (`public/models/digits`, modelId digits-bfa3be125a) · arch v3 training was interrupted | optional: mode `continue`, then review |
+| data | built ✅ + reviewed ✅ (68 tests, RLS 159/159) | live Supabase not yet exercised end to end |
+| art-characters | built ✅ + reviewed ✅ + full visual pass | low: octopus cheer pose prop, unused `overHat` hook |
+| art-worlds | built ✅ + reviewed ✅ + full visual pass | — |
+| audio-pwa | built ✅ + reviewed ✅ (159 tests) | real-device voice/haptics check |
 
 The orchestration script with every module prompt is `tools/workflows/numeria-foundations-split.js`.
 Run it with the Workflow tool (scriptPath) and args such as
@@ -89,7 +85,17 @@ Run it with the Workflow tool (scriptPath) and args such as
 Concurrency is 2 agents per workflow in this container (4 CPUs), so run several workflows side by side
 (for example 4 workflows × 2 items).
 
-### Workflow B (not started) — modules and owned paths (see docs/ARCHITECTURE.md)
+### Workflow B — game layer
+
+Script: `tools/workflows/numeria-game.js` (same item format; with no args it builds and reviews all six modules).
+
+Pending integrator decisions from the foundation reviews:
+- index.html viewport: audio-pwa asked to drop `maximum-scale=1, user-scalable=no` (WCAG 1.4.4). Kept for now:
+  pinch-zoom interferes with Pencil writing; decide in the iPad device pass.
+- Main chunk > 500 kB: code-split during integration; consider excluding `*.gallery` chunks from production.
+- Engine: `{child}`/`{pet}` in feedback strings must be rendered by activities via renderTemplate.
+
+Modules and owned paths (see docs/ARCHITECTURE.md):
 
 - **activities-facts**: `src/activities/{facts,race,missing,wheel,necklace,chain,family,maze,pixel,memory,bubbles}`
   + views `Fact/MissingFactor/SkipCount/DoubleChain/FactFamily`. Use `ExerciseView` and `useActivityHost`, call

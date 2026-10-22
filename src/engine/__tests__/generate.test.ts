@@ -520,15 +520,29 @@ describe('generate — adaptive with mastery', () => {
     }
   })
 
-  it('when the new-fact budget is spent by an earlier kind, later kinds fall back to uniform practice', () => {
+  it('when the new-fact budget is spent by an earlier kind, later kinds never introduce more hard facts', () => {
+    // Every fact here is hard (factors 6..9), so the second kind has nothing it may introduce: its share is
+    // delivered with repeats of the facts the first kind already introduced.
     const exs = generate(
       { kinds: ['fact-mul', 'fact-div'], tables: [7], factorRange: [6, 9], adaptive: true },
       10, { rng: createRng(3), mastery: {}, now },
     )
     expect(exs).toHaveLength(10)
-    const mulSkills = new Set(exs.filter((e) => e.kind === 'fact-mul').map((e) => e.skill))
-    expect(mulSkills.size).toBeLessThanOrEqual(3)
-    expect(exs.filter((e) => e.kind === 'fact-div')).toHaveLength(5)
+    const hardFacts = new Set(exs.map((e) => e.skill).filter((s) => s.startsWith('mul:') || s.startsWith('div:')))
+    expect(hardFacts.size).toBeLessThanOrEqual(3)
+    expect(exs.filter((e) => e.kind === 'fact-div')).toHaveLength(0)
+  })
+
+  it('the budget also holds when a later kind has only hard facts and nothing it may repeat yet', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const exs = generate(
+        { kinds: ['fact-mul', 'missing-factor', 'fact-div'], tables: [6, 7, 8], factorRange: [6, 9], adaptive: true },
+        12, { rng: createRng(seed), mastery: {}, now },
+      )
+      expect(exs).toHaveLength(12)
+      const hardFacts = new Set(exs.map((e) => e.skill).filter((s) => s.startsWith('mul:') || s.startsWith('div:')))
+      expect(hardFacts.size).toBeLessThanOrEqual(3)
+    }
   })
 
   it('avoidIds also steers missing-factor items', () => {

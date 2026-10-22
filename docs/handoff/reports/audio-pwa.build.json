@@ -1,0 +1,19 @@
+{
+  "module": "audio-pwa",
+  "summary": "Continued the interrupted audio-pwa build. Almost everything was already on disk and complete: all 24 SfxName recipes (src/audio/sfx.ts), generative ThemePlayer per MusicTheme with crossfade, duck and tab-hidden pause (music.ts, context.ts), Web Speech with es-ES voice selection, queue, character pitch/rate, emoji/markup stripping and maths reading (speech.ts, speechText.ts, voices.ts), haptics (haptics.ts), unlockAudio/applyAudioSettings/setMasterVolume/audioState (index.ts), themed celebrate and stopCelebrations with star particles and a reduced-motion glow (src/fx). This session I verified it and did not change any source. Gallery renders on iPad. Production build precaches fonts, models and icons. Offline reload works. Recommended changes to integrator-owned files are listed under contractRequests.",
+  "publicApi": "src/audio/index.ts: unlockAudio(): void; applyAudioSettings({sound,music,voice}): void; setMasterVolume(v): void (extra); audioState(): 'off'|'locked'|'suspended'|'running' (extra); re-exports sfx, music, speech, haptics. src/fx/index.ts: celebrate(kind), type CelebrationKind, stopCelebrations() (extra). Dev/QA only: src/audio/devtools.ts, offline.ts (renderSfx/renderTheme/analyse), testing/mockAudio.ts, testing/mockSpeech.ts.",
+  "tests": "npx vitest run src/audio src/fx: 9 files, 159 tests passed. npm run typecheck filtered to src/audio and src/fx: zero errors. npx vite build: succeeded, 91 precache entries (about 2.9 MB) including fonts/*.woff, models/digits/model.{json,bin} and icons. Offline test with vite preview on :4173 and Playwright: after the service worker takes control, setOffline plus reload loads with no page errors, and document.fonts.check('16px Fredoka') is true. Gallery screenshot /dev/gallery?only=src/audio on iPad viewport checked visually (shots/audio-ipad.png). Note: tools/shot.mjs hardcodes a Linux Chromium path that does not exist on this Mac, so I ran a copy in the scratchpad pointing at ~/Library/Caches/ms-playwright/chromium_headless_shell-1243. The tool itself is unchanged.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Real-device listening and iOS speech-voice checks are not possible in this container; speech voice selection (Mónica on iPad) and haptics on Android are untested on hardware.",
+    "The app shell served offline is a placeholder WelcomeScreen owned by another module, so the offline test only proves the shell and assets are cached, not the full app.",
+    "Vite warns that the main chunk is 592 kB (over 500 kB). Not from audio code; integrator may want code-splitting.",
+    "tools/shot.mjs hardcodes /opt/pw-browsers/chromium-1194 which does not exist on this machine; other agents will hit the same error."
+  ],
+  "contractRequests": [
+    "index.html: remove maximum-scale=1.0 and user-scalable=no from the viewport meta (WCAG 1.4.4 resize text, low-vision families). Keep viewport-fit=cover and width=device-width.",
+    "vite.config.ts workbox: add navigateFallbackDenylist: [/^\\/dev\\//] so the dev-only /dev/gallery route is not served by the service worker fallback in production, and consider excluding src/**/*.gallery chunks from the production build (they are lazy but still ship).",
+    "vite.config.ts workbox: globPatterns already covers woff, models (json/bin) and icons; no change needed. Optionally add 'favicon.svg' and 'icons/apple-touch-icon.png' to includeAssets so the iOS home-screen icon is available offline.",
+    "tools/shot.mjs: replace the hardcoded executablePath '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' with the Playwright default (omit executablePath) or an env var, so screenshots run on any machine."
+  ]
+}
