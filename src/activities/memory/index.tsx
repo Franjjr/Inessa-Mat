@@ -103,7 +103,7 @@ export default function MemoryActivity({ config, onDone, onExit }: ActivityProps
     const res = check(pair.ex, { type: 'number', value })
     host.reportAttempt({ exercise: pair.ex, check: res, ms: Math.round(now() - pairStart), inputMode: 'tap', hintsUsed: 0 })
     setMistakes((m) => new Set([...m, factCard.pair]))
-    setShake({ ids: [selected.id, card.id], key: Date.now() })
+    setShake({ ids: [selected.id, card.id], key: (shake?.key ?? 0) + 1 })
     setSelected(null)
     sfx.play('wrong')
     haptics.error()
@@ -135,17 +135,24 @@ export default function MemoryActivity({ config, onDone, onExit }: ActivityProps
               disabled={done}
               aria-pressed={picked}
               aria-label={card.side === 'fact' ? `Multiplicación ${card.label}` : `Resultado ${card.label}`}
-              animate={
-                done && !reduce
-                  ? { scale: 0.92, opacity: 0.55 }
-                  : wrong && !reduce
-                    ? { x: [0, -8, 8, -5, 5, 0] }
-                    : { scale: 1, opacity: 1, x: 0 }
-              }
+              animate={done && !reduce ? { scale: 0.92, opacity: 0.55 } : { scale: 1, opacity: 1 }}
               transition={{ duration: 0.35 }}
               data-shake={wrong && shake ? shake.key : undefined}
             >
-              {done ? '✓' : card.label}
+              {done ? (
+                '✓'
+              ) : (
+                // Keyed by the wrong try, so a repeated wrong card remounts and shakes again.
+                <motion.span
+                  key={wrong && shake ? `shake-${shake.key}` : 'rest'}
+                  className={s.label}
+                  initial={{ x: 0 }}
+                  animate={wrong && !reduce ? { x: [0, -8, 8, -5, 5, 0] } : { x: 0 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  {card.label}
+                </motion.span>
+              )}
             </motion.button>
           )
         })}

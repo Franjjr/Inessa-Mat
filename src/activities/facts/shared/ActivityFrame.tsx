@@ -74,7 +74,7 @@ const PRAISE = [
 export function ResultCard({ result, onContinue, extra, untimed }: ResultCardProps) {
   const host = useActivityHost()
   const reduce = useReducedMotion()
-  const perfect = result.correct === result.total
+  const perfect = result.total > 0 && result.correct === result.total
   return (
     <motion.div
       className={s.result}

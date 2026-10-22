@@ -153,8 +153,13 @@
   cursor: pointer;
 }
 .chipName { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-sm); color: var(--c-ink); }
-.chipLocked { opacity: .5; cursor: default; filter: grayscale(.6); }
+.chipLocked { opacity: .72; cursor: default; filter: grayscale(.5); }
 .chipDone { box-shadow: 0 0 0 3px var(--c-gold-soft), var(--shadow-1); }
+
+/* Narrow screens: lay the worlds out in two even rows instead of leaving one orphan chip on the second line. */
+@media (max-width: 1000px) {
+  .worlds { display: grid; grid-template-columns: repeat(4, max-content); justify-content: center; }
+}
 
 /* Phones and small portrait screens: one column. */
 @media (max-width: 760px) {
@@ -169,3 +174,11 @@
 
 /* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
+
+/* The family door sits over the string lights: give it a solid surface so it reads on any background. */
+.family.family {
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  color: var(--c-primary-strong);
+  padding: 0 var(--sp-4);
+}

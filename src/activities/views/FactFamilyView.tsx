@@ -52,7 +52,7 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <svg className={s.triangle} viewBox="0 0 200 170" role="img" aria-label={`Triángulo con ${a}, ${b} y ${p}`}>
         <polygon points="100,12 22,152 178,152" className={s.tri} />
-        <text x="100" y="58" className={s.num} textAnchor="middle">{p}</text>
+        <text x="100" y="104" className={s.num} textAnchor="middle">{p}</text>
         <text x="50" y="142" className={s.num} textAnchor="middle">{a}</text>
         <text x="150" y="142" className={s.num} textAnchor="middle">{b}</text>
       </svg>
@@ -77,7 +77,7 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
                   ariaLabel={`Resultado de ${r.left} ${r.op} ${r.right}`}
                 />
               ) : (
-                <span className={clsx(s.value, flow.revealed[i] && s.valueRevealed)}>{closed ? (flow.revealed[i] ? r.expected : flow.values[i]) : '·'}</span>
+                <span className={clsx(s.value, flow.revealed[i] && s.valueRevealed)}>{closed ? (flow.revealed[i] ? r.expected : flow.values[i]) : <span className={s.blank} aria-hidden />}</span>
               )}
             </li>
           )

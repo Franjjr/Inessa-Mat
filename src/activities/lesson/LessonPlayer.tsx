@@ -38,12 +38,14 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const total = steps.length
   const runs = useMemo(() => computeRuns(steps), [steps])
   const [index, setIndex] = useState(0)
-  const [solved, setSolved] = useState<ReadonlySet<number>>(() => new Set())
+  /** How each try step was settled: true when solved, false when given up. Going back keeps that outcome. */
+  const [settled, setSettled] = useState<ReadonlyMap<number, boolean>>(() => new Map())
   const current = Math.min(Math.max(index, 0), Math.max(total - 1, 0))
   const step = steps[current]
   const run = runs[current]
   const isTry = !!step && step.interaction === 'try' && !!step.trySelector
-  const canContinue = total === 0 || !isTry || solved.has(current)
+  const outcome = settled.get(current)
+  const canContinue = total === 0 || !isTry || outcome !== undefined
   const isLast = current >= total - 1
   const speaker = step?.speaker
   const voice = voiceFor(speaker)
@@ -81,8 +83,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   }, [current, goTo])
 
   // A try step is settled when solved or given up after the last allowed miss: the lesson then goes on.
-  const settle = useCallback((_solved: boolean) => {
-    setSolved((prev) => new Set(prev).add(current))
+  const settle = useCallback((solvedNow: boolean) => {
+    setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
   }, [current])
 
   // Keyboard: arrows and Page keys move, Escape exits, Enter continues when nothing else has focus.
@@ -122,7 +124,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
     )
   }
 
-  const pose = isTry && solved.has(current) ? 'cheer' : 'talk'
+  const pose = isTry && outcome === true ? 'cheer' : 'talk'
   const avatarSize = portrait ? 150 : 200
 
   return (
@@ -157,7 +159,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} onSettled={settle} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} />
                 </SafeVisual>
               ) : Visual ? (
                 <SafeVisual>

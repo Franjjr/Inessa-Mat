@@ -6,3 +6,8 @@
   justify-content: center;
   padding: var(--sp-4);
 }
+
+/* The family card is wider than the default card: triangle beside the four rows on tablets. */
+.wide {
+  width: min(100%, 860px);
+}

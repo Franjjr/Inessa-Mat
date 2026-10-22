@@ -48,13 +48,38 @@ const entries: GalleryEntry[] = [
   },
   {
     title: 'Galera · 84 ÷ 4',
-    width: 640,
+    width: 960,
     render: () => <DivisionView exercise={makeDivision(84, 4)} onAnswered={noop} guided />,
   },
   {
     title: 'Galera · 17 ÷ 5 con resto',
-    width: 640,
+    width: 960,
     render: () => <DivisionView exercise={makeDivision(17, 5)} onAnswered={noop} proof />,
+  },
+  {
+    title: 'Galera · 72 ÷ 3 (baja una cifra)',
+    width: 960,
+    render: () => <DivisionView exercise={makeDivision(72, 3)} onAnswered={noop} guided />,
+  },
+  {
+    title: 'Galera · 347 ÷ 3 con resto',
+    width: 960,
+    render: () => <DivisionView exercise={makeDivision(347, 3)} onAnswered={noop} guided proof />,
+  },
+  {
+    title: 'Galera · 512 ÷ 4 exacta',
+    width: 960,
+    render: () => <DivisionView exercise={makeDivision(512, 4)} onAnswered={noop} guided proof />,
+  },
+  {
+    title: 'Galera · 705 ÷ 6 con cero',
+    width: 960,
+    render: () => <DivisionView exercise={makeDivision(705, 6)} onAnswered={noop} guided proof />,
+  },
+  {
+    title: 'Galera · 418 ÷ 9 con resto',
+    width: 960,
+    render: () => <DivisionView exercise={makeDivision(418, 9)} onAnswered={noop} guided proof />,
   },
   {
     title: 'Problema · elegir operación',

@@ -1,0 +1,35 @@
+{
+  "module": "e2e",
+  "viewed": [
+    "Journey A onboarding (/kids, /kids/new, calibration skipped, prologue to /play): passed on ipad, ipad-portrait, android, desktop",
+    "Journey B world 1 first nodes (story arrival, lesson lesson-groups, groups activity answered on keyboard, reward, map progress and filled stars): passed on desktop; fixme on tablets (APP-1)",
+    "Journey C guardian challenge of world 1 (accept, rounds, spell, rescue story, crystal on map): fixme on all projects (APP-1), failure reproduced on desktop, ipad, ipad-portrait, android",
+    "Journey D shop (buy Piruleta with stars, equip, reload, unequip): passed on ipad, ipad-portrait, android, desktop",
+    "Journey E adult zone (set PIN via gate, family home, child report with heatmap and error list, settings): passed on ipad, ipad-portrait, android, desktop",
+    "Journey F offline (production build on vite preview :4173, service worker controls page, context offline, reload, world map and story still open): passed on ipad, ipad-portrait, android, desktop",
+    "Existing ink e2e spec tests/e2e/ink.spec.ts (kept working under the new config): passed on all four projects",
+    "Projects: ipad 1180x820 touch, ipad-portrait 820x1180 touch, android 1280x800 mobile touch, desktop 1440x900",
+    "Screenshot of APP-1 on desktop: /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/guardian-fail.png",
+    "Screenshot of APP-1 on iPad portrait: /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/guardian-portrait.png",
+    "Screenshot of APP-1 on iPad landscape lesson: /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/b-ipad-fail.png"
+  ],
+  "fixed": [
+    "created /Users/mac13/Desktop/Inessa-Mat/playwright.config.ts (testDir tests/e2e; baseURL from E2E_BASE_URL or http://localhost:5173; projects ipad 1180x820 touch, ipad-portrait 820x1180 touch, android 1280x800 mobile touch, desktop 1440x900; webServers (dev on 5173, vite build + vite preview on 4173) only when E2E_BASE_URL is unset, reuseExistingServer true; CHROMIUM_PATH honoured)",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/helpers.ts (onboarding flow, story tapping, keyboard answers, exercise driver, dev progress helpers via window.__numeriaDev and dynamic imports of /src/data and /src/content)",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/a-onboarding.spec.ts",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/b-world-one.spec.ts (tablets marked test.fixme via APP-1)",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/c-guardian.spec.ts (test.fixme for APP-1 on all projects)",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/d-shop.spec.ts",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/e-adult.spec.ts",
+    "created /Users/mac13/Desktop/Inessa-Mat/tests/e2e/journeys/f-offline.spec.ts (skipped when E2E_BASE_URL is set without E2E_OFFLINE_BASE)",
+    "kept /Users/mac13/Desktop/Inessa-Mat/tests/e2e/ink.spec.ts unchanged (passes under new config)"
+  ],
+  "tests": "Final counts from foreground runs (npx playwright test --project=X --reporter=list): ipad 11 passed, 2 skipped; ipad-portrait 11 passed, 2 skipped; android 11 passed, 2 skipped; desktop 12 passed, 1 skipped; total 45 passed, 0 failed, 7 skipped (skips are test.fixme for APP-1). Journeys run on all four projects. Failures before fixme: B on ipad/ipad-portrait/android-style tablets and C on all projects, both from APP-1. Not verified: android failure cause for B and C was not inspected (failed with the same exercise driver symptoms as the other tablets).",
+  "typecheckClean": false,
+  "openIssues": [
+    "APP-1 (array visual overflows its stage; owner to be confirmed, likely activities-ops ArrayView or lessons visuals and the guardian ExerciseStep layout in world-meta): On iPad landscape (1180x820) lesson /play/w/w1/lesson-groups step 9 'Filas y columnas' (6 rows x 2 columns), the array grid runs up under the top of the card and the lower rows sit under the answer bar, so the child cannot tap every object. On the guardian challenge /play/w/w1/guardian, 6x6 and 5x6 array rounds overflow the card on desktop (1440x900), iPad portrait (820x1180) and iPad landscape: the grid extends past the card, the 'N / 36' counter and the 'Total' row cover the lower rows, and those cells cannot be tapped (Playwright reports the answer region intercepts pointer events). Expected: the whole array fits the stage with the answer bar below it and no overlap. Actual: overflow and overlap. Screenshots: scratchpad guardian-fail.png (desktop), guardian-portrait.png (iPad portrait), b-ipad-fail.png (iPad landscape). Test status: journey B tablets and journey C all projects are test.fixme('APP-1') in tests/e2e/journeys.",
+    "tests/e2e/journeys depend on the Vite dev server for dev helpers (window.__numeriaDev seed/db and dynamic imports of /src/data and /src/content). Journeys C and D and the seeded setup need it; A, B, E, F run on any reachable app but B and C also use devEditProgress only in C and D. Running against E2E_BASE_URL (non-dev) would fail C and D.",
+    "typecheck not run: tests/e2e is outside tsconfig.app.json, and the helpers use window.__numeriaDev typed in src/data/dev.ts; no npm check was done for these files.",
+    "playwright.config.ts webServer for port 4173 runs 'npx vite build && npx vite preview' whenever nothing listens on 4173, so a fresh run rebuilds dist; this rebuilds dist in the repo (dist is gitignored)."
+  ]
+}

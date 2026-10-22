@@ -70,7 +70,7 @@ export default function WelcomeScreen() {
             {backendAvailable && (
               <>
                 <Button variant="secondary" size="lg" block onClick={() => navigate('/login')}>Iniciar sesión</Button>
-                <Button variant="ghost" size="lg" block onClick={() => navigate('/signup')}>Crear cuenta</Button>
+                <Button variant="secondary" size="lg" block onClick={() => navigate('/signup')}>Crear cuenta</Button>
               </>
             )}
           </div>

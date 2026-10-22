@@ -16,22 +16,31 @@
   text-align: center;
 }
 
-/* Fixed grid: every digit column has the same width so subtraction rows line up under the dividend. */
+/* The galera is drawn on squared school paper (cuadrícula azul), with ink-like lines for the casita. Every digit
+   column has the same width, so the printed products and the subtraction lines sit exactly under their digits. */
 .galera {
   --galera-col: calc(var(--cell-size) + 14px);
   --galera-gutter: 34px;
+  --paper-line: color-mix(in srgb, var(--pv-u) 15%, var(--c-surface));
+  --ink-pencil: var(--c-ink-soft);
   display: inline-grid;
   align-items: center;
   justify-items: center;
   column-gap: 0;
   row-gap: 6px;
   padding: var(--sp-4) var(--sp-5);
-  background: var(--c-surface);
+  background-color: var(--c-surface);
+  background-image:
+    linear-gradient(var(--paper-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-line) 1px, transparent 1px);
+  background-size: 28px 28px;
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-1);
   font-family: var(--font-display);
   font-size: var(--fs-num);
   font-variant-numeric: tabular-nums;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .cell {
@@ -41,58 +50,62 @@
   min-width: 0;
 }
 
-/* The vertical line of the "casita": it runs down the gutter, right of the dividend. */
+/* The vertical line of the casita: it runs down the gutter, right of the dividend, in ink. */
 .bracket {
   justify-self: center;
   align-self: stretch;
   width: 4px;
-  background: var(--c-primary);
+  background: var(--c-ink);
   border-radius: var(--r-pill);
-  opacity: .9;
 }
 
 /* Quotient digits sit below the top bar, never on it. */
 .quotient { padding-top: 12px; }
 
-/* The top bar of the casita: sits above the quotient, under the divisor. */
+/* The top bar under the divisor: starts exactly at the vertical line and runs right, in ink. */
 .topBar {
   justify-self: stretch;
   align-self: start;
   height: 4px;
   margin-top: -2px;
-  background: var(--c-primary);
+  margin-left: calc(var(--galera-gutter) / 2 - 2px);
+  background: var(--c-ink);
   border-radius: var(--r-pill);
 }
 
 .divisor {
   display: grid;
-  place-items: center start;
+  place-items: end start;
+  white-space: nowrap;
   padding-left: var(--sp-3);
+  padding-bottom: 6px;
 }
-.divisorNum { font-weight: 600; color: var(--c-primary-strong); }
+.divisorNum { font-weight: 600; color: var(--c-ink); }
 
 .brought {
   border-radius: var(--r-md);
   box-shadow: 0 0 0 3px var(--c-gold);
 }
 
+/* Printed product: one pencil-grey digit per column, same size as the dividend digits. */
 .product {
-  justify-self: end;
+  display: grid;
+  justify-items: center;
+  align-items: end;
   font-weight: 600;
-  color: var(--c-ink-soft);
-  font-size: var(--fs-md);
+  color: var(--ink-pencil);
   line-height: 1;
-  padding-right: 4px;
-  align-self: end;
+  padding-bottom: 2px;
   animation: pop var(--dur-med) var(--ease-bounce);
 }
 
+/* The subtraction line: a short ink stroke under the product, exactly as wide as the partial dividend. */
 .subLine {
+  justify-self: stretch;
   height: 4px;
+  align-self: center;
   border-radius: var(--r-pill);
   background: var(--c-ink);
-  opacity: .8;
-  align-self: start;
 }
 
 .steps {

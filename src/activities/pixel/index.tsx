@@ -135,10 +135,21 @@ export default function PixelActivity({ config, onDone, onExit }: ActivityProps)
     </div>
   )
 
+  // A picture without any usable fact has nothing to ask: finish at once instead of waiting for an answer.
+  if (questions.length === 0) {
+    const empty = { correct: 0, total: 0, stars: 0 as const, ms: 0 }
+    return (
+      <div className={clsx(s.stage, s.resultStage)}>
+        {pictureEl}
+        <ResultCard result={empty} untimed onContinue={() => onDone(empty)} />
+      </div>
+    )
+  }
+
   if (session.result) {
     const result = session.result
     return (
-      <div className={s.stage}>
+      <div className={clsx(s.stage, s.resultStage)}>
         {pictureEl}
         <ResultCard
           result={result}
@@ -164,7 +175,7 @@ export default function PixelActivity({ config, onDone, onExit }: ActivityProps)
         {Object.entries(legend).filter(([k]) => picture.some((row) => row.includes(k))).map(([k, v]) => (
           <span key={k} className={s.key}>
             <span className={s.swatch} style={{ background: v.color }} />
-            {v.name}{v.product !== undefined ? ` · ${v.product}` : ''}
+            {v.name}
           </span>
         ))}
       </div>

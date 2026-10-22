@@ -33,8 +33,8 @@ export default function WheelActivity({ config, onDone, onExit }: ActivityProps)
   const [products, setProducts] = useState<(number | null)[]>(() => numbers.map(() => null))
   const n = numbers.length
   const step = 360 / Math.max(1, n)
-  const turns = session.result ? 2 : 0
-  const rotation = -session.index * step + turns * 360
+  // The wheel turns so that the current number sits under the pointer at the top.
+  const rotation = -session.index * step
 
   if (session.result) {
     return (
@@ -83,10 +83,17 @@ export default function WheelActivity({ config, onDone, onExit }: ActivityProps)
               const done = products[i] !== null
               const current = i === session.index
               return (
-                <g key={i} data-state={done ? 'done' : current ? 'current' : 'open'}>
+                // Each slot turns back by the wheel's angle, so its number always reads upright.
+                <motion.g
+                  key={i}
+                  data-state={done ? 'done' : current ? 'current' : 'open'}
+                  style={{ transformOrigin: `${x}px ${y}px`, transformBox: 'view-box' }}
+                  animate={{ rotate: -rotation }}
+                  transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 90, damping: 16 }}
+                >
                   <circle cx={x} cy={y} r={25} className={`${s.slot} ${done ? s.slotDone : ''} ${current ? s.slotCurrent : ''}`} />
                   <text x={x} y={y + 9} textAnchor="middle" className={s.num}>{done ? products[i] : num}</text>
-                </g>
+                </motion.g>
               )
             })}
           </motion.g>

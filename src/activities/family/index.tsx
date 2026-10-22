@@ -1,4 +1,5 @@
 /* "Familias de números": a triangle with a, b and p; the child writes the four related facts. */
+import clsx from 'clsx'
 import type { ActivityProps, ExerciseOutcome } from '@/types'
 import { useActivityHost } from '../host'
 import FactFamilyView from '../views/FactFamilyView'
@@ -46,7 +47,7 @@ export default function FamilyActivity({ config, onDone, onExit }: ActivityProps
       onExit={onExit}
     >
       {ex && (
-        <div key={`${ex.id}-${session.index}`} className={shared.card}>
+        <div key={`${ex.id}-${session.index}`} className={clsx(shared.card, s.wide)}>
           <FactFamilyView exercise={ex} onAnswered={handle} allowHints />
         </div>
       )}

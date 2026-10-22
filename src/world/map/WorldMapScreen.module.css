@@ -135,7 +135,7 @@
   line-height: 1.15;
   text-align: center;
 }
-.locked .label { color: var(--c-ink-mute); }
+.locked .label { color: #5f4f7d; }
 .stars { display: inline-flex; gap: 2px; }
 
 @media (prefers-reduced-motion: reduce) {

@@ -141,20 +141,20 @@ export function GaleraVisual({ params, phase, runLength, reduced }: VisualProps)
   return (
     <div className={s.stage}>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 4px auto', gridTemplateRows: 'auto auto', alignItems: 'start' }} data-testid="galera">
-        <div style={{ ...cell, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
-        <div style={{ gridRow: '1 / span 2', background: GALERA_BAR, width: 4, alignSelf: 'stretch' }} />
+        <div style={{ ...cell, gridColumn: 1, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
+        <div style={{ gridColumn: 2, gridRow: '1 / span 2', background: GALERA_BAR, width: 4, alignSelf: 'stretch' }} />
         <motion.div
-          style={{ ...cell, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch', position: 'relative', color: multiDigit && st === 1 ? 'var(--c-magic)' : 'var(--c-ink)' }}
+          style={{ ...cell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch', position: 'relative', color: multiDigit && st === 1 ? 'var(--c-magic)' : 'var(--c-ink)' }}
           animate={multiDigit && st === 1 && !reduced ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={motionT(reduced, { duration: 0.8, repeat: multiDigit && st === 1 ? Infinity : 0, repeatDelay: 0.4 })}
           data-testid="divisor"
         >
           {divisor}
         </motion.div>
-        <div style={{ ...cell, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
+        <div style={{ ...cell, gridColumn: 1, gridRow: 2, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
           {remainderShown ? plan.remainder : ''}
         </div>
-        <motion.div style={{ ...cell, minHeight: 60, color: 'var(--c-primary)' }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: quotientShown ? 1 : 0 }} transition={motionT(reduced, GLIDE)} data-testid="quotient">
+        <motion.div style={{ ...cell, gridColumn: 3, gridRow: 2, minHeight: 60, color: 'var(--c-primary)' }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: quotientShown ? 1 : 0 }} transition={motionT(reduced, GLIDE)} data-testid="quotient">
           {quotientShown ? plan.quotient : ''}
         </motion.div>
       </div>

@@ -62,7 +62,6 @@ export default function NecklaceActivity({ config, onDone, onExit }: ActivityPro
       accentSoft="var(--w3-soft)"
       onExit={onExit}
     >
-      <div className={s.string} aria-hidden />
       {ex && (
         <div key={`${ex.id}-${session.index}`} className={shared.card}>
           <SkipCountView exercise={ex} onAnswered={handle} allowHints />

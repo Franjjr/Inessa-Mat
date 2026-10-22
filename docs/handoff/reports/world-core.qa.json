@@ -1,0 +1,35 @@
+{
+  "module": "world-core",
+  "viewed": [
+    "home iPad landscape (seeded, after fix)",
+    "home iPad portrait (before fix)",
+    "home Android 1280x800 (after fix)",
+    "onboarding name step iPad (empty and filled, disabled Siguiente)",
+    "onboarding species step iPad (all 8 species cards)",
+    "onboarding companion-name step iPad (Gatito suggestions, disabled Siguiente)",
+    "map w2 El Río de las Sumas iPad landscape and Android (node states, Aquí tag, locked nodes)"
+  ],
+  "fixed": [
+    "ChildHomeScreen.tsx + .module.css: 'Familia' button now has a solid white pill surface with primary-strong text, so it no longer sits on the string lights (verified on Android capture).",
+    "ChildHomeScreen.module.css: world chips use a 4-column grid at widths up to 1000px, so portrait and Android show two even rows instead of one orphan chip; locked chip opacity raised from .5 to .72 for legibility.",
+    "OnboardingScreen.tsx + .module.css: both disabled 'Siguiente' buttons (name and companion name) get a dashed outlined inactive style via className s.next and selector .next.next:disabled, replacing the faded grayscale primary (verified on iPad capture).",
+    "WorldMapScreen.module.css: locked node labels darkened from --c-ink-mute (#8b7aa8, about 3.8:1) to #5f4f7d for WCAG AA contrast on the light chips."
+  ],
+  "tests": "npx vitest run src/world: 58 tests passed (existing suite; no new test added for the CSS-only fixes). npm run typecheck filtered to src/world: zero errors. Screens were checked by reading PNGs in the session scratchpad, not in the repo.",
+  "typecheckClean": true,
+  "openIssues": [
+    "Coverage gap: picker (ChildPickerScreen) was NOT captured with 1 or 3 children and NOT reviewed; still open.",
+    "Coverage gap: only 1 of 8 world maps captured (w2). Worlds w1, w3 to w8 and their locked/partial/done states are not verified.",
+    "Coverage gap: the full onboarding flow was walked only to the companion-name step for Gatito. The other 7 species, colorways, companion gender, review step, calibration and prologue are not captured. A script exists at /private/tmp/claude-501/-Users-mac13-Desktop-Inessa-Mat/617bc86f-ac41-42c6-9653-ab9e29daea63/scratchpad/scripts/onboarding.mjs.",
+    "Coverage gap: no story scene sequence and no node screen with CompanionBuddy reacting were captured.",
+    "Coverage gap: map on iPad portrait and Android was not judged at the scroll bottom; the cut label seen on Android is scroll content, not a defect.",
+    "Galleries for picker, home and map were NOT added. Those screens depend on data hooks (useActiveChild, useProgress), so a gallery needs fixture providers. Not done.",
+    "Home 'Hola' header and the sync pill sit over the string decoration on iPad landscape; contrast is acceptable but not formally measured.",
+    "Carried over from the prior review: tests mock '@/activities' in GameHost.test.tsx and NodeScreen.test.tsx; remove once the lessons module lands. CompanionBuddy remounts figures per reaction; StoryPlayer rescue value is scene_index/(scenes-1) and may need an explicit marker per scene.",
+    "Contract request (unchanged): tools/shot.mjs has a hardcoded Linux Chromium path that fails on macOS; default should be platform-aware."
+  ],
+  "contractRequests": [
+    "tools/shot.mjs: make the default Chromium executablePath platform-aware (Playwright default when CHROMIUM_PATH is unset). It currently fails on macOS.",
+    "Scratchpad scripts import @playwright/test from the repo node_modules by absolute path because a script outside the repo cannot resolve packages. No change needed unless shot.mjs gains a multi-step mode."
+  ]
+}

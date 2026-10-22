@@ -185,7 +185,7 @@ export default function OnboardingScreen() {
                     placeholder="Escribe tu nombre"
                     onChange={(e) => update({ name: e.target.value })}
                   />
-                  <Button type="submit" size="lg" disabled={!draft.name.trim()}>Siguiente ›</Button>
+                  <Button type="submit" size="lg" className={s.next} disabled={!draft.name.trim()}>Siguiente ›</Button>
                 </form>
               </Question>
             )}
@@ -283,7 +283,7 @@ export default function OnboardingScreen() {
                     placeholder="Escribe un nombre"
                     onChange={(e) => update({ petName: e.target.value })}
                   />
-                  <Button type="submit" size="lg" disabled={!draft.petName.trim()}>Siguiente ›</Button>
+                  <Button type="submit" size="lg" className={s.next} disabled={!draft.petName.trim()}>Siguiente ›</Button>
                 </form>
               </Question>
             )}

@@ -14,6 +14,23 @@ import adult from '../shared/adult.module.css'
 
 const KIND_LABEL = { family: 'Familia', school: 'Colegio' } as const
 
+/** Simple line icons for the section tiles (decorative: the tile title names the link). */
+function TileIcon({ kind }: { kind: 'class' | 'join' | 'settings' | 'privacy' }) {
+  const paths = {
+    class: <><circle cx="9" cy="8" r="3.2" /><path d="M3 19c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><circle cx="17" cy="9" r="2.4" /><path d="M16.5 13.6c2.6.2 4.5 2.2 4.5 4.9" /></>,
+    join: <><path d="M10 14l4-4" /><path d="M8.5 11.5 6 14a3.5 3.5 0 0 0 5 5l2.5-2.5" /><path d="M15.5 12.5 18 10a3.5 3.5 0 0 0-5-5l-2.5 2.5" /></>,
+    settings: <><circle cx="12" cy="12" r="3" /><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6" /></>,
+    privacy: <><path d="M12 3l7 3v5.5c0 4.3-2.9 7.9-7 9.5-4.1-1.6-7-5.2-7-9.5V6l7-3z" /><path d="M9.2 12.2l2 2 3.6-3.8" /></>,
+  } as const
+  return (
+    <span className={s.tileIcon} aria-hidden>
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {paths[kind]}
+      </svg>
+    </span>
+  )
+}
+
 export default function AdultHomeScreen() {
   const { status, activeOrg, organizations, setActiveOrg, backendAvailable } = useAuth()
   const children = useChildren() ?? []
@@ -103,7 +120,7 @@ export default function AdultHomeScreen() {
       <section className={s.tiles} aria-label="Secciones">
         {isSchool ? (
           <Link to="/adult/school" className={s.tile}>
-            <span className={s.tileIcon} aria-hidden>C</span>
+            <TileIcon kind="class" />
             <h3 className={s.tileTitle}>Clases y colegio</h3>
             <p className={s.tileText}>Crea clases, comparte los códigos con las familias y asigna práctica para la semana.</p>
             <span className={s.tileFoot}>Abrir clases →</span>
@@ -111,7 +128,7 @@ export default function AdultHomeScreen() {
         ) : (
           signedIn && (
             <Link to="/adult/join" className={s.tile}>
-              <span className={s.tileIcon} aria-hidden>C</span>
+              <TileIcon kind="join" />
               <h3 className={s.tileTitle}>Unirse a una clase</h3>
               <p className={s.tileText}>Si el colegio de tu hijo o hija usa Numeria, introduce aquí el código de su clase.</p>
               <span className={s.tileFoot}>Introducir código →</span>
@@ -119,13 +136,13 @@ export default function AdultHomeScreen() {
           )
         )}
         <Link to="/adult/settings" className={s.tile}>
-          <span className={s.tileIcon} aria-hidden>A</span>
+          <TileIcon kind="settings" />
           <h3 className={s.tileTitle}>Ajustes y cuenta</h3>
           <p className={s.tileText}>Cuenta, miembros, sonido de cada perfil, cambiar el PIN y cerrar sesión.</p>
           <span className={s.tileFoot}>Abrir ajustes →</span>
         </Link>
         <Link to="/legal/privacidad" className={s.tile}>
-          <span className={s.tileIcon} aria-hidden>P</span>
+          <TileIcon kind="privacy" />
           <h3 className={s.tileTitle}>Privacidad y datos</h3>
           <p className={s.tileText}>Qué datos guardamos de los peques, para qué, y cómo exportarlos o borrarlos.</p>
           <span className={s.tileFoot}>Leer la política →</span>

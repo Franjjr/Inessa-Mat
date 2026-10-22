@@ -1,6 +1,6 @@
 /* Exercise view "array": r rows × c columns of objects. Tap the objects to count, then write the total.
    With `mirror`, after a correct answer the array turns over (rows ↔ columns) to show the mirror rule. */
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import type { ArrayExercise, ExerciseViewProps } from '@/types'
 import { useActivityHost } from '@/activities/host'
 import { NumberInput } from '@/ink'
@@ -92,7 +92,7 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
 
       <div className={s.stage}>
         <div key={turnKey} className={`${s.grid} ${turned ? s.turned : ''}`} role="grid" aria-label={`${rows} filas de ${cols}`}
-          style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          style={{ '--cols': cols, '--rows': rows } as CSSProperties}>
           {cellsInView.map((i) => {
             const on = counted.has(i)
             return (

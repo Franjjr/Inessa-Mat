@@ -83,7 +83,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const cells: ReactNode[] = []
   const lastRow = 3 + (k - 1) * 3 + 2
 
-  // Row 1: dividend digits, the divisor over the quotient.
+  // Row 1: dividend digits, the divisor sits above the top bar.
   digits.forEach((d, i) => {
     const brought = guided && active >= 0 && steps[active].endIndex === i
     cells.push(
@@ -93,12 +93,12 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     )
   })
   cells.push(
-    <div key="dvs" className={s.divisor} style={{ gridRow: 1, gridColumn: `${n + 2} / span ${width}` }}>
+    <div key="dvs" className={s.divisor} style={{ gridRow: 1, gridColumn: n + 2 }}>
       <span className={s.divisorNum} aria-label={`divisor ${ex.divisor}`}>{ex.divisor}</span>
     </div>,
   )
 
-  // Row 2: quotient digits under the divisor, one per open step.
+  // Row 2: quotient digits under the top bar, one per open step.
   steps.forEach((_, j) => {
     if (!open(j)) return
     cells.push(
@@ -117,19 +117,30 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     )
   })
 
-  // Rows 3+: each step is product (printed), a line, then the remainder under the digit just used.
+  // Rows 3+: each step is the product (printed, one digit per column, right-aligned under the partial dividend),
+  // a line, then the remainder under the last digit used.
   steps.forEach((st, j) => {
     if (!open(j)) return
     const base = 3 + j * 3
-    const productText = String(st.product)
-    const endCol = st.endIndex + 2
-    const startCol = Math.max(1, endCol - Math.max(productText.length, st.endIndex - st.startIndex + 1))
+    const productDigits = String(st.product).split('')
+    const partialLength = String(st.partial).length
+    const firstCol = st.endIndex - partialLength + 1 // 0-based column where the partial starts
+    const span = { gridColumn: `${firstCol + 1} / ${st.endIndex + 2}` }
     cells.push(
-      <div key={`p${j}`} className={s.product} style={{ gridRow: base, gridColumn: `${startCol} / ${endCol}` }} aria-label={`producto ${st.product}`}>
-        {productText}
+      <div
+        key={`p${j}`}
+        className={s.product}
+        role="group"
+        aria-label={`producto ${st.product}`}
+        style={{ ...span, gridRow: base, gridTemplateColumns: `repeat(${partialLength}, var(--galera-col))` }}
+      >
+        {Array.from({ length: partialLength }, (_, c) => {
+          const digit = productDigits[c - (partialLength - productDigits.length)]
+          return <span key={c} aria-hidden>{digit ?? ''}</span>
+        })}
       </div>,
     )
-    cells.push(<div key={`l${j}`} className={s.subLine} style={{ gridRow: base + 1, gridColumn: `${startCol} / ${endCol}` }} aria-hidden />)
+    cells.push(<div key={`l${j}`} className={s.subLine} style={{ ...span, gridRow: base + 1 }} aria-hidden />)
     cells.push(
       <div key={`r${j}`} className={s.cell} style={{ gridRow: base + 2, gridColumn: st.endIndex + 1 }}>
         <DigitCell
@@ -168,7 +179,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
           style={{ gridTemplateColumns: `repeat(${n}, var(--galera-col)) var(--galera-gutter) repeat(${width}, var(--galera-col))` }}
         >
           <div className={s.bracket} style={{ gridRow: `1 / ${lastRow + 1}`, gridColumn: n + 1 }} aria-hidden />
-          <div className={s.topBar} style={{ gridRow: 2, gridColumn: `${n + 2} / span ${width}` }} aria-hidden />
+          <div className={s.topBar} style={{ gridRow: 2, gridColumn: `${n + 1} / span ${width + 1}` }} aria-hidden />
           {cells}
         </div>
       </CellGroup>

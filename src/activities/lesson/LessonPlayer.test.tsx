@@ -165,6 +165,37 @@ describe('LessonPlayer: try steps', () => {
   })
 })
 
+describe('LessonPlayer: going back to a settled try step', () => {
+  it('keeps a solved try step solved when the child goes back to it', async () => {
+    const user = userEvent.setup()
+    render(<LessonPlayer lesson={tryLesson} onDone={() => undefined} />)
+    await user.click(nextButton())
+    await user.click(screen.getByRole('button', { name: 'Responder bien' }))
+    await user.click(nextButton())
+    await user.click(screen.getByRole('button', { name: '‹ Atrás' }))
+    expect(screen.getByTestId('lesson-text').textContent).toBe('Te toca.')
+    // No exercise is offered again, so the step cannot be skipped by re-answering it.
+    expect(screen.queryByRole('button', { name: 'Responder bien' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Responder mal' })).toBeNull()
+    expect(screen.getByText(/¡Muy bien/)).toBeInTheDocument()
+    expect(nextButton()).toBeEnabled()
+  })
+
+  it('keeps a given-up try step given up', async () => {
+    const user = userEvent.setup()
+    render(<LessonPlayer lesson={tryLesson} onDone={() => undefined} />)
+    await user.click(nextButton())
+    await user.click(screen.getByRole('button', { name: 'Responder mal' }))
+    await user.click(screen.getByRole('button', { name: 'Otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'Responder mal' }))
+    await user.click(nextButton())
+    await user.click(screen.getByRole('button', { name: '‹ Atrás' }))
+    expect(screen.queryByRole('button', { name: 'Responder bien' })).toBeNull()
+    expect(screen.getByText(/Seguimos con la lección/)).toBeInTheDocument()
+    expect(nextButton()).toBeEnabled()
+  })
+})
+
 describe('LessonPlayer: empty lesson', () => {
   it('still lets the child leave', async () => {
     const user = userEvent.setup()

@@ -365,3 +365,51 @@ describe('bubbles', () => {
     expect(screen.getAllByRole('button', { name: /Burbuja/ }).length).toBeGreaterThan(0)
   })
 })
+
+describe('memory: a repeated wrong card shakes again', () => {
+  it('changes the shake key on every wrong try, even when it is the same card', async () => {
+    const config: ActivityConfig = {
+      kind: 'memory',
+      title: 'Parejas del arcoíris',
+      instructions: 'Empareja.',
+      selector: { kinds: ['fact-mul'], tables: [6] },
+      count: 2,
+    }
+    const host = mockHost()
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    renderIn(host, <MemoryActivity config={config} onDone={vi.fn()} />)
+    const fact = screen.getAllByRole('button', { name: /Multiplicación/ })[0]
+    const [, a, b] = /(\d+) × (\d+)/.exec(fact.getAttribute('aria-label')!)!
+    const product = Number(a) * Number(b)
+    const wrongLabel = screen.getAllByRole('button', { name: /Resultado/ })
+      .map((x) => x.getAttribute('aria-label')!)
+      .find((l) => l !== `Resultado ${product}`)!
+    const keys: string[] = []
+    for (let i = 0; i < 2; i++) {
+      await user.click(screen.getByRole('button', { name: `Multiplicación ${a} × ${b}` }))
+      await user.click(screen.getByRole('button', { name: wrongLabel }))
+      keys.push(screen.getByRole('button', { name: wrongLabel }).getAttribute('data-shake') ?? '')
+      await pass(500)
+    }
+    expect(keys[0]).not.toBe('')
+    expect(keys[1]).not.toBe('')
+    expect(keys[1]).not.toBe(keys[0])
+  })
+})
+
+describe('pixel: a picture without facts finishes instead of freezing', () => {
+  it('shows the result card at once and continues', async () => {
+    const config: ActivityConfig = {
+      kind: 'pixel',
+      title: 'El cristal escondido',
+      instructions: 'Descúbrelo.',
+      selector: { kinds: ['fact-mul'], tables: [6] },
+      params: { picture: ['A'], legend: { A: { product: 97, color: 'var(--c-gold)', name: 'dorado' } } },
+      count: 3,
+    }
+    const onDone = vi.fn()
+    renderIn(mockHost(), <PixelActivity config={config} onDone={onDone} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Seguir' }))
+    expect(onDone.mock.calls[0][0]).toMatchObject({ total: 0, correct: 0 })
+  })
+})

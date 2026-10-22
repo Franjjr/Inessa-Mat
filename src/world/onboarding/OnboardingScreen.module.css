@@ -108,6 +108,17 @@
   box-shadow: var(--shadow-2);
 }
 .label { font-family: var(--font-display); font-size: var(--fs-sm); color: var(--c-ink-soft); }
+
+/* Disabled "Siguiente": a clearly inactive dashed pill instead of a faded primary button. */
+.next.next:disabled {
+  filter: none;
+  opacity: 1;
+  background: var(--c-surface);
+  color: var(--c-ink-mute);
+  box-shadow: none;
+  border: 3px dashed var(--c-ink-mute);
+  cursor: not-allowed;
+}
 .input {
   min-height: 64px;
   padding: 0 var(--sp-4);

@@ -42,8 +42,9 @@ export default function SettingsScreen() {
         signedIn={status === 'signed-in'}
         backendAvailable={backendAvailable}
         onSignOut={async () => {
-          await signOut()
+          // Lock first: the adult area must close even if the sign-out request fails.
           lockAdultArea()
+          await signOut()
           navigate('/welcome', { replace: true })
         }}
       />

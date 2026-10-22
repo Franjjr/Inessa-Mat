@@ -25,15 +25,27 @@
   cofre, iconos de la app): terminados, revisados y con revisión visual completa (unicornio, rocas e icono corregidos).
 - **Sonido, voz y confeti**: terminado y revisado; la app funciona sin conexión.
 - **Motor y contenido**: revisados (5 correcciones en el motor; el contenido estaba bien).
-- Estado del código: **1382 pruebas automáticas pasan**, el TypeScript compila sin errores y el build de producción
+- **El juego completo** (segunda tanda, construido, revisado y con pasada visual):
+  - 18 minijuegos: 11 de tablas y 7 de operaciones (grupos, rectángulos, columnas con llevadas y préstamos,
+    división en galera, repartos, problemas, tablero).
+  - Lecciones animadas: reproductor y 22 animaciones sacadas del cuaderno.
+  - Recorrido del niño: elegir perfil, crear perfil con su animal, inicio, mapa de cada mundo, historias, guardianes,
+    rescates y recompensas.
+  - Álbum, tienda de accesorios, cofre (premio real + palabra VALIENTE), diploma imprimible, juego libre y repaso
+    diario.
+  - Zona de adultos: inicio de sesión, PIN, informe con el mapa de calor de las tablas, colegio con clases y códigos,
+    ajustes y privacidad.
+- **Pruebas completas** (52 recorridos, todos en verde) con Playwright simulando iPad (horizontal y vertical), tablet Android y ordenador: crear niño,
+  jugar el mundo 1, superar al guardián, comprar en la tienda, zona de adultos y uso sin conexión.
+- Estado del código: **1589 pruebas automáticas pasan**, el TypeScript compila sin errores y el build de producción
   funciona.
 
 **Lo que falta después**
 
-1. Segunda tanda: los minijuegos, las lecciones animadas, las pantallas del juego (elegir niño, crear perfil
-   con su animal, mapa, historia, guardián, rescate, recompensas, álbum, tienda, cofre, diploma) y los paneles de
-   padres y profesores.
-2. Unirlo todo, pruebas completas simulando un iPad y una tablet Android, y una revisión final.
+1. Revisión final adversarial (matemáticas, seguridad de la base de datos, sincronización sin conexión, iPad,
+   textos en español, accesibilidad) y los pendientes de la lista técnica de abajo.
+2. **Prueba en aparatos reales** (iPad con Pencil y tablet Android): escritura, rechazo de la palma, voz española,
+   vibración, instalación como app. Esto no se puede simular.
 3. Pasar `dev` a `main` y publicar en Vercel.
 
 **Tus pasos pendientes (cuando quieras)**
@@ -41,6 +53,14 @@
 - ~~Pegar el SQL en Supabase~~ ✅ hecho. Falta el paso 4 de `docs/SUPABASE_SETUP.md` (URL de inicio de sesión),
   cuando tengamos la dirección de Vercel.
 - Vercel, más adelante: importar el repositorio y añadir las 2 variables (paso 5 de la guía).
+- **Página de privacidad** (`src/adult/legal/PrivacyScreen.tsx`): rellenar los huecos marcados [COMPLETAR]/[REVISAR]
+  (titular legal, dirección, email de privacidad, fecha, región de Supabase, conservación, seguridad) y que la revise
+  una asesoría antes de publicar.
+- **Decisiones de producto pendientes**:
+  - Cofre: ahora el niño pulsa «Ya tengo mi premio». ¿Debe marcarlo el adulto?
+  - Juegos con tiempo: activados por defecto. La pedagogía dice que el tiempo debe ser opcional; ¿desactivados por
+    defecto para 7-8 años?
+  - Galera: los productos de cada paso aparecen escritos; en el cuaderno los escribe el niño.
 
 Datos públicos del proyecto Supabase (es seguro guardarlos, van dentro de la app):
 
@@ -85,9 +105,31 @@ Run it with the Workflow tool (scriptPath) and args such as
 Concurrency is 2 agents per workflow in this container (4 CPUs), so run several workflows side by side
 (for example 4 workflows × 2 items).
 
-### Workflow B — game layer
+### Game layer (workflow B) — built, reviewed, visual QA done
 
 Script: `tools/workflows/numeria-game.js` (same item format; with no args it builds and reviews all six modules).
+Reports: `docs/handoff/reports/<module>.{build,review,qa}.json` (qa = visual QA pass + e2e).
+
+| Module | Status | Open (details in the qa report) |
+|---|---|---|
+| activities-facts | ✅ 11 games × 3 devices played through | FactView overflow < 420px (ink NumberInput min width); clue repeats hint 1 |
+| activities-ops | ✅ galera rewritten (school-paper look) | galera not captured portrait/Android; Column/Array/Word views not visually re-checked |
+| lessons | ✅ 70 tests | w3–w8 lessons only checked in the gallery; labels not routed through host.t |
+| world-core | ✅ | picker with several children, maps w1/w3–w8, story sequence not captured |
+| world-meta | ✅ | guardian rounds/pass/fail, reward crystal flight, chest open, diploma print not captured |
+| adult | ✅ PIN lockout persisted | school/class screens need a seeded school org; portrait not captured |
+
+E2E: `npx playwright test` (config `playwright.config.ts`, specs `tests/e2e/**`; reuses the dev server on :5173,
+journey F builds and serves `vite preview` on :4173). Journeys rely on `window.__numeriaDev` (dev server only).
+Fixed by the integrator after QA: array grids overflowing (ArrayView sizes tiles by width AND height), duplicate
+«Siguiente» when the host owns feedback (AnswerBar honours showFeedback=false), stacked companion bubbles (duplicate
+React keys in CompanionBuddy), race nodes receive personal records, lesson try steps own their feedback (no second
+«Siguiente»).
+
+Integrator TODO:
+- Unify the back control: DailyReview uses a «Salir» pill, album/shop/chest/free use a chevron.
+- ink: allow DigitCell borderless variant (galera notebook look) and NumberInput min width < 240px.
+- Copy: free-play title «Piedras con llevadas».
 
 Pending integrator decisions from the foundation reviews:
 - index.html viewport: audio-pwa asked to drop `maximum-scale=1, user-scalable=no` (WCAG 1.4.4). Kept for now:

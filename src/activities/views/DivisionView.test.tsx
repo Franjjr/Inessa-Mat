@@ -30,4 +30,16 @@ describe('DivisionView (galera)', () => {
     expect(outcome.check.correct).toBe(true)
     expect(outcome.check.given).toBe('24 resto 0')
   })
+
+  it('leaves the result and the forward button to the host when feedback is off (guardian, daily review)', () => {
+    render(<DivisionView exercise={makeDivision(84, 4)} onAnswered={() => {}} showFeedback={false} />)
+    const type = (name: RegExp, key: string) => fireEvent.keyDown(screen.getByRole('textbox', { name }), { key })
+    type(/cociente, cifra 1/, '2')
+    type(/resto del paso 1/, '0')
+    type(/cociente, cifra 2/, '1')
+    type(/resto del paso 2/, '0')
+    fireEvent.keyDown(screen.getByRole('textbox', { name: /cociente, cifra 2/ }), { key: 'Enter' })
+    // Regression: the view showed its own "Siguiente" next to the host's, and it did nothing.
+    expect(screen.queryByRole('button', { name: /Siguiente/ })).toBeNull()
+  })
 })

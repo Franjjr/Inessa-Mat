@@ -9,12 +9,28 @@
   font-family: var(--font-read);
 }
 
+/* Wide cards: the triangle sits beside the rows (the answer box needs ~560px for the rows). */
+@media (min-width: 1000px) {
+  .root {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'tri rows'
+      'below below';
+    align-items: center;
+    justify-items: center;
+    column-gap: var(--sp-5);
+    row-gap: var(--sp-4);
+  }
+}
+
 .compact {
   gap: var(--sp-2);
 }
 
 .triangle {
-  width: clamp(130px, 22vmin, 190px);
+  grid-area: tri;
+  width: clamp(120px, 22vmin, 180px);
   height: auto;
 }
 
@@ -33,12 +49,20 @@
 }
 
 .rows {
+  grid-area: rows;
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
   gap: var(--sp-2);
-  width: min(100%, 480px);
+  width: 100%;
+  max-width: 600px;
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.below {
+  grid-area: below;
 }
 
 .row {
@@ -74,6 +98,15 @@
   min-width: 48px;
   text-align: center;
   color: var(--c-success);
+}
+
+.blank {
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  border: 2px dashed var(--c-line);
+  border-radius: var(--r-sm);
+  vertical-align: middle;
 }
 
 .valueRevealed {

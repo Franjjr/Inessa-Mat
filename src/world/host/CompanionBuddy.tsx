@@ -58,12 +58,12 @@ export default function CompanionBuddy({ position = 'bottom-right', size = 120 }
   return (
     <div className={clsx(s.buddy, position === 'bottom-left' ? s.left : s.right)} aria-live="polite">
       {event?.phrase && (
-        <div key={event.id} className={s.bubble} role="status">
+        <div key={`bubble-${event.id}`} className={s.bubble} role="status">
           <span className={s.speaker}>{petName}</span>
           <span className={s.text}>{event.phrase}</span>
         </div>
       )}
-      <div className={clsx(s.figures, event && !reduced && s.bounce)} key={event?.id ?? 'idle'}>
+      <div className={clsx(s.figures, event && !reduced && s.bounce)} key={`figures-${event?.id ?? 'idle'}`}>
         <div className={s.companion}>
           <CompanionArt
             species={companion?.species ?? 'cat'}

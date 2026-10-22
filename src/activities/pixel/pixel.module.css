@@ -81,6 +81,19 @@
   padding: var(--sp-4);
 }
 
+.resultStage {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--sp-5);
+}
+
+/* Narrow screens: the revealed picture sits above the result card. */
+@media (max-width: 899px) {
+  .resultStage {
+    flex-direction: column;
+  }
+}
+
 .caption {
   margin: 0;
   font-family: var(--font-display);

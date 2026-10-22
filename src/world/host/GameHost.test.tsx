@@ -101,4 +101,25 @@ describe('GameHostProvider', () => {
     const bubble = await screen.findByRole('status')
     expect(bubble.textContent?.length ?? 0).toBeGreaterThan(0)
   })
+
+  it('keeps a single speech bubble when reactions follow each other', async () => {
+    const child = await createChild({
+      nickname: 'Bubble Test', gender: 'f', companion: { species: 'cat', name: 'Luna', gender: 'f', colorway: 'default', equipped: [] },
+    })
+    await activate(child.id)
+
+    let host: ActivityHost | null = null
+    render(
+      <GameHostProvider>
+        <Capture onHost={(h) => { host = h }} />
+        <CompanionBuddy />
+      </GameHostProvider>,
+    )
+    await waitFor(() => expect(host).not.toBeNull())
+    await flushTimers(150)
+    for (let i = 0; i < 6; i++) act(() => { host!.react(i % 2 ? 'correct' : 'encourage') })
+    await screen.findByRole('status')
+    // Regression: the bubble and the figures shared a React key, which left orphaned bubbles stacked on screen.
+    expect(screen.getAllByRole('status')).toHaveLength(1)
+  })
 })

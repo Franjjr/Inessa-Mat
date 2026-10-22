@@ -35,21 +35,28 @@
 }
 
 .grid {
+  /* Tile size fits BOTH the width and the height budget, so tall arrays (6 x 2, 6 x 6) never overflow. */
+  --gap: 6px;
+  --w: min(560px, 74vw);
+  --h: min(44dvh, 380px);
+  --tile: max(44px, min(
+    calc((var(--w) - (var(--cols) - 1) * var(--gap)) / var(--cols)),
+    calc((var(--h) - (var(--rows) - 1) * var(--gap)) / var(--rows)),
+    96px));
   display: grid;
-  gap: 6px;
-  width: min(560px, 74vw);
-  max-height: min(52vh, 420px);
-  aspect-ratio: auto;
+  gap: var(--gap);
+  grid-template-columns: repeat(var(--cols), var(--tile));
+  grid-auto-rows: var(--tile);
 }
 
 .tile {
-  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
   min-width: 0;
-  min-height: 44px;
   border: 0;
   border-radius: var(--r-sm);
   background: var(--c-surface-2);
-  font-size: clamp(22px, 4.4vmin, 40px);
+  font-size: min(40px, calc(var(--tile) * 0.58));
   line-height: 1;
   display: grid;
   place-items: center;
@@ -107,7 +114,7 @@
   font-weight: 600;
 }
 
-.compact .grid { width: min(380px, 60vw); }
+.compact .grid { --w: min(380px, 60vw); --h: min(34dvh, 280px); }
 
 @keyframes flip {
   from { transform: rotateY(90deg); opacity: 0; }

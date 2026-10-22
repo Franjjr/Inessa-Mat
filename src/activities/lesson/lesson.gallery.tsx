@@ -35,6 +35,12 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
 
 const STATES = 5
 
+/** Every Season 1 lesson, so each one can be reviewed without unlocking the worlds first. */
+const SEASON1_LESSON_IDS = [
+  'w1-groups', 'w1-easy', 'w2-placevalue', 'w2-carry', 'w3-five', 'w3-rhyme', 'w4-borrow', 'w4-zero',
+  'w5-double', 'w5-pattern', 'w6-seven', 'w6-nine', 'w7-split', 'w7-carry', 'w8-share', 'w8-galera',
+]
+
 /** One visual with step controls: ◀ ▶ and autoplay, to check every phase of its animation. */
 function VisualDemo({ id }: { id: LessonVisualId }) {
   const [phase, setPhase] = useState(0)
@@ -68,10 +74,11 @@ const entries: GalleryEntry[] = [
     background: '#fff',
     render: () => <VisualDemo id={id} />,
   })),
-  ...['w1-groups', 'w2-carry', 'w4-zero', 'w8-galera'].map((id) => ({
+  ...SEASON1_LESSON_IDS.map((id) => ({
     title: `lección · ${id}`,
-    width: 1180,
-    height: 820,
+    // The frame follows the viewport, so each device (iPad landscape or portrait, Android) shows the real size.
+    width: Math.min(window.innerWidth - 48, 1280),
+    height: window.innerHeight - 96,
     background: 'var(--c-bg)',
     render: () => {
       const lesson = lessons.find((l) => l.id === id)
