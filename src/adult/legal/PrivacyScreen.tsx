@@ -45,7 +45,7 @@ export default function PrivacyScreen() {
         <ul>
           <li><strong>De la niña o el niño:</strong> su apodo, su género gramatical (para las frases de la aplicación), su curso y su año de nacimiento si lo indicas, y el nombre y tipo del compañero animal que elija.</li>
           <li><strong>Su aprendizaje:</strong> respuestas a los ejercicios (acierto o error, tipo de error, tiempo de respuesta), sesiones de juego (fecha y minutos), avances por mundos y ajustes de juego que elijas.</li>
-          <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo <Todo>REVISAR: confirmar si alguna opción las sube a la nube</Todo>.</li>
+          <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo y nunca se suben a la nube.</li>
           <li><strong>De las personas adultas:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
         </ul>
         <p>No pedimos el nombre completo, la dirección, el teléfono ni fotos de los niños.</p>
@@ -78,7 +78,7 @@ export default function PrivacyScreen() {
         <p>
           Los datos de cuenta y los datos sincronizados se guardan en una base de datos alojada con Supabase, que actúa como proveedor
           de la infraestructura. Región donde se alojan: <Todo>COMPLETAR, según el proyecto</Todo>. Acuerdo de tratamiento de datos:{' '}
-          <Todo>COMPLETAR enlace</Todo>. Las reglas de acceso se aplican en la propia base de datos, de modo que cada familia o colegio
+          supabase.com/legal/dpa. Las reglas de acceso se aplican en la propia base de datos, de modo que cada familia o colegio
           solo puede ver sus propios perfiles.
         </p>
 
@@ -107,8 +107,10 @@ export default function PrivacyScreen() {
 
         <h2>10. Lectura en voz alta</h2>
         <p>
-          Numeria puede leer las instrucciones en voz alta usando las voces del propio dispositivo. Según el navegador y el sistema, esas voces pueden
-          funcionar sin enviar el texto fuera del dispositivo, o no. <Todo>REVISAR qué navegadores lo envían a un servicio externo</Todo>
+          Numeria puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
+          sin conexión. En iPad y iPhone las voces son del propio sistema. En algunos navegadores, como Chrome, ciertas voces envían el texto a
+          los servidores del fabricante del navegador para pronunciarlo. Ese texto son las instrucciones del juego y puede incluir el apodo del
+          peque. Si lo prefieres, puedes apagar la voz en la zona de adultos, en Ajustes.
         </p>
 
         <h2>11. Cambios en esta política</h2>
