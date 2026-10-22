@@ -2,5 +2,4 @@
 .doc h2 { margin: var(--sp-3) 0 0; font-family: var(--font-display); font-weight: 600; font-size: var(--fs-lg); color: var(--c-primary-strong); }
 .doc p, .doc li { margin: 0; font-size: var(--fs-md); line-height: 1.6; color: var(--c-ink); }
 .doc ul { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 6px; }
-.todo { display: inline; padding: 1px 6px; border-radius: 6px; background: var(--c-gold-soft); color: #7c2d12; font-weight: 700; border: 1px dashed #d97706; }
 .updated { font-size: var(--fs-sm); color: var(--c-ink-mute); margin: 0; }

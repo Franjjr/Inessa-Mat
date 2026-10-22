@@ -1,43 +1,28 @@
-/* Privacy policy for families and schools (Spanish). Facts that only the owner can confirm are marked as
-   placeholders with a visible tag, so nothing unverified is published as true. */
-import type { ReactNode } from 'react'
+/* Privacy policy for families and schools (Spanish). Kept to the minimum, and only states facts verified in the code. */
 import { AdultPage } from '../shared/AdultPage'
 import s from './legal.module.css'
 import adult from '../shared/adult.module.css'
 
-/** Visible marker for information the owner must complete or verify before publishing. */
-function Todo({ children }: { children: ReactNode }) {
-  return <span className={s.todo}>[{children}]</span>
-}
-
 export default function PrivacyScreen() {
   return (
     <AdultPage title="Privacidad y datos" back="/">
-      <div className={adult.notice} role="note" style={{ background: 'var(--c-gold-soft)' }}>
-        <span className={adult.noticeMark} aria-hidden>!</span>
-        <span>
-          Texto en revisión. Las partes marcadas así <Todo>COMPLETAR</Todo> o <Todo>REVISAR</Todo> deben confirmarse
-          antes de publicar esta política.
-        </span>
-      </div>
-
       <article className={s.doc} aria-labelledby="privacy-doc-title">
         <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Numeria</h2>
-        <p className={s.updated}>Última actualización: <Todo>FECHA</Todo></p>
+        <p className={s.updated}>Última actualización: 22 de octubre de 2026</p>
 
         <p>
           Numeria es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
-          cuánto tiempo los guardamos y qué derechos tienes. Está escrita para las familias y los colegios que la usan.
+          cuánto tiempo los guardamos y qué derechos tienes. Su uso es voluntario: puedes dejar de usarla y borrar los datos cuando quieras.
         </p>
 
         <h2>1. Quién es responsable</h2>
         <p>
-          Responsable del tratamiento: Fran Julian, <Todo>DIRECCIÓN</Todo>. Correo de privacidad:{' '}
-          <Todo>CORREO DE PRIVACIDAD</Todo>.
+          Responsable del tratamiento: Fran Julian, Calle Bellido, Jaca (Huesca), España. Correo de privacidad:{' '}
+          <a href="mailto:contact@falkir.es">contact@falkir.es</a>.
         </p>
         <p>
-          Si un colegio crea clases en Numeria, el colegio decide cómo se usan los datos de su alumnado dentro de la clase.
-          En ese caso Numeria actúa como proveedor que trata los datos por cuenta del colegio. <Todo>REVISAR con asesoría antes de publicar</Todo>
+          Si un colegio crea clases en Numeria, el colegio es el responsable de los datos de su alumnado dentro de la clase, y Numeria
+          solo los trata por su cuenta y siguiendo sus instrucciones, como encargado del tratamiento.
         </p>
 
         <h2>2. Qué datos guardamos</h2>
@@ -68,8 +53,8 @@ export default function PrivacyScreen() {
         <h2>5. Base legal y consentimiento</h2>
         <p>
           Tratamos los datos porque la persona adulta lo pide al crear el perfil y acepta esta política (consentimiento, artículo 6.1.a
-          del Reglamento General de Protección de Datos). Cuando un colegio gestiona las clases, la base es la función educativa del centro
-          <Todo>REVISAR</Todo>. En España, el consentimiento para tratar datos de menores de 14 años lo dan quienes ejercen su patria potestad o tutela
+          del Reglamento General de Protección de Datos). Cuando un colegio gestiona las clases, es el colegio quien
+          determina la base legal. En España, el consentimiento para tratar datos de menores de 14 años lo dan quienes ejercen su patria potestad o tutela
           (artículo 7 de la Ley Orgánica 3/2018).
         </p>
         <p>Al unir a un peque a una clase, la persona adulta da su consentimiento expreso en ese momento, y puede pedir que lo retiren.</p>
@@ -77,7 +62,7 @@ export default function PrivacyScreen() {
         <h2>6. Dónde se guardan los datos</h2>
         <p>
           Los datos de cuenta y los datos sincronizados se guardan en una base de datos alojada con Supabase, que actúa como proveedor
-          de la infraestructura. Región donde se alojan: <Todo>COMPLETAR, según el proyecto</Todo>. Acuerdo de tratamiento de datos:{' '}
+          de la infraestructura. Región donde se alojan: Unión Europea (Irlanda). Acuerdo de tratamiento de datos:{' '}
           supabase.com/legal/dpa. Las reglas de acceso se aplican en la propia base de datos, de modo que cada familia o colegio
           solo puede ver sus propios perfiles.
         </p>
@@ -85,14 +70,14 @@ export default function PrivacyScreen() {
         <h2>7. Cuánto tiempo los guardamos</h2>
         <p>
           Mientras la cuenta o el perfil exista. Si borras un perfil, sus datos se eliminan de este dispositivo y, si estaba en la nube,
-          también de la nube. Las copias de seguridad del proveedor se borran según su calendario <Todo>COMPLETAR plazo</Todo>.
+          también de la nube. Pueden quedar durante un tiempo limitado en las copias de seguridad automáticas del proveedor, que se eliminan según su propio calendario.
         </p>
 
         <h2>8. Tus derechos</h2>
         <p>
           Puedes pedir el acceso a tus datos y los de tus hijos, corregirlos, borrarlos, limitar su uso, oponerte a su tratamiento y
           recibirlos en un formato que puedas llevarte. Para descargar todo lo que guarda un perfil, entra en su informe desde la zona
-          de adultos y pulsa «Descargar sus datos». Para cualquier otra petición, escribe a <Todo>CORREO DE PRIVACIDAD</Todo>.
+          de adultos y pulsa «Descargar sus datos». Para cualquier otra petición, escribe a <a href="mailto:contact@falkir.es">contact@falkir.es</a>.
         </p>
         <p>
           Si crees que no hemos respetado tus derechos, puedes presentar una reclamación ante la Agencia Española de Protección de Datos
@@ -101,8 +86,8 @@ export default function PrivacyScreen() {
 
         <h2>9. Seguridad</h2>
         <p>
-          Protegemos la información con controles de acceso en la base de datos, contraseñas gestionadas por el proveedor de cuentas y un PIN
-          en el dispositivo para la zona de adultos. <Todo>COMPLETAR: medidas técnicas concretas verificadas</Todo>
+          Protegemos la información con conexiones cifradas, reglas de acceso en la propia base de datos para que cada familia o colegio
+          solo vea lo suyo, contraseñas gestionadas por el proveedor de cuentas y un PIN en el dispositivo para la zona de adultos.
         </p>
 
         <h2>10. Lectura en voz alta</h2>
@@ -116,7 +101,6 @@ export default function PrivacyScreen() {
         <h2>11. Cambios en esta política</h2>
         <p>Si cambiamos esta política de forma importante, te lo diremos dentro de la aplicación antes de que el cambio entre en vigor.</p>
 
-        <p className={s.updated}>Esta página es un resumen para familias y colegios. No sustituye el asesoramiento jurídico.</p>
       </article>
     </AdultPage>
   )

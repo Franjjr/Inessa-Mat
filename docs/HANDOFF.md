@@ -64,9 +64,9 @@
 - ~~Pegar el SQL en Supabase~~ ✅ hecho. Falta el paso 4 de `docs/SUPABASE_SETUP.md` (URL de inicio de sesión),
   cuando tengamos la dirección de Vercel.
 - Vercel, más adelante: importar el repositorio y añadir las 2 variables (paso 5 de la guía).
-- **Página de privacidad** (`src/adult/legal/PrivacyScreen.tsx`): rellenar los huecos marcados [COMPLETAR]/[REVISAR]
-  (titular legal, dirección, email de privacidad, fecha, región de Supabase, conservación, seguridad) y que la revise
-  una asesoría antes de publicar.
+- ~~Página de privacidad~~ ✅ completada el 22-10-2026 (Fran Julian, Calle Bellido, Jaca; contact@falkir.es; Supabase
+  en la UE, Irlanda). Versión mínima; si la app crece o la usan colegios de forma oficial, conviene que la revise una
+  asesoría.
 - **Decisiones de producto tomadas (22-10-2026)**:
   - Cofre: solo el adulto marca el premio como entregado (informe del niño → «Marcar como entregado»). El niño ve
     «¡Te lo has ganado! Pídeselo a tu familia.»
