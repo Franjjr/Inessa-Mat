@@ -18,8 +18,8 @@
 - **Contenido**: los 8 mundos, la historia del compañero que se mete en líos, lecciones, guardianes, accesorios,
   pegatinas y frases.
 - **Base de datos Supabase** (`supabase/migrations/0001_init.sql`): verificada con **159 pruebas de seguridad**
-  sobre un Postgres real. Ya se puede pegar en Supabase (ver `docs/SUPABASE_SETUP.md`, paso 3). Se puede volver
-  a ejecutar sin problemas si mañana cambia algo.
+  sobre un Postgres real. **Ya aplicada en tu proyecto de Supabase (22-10-2026, “Success. No rows returned”).**
+  Si más adelante cambia, se puede volver a ejecutar sin problemas.
 - Estado del código: **1378 pruebas automáticas pasan** y el TypeScript compila sin errores.
 
 **A medias (se pararon a petición tuya; el código está guardado y casi terminado)**
@@ -40,7 +40,8 @@
 
 **Tus pasos pendientes (cuando quieras)**
 
-- Pegar el SQL en Supabase: `docs/SUPABASE_SETUP.md`, paso 3.
+- ~~Pegar el SQL en Supabase~~ ✅ hecho. Falta el paso 4 de `docs/SUPABASE_SETUP.md` (URL de inicio de sesión),
+  cuando tengamos la dirección de Vercel.
 - Opcional: permitir `yronrdmbgtdcxhfvfjdx.supabase.co` en la red del entorno (Edit → Network access → Allowed
   domains) para que Claude pueda probar contra tu Supabase real.
 - Vercel, más adelante: importar el repositorio y añadir las 2 variables (paso 5 de la guía).
@@ -76,7 +77,7 @@ is blocked; PyPI works.
 | ink | built ✅ + reviewed ✅ (115 unit + 3 e2e) | — (later: real-device check of palm rejection on iPad/Android) |
 | content | built ✅ · review interrupted | run review (report `docs/handoff/reports/content.build.json`) |
 | ml | model exported (`public/models/digits`, modelId digits-bfa3be125a, metrics in `ml/metrics.json`) · continuation interrupted while training arch v3 (epoch 7/16 was MNIST 99.1 / fonts 98.4 / synth 99.9) | optional: mode `continue` (needs ml/.venv + data again: see ml/README.md), then review |
-| data | build interrupted, substantial; SQL verified (159 checks) | mode `continue`, then review |
+| data | build interrupted, substantial; SQL verified (159 checks) and APPLIED to the user's Supabase project | mode `continue`, then review |
 | art-characters | build interrupted, substantial | mode `continue`, then review |
 | art-worlds | build interrupted, substantial | mode `continue`, then review |
 | audio-pwa | build interrupted, substantial | mode `continue`, then review |
