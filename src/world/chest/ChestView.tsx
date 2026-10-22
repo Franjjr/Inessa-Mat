@@ -19,11 +19,10 @@ export interface ChestViewProps {
   openText: string
   childName: string
   diplomaReady: boolean
-  onClaim?: () => void
   onDiploma?: () => void
 }
 
-export function ChestView({ state, reward, lockedText, openText, childName, diplomaReady, onClaim, onDiploma }: ChestViewProps) {
+export function ChestView({ state, reward, lockedText, openText, childName, diplomaReady, onDiploma }: ChestViewProps) {
   const { open, collected, total, letters, word } = state
   const celebrated = useRef(false)
 
@@ -72,9 +71,9 @@ export function ChestView({ state, reward, lockedText, openText, childName, dipl
                 {reward.description ? <p className={s.prizeText}>{reward.description}</p> : null}
                 {reward.claimed ? (
                   <p className={s.claimed}>¡Ya lo tienes! Disfrútalo mucho.</p>
-                ) : onClaim ? (
-                  <Button variant="gold" size="lg" onClick={onClaim}>¡Ya tengo mi premio!</Button>
-                ) : null}
+                ) : (
+                  <p className={s.claimed}>¡Te lo has ganado! Pídeselo a tu familia.</p>
+                )}
               </Card>
             ) : (
               <p className={s.lead}>Tu familia está preparando una sorpresa especial.</p>

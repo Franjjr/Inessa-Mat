@@ -34,7 +34,6 @@ const gallery: GalleryEntry[] = [
         openText="¡El Gran Cofre se ha abierto! Dentro hay una sorpresa solo para ti."
         childName="Inessa"
         diplomaReady
-        onClaim={() => {}}
         onDiploma={() => {}}
       />
     ),

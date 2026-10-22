@@ -71,14 +71,12 @@ describe('ChestScreen', () => {
     expect(state.progress!.chestOpened).toBe(true)
   })
 
-  it('the child can mark the prize as received', async () => {
+  it('only the adult marks the prize as delivered: the child is told to ask for it', async () => {
     state.progress = progressWithCrystals(['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'])
-    const { default: userEvent } = await import('@testing-library/user-event')
-    const user = userEvent.setup()
     renderChest()
 
-    await user.click(await screen.findByRole('button', { name: '¡Ya tengo mi premio!' }))
-    await waitFor(() => expect(data.markRewardClaimed).toHaveBeenCalledWith('r1'))
-    expect(await screen.findByText('¡Ya lo tienes! Disfrútalo mucho.')).toBeInTheDocument()
+    expect(await screen.findByText('¡Te lo has ganado! Pídeselo a tu familia.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /premio/ })).toBeNull()
+    expect(data.markRewardClaimed).not.toHaveBeenCalled()
   })
 })

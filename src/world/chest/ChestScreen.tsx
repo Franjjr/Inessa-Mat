@@ -1,10 +1,11 @@
 /* Route /play/chest: the Gran Cofre. Locked until all 8 crystals are won. When it opens, the adult's chest reward
-   is marked unlocked (once) and the progress records chestOpened; the child can then mark the prize as received. */
+   is marked unlocked (once) and the progress records chestOpened. Only the adult marks the prize as delivered
+   (from the child's report), so the child just sees it and asks for it. */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CHEST_TEXT } from '@/content'
 import {
-  getRewards, markRewardClaimed, markRewardUnlocked, updateProgress, useActiveChild, useProgress,
+  getRewards, markRewardUnlocked, updateProgress, useActiveChild, useProgress,
 } from '@/data'
 import { Spinner, toast } from '@/ui'
 import type { Reward } from '@/types'
@@ -59,17 +60,6 @@ export default function ChestScreen() {
     return <Spinner label="Abriendo el cofre…" />
   }
 
-  const claim = async () => {
-    if (!reward || reward.claimedAt) return
-    try {
-      await markRewardClaimed(reward.id)
-      setRewards(await getRewards(child.id))
-      toast('¡Disfrútalo mucho!')
-    } catch {
-      toast('No hemos podido guardarlo. Prueba otra vez.')
-    }
-  }
-
   return (
     <ChestView
       state={state}
@@ -78,7 +68,6 @@ export default function ChestScreen() {
       openText={childText(child, CHEST_TEXT.open)}
       childName={childText(child, '{child}')}
       diplomaReady={Boolean(progress.diplomaEarnedAt)}
-      onClaim={reward && !reward.claimedAt ? claim : undefined}
       onDiploma={() => navigate('/play/diploma')}
     />
   )

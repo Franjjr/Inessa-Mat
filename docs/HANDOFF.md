@@ -67,11 +67,14 @@
 - **Página de privacidad** (`src/adult/legal/PrivacyScreen.tsx`): rellenar los huecos marcados [COMPLETAR]/[REVISAR]
   (titular legal, dirección, email de privacidad, fecha, región de Supabase, conservación, seguridad) y que la revise
   una asesoría antes de publicar.
-- **Decisiones de producto pendientes**:
-  - Cofre: ahora el niño pulsa «Ya tengo mi premio». ¿Debe marcarlo el adulto?
-  - Juegos con tiempo: activados por defecto. La pedagogía dice que el tiempo debe ser opcional; ¿desactivados por
-    defecto para 7-8 años?
-  - Galera: los productos de cada paso aparecen escritos; en el cuaderno los escribe el niño.
+- **Decisiones de producto tomadas (22-10-2026)**:
+  - Cofre: solo el adulto marca el premio como entregado (informe del niño → «Marcar como entregado»). El niño ve
+    «¡Te lo has ganado! Pídeselo a tu familia.»
+  - Juegos con tiempo: se quedan activados por defecto. Solo aparecen cuando el niño ya domina las tablas, compiten
+    contra sus propias marcas y se pueden apagar por niño en Zona de adultos → informe → Ajustes.
+  - Galera: los productos de cada paso siguen apareciendo escritos (ayuda); en el cuaderno los escribe el niño.
+    Revisar tras las pruebas con niños.
+  - Precios de accesorios: se mantienen los actuales; revisar en las pruebas y congelar antes de publicar.
 
 Datos públicos del proyecto Supabase (es seguro guardarlos, van dentro de la app):
 
