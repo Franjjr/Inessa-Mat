@@ -1,0 +1,77 @@
+.pop {
+  position: fixed;
+  z-index: var(--z-ink);
+  background: var(--c-surface);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2), 0 0 0 2px var(--c-line);
+  padding: 10px 12px 12px;
+  animation: pop var(--dur-med) var(--ease-bounce);
+  transform-origin: var(--arrow, 50%) 100%;
+}
+.below { transform-origin: var(--arrow, 50%) 0; }
+
+.pop::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--arrow, 50%) - 9px);
+  bottom: -8px;
+  width: 18px;
+  height: 18px;
+  background: var(--c-surface);
+  transform: rotate(45deg);
+  border-radius: 3px;
+  box-shadow: 2px 2px 0 0 var(--c-line);
+}
+.below::after { bottom: auto; top: -8px; box-shadow: -2px -2px 0 0 var(--c-line); }
+
+.title {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  text-align: center;
+  margin: 0 4px 8px;
+  white-space: nowrap;
+}
+
+.chips {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.many .chips {
+  display: grid;
+  grid-template-columns: repeat(6, var(--tap-min));
+}
+
+.chip {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: 50%;
+  border: 0;
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 30px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 var(--c-line);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+.chip:active { transform: translateY(2px) scale(.96); box-shadow: 0 1px 0 var(--c-line); }
+.current { background: var(--c-primary); color: var(--c-surface); box-shadow: 0 3px 0 var(--c-primary-strong); }
+.rewrite { background: var(--c-surface-2); color: var(--c-ink-soft); box-shadow: inset 0 0 0 2px var(--c-line); }
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pop { animation: none; }
+  .chip:active { transform: none; }
+}

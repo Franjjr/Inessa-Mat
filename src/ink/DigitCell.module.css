@@ -1,0 +1,207 @@
+.cell {
+  --w: var(--cell-size);
+  --h: calc(var(--w) * 1.16);
+  --scale: 1;
+  --bg: var(--c-surface);
+  --border: var(--c-line);
+  --digit: var(--c-ink);
+  --band: transparent;
+  position: relative;
+  display: inline-block;
+  flex: none;
+  vertical-align: middle;
+  width: calc(var(--w) * var(--scale));
+  height: calc(var(--h) * var(--scale));
+}
+.sm { --w: calc(var(--cell-size) * .8); }
+.lg { --w: calc(var(--cell-size) * 1.25); }
+.big { --scale: 1.2; }
+.carry { --w: var(--cell-size-sm); --h: var(--cell-size-sm); --digit: var(--c-magic); }
+
+/* ---- place-value colours (same as the workbook houses) */
+.pv_u { --bg: var(--pv-u-soft); --border: color-mix(in srgb, var(--pv-u) 38%, var(--c-surface)); --band: var(--pv-u); }
+.pv_d { --bg: var(--pv-d-soft); --border: color-mix(in srgb, var(--pv-d) 38%, var(--c-surface)); --band: var(--pv-d); }
+.pv_c { --bg: var(--pv-c-soft); --border: color-mix(in srgb, var(--pv-c) 38%, var(--c-surface)); --band: var(--pv-c); }
+.pv_um { --bg: var(--pv-um-soft); --border: color-mix(in srgb, var(--pv-um) 42%, var(--c-surface)); --band: var(--pv-um); }
+
+/* ---- the writing surface (focusable; holds the canvas) */
+.surface {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-md);
+  background: var(--bg);
+  border: 3px solid var(--border);
+  box-shadow: inset 0 3px 0 rgba(46, 26, 71, .035), 0 2px 0 rgba(46, 26, 71, .05);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: crosshair;
+  outline: none;
+  transition: border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), background-color var(--dur-med) var(--ease-out);
+}
+.surface::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  border-radius: calc(var(--r-md) - 4px) calc(var(--r-md) - 4px) 0 0;
+  background: var(--band);
+  opacity: .85;
+  pointer-events: none;
+}
+.surface:focus-visible {
+  border-color: var(--c-magic);
+  box-shadow: 0 0 0 4px var(--c-magic-soft);
+}
+
+.guide {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 16%;
+  border-bottom: 2px dashed var(--c-line);
+  pointer-events: none;
+  transition: opacity var(--dur-med);
+}
+.hasDigit .guide { opacity: 0; }
+.carry .guide { display: none; }
+.pv_u .guide, .pv_d .guide, .pv_c .guide, .pv_um .guide { border-bottom-color: var(--border); }
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  color: var(--c-ink); /* deep plum ink, read by the renderer */
+  transition: opacity var(--dur-med) var(--ease-out), filter var(--dur-med) var(--ease-out);
+}
+.hasDigit .canvas { opacity: .16; filter: blur(.4px); }
+
+.digit {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 4%;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(var(--h) * var(--scale) * .64);
+  line-height: 1;
+  color: var(--digit);
+  pointer-events: none;
+  animation: digitIn var(--dur-slow) var(--ease-bounce) both;
+}
+.typed { animation: typedIn var(--dur-med) var(--ease-bounce) both; }
+.carry .digit { font-size: calc(var(--h) * var(--scale) * .68); padding-top: 0; }
+.given .digit { animation: none; }
+
+.unsure {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  color: color-mix(in srgb, var(--c-gold) 55%, var(--c-ink));
+  background: var(--c-gold-soft);
+  box-shadow: 0 0 0 2px var(--c-gold), 0 2px 6px rgba(245, 158, 11, .35);
+  pointer-events: none;
+  animation: nudge 900ms var(--ease-bounce) 1 both;
+}
+.carry .unsure { top: -8px; right: -8px; width: 20px; height: 20px; font-size: 13px; }
+
+/* ---- clear button: small circle outside the bottom-right corner, 56px hit area */
+.clear {
+  position: absolute;
+  right: -13px;
+  bottom: -13px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--c-surface);
+  color: var(--c-ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px var(--c-line), 0 3px 8px rgba(46, 26, 71, .14);
+  animation: typedIn var(--dur-med) var(--ease-bounce) both;
+}
+.clear::before { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
+.clear:active { background: var(--c-primary-soft); }
+
+/* ---- variants */
+.carry .surface {
+  border-width: 2px;
+  border-style: dashed;
+  border-radius: var(--r-sm);
+  border-color: color-mix(in srgb, var(--c-magic) 42%, var(--c-surface));
+  background: color-mix(in srgb, var(--c-magic-soft) 55%, var(--c-surface));
+}
+.carry .surface::before { display: none; }
+
+.given .surface {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+.given .surface::before { display: none; }
+.given.pv_u .surface, .given.pv_d .surface, .given.pv_c .surface, .given.pv_um .surface { background: var(--bg); }
+
+/* ---- statuses (gentle: errors are clues) */
+.st_active .surface, .current .surface {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 4px var(--c-primary-soft);
+}
+.st_correct { --bg: var(--c-success-soft); --border: var(--c-success); --digit: color-mix(in srgb, var(--c-success) 70%, var(--c-ink)); }
+.st_wrong { --bg: var(--c-warn-soft); --border: var(--c-warn); --digit: color-mix(in srgb, var(--c-warn) 70%, var(--c-ink)); }
+.st_wrong .surface { animation: wiggle 480ms var(--ease-out) 1; }
+.st_hint .surface {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 5px var(--c-gold-soft);
+  animation: glow 1.8s ease-in-out infinite;
+}
+.disabled .surface { opacity: .6; cursor: not-allowed; }
+
+@keyframes digitIn {
+  0% { opacity: 0; transform: scale(.5) rotate(-8deg); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+@keyframes typedIn {
+  0% { opacity: 0; transform: scale(.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes nudge {
+  0% { opacity: 0; transform: scale(.3); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-1.5deg); }
+  60% { transform: translateX(3px) rotate(1deg); }
+}
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 0 4px var(--c-gold-soft); }
+  50% { box-shadow: 0 0 0 9px var(--c-gold-soft); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digit, .typed, .unsure, .clear, .st_wrong .surface, .st_hint .surface { animation: none; }
+  .canvas, .surface { transition: none; }
+}

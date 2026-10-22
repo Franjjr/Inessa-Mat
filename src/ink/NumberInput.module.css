@@ -1,0 +1,208 @@
+.root {
+  --cell: var(--cell-size);
+  --padH: calc(var(--cell) * 1.3);
+  --padW: max(240px, calc(var(--digits, 3) * var(--cell) * .95 + 36px));
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 100%;
+}
+.lg {
+  --padH: calc(var(--cell) * 1.62);
+  --padW: max(300px, calc(var(--digits, 3) * var(--cell) * 1.18 + 44px));
+}
+.big { --cell: calc(var(--cell-size) * 1.2); }
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 100%;
+}
+
+.pad {
+  position: relative;
+  flex: none;
+  width: var(--padW);
+  max-width: calc(100vw - 180px);
+  height: var(--padH);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  box-shadow: inset 0 4px 0 rgba(46, 26, 71, .035), var(--shadow-1);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: crosshair;
+  outline: none;
+  transition: border-color var(--dur-med) var(--ease-out), box-shadow var(--dur-med) var(--ease-out), background-color var(--dur-med) var(--ease-out);
+}
+.pad:focus { border-color: color-mix(in srgb, var(--c-primary) 40%, var(--c-line)); }
+.pad:focus-visible { border-color: var(--c-magic); box-shadow: 0 0 0 5px var(--c-magic-soft), var(--shadow-1); }
+
+.guide {
+  position: absolute;
+  left: 7%;
+  right: 7%;
+  bottom: 17%;
+  border-bottom: 2px dashed var(--c-line);
+  pointer-events: none;
+}
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  color: var(--c-ink);
+  transition: opacity var(--dur-med) var(--ease-out), filter var(--dur-med) var(--ease-out);
+}
+.faded .canvas { opacity: .16; filter: blur(.4px); }
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-bottom: 4%;
+  color: var(--c-ink-mute);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  pointer-events: none;
+}
+
+.digit {
+  position: absolute;
+  top: 52%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--c-ink);
+  pointer-events: none;
+  animation: digitIn var(--dur-slow) var(--ease-bounce) both;
+}
+.unknown { color: var(--c-ink-mute); }
+.unsure {
+  position: absolute;
+  top: -4px;
+  right: -16px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--c-gold) 55%, var(--c-ink));
+  background: var(--c-gold-soft);
+  box-shadow: 0 0 0 2px var(--c-gold);
+}
+
+.typed {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .04em;
+  padding-top: 3%;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(var(--padH) * .6);
+  line-height: 1;
+  color: var(--c-ink);
+  pointer-events: none;
+}
+.typedDigit { display: inline-block; animation: typedIn var(--dur-med) var(--ease-bounce) both; }
+
+.anchor { position: absolute; pointer-events: none; }
+
+/* ---- tools: eraser + keypad toggle | big check */
+.tools {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: 10px 12px;
+}
+.tool {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: 50%;
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 0 var(--c-line);
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-med);
+}
+.tool:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--c-line); }
+.tool:disabled { opacity: .4; cursor: default; }
+.tool[aria-pressed='true'] { background: var(--c-primary-soft); }
+.erase { grid-column: 1; grid-row: 1; }
+.toggle { grid-column: 1; grid-row: 2; }
+
+.check {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--c-success);
+  color: var(--c-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--c-success) 62%, var(--c-ink)), 0 10px 22px rgba(22, 163, 74, .28);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background var(--dur-med), filter var(--dur-med);
+}
+.check:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--c-success) 62%, var(--c-ink));
+}
+.check:disabled {
+  background: color-mix(in srgb, var(--c-success) 30%, var(--c-surface));
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--c-success) 22%, var(--c-line));
+  cursor: default;
+}
+.lg .check { width: 100px; height: 100px; }
+
+/* ---- statuses */
+.st_correct .pad { border-color: var(--c-success); background: var(--c-success-soft); }
+.st_correct .digit, .st_correct .typed { color: color-mix(in srgb, var(--c-success) 70%, var(--c-ink)); }
+.st_wrong .pad { border-color: var(--c-warn); background: var(--c-warn-soft); animation: wiggle 480ms var(--ease-out) 1; }
+.disabled .pad { opacity: .65; cursor: not-allowed; }
+
+.keypad { margin-top: 2px; }
+
+@keyframes digitIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) rotate(-8deg); }
+  55% { opacity: 1; }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+}
+@keyframes typedIn {
+  0% { opacity: 0; transform: scale(.7); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px) rotate(-1deg); }
+  60% { transform: translateX(4px) rotate(.6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .digit { animation: none; }
+  .typedDigit, .st_wrong .pad { animation: none; }
+  .pad, .canvas, .check, .tool { transition: none; }
+}
