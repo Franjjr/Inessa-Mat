@@ -23,7 +23,9 @@
 
 .pad {
   position: relative;
-  flex: none;
+  /* shrinks before the tools do, so the check never leaves a narrow card */
+  flex: 0 1 auto;
+  min-width: 150px;
   width: var(--padW);
   max-width: calc(100vw - 180px);
   height: var(--padH);
@@ -178,6 +180,13 @@
   cursor: default;
 }
 .lg .check { width: 100px; height: 100px; }
+.tools { flex: none; }
+
+@media (max-width: 480px) {
+  .row { gap: var(--sp-3); }
+  .tools { gap: 8px; }
+  .check, .lg .check { width: 72px; height: 72px; }
+}
 
 /* ---- statuses */
 .st_correct .pad { border-color: var(--c-success); background: var(--c-success-soft); }
