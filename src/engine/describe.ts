@@ -1,6 +1,6 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
 import type { ErrorType, SkillKey } from '@/types'
-import { parseSkill } from './skills'
+import { GEO_OPS, parseSkill } from './skills'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
 const prestamos = (n: number) => (n === 0 ? 'sin préstamos' : n === 1 ? 'con 1 préstamo' : `con ${n} préstamos`)
@@ -71,6 +71,8 @@ export function describeSkill(skill: SkillKey): string {
     case 'clock-convert': return 'Reloj digital de 24 horas y frases (mañana, tarde, noche)'
     case 'time-duration': return p.ask === 'end' ? 'Duraciones: a qué hora acaba' : 'Duraciones: cuántos minutos pasan'
     case 'calendar': return CALENDAR_TEXT[p.topic]
+    case 'fraction': return fractionText(p)
+    case 'geo': return GEO_TEXT[p.op]
   }
 }
 
@@ -86,6 +88,32 @@ const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month', string> = {
 }
 
 const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }
+
+/** Adult description of a fraction skill: 'frac:read:4' → 'Leer fracciones de 4 partes'. */
+function fractionText(p: { op: 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare'; d?: number }): string {
+  switch (p.op) {
+    case 'shade': return `Colorear fracciones de ${p.d} partes`
+    case 'read': return `Leer fracciones de ${p.d} partes`
+    case 'name': return `Nombres de fracciones de ${p.d} partes`
+    case 'of': return `Fracción de una cantidad (denominador ${p.d})`
+    case 'equal': return 'Figuras partidas en partes iguales'
+    case 'compare': return 'Comparar fracciones con dibujos'
+  }
+}
+
+const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
+  'poly:name': 'Nombre de polígonos (triángulo, cuadrado, rectángulo, pentágono, hexágono)',
+  'poly:sides': 'Contar lados y esquinas de polígonos',
+  'line:type': 'Tipos de línea: recta, curva y poligonal',
+  'line:rel': 'Rectas paralelas, perpendiculares y que se cruzan',
+  'angle:type': 'Ángulos: recto, menor o mayor que un recto',
+  'angle:tap': 'Encontrar los ángulos rectos de una figura',
+  circle: 'Círculo y circunferencia',
+  'solid:name': 'Nombre de cuerpos (cubo, prisma, pirámide, cilindro, cono, esfera)',
+  'solid:roll': 'Qué cuerpos ruedan',
+  'solid:faces': 'Caras planas de los cuerpos',
+  perimeter: 'Perímetro: sumar los lados',
+}
 
 const ERROR_TEXT: Record<ErrorType, string> = {
   'fact': 'Resultado de la tabla o cálculo básico incorrecto',
@@ -104,6 +132,10 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'place-value': 'Escribe una cifra en una columna que no le toca (valor posicional)',
   'step': 'Se equivoca en el primer paso de un problema de dos pasos',
   'false-alarm': 'Dice que hay un error cuando la cuenta está bien',
+  'fraction-parts': 'Toma como partes iguales una figura que no está partida en partes iguales',
+  'fraction-count': 'Confunde el número de arriba con el de abajo, o cuenta mal las partes',
+  'geo-name': 'Confunde una figura, una línea, un ángulo o un cuerpo con otro',
+  'geo-perimeter': 'Al sumar los lados del contorno se deja alguno',
   'other': 'Otro tipo de error',
   'clock-hour': 'Lee mal la hora del reloj (la aguja corta)',
   'clock-minute': 'Lee mal los minutos del reloj (la aguja larga, de cinco en cinco)',

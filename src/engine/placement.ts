@@ -9,7 +9,7 @@ import { allMulFactSkills, divSkill, parseSkill } from './skills'
 /** Attempts of the placement carry this activity name in their context. */
 export const PLACEMENT_ACTIVITY = 'prueba-inicial'
 
-export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas' | 'tiempo'
+export type PlacementBlockId = 'numeros' | 'sumas-restas' | 'tablas' | 'dividir' | 'problemas' | 'tiempo' | 'fracciones-geometria'
 
 export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'numeros', label: 'Números' },
@@ -18,6 +18,7 @@ export const PLACEMENT_BLOCKS: { id: PlacementBlockId; label: string }[] = [
   { id: 'dividir', label: 'División' },
   { id: 'problemas', label: 'Problemas' },
   { id: 'tiempo', label: 'Tiempo' },
+  { id: 'fracciones-geometria', label: 'Fracciones y figuras' },
 ]
 
 export interface PlacementItem {
@@ -37,6 +38,7 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'div': case 'div2x1': case 'div3x1': return 'dividir'
     case 'word': case 'bar': return 'problemas'
     case 'clock-read': case 'clock-set': case 'clock-convert': case 'time-duration': case 'calendar': return 'tiempo'
+    case 'fraction': case 'geo': return 'fracciones-geometria'
     case 'place': case 'compare': case 'order': case 'round': case 'line': return 'numeros'
     default: return null
   }
@@ -56,7 +58,8 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
     { block: 'tablas', skills: facts.slice(0, 4) },
     { block: 'dividir', skills: [divFacts[0], 'div:3x1:rem'] },
     { block: 'problemas', skills: ['bar:add', 'bar:sub'] },
-    { block: 'tiempo', skills: ['clock:read:5', 'time:units'] },
+    { block: 'tiempo', skills: ['clock:read:15'] },
+    { block: 'fracciones-geometria', skills: ['frac:read:4'] },
   ]
   const out: PlacementItem[] = []
   for (const { block, skills } of plan) {

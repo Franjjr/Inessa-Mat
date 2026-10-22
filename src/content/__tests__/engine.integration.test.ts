@@ -21,6 +21,7 @@ const answerOf = (ex: Exercise): number => {
     case 'skip-count': case 'double-chain': case 'fact-family': return NaN
     case 'compare': case 'order': return NaN
     case 'place-value': return typeof ex.answer === 'number' ? ex.answer : NaN
+    case 'fraction-shade': case 'fraction-read': case 'fraction-equal': case 'shape-choice': case 'angle-tap': return NaN
     default: return ex.answer as number
   }
 }

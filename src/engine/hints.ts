@@ -15,6 +15,8 @@ import { barHints } from './bars'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
 import { TABLE_METHODS } from './methods'
+import { fractionHints } from './fractions'
+import { geometryHints } from './geometry'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
@@ -374,6 +376,14 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'time-convert':
     case 'time-duration':
     case 'calendar': return hintsClock(ex) ?? []
+    case 'fraction-shade':
+    case 'fraction-read':
+    case 'fraction-of':
+    case 'fraction-equal': return fractionHints(ex)
+    case 'shape-choice':
+    case 'angle-tap':
+    case 'perimeter':
+    case 'shape-count': return geometryHints(ex)
   }
 }
 

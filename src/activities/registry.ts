@@ -65,4 +65,13 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'time-convert': lazy(() => import('./views/TimeConvertView')),
   'time-duration': lazy(() => import('./views/TimeDurationView')),
   calendar: lazy(() => import('./views/CalendarView')),
+  // ---- fracciones and geometría (3.º, block E) — src/activities/views/<name>.tsx
+  'fraction-shade': lazy(() => import('./views/FractionShadeView')),
+  'fraction-read': lazy(() => import('./views/FractionReadView')),
+  'fraction-of': lazy(() => import('./views/FractionOfView')),
+  'fraction-equal': lazy(() => import('./views/FractionEqualView')),
+  'shape-choice': lazy(() => import('./views/ShapeChoiceView')),
+  'angle-tap': lazy(() => import('./views/AngleTapView')),
+  perimeter: lazy(() => import('./views/FigureNumberView')),
+  'shape-count': lazy(() => import('./views/FigureNumberView')),
 }

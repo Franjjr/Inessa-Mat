@@ -19,6 +19,8 @@ import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
 import { checkClock, expectedClock } from './clock'
+import { checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
+import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -561,5 +563,14 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'time-convert':
     case 'time-duration':
     case 'calendar': return checkClock(exercise, answer) ?? wrongShape(expectedClock(exercise))
+    // fracciones and geometría (block E)
+    case 'fraction-shade': return checkFractionShade(exercise, answer)
+    case 'fraction-read': return checkFractionRead(exercise, answer)
+    case 'fraction-of': return checkFractionOf(exercise, answer)
+    case 'fraction-equal': return checkFractionEqual(exercise, answer)
+    case 'shape-choice': return checkShapeChoice(exercise, answer)
+    case 'angle-tap': return checkAngleTap(exercise, answer)
+    case 'perimeter': return checkPerimeter(exercise, answer)
+    case 'shape-count': return checkShapeCount(exercise, answer)
   }
 }

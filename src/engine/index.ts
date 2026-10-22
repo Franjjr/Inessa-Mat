@@ -61,6 +61,14 @@ export {
   normaliseSubMethod, normaliseTableMethod, SUB_METHODS, TABLE_METHODS, tricksFor,
 } from './methods'
 export type { MethodInfo, MethodOp, TableTrick } from './methods'
+/** Fracciones and geometría (block E): generators, grading and hints (see fractions.ts and geometry.ts). */
+export { fractionName, fractionHints, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade, unequalWeights } from './fractions'
+export {
+  genAngleTap, genAngleType, genCircle, genGeometry, genLineRelation, genLineType, genPerimeter, genPolygonName, genPolygonSides,
+  genSolidFaces, genSolidName, genSolidRoll, geometryHints, isConvex, polygonPoints, rightCorners, sideLengths, POLYGON_WORD,
+} from './geometry'
+export { blockSkillsOf, fractionSkill, geoSkill, FRACTION_DENOMINATORS, GEO_OPS } from './skills'
+export type { FractionDenominator, FractionOp, GeoOp } from './skills'
 /** Problemas con barras: the generator, the grading and the hints (see bars.ts). */
 export { BAR_OPS, barChips, barHints, checkBar, genBarProblem } from './bars'
 /** Encuentra el error and comprobar (see bugs.ts). */

@@ -46,6 +46,9 @@ function showAnswer(a: Answer): string {
     case 'climb': return `${a.products.map((v) => v ?? '—').join(' · ')} resto ${a.remainder ?? '—'}`
     case 'time': return `${a.hour ?? '—'}:${a.minute === null ? '—' : String(a.minute).padStart(2, '0')}`
     case 'choice': return a.index === null ? '—' : `opción ${a.index + 1}`
+    case 'shade': return `${a.chosen.length} partes`
+    case 'fraction': return `${a.numerator ?? '—'}/${a.denominator ?? '—'}`
+    case 'marks': return a.marked.length ? a.marked.map((i) => i + 1).join(', ') : 'ninguna'
   }
 }
 
