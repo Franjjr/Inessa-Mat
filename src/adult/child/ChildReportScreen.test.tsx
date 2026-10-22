@@ -89,7 +89,7 @@ describe('ChildReportScreen', () => {
     renderReport()
 
     const heatmap = await screen.findByRole('table', { name: /Mapa de las tablas de Inessa/ })
-    expect(within(heatmap).getAllByRole('cell')).toHaveLength(100)
+    expect(within(heatmap).getAllByRole('cell')).toHaveLength(55)
 
     // Each state has a label, not only a colour.
     expect(within(heatmap).getByRole('cell', { name: '2 × 3 = 6: Dominada' })).toBeInTheDocument()

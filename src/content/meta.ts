@@ -34,7 +34,7 @@ export const DIPLOMA_TEXT: { kicker: TemplateString; title: TemplateString; subt
 
 /** Words of the Gran Cofre screen. The prize itself is set by the adult in the adult area. */
 export const CHEST_TEXT: { locked: TemplateString; prompt: TemplateString; open: TemplateString } = {
-  locked: 'El Gran Cofre necesita las 8 letras de la palabra secreta.',
+  locked: 'Cada cristal te da una letra de la palabra secreta. Con los 8 cristales se abre el Gran Cofre.',
   prompt: 'Escribe la palabra secreta y dila en voz alta, {child}.',
   open: '¡El Gran Cofre se ha abierto! Dentro hay una sorpresa solo para ti.',
 }

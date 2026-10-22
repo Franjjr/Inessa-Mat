@@ -36,7 +36,7 @@ export default function LoginScreen() {
   if (!backendAvailable) {
     return (
       <AdultPage title="Iniciar sesión" back="/welcome" narrow>
-        <section className={adult.card}>
+        <section className={`${adult.card} ${s.panel}`}>
           <h2 className={adult.subheading}>Las cuentas no están disponibles en esta versión</h2>
           <p className={adult.lead}>
             Puedes seguir usando Repasitos sin cuenta. Todo se guarda en este dispositivo.
@@ -56,7 +56,7 @@ export default function LoginScreen() {
     if (invite && invited.status === 'error') {
       return (
         <AdultPage title="Invitación" narrow>
-          <section className={adult.card}>
+          <section className={`${adult.card} ${s.panel}`}>
             <p className={adult.error} role="alert">{invited.error}</p>
             <div className={adult.actions}><Button onClick={() => navigate('/adult')}>Continuar</Button></div>
           </section>
@@ -144,7 +144,7 @@ export default function LoginScreen() {
   if (passwordRecovery) {
     return (
       <AdultPage title="Nueva contraseña" narrow>
-        <form className={adult.card} onSubmit={submitPassword} noValidate>
+        <form className={`${adult.card} ${s.panel}`} onSubmit={submitPassword} noValidate>
           <h2 className={adult.subheading}>Elige una contraseña nueva</h2>
           <TextField
             id="new-password" label="Contraseña nueva" type="password" autoComplete="new-password"
@@ -170,7 +170,7 @@ export default function LoginScreen() {
             Tienes una invitación. Entra con el correo al que te la enviaron y la aceptaremos automáticamente.
           </div>
         )}
-        <form className={adult.card} onSubmit={submitPassword} noValidate aria-label="Iniciar sesión">
+        <form className={`${adult.card} ${s.panel}`} onSubmit={submitPassword} noValidate aria-label="Iniciar sesión">
           <TextField
             id="login-email" label="Correo electrónico" type="email" autoComplete="username" inputMode="email"
             value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} autoCapitalize="none"

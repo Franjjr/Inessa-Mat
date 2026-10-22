@@ -122,6 +122,11 @@ export default function SchoolScreen() {
     }
   }
 
+  const firstClass = classes?.[0]
+  const familyMessage = firstClass
+    ? `Familias de ${firstClass.name}: para unir a vuestro hijo a Repasitos, entrad en repasitos.es, elegid «Unirse a una clase» e introducid el código ${firstClass.joinCode}.`
+    : 'Familias: para unir a vuestro hijo a Repasitos, entrad en repasitos.es, elegid «Unirse a una clase» e introducid el código de su clase.'
+
   return (
     <AdultPage title="Clases y colegio" back="/adult">
       <header className={adult.stack} style={{ gap: 6 }}>
@@ -131,6 +136,38 @@ export default function SchoolScreen() {
           con su consentimiento.
         </p>
       </header>
+
+      <section className={`${adult.card} ${adult.cardYellow}`} aria-labelledby="guide-title">
+        <h2 id="guide-title" className={adult.subheading}>Tres pasos para empezar</h2>
+        <ol className={s.steps}>
+          <li>
+            <span className={s.stepNum} aria-hidden>1</span>
+            <div className={adult.stack} style={{ gap: 2 }}>
+              <span className={adult.strong}>Crea la clase</span>
+              <span className={adult.muted}>Escribe su nombre y su curso, por ejemplo «3.º B».</span>
+            </div>
+          </li>
+          <li>
+            <span className={s.stepNum} aria-hidden>2</span>
+            <div className={adult.stack} style={{ gap: 2 }}>
+              <span className={adult.strong}>Copia su código</span>
+              <span className={adult.muted}>Cada clase tiene un código. Pulsa «Copiar» en su tarjeta, más abajo.</span>
+            </div>
+          </li>
+          <li>
+            <span className={s.stepNum} aria-hidden>3</span>
+            <div className={adult.stack} style={{ gap: 6, minWidth: 0 }}>
+              <span className={adult.strong}>Pégalo en la agenda o en un mensaje a las familias</span>
+              <pre className={s.template} aria-label="Mensaje para las familias">{familyMessage}</pre>
+              <div>
+                <Button variant="secondary" size="sm" onClick={() => void copyText(familyMessage).then((ok) => toast(ok ? 'Mensaje copiado' : 'Selecciona el texto y cópialo a mano'))}>
+                  Copiar el mensaje
+                </Button>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </section>
 
       <section className={adult.card} aria-labelledby="new-class-title">
         <h2 id="new-class-title" className={adult.subheading}>Crear una clase</h2>

@@ -64,3 +64,8 @@
   cursor: pointer;
 }
 .linkButton:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-height: 900px) {
+  .wrap { padding-top: var(--sp-2); gap: var(--sp-3); }
+  .card { padding: var(--sp-4) var(--sp-4); gap: var(--sp-3); }
+  .lockMark { width: 56px; height: 56px; font-size: 26px; }
+}

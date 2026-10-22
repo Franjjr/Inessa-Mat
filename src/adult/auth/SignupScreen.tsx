@@ -55,7 +55,7 @@ export default function SignupScreen() {
   if (!backendAvailable) {
     return (
       <AdultPage title="Crear cuenta" back="/welcome" narrow>
-        <section className={adult.card}>
+        <section className={`${adult.card} ${s.panel}`}>
           <h2 className={adult.subheading}>Las cuentas no están disponibles en esta versión</h2>
           <p className={adult.lead}>Puedes probar Repasitos sin cuenta. Todo se guarda en este dispositivo.</p>
           <div className={adult.actions}><Button onClick={() => navigate('/welcome')}>Volver al inicio</Button></div>
@@ -67,7 +67,7 @@ export default function SignupScreen() {
   if (sent) {
     return (
       <AdultPage title="Revisa tu correo" back="/welcome" narrow>
-        <section className={adult.card} role="status">
+        <section className={`${adult.card} ${s.panel}`} role="status">
           <h2 className={adult.subheading}>Te hemos enviado un correo de confirmación</h2>
           <p className={adult.lead}>
             Abre el enlace de <strong>{sent}</strong> en este dispositivo para activar tu cuenta. Si no lo ves, revisa la carpeta de spam.
@@ -113,7 +113,7 @@ export default function SignupScreen() {
           Tienes una invitación. Crea la cuenta con el correo al que te la enviaron.
         </div>
       )}
-      <form className={adult.card} onSubmit={submit} noValidate aria-label="Crear cuenta">
+      <form className={`${adult.card} ${s.panel}`} onSubmit={submit} noValidate aria-label="Crear cuenta">
         <TextField
           id="signup-name" label="Tu nombre" autoComplete="name" value={form.displayName}
           onChange={(e) => set('displayName', e.target.value)} error={errors.displayName}

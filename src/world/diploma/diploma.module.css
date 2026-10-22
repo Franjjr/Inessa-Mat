@@ -237,3 +237,17 @@
 @media (prefers-reduced-motion: reduce) {
   .sheet { transition: none; }
 }
+
+/* Before the diploma is won: the same sheet in grey, with its eight crystal slots. */
+.pending .frame { filter: grayscale(.9) opacity(.8); }
+.slots {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 1cqw;
+  width: 74%;
+  margin-top: 0.6cqw;
+}
+.slot { display: flex; justify-content: center; }
+/* The grey sheet sits in a full-width row of the locked screen (a centred flex child would collapse it to zero). */
+.locked .previewWrap { width: 100%; box-sizing: border-box; }
+.locked .sheet { width: min(100%, 720px); }

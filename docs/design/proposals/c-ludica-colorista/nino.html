@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Repasitos · C · Niño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Dirección C · Lúdica y colorista · inicio del niño (iPad 1180×820). Nombre de demo ficticio: Lía. */
+:root {
+  --bg: oklch(96.5% .03 300);
+  --surface: oklch(100% 0 0);
+  --ink: oklch(22% .06 290);
+  --muted: oklch(40% .05 290);
+  --line: oklch(22% .06 290);
+  --violet: oklch(54% .23 293);
+  --green: #15803d; --blue: #2563eb; --red: #dc2626; --orange: #ea580c; --yellow: #facc15; --magic: #c026d3; --teal: #0e7490; --brown: #a16207;
+  --yellow-soft: oklch(96% .08 95); --green-soft: oklch(94% .07 150); --blue-soft: oklch(93% .05 255); --pink-soft: oklch(94% .06 350);
+  --font-display: 'Baloo 2', system-ui, sans-serif;
+  --font-read: 'Andika', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font-read); }
+body { overflow: hidden; }
+img { display: block; }
+.screen { width: 1180px; height: 820px; margin: 0 auto; padding: 22px 26px; display: grid; grid-template-rows: auto minmax(0,1fr) auto; gap: 16px; }
+.sticker { border: 3px solid var(--line); border-radius: 26px; background: var(--surface); box-shadow: 5px 6px 0 var(--line); }
+.top { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.hello { font: 800 44px/1 var(--font-display); }
+.hello b { color: var(--violet); font-weight: 800; }
+.chips { display: flex; gap: 10px; align-items: center; }
+.chip { min-height: 52px; padding: 0 18px; border-radius: 999px; border: 3px solid var(--line); background: var(--surface); font: 800 18px/1 var(--font-display); display: inline-flex; align-items: center; box-shadow: 3px 4px 0 var(--line); }
+.chip.ok { background: var(--green-soft); box-shadow: none; border-style: solid; font-weight: 700; font-family: var(--font-read); font-size: 17px; }
+
+.main { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 20px; min-height: 0; }
+.left { display: grid; grid-template-rows: auto minmax(0,1fr); gap: 16px; min-height: 0; }
+.subjects { display: grid; grid-template-columns: 1.5fr repeat(4, minmax(0,1fr)); gap: 10px; }
+.subj { min-height: 76px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; font: 800 20px/1.05 var(--font-display); text-align: center; border-radius: 22px; }
+.subj small { font: 700 13px/1 var(--font-read); }
+.subj.on { background: var(--green); color: #fff; box-shadow: 4px 5px 0 var(--line); border: 3px solid var(--line); }
+.subj.on small { color: var(--yellow); }
+.subj.off { border: 3px dashed var(--line); color: var(--muted); background: transparent; }
+.stage { position: relative; padding: 18px 22px 18px; display: grid; grid-template-rows: minmax(0,1fr) auto; background: var(--blue-soft); overflow: hidden; }
+.stage .pals { display: flex; justify-content: center; align-items: flex-end; gap: 8px; }
+.stage img { width: 200px; height: 200px; }
+.stage .name { position: absolute; font: 800 20px/1 var(--font-display); background: var(--surface); border: 3px solid var(--line); border-radius: 999px; padding: 8px 14px; box-shadow: 3px 4px 0 var(--line); }
+.horn { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: 14px 18px; background: var(--yellow-soft); border: 3px solid var(--line); border-radius: 22px; margin-top: 10px; }
+.horn b { font: 800 26px/1 var(--font-display); display: block; }
+.horn span { font-size: 18px; color: var(--muted); }
+.gems { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 6px; margin-top: 8px; }
+.gems i { height: 24px; border-radius: 50%; border: 3px solid var(--line); background: var(--surface); display: block; }
+.gems i.on { background: var(--green); }
+
+.right { display: grid; grid-template-rows: auto auto minmax(0,1fr); gap: 16px; min-height: 0; }
+.next { padding: 26px 28px; background: var(--pink-soft); display: grid; gap: 10px; }
+.next .k { font: 800 17px/1 var(--font-display); color: var(--magic); text-transform: uppercase; letter-spacing: .06em; }
+.next h3 { font: 800 44px/1.02 var(--font-display); margin: 0; }
+.next p { margin: 0; font-size: 20px; color: var(--muted); }
+.btn-go { justify-self: start; margin-top: 6px; min-height: 64px; padding: 0 30px; border-radius: 999px; border: 3px solid var(--line); background: var(--yellow); font: 800 22px/1 var(--font-display); color: var(--ink); box-shadow: 4px 5px 0 var(--line); cursor: pointer; }
+.tiles { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.tile { min-height: 96px; padding: 16px 18px; display: flex; flex-direction: column; justify-content: center; gap: 4px; font: 800 24px/1.05 var(--font-display); }
+.tile small { font: 400 16px/1.2 var(--font-read); color: var(--muted); }
+.tile.t1 { background: var(--violet); color: #fff; } .tile.t1 small { color: #ede9fe; }
+.tile.t2 { background: var(--yellow-soft); }
+.tile.t3 { background: var(--green-soft); }
+.tile.t4 { background: var(--blue-soft); }
+
+.worlds { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 10px; }
+.world { min-height: 86px; padding: 8px 6px; border-radius: 22px; border: 3px solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font: 800 17px/1 var(--font-display); }
+.world i { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line); display: block; }
+.world.done { background: var(--c); color: #fff; }
+.world.now { box-shadow: 4px 5px 0 var(--line); background: var(--yellow); }
+.world.lock { border-style: dashed; color: var(--muted); background: transparent; }
+.world.lock i { background: transparent; }
+</style>
+</head>
+<body>
+<div class="screen">
+  <header class="top">
+    <div class="hello">¡Hola, <b>Lía</b>!</div>
+    <div class="chips">
+      <span class="chip ok">Guardado en este dispositivo</span>
+      <span class="chip">Cambiar</span>
+      <span class="chip">Familia</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="left">
+      <nav class="subjects" aria-label="Asignaturas">
+        <button class="subj on" type="button">Mates<small>¡Hoy!</small></button>
+        <button class="subj off" type="button" disabled>Lengua<small>Pronto</small></button>
+        <button class="subj off" type="button" disabled>Inglés<small>Pronto</small></button>
+        <button class="subj off" type="button" disabled>Ciencias<small>Pronto</small></button>
+        <button class="subj off" type="button" disabled>Historia<small>Pronto</small></button>
+      </nav>
+      <section class="stage sticker" aria-label="Tu equipo">
+        <div class="pals">
+          <img src="img/luna.svg" alt="Luna, la gata compañera">
+          <img src="img/lumi.svg" alt="Lumi, el unicornio guía">
+        </div>
+        <div class="horn">
+          <div style="width:64px"><svg viewBox="0 0 40 52" width="64" height="84" aria-hidden="true"><path d="M20 2 L34 46 Q20 52 6 46 Z" fill="#facc15" stroke="#22163a" stroke-width="3" stroke-linejoin="round"/><path d="M14 22h12M12 32h16M13 40h14" stroke="#22163a" stroke-width="2.5"/></svg></div>
+          <div>
+            <b>Cuerno de Lumi</b>
+            <span>1 de 8 cristales · 44 estrellas</span>
+            <div class="gems" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="right">
+      <article class="next sticker">
+        <span class="k">Río de las Sumas · Paso siguiente</span>
+        <h3>¡Borrón quiere las mochilas!</h3>
+        <p>Luna se ha metido en el río. Ayúdala a salir con sumas.</p>
+        <button class="btn-go" type="button">¡Seguir la aventura!</button>
+      </article>
+      <div class="tiles">
+        <div class="tile t1 sticker">Repaso del día<small>2 cosas para repasar</small></div>
+        <div class="tile t2 sticker">Juego libre<small>Practica lo que quieras</small></div>
+        <div class="tile t3 sticker">Álbum<small>Tus pegatinas</small></div>
+        <div class="tile t4 sticker">Tienda<small>Ropa para tu compañero</small></div>
+      </div>
+      <div></div>
+    </div>
+  </div>
+
+  <footer class="worlds" aria-label="Mundos">
+    <div class="world done" style="--c:var(--green)"><i style="background:#fff"></i>Bosque</div>
+    <div class="world now"><i style="background:var(--blue)"></i>Río</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Cueva</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Montaña</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Lago</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Jardín</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Forja</div>
+    <div class="world lock"><i style="border-style:dashed"></i>Castillo</div>
+  </footer>
+</div>
+</body>
+</html>

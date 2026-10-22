@@ -420,7 +420,7 @@ function VoicePicker() {
           value={chosen}
           onChange={(e) => pick(e.target.value)}
         >
-          <option value="">Automática (la mejor disponible)</option>
+          <option value="">Automática: voz natural de Repasitos (con internet) o la mejor del dispositivo</option>
           {voices.map((v) => (
             <option key={v.id} value={v.id}>{v.name}{v.local ? '' : ' (necesita internet)'}</option>
           ))}

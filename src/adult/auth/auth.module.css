@@ -26,3 +26,20 @@
 .link { color: var(--c-primary-strong); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .orgChoices { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 .confirmBox { display: flex; flex-direction: column; gap: var(--sp-4); align-items: flex-start; }
+
+/* Direction C: forms and notices are sticker panels, and their fields carry the same ink outline. */
+.panel {
+  border: var(--sticker-border);
+  border-radius: 26px;
+  box-shadow: var(--sticker-shadow);
+  padding: var(--sp-6);
+}
+.panel input {
+  border: 3px solid var(--sticker-line);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+}
+.panel input:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 2px; border-color: var(--sticker-line); }
+@media (max-width: 480px) {
+  .panel { padding: var(--sp-5); }
+}

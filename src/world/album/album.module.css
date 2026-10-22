@@ -37,7 +37,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--c-gold), var(--c-magic));
+  background: var(--c-primary);
   transition: width var(--dur-slow) var(--ease-out);
 }
 
@@ -47,7 +47,11 @@
   overflow-x: auto;
   padding: var(--sp-1) 2px var(--sp-2);
   scrollbar-width: none;
+  /* The right edge fades out so a cut tab reads as «there is more to the side». */
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
+  mask-image: linear-gradient(90deg, #000 calc(100% - 48px), transparent);
 }
+.tabs { scroll-padding-inline: var(--sp-4); }
 
 .tabs::-webkit-scrollbar { display: none; }
 
@@ -60,18 +64,18 @@
   min-height: 60px;
   min-width: 132px;
   padding: var(--sp-2) var(--sp-4);
-  border: 3px solid transparent;
+  border: var(--sticker-border);
   border-radius: var(--r-lg);
   background: var(--tab-soft, var(--c-surface));
   font: inherit;
   color: var(--c-ink);
   cursor: pointer;
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow-sm);
 }
 
 .tabOn {
-  border-color: var(--tab, var(--c-primary));
-  box-shadow: 0 4px 0 var(--tab, var(--c-primary));
+  box-shadow: var(--sticker-shadow);
+  transform: translate(-1px, -2px);
 }
 
 .tabTitle {
@@ -89,9 +93,10 @@
 
 .page {
   padding: var(--sp-5);
+  border: var(--sticker-border);
   border-radius: var(--r-xl);
   background: var(--tab-soft, var(--c-surface));
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow);
 }
 
 .slots {
@@ -108,9 +113,10 @@
   gap: var(--sp-2);
   min-height: 240px;
   padding: var(--sp-4);
+  border: var(--sticker-border);
   border-radius: var(--r-lg);
   background: var(--c-surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow-sm);
   text-align: center;
 }
 
@@ -137,7 +143,7 @@
 }
 
 .locked {
-  border: 3px dashed var(--c-line);
+  border: 3px dashed var(--c-ink-mute);
   background: var(--c-surface-2);
   box-shadow: none;
 }

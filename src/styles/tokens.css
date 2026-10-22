@@ -3,14 +3,13 @@
 
 @font-face { font-family: 'Andika'; src: url('/fonts/Andika-Regular.woff2') format('woff2'); font-weight: 400; font-display: swap; }
 @font-face { font-family: 'Andika'; src: url('/fonts/Andika-Bold.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
-@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
-@font-face { font-family: 'Fredoka'; src: url('/fonts/Fredoka-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Baloo 2'; src: url('/fonts/Baloo2-600.woff2') format('woff2'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Baloo 2'; src: url('/fonts/Baloo2-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Baloo 2'; src: url('/fonts/Baloo2-800.woff2') format('woff2'); font-weight: 800; font-display: swap; }
 
 :root {
-  /* Typography: Fredoka for titles, numbers and buttons; Andika (literacy font, single-storey a/g) for reading text. */
-  --font-display: 'Fredoka', system-ui, sans-serif;
+  /* Typography: Baloo 2 (OFL) for titles, numbers and buttons; Andika (literacy font, single-storey a/g) for reading text. */
+  --font-display: 'Baloo 2', system-ui, sans-serif;
   --font-read: 'Andika', system-ui, sans-serif;
   --fs-xs: clamp(14px, 1.1vmin + 4px, 15px);   /* floor 14 px: nothing a child must read is smaller */
   --fs-sm: clamp(16px, 1.3vmin + 5px, 18px);   /* floor 16 px for reading text */

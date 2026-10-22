@@ -1,7 +1,8 @@
 /* Speech via the Web Speech API, tuned for Spanish (Spain) and for 7–8-year-olds.
    - Picks the best Spanish voice (es-ES first; "Mónica" on iPad), reloading when voices arrive late (iOS polls).
    - Characters differ only slightly by pitch/rate: system voices sound robotic when the pitch moves far from 1.
-   - The adult can pick the voice for this device (Ajustes); otherwise the best one is chosen automatically.
+   - Automatic mode plays the natural (neural) voice from /api/tts when it can (see neuralVoice.ts) and falls back,
+     chunk by chunk, to the best device voice. The adult can pick a device voice instead (Ajustes).
    - Queue by default; `interrupt: true` cuts in. say() always resolves (end, error, stop or watchdog), never rejects.
    - Text is cleaned and maths verbalised ("6 × 7 = 42" → "seis por siete son cuarenta y dos").
    - Music ducks while speaking. iOS needs a first speak() inside a gesture: a silent warm-up runs on the first tap.
@@ -13,6 +14,7 @@ import { onGesture, onVisibility, resumeQuietly } from './context'
 import { music } from './music'
 import { clamp } from './notes'
 import { chunkForSpeech, toSpeakable } from './speechText'
+import { fetchClip, neuralAvailable, playClip, stopClip } from './neuralVoice'
 import { isSpanish, pickBestVoice, scoreVoice } from './voices'
 
 export type SpeechCharacter = NonNullable<SpeechOptions['voice']>
@@ -56,6 +58,8 @@ let lastCancelAt = -Infinity
 const nowMs = () => Date.now()
 
 function synth(): SpeechSynthesis | null {
+  // Automated browsers (screenshots, e2e) stay silent: on macOS the OS voice would speak through the speakers.
+  if (typeof navigator !== 'undefined' && navigator.webdriver) return null
   return typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis : null
 }
 
@@ -171,6 +175,7 @@ function stopAll(): void {
     lastCancelAt = nowMs()
   }
   utterance = null
+  stopClip()
   scheduleUnduck()
 }
 
@@ -207,6 +212,32 @@ function speakNext(): void {
 }
 
 function speakChunk(job: Job): void {
+  if (job !== current || job.done) return
+  if (preferredVoiceId() || !neuralAvailable()) {
+    speakChunkOnDevice(job)
+    return
+  }
+  const character = job.opts.voice ?? 'lumi'
+  const ahead = job.chunks[job.index + 1]
+  if (ahead) void fetchClip(ahead, character)
+  void fetchClip(job.chunks[job.index], character).then(async (url) => {
+    if (job !== current || job.done) return
+    if (!url) {
+      speakChunkOnDevice(job)
+      return
+    }
+    const played = await playClip(url, job.opts.rate ?? 1)
+    if (job !== current || job.done) return
+    if (!played) {
+      speakChunkOnDevice(job)
+      return
+    }
+    job.index += 1
+    speakNext()
+  })
+}
+
+function speakChunkOnDevice(job: Job): void {
   if (job !== current || job.done) return
   const s = synth()
   const U = UtteranceCtor()
@@ -249,7 +280,7 @@ function speakChunk(job: Job): void {
       job.retried = true
       finished = true
       clearTimers()
-      speakChunk(job)
+      speakChunkOnDevice(job)
       return
     }
     next()
@@ -283,7 +314,7 @@ export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
   wire()
   const s = synth()
   const clean = toSpeakable(text)
-  if (!enabled || !s || !UtteranceCtor() || !clean) return Promise.resolve()
+  if (!enabled || !clean || ((!s || !UtteranceCtor()) && !neuralAvailable())) return Promise.resolve()
   return new Promise<void>((resolve) => {
     if (opts.interrupt) stopAll()
     const job: Job = { chunks: chunkForSpeech(clean), index: 0, opts, resolve, done: false, retried: false }
@@ -296,6 +327,7 @@ export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
 export const speech = {
   available(): boolean {
     wire()
+    if (neuralAvailable()) return true
     if (!synth() || !UtteranceCtor()) return false
     if (!voicesLoaded) refreshVoices()
     if (!voicesLoaded) return !voicesSettled

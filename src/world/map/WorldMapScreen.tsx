@@ -166,7 +166,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                   )}
                 </span>
                 {isGuardian && !crystal && <span className={s.guardianTag}>¡Ayúdame!</span>}
-                {isCurrent && <span className={s.here}>Aquí</span>}
+                {isCurrent && <span className={s.here}>Aquí sigue {ctx.petName}</span>}
                 <span className={s.label}>{label}</span>
                 {done && (
                   <span className={s.stars} aria-hidden="true">

@@ -77,7 +77,7 @@ export function RewardCard({ childId, childName }: { childId: string; childName:
   const showForm = editing || !reward
 
   return (
-    <section className={adult.card} aria-labelledby="reward-title">
+    <section className={`${adult.card} ${adult.cardYellow}`} aria-labelledby="reward-title">
       <div className={s.heatWrap}>
         <div className={adult.cardHead}>
           <h2 id="reward-title" className={adult.subheading}>Premio del Gran Cofre</h2>
@@ -99,7 +99,7 @@ export function RewardCard({ childId, childName }: { childId: string; childName:
               ? `Entregado el ${formatDate(reward.claimedAt)}.`
               : reward.unlockedAt
                 ? `Desbloqueado el ${formatDate(reward.unlockedAt)}. Cuando se lo des, márcalo como entregado.`
-                : 'Se desbloquea cuando consigue los ocho cristales mágicos.'}
+                : 'Se desbloquea cuando consigue los ocho cristales.'}
           </p>
           {reward.unlockedAt && !reward.claimedAt && (
             <div className={adult.actions}>

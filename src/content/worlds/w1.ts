@@ -45,7 +45,7 @@ export const w1 = world({
     storyNode('mid', '¡Borrón desordena las setas!', 'w1-mid'),
     activityNode('facts', {
       kind: 'facts',
-      title: 'Tablas fáciles',
+      title: 'Practica con los trucos',
       instructions: 'Usa los trucos: por 1, por 2, por 5 y por 10. ¡Y no te olvides del espejo!',
       selector: { kinds: ['fact-mul'], tables: [1, 2, 5, 10] },
       count: 12,

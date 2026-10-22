@@ -43,9 +43,10 @@
   align-items: center;
   gap: var(--sp-3);
   padding: var(--sp-5);
+  border: var(--sticker-border);
   border-radius: var(--r-xl);
   background: linear-gradient(180deg, var(--c-primary-soft), var(--c-surface));
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow);
 }
 
 .stageArt {
@@ -117,10 +118,10 @@
   gap: var(--sp-2);
   min-height: 116px;
   padding: var(--sp-4);
-  border: 3px solid transparent;
+  border: var(--sticker-border);
   border-radius: var(--r-lg);
   background: var(--c-surface);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--sticker-shadow-sm);
   font: inherit;
   text-align: left;
   color: var(--c-ink);
