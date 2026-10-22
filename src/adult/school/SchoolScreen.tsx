@@ -67,7 +67,7 @@ export default function SchoolScreen() {
         <section className={adult.card}>
           <h2 className={adult.subheading}>Esta cuenta es familiar</h2>
           <p className={adult.lead}>
-            Las clases son para cuentas de colegio. Si tu hijo va a un colegio que usa Numeria, puedes unirlo a su clase
+            Las clases son para cuentas de colegio. Si tu hijo va a un colegio que usa Repasitos, puedes unirlo a su clase
             con el código que te den.
           </p>
           <div className={adult.actions}>

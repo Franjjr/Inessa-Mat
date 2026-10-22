@@ -7,11 +7,11 @@ export default function PrivacyScreen() {
   return (
     <AdultPage title="Privacidad y datos" back="/">
       <article className={s.doc} aria-labelledby="privacy-doc-title">
-        <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Numeria</h2>
+        <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Repasitos</h2>
         <p className={s.updated}>Última actualización: 22 de octubre de 2026</p>
 
         <p>
-          Numeria es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
+          Repasitos es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
           cuánto tiempo los guardamos y qué derechos tienes. Su uso es voluntario: puedes dejar de usarla y borrar los datos cuando quieras.
         </p>
 
@@ -21,7 +21,7 @@ export default function PrivacyScreen() {
           <a href="mailto:contact@falkir.es">contact@falkir.es</a>.
         </p>
         <p>
-          Si un colegio crea clases en Numeria, el colegio es el responsable de los datos de sus alumnos dentro de la clase, y Numeria
+          Si un colegio crea clases en Repasitos, el colegio es el responsable de los datos de sus alumnos dentro de la clase, y Repasitos
           solo los trata por su cuenta y siguiendo sus instrucciones, como encargado del tratamiento.
         </p>
 
@@ -92,7 +92,7 @@ export default function PrivacyScreen() {
 
         <h2>10. Lectura en voz alta</h2>
         <p>
-          Numeria puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
+          Repasitos puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
           sin conexión. En iPad y iPhone las voces son del propio sistema. En algunos navegadores, como Chrome, ciertas voces envían el texto a
           los servidores del fabricante del navegador para pronunciarlo. Ese texto son las instrucciones del juego y puede incluir el apodo del
           niño. Si lo prefieres, puedes apagar la voz en la zona de adultos, en Ajustes.

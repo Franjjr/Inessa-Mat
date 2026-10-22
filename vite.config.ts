@@ -15,8 +15,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['fonts/*.woff', 'models/**/*', 'icons/*'],
       manifest: {
-        name: 'Numeria · Aventuras matemáticas',
-        short_name: 'Numeria',
+        name: 'Repasitos · Aventuras matemáticas',
+        short_name: 'Repasitos',
         description: 'Aprende las tablas, sumas, restas, multiplicaciones y divisiones jugando.',
         lang: 'es',
         display: 'fullscreen',

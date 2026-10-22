@@ -1,4 +1,4 @@
-# Numeria is an app for children: keep the child and adult areas out of search engines.
+# Repasitos is an app for children: keep the child and adult areas out of search engines.
 User-agent: *
 Allow: /$
 Allow: /welcome

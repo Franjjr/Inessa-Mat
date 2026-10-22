@@ -1,4 +1,4 @@
-# Numeria · Aventuras matemáticas
+# Repasitos · Aventuras matemáticas (código interno: Numeria)
 
 Juego educativo (PWA para tablet con lápiz, ordenador y móvil) para aprender las tablas de multiplicar, sumas,
 restas, multiplicaciones y divisiones a través de una historia. Pensado para familias y colegios.

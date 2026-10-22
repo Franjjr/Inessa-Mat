@@ -39,7 +39,7 @@ export default function LoginScreen() {
         <section className={adult.card}>
           <h2 className={adult.subheading}>Las cuentas no están disponibles en esta versión</h2>
           <p className={adult.lead}>
-            Puedes seguir usando Numeria sin cuenta. Todo se guarda en este dispositivo.
+            Puedes seguir usando Repasitos sin cuenta. Todo se guarda en este dispositivo.
           </p>
           <div className={adult.actions}>
             <Button onClick={() => navigate('/welcome')}>Volver al inicio</Button>

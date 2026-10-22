@@ -1,4 +1,4 @@
-/* First screen for grown-ups: what Numeria is, who it is for, and the choice between a local-only try,
+/* First screen for grown-ups: what Repasitos is, who it is for, and the choice between a local-only try,
    signing in, or creating an account. Children never see a login. */
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Character } from '@/art'
@@ -26,17 +26,17 @@ export default function WelcomeScreen() {
             <Character id="lumi" pose="happy" size={230} />
           </div>
           <div className={adult.stack} style={{ gap: 12 }}>
-            <h1 id="welcome-title" className={s.brand}>Numeria</h1>
+            <h1 id="welcome-title" className={s.brand}>Repasitos</h1>
             <p className={s.tagline}>Aventuras para aprender las tablas y las cuentas jugando.</p>
             <p className={s.intro}>
-              Numeria acompaña a niños de Primaria con las tablas de multiplicar, las sumas y restas de varias cifras,
+              Repasitos acompaña a niños de Primaria con las tablas de multiplicar, las sumas y restas de varias cifras,
               las multiplicaciones y las divisiones. Escriben las respuestas con el lápiz, el dedo o el teclado, y van
               rescatando a su compañero animal en ocho mundos mágicos.
             </p>
           </div>
         </section>
 
-        <section className={s.cards} aria-label="Para quién es Numeria">
+        <section className={s.cards} aria-label="Para quién es Repasitos">
           <Card>
             <h2 className={adult.subheading}>Para familias</h2>
             <ul className={s.bullets}>
@@ -76,7 +76,7 @@ export default function WelcomeScreen() {
           </div>
           {!backendAvailable && (
             <p className={adult.hint}>
-              Esta versión de Numeria funciona sin cuenta, así que las cuentas y las clases no están disponibles todavía.
+              Esta versión de Repasitos funciona sin cuenta, así que las cuentas y las clases no están disponibles todavía.
             </p>
           )}
         </section>

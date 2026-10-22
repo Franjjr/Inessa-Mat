@@ -77,7 +77,7 @@ export default function AdultHomeScreen() {
       {status === 'local-only' && (
         <div className={`${adult.notice} ${adult.noticeInfo}`} role="note">
           <div className={adult.stack} style={{ gap: 6, flex: 1 }}>
-            <strong>Estás usando Numeria sin cuenta.</strong>
+            <strong>Estás usando Repasitos sin cuenta.</strong>
             <span>Los datos solo están en este dispositivo. Si creas una cuenta, puedes guardarlos y verlos desde otros dispositivos.</span>
           </div>
           {backendAvailable && (
@@ -130,7 +130,7 @@ export default function AdultHomeScreen() {
             <Link to="/adult/join" className={s.tile}>
               <TileIcon kind="join" />
               <h3 className={s.tileTitle}>Unirse a una clase</h3>
-              <p className={s.tileText}>Si el colegio de tu hijo usa Numeria, introduce aquí el código de su clase.</p>
+              <p className={s.tileText}>Si el colegio de tu hijo usa Repasitos, introduce aquí el código de su clase.</p>
               <span className={s.tileFoot}>Introducir código →</span>
             </Link>
           )

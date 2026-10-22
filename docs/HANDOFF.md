@@ -1,5 +1,10 @@
 # Numeria · Estado del proyecto y cómo continuar
 
+> **Nombre y dominio (22-10-2026):** la app se llama **Repasitos** y vive en **https://repasitos.es**. «Numeria»
+> sigue siendo el reino de la historia (Reino de Numeria) y el nombre interno del código, de la base de datos del
+> dispositivo y de las claves guardadas: no los renombres o se perderían los datos locales de quien ya la usa.
+
+
 Última actualización: 22-10-2026 (2.ª sesión, en el Mac de Fran: `/Users/mac13/Desktop/Inessa-Mat`). Rama de trabajo: `dev`.
 
 ## Para Fran (resumen)

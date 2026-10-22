@@ -57,7 +57,7 @@ export default function SignupScreen() {
       <AdultPage title="Crear cuenta" back="/welcome" narrow>
         <section className={adult.card}>
           <h2 className={adult.subheading}>Las cuentas no están disponibles en esta versión</h2>
-          <p className={adult.lead}>Puedes probar Numeria sin cuenta. Todo se guarda en este dispositivo.</p>
+          <p className={adult.lead}>Puedes probar Repasitos sin cuenta. Todo se guarda en este dispositivo.</p>
           <div className={adult.actions}><Button onClick={() => navigate('/welcome')}>Volver al inicio</Button></div>
         </section>
       </AdultPage>
@@ -133,7 +133,7 @@ export default function SignupScreen() {
         />
 
         <fieldset className={s.form} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }} aria-describedby={errors.orgKind ? 'signup-org-error' : undefined}>
-          <legend className={adult.label} style={{ marginBottom: 8 }}>¿Cómo usarás Numeria?</legend>
+          <legend className={adult.label} style={{ marginBottom: 8 }}>¿Cómo usarás Repasitos?</legend>
           <div className={s.orgChoices} role="radiogroup" aria-label="Tipo de cuenta">
             {ORG_OPTIONS.map((o) => (
               <button

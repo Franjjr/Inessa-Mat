@@ -92,7 +92,7 @@ function AccountCard({
     return (
       <section className={adult.card} aria-labelledby="account-title">
         <h2 id="account-title" className={adult.subheading}>Cuenta</h2>
-        <p className={adult.lead}>Estás usando Numeria sin cuenta. Los datos se quedan en este dispositivo.</p>
+        <p className={adult.lead}>Estás usando Repasitos sin cuenta. Los datos se quedan en este dispositivo.</p>
         {backendAvailable && (
           <div className={adult.actions}>
             <Button onClick={() => navigate('/signup')}>Crear cuenta</Button>
@@ -180,7 +180,7 @@ function MembersCard({ orgId, orgKind }: { orgId: string; orgKind: 'family' | 's
   const share = async (url: string) => {
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
-        await navigator.share({ title: 'Invitación a Numeria', text: 'Únete a nuestra cuenta de Numeria:', url })
+        await navigator.share({ title: 'Invitación a Repasitos', text: 'Únete a nuestra cuenta de Repasitos:', url })
         return
       } catch {
         /* cancelled: fall back to copying */

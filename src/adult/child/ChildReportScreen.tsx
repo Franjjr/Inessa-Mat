@@ -93,7 +93,7 @@ export default function ChildReportScreen() {
     setActionError(null)
     try {
       const blob = await exportChildData(childId)
-      downloadBlob(blob, `numeria-${slug(name)}-datos.json`)
+      downloadBlob(blob, `repasitos-${slug(name)}-datos.json`)
       toast('Copia de datos descargada')
     } catch (e) {
       setActionError(errorMessage(e))
@@ -230,7 +230,7 @@ export default function ChildReportScreen() {
       <section className={adult.card} aria-labelledby="data-title">
         <h2 id="data-title" className={adult.subheading}>Datos y privacidad</h2>
         <p className={adult.muted}>
-          Puedes descargar todo lo que Numeria guarda de {name} o borrar su perfil. Ten en cuenta que borrar no se puede deshacer.
+          Puedes descargar todo lo que Repasitos guarda de {name} o borrar su perfil. Ten en cuenta que borrar no se puede deshacer.
         </p>
         {actionError && <p className={adult.error} role="alert">{actionError}</p>}
         <div className={adult.actions}>
@@ -252,7 +252,7 @@ export default function ChildReportScreen() {
         onCancel={() => setCalibrationOpen(false)}
       >
         <p className={adult.lead}>
-          Numeria olvidará las muestras de escritura de {name} y volverá a pedirle que escriba algunos números para aprender su letra.
+          Repasitos olvidará las muestras de escritura de {name} y volverá a pedirle que escriba algunos números para aprender su letra.
           Sus avances no cambian.
         </p>
       </ConfirmModal>
