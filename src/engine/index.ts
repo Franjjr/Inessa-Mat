@@ -72,3 +72,16 @@ export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendPart
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */
 export { expandedParts, fmt, numberWords, placeName, roundTo } from './numeric'
 export { mentalHints, holds } from './calc'
+
+// ---------------------------------------------------------------- tiempo (3.º, block D: reloj, duraciones, calendario)
+/** Phrases of the clock, periods of the day and the calendar words (src/engine/time.ts). */
+export {
+  addFace, clockPhrase, digital, faceHour, MONTHS_30_31, minutesFace, pad2, parseClockPhrase, periodOf, durationWords, WEEKDAYS,
+} from './time'
+export type { DayPeriod } from './time'
+/** Clock, time and calendar items: makers, checks and hints (src/engine/clock.ts). */
+export {
+  checkClock, clockSkillsOf, expectedClock, hintsClock, makeCalendarMonth, makeCalendarWeekday, makeClockRead, makeClockSet,
+  makeTimeConvert, makeTimeDuration, statementClock,
+} from './clock'
+export { calendarSkill, clockConvertSkill, clockReadSkill, clockSetSkill, timeDurationSkill } from './skills'

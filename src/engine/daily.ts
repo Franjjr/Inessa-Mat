@@ -10,6 +10,7 @@
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillMastery } from '@/types'
 import { availableSkills, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { makeArray } from './make'
+import { statementClock } from './clock'
 import { generate } from './generate'
 import { hintsFor } from './hints'
 import { fmt, numberWords } from './numeric'
@@ -38,6 +39,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'double-chain': 20, 'fact-family': 25, 'column-add': 50, 'column-sub': 55, 'column-mul': 45,
   division: 60, 'word-problem': 60, 'bar-problem': 75, 'error-hunt': 50, 'check-calc': 45,
   'place-value': 30, compare: 15, order: 35, round: 20, 'number-line': 25, mental: 15, equation: 20,
+  'clock-read': 25, 'clock-set': 60, 'time-convert': 30, 'time-duration': 60, calendar: 25,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -107,7 +109,7 @@ export function statementOf(ex: Exercise): string {
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
-    default: return ex.skill
+    default: return statementClock(ex) ?? ex.skill
   }
 }
 

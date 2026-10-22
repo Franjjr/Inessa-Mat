@@ -59,4 +59,10 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'bar-problem': lazy(() => import('./views/BarProblemView')),
   'error-hunt': lazy(() => import('./views/ErrorHuntView')),
   'check-calc': lazy(() => import('./views/CheckCalcView')),
+  // ---- tiempo (3.º, block D: reloj, duraciones, calendario) — src/activities/views/<name>.tsx
+  'clock-read': lazy(() => import('./views/ClockReadView')),
+  'clock-set': lazy(() => import('./views/ClockSetView')),
+  'time-convert': lazy(() => import('./views/TimeConvertView')),
+  'time-duration': lazy(() => import('./views/TimeDurationView')),
+  calendar: lazy(() => import('./views/CalendarView')),
 }

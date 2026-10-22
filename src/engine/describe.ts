@@ -66,7 +66,23 @@ export function describeSkill(skill: SkillKey): string {
     case 'bar': return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
     case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
     case 'check': return `Comprobar resultados de ${HUNT_TEXT[p.op === 'div' ? 'mul' : p.op]}`
+    case 'clock-read': return CLOCK_READ_TEXT[p.step]
+    case 'clock-set': return p.step === 30 ? 'Poner la hora en el reloj: en punto, y media, cuartos' : 'Poner la hora en el reloj de cinco en cinco minutos'
+    case 'clock-convert': return 'Reloj digital de 24 horas y frases (mañana, tarde, noche)'
+    case 'time-duration': return p.ask === 'end' ? 'Duraciones: a qué hora acaba' : 'Duraciones: cuántos minutos pasan'
+    case 'calendar': return CALENDAR_TEXT[p.topic]
   }
+}
+
+const CLOCK_READ_TEXT: Record<30 | 15 | 5, string> = {
+  30: 'Leer el reloj: en punto y media',
+  15: 'Leer el reloj: cuartos (y cuarto, menos cuarto)',
+  5: 'Leer el reloj de cinco en cinco minutos',
+}
+const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month', string> = {
+  units: 'Unidades de tiempo: hora, minuto, día, semana',
+  weekday: 'Días de la semana: qué día será dentro de unos días',
+  month: 'Días de cada mes',
 }
 
 const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }
@@ -89,6 +105,9 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'step': 'Se equivoca en el primer paso de un problema de dos pasos',
   'false-alarm': 'Dice que hay un error cuando la cuenta está bien',
   'other': 'Otro tipo de error',
+  'clock-hour': 'Lee mal la hora del reloj (la aguja corta)',
+  'clock-minute': 'Lee mal los minutos del reloj (la aguja larga, de cinco en cinco)',
+  'clock-period': 'Confunde el momento del día (mañana, tarde o noche)',
 }
 
 /** Spanish description of an error type for adult dashboards. */

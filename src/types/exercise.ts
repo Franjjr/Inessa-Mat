@@ -22,6 +22,11 @@ import type { ID, InputMode } from './common'
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
  *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
  *   div:3x1:exact|rem         3-digit dividend ÷ 1-digit divisor
+ *   clock:read:30|15|5        analogue clock: read it (en punto y media / cuarto / cada 5 minutos)
+ *   clock:set:30|5            analogue clock: set the hands (drag or tap)
+ *   clock:convert:day        digital 24 h ↔ the phrase with mañana, tarde, noche
+ *   time:end | time:elapsed  duration problems: end time, or the minutes that pass (time line)
+ *   time:units | cal:weekday | cal:month   units of time, days of the week, days of a month
  */
 export type SkillKey = string
 
@@ -49,6 +54,11 @@ export type ExerciseKind =
   | 'bar-problem'     // story problem solved on a bar diagram (with the bar first, then without it)
   | 'error-hunt'      // encuentra el error: a worked column calculation; the child decides and fixes it
   | 'check-calc'      // comprobar: a claimed result; the child writes the check operation and decides
+  | 'clock-read'      // analogue clock: choose the phrase, or write the hour and the minutes (clock:read:*)
+  | 'clock-set'       // analogue clock: set the hands by dragging or with the +/− buttons (clock:set:*)
+  | 'time-convert'    // digital 24 h ↔ phrase with mañana / tarde / noche (clock:convert:day)
+  | 'time-duration'   // start + duration → end time, or minutes that pass, on a time line (time:end, time:elapsed)
+  | 'calendar'        // days of the week, days of a month, units of time (cal:weekday, cal:month, time:units)
 
 interface ExerciseBase {
   id: ID
@@ -216,12 +226,53 @@ export interface CheckCalcExercise extends ExerciseBase {
   errorType: ErrorType | null
 }
 
+// ---------------------------------------------------------------- tiempo (3.º, block D: reloj, duraciones, calendario)
+
+/** A clock time. On the analogue face hour is 1..12 (12 = the 12 of the clock); digital 24 h uses 0..23. Minute 0..59. */
+export interface ClockTime { hour: number; minute: number }
+
+/** clock:read — the child reads the clock: picks the phrase (mode 'phrase', `options`, right one at `correct`) or writes
+    the hour and the minutes (mode 'write'). `answer` is the time on the face. */
+export interface ClockReadExercise extends ExerciseBase {
+  kind: 'clock-read'; hour: number; minute: number; mode: 'phrase' | 'write'
+  options: string[]; correct: number; answer: ClockTime
+}
+/** clock:set — the child sets the hands to the phrase in `prompt` (drag, or +/− buttons). */
+export interface ClockSetExercise extends ExerciseBase {
+  kind: 'clock-set'; prompt: string; answer: ClockTime
+}
+/** clock:convert:day — to-digital: the phrase is shown and the child writes 24 h time; to-phrase: the 24 h time is shown
+    and the child picks the phrase (`options`, right one at `correct`). `answer` is always the 24 h time. */
+export interface TimeConvertExercise extends ExerciseBase {
+  kind: 'time-convert'; direction: 'to-digital' | 'to-phrase'; phrase: string; options: string[]; correct: number
+  answer: ClockTime
+}
+/** time:end — start + duration, the child writes the end time (answer: ClockTime on the face).
+    time:elapsed — start and end shown, the child writes the minutes that pass (answer: minutes). Both draw a time line. */
+export interface TimeDurationExercise extends ExerciseBase {
+  kind: 'time-duration'; ask: 'end' | 'elapsed'; start: ClockTime; duration: number; end: ClockTime
+  answer: ClockTime | number
+}
+/** cal:weekday — weekday choice (`options`, answer = index); cal:month and time:units — a number (answer). */
+export interface CalendarExercise extends ExerciseBase {
+  kind: 'calendar'; topic: 'units' | 'weekday' | 'month'; prompt: string
+  options: string[]
+  answer: number
+  /** weekday: index of today (0 = lunes) and the days to count. */
+  week?: { today: number; days: number }
+  /** units: the fact shown as a chip, e.g. 1 hora → minutos. */
+  units?: { amount: number; from: string; to: string }
+  /** month: the month asked about. */
+  month?: string
+}
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
   | ColumnMulExercise | DivisionExercise | WordProblemExercise | BarProblemExercise | ErrorHuntExercise | CheckCalcExercise
   | PlaceValueExercise | CompareExercise | OrderExercise | RoundExercise | NumberLineExercise | MentalExercise
   | EquationExercise
+  | ClockReadExercise | ClockSetExercise | TimeConvertExercise | TimeDurationExercise | CalendarExercise
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -240,6 +291,8 @@ export type Answer =
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
   | { type: 'division-parts'; parts: (number | null)[]; quotient: number | null; remainder: number | null } // repartir por partes
   | { type: 'climb'; products: (number | null)[]; remainder: number | null } // multiplicar hacia arriba
+  | { type: 'time'; hour: number | null; minute: number | null }        // reloj: the hour and the minutes
+  | { type: 'choice'; index: number | null }                             // reloj (frases), días de la semana
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
@@ -273,6 +326,9 @@ export type ErrorType =
   | 'recognition'          // child said the handwriting was misread (not a maths error!)
   | 'bar-placement'        // a quantity put on the wrong piece of the bar
   | 'place-value'          // a digit written in the wrong column (valor posicional), or a shifted result
+  | 'clock-hour'           // reloj: the hour is wrong (the hand that says the hour)
+  | 'clock-minute'         // reloj: the minutes are wrong (the long hand, counted in fives)
+  | 'clock-period'         // reloj de 24 h: the period of the day (mañana, tarde, noche) is wrong
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'other'
@@ -292,6 +348,7 @@ export interface CheckResult {
 export type HintVisual =
   | 'groups' | 'array' | 'dots-five-plus-one' | 'double-chain' | 'mirror' | 'nine-trick' | 'skip-count'
   | 'place-value' | 'carry' | 'borrow' | 'times-ten-minus' | 'share' | 'family' | 'none'
+  | 'clock' | 'time-line' | 'week' | 'units'
 
 export interface Hint {
   level: 1 | 2 | 3            // 1 = strategy reminder, 2 = visual scaffold, 3 = worked step

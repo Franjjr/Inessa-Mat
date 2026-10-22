@@ -140,7 +140,13 @@ export const GRADE3_SYLLABUS: Syllabus = {
     {
       id: 'tiempo',
       name: 'Tiempo',
-      topics: [pending('reloj', 'Leer el reloj (en punto, y media, cuarto)', 'Falta la vista de reloj.')],
+      topics: [
+        { id: 'reloj-en-punto-media-cuarto', name: 'Reloj: en punto, y media, y cuarto', skills: ['clock:read:30', 'clock:read:15', 'clock:set:30'], status: 'disponible', rungs: { concreto: 'Reloj de agujas: poner la aguja larga en el 12, el 6, el 3 o el 9', dibujo: 'La aguja larga en el 3 (cuarto) o en el 6 (media)', numeros: 'La frase: «las tres y cuarto», «las seis y media»', uso: 'A qué hora empieza una actividad' } },
+        { id: 'reloj-5-minutos', name: 'Reloj de cinco en cinco minutos', skills: ['clock:read:5', 'clock:set:5'], status: 'disponible', rungs: { concreto: 'Contar los números del reloj de 5 en 5', dibujo: 'Las marcas de cinco minutos', numeros: 'La frase: «las tres y veinte», «las cinco menos diez»', uso: 'Horas de clase, de comer y de dormir' } },
+        { id: 'reloj-digital', name: 'Reloj digital y de agujas (24 h, mañana, tarde, noche)', skills: ['clock:convert:day'], status: 'disponible', rungs: { dibujo: 'Dos columnas: la hora de agujas y la digital', numeros: '14:30 = las dos y media de la tarde', uso: 'Leer los horarios de la vida diaria' } },
+        { id: 'duraciones', name: 'Duraciones: cuánto dura y a qué hora acaba', skills: ['time:end', 'time:elapsed'], status: 'disponible', rungs: { dibujo: 'Recta de horas con la salida y la llegada', numeros: 'Una hora y media = 60 + 30 minutos', uso: 'La película empieza a las 5 y dura 1 hora y media' } },
+        { id: 'calendario', name: 'Calendario y unidades de tiempo', skills: ['time:units', 'cal:weekday', 'cal:month'], status: 'disponible', rungs: { concreto: 'La semana en tarjetas de lunes a domingo', dibujo: 'Los nudillos para los meses', numeros: '1 hora = 60 minutos; 1 minuto = 60 segundos; 1 día = 24 horas', uso: '¿Qué día será dentro de 3 días?' } },
+      ],
     },
     {
       id: 'medida',

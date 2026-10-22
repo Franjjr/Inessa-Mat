@@ -15,6 +15,7 @@ import { genCheckCalc, genErrorHunt } from './bugs'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
 import { buildEquation, buildMental, mentalSkillsOf } from './calc'
 import { buildNumericExercise, numericSkillsOf } from './numeric'
+import { buildClock, clockSkillsOf } from './clock'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, checkSkill, conceptSkill, div2x1Skill, divSkill,
@@ -28,6 +29,8 @@ export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation',
+  // tiempo (block D, src/engine/clock.ts)
+  'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -206,6 +209,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
+      break
+    case 'clock-read': case 'clock-set': case 'time-convert': case 'time-duration': case 'calendar':
+      for (const skill of clockSkillsOf(kind)) addItem(map, skill, kind, 1)
       break
     default: {
       const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
@@ -624,6 +630,12 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  // Tiempo (block D): the clock and calendar generators (src/engine/clock.ts). Read items show the phrase while the child learns.
+  if (p.type === 'clock-read' || p.type === 'clock-set' || p.type === 'clock-convert' || p.type === 'time-duration' || p.type === 'calendar') {
+    const writeMode = p.type === 'clock-read' && (ctx.mastery?.[skill]?.box ?? 0) >= 2
+    const built = buildClock(skill, rng, used, writeMode)
+    if (built) return built
+  }
   if (NUMERIC_KINDS.includes(kind)) {
     // Numbers up to 9 999 and cálculo mental: their own generators (src/engine/numeric.ts, calc.ts).
     if (p.type === 'mental') return buildMental(p.family, rng, used)

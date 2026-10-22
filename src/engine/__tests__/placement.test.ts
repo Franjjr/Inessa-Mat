@@ -5,11 +5,12 @@ import { PLACEMENT_ACTIVITY, PLACEMENT_COUNT, buildPlacement, placementBlockOf, 
 const now = new Date('2026-10-22T10:00:00.000Z')
 
 describe('buildPlacement (prueba inicial)', () => {
-  it('has about fourteen items in the five blocks, one of each need', () => {
+  it('has about nineteen items in the six blocks, one of each need (tiempo: two items)', () => {
     const items = buildPlacement('child-1|2026-10-22', now)
     expect(items).toHaveLength(PLACEMENT_COUNT)
     const blocks = new Set(items.map((i) => i.block))
-    expect([...blocks].sort()).toEqual(['dividir', 'numeros', 'problemas', 'sumas-restas', 'tablas'].sort())
+    expect([...blocks].sort()).toEqual(['dividir', 'numeros', 'problemas', 'sumas-restas', 'tablas', 'tiempo'].sort())
+    expect(items.filter((i) => i.block === 'tiempo')).toHaveLength(2)
     expect(items.filter((i) => i.block === 'tablas').length).toBe(4)
     expect(items.filter((i) => i.block === 'problemas').every((i) => i.exercise.kind === 'bar-problem')).toBe(true)
   })

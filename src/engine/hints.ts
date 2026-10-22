@@ -10,6 +10,7 @@ import { strategyDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 import { hintsCalc } from './calc'
 import { hintsNumeric } from './numeric'
+import { hintsClock } from './clock'
 import { barHints } from './bars'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
@@ -368,6 +369,11 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'bar-problem': return barHints(ex)
     case 'error-hunt': return huntHints(ex)
     case 'check-calc': return checkHints(ex)
+    case 'clock-read':
+    case 'clock-set':
+    case 'time-convert':
+    case 'time-duration':
+    case 'calendar': return hintsClock(ex) ?? []
   }
 }
 

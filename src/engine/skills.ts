@@ -16,6 +16,11 @@
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
    check:add|sub|div        comprobar (claim + the check operation)
    div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
+   clock:read:30|15|5   reloj de agujas: leer (30 = en punto y media, 15 = cuartos, 5 = cada 5 minutos)
+   clock:set:30|5       reloj de agujas: poner la hora (30 = cuartos, 5 = cada 5 minutos)
+   clock:convert:day    reloj digital de 24 h ↔ frase con mañana, tarde o noche
+   time:end | time:elapsed   duraciones: hora de llegada, o minutos que pasan (recta de horas)
+   time:units | cal:weekday | cal:month   unidades de tiempo, días de la semana, días de un mes
 */
 import type { BarOp, DivisionExercise, ExerciseKind, MentalFamily, PlaceMode, SkillKey } from '@/types'
 
@@ -58,6 +63,11 @@ export type ParsedSkill =
   | { type: 'bar'; op: BarSkillOp }
   | { type: 'hunt'; op: HuntOp }
   | { type: 'check'; op: CheckOp }
+  | { type: 'clock-read'; step: 30 | 15 | 5 }
+  | { type: 'clock-set'; step: 30 | 5 }
+  | { type: 'clock-convert' }
+  | { type: 'time-duration'; ask: 'end' | 'elapsed' }
+  | { type: 'calendar'; topic: 'units' | 'weekday' | 'month' }
 
 // ---------------------------------------------------------------- builders
 
@@ -111,6 +121,21 @@ export function checkSkill(op: CheckOp): SkillKey {
 }
 export function div3x1Skill(variant: 'exact' | 'rem'): SkillKey {
   return `div:3x1:${variant}`
+}
+export function clockReadSkill(step: 30 | 15 | 5): SkillKey {
+  return `clock:read:${step}`
+}
+export function clockSetSkill(step: 30 | 5): SkillKey {
+  return `clock:set:${step}`
+}
+export function clockConvertSkill(): SkillKey {
+  return 'clock:convert:day'
+}
+export function timeDurationSkill(ask: 'end' | 'elapsed'): SkillKey {
+  return ask === 'end' ? 'time:end' : 'time:elapsed'
+}
+export function calendarSkill(topic: 'units' | 'weekday' | 'month'): SkillKey {
+  return topic === 'units' ? 'time:units' : topic === 'weekday' ? 'cal:weekday' : 'cal:month'
 }
 
 // ---------------------------------------------------------------- parser
@@ -169,6 +194,13 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
   if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
   if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
+  if ((m = key.match(/^clock:read:(30|15|5)$/))) return { type: 'clock-read', step: Number(m[1]) as 30 | 15 | 5 }
+  if ((m = key.match(/^clock:set:(30|5)$/))) return { type: 'clock-set', step: Number(m[1]) as 30 | 5 }
+  if (key === 'clock:convert:day') return { type: 'clock-convert' }
+  if ((m = key.match(/^time:(end|elapsed)$/))) return { type: 'time-duration', ask: m[1] as 'end' | 'elapsed' }
+  if (key === 'time:units') return { type: 'calendar', topic: 'units' }
+  if (key === 'cal:weekday') return { type: 'calendar', topic: 'weekday' }
+  if (key === 'cal:month') return { type: 'calendar', topic: 'month' }
   return null
 }
 
@@ -224,6 +256,11 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']
+    case 'clock-read': return ['clock-read']
+    case 'clock-set': return ['clock-set']
+    case 'clock-convert': return ['time-convert']
+    case 'time-duration': return ['time-duration']
+    case 'calendar': return ['calendar']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']

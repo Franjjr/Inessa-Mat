@@ -18,6 +18,7 @@ import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './su
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
+import { checkClock, expectedClock } from './clock'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -555,5 +556,10 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
     case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
     case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
+    case 'clock-read':
+    case 'clock-set':
+    case 'time-convert':
+    case 'time-duration':
+    case 'calendar': return checkClock(exercise, answer) ?? wrongShape(expectedClock(exercise))
   }
 }
