@@ -119,3 +119,19 @@
 
 /* Child-sized tap targets for Salir and Saltar (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
+
+/* Shown when the child reads the stories: the line is only heard when asked for. */
+.listen {
+  align-self: flex-start;
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border: var(--sticker-border);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--c-primary-strong);
+  cursor: pointer;
+}

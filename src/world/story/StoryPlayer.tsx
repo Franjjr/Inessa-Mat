@@ -81,6 +81,8 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
   const scene: StoryScene | undefined = story.scenes[beat?.scene ?? 0]
   const line = beat?.line ?? null
   const voiceOn = child?.settings.voice ?? false
+  // The adult can let the child read the stories: then nothing is read automatically, but «Escuchar» still works.
+  const autoRead = voiceOn && child?.settings.storyVoice !== false
   const companion = child?.companion
   const sceneCount = story.scenes.length
 
@@ -88,6 +90,13 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
     if (doneRef.current) return
     doneRef.current = true
     onDone()
+  }
+
+  const speakLine = () => {
+    if (!line) return
+    const plain = renderTemplate(line.text, ctx).replace(/^—\s*/, '')
+    const voice = line.speaker === 'companion' ? 'companion' : SPEAKER_VOICE[line.speaker] ?? 'narrator'
+    void speech.say(plain, { voice, interrupt: true }).catch(() => undefined)
   }
 
   const advance = () => {
@@ -99,11 +108,7 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
   useEffect(() => {
     if (!beat) return
     if (line?.sfx) sfx.play(line.sfx as SfxName)
-    if (line && voiceOn) {
-      const plain = renderTemplate(line.text, ctx).replace(/^—\s*/, '')
-      const voice = line.speaker === 'companion' ? 'companion' : SPEAKER_VOICE[line.speaker] ?? 'narrator'
-      void speech.say(plain, { voice, interrupt: true }).catch(() => undefined)
-    }
+    if (autoRead) speakLine()
     // Runs once per beat: the sound and the spoken line belong to that beat only.
   }, [index])
 
@@ -207,6 +212,18 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
               >
                 {speakerLabel && <span className={s.speaker}>{speakerLabel}</span>}
                 <p className={s.text}>{text}</p>
+                {voiceOn && !autoRead && (
+                  <button
+                    type="button"
+                    className={s.listen}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      speakLine()
+                    }}
+                  >
+                    🔊 Escuchar
+                  </button>
+                )}
                 <span className={s.hint} aria-hidden="true">Toca para seguir ›</span>
               </motion.div>
             )}

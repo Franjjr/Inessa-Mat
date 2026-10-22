@@ -48,6 +48,8 @@ export interface ChildSettings {
   music: boolean
   /** Lumi reads instructions aloud (Web Speech API). Stories are meant to be read by the child; a "listen" button stays available. */
   voice: boolean
+  /** Stories are read aloud by Lumi (true) or the child reads them (false; a «Escuchar» button stays available). */
+  storyVoice: boolean
   /** Allow timed activities (race). Parents can disable time pressure entirely. */
   timedActivities: boolean
   handedness: 'right' | 'left'
@@ -63,6 +65,7 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   sound: true,
   music: true,
   voice: true,
+  storyVoice: true,
   timedActivities: true,
   handedness: 'right',
   bigCells: false,

@@ -119,10 +119,7 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
         </p>
       </div>
 
-      <div className={s.counter} aria-live="polite">
-        <span className={s.counterNum}>{counted.size}</span>
-        <span className={s.counterOf}>/ {ex.rows * ex.cols}</span>
-      </div>
+      {/* No running count: the child counts (better, by rows); the marks only show which ones are done. */}
 
       {turned && flow.result?.correct && (
         <p className={s.mirrorNote}>
