@@ -108,7 +108,7 @@
 .lumi img { width: 128px; height: 128px; }
 
 /* Trust strip (right under the hero) */
-.trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); margin: 0; }
+.trust { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); margin: 0; }
 .trustCard { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-5); }
 .trustCard h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
 .trustCard p { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
