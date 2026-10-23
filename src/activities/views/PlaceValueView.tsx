@@ -107,6 +107,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
                     size="lg"
                     status={status}
                     ariaLabel={`Valor de ${placeName(top - i) === 'millares' ? 'los' : 'las'} ${placeName(top - i)}`}
+                    checkButton={false}
                     placeholder="?"
                     autoFocus={i === 0}
                   />

@@ -42,6 +42,7 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionR
           size="lg"
           status={status}
           ariaLabel="Número de arriba"
+          checkButton={false}
           placeholder="?"
           autoFocus
         />
@@ -54,6 +55,7 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionR
           size="lg"
           status={status}
           ariaLabel="Número de abajo"
+          checkButton={false}
           placeholder="?"
         />
       </div>

@@ -338,22 +338,26 @@ function AmountAnswer({ flow, ask }: { flow: AnswerFlow; ask: string }) {
     <>
       <div className={m.amountWrap}>
         {ask && <p className={m.ask}>{ask}</p>}
-        <div className={m.row} role="group" aria-label="Cantidad en euros y céntimos">
-          <div className={m.amountCol}>
-            <NumberInput
-              value={amount.e}
-              onChange={(e) => setAmount((a) => ({ ...a, e }))}
-              onSubmit={(e) => { const next = { ...amount, e }; setAmount(next); if (!flow.submitted) check(next) }}
-              maxDigits={2}
-              size="lg"
-              status={status}
-              ariaLabel="Euros"
-              placeholder="€"
-              autoFocus
-            />
-            <span className={m.unit}>euros</span>
+        <div className={m.amountRow} role="group" aria-label="Cantidad en euros y céntimos">
+          {/* The comma stays with the euros when a phone puts the céntimos on the next line. */}
+          <div className={m.amountLead}>
+            <div className={m.amountCol}>
+              <NumberInput
+                value={amount.e}
+                onChange={(e) => setAmount((a) => ({ ...a, e }))}
+                onSubmit={(e) => { const next = { ...amount, e }; setAmount(next); if (!flow.submitted) check(next) }}
+                maxDigits={2}
+                size="lg"
+                status={status}
+                ariaLabel="Euros"
+                checkButton={false}
+                placeholder="€"
+                autoFocus
+              />
+              <span className={m.unit}>euros</span>
+            </div>
+            <span className={m.comma} aria-hidden>,</span>
           </div>
-          <span className={m.comma} aria-hidden>,</span>
           <div className={m.amountCol}>
             <NumberInput
               value={amount.c}
@@ -363,6 +367,7 @@ function AmountAnswer({ flow, ask }: { flow: AnswerFlow; ask: string }) {
               size="lg"
               status={status}
               ariaLabel="Céntimos"
+              checkButton={false}
               placeholder="00"
             />
             <span className={m.unit}>céntimos</span>

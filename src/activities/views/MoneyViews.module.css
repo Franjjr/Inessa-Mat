@@ -336,6 +336,35 @@
   min-width: 0;
 }
 
+/* Euros, comma and céntimos stay on one line: the comma between the boxes is the point of the exercise. */
+.amountRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.amountLead {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .amountRow {
+    flex-wrap: wrap;
+  }
+  /* The story card: the note above the text, so the text keeps the whole width. */
+  .story {
+    flex-direction: column;
+  }
+}
+
 .amountCol {
   display: flex;
   flex-direction: column;

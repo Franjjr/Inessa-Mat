@@ -7,6 +7,7 @@ import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
 import { DIMENSION_NAME, fmt } from '@/engine'
 import { useActivityHost } from '@/activities/host'
+import { useMediaQuery } from '@/activities/lesson/useLessonMedia'
 import type {
   ExerciseViewProps, MeasureAddExercise, MeasureConvertExercise, MeasureEstimateExercise, MeasureRulerExercise, MeasureUnitExercise,
 } from '@/types'
@@ -108,30 +109,43 @@ function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFl
 
 // ---------------------------------------------------------------- ruler
 
-/** Ruler of 30 cm drawn to scale, with the object from `start` to `end`. The child reads where it ends. */
+/**
+ * Ruler of 30 cm drawn to scale, with the object from `start` to `end`. The child reads where it ends. On a phone the
+ * whole ruler would be tiny, so it shows only the stretch around the object (from a multiple of 5 to another).
+ */
 function Ruler({ max, start, end }: { max: number; start: number; end: number }) {
+  const narrow = useMediaQuery('(max-width: 600px)')
+  let from = 0
+  let to = max
+  if (narrow) {
+    from = Math.max(0, Math.floor((start - 1) / 5) * 5)
+    to = Math.min(max, Math.ceil((end + 1) / 5) * 5)
+    if (to - from < 10) to = Math.min(max, from + 10)
+    if (to - from < 10) from = Math.max(0, to - 10)
+  }
   const cm = 24
   const pad = 14
-  const width = max * cm + pad * 2
+  const width = (to - from) * cm + pad * 2
   const top = 14
   const bodyH = 58
+  const x = (v: number) => pad + (v - from) * cm
   return (
     <svg className={r.ruler} viewBox={`0 0 ${width} ${top + bodyH + 46}`} role="img" aria-label={`Regla de ${max} centímetros. El objeto empieza en ${start} y acaba en ${end}`}>
       <rect x={0} y={top} width={width} height={bodyH} rx={10} className={r.rulerBody} />
-      {Array.from({ length: max + 1 }, (_, i) => {
-        const x = pad + i * cm
+      {Array.from({ length: to - from + 1 }, (_, k) => {
+        const i = from + k
         const len = i % 10 === 0 ? 26 : i % 5 === 0 ? 20 : 12
         return (
           <g key={i}>
-            <line x1={x} x2={x} y1={top + bodyH} y2={top + bodyH - len} className={r.tick} />
+            <line x1={x(i)} x2={x(i)} y1={top + bodyH} y2={top + bodyH - len} className={r.tick} />
             {i % 5 === 0 && (
-              <text x={x} y={top + bodyH + 34} textAnchor="middle" className={r.label}>{i}</text>
+              <text x={x(i)} y={top + bodyH + 34} textAnchor="middle" className={r.label}>{i}</text>
             )}
           </g>
         )
       })}
-      <rect x={pad + start * cm} y={top + 14} width={Math.max(4, (end - start) * cm)} height={bodyH - 28} rx={8} className={r.thing} />
-      <line x1={pad + start * cm} x2={pad + start * cm} y1={top - 4} y2={top + bodyH + 2} className={r.startMark} />
+      <rect x={x(start)} y={top + 14} width={Math.max(4, (end - start) * cm)} height={bodyH - 28} rx={8} className={r.thing} />
+      <line x1={x(start)} x2={x(start)} y1={top - 4} y2={top + bodyH + 2} className={r.startMark} />
     </svg>
   )
 }

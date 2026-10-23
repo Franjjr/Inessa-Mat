@@ -177,6 +177,7 @@ export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, a
           size="lg"
           status={status}
           ariaLabel="Hora"
+          checkButton={false}
           placeholder="?"
           autoFocus={autoFocus}
           keypadToggle={false}
@@ -193,6 +194,7 @@ export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, a
           size="lg"
           status={status}
           ariaLabel="Minutos"
+          checkButton={false}
           placeholder="?"
           keypadToggle={false}
         />

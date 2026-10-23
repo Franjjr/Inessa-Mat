@@ -84,6 +84,14 @@
   fill: var(--c-ink-soft);
 }
 
+/* On a phone the ruler is a stretch of it, still drawn smaller than on a tablet: bolder, slightly bigger numbers. */
+@media (max-width: 600px) {
+  .label {
+    font-size: 26px;
+    font-weight: 700;
+  }
+}
+
 .thing {
   fill: var(--c-primary-soft);
   stroke: var(--c-primary-strong);

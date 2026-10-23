@@ -29,6 +29,11 @@ export interface NumberInputExtraProps {
    * or 'right' (3×4 grid beside the pad — keeps the pad centred, e.g. inline after "6 × 7 =").
    */
   keypadPosition?: 'below' | 'right'
+  /**
+   * Show the pad's own ✓ (default true). Views with several boxes side by side (euros and céntimos, the parts of a
+   * number, a fraction, hour and minutes) hide it and check with their shared «Comprobar»; Enter still submits.
+   */
+  checkButton?: boolean
 }
 
 interface SegView {
@@ -60,7 +65,7 @@ function placeholderFor(mode: string): string {
 
 export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const {
-    value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true,
+    value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true, checkButton = true,
     keypadPosition = 'below',
   } = props
   const ink = useInk()
@@ -422,7 +427,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
               </button>
             </span>
           )}
-          {!keypadVisible && (
+          {!keypadVisible && checkButton && (
             <button
               type="button"
               className={s.check}
