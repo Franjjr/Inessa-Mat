@@ -226,3 +226,14 @@ describe('hints: never the right result', () => {
     expect(toDigits(352)).toEqual([2, 5, 3])
   })
 })
+
+describe('encuentra el error: sums stay below 1 000', () => {
+  it('neither the right nor the written result of a sum passes 999 (the top of 2.º)', () => {
+    const rng = createRng(2024)
+    for (let i = 0; i < 600; i++) {
+      const ex: ErrorHuntExercise = genErrorHunt('add', rng, i % 3 !== 0)
+      expect(ex.answer).toBeLessThanOrEqual(999)
+      expect(ex.shown).toBeLessThanOrEqual(999)
+    }
+  })
+})

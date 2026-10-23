@@ -588,9 +588,9 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
 }
 
 /** A bar problem. The ladder: until the child has mastered the bar of the operation, the drawing is shown. */
-function buildBar(op: BarSkillOp, skill: SkillKey, ctx: Ctx, rng: Rng): Exercise {
+function buildBar(op: BarSkillOp, skill: SkillKey, ctx: Ctx, rng: Rng, small = false): Exercise {
   const withBar = (ctx.mastery?.[skill]?.box ?? -1) < 2
-  return genBarProblem(op, rng, withBar)
+  return genBarProblem(op, rng, withBar, small)
 }
 
 /** A 3-digit dividend (100..999) by a 1-digit divisor: exact (no remainder) or with a remainder. */
@@ -719,7 +719,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
   if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!
   if (p.type === 'position') return retry(() => buildPosition(p.variant, rng), used, rng)!
-  if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
+  if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng, p.small)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
   if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!

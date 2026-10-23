@@ -1,7 +1,12 @@
 /* Public front page, direction C «lúdica y colorista»: sticker panels (thick ink outline, hard offset shadow),
-   Baloo 2 headings, colours from tokens. Works at 390 px wide, iPad portrait and landscape, and desktop. */
+   Baloo 2 headings, colours from tokens. Full width: each section is a band from edge to edge with its own background;
+   the content inside keeps a side gutter (and a cap only on very wide screens). The header stays on top only where it
+   fits in one row (wide screens); section anchors leave room for it. Works at 390 px wide, iPad portrait and
+   landscape, Android tablet and desktop. */
 
 .root {
+  --gutter: clamp(16px, 4.5vw, 80px);
+  --header-h: 96px;
   height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -14,14 +19,24 @@
   -webkit-user-select: text;
   user-select: text;
 }
-.page {
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: var(--sp-3) 0 calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-6);
+.root [id] { scroll-margin-top: calc(var(--header-h) + 12px); }
+
+/* Bands: full-bleed backgrounds; .inner holds the content with the gutter. */
+.band { margin: 0; padding: clamp(40px, 6vw, 88px) var(--gutter); }
+.inner { width: 100%; max-width: 1760px; margin: 0 auto; }
+.stack { display: flex; flex-direction: column; gap: var(--sp-5); }
+.heroBand {
+  padding-top: clamp(24px, 4vw, 56px);
+  background:
+    radial-gradient(circle at 92% 8%, var(--c-pink-soft) 0, transparent 38%),
+    radial-gradient(circle at 4% 96%, var(--c-blue-soft) 0, transparent 40%),
+    var(--c-yellow-soft);
+  border-bottom: var(--sticker-border);
 }
+.howBand { background: var(--c-primary-soft); border-bottom: var(--sticker-border); }
+.subjectsBand { background: var(--c-surface); border-block: var(--sticker-border); }
+.trustBand { background: var(--c-blue-soft); }
+.closingBand { background: var(--c-primary); color: #fff; border-top: var(--sticker-border); }
 
 .sticker {
   background: var(--c-surface);
@@ -34,36 +49,37 @@
 .cBlue { background: var(--c-blue-soft); }
 .cPink { background: var(--c-pink-soft); }
 
-.visuallyHiddenTitle {
-  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
-  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
-}
+.band h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 4vw, 50px); line-height: 1.08; margin: 0; max-width: 22em; }
 
 /* Header */
 .top {
+  position: sticky; top: 0; z-index: 5;
+  padding: 12px var(--gutter);
+  background: var(--c-surface); border-bottom: var(--sticker-border);
+}
+.topInner {
+  width: 100%; max-width: 1760px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-4);
-  flex-wrap: wrap;
-  padding: var(--sp-3) 0;
 }
 .logo {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 10px; flex: none;
   font-family: var(--font-display); font-weight: 800; font-size: 30px; line-height: 1;
   color: var(--c-ink); text-decoration: none;
 }
 .logo img { width: 46px; height: 46px; }
-.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.nav { display: flex; gap: 8px; }
 .nav a {
-  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1;
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1; white-space: nowrap;
   padding: 12px 12px; min-height: 44px; display: inline-flex; align-items: center;
   border-radius: var(--r-pill); background: var(--c-surface); border: 2px solid var(--sticker-line);
   color: var(--c-ink); text-decoration: none;
 }
-.topCta { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-left: auto; }
+.topCta { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; flex: none; }
 
 /* Hero */
 .hero {
   display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-  gap: var(--sp-6); align-items: center; margin: 0; padding-top: var(--sp-3);
+  gap: clamp(24px, 5vw, 80px); align-items: center;
 }
 .heroText { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
 .badge {
@@ -75,17 +91,26 @@
 }
 .title {
   margin: 0; font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(40px, 6.4vw, 80px); line-height: 1.14; color: var(--c-ink);
+  font-size: clamp(40px, 6vw, 80px); line-height: 1.12; color: var(--c-ink);
 }
 .hl {
-  background: var(--c-yellow); padding: .02em .12em .06em; border-radius: 14px;
+  background: var(--c-yellow); padding: 0 .12em; border-radius: 14px;
   box-decoration-break: clone; -webkit-box-decoration-break: clone;
 }
-.deck { margin: 0; max-width: 30em; font-size: clamp(19px, 2vw, 21px); color: var(--c-ink-soft); }
+.deck { margin: 0; max-width: 34em; font-size: clamp(19px, 2vw, 22px); color: var(--c-ink-soft); }
 .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .row > * { flex: 0 1 auto; }
 .small { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
 .small button { min-height: 44px; }
+
+/* Subjects in the hero: the one available now and the ones coming. */
+.subjectChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1;
+  padding: 9px 12px; border-radius: var(--r-pill);
+  border: 2px dashed var(--sticker-line); background: var(--c-surface); color: var(--c-ink-soft);
+}
+.chipOn { border-style: solid; background: #15803d; color: #fff; box-shadow: var(--sticker-shadow-sm); }
 
 .heroArt { position: relative; margin: 0; padding: 0 var(--sp-3) var(--sp-5) 0; }
 .tag {
@@ -107,24 +132,30 @@
 }
 .lumi img { width: 128px; height: 128px; }
 
-/* Trust strip (right under the hero) */
-.trust { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); margin: 0; }
-.trustCard { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-5); }
-.trustCard h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
-.trustCard p { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
-.check {
-  flex: none; width: 46px; height: 46px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--c-surface); border: 3px solid var(--sticker-line);
-  font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1;
+/* How it works: three steps, each a text and a real capture, alternating sides. */
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(32px, 5vw, 72px); }
+.step {
+  display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 4vw, 64px); align-items: center;
 }
+.step:nth-child(even) .stepText { order: 2; }
+.stepText { display: flex; flex-direction: column; gap: 10px; }
+.stepText h3 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(26px, 3vw, 38px); line-height: 1.08; }
+.stepText p { margin: 0; max-width: 32em; font-size: clamp(18px, 1.8vw, 20px); color: var(--c-ink-soft); }
+.n {
+  width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--sticker-line);
+  display: grid; place-items: center; margin-bottom: 4px;
+  font-family: var(--font-display); font-weight: 800; font-size: 32px; line-height: 1; color: #fff;
+}
+.n1 { background: #15803d; }
+.n2 { background: #1d4ed8; }
+.n3 { background: #b4235a; }
+.stepFig { margin: 0; }
+.frame { padding: 10px; background: var(--c-surface); }
+.frame img { display: block; width: 100%; height: auto; border-radius: 16px; border: 3px solid var(--sticker-line); }
+.stepFig figcaption { margin-top: 12px; font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 1.25; }
 
-/* Bands */
-.band { margin: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
-.band h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; margin: 0; }
-.whatCard { padding: var(--sp-6); background: var(--c-yellow-soft); }
-.whatCard h2 { margin-bottom: 12px; }
-.whatCard p { margin: 0; font-size: clamp(18px, 2vw, 20px); color: var(--c-ink-soft); max-width: 46em; }
+/* Who it is for */
 .cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
 .card { padding: var(--sp-5); }
 .card h3 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.05; }
@@ -133,25 +164,7 @@
 .notFor h3 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 800; font-size: 24px; }
 .notFor ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; color: var(--c-ink-soft); }
 
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
-.step { padding: var(--sp-5); position: relative; }
-.n {
-  width: 64px; height: 64px; border-radius: 50%; border: 3px solid var(--sticker-line);
-  display: grid; place-items: center; margin-bottom: 14px;
-  font-family: var(--font-display); font-weight: 800; font-size: 32px; line-height: 1;
-}
-.n1 { background: #15803d; color: #fff; }
-.n2 { background: var(--w2); color: #fff; }
-.n3 { background: var(--c-warn); color: #fff; }
-.step h3 { margin: 0 0 8px; font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.05; }
-.step p { margin: 0; color: var(--c-ink-soft); }
-
-.gallery { display: grid; grid-template-columns: 1.4fr 1fr; gap: var(--sp-5); margin: 0; }
-.gallery figure { margin: 0; }
-.frame { padding: 10px; background: var(--c-surface); }
-.frame img { display: block; width: 100%; height: auto; border-radius: 16px; border: 3px solid var(--sticker-line); }
-.gallery figcaption { margin-top: 12px; font-family: var(--font-display); font-weight: 700; font-size: 18px; line-height: 1.25; }
-
+/* Subjects */
 .subjects { display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: var(--sp-3); }
 .subj { padding: 22px; min-height: 170px; display: flex; flex-direction: column; gap: 10px; border-radius: 26px; }
 .subj h3 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.05; }
@@ -168,49 +181,71 @@
 .subjOff { border: 3px dashed var(--sticker-line); border-radius: 26px; background: transparent; }
 .subjOff h3 { color: var(--c-ink-mute); }
 
-/* Closing and footer */
-.closing {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center;
-  padding: 40px; background: var(--c-primary); color: #fff;
-  box-shadow: 6px 7px 0 var(--sticker-line);
+/* Trust, right before the closing choice */
+.trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+.trustCard { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-5); }
+.trustCard h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
+.trustCard p { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
+.trustCard a { color: var(--c-primary-strong); font-weight: 700; display: inline-flex; align-items: center; min-height: 44px; }
+.check {
+  flex: none; width: 46px; height: 46px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c-surface); border: 3px solid var(--sticker-line);
+  font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1;
 }
-.closing h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
-.closing p { margin: 10px 0 0; font-size: 19px; }
-.closing .row > * { flex: 0 1 auto; }
+
+/* Closing and footer */
+.closing { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
+.closing h2 { color: #fff; }
+.closing p { margin: 10px 0 0; font-size: clamp(18px, 2vw, 21px); }
 
 .foot {
-  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); justify-content: space-between;
-  font-size: var(--fs-sm); color: var(--c-ink-soft); padding-top: var(--sp-3);
+  padding: var(--sp-4) var(--gutter) calc(var(--sp-4) + env(safe-area-inset-bottom, 0px));
+  font-size: var(--fs-sm); color: var(--c-ink-soft); background: var(--c-surface);
 }
-.foot a { color: var(--c-primary-strong); font-weight: 700; }
+.footInner { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); justify-content: space-between; align-items: center; }
+.foot a {
+  color: var(--c-primary-strong); font-weight: 700;
+  display: inline-flex; align-items: center; min-height: 44px;
+}
 .footLogo { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--c-ink); }
 
+/* Below the width where the header fits in one row: it scrolls away, and the section links go under the logo. */
+@media (max-width: 1100px) {
+  .root { --header-h: 0px; }
+  .top { position: static; }
+  .topInner { flex-wrap: wrap; }
+  .nav { order: 3; width: 100%; flex-wrap: wrap; }
+}
 /* Tablet portrait and small desktop */
 @media (max-width: 900px) {
-  .hero { grid-template-columns: minmax(0, 1fr); }
+  .hero, .step { grid-template-columns: minmax(0, 1fr); }
+  .step:nth-child(even) .stepText { order: 0; }
   .heroArt { max-width: 640px; width: 100%; justify-self: center; }
-  .nav { display: none; }
   .lumi { right: 0; }
-  .cards3, .steps, .trust { grid-template-columns: 1fr; }
-  .gallery { grid-template-columns: 1fr; }
+  .cards3, .trust { grid-template-columns: 1fr; }
   .subjects { grid-template-columns: 1fr 1fr; }
+  .subj:first-child { grid-column: 1 / -1; min-height: 0; }
   .closing { grid-template-columns: 1fr; }
 }
-/* Phones (390 px) */
+/* Phones (390 px): one header row with the logo and the main button; sign-in stays under the hero buttons. */
+@media (max-width: 640px) {
+  .nav { display: none; }
+  .topInner { flex-wrap: nowrap; }
+  .topLogin { display: none; }
+}
 @media (max-width: 480px) {
   .root { font-size: 17px; }
+  .logo { font-size: 24px; }
+  .logo img { width: 38px; height: 38px; }
   .title { font-size: clamp(38px, 11vw, 46px); }
   .deck { font-size: 19px; }
   .row { flex-direction: column; align-items: stretch; }
   .row > * { width: 100%; }
-  .topCta { width: 100%; }
-  .topCta > * { flex: 1 1 0; }
   .tag { display: none; }
   .heroArt { padding-right: 0; padding-bottom: 36px; }
   .lumi { width: 108px; height: 108px; right: -6px; bottom: -6px; }
   .lumi img { width: 90px; height: 90px; }
   .subjects { grid-template-columns: 1fr; }
-  .closing { padding: 26px; }
-  .whatCard { padding: var(--sp-5); }
   .notFor { padding: var(--sp-4) var(--sp-5); }
 }

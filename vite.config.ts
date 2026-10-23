@@ -37,7 +37,7 @@ function ttsDevApi(): Plugin {
   }
 }
 
-const WELCOME_TITLE = 'Repasitos: repasar tablas y operaciones de 7 a 9 años'
+const WELCOME_TITLE = 'Repasitos: el repaso diario de Primaria, en forma de aventura'
 const WELCOME_JSON_LD = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -49,8 +49,8 @@ const WELCOME_JSON_LD = {
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Web, iPadOS, Android',
       inLanguage: 'es-ES',
-      description: 'Juego de aventuras para que los niños de 7 a 9 años repasen las tablas de multiplicar, sumas, restas y divisiones.',
-      audience: { '@type': 'EducationalAudience', educationalRole: 'student', audienceType: 'Niños de 7 a 9 años' },
+      description: 'Repaso diario para Primaria (2.º a 4.º) según el temario del curso, en forma de aventura, con informe para la familia y el colegio. Empieza por Matemáticas.',
+      audience: { '@type': 'EducationalAudience', educationalRole: 'student', audienceType: 'Niños de 2.º a 4.º de Primaria' },
       educationalLevel: 'Educación Primaria',
     },
   ],
@@ -93,9 +93,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['fonts/*.woff2', 'models/**/*', 'icons/*'],
       manifest: {
-        name: 'Repasitos · Aventuras matemáticas',
+        name: 'Repasitos · El repaso de cada día',
         short_name: 'Repasitos',
-        description: 'Aprende las tablas, sumas, restas, multiplicaciones y divisiones jugando.',
+        description: 'El repaso diario de Primaria, según el curso y en forma de aventura.',
         lang: 'es',
         display: 'fullscreen',
         orientation: 'any',

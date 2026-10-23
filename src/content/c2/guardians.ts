@@ -134,7 +134,7 @@ export const c2Guardians: GuardianDef[] = [
       { selector: { skills: ['concept:groups', 'concept:array'] }, count: 2 },
       { selector: { kinds: ['fact-mul'], skills: ['mul:2x6', 'mul:2x8', 'mul:7x10', 'mul:3x10', 'mul:2x9'] }, count: 2 },
       { selector: { kinds: ['fact-mul'], skills: ['mul:5x7', 'mul:5x8', 'mul:4x5', 'mul:5x6'] }, count: 2 },
-      { selector: { skills: ['bar:mul'] }, count: 1 },
+      { selector: { skills: ['bar:mul:small'] }, count: 1 },
     ],
     spell: {
       text: 'La dragona hace 6 espadas cada día de la semana que trabaja: 5 días. ¿Cuántas espadas hace?',

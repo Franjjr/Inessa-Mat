@@ -132,7 +132,8 @@ function wrongValue(answer: number, models: Bug[], rng: Rng): Bug | null {
 function operandsForHunt(op: HuntOp, rng: Rng): [number, number] | null {
   if (op === 'add') {
     const digits = pick(rng, [2, 3])
-    return genAddOperands(rng, digits, randInt(rng, 1, digits - 1))
+    // Capped: the sum keeps the digits of the operands (never past 999, the top of 2.º).
+    return genAddOperands(rng, digits, randInt(rng, 1, digits - 1), digits, true)
   }
   if (op === 'sub') {
     const digits = pick(rng, [2, 3])

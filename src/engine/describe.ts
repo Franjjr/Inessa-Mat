@@ -70,7 +70,8 @@ export function describeSkill(skill: SkillKey): string {
     case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
-    case 'bar': return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
+    case 'bar': if (p.small) return 'Problemas con barras (grupos de 2, 3, 4, 5 y 10)'
+      return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
     case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
     case 'check': return `Comprobar resultados de ${HUNT_TEXT[p.op === 'div' ? 'mul' : p.op]}`
     case 'clock-read': return CLOCK_READ_TEXT[p.step]

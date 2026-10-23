@@ -351,8 +351,10 @@ export function planDailySession(input: PlanInput): DailyPlan {
 
   // 4. Problema: one word problem of the operation the child is working on.
   const problem: DailyItem[] = []
-  const barNow = barSkill(barOpFor(topic, mastery))
-  const barAny = (['add', 'sub', 'mul', 'div', 'two'] as const).map((op) => barSkill(op)).find((s) => inSyllabus.has(s)) ?? barSkill('add')
+  // 2.º has its own groups problem (bar:mul:small): the bar of the temario wins over the generic one.
+  const barOf = (op: BarSkillOp) => [barSkill(op), barSkill(op, true)].find((s) => inSyllabus.has(s)) ?? barSkill(op)
+  const barNow = barOf(barOpFor(topic, mastery))
+  const barAny = (['add', 'sub', 'mul', 'div', 'two'] as const).map(barOf).find((s) => inSyllabus.has(s)) ?? barSkill('add')
   const bex = make(inSyllabus.has(barNow) ? barNow : barAny, rng, ['bar-problem'])
   if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
 

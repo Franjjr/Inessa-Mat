@@ -391,7 +391,7 @@ export const c2w7 = world({
       kind: 'exercises',
       title: 'El problema de Chispa',
       instructions: 'Hay grupos iguales. Dibuja la barra y piensa: ¿cuántos hay en total?',
-      selector: { skills: ['bar:mul'] },
+      selector: { skills: ['bar:mul:small'] },
       count: 3,
     }),
     guardianNode('El desafío de la dragona Chispa', 'c2-w7-guardian'),

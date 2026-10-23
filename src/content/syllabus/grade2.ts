@@ -80,7 +80,7 @@ export const GRADE2_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'prob-sumar', name: 'Problemas de juntar', skills: ['bar:add'], status: 'disponible', rungs: { dibujo: 'Barra con las dos partes y el total', uso: 'Escribir la operación' } },
         { id: 'prob-restar', name: 'Problemas de quitar y comparar', skills: ['bar:sub'], status: 'disponible', rungs: { dibujo: 'Barra con la parte que se quita o la diferencia', uso: 'Escribir la operación' } },
-        { id: 'prob-multiplicar', name: 'Problemas de grupos', skills: ['bar:mul'], status: 'disponible', rungs: { dibujo: 'Barras iguales, una por grupo', uso: 'Escribir la operación' } },
+        { id: 'prob-multiplicar', name: 'Problemas de grupos', skills: ['bar:mul:small'], status: 'disponible', rungs: { dibujo: 'Barras iguales, una por grupo', uso: 'Escribir la operación' } },
       ],
     },
     {
