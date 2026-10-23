@@ -152,6 +152,7 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'fraction-count': 'fracciones-geometria',
   'geo-name': 'fracciones-geometria',
   'geo-perimeter': 'fracciones-geometria',
+  'left-right': 'fracciones-geometria',
   'incomplete': 'despiste',
   'false-alarm': 'despiste',
   'remainder-too-big': 'despiste',

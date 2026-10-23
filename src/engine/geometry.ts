@@ -5,7 +5,7 @@
    Figures are data (src/types/exercise.ts); src/activities/views/FigureSvg.tsx draws them. Hints never state the answer.
    Pure: no React. */
 import type {
-  AngleTapExercise, Answer, AngleFigure, CheckResult, CircleFigure, ErrorType, Hint, LineFigure, LinesFigure, PerimeterExercise,
+  AngleTapExercise, Answer, AngleFigure, AreaExercise, GridFigure, CheckResult, CircleFigure, ErrorType, Hint, LineFigure, LinesFigure, PerimeterExercise,
   PolygonFigure, Rng, ShapeChoiceExercise, ShapeCountExercise, SolidFigure, SolidName,
 } from '@/types'
 import { pick, randInt, shuffle } from './rng'
@@ -408,7 +408,7 @@ export function genPerimeter(rng: Rng, mode: 'drawing' | 'story'): PerimeterExer
 // ---------------------------------------------------------------- dispatch
 
 /** A geometry exercise for one skill (the perimeter mode comes from the ladder: drawing first, then the story). */
-export function genGeometry(op: GeoOp, rng: Rng, perimeterMode: 'drawing' | 'story' = 'drawing'): ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise {
+export function genGeometry(op: GeoOp, rng: Rng, perimeterMode: 'drawing' | 'story' = 'drawing'): ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise | AreaExercise {
   switch (op) {
     case 'poly:name': return genPolygonName(rng)
     case 'poly:sides': return genPolygonSides(rng)
@@ -421,8 +421,119 @@ export function genGeometry(op: GeoOp, rng: Rng, perimeterMode: 'drawing' | 'sto
     case 'solid:roll': return genSolidRoll(rng)
     case 'solid:faces': return genSolidFaces(rng)
     case 'perimeter': return genPerimeter(rng, perimeterMode)
+    case 'area': return genArea(rng)
+    case 'symmetry': return genSymmetry(rng)
   }
 }
+
+// ---------------------------------------------------------------- área y simetría (4.º)
+
+const key = (r: number, c: number) => `${r},${c}`
+
+/** A connected figure of 6 to 16 squares on a 5 × 7 grid: a rectangle with a few squares added beside it. */
+export function genArea(rng: Rng): AreaExercise {
+  const rows = 5
+  const cols = 7
+  const w = randInt(rng, 2, 4)
+  const h = randInt(rng, 2, 3)
+  const r0 = randInt(rng, 0, rows - h)
+  const c0 = randInt(rng, 0, cols - w)
+  const cells = new Set<string>()
+  for (let r = r0; r < r0 + h; r++) for (let c = c0; c < c0 + w; c++) cells.add(key(r, c))
+  const extra = randInt(rng, 0, 3)
+  for (let k = 0, tries = 0; k < extra && tries < 50; tries++) {
+    const [r, c] = pick(rng, [...cells]).split(',').map(Number)
+    const [dr, dc] = pick(rng, [[0, 1], [0, -1], [1, 0], [-1, 0]] as const)
+    const nr = r + dr
+    const nc = c + dc
+    if (nr < 0 || nc < 0 || nr >= rows || nc >= cols || cells.has(key(nr, nc))) continue
+    cells.add(key(nr, nc))
+    k++
+  }
+  const filled = [...cells].map((s) => s.split(',').map(Number) as [number, number]).sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  return {
+    id: `area:${filled.map(([r, c]) => `${r}${c}`).join('.')}`, kind: 'area', skill: geoSkill('area'), difficulty: 2,
+    figure: { type: 'grid', rows, cols, filled }, answer: filled.length,
+  }
+}
+
+/** True when the squares are the same on both sides of the axis. */
+export function isSymmetric(f: GridFigure): boolean {
+  if (!f.axis) return false
+  const set = new Set(f.filled.map(([r, c]) => key(r, c)))
+  const at = f.axis.at
+  return f.filled.every(([r, c]) => (f.axis!.dir === 'v' ? set.has(key(r, 2 * at - 1 - c)) : set.has(key(2 * at - 1 - r, c))))
+}
+
+/** «¿La línea roja es un eje de simetría?»: half a figure mirrored across the line, or mirrored with one slip. */
+export function genSymmetry(rng: Rng): ShapeChoiceExercise {
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const dir = rng() < 0.6 ? 'v' : 'h'
+    const rows = dir === 'v' ? 5 : 6
+    const cols = dir === 'v' ? 6 : 5
+    const at = dir === 'v' ? cols / 2 : rows / 2
+    const half = new Set<string>()
+    // A connected half that touches the axis.
+    let r = dir === 'v' ? randInt(rng, 0, rows - 1) : at - 1
+    let c = dir === 'v' ? at - 1 : randInt(rng, 0, cols - 1)
+    half.add(key(r, c))
+    const size = randInt(rng, 3, 6)
+    for (let tries = 0; half.size < size && tries < 60; tries++) {
+      const [dr, dc] = pick(rng, [[0, 1], [0, -1], [1, 0], [-1, 0]] as const)
+      const nr = r + dr
+      const nc = c + dc
+      const inHalf = dir === 'v' ? nc >= 0 && nc < at && nr >= 0 && nr < rows : nr >= 0 && nr < at && nc >= 0 && nc < cols
+      if (!inHalf) continue
+      r = nr
+      c = nc
+      half.add(key(r, c))
+    }
+    const cells = [...half].map((s) => s.split(',').map(Number) as [number, number])
+    const mirror = cells.map(([y, x]) => (dir === 'v' ? [y, 2 * at - 1 - x] : [2 * at - 1 - y, x]) as [number, number])
+    const yes = rng() < 0.5
+    let other = mirror
+    if (!yes) {
+      // One square of the mirrored half moves one step along the axis: the figure stops matching.
+      const i = randInt(rng, 0, mirror.length - 1)
+      const [y, x] = mirror[i]
+      const moved: [number, number] = dir === 'v' ? [y + (y + 1 < rows ? 1 : -1), x] : [y, x + (x + 1 < cols ? 1 : -1)]
+      other = mirror.map((p, k) => (k === i ? moved : p))
+    }
+    const filled = [...new Map([...cells, ...other].map((p) => [key(p[0], p[1]), p])).values()]
+      .sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    const figure: GridFigure = { type: 'grid', rows, cols, filled, axis: { dir, at } }
+    if (isSymmetric(figure) !== yes) continue
+    const options = ['Sí', 'No']
+    return {
+      id: `shape-choice:symmetry:${dir}:${filled.map(([y, x]) => `${y}${x}`).join('.')}`,
+      kind: 'shape-choice', skill: geoSkill('symmetry'), difficulty: 3,
+      question: '¿La línea roja es un eje de simetría? Si doblas por ella, ¿las dos mitades coinciden?',
+      figures: [figure], options, answer: yes ? 0 : 1,
+      hints: [
+        'Imagina que doblas la hoja por la línea roja.',
+        'Compara cada cuadradito con el que le toca al otro lado, a la misma distancia de la línea.',
+        'Si todos los cuadraditos tienen pareja al otro lado, la línea es un eje; si alguno se queda solo, no lo es.',
+      ],
+    }
+  }
+  throw new Error('geometry: no symmetry exercise could be built')
+}
+
+/** Grades the área: the squares counted. */
+export function checkArea(ex: AreaExercise, answer: Answer): CheckResult {
+  const expected = String(ex.answer)
+  const v = answer.type === 'number' ? answer.value : answer.type === 'numbers' && answer.values.length === 1 ? answer.values[0] : undefined
+  if (v === undefined) return wrongShape(expected)
+  if (v === null || !Number.isFinite(v)) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: 'Escribe cuántos cuadraditos ocupa.' }
+  if (v === ex.answer) return { correct: true, given: String(v), expected, feedback: '¡Muy bien! Has medido la superficie.' }
+  return { correct: false, given: String(v), expected, errorType: 'other', feedback: '¡Casi! Cuenta fila a fila y ve tachando con el dedo los que ya has contado.' }
+}
+
+export const AREA_HINTS = [
+  'El área es lo que ocupa la figura por dentro: cuenta los cuadraditos de color.',
+  'Cuenta fila a fila, de izquierda a derecha.',
+  'Suma lo que hay en cada fila.',
+]
 
 // ---------------------------------------------------------------- grading
 
@@ -497,8 +608,9 @@ const SIDES_HINTS: [string, string, string] = [
 ]
 
 /** Hints of the geometry exercises: the strategy, then the step; never the answer. */
-export function geometryHints(ex: ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise): Hint[] {
+export function geometryHints(ex: ShapeChoiceExercise | ShapeCountExercise | AngleTapExercise | PerimeterExercise | AreaExercise): Hint[] {
   switch (ex.kind) {
+    case 'area': return AREA_HINTS.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
     case 'shape-choice': return ex.hints.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
     case 'shape-count': return SIDES_HINTS.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))
     case 'angle-tap': return ANGLE_TAP_HINTS.map((text, i) => hint((i + 1) as 1 | 2 | 3, text))

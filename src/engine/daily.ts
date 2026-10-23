@@ -13,9 +13,13 @@ import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
 import { hintsFor } from './hints'
-import { fmt, numberWords } from './numeric'
+import { fmt, numberWords, roundWords } from './numeric'
 import { moneyStatement } from './money'
 import { measureStatement } from './measure'
+import { dataStatement } from './data'
+import { patternStatement } from './patterns'
+import { positionStatement } from './position'
+import { mulPartsStatement } from './bigops'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -44,7 +48,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'clock-read': 25, 'clock-set': 60, 'time-convert': 30, 'time-duration': 60, calendar: 25,
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
-  money: 40, measure: 35,
+  money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -106,7 +110,7 @@ export function statementOf(ex: Exercise): string {
           : `Escribe con cifras: ${numberWords(ex.value)}`
     case 'compare': return `Compara ${fmt(ex.left)} y ${fmt(ex.right)}`
     case 'order': return `Ordena ${ex.values.map(fmt).join(', ')}`
-    case 'round': return `Redondea ${fmt(ex.value)} a las ${ex.to === 10 ? 'decenas' : 'centenas'}`
+    case 'round': return `Redondea ${fmt(ex.value)} a ${ex.to === 1000 ? 'los millares' : `las ${roundWords(ex.to).plural}`}`
     case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
     case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     case 'bar-problem': return ex.text
@@ -121,6 +125,11 @@ export function statementOf(ex: Exercise): string {
     case 'error-hunt': return `${ex.top} ${ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'} ${ex.bottom} = ${ex.shown}`
     case 'money': return moneyStatement(ex)
     case 'measure': return measureStatement(ex)
+    case 'chart': case 'chance': return dataStatement(ex) ?? ex.skill
+    case 'pattern': return patternStatement(ex) ?? ex.skill
+    case 'position': return positionStatement(ex) ?? ex.skill
+    case 'mul-parts': return mulPartsStatement(ex)
+    case 'area': return '¿Cuántos cuadraditos ocupa la figura?'
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
@@ -207,8 +216,8 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
     if (first.type === 'word') return first.op
     if (first.type === 'add') return 'add'
     if (first.type === 'sub') return 'sub'
-    if (first.type === 'mul' || first.type === 'mul2x1') return 'mul'
-    if (first.type === 'div' || first.type === 'div2x1') return 'div'
+    if (first.type === 'mul' || first.type === 'mul2x1' || first.type === 'mul3x1' || first.type === 'mulParts') return 'mul'
+    if (first.type === 'div' || first.type === 'div2x1' || first.type === 'div4x1') return 'div'
   }
   const count: Record<WordOp, number> = { add: 0, sub: 0, mul: 0, div: 0 }
   for (const m of Object.values(mastery)) {
@@ -342,7 +351,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
   // 4. Problema: one word problem of the operation the child is working on.
   const problem: DailyItem[] = []
   const barNow = barSkill(barOpFor(topic, mastery))
-  const bex = make(inSyllabus.has(barNow) ? barNow : barSkill('add'), rng, ['bar-problem'])
+  const barAny = (['add', 'sub', 'mul', 'div', 'two'] as const).map((op) => barSkill(op)).find((s) => inSyllabus.has(s)) ?? barSkill('add')
+  const bex = make(inSyllabus.has(barNow) ? barNow : barAny, rng, ['bar-problem'])
   if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
 
   const blocks: DailyPlan['blocks'] = [

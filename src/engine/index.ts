@@ -69,6 +69,7 @@ export { fractionName, fractionHints, genFractionCompare, genFractionEqual, genF
 export {
   genAngleTap, genAngleType, genCircle, genGeometry, genLineRelation, genLineType, genPerimeter, genPolygonName, genPolygonSides,
   genSolidFaces, genSolidName, genSolidRoll, geometryHints, isConvex, polygonPoints, rightCorners, sideLengths, POLYGON_WORD,
+  genArea, genSymmetry, isSymmetric, checkArea,
 } from './geometry'
 export { blockSkillsOf, fractionSkill, geoSkill, FRACTION_DENOMINATORS, GEO_OPS } from './skills'
 export type { FractionDenominator, FractionOp, GeoOp } from './skills'
@@ -83,9 +84,14 @@ export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendPart
 /** Dinero and medida (3.º, block C): generators, checks, hints and statements (see money.ts and measure.ts). */
 export { buildMoney, checkMoney, euros, hintsMoney, isNote, moneyStatement, MONEY_MODES, PIECES, pieceName, splitCents, SHOP } from './money'
 export { buildMeasure, checkMeasure, DIMENSION_NAME, hintsMeasure, MEASURE_MODES, measureStatement, THINGS, UNITS } from './measure'
+export { CHART_SKILLS, CHANCE_OPTIONS, buildChance, buildChart, checkChance, checkChart, hintsChance, hintsChart, makeChance, makeChart, makeModeList } from './data'
+export { PATTERN_SKILLS, buildPattern, checkPattern, hintsPattern, makeNumberSeries, makePredict, makeShapePattern } from './patterns'
+export { POSITION_SKILLS, SIDES, buildPosition, checkPosition, hintsPosition, makeNext, makeRelative, makeRoute } from './position'
+export { genDivision4, genMul3x1, genMulParts, makeMulParts, checkMulParts, hintsMulParts } from './bigops'
+export { toRoman } from './calc'
 export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */
-export { expandedParts, fmt, numberWords, placeName, roundTo } from './numeric'
+export { expandedParts, fmt, numberWords, placeName, roundTo, roundWords } from './numeric'
 export { mentalHints, holds } from './calc'
 
 // ---------------------------------------------------------------- tiempo (3.º, block D: reloj, duraciones, calendario)

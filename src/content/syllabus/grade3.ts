@@ -6,7 +6,7 @@
 import { divSkill, fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage } from './model'
-import { pending, tableTopic, withStageTerms } from './helpers'
+import { tableTopic, withStageTerms } from './helpers'
 
 export { tableSkills } from './helpers'
 
@@ -33,10 +33,10 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'prob-multiplicar', 'poligonos', 'rectas'] },
   // 2.º trimestre
   { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio'] },
-  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos'] },
-  { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos'] },
+  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'graficos'] },
+  { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos', 'recorridos'] },
   // 3.er trimestre
-  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error'] },
+  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error', 'probabilidad'] },
   { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes'] },
 ]
 
@@ -80,8 +80,8 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'mul-2x1-sin-llevar', name: 'Multiplicar 2 cifras por 1 (sin llevada)', skills: ['mul:2x1:c0'], status: 'disponible', rungs: { concreto: 'Grupos de decenas y unidades', dibujo: 'Descomponer 23 × 3 = 20 × 3 + 3 × 3', numeros: 'La cuenta en columna', uso: 'Problemas de grupos' } },
         { id: 'mul-2x1-llevando', name: 'Multiplicar 2 cifras por 1 (con llevada)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { dibujo: 'Llevadas de las unidades', numeros: 'La cuenta en columna con llevada', uso: 'Problemas de grupos' } },
-        pending('mul-3x1', 'Multiplicar 3 cifras por 1', 'Falta el generador de 3 cifras × 1 cifra.'),
-        pending('mul-10-100', 'Multiplicar por 10, 100 y 1 000', 'Falta el generador de potencias de 10.'),
+        { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: 'Descomponer 213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de grupos grandes' } },
+        { id: 'mul-10-100', name: 'Multiplicar por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven a la izquierda en la tabla de valor posicional', numeros: '37 × 100 = 3 700: dos ceros a la derecha' } },
       ],
     },
     {
@@ -174,6 +174,15 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'angulos-rectos', name: 'Ángulos rectos', skills: [geoSkill('angle:type'), geoSkill('angle:tap')], status: 'disponible', rungs: { concreto: 'La esquina de una hoja de papel', dibujo: 'Comparar cada ángulo con la esquina del papel', uso: 'Encontrar las esquinas rectas de una habitación' } },
         { id: 'circulo-cuerpos', name: 'Círculo, circunferencia y cuerpos', skills: [geoSkill('circle'), geoSkill('solid:name'), geoSkill('solid:roll'), geoSkill('solid:faces')], status: 'disponible', rungs: { concreto: 'Pelotas, cajas, latas y conos', dibujo: 'Caras planas y partes redondas', numeros: 'Cuántas caras planas tiene cada cuerpo' } },
         { id: 'perimetro', name: 'Perímetro: sumar los lados', skills: [geoSkill('perimeter')], status: 'disponible', rungs: { dibujo: 'Figuras con la medida de cada lado', uso: '¿Cuántos metros de valla hacen falta para rodear el jardín?' } },
+        { id: 'recorridos', name: 'Recorridos en una cuadrícula', skills: ['pos:route'], status: 'disponible', rungs: { concreto: 'Caminar por la clase contando pasos', dibujo: 'Flechas en una cuadrícula', uso: 'Dar indicaciones para llegar a un sitio' } },
+      ],
+    },
+    {
+      id: 'estadistica',
+      name: 'Gráficos y probabilidad',
+      topics: [
+        { id: 'graficos', name: 'Pictogramas y gráficas de barras', skills: ['chart:pict:x', 'chart:bars'], status: 'disponible', rungs: { concreto: 'Contar votos de la clase', dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
+        { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance'], status: 'disponible', rungs: { concreto: 'Sacar bolas de una bolsa sin mirar', uso: '¿Puede salir una bola verde?' } },
       ],
     },
   ],

@@ -14,6 +14,10 @@ import { hintsClock } from './clock'
 import { barHints } from './bars'
 import { hintsMoney } from './money'
 import { hintsMeasure } from './measure'
+import { hintsChance, hintsChart } from './data'
+import { hintsPattern } from './patterns'
+import { hintsMulParts } from './bigops'
+import { hintsPosition } from './position'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
 import { TABLE_METHODS } from './methods'
@@ -388,6 +392,12 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'shape-count': return geometryHints(ex)
     case 'money': return hintsMoney(ex) ?? []
     case 'measure': return hintsMeasure(ex) ?? []
+    case 'chart': return hintsChart(ex)
+    case 'chance': return hintsChance(ex)
+    case 'pattern': return hintsPattern(ex)
+    case 'position': return hintsPosition(ex)
+    case 'mul-parts': return hintsMulParts(ex)
+    case 'area': return geometryHints(ex)
   }
 }
 

@@ -79,6 +79,12 @@ export type ExerciseKind =
   | 'shape-count'     // how many sides (or corners) a polygon has (geo:poly:sides)
   | 'money'           // dinero: recognise, pay, change, add prices, compare, convert (money:*)
   | 'measure'         // medida: unit, conversion, ruler, add, estimate (measure:*)
+  | 'chart'           // gráficos: read a pictogram or a bar chart, or find the moda of a list (chart:*)
+  | 'chance'          // probabilidad: seguro, posible o imposible (prob:chance)
+  | 'pattern'         // series: the next figure of a pattern, the missing number, or a later term (pattern:*)
+  | 'position'        // posición: left, right, above, below on a grid, and routes with arrows (pos:*)
+  | 'mul-parts'       // multiplicar por dos cifras por partes: 23 × 14 = 23 × 4 + 23 × 10 (mul:2dx2d, mul:3dx2d)
+  | 'area'            // área: count the unit squares of a figure on a grid (geo:area)
 
 interface ExerciseBase {
   id: ID
@@ -129,7 +135,7 @@ export interface DivisionExercise extends ExerciseBase {
   variant: 'exact' | 'rem' | 'long'
 }
 export type PlaceMode = 'blocks' | 'expanded' | 'words'
-export type MentalFamily = 'dobles' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar'
+export type MentalFamily = 'dobles' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
 /** A term of an equation side: a number, an operator, or null for the blank the child fills. */
 export type EqTerm = number | '+' | '−' | null
 
@@ -144,7 +150,7 @@ export interface CompareExercise extends ExerciseBase { kind: 'compare'; left: n
 export interface OrderExercise extends ExerciseBase {
   kind: 'order'; values: number[] /* as shown */; direction: 'asc' | 'desc'; answer: number[] /* in the order to write */
 }
-export interface RoundExercise extends ExerciseBase { kind: 'round'; value: number; to: 10 | 100; answer: number }
+export interface RoundExercise extends ExerciseBase { kind: 'round'; value: number; to: 10 | 100 | 1000; answer: number }
 export interface NumberLineExercise extends ExerciseBase {
   kind: 'number-line'
   mode: 'tick' | 'jump'
@@ -310,7 +316,13 @@ export interface LinesFigure { type: 'lines'; segments: [[number, number], [numb
 export interface AngleFigure { type: 'angle'; deg: number; rotation: number }
 export type SolidName = 'cubo' | 'prisma' | 'piramide' | 'cilindro' | 'cono' | 'esfera'
 export interface SolidFigure { type: 'solid'; name: SolidName }
-export type Figure = FractionFigure | PolygonFigure | CircleFigure | LineFigure | LinesFigure | AngleFigure | SolidFigure
+/** Squares on a grid (área, simetría). filled: [row, col] of the coloured squares. axis: a dashed line between columns
+    (v, at = the column boundary) or rows (h). */
+export interface GridFigure {
+  type: 'grid'; rows: number; cols: number; filled: [number, number][]
+  axis?: { dir: 'v' | 'h'; at: number }
+}
+export type Figure = FractionFigure | PolygonFigure | CircleFigure | LineFigure | LinesFigure | AngleFigure | SolidFigure | GridFigure
 
 export interface FractionShadeExercise extends ExerciseBase {
   kind: 'fraction-shade'; numerator: number; denominator: number; figure: FractionFigure
@@ -456,6 +468,82 @@ export type Exercise =
   | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
+  | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise
+
+// ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
+
+export interface MulPartsExercise extends ExerciseBase {
+  kind: 'mul-parts'
+  top: number
+  /** The two-digit multiplier and its parts: 14 → units 4, tens 10. */
+  bottom: number
+  units: number
+  tens: number
+  /** [top × units, top × tens]. */
+  partials: [number, number]
+  answer: number
+}
+export interface AreaExercise extends ExerciseBase { kind: 'area'; figure: GridFigure; answer: number }
+
+// ---- gráficos, probabilidad, series y posición (src/engine/data.ts, patterns.ts, position.ts)
+
+export interface ChartCategory { label: string; emoji: string; value: number }
+export interface ChartExercise extends ExerciseBase {
+  kind: 'chart'
+  /** pictogram: rows of icons; bars: a bar chart with a scale; data: a list of values (the moda). */
+  mode: 'pictogram' | 'bars' | 'data'
+  title: string
+  categories: ChartCategory[]
+  /** Pictogram: what one icon is worth (1, 2, 5 or 10). Bars: the step of the scale. */
+  per: number
+  /** data mode: the values in the list. */
+  data: number[]
+  ask: 'count' | 'difference' | 'total' | 'most' | 'least' | 'mode'
+  question: string
+  /** most / least: the labels to choose from (the answer is an index). Empty when a number is written. */
+  options: string[]
+  answer: number
+}
+export interface ChanceExercise extends ExerciseBase {
+  kind: 'chance'
+  /** What is in the bag (or on the spinner), with how many of each. */
+  bag: { label: string; emoji: string; count: number }[]
+  question: string
+  /** Always ['Seguro', 'Posible', 'Imposible']; the answer is an index. */
+  options: string[]
+  answer: number
+}
+export interface PatternExercise extends ExerciseBase {
+  kind: 'pattern'
+  /** shapes: a row of figures, choose the next one; numbers: a series with a gap; predict: a term further on. */
+  mode: 'shapes' | 'numbers' | 'predict'
+  /** The terms shown; null is the gap (numbers) or the next one (shapes). */
+  items: (string | number | null)[]
+  /** numbers / predict: the constant step of the series (negative when it goes down). 0 for shapes. */
+  step: number
+  /** predict: the position asked (1-based). */
+  position: number | null
+  /** shapes: the figures to choose from (the answer is an index). Empty when a number is written. */
+  options: string[]
+  answer: number
+}
+export interface PositionCell { row: number; col: number; emoji: string; name: string }
+export interface PositionExercise extends ExerciseBase {
+  kind: 'position'
+  /** relative: where one thing is from another; next: what is beside a thing; route: where a walk ends. */
+  mode: 'relative' | 'next' | 'route'
+  rows: number
+  cols: number
+  cells: PositionCell[]
+  question: string
+  /** route: the moves, in order. */
+  moves: { dir: 'up' | 'down' | 'left' | 'right'; n: number }[]
+  /** route: where the walk starts (a cell index). */
+  start: number | null
+  options: string[]
+  /** Index in options. */
+  answer: number
+}
 
 /**
  * A child's answer. Single-number kinds use { value }. Column kinds send the digits written in each cell so the
@@ -523,6 +611,7 @@ export type ErrorType =
   | 'fraction-count'       // counted the coloured parts or the parts of the whole wrongly (numerator or denominator)
   | 'geo-name'             // confused a figure, a line, an angle or a solid with another one
   | 'geo-perimeter'        // the perimeter did not add every side
+  | 'left-right'           // posición: left and right (or above and below) swapped
   | 'other'
 
 export interface CheckResult {

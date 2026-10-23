@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
-import { fmt } from '@/engine'
+import { fmt, roundWords } from '@/engine'
 import type { ExerciseViewProps, RoundExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
@@ -17,7 +17,7 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
   const [value, setValue] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  const unit = ex.to === 10 ? 'decenas' : 'centenas'
+  const unit = roundWords(ex.to).plural
 
   const submit = (v: number | null = value) => {
     if (v === null) return

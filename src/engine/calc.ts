@@ -5,7 +5,7 @@
 import type {
   Answer, CheckResult, EqTerm, EquationExercise, Exercise, Hint, MentalExercise, MentalFamily, Rng, SkillKey,
 } from '@/types'
-import { randInt, shuffle } from './rng'
+import { pick, randInt, shuffle } from './rng'
 import { fmt } from './numeric'
 import { MENTAL_FAMILIES, mentalSkill } from './skills'
 
@@ -14,7 +14,7 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): 
 // ---------------------------------------------------------------- mental
 
 const DIFFICULTY: Record<MentalFamily, number> = {
-  dobles: 2, mitades: 2, completar10: 1, completar100: 2, completar1000: 3, decenas: 2, centenas: 2, compensar: 3,
+  dobles: 2, mitades: 2, completar10: 1, completar100: 2, completar1000: 3, decenas: 2, centenas: 2, compensar: 3, por10: 2, romanos: 3,
 }
 
 /** Makes a mental item; `a` and `b` carry the numbers the hints work with (see mentalHints). */
@@ -74,7 +74,44 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       const answer = plus ? a + b : a - b
       return makeMental(family, a, b, answer, `${a} ${plus ? '+' : '−'} ${b} = ?`)
     }
+    case 'por10': {
+      // a × b or (a × b) : b, with b = 10, 100 or 1 000; the result stays in 4 digits.
+      const b = pick(rng, [10, 10, 100, 100, 1000])
+      const a = b === 10 ? randInt(rng, 2, 99) * (rng() < 0.3 ? 10 : 1) : b === 100 ? randInt(rng, 2, 99) : randInt(rng, 2, 9)
+      // 10, 100 and 1 000 are named in the hints: they are never the answer.
+      if (a * b > 9999 || [10, 100, 1000].includes(a) || [10, 100, 1000].includes(a * b)) return mentalItem(family, rng)
+      if (rng() < 0.65) return makeMental(family, a, b, a * b, `${fmt(a)} × ${fmt(b)} = ?`)
+      return makeMental(family, a * b, b, a, `${fmt(a * b)} : ${fmt(b)} = ?`)
+    }
+    case 'romanos': {
+      // A single letter (I, V, X, L, C) is its own value in the hints: never asked alone.
+      const n = rng() < 0.4 ? randInt(rng, 2, 20) : randInt(rng, 21, 99)
+      if ([5, 10, 50].includes(n)) return mentalItem(family, rng)
+      return makeMental(family, n, 0, n, `¿Qué número es ${toRoman(n)}?`)
+    }
   }
+}
+
+const ROMAN: [number, string][] = [[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
+
+/** 47 → 'XLVII' (1..399). */
+export function toRoman(n: number): string {
+  let out = ''
+  let rest = n
+  for (const [v, s] of ROMAN) while (rest >= v) { out += s; rest -= v }
+  return out
+}
+
+/** The pieces a Roman numeral is read in, from the left: 'XLVII' → ['XL', 'V', 'I', 'I']. */
+function romanPieces(r: string): string[] {
+  const pieces: string[] = []
+  let rest = r
+  while (rest) {
+    const hit = ROMAN.find(([, s]) => rest.startsWith(s))!
+    pieces.push(hit[1])
+    rest = rest.slice(hit[1].length)
+  }
+  return pieces
 }
 
 /** A mental item of one of the families (the skill fixes the family). */
@@ -97,6 +134,8 @@ const TIP: Record<MentalFamily, string> = {
   decenas: 'Cambian solo las decenas: las unidades se quedan igual.',
   centenas: 'Cambian solo las centenas: las decenas y las unidades se quedan igual.',
   compensar: 'Usa el número redondo cercano y después corrige con 1.',
+  por10: 'Multiplicar por 10 es poner un cero a la derecha; por 100, dos ceros; por 1 000, tres. Dividir los quita.',
+  romanos: 'I vale 1, V vale 5, X vale 10, L vale 50 y C vale 100.',
 }
 
 /** Hints of a mental item. Level 3 works one step and never writes the final answer. */
@@ -205,6 +244,24 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         hint(1, plus ? `Sumar ${b} es sumar ${round} y quitar 1.` : `Restar ${b} es restar ${round} y sumar 1.`),
         hint(2, `${a} ${plus ? '+' : '−'} ${round} = ?. Después ${plus ? 'quita' : 'suma'} 1.`),
         hint(3, `Tienes ${plus ? a + round : a - round} y ${plus ? 'quitas' : 'sumas'} 1. ¿Cuánto queda?`),
+      ]
+    }
+    case 'por10': {
+      // The count of zeros in words: a digit could be the answer itself (3 000 : 1 000).
+      const zeros = ['', 'un cero', 'dos ceros', 'tres ceros'][String(b).length - 1]
+      const times = ex.prompt.includes('×')
+      return [
+        hint(1, TIP.por10),
+        hint(2, times ? `Por ${fmt(b)} se ponen ${zeros} a la derecha.` : `Entre ${fmt(b)} se quitan ${zeros} de la derecha.`),
+        hint(3, times ? `Escribe ${fmt(a)} y después ${zeros === 'un cero' ? 'el cero' : 'los ceros'}.` : `Tapa con el dedo ${zeros === 'un cero' ? 'el último cero' : `los ${zeros.replace(' ceros', '')} últimos ceros`} de ${fmt(a)} y lee lo que queda.`),
+      ]
+    }
+    case 'romanos': {
+      const pieces = romanPieces(toRoman(a))
+      return [
+        hint(1, TIP.romanos),
+        hint(2, `Si una letra pequeña va delante de una más grande, se resta: ${[4, 40].includes(a) ? 'IX es 9 y XC es 90' : 'IV es 4 y XL es 40'}.`),
+        hint(3, `Lee por trozos, de izquierda a derecha: ${pieces.join(' + ')}. Después suma los trozos.`),
       ]
     }
   }

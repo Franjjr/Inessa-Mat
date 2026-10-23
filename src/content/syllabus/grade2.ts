@@ -7,7 +7,7 @@
    dinero, euros enteros, sin céntimos. */
 import { addSkill, compareSkill, geoSkill, lineSkill, moneySkill, orderSkill, placeSkill } from '@/engine/skills'
 import type { Syllabus, SyllabusStage } from './model'
-import { pending, tableTopic, withStageTerms } from './helpers'
+import { tableTopic, withStageTerms } from './helpers'
 
 export const GRADE2_STAGES: SyllabusStage[] = [
   // 1.er trimestre
@@ -36,7 +36,7 @@ export const GRADE2_SYLLABUS: Syllabus = withStageTerms({
         { id: 'leer-escribir-999', name: 'Leer y escribir hasta 999', skills: [placeSkill('words', 999)], status: 'disponible', rungs: { dibujo: 'Tabla de centenas, decenas y unidades', numeros: 'El número en palabras, sin cifras' } },
         { id: 'comparar-ordenar-999', name: 'Comparar y ordenar hasta 999', skills: [compareSkill(999), orderSkill(999)], status: 'disponible', rungs: { dibujo: 'Columnas de centenas, decenas y unidades', numeros: 'Signos < > = y orden de menor a mayor' } },
         { id: 'recta-999', name: 'La recta numérica: saltos de 10 y de 100', skills: [lineSkill(10, 999), lineSkill(100, 999)], status: 'disponible', rungs: { dibujo: 'Saltos de 10 y de 100 en la recta', numeros: '340 + 10 = 350; 340 + 100 = 440' } },
-        pending('series', 'Series y patrones', 'Faltan los ejercicios de series de figuras y de números con regla.', { concreto: 'Collares de cuentas de colores', dibujo: 'Figuras que se repiten', numeros: '3, 6, 9, __' }),
+        { id: 'series', name: 'Series y patrones', skills: ['pattern:shapes', 'pattern:numbers'], status: 'disponible', rungs: { concreto: 'Collares de cuentas de colores', dibujo: 'Figuras que se repiten', numeros: '3, 6, 9, __' } },
       ],
     },
     {
@@ -115,14 +115,14 @@ export const GRADE2_SYLLABUS: Syllabus = withStageTerms({
         { id: 'figuras', name: 'Figuras planas: nombre, lados y esquinas', skills: [geoSkill('poly:name'), geoSkill('poly:sides')], status: 'disponible', rungs: { concreto: 'Figuras de cartón de distintas formas y giros', dibujo: 'Contar lados y esquinas marcándolos', numeros: 'Triángulo 3, cuadrado y rectángulo 4' } },
         { id: 'lineas', name: 'Líneas rectas, curvas y poligonales', skills: [geoSkill('line:type')], status: 'disponible', rungs: { concreto: 'Un cordel estirado y uno suelto', dibujo: 'Repasar líneas con el dedo', numeros: 'Recta, curva o poligonal' } },
         { id: 'cuerpos', name: 'Cuerpos: cubo, esfera, cilindro…', skills: [geoSkill('solid:name'), geoSkill('solid:roll')], status: 'disponible', rungs: { concreto: 'Pelotas, cajas, latas y conos', dibujo: 'Caras planas y partes redondas', uso: '¿Qué rueda y qué no?' } },
-        pending('posicion', 'Izquierda, derecha, delante y detrás', 'Faltan los ejercicios de posición y recorridos en una cuadrícula.', { concreto: 'Moverse por la clase siguiendo órdenes', dibujo: 'Un muñeco en una cuadrícula' }),
+        { id: 'posicion', name: 'Izquierda, derecha, encima y debajo', skills: ['pos:relative', 'pos:next'], status: 'disponible', rungs: { concreto: 'Moverse por la clase siguiendo órdenes', dibujo: 'Cosas en una cuadrícula', uso: '¿Qué hay a la derecha del gato?' } },
       ],
     },
     {
       id: 'estadistica',
       name: 'Gráficos',
       topics: [
-        pending('pictogramas', 'Pictogramas y gráficas de barras', 'Faltan los ejercicios de leer y completar gráficos.', { concreto: 'Contar votos de la clase con gomets', dibujo: 'Un dibujo por cada voto', numeros: 'Leer cuántos hay en cada barra' }),
+        { id: 'pictogramas', name: 'Pictogramas y gráficas de barras', skills: ['chart:pict', 'chart:bars'], status: 'disponible', rungs: { concreto: 'Contar votos de la clase con gomets', dibujo: 'Un dibujo por cada voto', numeros: 'Leer cuántos hay en cada barra' } },
       ],
     },
   ],

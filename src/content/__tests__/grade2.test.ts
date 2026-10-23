@@ -5,7 +5,7 @@ import type { ChildProfile, Exercise, MasteryMap } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
 import { buildPlacement, check, generate, isValidSkill, newMastery, parseSkill, planDailySession, PLACEMENT_COUNT } from '@/engine'
 import {
-  GRADE2_STAGES, GRADE2_SYLLABUS, GRADE3_SYLLABUS, allTopics, availableSkills, currentTopic, syllabusForGrade, teachingOrder,
+  GRADE2_STAGES, GRADE2_SYLLABUS, GRADE3_SYLLABUS, GRADE4_SYLLABUS, allTopics, availableSkills, currentTopic, syllabusForGrade, teachingOrder,
 } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -81,10 +81,11 @@ describe('temario de 2.º', () => {
 })
 
 describe('the course decides the temario', () => {
-  it('1.º and 2.º follow 2.º; 3.º to 6.º, and a child without a course, follow 3.º', () => {
+  it('1.º and 2.º follow 2.º; 3.º, and a child without a course, follow 3.º; 4.º to 6.º follow 4.º', () => {
     expect(syllabusForGrade(1)).toBe(GRADE2_SYLLABUS)
     expect(syllabusForGrade(2)).toBe(GRADE2_SYLLABUS)
-    for (const g of [3, 4, 5, 6]) expect(syllabusForGrade(g)).toBe(GRADE3_SYLLABUS)
+    expect(syllabusForGrade(3)).toBe(GRADE3_SYLLABUS)
+    for (const g of [4, 5, 6]) expect(syllabusForGrade(g)).toBe(GRADE4_SYLLABUS)
     expect(syllabusForGrade(undefined)).toBe(GRADE3_SYLLABUS)
   })
 

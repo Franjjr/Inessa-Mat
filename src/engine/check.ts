@@ -23,6 +23,11 @@ import { checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionSh
 import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 import { checkMoney } from './money'
 import { checkMeasure } from './measure'
+import { checkChance, checkChart } from './data'
+import { checkPattern } from './patterns'
+import { checkMulParts } from './bigops'
+import { checkArea } from './geometry'
+import { checkPosition } from './position'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -576,5 +581,11 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'shape-count': return checkShapeCount(exercise, answer)
     case 'money': return checkMoney(exercise, answer)
     case 'measure': return checkMeasure(exercise, answer)
+    case 'chart': return checkChart(exercise, answer)
+    case 'chance': return checkChance(exercise, answer)
+    case 'pattern': return checkPattern(exercise, answer)
+    case 'position': return checkPosition(exercise, answer)
+    case 'mul-parts': return checkMulParts(exercise, answer)
+    case 'area': return checkArea(exercise, answer)
   }
 }

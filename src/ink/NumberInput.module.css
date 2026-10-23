@@ -185,7 +185,9 @@
 @media (max-width: 480px) {
   .row { gap: var(--sp-3); }
   .tools { gap: 8px; }
-  .check, .lg .check { width: 72px; height: 72px; }
+  /* The pad gives way so that the ✓ stays inside a phone card (pad + tools + ✓ ≈ 290px). */
+  .pad { min-width: 130px; max-width: calc(100vw - 240px); }
+  .check, .lg .check { width: 64px; height: 64px; }
 }
 
 /* ---- statuses */

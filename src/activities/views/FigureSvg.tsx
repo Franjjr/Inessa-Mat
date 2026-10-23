@@ -2,7 +2,7 @@
    no images. Fractions: the parts can be tapped (onPartTap) and shown as coloured (chosen or colored in the data).
    Polygons: side labels, and corners that can be tapped (corners.onTap) for the right-angle exercise. */
 import type { CSSProperties, ReactNode } from 'react'
-import type { AngleFigure, CircleFigure, FractionFigure, Figure, LineFigure, LinesFigure, PolygonFigure, SolidFigure } from '@/types'
+import type { AngleFigure, CircleFigure, FractionFigure, Figure, GridFigure, LineFigure, LinesFigure, PolygonFigure, SolidFigure } from '@/types'
 import s from './FractionsGeometry.module.css'
 
 const VB = 200
@@ -82,6 +82,7 @@ export function FigureSvg({ figure, label, chosen, onPartTap, corners, className
     case 'lines': body = <LinesBody f={figure} />; break
     case 'angle': body = <AngleBody f={figure} />; break
     case 'solid': body = <SolidBody f={figure} />; break
+    case 'grid': body = <GridBody f={figure} />; break
   }
   return (
     <svg
@@ -98,6 +99,31 @@ export function FigureSvg({ figure, label, chosen, onPartTap, corners, className
 }
 
 const INK = 'var(--c-ink)'
+
+/** Squares on a grid: the coloured ones are the figure; the axis (simetría) is a dashed line on a boundary. */
+function GridBody({ f }: { f: GridFigure }) {
+  const cell = Math.min((VB - 16) / f.cols, (VB - 16) / f.rows)
+  const ox = (VB - cell * f.cols) / 2
+  const oy = (VB - cell * f.rows) / 2
+  const on = new Set(f.filled.map(([r, c]) => `${r},${c}`))
+  return (
+    <g>
+      {Array.from({ length: f.rows * f.cols }, (_, k) => {
+        const r = Math.floor(k / f.cols)
+        const c = k % f.cols
+        return (
+          <rect
+            key={k} x={r1(ox + c * cell)} y={r1(oy + r * cell)} width={r1(cell)} height={r1(cell)}
+            fill={on.has(`${r},${c}`) ? PART_ON_STRONG : PART_OFF} stroke="var(--c-line)" strokeWidth={1.5}
+          />
+        )
+      })}
+      {f.axis && (f.axis.dir === 'v'
+        ? <line x1={r1(ox + f.axis.at * cell)} x2={r1(ox + f.axis.at * cell)} y1={oy - 6} y2={r1(oy + f.rows * cell + 6)} stroke="var(--c-error)" strokeWidth={4} strokeDasharray="8 6" />
+        : <line y1={r1(oy + f.axis.at * cell)} y2={r1(oy + f.axis.at * cell)} x1={ox - 6} x2={r1(ox + f.cols * cell + 6)} stroke="var(--c-error)" strokeWidth={4} strokeDasharray="8 6" />)}
+    </g>
+  )
+}
 const PART_OFF = 'var(--c-surface)'
 const PART_ON = 'var(--c-magic-soft)'
 const PART_ON_STRONG = 'var(--c-magic)'

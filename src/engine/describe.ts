@@ -30,6 +30,8 @@ const MENTAL_TEXT: Record<string, string> = {
   decenas: 'Sumar y restar decenas',
   centenas: 'Sumar y restar centenas',
   compensar: 'Compensar (+9 = +10 − 1)',
+  por10: 'Multiplicar y dividir por 10, 100 y 1 000',
+  romanos: 'Números romanos',
 }
 
 const WORD_TEXT: Record<string, string> = {
@@ -57,12 +59,15 @@ export function describeSkill(skill: SkillKey): string {
     case 'concept': return CONCEPT_TEXT[p.name]
     case 'word': return WORD_TEXT[p.op]
     case 'place': return PLACE_TEXT[p.mode]
-    case 'compare': return 'Comparar números hasta 9 999 con < > ='
-    case 'order': return 'Ordenar números hasta 9 999'
+    case 'compare': return `Comparar números hasta ${p.max === 999 ? '999' : '9 999'} con < > =`
+    case 'order': return `Ordenar números hasta ${p.max === 999 ? '999' : '9 999'}`
     case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : 'centenas'}`
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
     case 'equation': return 'Signo igual: los dos lados valen lo mismo'
+    case 'mul3x1': return `Multiplicaciones de 3 cifras × 1 cifra ${p.carry ? 'con llevadas' : 'sin llevadas'}`
+    case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
+    case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
     case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
@@ -76,7 +81,28 @@ export function describeSkill(skill: SkillKey): string {
     case 'geo': return GEO_TEXT[p.op]
     case 'money': return MONEY_TEXT[p.mode]
     case 'measure': return measureText(p.mode, p.dimension)
+    case 'chart': return CHART_TEXT[p.variant]
+    case 'chance': return 'Seguro, posible o imposible'
+    case 'pattern': return PATTERN_TEXT[p.variant]
+    case 'position': return POSITION_TEXT[p.variant]
   }
+}
+
+const CHART_TEXT = {
+  pict: 'Leer pictogramas',
+  'pict:x': 'Pictogramas en los que cada dibujo vale 2, 5 o 10',
+  bars: 'Leer gráficas de barras',
+  mode: 'La moda: el dato que más se repite',
+}
+const PATTERN_TEXT = {
+  shapes: 'Series de figuras: qué va después',
+  numbers: 'Series de números: el que falta',
+  predict: 'Series: qué número habrá más adelante',
+}
+const POSITION_TEXT = {
+  relative: 'Izquierda, derecha, encima y debajo',
+  next: 'Qué hay al lado: izquierda y derecha',
+  route: 'Recorridos en una cuadrícula con flechas',
 }
 
 const MONEY_TEXT: Record<MoneyMode, string> = {
@@ -135,6 +161,8 @@ const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
   'solid:roll': 'Qué cuerpos ruedan',
   'solid:faces': 'Caras planas de los cuerpos',
   perimeter: 'Perímetro: sumar los lados',
+  area: 'Área: contar los cuadraditos',
+  symmetry: 'Ejes de simetría',
 }
 
 const ERROR_TEXT: Record<ErrorType, string> = {
@@ -158,6 +186,7 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'fraction-count': 'Confunde el número de arriba con el de abajo, o cuenta mal las partes',
   'geo-name': 'Confunde una figura, una línea, un ángulo o un cuerpo con otro',
   'geo-perimeter': 'Al sumar los lados del contorno se deja alguno',
+  'left-right': 'Confunde la izquierda con la derecha (o encima con debajo)',
   'other': 'Otro tipo de error',
   'clock-hour': 'Lee mal la hora del reloj (la aguja corta)',
   'clock-minute': 'Lee mal los minutos del reloj (la aguja larga, de cinco en cinco)',

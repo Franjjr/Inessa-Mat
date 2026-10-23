@@ -1,0 +1,269 @@
+/* Gráficos, probabilidad, series y posición (DataView.tsx). Big pictures, no small print: a pictogram row per category,
+   a bar chart drawn in SVG, a row of pattern tiles, a grid of pictures with arrows. */
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.card {
+  align-self: center;
+  width: 100%;
+  max-width: 640px;
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-xl);
+}
+
+/* ---- pictogram */
+.pictRows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pictRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.pictLabel {
+  min-width: 72px;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.pictIcons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  font-size: 30px;
+  line-height: 1.1;
+  min-width: 0;
+}
+
+.legend {
+  margin: var(--sp-2) 0 0;
+  text-align: center;
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+/* ---- bar chart */
+.bars {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.gridLine {
+  stroke: var(--c-line);
+  stroke-width: 2;
+}
+
+.axis {
+  stroke: var(--c-ink-soft);
+  stroke-width: 3;
+}
+
+.scale {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--c-ink-soft);
+}
+
+.bar {
+  fill: var(--c-primary);
+  stroke: var(--c-ink);
+  stroke-width: 2;
+}
+
+.barEmoji {
+  font-size: 30px;
+}
+
+/* ---- data list (moda) */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  min-width: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-gold-soft);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-lg);
+}
+
+/* ---- the bag of balls */
+.bag {
+  align-self: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  max-width: 360px;
+  padding: var(--sp-4) var(--sp-5);
+  font-size: 40px;
+  line-height: 1;
+  background: var(--c-warn-soft);
+  border: 3px solid var(--c-ink);
+  border-radius: 40% 40% var(--r-xl) var(--r-xl);
+}
+
+/* ---- pattern tiles */
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-lg);
+}
+
+.tileGap {
+  color: var(--c-magic);
+  background: var(--c-magic-soft);
+  border-style: dashed;
+  border-color: var(--c-magic);
+}
+
+.emojiOption {
+  font-size: 34px;
+}
+
+/* ---- position grid */
+.grid {
+  align-self: center;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  max-width: 420px;
+  padding: 6px;
+  background: var(--c-line);
+  border-radius: var(--r-lg);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  font-size: clamp(24px, 7vw, 40px);
+  background: var(--c-surface);
+  border-radius: var(--r-md);
+}
+
+.cellStart {
+  background: var(--c-gold-soft);
+  box-shadow: inset 0 0 0 3px var(--c-gold);
+}
+
+.sides {
+  display: flex;
+  justify-content: space-between;
+  align-self: center;
+  width: 100%;
+  max-width: 420px;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.moves {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.move {
+  padding: var(--sp-1) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-blue-soft);
+  border-radius: var(--r-lg);
+}
+
+/* ---- multiplicar por partes (MulPartsView) */
+.partsList {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.partsRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.partsLabel {
+  min-width: 132px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+@media (max-width: 600px) {
+  .partsLabel { min-width: 0; text-align: center; }
+}

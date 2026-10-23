@@ -20,6 +20,10 @@ import { genFractionCompare, genFractionEqual, genFractionName, genFractionOf, g
 import { genGeometry } from './geometry'
 import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
+import { CHART_SKILLS, buildChance, buildChart } from './data'
+import { genDivision4, genMul3x1, genMulParts } from './bigops'
+import { PATTERN_SKILLS, buildPattern } from './patterns'
+import { POSITION_SKILLS, buildPosition } from './position'
 import { moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
@@ -38,6 +42,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
   'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
+  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -222,8 +227,8 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal':
     case 'shape-choice': case 'angle-tap': case 'perimeter': case 'shape-count':
-      break
       for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
+      break
     case 'money':
       for (const mode of MONEY_MODES) addItem(map, moneySkill(mode), kind, 1)
       break
@@ -233,6 +238,25 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
         addItem(map, measureSkill('convert', dim), kind, 1)
       }
       for (const skill of ['measure:ruler', 'measure:add', 'measure:estimate']) addItem(map, skill, kind, 1)
+      break
+    case 'chart':
+      for (const v of CHART_SKILLS) addItem(map, `chart:${v}`, kind, 1)
+      break
+    case 'chance':
+      addItem(map, 'prob:chance', kind, 1)
+      break
+    case 'mul-parts':
+      addItem(map, 'mul:2dx2d', kind, 1)
+      addItem(map, 'mul:3dx2d', kind, 1)
+      break
+    case 'area':
+      addItem(map, 'geo:area', kind, 1)
+      break
+    case 'pattern':
+      for (const v of PATTERN_SKILLS) addItem(map, `pattern:${v}`, kind, 1)
+      break
+    case 'position':
+      for (const v of POSITION_SKILLS) addItem(map, `pos:${v}`, kind, 1)
       break
     default: {
       const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
@@ -690,9 +714,16 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
   if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
   if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
+  if (p.type === 'chart') return retry(() => buildChart(p.variant, rng), used, rng)!
+  if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
+  if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!
+  if (p.type === 'position') return retry(() => buildPosition(p.variant, rng), used, rng)!
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
+  if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
+  if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {
       const [dd, dv] = genDivision3(rng, p.variant === 'rem')

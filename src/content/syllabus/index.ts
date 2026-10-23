@@ -1,19 +1,23 @@
-/* Syllabus public API: the temarios of 2.º and 3.º de Primaria as data plus pure queries over them. Another course is
+/* Syllabus public API: the temarios of 2.º, 3.º and 4.º de Primaria as data plus pure queries over them. Another course is
    another Syllabus object (same model) and one line in syllabusForGrade. */
 import type { MasteryMap, SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage, SyllabusTopic } from './model'
 import { GRADE2_SYLLABUS } from './grade2'
 import { GRADE3_SYLLABUS } from './grade3'
+import { GRADE4_SYLLABUS } from './grade4'
 
 export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './model'
 export { SYLLABUS_RUNGS } from './model'
 export { GRADE3_STAGES, GRADE3_SYLLABUS, divisionFactSkills, tableSkills } from './grade3'
 export { GRADE2_STAGES, GRADE2_SYLLABUS } from './grade2'
+export { GRADE4_STAGES, GRADE4_SYLLABUS } from './grade4'
 
-/** The temario a child follows. 1.º takes 2.º (the closest one there is) and 4.º–6.º take 3.º until theirs exist;
+/** The temario a child follows. 1.º takes 2.º and 5.º–6.º take 4.º (the closest ones there are) until theirs exist;
     a child without a course follows 3.º. */
 export function syllabusForGrade(grade?: number): Syllabus {
-  return grade !== undefined && grade <= 2 ? GRADE2_SYLLABUS : GRADE3_SYLLABUS
+  if (grade === undefined) return GRADE3_SYLLABUS
+  if (grade <= 2) return GRADE2_SYLLABUS
+  return grade >= 4 ? GRADE4_SYLLABUS : GRADE3_SYLLABUS
 }
 
 /** A skill counts as mastered at this Leitner box (two fluent answers). */

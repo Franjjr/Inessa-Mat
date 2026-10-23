@@ -95,5 +95,5 @@ export { SPELL_CODES, SPELL_DECOYS } from './guardians'
 export { CHEST_TEXT, DIPLOMA_TEXT, SEASON2_TEASER, TEACH_BACK_ACTIVITY } from './meta'
 
 /** Temarios de 2.º y 3.º as data and their pure queries (src/content/syllabus). */
-export { GRADE2_SYLLABUS, GRADE2_STAGES, syllabusForGrade, GRADE3_SYLLABUS, MASTERED_BOX, MASTERED_SHARE, availableSkills, availableTopics, currentTopic, isTopicMastered, topicProgress, blockIdOfTopic, allTopics, teachingOrder, stageOfTopic, GRADE3_STAGES, SYLLABUS_RUNGS } from './syllabus'
+export { GRADE2_SYLLABUS, GRADE2_STAGES, GRADE4_SYLLABUS, GRADE4_STAGES, syllabusForGrade, GRADE3_SYLLABUS, MASTERED_BOX, MASTERED_SHARE, availableSkills, availableTopics, currentTopic, isTopicMastered, topicProgress, blockIdOfTopic, allTopics, teachingOrder, stageOfTopic, GRADE3_STAGES, SYLLABUS_RUNGS } from './syllabus'
 export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './syllabus'

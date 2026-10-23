@@ -121,8 +121,17 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
      iguales y tablas del 2, 3, 4, 5 y 10, problemas con barra, reloj y calendario, euros enteros, metro, kilo y
      litro, figuras, líneas y cuerpos. Usa los mismos ejercicios con tope de 999 y sin céntimos. El curso del niño
      elige el temario, la sesión diaria, la prueba inicial y el informe (`syllabusForGrade`: 1.º usa el de 2.º y
-     4.º–6.º el de 3.º hasta que tengan el suyo). Pendiente en 2.º: pictogramas, series y patrones, posición; y una
-     aventura propia (los mundos siguen el temario de 3.º).
+     4.º–6.º el de 3.º hasta que tengan el suyo).
+   - **Hecho (octubre de 2026): ejercicios nuevos de gráficos y espacio.** Pictogramas (cada dibujo vale 1, 2, 5 o 10),
+     gráficas de barras, la moda, seguro/posible/imposible, series de figuras y de números (y qué número habrá más
+     adelante), izquierda/derecha/encima/debajo en una cuadrícula y recorridos con flechas. Entran en 2.º, en 3.º
+     (gráficos, probabilidad y recorridos, que la ley pide en el segundo ciclo) y en 4.º.
+   - **Hecho (octubre de 2026): 4.º.** `GRADE4_SYLLABUS` (`src/content/syllabus/grade4.ts`), 8 etapas: repaso de números,
+     redondear a millares, números romanos, sumas y restas de 4 cifras, multiplicar 3 × 1, por 10/100/1 000 y por dos
+     cifras **por partes** (23 × 14 = 23 × 4 + 23 × 10), dividir 4 cifras entre 1, fracciones hasta doceavos, cambio en
+     euros, km/m/cm, kg/g, l/ml, reloj digital y duraciones, ángulos, perímetro, **área en cuadraditos**, **ejes de
+     simetría**, gráficos, moda y probabilidad. 5.º y 6.º usan el de 4.º hasta tener el suyo. Pendiente en 4.º: dividir
+     entre dos cifras y sumar fracciones de igual denominador. En 3.º ya están multiplicar 3 × 1 y por 10, 100 y 1 000.
 
 ## 9. Lo que necesitamos del dueño
 

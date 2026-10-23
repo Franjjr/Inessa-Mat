@@ -70,8 +70,15 @@ const digitAtPlace = (n: number, i: number) => Math.floor(n / 10 ** i) % 10
 
 const NUMBER_RANGE: Record<2 | 3 | 4, [number, number]> = { 2: [10, 99], 3: [100, 999], 4: [1000, 9999] }
 
-/** Rounds half up to the nearest decena or centena: 3745 → 3750 (to 10), 3745 → 3700 (to 100). */
-export function roundTo(value: number, to: 10 | 100): number {
+/** The words of a rounding: «decenas» and the digit to look at, «las unidades». */
+export function roundWords(to: 10 | 100 | 1000): { plural: string; one: string; look: string } {
+  if (to === 10) return { plural: 'decenas', one: 'decena', look: 'las unidades' }
+  if (to === 100) return { plural: 'centenas', one: 'centena', look: 'las decenas' }
+  return { plural: 'millares', one: 'unidad de millar', look: 'las centenas' }
+}
+
+/** Rounds half up to the nearest decena, centena or millar: 3745 → 3750 (to 10), 3700 (to 100), 4000 (to 1000). */
+export function roundTo(value: number, to: 10 | 100 | 1000): number {
   return Math.floor((value + to / 2) / to) * to
 }
 
@@ -102,9 +109,9 @@ export function makeOrder(values: number[], direction: 'asc' | 'desc', max?: 999
   }
 }
 
-export function makeRound(value: number, to: 10 | 100): RoundExercise {
+export function makeRound(value: number, to: 10 | 100 | 1000): RoundExercise {
   return {
-    id: `round:${value}:${to}`, kind: 'round', skill: roundSkill(to), difficulty: to === 10 ? 2 : 3,
+    id: `round:${value}:${to}`, kind: 'round', skill: roundSkill(to), difficulty: to === 10 ? 2 : to === 100 ? 3 : 4,
     value, to, answer: roundTo(value, to),
   }
 }
@@ -216,9 +223,10 @@ export function buildNumericExercise(kind: ExerciseKind, skill: SkillKey, rng: R
       if (p.type !== 'round') return null
       return fresh(() => {
         const exact = rng() < 0.2
-        let v = randomNumber(rng() < 0.7 ? 4 : 3)
+        let v = randomNumber(p.to === 1000 || rng() < 0.7 ? 4 : 3)
         if (exact) v = Math.round(v / p.to) * p.to
-        v = Math.min(9999, Math.max(10, v))
+        // A millar never rounds up to 10 000: the numbers stay in 4 digits.
+        v = Math.min(p.to === 1000 ? 9499 : 9999, Math.max(p.to === 1000 ? 1000 : 10, v))
         return makeRound(v, p.to)
       }, used)
     }
@@ -315,10 +323,11 @@ function checkSingle(expected: number, answer: Answer, judge: (v: number) => Che
 function wrongRound(ex: RoundExercise, v: number): CheckResult {
   const given = String(v)
   const expected = String(ex.answer)
-  const other = ex.to === 10 ? ex.value - (ex.value % 10) : ex.value - (ex.value % 100)
+  const other = ex.value - (ex.value % ex.to)
+  const w = roundWords(ex.to)
   const feedback = v === other && other !== ex.answer
-    ? `¡Casi! Ese es el número cortado, sin redondear. Mira la cifra de ${ex.to === 10 ? 'las unidades' : 'las decenas'}: ¿es 5 o más?`
-    : `¡Casi! Redondea a las ${ex.to === 10 ? 'decenas' : 'centenas'} más cercanas: mira la cifra de al lado.`
+    ? `¡Casi! Ese es el número cortado, sin redondear. Mira la cifra de ${w.look}: ¿es 5 o más?`
+    : `¡Casi! Redondea ${ex.to === 1000 ? 'a los millares más cercanos' : `a las ${w.plural} más cercanas`}: mira la cifra de al lado.`
   return res(false, given, expected, { errorType: 'other', feedback })
 }
 
@@ -448,14 +457,14 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
       ]
     }
     case 'round': {
-      const digit = ex.to === 10 ? digitAtPlace(ex.value, 0) : digitAtPlace(ex.value, 1)
-      const side = ex.to === 10 ? 'las unidades' : 'las decenas'
+      const digit = digitAtPlace(ex.value, Math.log10(ex.to) - 1)
+      const w = roundWords(ex.to)
       return [
-        hint(1, `Redondear es buscar la ${ex.to === 10 ? 'decena' : 'centena'} más cercana.`, 'none'),
-        hint(2, `Mira la cifra de ${side}: es un ${digit}. ¿Es 5 o más?`, 'place-value', { value: ex.value, to: ex.to }),
+        hint(1, `Redondear es buscar la ${w.one} más cercana.`, 'none'),
+        hint(2, `Mira la cifra de ${w.look}: es un ${digit}. ¿Es 5 o más?`, 'place-value', { value: ex.value, to: ex.to }),
         hint(3, digit >= 5
-          ? `Como es 5 o más, la ${ex.to === 10 ? 'decena' : 'centena'} sube una vez. Las cifras de la derecha se quedan en 0.`
-          : `Como es menos de 5, la ${ex.to === 10 ? 'decena' : 'centena'} se queda igual. Las cifras de la derecha pasan a 0.`, 'place-value', { value: ex.value, to: ex.to }),
+          ? `Como es 5 o más, la ${w.one} sube una vez. Las cifras de la derecha se quedan en 0.`
+          : `Como es menos de 5, la ${w.one} se queda igual. Las cifras de la derecha pasan a 0.`, 'place-value', { value: ex.value, to: ex.to }),
       ]
     }
     case 'number-line': {

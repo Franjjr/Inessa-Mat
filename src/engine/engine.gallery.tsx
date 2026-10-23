@@ -5,7 +5,7 @@ import type { GalleryEntry } from '@/dev/Gallery'
 import type { Answer, Exercise } from '@/types'
 import {
   check, createRng, describeError, fmt, generate, hintsFor, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision,
-  makeFactFamily, makeFactMul, numberWords, strategyForFact,
+  makeFactFamily, makeFactMul, numberWords, roundWords, strategyForFact,
 } from './index'
 import s from './engine.gallery.module.css'
 
@@ -22,7 +22,7 @@ function show(ex: Exercise): string {
     case 'place-value': return ex.mode === 'expanded' ? fmt(ex.value) : ex.mode === 'words' ? numberWords(ex.value) : `${fmt(ex.value)} (bloques)`
     case 'compare': return `${fmt(ex.left)} ? ${fmt(ex.right)}`
     case 'order': return ex.values.map(fmt).join(' · ') + (ex.direction === 'asc' ? ' (de menor a mayor)' : ' (de mayor a menor)')
-    case 'round': return `${fmt(ex.value)} a las ${ex.to === 10 ? 'decenas' : 'centenas'}`
+    case 'round': return `${fmt(ex.value)} a ${ex.to === 1000 ? 'los millares' : `las ${roundWords(ex.to).plural}`}`
     case 'number-line': return ex.mode === 'tick' ? `recta de ${ex.step}: marca ${ex.blank + 1} vacía` : `recta de ${ex.step}: desde ${fmt(ex.start ?? 0)}`
     case 'mental': return ex.prompt
     case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`

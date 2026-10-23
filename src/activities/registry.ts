@@ -77,4 +77,12 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   // ---- dinero and medida (3.º, block C) — src/activities/views/<name>.tsx
   money: lazy(() => import('./views/MoneyView')),
   measure: lazy(() => import('./views/MeasureView')),
+  // ---- gráficos, probabilidad, series y posición (2.º and 4.º) — src/activities/views/DataView.tsx
+  chart: lazy(() => import('./views/DataView')),
+  chance: lazy(() => import('./views/DataView')),
+  pattern: lazy(() => import('./views/DataView')),
+  position: lazy(() => import('./views/DataView')),
+  // ---- 4.º: multiplicar por partes, área en cuadraditos
+  'mul-parts': lazy(() => import('./views/MulPartsView')),
+  area: lazy(() => import('./views/FigureNumberView')),
 }

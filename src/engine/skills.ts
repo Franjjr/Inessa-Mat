@@ -28,6 +28,13 @@
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
    money:pay:e | money:add:e   whole euros, no céntimos (2.º)
+   chart:pict|pict:x|bars|mode   gráficos: pictogram (an icon is 1, or 2/5/10), bar chart, moda (src/engine/data.ts)
+   prob:chance              seguro, posible o imposible
+   pattern:shapes|numbers|predict   series: next figure, missing number, a term further on (src/engine/patterns.ts)
+   pos:relative|next|route  posición en una cuadrícula y recorridos (src/engine/position.ts)
+   mul:3x1:c0|c1            3-digit × 1-digit in columns, without / with carries (4.º, src/engine/bigops.ts)
+   div:4x1:exact|rem        4-digit dividend ÷ 1-digit divisor (4.º)
+   mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
@@ -42,10 +49,10 @@ export type FractionDenominator = (typeof FRACTION_DENOMINATORS)[number]
 export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare'
 export type GeoOp =
   | 'poly:name' | 'poly:sides' | 'line:type' | 'line:rel' | 'angle:type' | 'angle:tap' | 'circle'
-  | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter'
+  | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter' | 'area' | 'symmetry'
 export const GEO_OPS: GeoOp[] = [
   'poly:name', 'poly:sides', 'line:type', 'line:rel', 'angle:type', 'angle:tap', 'circle',
-  'solid:name', 'solid:roll', 'solid:faces', 'perimeter',
+  'solid:name', 'solid:roll', 'solid:faces', 'perimeter', 'area', 'symmetry',
 ]
 
 export type DivisionVariant = DivisionExercise['variant']
@@ -62,7 +69,7 @@ export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
 export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
-export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar']
+export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
 export const ROUND_TARGETS = [10, 100] as const
 export const LINE_STEPS = [10, 100, 1000] as const
 
@@ -80,7 +87,7 @@ export type ParsedSkill =
   | { type: 'place'; mode: PlaceMode; max?: 999 }
   | { type: 'compare'; max?: 999 }
   | { type: 'order'; max?: 999 }
-  | { type: 'round'; to: 10 | 100 }
+  | { type: 'round'; to: 10 | 100 | 1000 }
   | { type: 'line'; step: 10 | 100 | 1000; max?: 999 }
   | { type: 'mental'; family: MentalFamily }
   | { type: 'equation' }
@@ -97,6 +104,13 @@ export type ParsedSkill =
   | { type: 'geo'; op: GeoOp }
   | { type: 'money'; mode: MoneyMode; whole?: true }
   | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
+  | { type: 'mul3x1'; carry: boolean }
+  | { type: 'div4x1'; variant: 'exact' | 'rem' }
+  | { type: 'mulParts'; digits: 2 | 3 }
+  | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
+  | { type: 'chance' }
+  | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
+  | { type: 'position'; variant: 'relative' | 'next' | 'route' }
 
 // ---------------------------------------------------------------- builders
 
@@ -137,7 +151,7 @@ export function compareSkill(max?: 999): SkillKey {
 export function orderSkill(max?: 999): SkillKey {
   return max ? `num:order:${max}` : 'num:order'
 }
-export function roundSkill(to: 10 | 100): SkillKey {
+export function roundSkill(to: 10 | 100 | 1000): SkillKey {
   return `num:round:${to}`
 }
 export function lineSkill(step: 10 | 100 | 1000, max?: 999): SkillKey {
@@ -225,6 +239,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return borrows <= digits - 1 ? { type: 'sub', digits, borrows, zero: false } : null
   }
   if ((m = key.match(/^mul:2x1:c([01])$/))) return { type: 'mul2x1', carry: m[1] === '1' }
+  if ((m = key.match(/^mul:3x1:c([01])$/))) return { type: 'mul3x1', carry: m[1] === '1' }
+  if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
+  if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
   if ((m = key.match(/^concept:(\w+)$/))) {
     const name = m[1] as ConceptName
@@ -236,7 +253,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'num:order') return { type: 'order' }
   if (key === 'num:compare:999') return { type: 'compare', max: 999 }
   if (key === 'num:order:999') return { type: 'order', max: 999 }
-  if ((m = key.match(/^num:round:(10|100)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 }
+  if ((m = key.match(/^num:round:(10|100|1000)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 | 1000 }
   if ((m = key.match(/^num:line:(10|100|1000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 }
   if ((m = key.match(/^num:line:(10|100):999$/))) return { type: 'line', step: Number(m[1]) as 10 | 100, max: 999 }
   if ((m = key.match(/^mental:(\w+)$/))) {
@@ -269,6 +286,10 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
   if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
   if (key === 'measure:estimate') return { type: 'measure', mode: 'estimate', dimension: null }
+  if ((m = key.match(/^chart:(pict|pict:x|bars|mode)$/))) return { type: 'chart', variant: m[1] as 'pict' | 'pict:x' | 'bars' | 'mode' }
+  if (key === 'prob:chance') return { type: 'chance' }
+  if ((m = key.match(/^pattern:(shapes|numbers|predict)$/))) return { type: 'pattern', variant: m[1] as 'shapes' | 'numbers' | 'predict' }
+  if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
   return null
 }
 
@@ -281,11 +302,12 @@ export function blockSkillsOf(kind: ExerciseKind): SkillKey[] {
     case 'fraction-equal': return [fractionSkill('equal')]
     case 'shape-choice': return [
       ...FRACTION_DENOMINATORS.map((d) => fractionSkill('name', d)), fractionSkill('compare'),
-      ...GEO_OPS.filter((op) => !['poly:sides', 'angle:tap', 'perimeter'].includes(op)).map(geoSkill),
+      ...GEO_OPS.filter((op) => !['poly:sides', 'angle:tap', 'perimeter', 'area'].includes(op)).map(geoSkill),
     ]
     case 'angle-tap': return [geoSkill('angle:tap')]
     case 'perimeter': return [geoSkill('perimeter')]
     case 'shape-count': return [geoSkill('poly:sides')]
+    case 'area': return [geoSkill('area')]
     default: return []
   }
 }
@@ -339,6 +361,9 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'mul2x1': return ['column-mul', 'word-problem']
     case 'div2x1': return ['division', 'word-problem']
     case 'div3x1': return ['division']
+    case 'mul3x1': return ['column-mul']
+    case 'div4x1': return ['division']
+    case 'mulParts': return ['mul-parts']
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']
@@ -362,10 +387,15 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
         case 'poly:sides': return ['shape-count']
         case 'angle:tap': return ['angle-tap']
         case 'perimeter': return ['perimeter']
+        case 'area': return ['area']
         default: return ['shape-choice']
       }
     case 'money': return ['money']
     case 'measure': return ['measure']
+    case 'chart': return ['chart']
+    case 'chance': return ['chance']
+    case 'pattern': return ['pattern']
+    case 'position': return ['position']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']
