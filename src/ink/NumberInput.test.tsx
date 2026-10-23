@@ -136,6 +136,39 @@ describe('NumberInput · keyboard', () => {
   })
 })
 
+describe('NumberInput · several boxes with one «Comprobar»', () => {
+  function Parts({ onSubmit }: { onSubmit: () => void }) {
+    const [v, setV] = useState<(number | null)[]>([null, null, null])
+    const set = (i: number) => (x: number | null) => setV((old) => old.map((y, k) => (k === i ? x : y)))
+    return (
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        {v.map((x, i) => (
+          <NumberInput key={i} value={x} onChange={set(i)} onSubmit={onSubmit} checkButton={false} ariaLabel={`caja ${i}`} />
+        ))}
+      </InkProvider>
+    )
+  }
+
+  it('Enter on a filled box goes to the next empty one; with all filled it submits', () => {
+    const onSubmit = vi.fn()
+    render(<Parts onSubmit={onSubmit} />)
+    const box = (i: number) => screen.getByRole('textbox', { name: `caja ${i}` })
+    box(0).focus()
+    fireEvent.keyDown(box(0), { key: '3' })
+    fireEvent.keyDown(box(0), { key: 'Enter' })
+    expect(document.activeElement).toBe(box(1))
+    fireEvent.keyDown(box(1), { key: 'Enter' }) // empty: stays and lets the view decide
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    box(2).focus()
+    fireEvent.keyDown(box(2), { key: '5' })
+    fireEvent.keyDown(box(2), { key: 'Enter' })
+    expect(document.activeElement).toBe(box(1)) // goes round to the empty one
+    fireEvent.keyDown(box(1), { key: '7' })
+    fireEvent.keyDown(box(1), { key: 'Enter' })
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+  })
+})
+
 describe('NumberInput · keypad and lost Pencil', () => {
   afterEach(() => localStorage.clear())
 

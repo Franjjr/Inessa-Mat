@@ -15,7 +15,7 @@ import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
 import { Keypad } from './Keypad'
-import { focusPad, useIsActivePad } from './activePad'
+import { focusPad, moveToPad, nextEmptyPad, useIsActivePad, usePadSlot } from './activePad'
 import { CheckIcon, EraserIcon, KeypadIcon, PencilIcon } from './icons'
 import { NudgeBubble, useNudge } from './Nudge'
 import s from './NumberInput.module.css'
@@ -94,6 +94,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   // In keypad mode only one box on the screen shows the keypad: the one touched last.
   const activePad = useIsActivePad(uid)
+  usePadSlot(uid, value != null, () => padRef.current?.focus({ preventScroll: true }))
   const keypadVisible = (ink.mode === 'keypad' && activePad) || toggled
   const palm = usePalmGuard()
   const [nudging, nudge] = useNudge()
@@ -216,6 +217,12 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     if (idle.current || surface.capture.current?.writing) {
       waits.current = 99 // no more waiting: recognise with whatever is available
       v = recognizeAll()
+    }
+    // Several boxes share one «Comprobar»: with this box filled, ✓ (or Enter) goes on to the next empty one.
+    const next = latest.current.props.checkButton === false && v != null ? nextEmptyPad(uid) : null
+    if (next) {
+      moveToPad(next)
+      return
     }
     latest.current.props.onSubmit(v)
   }

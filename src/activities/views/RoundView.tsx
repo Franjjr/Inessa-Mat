@@ -17,7 +17,7 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
   const [value, setValue] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  const unit = roundWords(ex.to).plural
+  const unit = roundWords(ex.to).one
 
   const submit = (v: number | null = value) => {
     if (v === null) return
@@ -27,7 +27,7 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
 
   return (
     <section className={s.view} aria-label="Redondear" data-kind={ex.kind}>
-      <p className={s.instructions}>Redondea a las {unit} más cercanas.</p>
+      <p className={s.instructions}>Redondea a la {unit} más cercana.</p>
       <p className={s.prompt}>{fmt(ex.value)}</p>
       <div className={s.row}>
         <NumberInput

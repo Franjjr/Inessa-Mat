@@ -54,7 +54,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
 
       {isJump && ex.start !== null && (
         <div className={s.row} aria-label={`Empiezas en ${fmt(ex.start)}`}>
-          <span className={s.jumpLabel}>Empiezas en {fmt(ex.start)} · salto {ex.jump > 0 ? '+' : '−'}{fmt(ex.step)}</span>
+          <span className={s.jumpLabel}>Empiezas en {fmt(ex.start)}</span>
         </div>
       )}
 
