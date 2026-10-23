@@ -200,7 +200,7 @@ export default function ChildReportScreen() {
         </div>
       </section>
 
-      <LearningSection childId={childId} childName={name} progress={progress} />
+      <LearningSection childId={childId} childName={name} grade={child?.grade} progress={progress} />
 
       <div className={s.twoCol}>
         <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">

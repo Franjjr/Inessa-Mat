@@ -19,6 +19,8 @@ import m from './MoneyViews.module.css'
 
 /** The pieces in the purse: the coins and the notes up to 50 €. */
 const PURSE = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
+/** Whole euros (2.º): the euro coins and the notes up to 20 €. */
+const PURSE_WHOLE = [100, 200, 500, 1000, 2000]
 
 type MoneyEx = MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
 
@@ -168,8 +170,8 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
           ↶ Quitar
         </button>
       </div>
-      <div className={m.purse} role="group" aria-label="Monedas y billetes">
-        {PURSE.map((v) => (
+      <div className={clsx(m.purse, ex.whole && m.purseFew)} role="group" aria-label="Monedas y billetes">
+        {(ex.whole ? PURSE_WHOLE : PURSE).map((v) => (
           <button
             key={v}
             type="button"
@@ -227,7 +229,7 @@ function Add({ ex, flow }: { ex: MoneyAddExercise; flow: AnswerFlow }) {
           <PriceCards items={ex.items} />
         </>
       )}
-      <AmountAnswer flow={flow} ask="¿Cuánto cuestan todos?" />
+      <AmountAnswer flow={flow} ask="¿Cuánto cuestan todos?" whole={ex.whole} />
     </>
   )
 }
@@ -327,13 +329,39 @@ function ConvertToEuros({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
 interface Amount { e: number | null; c: number | null }
 const amountReady = (a: Amount) => a.e !== null && a.c !== null
 
-/** Two writing pads (euros, a decimal comma, céntimos) and the check. Both boxes are needed. */
-function AmountAnswer({ flow, ask }: { flow: AnswerFlow; ask: string }) {
-  const [amount, setAmount] = useState<Amount>({ e: null, c: null })
+/** Two writing pads (euros, a decimal comma, céntimos) and the check. Both boxes are needed. `whole`: only the euros. */
+function AmountAnswer({ flow, ask, whole = false }: { flow: AnswerFlow; ask: string; whole?: boolean }) {
+  const [amount, setAmount] = useState<Amount>({ e: null, c: whole ? 0 : null })
   const check = (a: Amount) => {
     if (amountReady(a)) submitWith(flow, { type: 'numbers', values: [a.e, a.c] })
   }
   const status = statusOf(flow)
+  if (whole) {
+    return (
+      <>
+        <div className={m.amountWrap}>
+          {ask && <p className={m.ask}>{ask}</p>}
+          <div className={m.amountRow}>
+            <div className={m.amountCol}>
+              <NumberInput
+                value={amount.e}
+                onChange={(e) => setAmount((a) => ({ ...a, e }))}
+                onSubmit={(e) => { const next = { ...amount, e }; setAmount(next); if (!flow.submitted) check(next) }}
+                maxDigits={2}
+                size="lg"
+                status={status}
+                ariaLabel="Euros"
+                placeholder="€"
+                autoFocus
+              />
+              <span className={m.unit}>euros</span>
+            </div>
+          </div>
+        </div>
+        <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount)} />
+      </>
+    )
+  }
   return (
     <>
       <div className={m.amountWrap}>

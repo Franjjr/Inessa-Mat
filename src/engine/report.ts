@@ -30,8 +30,10 @@ export interface BlockReport {
 }
 
 export interface SyllabusReport {
+  /** Primary school year of the temario (1..6). */
+  course: number
   /** The topic the daily session teaches now, with its stage (1-based number, trimester and world of the adventure). */
-  current: { blockName: string; topicName: string; stage: { number: number; total: number; term: number; worldId: string } | null } | null
+  current: { blockName: string; topicName: string; stage: { number: number; total: number; term: number; worldId?: string } | null } | null
   blocks: BlockReport[]
   mastered: number
   available: number
@@ -52,7 +54,7 @@ export function syllabusReport(syllabus: Syllabus, mastery: MasteryMap, term?: n
         current = {
           blockName: b.name,
           topicName: t.name,
-          stage: st ? { number: stages.indexOf(st) + 1, total: stages.length, term: st.term, worldId: st.worldId } : null,
+          stage: st ? { number: stages.indexOf(st) + 1, total: stages.length, term: st.term, ...(st.worldId ? { worldId: st.worldId } : {}) } : null,
         }
       }
       return { id: t.id, name: t.name, state, progress: pending ? 0 : topicProgress(t, mastery), current: now?.id === t.id }
@@ -66,6 +68,7 @@ export function syllabusReport(syllabus: Syllabus, mastery: MasteryMap, term?: n
     }
   })
   return {
+    course: syllabus.course,
     current,
     blocks,
     mastered: blocks.reduce((n, b) => n + b.mastered, 0),

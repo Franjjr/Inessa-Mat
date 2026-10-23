@@ -3,9 +3,12 @@
    mezcla números u operaciones con dinero, reloj, medida, fracciones o figuras). Es un orden progresivo propio: el
    índice del libro del colegio no está publicado (docs/curriculum/PLAN_DOCENTE.md §9). Solo entran como
    «disponible» las destrezas para las que ya hay ejercicios; el resto queda «pendiente». */
-import { divSkill, fractionSkill, geoSkill, mulSkill } from '@/engine/skills'
+import { divSkill, fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
-import type { Syllabus, SyllabusStage, SyllabusTopic } from './model'
+import type { Syllabus, SyllabusStage } from './model'
+import { pending, tableTopic, withStageTerms } from './helpers'
+
+export { tableSkills } from './helpers'
 
 const TABLE_ORDER = [2, 5, 10, 3, 4, 6, 8, 7, 9] as const
 
@@ -14,41 +17,12 @@ function fractionFamily(ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[])
   return ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
 }
 
-/** Multiplication facts of one table (1..10), normalised keys (mul:AxB, A <= B). */
-export function tableSkills(t: number): SkillKey[] {
-  const out = new Set<SkillKey>()
-  for (let n = 1; n <= 10; n++) out.add(mulSkill(t, n))
-  return [...out]
-}
-
 /** Division facts whose divisor is 2..10 and quotient 2..10 (the ones a 3.º child meets as tables). */
 export function divisionFactSkills(): SkillKey[] {
   const out: SkillKey[] = []
   for (let d = 2; d <= 10; d++) for (let q = 2; q <= 10; q++) out.push(divSkill(d * q, d))
   return out
 }
-
-const tableTopic = (t: number): SyllabusTopic => ({
-  id: `tabla-${t}`,
-  name: `Tabla del ${t}`,
-  skills: tableSkills(t),
-  status: 'disponible',
-  rungs: {
-    concreto: `Grupos de ${t} objetos en la pantalla`,
-    dibujo: `Filas de ${t} en una matriz`,
-    numeros: `La tabla del ${t} escrita, con sus trucos`,
-    uso: `Problemas de agrupar y repartir de a ${t}`,
-  },
-})
-
-const pending = (id: string, name: string, pendingNote: string, rungs: SyllabusTopic['rungs'] = {}): SyllabusTopic => ({
-  id,
-  name,
-  skills: [],
-  status: 'pendiente',
-  rungs,
-  pendingNote,
-})
 
 /** Teaching order: eight stages, one per world, three trimesters. Every topic of the blocks appears exactly once. */
 // «Encuentra el error» waits for etapa 7: its items include column multiplication.
@@ -65,15 +39,6 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error'] },
   { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes'] },
 ]
-
-/** Each topic takes the trimester of its stage. */
-function withStageTerms(syllabus: Syllabus): Syllabus {
-  const termOf = new Map((syllabus.stages ?? []).flatMap((st) => st.topics.map((id) => [id, st.term] as const)))
-  return {
-    ...syllabus,
-    blocks: syllabus.blocks.map((b) => ({ ...b, topics: b.topics.map((t) => ({ ...t, term: t.term ?? termOf.get(t.id) })) })),
-  }
-}
 
 export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
   id: 'matematicas-3-primaria',

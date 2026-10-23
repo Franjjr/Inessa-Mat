@@ -60,6 +60,22 @@ export const SHOP: MoneyItem[] = [
   { name: 'un pincel', emoji: '🖌️', price: 75 },
 ]
 
+/** Things priced in whole euros, for 2.º (no céntimos yet). */
+export const SHOP_WHOLE: MoneyItem[] = [
+  { name: 'un libro de cuentos', emoji: '📕', price: 600 },
+  { name: 'un balón', emoji: '🏀', price: 900 },
+  { name: 'un puzle', emoji: '🧩', price: 800 },
+  { name: 'una caja de pinturas', emoji: '🖍️', price: 300 },
+  { name: 'un juego de mesa', emoji: '🎲', price: 1500 },
+  { name: 'una mochila', emoji: '🎒', price: 1200 },
+  { name: 'una cometa', emoji: '🪁', price: 700 },
+  { name: 'un yoyó', emoji: '🪀', price: 200 },
+  { name: 'una linterna', emoji: '🔦', price: 500 },
+  { name: 'un tren de juguete', emoji: '🚂', price: 1100 },
+  { name: 'una flauta', emoji: '🎶', price: 400 },
+  { name: 'una planta', emoji: '🪴', price: 1000 },
+]
+
 const CHANGE_TEMPLATES = [
   '{child} compra {item} que cuesta {price}. Paga con {paid}. ¿Cuánto le devuelven?',
   '{child} paga con {paid} {item} que cuesta {price}. ¿Cuánto le dan de cambio?',
@@ -80,10 +96,11 @@ export function makeRecognise(piece: number, options: number[]): MoneyRecogniseE
   }
 }
 
-export function makePay(price: number): MoneyPayExercise {
+export function makePay(price: number, whole = false): MoneyPayExercise {
   return {
-    id: `money:pay:${price}`, kind: 'money', skill: moneySkill('pay'),
+    id: `money:pay:${price}`, kind: 'money', skill: moneySkill('pay', whole),
     difficulty: price < 200 ? 1 : price < 1000 ? 2 : 3, mode: 'pay', price, answer: price,
+    ...(whole ? { whole: true } : {}),
   }
 }
 
@@ -103,12 +120,12 @@ export function addText(items: MoneyItem[]): string {
   return `{child} compra ${joined}. ¿Cuánto tiene que pagar en total?`
 }
 
-export function makeAdd(items: MoneyItem[], story: boolean): MoneyAddExercise {
+export function makeAdd(items: MoneyItem[], story: boolean, whole = false): MoneyAddExercise {
   const answer = items.reduce((sum, it) => sum + it.price, 0)
   return {
-    id: `money:add:${items.map((it) => it.price).join('+')}:${story ? 's' : 'c'}`, kind: 'money', skill: moneySkill('add'),
+    id: `money:add:${items.map((it) => it.price).join('+')}:${story ? 's' : 'c'}`, kind: 'money', skill: moneySkill('add', whole),
     difficulty: story ? 3 : 2, mode: 'add', items: [...items], story, text: story ? addText(items) : 'Estos son los precios. ¿Cuánto cuestan todos juntos?',
-    answer,
+    answer, ...(whole ? { whole: true } : {}),
   }
 }
 
@@ -132,7 +149,17 @@ export function makeConvert(direction: 'to-cents' | 'to-euros', amount: number):
 
 // ---------------------------------------------------------------- generation
 
-export function buildMoney(mode: MoneyMode, rng: Rng, used: Set<string>): Exercise {
+/** `whole`: whole euros, no céntimos (2.º); only pay and add have it. */
+export function buildMoney(mode: MoneyMode, rng: Rng, used: Set<string>, whole = false): Exercise {
+  if (whole && mode === 'pay') return fresh(() => makePay(randInt(rng, 1, 30) * 100, true), used)
+  if (whole && mode === 'add') {
+    return fresh(() => {
+      const n = rng() < 0.7 ? 2 : 3
+      let items = shuffle(rng, SHOP_WHOLE).slice(0, n)
+      for (let k = 0; k < 6 && items.reduce((s, it) => s + it.price, 0) > 3000; k++) items = shuffle(rng, SHOP_WHOLE).slice(0, n)
+      return makeAdd(items, rng() < 0.5, true)
+    }, used)
+  }
   switch (mode) {
     case 'recognise':
       return fresh(() => {
@@ -242,6 +269,7 @@ function checkChange(ex: MoneyChangeExercise, answer: Answer): CheckResult {
 
 function checkAdd(ex: MoneyAddExercise, answer: Answer): CheckResult {
   const r = judgeAmount(ex.answer, answer)
+  if (ex.whole && !r.correct && r.errorType === 'other') return { ...r, feedback: '¡Casi! Suma otra vez los euros de cada cosa, de uno en uno.' }
   if (!r.correct && r.errorType === 'other' && r.given !== '?' && r.given !== '') {
     return { ...r, feedback: r.feedback === '¡Casi! Revisa los céntimos: cuenta cuántos faltan para el euro siguiente.'
       ? '¡Casi! Suma primero los céntimos: si pasan de 100, cambia 100 céntimos por 1 €.'
@@ -308,7 +336,11 @@ export function hintsMoney(ex: Exercise): Hint[] | null {
       hint(2, 'Primero cuenta los céntimos que faltan para el euro siguiente, y después de euro en euro hasta lo que paga.'),
       hint(3, 'Suma las partes que has contado: los céntimos de la primera parte y los euros de la segunda.'),
     ]
-    case 'add': return [
+    case 'add': return ex.whole ? [
+      hint(1, 'Suma los euros de cada cosa.'),
+      hint(2, 'Empieza por el precio más alto y añade los otros.'),
+      hint(3, 'Pon los precios uno debajo de otro y súmalos como una cuenta.'),
+    ] : [
       hint(1, 'Suma primero los euros y después los céntimos.'),
       hint(2, 'Pon los precios uno debajo de otro, con las comas en la misma columna.'),
       hint(3, 'Si los céntimos pasan de cien, cambia cien céntimos por un euro y sigue sumando los euros.'),

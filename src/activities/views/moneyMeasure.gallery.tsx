@@ -20,6 +20,8 @@ const add = buildMoney('add', createRng(9), new Set())
 const recognise = buildMoney('recognise', createRng(2), new Set())
 const compare = buildMoney('compare', createRng(5), new Set())
 const convert = buildMoney('convert', createRng(8), new Set())
+const payWhole = buildMoney('pay', createRng(4), new Set(), true)
+const addWhole = buildMoney('add', createRng(10), new Set(), true)
 const unit = buildMeasure('unit', 'mass', createRng(3), new Set())
 const conv = buildMeasure('convert', 'capacity', createRng(6), new Set())
 const ruler = buildMeasure('ruler', null, createRng(11), new Set())
@@ -37,6 +39,8 @@ const entries: GalleryEntry[] = [
   { title: 'Dinero: sumar precios (ipad)', ...ipad, render: () => frame(<MoneyView exercise={add} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Dinero: qué cuesta más (teléfono)', ...phone, render: () => frame(<MoneyView exercise={compare} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Dinero: euros y céntimos (ipad)', ...ipad, render: () => frame(<MoneyView exercise={convert} onAnswered={noop} showFeedback allowHints />) },
+  { title: 'Dinero de 2.º: pagar en euros (ipad)', ...ipad, render: () => frame(<MoneyView exercise={payWhole} onAnswered={noop} showFeedback allowHints />) },
+  { title: 'Dinero de 2.º: sumar precios en euros (teléfono)', ...phone, render: () => frame(<MoneyView exercise={addWhole} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Medida: la unidad de un objeto (ipad)', ...ipad, render: () => frame(<MeasureView exercise={unit} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Medida: conversiones (ipad)', ...ipad, render: () => frame(<MeasureView exercise={conv} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Medida: la regla (ipad)', ...ipad, render: () => frame(<MeasureView exercise={ruler} onAnswered={noop} showFeedback allowHints />) },

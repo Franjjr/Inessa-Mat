@@ -194,6 +194,11 @@
   margin: 0 auto;
   min-width: 0;
 }
+/* The five pieces of whole euros (2.º): centred, not left in a row of twelve slots. */
+.purseFew {
+  grid-template-columns: repeat(auto-fit, minmax(96px, 120px));
+  justify-content: center;
+}
 
 .purseBtn {
   display: flex;

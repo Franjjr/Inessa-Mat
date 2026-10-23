@@ -4,7 +4,7 @@
    again. A failing read shows inside the section and never takes the whole report down. */
 import { useEffect, useMemo, useState } from 'react'
 import { getMastery, listAttempts, updateProgress } from '@/data'
-import { GRADE3_SYLLABUS } from '@/content/syllabus'
+import { syllabusForGrade } from '@/content/syllabus'
 import { getWorld } from '@/content'
 import {
   describeError, errorReport, placementRuns, recallReport, syllabusReport, PLACEMENT_COUNT,
@@ -20,7 +20,7 @@ import s from './child.module.css'
 /** Enough history for the recall check and every prueba inicial, read from this device. */
 const ATTEMPT_LIMIT = 5000
 
-export function LearningSection({ childId, childName, progress }: { childId: string; childName: string; progress: ProgressState | null }) {
+export function LearningSection({ childId, childName, grade, progress }: { childId: string; childName: string; grade?: number; progress: ProgressState | null }) {
   const [data, setData] = useState<{ mastery: MasteryMap; attempts: AttemptRecord[] } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -39,12 +39,12 @@ export function LearningSection({ childId, childName, progress }: { childId: str
     if (!data) return null
     const now = new Date()
     return {
-      syllabus: syllabusReport(GRADE3_SYLLABUS, data.mastery),
+      syllabus: syllabusReport(syllabusForGrade(grade), data.mastery),
       errors: errorReport(data.attempts, now),
       runs: placementRuns(data.attempts),
       recall: recallReport(data.attempts, now),
     }
-  }, [data])
+  }, [data, grade])
 
   const offer = async () => {
     setBusy(true)
@@ -94,7 +94,7 @@ export function TemarioCard({ report, childName }: { report: SyllabusReport; chi
   return (
     <section className={`${adult.card} ${adult.cardBlue}`} aria-labelledby="temario-title">
       <div className={adult.cardHead}>
-        <h2 id="temario-title" className={adult.subheading}>Temario de 3.º</h2>
+        <h2 id="temario-title" className={adult.subheading}>Temario de {report.course}.º</h2>
         <span className={adult.muted}>{report.mastered} de {report.available} temas dominados</span>
       </div>
       <p className={adult.lead}>
@@ -105,8 +105,8 @@ export function TemarioCard({ report, childName }: { report: SyllabusReport; chi
       {report.current?.stage && (
         <p className={adult.muted}>
           Etapa {report.current.stage.number} de {report.current.stage.total} · {TERM_TEXT[report.current.stage.term]}
-          {getWorld(report.current.stage.worldId) ? ` · en la aventura, ${getWorld(report.current.stage.worldId)!.name}` : ''}.
-          Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas, fracciones o figuras.
+          {report.current.stage.worldId && getWorld(report.current.stage.worldId) ? ` · en la aventura, ${getWorld(report.current.stage.worldId)!.name}` : ''}.
+          Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas{report.course >= 3 ? ', fracciones' : ''} o figuras.
         </p>
       )}
       <p className={adult.muted}>Un tema está dominado cuando acierta con soltura casi todos sus ejercicios, más de una vez.</p>

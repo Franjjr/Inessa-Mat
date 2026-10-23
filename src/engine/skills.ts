@@ -10,6 +10,7 @@
    concept:groups|array|commutative|share|family|placevalue
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
    num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
+   <key>:999            numbers up to 999 (2.º): num:place:*, num:compare, num:order, num:line:10|100, add:3d:cK
    mental:dobles|mitades|completar10|completar100|completar1000|decenas|centenas|compensar           (cálculo mental)
    eq:flex                                                                                          (signo igual flexible)
    bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
@@ -26,6 +27,7 @@
    geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
+   money:pay:e | money:add:e   whole euros, no céntimos (2.º)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
@@ -68,18 +70,18 @@ export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
   | { type: 'div'; p: number; d: number; q: number }
   | { type: 'skip'; n: number }
-  | { type: 'add'; digits: 2 | 3 | 4; carries: number }
+  | { type: 'add'; digits: 2 | 3 | 4; carries: number; max?: 999 }
   | { type: 'sub'; digits: 2 | 3 | 4; borrows: number | null; zero: boolean }
   | { type: 'mul2x1'; carry: boolean }
   | { type: 'div2x1'; variant: DivisionVariant }
   | { type: 'div3x1'; variant: 'exact' | 'rem' }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
-  | { type: 'place'; mode: PlaceMode }
-  | { type: 'compare' }
-  | { type: 'order' }
+  | { type: 'place'; mode: PlaceMode; max?: 999 }
+  | { type: 'compare'; max?: 999 }
+  | { type: 'order'; max?: 999 }
   | { type: 'round'; to: 10 | 100 }
-  | { type: 'line'; step: 10 | 100 | 1000 }
+  | { type: 'line'; step: 10 | 100 | 1000; max?: 999 }
   | { type: 'mental'; family: MentalFamily }
   | { type: 'equation' }
   | { type: 'bar'; op: BarSkillOp }
@@ -93,7 +95,7 @@ export type ParsedSkill =
   | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
   | { type: 'fraction'; op: 'equal' | 'compare' }
   | { type: 'geo'; op: GeoOp }
-  | { type: 'money'; mode: MoneyMode }
+  | { type: 'money'; mode: MoneyMode; whole?: true }
   | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
 
 // ---------------------------------------------------------------- builders
@@ -107,8 +109,9 @@ export function divSkill(dividend: number, divisor: number): SkillKey {
 export function skipSkill(n: number): SkillKey {
   return `skip:${n}`
 }
-export function addSkill(digits: number, carries: number): SkillKey {
-  return `add:${digits}d:c${carries}`
+/** `max` 999: the sum stays below 1 000 (2.º). */
+export function addSkill(digits: number, carries: number, max?: 999): SkillKey {
+  return `add:${digits}d:c${carries}${max ? `:${max}` : ''}`
 }
 export function subSkill(digits: number, borrows: number, zero = false): SkillKey {
   return zero ? `sub:${digits}d:z` : `sub:${digits}d:b${borrows}`
@@ -125,14 +128,20 @@ export function conceptSkill(name: ConceptName): SkillKey {
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
 }
-export function placeSkill(mode: PlaceMode): SkillKey {
-  return `num:place:${mode}`
+export function placeSkill(mode: PlaceMode, max?: 999): SkillKey {
+  return `num:place:${mode}${max ? `:${max}` : ''}`
+}
+export function compareSkill(max?: 999): SkillKey {
+  return max ? `num:compare:${max}` : 'num:compare'
+}
+export function orderSkill(max?: 999): SkillKey {
+  return max ? `num:order:${max}` : 'num:order'
 }
 export function roundSkill(to: 10 | 100): SkillKey {
   return `num:round:${to}`
 }
-export function lineSkill(step: 10 | 100 | 1000): SkillKey {
-  return `num:line:${step}`
+export function lineSkill(step: 10 | 100 | 1000, max?: 999): SkillKey {
+  return `num:line:${step}${max ? `:${max}` : ''}`
 }
 export function mentalSkill(family: MentalFamily): SkillKey {
   return `mental:${family}`
@@ -171,8 +180,9 @@ export function fractionSkill(op: FractionOp, d?: number): SkillKey {
 export function geoSkill(op: GeoOp): SkillKey {
   return `geo:${op}`
 }
-export function moneySkill(mode: MoneyMode): SkillKey {
-  return `money:${mode}`
+/** `whole`: prices in whole euros, no céntimos (only pay and add). */
+export function moneySkill(mode: MoneyMode, whole = false): SkillKey {
+  return whole ? `money:${mode}:e` : `money:${mode}`
 }
 export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension): SkillKey {
   return `measure:${mode}:${dimension}`
@@ -202,9 +212,10 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     const n = Number(m[1])
     return n >= 2 && n <= 10 ? { type: 'skip', n } : null
   }
-  if ((m = key.match(/^add:([234])d:c(\d)$/))) {
+  if ((m = key.match(/^add:([234])d:c(\d)(:999)?$/))) {
     const digits = Number(m[1]) as 2 | 3 | 4
     const carries = Number(m[2])
+    if (m[3]) return digits === 3 && carries <= 2 ? { type: 'add', digits, carries, max: 999 } : null
     return carries <= MAX_CARRIES[digits] ? { type: 'add', digits, carries } : null
   }
   if ((m = key.match(/^sub:([234])d:(b(\d)|z)$/))) {
@@ -220,11 +231,14 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
-  if ((m = key.match(/^num:place:(blocks|expanded|words)$/))) return { type: 'place', mode: m[1] as PlaceMode }
+  if ((m = key.match(/^num:place:(blocks|expanded|words)(:999)?$/))) return { type: 'place', mode: m[1] as PlaceMode, ...(m[2] ? { max: 999 as const } : {}) }
   if (key === 'num:compare') return { type: 'compare' }
   if (key === 'num:order') return { type: 'order' }
+  if (key === 'num:compare:999') return { type: 'compare', max: 999 }
+  if (key === 'num:order:999') return { type: 'order', max: 999 }
   if ((m = key.match(/^num:round:(10|100)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 }
   if ((m = key.match(/^num:line:(10|100|1000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 }
+  if ((m = key.match(/^num:line:(10|100):999$/))) return { type: 'line', step: Number(m[1]) as 10 | 100, max: 999 }
   if ((m = key.match(/^mental:(\w+)$/))) {
     const family = m[1] as MentalFamily
     return MENTAL_FAMILIES.includes(family) ? { type: 'mental', family } : null
@@ -248,6 +262,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^frac:(equal|compare)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' }
   if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
   if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
+  if ((m = key.match(/^money:(pay|add):e$/))) return { type: 'money', mode: m[1] as MoneyMode, whole: true }
   if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)$/))) {
     return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension }
   }

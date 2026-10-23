@@ -116,6 +116,13 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
 5. **Reorganizar mundos e historia** sobre el temario.
 6. **Informe del adulto** con errores por tipo y progreso en las pruebas.
 7. Después, el mismo esquema para 1.º–2.º y 4.º–6.º, y otras asignaturas.
+   - **Hecho (octubre de 2026): 2.º.** Temario propio en 8 etapas y 3 trimestres (`GRADE2_SYLLABUS` en
+     `src/content/syllabus/grade2.ts`): números hasta 999, sumas y restas de 2 y 3 cifras, cálculo mental, grupos
+     iguales y tablas del 2, 3, 4, 5 y 10, problemas con barra, reloj y calendario, euros enteros, metro, kilo y
+     litro, figuras, líneas y cuerpos. Usa los mismos ejercicios con tope de 999 y sin céntimos. El curso del niño
+     elige el temario, la sesión diaria, la prueba inicial y el informe (`syllabusForGrade`: 1.º usa el de 2.º y
+     4.º–6.º el de 3.º hasta que tengan el suyo). Pendiente en 2.º: pictogramas, series y patrones, posición; y una
+     aventura propia (los mundos siguen el temario de 3.º).
 
 ## 9. Lo que necesitamos del dueño
 

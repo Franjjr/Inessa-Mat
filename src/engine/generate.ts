@@ -540,10 +540,13 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
   if (p.type === 'add' || (p.type === 'concept' && p.name === 'placevalue')) {
     const digits = p.type === 'add' ? p.digits : 3
     const carries = p.type === 'add' ? p.carries : 0
+    const capped = p.type === 'add' && p.max === 999
     return retry(() => {
-      const [a, b] = addNumbers(rng, digits, Math.min(carries, maxCarries(digits)))
+      const [a, b] = capped
+        ? genAddOperands(rng, digits, carries, digits, true) ?? [123, 456]
+        : addNumbers(rng, digits, Math.min(carries, maxCarries(digits)))
       const ops = digitCount(a) === digitCount(b) && rng() < 0.5 ? [b, a] : [a, b]
-      return makeColumnAdd(ops, p.type === 'concept' ? skill : undefined)
+      return makeColumnAdd(ops, p.type === 'concept' || capped ? skill : undefined)
     }, used, rng)!
   }
   if (p.type === 'sub') {
@@ -685,7 +688,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
     if (built) return built
   }
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
-  if (p.type === 'money') return buildMoney(p.mode, rng, used)
+  if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
   if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)

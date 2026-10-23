@@ -376,7 +376,11 @@ export interface MoneyItem { name: string; emoji: string; price: number }
 export interface MoneyRecogniseExercise extends ExerciseBase {
   kind: 'money'; mode: 'recognise'; piece: number; options: number[]; answer: number
 }
-export interface MoneyPayExercise extends ExerciseBase { kind: 'money'; mode: 'pay'; price: number; answer: number }
+export interface MoneyPayExercise extends ExerciseBase {
+  kind: 'money'; mode: 'pay'; price: number; answer: number
+  /** Whole euros (2.º): no céntimos in the price. */
+  whole?: boolean
+}
 export interface MoneyChangeExercise extends ExerciseBase {
   kind: 'money'; mode: 'change'; price: number; paid: number; text: string
   /** The change in céntimos (paid − price). */
@@ -386,6 +390,8 @@ export interface MoneyAddExercise extends ExerciseBase {
   kind: 'money'; mode: 'add'; items: MoneyItem[]; story: boolean; text: string
   /** Sum in céntimos. */
   answer: number
+  /** Whole euros (2.º): the answer has a single box, the euros. */
+  whole?: boolean
 }
 export interface MoneyCompareExercise extends ExerciseBase {
   kind: 'money'; mode: 'compare'; items: MoneyItem[]; question: 'more' | 'less'

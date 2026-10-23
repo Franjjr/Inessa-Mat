@@ -113,7 +113,7 @@ describe('ChildReportScreen', () => {
     expect(await screen.findByRole('heading', { name: 'Tablas y cálculo básico' })).toBeInTheDocument()
     expect(screen.getByText('4 veces')).toBeInTheDocument()
     expect(screen.getByText(/Repasar un rato esas tablas/)).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Temario de 2.º' })).toBeInTheDocument()
     expect(screen.getByText('42 min')).toBeInTheDocument()
     expect(screen.getByText('80 %')).toBeInTheDocument()
     expect(screen.getByText('1 de 8')).toBeInTheDocument()

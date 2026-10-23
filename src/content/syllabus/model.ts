@@ -37,8 +37,8 @@ export interface SyllabusStage {
   id: string
   /** Trimester of the stage (the app's own progressive order, not a school's). */
   term: 1 | 2 | 3
-  /** The world of the adventure that goes with this stage (its guardian is the stage test). */
-  worldId: string
+  /** The world of the adventure that goes with this stage (its guardian is the stage test). 2.º has none yet. */
+  worldId?: string
   /** Topic ids in teaching order. */
   topics: string[]
 }

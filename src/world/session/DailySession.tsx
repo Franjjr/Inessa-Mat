@@ -10,7 +10,7 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
-import { GRADE3_SYLLABUS } from '@/content/syllabus'
+import { syllabusForGrade } from '@/content/syllabus'
 import { DAILY_BLOCK_LABEL, DAILY_MINUTES, planDailySession, type DailyPlan } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
@@ -93,7 +93,7 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
   useEffect(() => {
     if (plan || !child || !mastery || !attempts) return
     const now = new Date()
-    const made = planDailySession({ child, mastery, attempts, syllabus: GRADE3_SYLLABUS, now })
+    const made = planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now })
     setPlan(made)
     if (made.blocks.every((b) => b.items.length === 0)) setPhase('empty')
   }, [child, mastery, attempts, plan])

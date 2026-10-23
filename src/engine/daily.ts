@@ -46,7 +46,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
   money: 40, measure: 35,
 }
-/** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations, the weakest one first. */
+/** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 /** Reading the feedback and pressing «Siguiente», per item. */
 export const ITEM_OVERHEAD_SECONDS = 5
@@ -315,8 +315,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
     if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: base.scaffold, isNew: false })
   }
   // The «encuentra el error» of the mix: the column operation the child is weakest at (never seen counts as weakest).
-  const huntNow = HUNT_OPS.map((op) => huntSkill(op)).sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
-  const hunt = make(huntNow, rng, ['error-hunt'])
+  // Only what the child's temario has: 2.º finds errors in sums and subtractions, not in multiplications.
+  const inSyllabus = new Set(availableSkills(syllabus))
+  const huntNow = HUNT_OPS.map((op) => huntSkill(op)).filter((s) => inSyllabus.has(s))
+    .sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
+  const hunt = huntNow ? make(huntNow, rng, ['error-hunt']) : null
   if (hunt) {
     if (mixItems.length >= MIX_MAX) mixItems.pop()
     mixItems.push({ exercise: hunt, block: 'mix', scaffold: false, isNew: false })
@@ -338,7 +341,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
 
   // 4. Problema: one word problem of the operation the child is working on.
   const problem: DailyItem[] = []
-  const bex = make(barSkill(barOpFor(topic, mastery)), rng, ['bar-problem'])
+  const barNow = barSkill(barOpFor(topic, mastery))
+  const bex = make(inSyllabus.has(barNow) ? barNow : barSkill('add'), rng, ['bar-problem'])
   if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
 
   const blocks: DailyPlan['blocks'] = [

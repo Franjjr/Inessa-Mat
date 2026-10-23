@@ -4,7 +4,7 @@
 import type { AttemptRecord, Exercise, Rng, SkillKey } from '@/types'
 import { generate } from './generate'
 import { createRng, hashString, shuffle } from './rng'
-import { allMulFactSkills, divSkill, parseSkill } from './skills'
+import { allMulFactSkills, divSkill, mulSkill, parseSkill } from './skills'
 
 /** Attempts of the placement carry this activity name in their context. */
 export const PLACEMENT_ACTIVITY = 'prueba-inicial'
@@ -41,14 +41,29 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'clock-read': case 'clock-set': case 'clock-convert': case 'time-duration': case 'calendar': return 'tiempo'
     case 'fraction': case 'geo': return 'fracciones-geometria'
     case 'money': case 'measure': return 'dinero-medida'
-    case 'place': case 'compare': case 'order': case 'round': case 'line': return 'numeros'
+    case 'place': case 'compare': case 'order': case 'round': case 'line': case 'skip': return 'numeros'
     default: return null
   }
 }
 
-/** The items of the placement, in order. The same child and day give the same items. */
-export function buildPlacement(seed: number | string, now: Date = new Date()): PlacementItem[] {
+/** The 2.º placement: numbers up to 999, sums and subtractions of 2 and 3 digits, the first tables, whole euros. */
+function grade2Plan(rng: Rng): { block: PlacementBlockId; skills: SkillKey[] }[] {
+  const facts = shuffle(rng, [2, 5, 10].flatMap((t) => [2, 3, 4, 5, 6, 7, 8, 9].map((n) => mulSkill(t, n))))
+  return [
+    { block: 'numeros', skills: ['num:place:blocks:999', 'num:place:expanded:999', 'num:place:words:999', 'num:compare:999', 'skip:5'] },
+    { block: 'sumas-restas', skills: ['add:2d:c0', 'add:2d:c1', 'sub:2d:b0', 'sub:2d:b1', 'add:3d:c0'] },
+    { block: 'tablas', skills: facts.slice(0, 3) },
+    { block: 'problemas', skills: ['bar:add', 'bar:sub'] },
+    { block: 'tiempo', skills: ['clock:read:30', 'cal:weekday'] },
+    { block: 'fracciones-geometria', skills: ['geo:poly:name'] },
+    { block: 'dinero-medida', skills: ['money:recognise', 'money:pay:e'] },
+  ]
+}
+
+/** The items of the placement, in order. The same child and day give the same items. `grade` 1–2 takes the 2.º one. */
+export function buildPlacement(seed: number | string, now: Date = new Date(), grade?: number): PlacementItem[] {
   const rng: Rng = createRng(typeof seed === 'number' ? seed : hashString(seed))
+  if (grade !== undefined && grade <= 2) return itemsOf(grade2Plan(rng), rng, now)
   const facts = shuffle(rng, allMulFactSkills().filter((s) => {
     const p = parseSkill(s)
     return p?.type === 'mul' && p.a >= 2
@@ -64,6 +79,10 @@ export function buildPlacement(seed: number | string, now: Date = new Date()): P
     { block: 'fracciones-geometria', skills: ['frac:read:4'] },
     { block: 'dinero-medida', skills: ['money:pay'] },
   ]
+  return itemsOf(plan, rng, now)
+}
+
+function itemsOf(plan: { block: PlacementBlockId; skills: SkillKey[] }[], rng: Rng, now: Date): PlacementItem[] {
   const out: PlacementItem[] = []
   for (const { block, skills } of plan) {
     for (const skill of skills) {

@@ -35,7 +35,7 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
 
   useEffect(() => {
     if (items || !child) return
-    setItems(buildPlacement(`${child.id}|${new Date().toISOString().slice(0, 10)}`))
+    setItems(buildPlacement(`${child.id}|${new Date().toISOString().slice(0, 10)}`, new Date(), child.grade))
   }, [child, items])
 
   if (loading || !child || !progress || !items) return <Spinner label="Preparando la prueba…" />

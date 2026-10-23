@@ -6,15 +6,15 @@ import { NumberPad, PinDots } from './shared/NumberPad'
 import { SwitchRow } from './child/SwitchRow'
 import { averageGrid } from './shared/heatmap'
 import { MistakesCard, TemarioCard, TestsCard } from './child/LearningCards'
-import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
+import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import { errorReport, newMastery, placementRuns, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
 import type { AttemptRecord, ErrorType, MasteryMap } from '@/types'
 
 const NOW = new Date('2026-10-22T10:00:00.000Z')
 const ago = (days: number, ms = 0) => new Date(NOW.getTime() - days * 86_400_000 + ms).toISOString()
 
-function sampleMastery(): MasteryMap {
-  const topics = teachingOrder(GRADE3_SYLLABUS).filter((t) => t.status === 'disponible' && t.skills.length > 0)
+function sampleMastery(syllabus = GRADE3_SYLLABUS): MasteryMap {
+  const topics = teachingOrder(syllabus).filter((t) => t.status === 'disponible' && t.skills.length > 0)
   const map: MasteryMap = {}
   topics.slice(0, 9).forEach((t) => t.skills.forEach((s) => { map[s] = { ...newMastery(s, NOW), box: 3 } }))
   topics[9].skills.slice(0, 2).forEach((s) => { map[s] = { ...newMastery(s, NOW), box: 2 } })
@@ -59,6 +59,11 @@ const entries: GalleryEntry[] = [
     title: 'TemarioCard',
     width: 720,
     render: () => <TemarioCard report={syllabusReport(GRADE3_SYLLABUS, sampleMastery())} childName="Lía" />,
+  },
+  {
+    title: 'TemarioCard de 2.º',
+    width: 720,
+    render: () => <TemarioCard report={syllabusReport(GRADE2_SYLLABUS, sampleMastery(GRADE2_SYLLABUS))} childName="Hugo" />,
   },
   {
     title: 'MistakesCard',

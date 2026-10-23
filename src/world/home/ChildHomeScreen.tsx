@@ -8,7 +8,7 @@ import {
   crystalsOf, isWorldUnlocked, nextNode, season1, getNode, getWorld, renderTemplate, templateContext,
 } from '@/content'
 import { DAILY_MINUTES, dueSkills } from '@/engine'
-import { GRADE3_SYLLABUS, currentTopic } from '@/content/syllabus'
+import { currentTopic, syllabusForGrade } from '@/content/syllabus'
 import { useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
@@ -61,7 +61,7 @@ export default function ChildHomeScreen() {
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season1.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
-  const sessionTopic = currentTopic(GRADE3_SYLLABUS, mastery ?? {})?.name ?? null
+  const sessionTopic = currentTopic(syllabusForGrade(child?.grade), mastery ?? {})?.name ?? null
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`

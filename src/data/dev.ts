@@ -132,7 +132,7 @@ export async function seedDemo(): Promise<{ childId: string }> {
     nickname: 'Lía',
     gender: 'f',
     birthYear: 2018,
-    grade: 2,
+    grade: 3,
     companion: { species: 'cat', name: 'Luna', gender: 'f', colorway: 'default', equipped: [] },
     settings: { inputPreference: 'auto', sessionMinutes: 15, sound: true, music: true, voice: true, storyVoice: true, timedActivities: true, handedness: 'right', bigCells: false, subjects: ['math'], subMethod: 'borrow', divMethod: 'galera', tableMethod: null },
     createdAt: created,

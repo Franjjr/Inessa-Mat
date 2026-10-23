@@ -7,7 +7,7 @@ import type {
 } from '@/types'
 import { valueOf } from './diagnose'
 import { randInt, shuffle } from './rng'
-import { LINE_STEPS, ROUND_TARGETS, lineSkill, parseSkill, placeSkill, roundSkill, type ParsedSkill } from './skills'
+import { LINE_STEPS, ROUND_TARGETS, compareSkill, lineSkill, orderSkill, parseSkill, placeSkill, roundSkill, type ParsedSkill } from './skills'
 
 /** Thousands separated by a space, as Spanish children read them: 4325 → '4 325'. */
 export const fmt = (n: number): string => String(Math.trunc(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
@@ -77,26 +77,27 @@ export function roundTo(value: number, to: 10 | 100): number {
 
 // ---------------------------------------------------------------- makers
 
-export function makePlaceValue(value: number, mode: PlaceMode): PlaceValueExercise {
+/** `max` 999: the 2.º skill (numbers up to 999); the exercise is the same. */
+export function makePlaceValue(value: number, mode: PlaceMode, max?: 999): PlaceValueExercise {
   const parts = expandedParts(value)
   return {
-    id: `place-value:${mode}:${value}`, kind: 'place-value', skill: placeSkill(mode),
+    id: `place-value:${mode}:${value}`, kind: 'place-value', skill: placeSkill(mode, max),
     difficulty: mode === 'blocks' ? 1 : mode === 'expanded' ? 2 : 3,
     mode, value, parts, answer: mode === 'expanded' ? parts : value,
   }
 }
 
-export function makeCompare(left: number, right: number): CompareExercise {
+export function makeCompare(left: number, right: number, max?: 999): CompareExercise {
   return {
-    id: `compare:${left}:${right}`, kind: 'compare', skill: 'num:compare', difficulty: 2,
+    id: `compare:${left}:${right}`, kind: 'compare', skill: compareSkill(max), difficulty: 2,
     left, right, answer: left > right ? '>' : left < right ? '<' : '=',
   }
 }
 
-export function makeOrder(values: number[], direction: 'asc' | 'desc'): OrderExercise {
+export function makeOrder(values: number[], direction: 'asc' | 'desc', max?: 999): OrderExercise {
   const answer = [...values].sort((x, y) => (direction === 'asc' ? x - y : y - x))
   return {
-    id: `order:${values.join('.')}:${direction}`, kind: 'order', skill: 'num:order', difficulty: values.length > 3 ? 3 : 2,
+    id: `order:${values.join('.')}:${direction}`, kind: 'order', skill: orderSkill(max), difficulty: values.length > 3 ? 3 : 2,
     values: [...values], direction, answer,
   }
 }
@@ -109,18 +110,18 @@ export function makeRound(value: number, to: 10 | 100): RoundExercise {
 }
 
 /** Tick mode: five labelled marks, the one at `blank` is hidden. */
-export function makeLineTick(step: 10 | 100 | 1000, ticks: number[], blank: number): NumberLineExercise {
+export function makeLineTick(step: 10 | 100 | 1000, ticks: number[], blank: number, max?: 999): NumberLineExercise {
   return {
-    id: `number-line:tick:${step}:${ticks[0]}:${blank}`, kind: 'number-line', skill: lineSkill(step),
+    id: `number-line:tick:${step}:${ticks[0]}:${blank}`, kind: 'number-line', skill: lineSkill(step, max),
     difficulty: step === 10 ? 2 : 3, mode: 'tick', step, ticks: [...ticks], blank,
     start: null, jump: 0, answer: ticks[blank],
   }
 }
 
 /** Jump mode: start from a point on the line and jump +step or −step; the child writes where it lands. */
-export function makeLineJump(step: 10 | 100 | 1000, ticks: number[], start: number, jump: number): NumberLineExercise {
+export function makeLineJump(step: 10 | 100 | 1000, ticks: number[], start: number, jump: number, max?: 999): NumberLineExercise {
   return {
-    id: `number-line:jump:${step}:${start}:${jump > 0 ? '+' : '-'}`, kind: 'number-line', skill: lineSkill(step),
+    id: `number-line:jump:${step}:${start}:${jump > 0 ? '+' : '-'}`, kind: 'number-line', skill: lineSkill(step, max),
     difficulty: 3, mode: 'jump', step, ticks: [...ticks], blank: -1, start, jump, answer: start + jump,
   }
 }
@@ -130,11 +131,11 @@ export function makeLineJump(step: 10 | 100 | 1000, ticks: number[], start: numb
 /** The skill keys practised by one of the numeric kinds (for free play and universe building). */
 export function numericSkillsOf(kind: ExerciseKind): SkillKey[] {
   switch (kind) {
-    case 'place-value': return (['blocks', 'expanded', 'words'] as PlaceMode[]).map(placeSkill)
+    case 'place-value': return (['blocks', 'expanded', 'words'] as PlaceMode[]).map((m) => placeSkill(m))
     case 'compare': return ['num:compare']
     case 'order': return ['num:order']
     case 'round': return ROUND_TARGETS.map(roundSkill)
-    case 'number-line': return LINE_STEPS.map(lineSkill)
+    case 'number-line': return LINE_STEPS.map((s) => lineSkill(s))
     default: return []
   }
 }
@@ -151,14 +152,30 @@ function fresh<T extends Exercise>(make: () => T, used: Set<string>, tries = 12)
 export function buildNumericExercise(kind: ExerciseKind, skill: SkillKey, rng: Rng, used: Set<string>, digits?: number): Exercise | null {
   const p: ParsedSkill | null = parseSkill(skill)
   if (!p) return null
-  const d = digits === 2 || digits === 3 || digits === 4 ? digits : 4
+  // Numbers up to 999 (2.º): mostly 3 digits, some 2-digit ones.
+  const small = 'max' in p && p.max === 999
+  const d = small ? 3 : digits === 2 || digits === 3 || digits === 4 ? digits : 4
   const randomNumber = (dd: 2 | 3 | 4 = d as 2 | 3 | 4) => randInt(rng, NUMBER_RANGE[dd][0], NUMBER_RANGE[dd][1])
+  const max = small ? 999 as const : undefined
   switch (kind) {
     case 'place-value': {
       if (p.type !== 'place') return null
-      return fresh(() => makePlaceValue(randomNumber(), p.mode), used)
+      return fresh(() => makePlaceValue(small && rng() < 0.25 ? randomNumber(2) : randomNumber(), p.mode, max), used)
     }
     case 'compare': {
+      if (small) {
+        return fresh(() => {
+          const a = rng() < 0.2 ? randomNumber(2) : randomNumber()
+          const roll = rng()
+          let b: number
+          if (roll < 0.1) b = a
+          else if (roll < 0.45) b = Math.floor(a / 100) * 100 + randInt(rng, 0, 99) // same centenas: the decenas decide
+          else if (roll < 0.7) b = Math.floor(a / 10) * 10 + randInt(rng, 0, 9) // same decenas: the unidades decide
+          else b = randomNumber()
+          b = Math.min(999, Math.max(10, b))
+          return rng() < 0.5 ? makeCompare(a, b, max) : makeCompare(b, a, max)
+        }, used)
+      }
       return fresh(() => {
         const a = randomNumber()
         const roll = rng()
@@ -172,6 +189,18 @@ export function buildNumericExercise(kind: ExerciseKind, skill: SkillKey, rng: R
       }, used)
     }
     case 'order': {
+      if (small) {
+        return fresh(() => {
+          const n = rng() < 0.5 ? 3 : 4
+          const base = randInt(rng, 1, 8) * 100
+          const values: number[] = []
+          while (values.length < n) {
+            const v = rng() < 0.5 ? randomNumber() : base + randInt(rng, 0, 99)
+            if (!values.includes(v)) values.push(v)
+          }
+          return makeOrder(shuffle(rng, values), rng() < 0.5 ? 'asc' : 'desc', max)
+        }, used)
+      }
       return fresh(() => {
         const n = rng() < 0.5 ? 3 : 4
         const base = randInt(rng, 1, 8) * 1000
@@ -196,6 +225,22 @@ export function buildNumericExercise(kind: ExerciseKind, skill: SkillKey, rng: R
     case 'number-line': {
       if (p.type !== 'line') return null
       const step = p.step
+      if (small) {
+        // Five marks that stay within 0..999.
+        const topK = Math.floor((999 - 4 * step) / step)
+        if (rng() < 0.5) {
+          return fresh(() => {
+            const base = randInt(rng, 0, topK) * step
+            return makeLineTick(step, [0, 1, 2, 3, 4].map((k) => base + k * step), randInt(rng, 1, 3), max)
+          }, used)
+        }
+        return fresh(() => {
+          const lo = randInt(rng, 0, topK) * step
+          const start = lo + step + randInt(rng, 0, step - 1)
+          const jump = rng() < 0.5 ? step : -step
+          return makeLineJump(step, [0, 1, 2, 3, 4].map((k) => lo + k * step), start, jump, max)
+        }, used)
+      }
       if (rng() < 0.5) {
         return fresh(() => {
           const maxK = Math.floor(9000 / step) - 5
