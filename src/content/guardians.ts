@@ -4,6 +4,7 @@
    "Hechizo del Cristal": one story problem with the workbook's fixed numbers whose result reveals the letter of
    VALIENTE. Rounds use explicit skills so every child meets the same items the workbook chose. */
 import type { GuardianDef } from '@/types'
+import { C2_SPELL_CODES } from './c2/guardians'
 
 const total = (rounds: GuardianDef['rounds']) => rounds.reduce((s, r) => s + r.count, 0)
 
@@ -179,6 +180,7 @@ export const SPELL_CODES: Record<string, { result: number; letter: string }> = {
   'w6-guardian': { result: 49, letter: 'N' },
   'w7-guardian': { result: 282, letter: 'T' },
   'w8-guardian': { result: 21, letter: 'E' },
+  ...C2_SPELL_CODES,
 }
 
 /** Decoy letters Borrón hid in the scroll (a wrong spell result that lands on one of these is a "clue to revise"). */

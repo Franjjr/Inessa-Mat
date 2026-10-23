@@ -14,14 +14,16 @@ export interface WorldSpec extends Omit<WorldDef, 'nodes' | 'seasonId' | 'color'
   /** Control points of the map path, 0..1 (x right, y down). Nodes are spread evenly along it. */
   path: [number, number][]
   nodes: NodeSpec[]
+  /** 's1' (the 3.º adventure, default) or 'c2' (the 2.º adventure on the same maps, src/content/c2). */
+  seasonId?: string
 }
 
 export function world(spec: WorldSpec): WorldDef {
-  const { path, nodes, ...meta } = spec
+  const { path, nodes, seasonId = 's1', ...meta } = spec
   const pos = layoutPath(path, nodes.length)
   return {
     ...meta,
-    seasonId: 's1',
+    seasonId,
     color: `var(--${spec.id})`,
     colorSoft: `var(--${spec.id}-soft)`,
     nodes: nodes.map((n, i) => ({ ...n, pos: pos[i] })),

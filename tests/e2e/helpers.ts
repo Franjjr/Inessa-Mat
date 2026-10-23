@@ -22,12 +22,12 @@ export async function seedDemo(page: Page, route = '/kids'): Promise<void> {
 
 /** Creates a child through the real onboarding (/kids/new), skipping handwriting calibration, and lands on /play
  *  after the prologue. The prologue is played by tapping the story. */
-export async function createChildThroughOnboarding(page: Page, name = CHILD_NAME): Promise<void> {
+export async function createChildThroughOnboarding(page: Page, name = CHILD_NAME, grade?: number): Promise<void> {
   await page.goto('/kids/new')
   await page.getByRole('textbox', { name: 'Tu nombre' }).fill(name)
   await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: 'Como a una niña' }).click()
-  await page.getByRole('button', { name: 'No lo sé' }).click()
+  await page.getByRole('button', { name: grade ? `${grade}º de Primaria` : 'No lo sé' }).click()
   await page.getByRole('group', { name: 'Compañeros' }).getByRole('button').first().click()
   await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
   await page.getByRole('textbox', { name: 'Nombre del compañero' }).fill(PET_NAME)

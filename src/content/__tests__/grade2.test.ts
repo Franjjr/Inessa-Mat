@@ -24,13 +24,13 @@ function numbersOf(ex: Exercise): number[] {
 }
 
 describe('temario de 2.º', () => {
-  it('every topic is taught in exactly one stage, three trimesters, no world of the adventure', () => {
+  it('every topic is taught in exactly one stage, three trimesters, one world of the 2.º adventure each', () => {
     const staged = GRADE2_STAGES.flatMap((st) => st.topics)
     expect(new Set(staged).size).toBe(staged.length)
     expect([...staged].sort()).toEqual(allTopics(GRADE2_SYLLABUS).map((t) => t.id).sort())
     expect(teachingOrder(GRADE2_SYLLABUS).map((t) => t.id)).toEqual(staged)
     expect(GRADE2_STAGES.map((st) => st.term)).toEqual([1, 1, 1, 2, 2, 2, 3, 3])
-    expect(GRADE2_STAGES.every((st) => st.worldId === undefined)).toBe(true)
+    expect(GRADE2_STAGES.map((st) => st.worldId)).toEqual(['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'])
     expect(GRADE2_SYLLABUS.course).toBe(2)
   })
 

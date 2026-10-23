@@ -284,8 +284,8 @@ function Closing({ child, progress, summary, topicName, finished, onDone, onGo, 
   }, [alreadyToday, finished, summary.answered, child.id, key])
 
   const next = safeNext(progress)
-  const nextWorld = next ? getWorld(next.worldId) : undefined
-  const nextDef = next ? getNode(next.worldId, next.nodeId) : undefined
+  const nextWorld = next ? getWorld(next.worldId, progress.seasonId) : undefined
+  const nextDef = next ? getNode(next.worldId, next.nodeId, progress.seasonId) : undefined
   const hook = nextWorld && nextDef ? renderTemplate(nextWorld.hook, ctx) : null
 
   return (

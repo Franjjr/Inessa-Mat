@@ -25,7 +25,7 @@ export default function DiplomaScreen() {
         <TopBar back="/play" title="Mi diploma" />
         <div className={s.locked}>
           <div className={s.previewWrap}>
-            <DiplomaCertificate child={child} crystals={crystals} className={s.printSheet} />
+            <DiplomaCertificate child={child} crystals={crystals} seasonId={progress.seasonId} className={s.printSheet} />
           </div>
           <p className={s.lockedText}>{lead}</p>
           <Button variant="magic" size="lg" onClick={() => navigate('/play')}>Volver al mapa</Button>
@@ -44,7 +44,7 @@ export default function DiplomaScreen() {
         />
       </div>
       <div className={s.previewWrap}>
-        <DiplomaCertificate child={child} date={earned} className={s.printSheet} />
+        <DiplomaCertificate child={child} date={earned} seasonId={progress.seasonId} className={s.printSheet} />
       </div>
       <p className={s.note}>Se imprime en papel A4 horizontal.</p>
     </Screen>

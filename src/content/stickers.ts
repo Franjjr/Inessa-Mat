@@ -3,7 +3,7 @@
      stars:<worldId>:<nodeId>:<n>      get at least n stars on that node (best result counts)
      world:<worldId>                   win the world's crystal
      days:<n>                          play on n different days (never a streak that can be lost)
-     season:<seasonId>                 win all the crystals of the season */
+     season:<seasonId>                 win all the crystals of the season ('*': of the season the child plays) */
 import type { ProgressState, StickerDef } from '@/types'
 
 export const stickers: StickerDef[] = [
@@ -42,7 +42,7 @@ export const stickers: StickerDef[] = [
   // special
   { id: 'dias-3', name: 'Tres días de magia', emoji: '⭐', earnedBy: 'days:3' },
   { id: 'dias-7', name: 'Siete días de magia', emoji: '🌟', earnedBy: 'days:7' },
-  { id: 'lumi-brilla', name: 'Lumi brilla otra vez', emoji: '🦄', earnedBy: 'season:s1' },
+  { id: 'lumi-brilla', name: 'Lumi brilla otra vez', emoji: '🦄', earnedBy: 'season:*' },
 ]
 
 export type StickerRule =
@@ -81,7 +81,7 @@ export function stickerRuleMet(rule: string, progress: ProgressState, worldIds: 
     case 'stars': return (progress.worlds[r.worldId]?.nodes[r.nodeId]?.stars ?? 0) >= r.stars
     case 'world': return progress.worlds[r.worldId]?.crystal === true
     case 'days': return new Set(progress.daysPlayed).size >= r.days
-    case 'season': return progress.seasonId === r.seasonId && worldIds.length > 0 && worldIds.every((w) => progress.worlds[w]?.crystal === true)
+    case 'season': return (r.seasonId === '*' || progress.seasonId === r.seasonId) && worldIds.length > 0 && worldIds.every((w) => progress.worlds[w]?.crystal === true)
   }
 }
 

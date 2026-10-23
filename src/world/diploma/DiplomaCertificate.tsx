@@ -1,7 +1,7 @@
 /* The printable diploma (A4 landscape). Presentational: child, companion and the date it was earned.
    The screen prints only this sheet (see diploma.module.css). */
 import { Character, CompanionArt, Crystal, StarIcon } from '@/art'
-import { DIPLOMA_TEXT, renderTemplate, season1, templateContext } from '@/content'
+import { DIPLOMA_BODY_C2, DIPLOMA_TEXT, renderTemplate, season1, templateContext } from '@/content'
 import type { ChildProfile } from '@/types'
 import { worldHex } from '@/world/rewards/worldColors'
 import s from './diploma.module.css'
@@ -12,6 +12,8 @@ export interface DiplomaCertificateProps {
   date?: string | Date
   /** While the diploma is not earned: the eight crystals (true = won). The sheet shows in grey with its empty slots. */
   crystals?: boolean[]
+  /** The season won: the 2.º adventure ('c2') says what was learnt in 2.º. */
+  seasonId?: string
   className?: string
 }
 
@@ -22,7 +24,7 @@ export function diplomaDateLabel(date: string | Date): string {
   return Number.isNaN(d.getTime()) ? '' : DATE_FORMAT.format(d)
 }
 
-export function DiplomaCertificate({ child, date, crystals, className }: DiplomaCertificateProps) {
+export function DiplomaCertificate({ child, date, crystals, seasonId, className }: DiplomaCertificateProps) {
   const ctx = templateContext(child)
   const pending = crystals !== undefined && date === undefined
   const t = (text: string) => renderTemplate(text, ctx)
@@ -46,7 +48,7 @@ export function DiplomaCertificate({ child, date, crystals, className }: Diploma
 
         <p className={s.givenTo}>{t(DIPLOMA_TEXT.givenTo)}</p>
         <p className={s.name}>{ctx.childName}</p>
-        <p className={s.body}>{t(DIPLOMA_TEXT.body)}</p>
+        <p className={s.body}>{t(seasonId === 'c2' ? DIPLOMA_BODY_C2 : DIPLOMA_TEXT.body)}</p>
 
         {pending && crystals && (
           <div className={s.slots} aria-label={`${crystals.filter(Boolean).length} de ${crystals.length} cristales`}>

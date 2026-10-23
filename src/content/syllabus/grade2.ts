@@ -2,25 +2,25 @@
    adulto y un orden de enseñanza propio en ocho etapas y tres trimestres, en espiral. La ley fija el primer ciclo
    (1.º-2.º) sin reparto por curso (docs/curriculum/MATEMATICAS_PRIMARIA.md): números hasta 999, sumas y restas,
    monedas de 1 y 2 € y billetes, metro, kilo y litro, la hora, figuras y cuerpos, pictogramas y patrones. Las tablas
-   del 2, 3, 4, 5 y 10 entran como inicio de la multiplicación (práctica habitual, no ley). Las etapas de 2.º no van
-   ligadas a los mundos de la aventura, que siguen el temario de 3.º. Los números usan las destrezas «hasta 999» y el
-   dinero, euros enteros, sin céntimos. */
+   del 2, 3, 4, 5 y 10 entran como inicio de la multiplicación (práctica habitual, no ley). Cada etapa va con un mundo
+   de la aventura de 2.º (la temporada 'c2', src/content/c2): el mismo mapa con historias y paradas de 2.º. Los números
+   usan las destrezas «hasta 999» y el dinero, euros enteros, sin céntimos. */
 import { addSkill, compareSkill, geoSkill, lineSkill, moneySkill, orderSkill, placeSkill } from '@/engine/skills'
 import type { Syllabus, SyllabusStage } from './model'
 import { tableTopic, withStageTerms } from './helpers'
 
 export const GRADE2_STAGES: SyllabusStage[] = [
   // 1.er trimestre
-  { id: 'etapa-1', term: 1, topics: ['contar-saltos', 'descomponer-999', 'leer-escribir-999', 'suma-2d-sin-llevar', 'completar-10-100', 'monedas-billetes'] },
-  { id: 'etapa-2', term: 1, topics: ['comparar-ordenar-999', 'resta-2d-sin-llevar', 'prob-sumar', 'reloj-en-punto-media-cuarto', 'figuras', 'posicion'] },
-  { id: 'etapa-3', term: 1, topics: ['suma-2d-llevando', 'dobles-mitades', 'prob-restar', 'calendario', 'lineas'] },
+  { id: 'etapa-1', term: 1, worldId: 'w1', topics: ['contar-saltos', 'descomponer-999', 'leer-escribir-999', 'comparar-ordenar-999', 'monedas-billetes'] },
+  { id: 'etapa-2', term: 1, worldId: 'w2', topics: ['suma-2d-sin-llevar', 'completar-10-100', 'suma-2d-llevando', 'prob-sumar', 'reloj-en-punto-media-cuarto'] },
+  { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['figuras', 'lineas', 'posicion', 'series'] },
   // 2.º trimestre
-  { id: 'etapa-4', term: 2, topics: ['resta-2d-prestando', 'recta-999', 'igualdad', 'pagar-euros', 'medir-unidades'] },
-  { id: 'etapa-5', term: 2, topics: ['sumas-repetidas', 'tabla-2', 'tabla-10', 'sumar-decenas', 'regla'] },
-  { id: 'etapa-6', term: 2, topics: ['tabla-5', 'prob-multiplicar', 'sumar-precios-euros', 'cuerpos'] },
+  { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-2d-sin-llevar', 'resta-2d-prestando', 'prob-restar', 'igualdad', 'pagar-euros'] },
+  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['dobles-mitades', 'recta-999', 'calendario', 'medir-unidades', 'regla'] },
+  { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['pictogramas', 'sumar-decenas', 'sumar-precios-euros', 'cuerpos'] },
   // 3.er trimestre
-  { id: 'etapa-7', term: 3, topics: ['suma-3d', 'resta-3d', 'tabla-3', 'pictogramas'] },
-  { id: 'etapa-8', term: 3, topics: ['tabla-4', 'encuentra-error', 'series'] },
+  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['sumas-repetidas', 'tabla-2', 'tabla-10', 'tabla-5', 'prob-multiplicar'] },
+  { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['tabla-3', 'tabla-4', 'suma-3d', 'resta-3d', 'encuentra-error'] },
 ]
 
 export const GRADE2_SYLLABUS: Syllabus = withStageTerms({

@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMastery, listAttempts, updateProgress } from '@/data'
 import { syllabusForGrade } from '@/content/syllabus'
-import { getWorld } from '@/content'
+import { getWorld, seasonIdForGrade } from '@/content'
 import {
   describeError, errorReport, placementRuns, recallReport, syllabusReport, PLACEMENT_COUNT,
   type ErrorReport, type PlacementRun, type RecallReport, type SyllabusReport, type TopicState,
@@ -91,6 +91,9 @@ const STATE_TEXT: Record<TopicState, string> = {
 }
 
 export function TemarioCard({ report, childName }: { report: SyllabusReport; childName: string }) {
+  // The stage's world in the adventure of the course (2.º plays its own season on the same maps).
+  const stageId = report.current?.stage?.worldId
+  const stageWorld = stageId ? getWorld(stageId, seasonIdForGrade(report.course)) : undefined
   return (
     <section className={`${adult.card} ${adult.cardBlue}`} aria-labelledby="temario-title">
       <div className={adult.cardHead}>
@@ -105,7 +108,7 @@ export function TemarioCard({ report, childName }: { report: SyllabusReport; chi
       {report.current?.stage && (
         <p className={adult.muted}>
           Etapa {report.current.stage.number} de {report.current.stage.total} · {TERM_TEXT[report.current.stage.term]}
-          {report.current.stage.worldId && getWorld(report.current.stage.worldId) ? ` · en la aventura, ${getWorld(report.current.stage.worldId)!.name}` : ''}.
+          {stageWorld ? ` · en la aventura, ${stageWorld.name}` : ''}.
           Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas{report.course >= 3 ? ', fracciones' : ''} o figuras.
         </p>
       )}

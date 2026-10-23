@@ -1,15 +1,16 @@
 /* ChildHomeScreen (/play): the child's start in the direction C layout. A greeting, the subjects the adult enabled,
    the companion and Lumi with the horn of crystals, the next step of the adventure, the daily tiles and the world bar.
    Shows the sync state quietly and lets a family switch child. */
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { ChestArt, Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
 import {
-  crystalsOf, isWorldUnlocked, nextNode, season1, getNode, getWorld, renderTemplate, templateContext,
+  crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
+  templateContext,
 } from '@/content'
 import { DAILY_MINUTES, dueSkills } from '@/engine'
 import { currentTopic, syllabusForGrade } from '@/content/syllabus'
-import { useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
+import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
 import type { ProgressState, WorldDef } from '@/types'
@@ -36,8 +37,8 @@ function SyncPill() {
 }
 
 /** The world that must be finished before `world` opens (the one before it in the season). */
-function previousWorld(world: WorldDef): WorldDef | undefined {
-  return world.index > 1 ? season1.worlds[world.index - 2] : undefined
+function previousWorld(world: WorldDef, worlds: WorldDef[]): WorldDef | undefined {
+  return world.index > 1 ? worlds[world.index - 2] : undefined
 }
 
 export default function ChildHomeScreen() {
@@ -46,26 +47,35 @@ export default function ChildHomeScreen() {
   const progress = useProgress(child?.id)
   const mastery = useMastery(child?.id)
 
+  // The adventure follows the course: a 2.º child plays the 2.º season. switchSeason keeps a season half won.
+  useEffect(() => {
+    if (!child || !progress) return
+    const target = seasonIdForGrade(child.grade)
+    if (progress.seasonId === target || switchSeason(progress, target) === progress) return
+    void updateProgress(child.id, (p) => switchSeason(p, target)).catch(() => undefined)
+  }, [child, progress])
+
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
   if (!progress) return <Spinner />
 
   const ctx = templateContext(child)
+  const season = seasonOf(progress)
   const crystals = crystalsOf(progress)
   const crystalCount = crystals.filter(Boolean).length
-  const allCrystals = crystalCount === season1.worlds.length
+  const allCrystals = crystalCount === season.worlds.length
   const next = nextNode(progress)
-  const nextWorld = next ? getWorld(next.worldId) : undefined
-  const nextDef = next ? getNode(next.worldId, next.nodeId) : undefined
+  const nextWorld = next ? getWorld(next.worldId, season.id) : undefined
+  const nextDef = next ? getNode(next.worldId, next.nodeId, season.id) : undefined
   const due = mastery ? dueSkills(mastery, new Date(), 50).length : 0
   const available = progress.stars - progress.starsSpent
-  const unlockedWorlds = season1.worlds.filter((w) => isWorldUnlocked(progress, w.id))
+  const unlockedWorlds = season.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
   const sessionTopic = currentTopic(syllabusForGrade(child?.grade), mastery ?? {})?.name ?? null
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
-    : progress.diplomaEarnedAt ? '/play/diploma' : `/play/w/${season1.worlds[0].id}`
+    : progress.diplomaEarnedAt ? '/play/diploma' : `/play/w/${season.worlds[0].id}`
   const continueTitle = nextWorld && nextDef
     ? renderTemplate(nextDef.title, ctx)
     : progress.diplomaEarnedAt ? 'Tu diploma' : '¡Aventura completa!'
@@ -81,13 +91,13 @@ export default function ChildHomeScreen() {
       navigate(`/play/w/${world.id}`)
       return
     }
-    const before = previousWorld(world)
+    const before = previousWorld(world, season.worlds)
     toast(before ? `Este mundo se abre al conseguir el cristal del ${before.shortName}.` : 'Este mundo todavía está cerrado.')
   }
 
   return (
     <Screen className={s.screen}>
-      <WorldBackground id="home" vividness={0.45 + 0.55 * (crystalCount / season1.worlds.length)} />
+      <WorldBackground id="home" vividness={0.45 + 0.55 * (crystalCount / season.worlds.length)} />
 
       <header className={s.top}>
         <h1 className={s.hello}>
@@ -124,7 +134,7 @@ export default function ChildHomeScreen() {
               <LumiHorn crystals={crystals} size={80} animated />
               <div className={s.hornText}>
                 <span className={s.hornTitle}>Cuerno de Lumi</span>
-                <span className={s.hornCount}>{crystalCount} de {season1.worlds.length} cristales</span>
+                <span className={s.hornCount}>{crystalCount} de {season.worlds.length} cristales</span>
                 <Pill>
                   <StarIcon filled size={18} /> {available} {available === 1 ? 'estrella' : 'estrellas'}
                 </Pill>
@@ -182,7 +192,7 @@ export default function ChildHomeScreen() {
       </main>
 
       <footer className={s.worlds} aria-label="Mundos">
-        {season1.worlds.map((w) => (
+        {season.worlds.map((w) => (
           <WorldChip key={w.id} world={w} progress={progress} open={unlockedWorlds.includes(w)} currentWorldId={next?.worldId} onOpen={() => openWorld(w, true)} onLocked={() => openWorld(w, false)} />
         ))}
       </footer>

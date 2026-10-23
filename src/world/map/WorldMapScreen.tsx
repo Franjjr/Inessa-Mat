@@ -33,12 +33,13 @@ export default function WorldMapScreen() {
   const { worldId = '' } = useParams()
   const { child, loading } = useActiveChild()
   const progress = useProgress(child?.id)
-  const world = getWorld(worldId)
 
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
-  if (!world) return <Navigate to="/play" replace />
   if (!progress) return <Spinner />
+  // The world of the child's season: the 2.º adventure has its own stops on the same map.
+  const world = getWorld(worldId, progress.seasonId)
+  if (!world) return <Navigate to="/play" replace />
   if (!isWorldUnlocked(progress, world.id)) return <Navigate to="/play" replace />
   return <WorldMap world={world} child={child} progress={progress} />
 }

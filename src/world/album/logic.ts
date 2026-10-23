@@ -1,6 +1,6 @@
 /* Sticker album pages (pure): one page per world, one for the special stickers. A locked sticker shows how it is
    earned (describeStickerRule), never its picture. */
-import { describeStickerRule, getNode, getWorld, season1, stickers } from '@/content'
+import { describeStickerRule, getNode, getWorld, seasonOf, stickers } from '@/content'
 import { childText } from '@/world/rewards/childText'
 import type { ChildProfile, ProgressState, StickerDef, WorldDef } from '@/types'
 import { worldHex } from '@/world/rewards/worldColors'
@@ -34,14 +34,14 @@ export function albumPages(progress: ProgressState, child: ChildProfile | null):
     rule: childText(child, describeStickerRule(
       s.earnedBy,
       (worldId, nodeId) => {
-        const node = getNode(worldId, nodeId)
+        const node = getNode(worldId, nodeId, progress.seasonId)
         return node ? childText(child, node.title) : undefined
       },
-      (worldId) => getWorld(worldId)?.shortName,
+      (worldId) => getWorld(worldId, progress.seasonId)?.shortName,
     )),
   })
 
-  const pages: AlbumPage[] = season1.worlds.map((w: WorldDef) => ({
+  const pages: AlbumPage[] = seasonOf(progress).worlds.map((w: WorldDef) => ({
     id: w.id,
     title: childText(child, w.name),
     color: worldHex(w.id),

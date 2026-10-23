@@ -32,6 +32,11 @@ export const DIPLOMA_TEXT: { kicker: TemplateString; title: TemplateString; subt
   signature: 'Lumi, unicornio guardián',
 }
 
+/** The diploma body of the 2.º adventure (season 'c2'). */
+export const DIPLOMA_BODY_C2: TemplateString =
+  'por encontrar los 8 cristales mágicos de Numeria, contar hasta 999, sumar y restar llevando, empezar a multiplicar ' +
+  '{cg:como una auténtica maga|como un auténtico mago} y demostrar que es muy VALIENTE.'
+
 /** Words of the Gran Cofre screen. The prize itself is set by the adult in the adult area. */
 export const CHEST_TEXT: { locked: TemplateString; prompt: TemplateString; open: TemplateString } = {
   locked: 'Cada cristal te da una letra de la palabra secreta. Con los 8 cristales se abre el Gran Cofre.',

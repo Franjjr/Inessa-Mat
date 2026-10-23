@@ -1,10 +1,19 @@
-# content — Season 1 of Numeria
+# content — the adventures of Numeria
+
+Two seasons share the maps, the art and the world ids `w1`..`w8`: `s1` is the 3.º adventure (worlds/, stories/,
+lessons/, guardians.ts) and `c2` the 2.º one (`c2/`: worlds with the stops of `GRADE2_STAGES`, 24 stories, lessons,
+guardians `c2-wN-guardian`, the 2.º finale). The progress says which one a child plays (`ProgressState.seasonId`);
+every lookup takes it (`getWorld(id, seasonId)`, `getNode(…, seasonId)`, 's1' by default) and the progression
+functions read it from the progress. `seasonIdForGrade` picks it from the course and `switchSeason` starts the other
+adventure when the course changes (never in the middle of a season half won). Two stops of each 2.º world keep the
+node ids that the stickers name, so the album works in both.
 
 Data + pure functions only (no React, no I/O). Public entry: `@/content` (`src/content/index.ts`).
 
 ```
 index.ts          public API (contract signatures + extras)
-season.ts         season1 assembly + lookups (getWorld/getNode/getStory/getLesson/getGuardian)
+season.ts         seasons s1 and c2 + lookups (getWorld/getNode/getStory/getLesson/getGuardian, by season)
+c2/               the 2.º adventure (worlds, stories, lessons, guardians, finale)
 worlds/w1..w8.ts  WorldDef + nodes (dsl.ts builders, path.ts map layout)
 stories/*.ts      prologue, per-world arrival / mid / rescue, finale (dsl.ts builders)
 lessons/*.ts      LessonDef per world (dsl.ts builders)

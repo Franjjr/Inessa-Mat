@@ -11,10 +11,12 @@
                          world unlocked; the caller plays the rescue story.
    - Best stars are kept. The star CURRENCY only grows by the improvement over the previous best, so replaying a
      node can never farm stars.
-   - Stickers whose rule becomes true are added; lastNode and today's date (local) are recorded. */
+   - Stickers whose rule becomes true are added; lastNode and today's date (local) are recorded.
+   - Everything follows the season of the progress (ProgressState.seasonId: 's1' the 3.º adventure, 'c2' the 2.º one);
+     switchSeason starts the adventure of another school year. */
 import type { AccessoryDef, NodeProgress, ProgressState, WorldDef, WorldProgress } from '@/types'
 import { getAccessory } from './accessories'
-import { getNode, getWorld, guardianForWorld, nextWorldId, season1 } from './season'
+import { getNode, getSeason, getWorld, guardianForWorld, nextWorldId } from './season'
 import { stickerRuleMet, stickers } from './stickers'
 
 /** Stars recorded for finishing a story or a lesson node. */
@@ -22,9 +24,9 @@ export const COMPLETION_STARS = 3
 /** How many personal race records are kept per node (fastest first). */
 export const MAX_RECORDS = 5
 
-export function initialProgress(childId: string, now: Date = new Date()): ProgressState {
+export function initialProgress(childId: string, now: Date = new Date(), seasonId = 's1'): ProgressState {
   return {
-    childId, seasonId: 's1', worlds: { w1: { unlocked: true, nodes: {}, crystal: false } }, stars: 0, starsSpent: 0,
+    childId, seasonId, worlds: { w1: { unlocked: true, nodes: {}, crystal: false } }, stars: 0, starsSpent: 0,
     stickers: [], accessoriesOwned: [], chestOpened: false, daysPlayed: [], flags: {}, updatedAt: now.toISOString(),
   }
 }
@@ -38,16 +40,16 @@ export function localDay(now: Date): string {
 }
 
 export function isWorldUnlocked(progress: ProgressState, worldId: string): boolean {
-  const world = getWorld(worldId)
+  const world = getWorld(worldId, progress.seasonId)
   if (!world) return false
   if (world.index === 1) return true
   if (progress.worlds[worldId]?.unlocked) return true
-  const prev = season1.worlds[world.index - 2]
+  const prev = getSeason(progress.seasonId).worlds[world.index - 2]
   return progress.worlds[prev.id]?.crystal === true
 }
 
 export function isNodeUnlocked(progress: ProgressState, worldId: string, nodeId: string): boolean {
-  const world = getWorld(worldId)
+  const world = getWorld(worldId, progress.seasonId)
   if (!world) return false
   const i = world.nodes.findIndex((n) => n.id === nodeId)
   if (i < 0 || !isWorldUnlocked(progress, worldId)) return false
@@ -66,7 +68,7 @@ function frontierNode(progress: ProgressState, world: WorldDef): string {
     The current world is the one the child was last in if it is still unfinished, otherwise the furthest open
     world without its crystal (so a child who started further ahead keeps going forward). */
 export function nextNode(progress: ProgressState): { worldId: string; nodeId: string } | null {
-  const open = season1.worlds.filter((w) => isWorldUnlocked(progress, w.id) && !progress.worlds[w.id]?.crystal)
+  const open = getSeason(progress.seasonId).worlds.filter((w) => isWorldUnlocked(progress, w.id) && !progress.worlds[w.id]?.crystal)
   if (open.length === 0) return null
   const last = progress.lastNode ? open.find((w) => w.id === progress.lastNode!.worldId) : undefined
   const world = last ?? open[open.length - 1]
@@ -88,8 +90,8 @@ export function applyNodeResult(
   result: { stars: number; ms?: number; passed?: boolean; letter?: string },
   now: Date = new Date(),
 ): ProgressState {
-  const world = getWorld(worldId)
-  const node = getNode(worldId, nodeId)
+  const world = getWorld(worldId, progress.seasonId)
+  const node = getNode(worldId, nodeId, progress.seasonId)
   if (!world || !node) return progress
   const iso = now.toISOString()
   const stars = clampStars(result.stars)
@@ -136,9 +138,9 @@ export function applyNodeResult(
 
   if (node.kind === 'guardian' && passed) {
     wp.crystal = true
-    wp.letter = guardianForWorld(worldId)?.letter ?? result.letter
+    wp.letter = guardianForWorld(worldId, progress.seasonId)?.letter ?? result.letter
     if (!wp.completedAt) wp.completedAt = iso
-    const nextId = nextWorldId(worldId)
+    const nextId = nextWorldId(worldId, progress.seasonId)
     if (nextId) worlds[nextId] = openWorld(worlds[nextId])
   }
 
@@ -151,7 +153,7 @@ export function applyNodeResult(
     lastNode: { worldId, nodeId },
     updatedAt: iso,
   }
-  const worldIds = season1.worlds.map((w) => w.id)
+  const worldIds = getSeason(progress.seasonId).worlds.map((w) => w.id)
   if (!next.diplomaEarnedAt && worldIds.every((id) => next.worlds[id]?.crystal)) next.diplomaEarnedAt = iso
   const owned = new Set(progress.stickers)
   const won = stickers.filter((s) => !owned.has(s.id) && stickerRuleMet(s.earnedBy, next, worldIds)).map((s) => s.id)
@@ -174,10 +176,10 @@ export function startingWorldForGrade(grade?: number): string {
 
 /** Open every world up to and including `worldId` (adult/teacher setting or grade-based start). */
 export function unlockThroughWorld(progress: ProgressState, worldId: string, now: Date = new Date()): ProgressState {
-  const target = getWorld(worldId)
+  const target = getWorld(worldId, progress.seasonId)
   if (!target) return progress
   const worlds = { ...progress.worlds }
-  for (const w of season1.worlds) {
+  for (const w of getSeason(progress.seasonId).worlds) {
     if (w.index > target.index) break
     worlds[w.id] = openWorld(worlds[w.id])
   }
@@ -186,12 +188,33 @@ export function unlockThroughWorld(progress: ProgressState, worldId: string, now
 
 /** Crystals won per world, in season order (for LumiHorn). */
 export function crystalsOf(progress: ProgressState): boolean[] {
-  return season1.worlds.map((w) => progress.worlds[w.id]?.crystal === true)
+  return getSeason(progress.seasonId).worlds.map((w) => progress.worlds[w.id]?.crystal === true)
 }
 
 /** Secret-word letters won so far, in order; null where the crystal is still missing. */
 export function lettersOf(progress: ProgressState): (string | null)[] {
-  return season1.worlds.map((w) => (progress.worlds[w.id]?.crystal ? progress.worlds[w.id]?.letter ?? guardianForWorld(w.id)?.letter ?? null : null))
+  return getSeason(progress.seasonId).worlds.map((w) => (progress.worlds[w.id]?.crystal ? progress.worlds[w.id]?.letter ?? guardianForWorld(w.id, progress.seasonId)?.letter ?? null : null))
+}
+
+/**
+ * Starts the adventure of another school year (the course changed): a fresh map from world 1, keeping the stars,
+ * stickers, accessories and days played. A season half won (some crystals, not all) is kept until it is finished, so
+ * no child loses a crystal; the call then returns the progress unchanged.
+ */
+export function switchSeason(progress: ProgressState, seasonId: string, now: Date = new Date()): ProgressState {
+  if (progress.seasonId === seasonId || getSeason(seasonId).id !== seasonId) return progress
+  const crystals = crystalsOf(progress)
+  const won = crystals.filter(Boolean).length
+  if (won > 0 && won < crystals.length) return progress
+  return {
+    ...progress,
+    seasonId,
+    worlds: { w1: { unlocked: true, nodes: {}, crystal: false } },
+    lastNode: undefined,
+    chestOpened: false,
+    diplomaEarnedAt: undefined,
+    updatedAt: now.toISOString(),
+  }
 }
 
 /** Stars the child can spend right now. */

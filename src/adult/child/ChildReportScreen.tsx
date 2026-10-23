@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
 import { clearInkSamples, eraseChild, exportChildData, getChildSummary, getProgress, useChildren } from '@/data'
-import { season1 } from '@/content'
+import { season1, seasonOf } from '@/content'
 import type { ChildSummary, CompanionSpecies, ProgressState } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
@@ -126,7 +126,7 @@ export default function ChildReportScreen() {
   const share = async () => {
     setSharing(true)
     try {
-      const currentName = season1.worlds.find((w) => w.id === summary.currentWorld)?.name ?? null
+      const currentName = seasonOf(progress).worlds.find((w) => w.id === summary.currentWorld)?.name ?? null
       const blob = await renderSummaryPng({
         nickname: name,
         companionName: child?.companion.name ?? '',
@@ -143,9 +143,11 @@ export default function ChildReportScreen() {
     }
   }
 
-  const worldStates = season1.worlds.map((w, i) => {
+  // The names of the child's season: the 2.º adventure renames two worlds.
+  const season = seasonOf(progress)
+  const worldStates = season.worlds.map((w, i) => {
     const wp = progress.worlds[w.id]
-    const firstOpen = season1.worlds.find((x) => progress.worlds[x.id]?.unlocked && !progress.worlds[x.id]?.crystal)
+    const firstOpen = season.worlds.find((x) => progress.worlds[x.id]?.unlocked && !progress.worlds[x.id]?.crystal)
     if (wp?.crystal) return { id: w.id, index: i, name: w.name, state: 'done' as const }
     if (wp?.unlocked) return { id: w.id, index: i, name: w.name, state: firstOpen?.id === w.id ? ('current' as const) : ('open' as const) }
     return { id: w.id, index: i, name: w.name, state: 'locked' as const }

@@ -132,6 +132,13 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
      euros, km/m/cm, kg/g, l/ml, reloj digital y duraciones, ángulos, perímetro, **área en cuadraditos**, **ejes de
      simetría**, gráficos, moda y probabilidad. 5.º y 6.º usan el de 4.º hasta tener el suyo. Pendiente en 4.º: dividir
      entre dos cifras y sumar fracciones de igual denominador. En 3.º ya están multiplicar 3 × 1 y por 10, 100 y 1 000.
+   - **Hecho (octubre de 2026): la aventura de 2.º.** Una segunda temporada ('c2', `src/content/c2/`) en los mismos
+     mapas, con los mismos guardianes, cristales y la palabra VALIENTE: cada mundo lleva las paradas de su etapa de 2.º
+     (las etapas de 2.º se ordenaron por temas: grupos y números, sumas, figuras y series, restas, dobles y medidas,
+     gráficos y precios, primeras tablas, tablas del 3 y del 4), 24 historias propias, lecciones, guardianes y un final
+     y un diploma de 2.º. Dos mundos cambian de nombre: la Cueva de las Mariquitas y el Lago de los Dobles; el Castillo
+     es «de las Torres». El curso del niño elige la temporada; al cambiar de curso empieza la otra aventura, salvo si
+     tiene una a medias (con algún cristal pero no todos): entonces la termina primero.
 
 ## 9. Lo que necesitamos del dueño
 
