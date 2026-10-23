@@ -22,7 +22,8 @@ interface Built {
 interface Variant {
   id: string
   problem: BarProblemKind
-  build: (rng: Rng) => Built | null
+  /** `small`: the 2.º version (bar:mul:small), with groups of 2, 3, 4, 5 or 10 only. */
+  build: (rng: Rng, small: boolean) => Built | null
 }
 
 const cell = (id: string, name: string, row: number, kind: BarSlot['kind'], value: number | null): BarSlot =>
@@ -152,9 +153,9 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
   mul: [
     {
       id: 'groups-total', problem: 'share',
-      build: (rng) => tries(() => {
-        const n = randInt(rng, 3, 6)
-        const p = randInt(rng, 3, 9)
+      build: (rng, small) => tries(() => {
+        const n = small ? randInt(rng, 2, 5) : randInt(rng, 3, 6)
+        const p = small ? pick(rng, [2, 3, 4, 5, 10]) : randInt(rng, 3, 9)
         const s = stepOf('mul', n, p)
         if (!fine(s.result, [n, p])) return null
         return {
@@ -240,24 +241,24 @@ function difficultyOf(skill: BarSkillOp, steps: number): number {
  * A bar problem of the skill. `withBar` false is the second rung (the same story without the drawing).
  * Deterministic for a given rng.
  */
-export function genBarProblem(skill: BarSkillOp, rng: Rng, withBar = true): BarProblemExercise {
+export function genBarProblem(skill: BarSkillOp, rng: Rng, withBar = true, small = false): BarProblemExercise {
   const list = VARIANTS[skill]
   for (let attempt = 0; attempt < 60; attempt++) {
     const v = pick(rng, list)
-    const built = v.build(rng)
-    if (built) return makeBarProblem(skill, v, built, withBar)
+    const built = v.build(rng, small && skill === 'mul')
+    if (built) return makeBarProblem(skill, v, built, withBar, small && skill === 'mul')
   }
   throw new Error(`bars: no ${skill} problem could be built`)
 }
 
-function makeBarProblem(skill: BarSkillOp, v: Variant, built: Built, withBar: boolean): BarProblemExercise {
+function makeBarProblem(skill: BarSkillOp, v: Variant, built: Built, withBar: boolean, small: boolean): BarProblemExercise {
   const rows = Math.max(...built.bar.map((b) => b.row)) + 1
   const last = built.steps[built.steps.length - 1]
   const nums = built.steps.map((s) => `${s.a}.${s.b}`).join('-')
   return {
     id: `bar-problem:${v.id}:${nums}:${withBar ? 'bar' : 'plain'}`,
     kind: 'bar-problem',
-    skill: barSkill(skill),
+    skill: barSkill(skill, small),
     difficulty: difficultyOf(skill, built.steps.length),
     text: built.text,
     problem: v.problem,

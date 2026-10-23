@@ -14,6 +14,7 @@
    mental:dobles|mitades|completar10|completar100|completar1000|decenas|centenas|compensar           (cálculo mental)
    eq:flex                                                                                          (signo igual flexible)
    bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
+   bar:mul:small            the 2.º groups problem: groups of 2, 3, 4, 5 or 10 (the tables of 2.º)
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
    check:add|sub|div        comprobar (claim + the check operation)
    div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
@@ -93,7 +94,7 @@ export type ParsedSkill =
   | { type: 'line'; step: 10 | 100 | 1000; max?: 999 }
   | { type: 'mental'; family: MentalFamily }
   | { type: 'equation' }
-  | { type: 'bar'; op: BarSkillOp }
+  | { type: 'bar'; op: BarSkillOp; small?: true }
   | { type: 'hunt'; op: HuntOp }
   | { type: 'check'; op: CheckOp }
   | { type: 'clock-read'; step: 30 | 15 | 5 }
@@ -163,8 +164,9 @@ export function lineSkill(step: 10 | 100 | 1000, max?: 999): SkillKey {
 export function mentalSkill(family: MentalFamily): SkillKey {
   return `mental:${family}`
 }
-export function barSkill(op: BarSkillOp): SkillKey {
-  return `bar:${op}`
+/** `small` (only with mul): the 2.º groups problem, groups of 2, 3, 4, 5 or 10. */
+export function barSkill(op: BarSkillOp, small = false): SkillKey {
+  return small && op === 'mul' ? 'bar:mul:small' : `bar:${op}`
 }
 export function huntSkill(op: HuntOp): SkillKey {
   return `hunt:${op}`
@@ -267,6 +269,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'eq:flex') return { type: 'equation' }
   if ((m = key.match(/^div:3x1:(exact|rem)$/))) return { type: 'div3x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
+  if (key === 'bar:mul:small') return { type: 'bar', op: 'mul', small: true }
   if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
   if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
   if ((m = key.match(/^clock:read:(30|15|5)$/))) return { type: 'clock-read', step: Number(m[1]) as 30 | 15 | 5 }

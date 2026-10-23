@@ -166,3 +166,27 @@ describe('bar problems: grading', () => {
     expect(finalWrong.errorType).toBe('fact')
   })
 })
+
+describe('bar:mul:small (2.º)', () => {
+  it('uses only groups of 2, 3, 4, 5 or 10, at most 5 groups, and keeps its own skill', () => {
+    const rng = createRng(77)
+    for (let i = 0; i < 300; i++) {
+      const ex = genBarProblem('mul', rng, i % 2 === 0, true)
+      expect(ex.skill).toBe('bar:mul:small')
+      const [step] = ex.steps
+      expect([2, 3, 4, 5, 10]).toContain(step.b)
+      expect(step.a).toBeGreaterThanOrEqual(2)
+      expect(step.a).toBeLessThanOrEqual(5)
+      expect(ex.answer).toBe(step.a * step.b)
+    }
+  })
+
+  it('is generated from its skill key, and the generic bar:mul still reaches 6 to 9', () => {
+    const small = generate({ skills: ['bar:mul:small'] }, 40, { rng: createRng(5) }) as BarProblemExercise[]
+    expect(small.length).toBeGreaterThan(0)
+    for (const ex of small) expect([2, 3, 4, 5, 10]).toContain(ex.steps[0].b)
+    const rng = createRng(9)
+    const sizes = new Set(Array.from({ length: 200 }, () => genBarProblem('mul', rng).steps[0].b))
+    expect([...sizes].some((p) => p >= 6)).toBe(true)
+  })
+})
