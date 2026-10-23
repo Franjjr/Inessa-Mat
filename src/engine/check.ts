@@ -6,12 +6,28 @@
 import type {
   Answer, CheckResult, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, DoubleChainExercise,
   Exercise, FactDivExercise, FactFamilyExercise, FactMulExercise, MissingFactorExercise, SkipCountExercise,
-  WordProblemExercise,
+  WordProblemExercise, BarProblemExercise, ErrorHuntExercise, CheckCalcExercise,
 } from '@/types'
+import { checkBar } from './bars'
+import { checkCheckCalc, checkErrorHunt } from './bugs'
+import { climbProducts, divisionParts } from './divParts'
 import { digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
-import { FEEDBACK, praise, praiseFact } from './feedback'
+import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
+import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
+import { checkCalc } from './calc'
+import { checkNumeric } from './numeric'
+import { checkClock, expectedClock } from './clock'
+import { checkFractionAdd, checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
+import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
+import { checkMoney } from './money'
+import { checkMeasure } from './measure'
+import { checkChance, checkChart } from './data'
+import { checkPattern } from './patterns'
+import { checkMulParts } from './bigops'
+import { checkArea } from './geometry'
+import { checkPosition } from './position'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -258,8 +274,71 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
 
+/* Subtraction methods: the written steps. Marks in the column (pedir prestado arriba, me llevo una abajo) are graded
+   only where the child writes them: an empty mark is not wrong, a written one must match the step the method needs. */
+const SUB_STEP_FEEDBACK = {
+  borrowMark: (col: number) => `¡Casi! Revisa la cifra que has tachado en las ${columnName(col)}: al prestar, la vecina se queda con una menos.`,
+  carryMark: (col: number) => `¡Casi! Revisa la cifra de abajo de las ${columnName(col)}: le sumas 1 cuando la columna de la derecha se lleva.`,
+  partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
+  partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
+  lineWrong: (step: number, from: number, to: number) => `¡Casi! El salto ${step} va de ${from} hacia ${to}: cuenta hacia delante, sin pasarte.`,
+  lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
+  lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
+} as const
+
+/** Columns (units = 0) where a written subtraction mark does not match what the method needs at that point. */
+function markErrors(ex: ColumnSubExercise, answer: Extract<Answer, { type: 'digits' }>): number[] {
+  if (!answer.carries) return []
+  const expected = answer.method === 'carry' ? compensationSteps(ex.minuend, ex.subtrahend).marks : borrowMarks(ex.minuend, ex.subtrahend)
+  const wrong: number[] = []
+  for (let i = 1; i < expected.length; i++) {
+    const written = answer.carries[i]
+    if (!isNum(written)) continue
+    if (written !== expected[i]) wrong.push(i)
+  }
+  return wrong
+}
+
+function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckResult {
+  const expected = String(ex.answer)
+  const parts = subtrahendParts(ex.subtrahend)
+  const given = values.slice(0, parts.length).map((v) => (isNum(v) ? String(v) : '?')).join(' · ')
+  if (parts.some((_, k) => !isNum(values[k]))) return incomplete(given, expected)
+  let from = ex.minuend
+  for (let k = 0; k < parts.length; k++) {
+    const v = values[k] as number
+    if (v !== from - parts[k]) {
+      return { correct: false, given, expected, errorType: 'fact', feedback: SUB_STEP_FEEDBACK.partsWrong(k + 1, from, parts[k]) }
+    }
+    from = v
+  }
+  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.partsCorrect }
+}
+
+function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: number | null | undefined): CheckResult {
+  const expected = String(ex.answer)
+  const stops = lineStops(ex.subtrahend, ex.minuend)
+  const given = values.slice(0, stops.length).map((v) => (isNum(v) ? String(v) : '?')).join(' → ') + (isNum(total) ? ` = ${total}` : '')
+  if (stops.some((_, k) => !isNum(values[k])) || !isNum(total)) return incomplete(given, expected)
+  let at = ex.subtrahend
+  for (let k = 0; k < stops.length; k++) {
+    const v = values[k] as number
+    if (v <= at || v >= ex.minuend) {
+      return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineWrong(k + 1, at, ex.minuend) }
+    }
+    at = v
+  }
+  if (total !== ex.answer) return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineTotal }
+  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
+}
+
 function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
+  if (answer.type === 'steps') {
+    return answer.method === 'parts'
+      ? checkSubParts(ex, answer.values)
+      : checkSubLine(ex, answer.values, answer.total)
+  }
   const input = digitsFrom(answer)
   if (!input) return wrongShape(expected)
   const cols = digitCount(ex.minuend)
@@ -270,8 +349,12 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const { empty, extra, value } = columnPrecheck(input, ex.answer, cols)
   if (empty.length === len && input.digits.every((x) => x === null || x === undefined)) return incomplete('?', expected)
   if (empty.length) return incomplete(given, expected, empty)
-  // Any correct result is right, whatever borrowing method was used: borrow cells are scratch and never graded.
   if (!extra && value === ex.answer) {
+    const marks = answer.type === 'digits' ? markErrors(ex, answer) : []
+    if (marks.length) {
+      const msg = answer.type === 'digits' && answer.method === 'carry' ? SUB_STEP_FEEDBACK.carryMark : SUB_STEP_FEEDBACK.borrowMark
+      return { correct: false, given, expected, errorType: 'borrow-forgot', wrongColumns: marks, feedback: msg(marks[0]) }
+    }
     return { correct: true, given, expected, feedback: FEEDBACK.subCorrect(ex.borrowed.filter(Boolean).length, ex.id) }
   }
   const d = diagnoseSub(ex.minuend, ex.subtrahend, input.digits)
@@ -348,6 +431,64 @@ function checkDivision(ex: DivisionExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, feedback }
 }
 
+/* «Repartir por partes» and «Multiplicar hacia arriba»: the written steps. The total and the remainder count at the end;
+   a part that is written wrong is named (the step), never the right number. */
+const DIV_METHOD_FEEDBACK = {
+  partWrong: (step: number, partial: number, divisor: number) =>
+    `¡Casi! Revisa el paso ${step}: ¿cuántas veces cabe el ${divisor} en ${partial}?`,
+  partsIncomplete: 'Escribe el cociente de cada parte y después el total.',
+  partsTotal: 'Ya tienes bien las partes. Ahora suma sus cocientes: ese es el cociente.',
+  climbWrong: (row: number, divisor: number) => `¡Casi! Revisa la fila ${row}: ¿cuánto es ${divisor} por ${row}?`,
+  climbIncomplete: 'Sigue subiendo: escribe la siguiente fila hasta pasarte del dividendo.',
+  climbOver: 'Te has pasado: para en la primera fila que llega o pasa del dividendo.',
+  remainder: 'El cociente está bien: ahora revisa el resto.',
+}
+
+function checkDivisionParts(ex: DivisionExercise, answer: Extract<Answer, { type: 'division-parts' }>): CheckResult {
+  const steps = divisionParts(ex.dividend, ex.divisor)
+  const expected = showDivision(ex.quotient, ex.remainder)
+  const written = steps.map((_, k) => answer.parts[k] ?? null)
+  const given = written.map((v) => show(v)).join(' + ') + (answer.quotient === null ? '' : ` = ${answer.quotient}`)
+  if (written.some((v) => v === null) || answer.quotient === null) return incomplete(given, expected)
+  for (let k = 0; k < steps.length; k++) {
+    if (written[k] !== steps[k].quotient) {
+      return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.partWrong(k + 1, steps[k].partial, ex.divisor) }
+    }
+  }
+  const total = steps.reduce((sum, s) => sum + s.quotient, 0)
+  if (answer.quotient !== total) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
+  if (answer.remainder === null) return incomplete(given, expected)
+  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+}
+
+function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb' }>): CheckResult {
+  const products = climbProducts(ex.dividend, ex.divisor)
+  const stop = products.findIndex((p) => p >= ex.dividend)
+  const expected = showDivision(ex.quotient, ex.remainder)
+  const written = answer.products
+  const filled = written.map((v, k) => (v === null || v === undefined ? -1 : k)).filter((k) => k >= 0)
+  const given = written.filter((v) => v !== null && v !== undefined).join(' · ')
+  if (filled.length === 0) return incomplete('?', expected)
+  for (const k of filled) {
+    if (written[k] !== products[k]) {
+      return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.climbWrong(k + 1, ex.divisor) }
+    }
+  }
+  if (filled[filled.length - 1] > stop) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.climbOver }
+  if (!filled.includes(stop)) return incomplete(given, expected)
+  if (answer.remainder === null || answer.remainder === undefined) return incomplete(given, expected)
+  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+}
+
+/** A division may come as the galera answer, the parts or the climb, whatever method the view used. */
+function checkDivisionAny(ex: DivisionExercise, answer: Answer): CheckResult {
+  if (answer.type === 'division-parts') return checkDivisionParts(ex, answer)
+  if (answer.type === 'climb') return checkClimb(ex, answer)
+  return checkDivision(ex, answer)
+}
+
 // ---------------------------------------------------------------- word problems
 
 function opValue(op: WordProblemExercise['op'], a: number, b: number): number | null {
@@ -412,7 +553,40 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'column-add': return checkColumnAdd(exercise, answer)
     case 'column-sub': return checkColumnSub(exercise, answer)
     case 'column-mul': return checkColumnMul(exercise, answer)
-    case 'division': return checkDivision(exercise, answer)
+    case 'division': return checkDivisionAny(exercise, answer)
     case 'word-problem': return checkWord(exercise, answer)
+    case 'place-value':
+    case 'compare':
+    case 'order':
+    case 'round':
+    case 'number-line': return checkNumeric(exercise, answer)
+    case 'mental':
+    case 'equation': return checkCalc(exercise, answer) ?? wrongShape(expectedText(exercise))
+    case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
+    case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
+    case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
+    case 'clock-read':
+    case 'clock-set':
+    case 'time-convert':
+    case 'time-duration':
+    case 'calendar': return checkClock(exercise, answer) ?? wrongShape(expectedClock(exercise))
+    // fracciones and geometría (block E)
+    case 'fraction-shade': return checkFractionShade(exercise, answer)
+    case 'fraction-read': return checkFractionRead(exercise, answer)
+    case 'fraction-of': return checkFractionOf(exercise, answer)
+    case 'fraction-add': return checkFractionAdd(exercise, answer)
+    case 'fraction-equal': return checkFractionEqual(exercise, answer)
+    case 'shape-choice': return checkShapeChoice(exercise, answer)
+    case 'angle-tap': return checkAngleTap(exercise, answer)
+    case 'perimeter': return checkPerimeter(exercise, answer)
+    case 'shape-count': return checkShapeCount(exercise, answer)
+    case 'money': return checkMoney(exercise, answer)
+    case 'measure': return checkMeasure(exercise, answer)
+    case 'chart': return checkChart(exercise, answer)
+    case 'chance': return checkChance(exercise, answer)
+    case 'pattern': return checkPattern(exercise, answer)
+    case 'position': return checkPosition(exercise, answer)
+    case 'mul-parts': return checkMulParts(exercise, answer)
+    case 'area': return checkArea(exercise, answer)
   }
 }

@@ -3,12 +3,13 @@
 import type { LessonVisualId } from '@/types'
 import { SplitMultiplyVisual, ColumnMulVisual, FivePlusOneVisual, ArrayRotateVisual, GroupsVisual, SquareRhymeVisual } from './multiplication'
 import { CarryVisual, PlaceValueVisual } from './addition'
-import { BorrowVisual, SubCheckVisual, ZeroBorrowVisual } from './subtraction'
+import { BorrowVisual, SubCarryVisual, SubCheckVisual, SubLineVisual, SubPartsVisual, ZeroBorrowVisual } from './subtraction'
 import {
   DoubleChainVisual, EasyTablesVisual, EvenSixRhymeVisual, FiveSixSevenEightVisual, KnownFactsVisual,
   NineTrickVisual, PatternUnitsVisual,
 } from './tables'
 import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from './division'
+import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -23,6 +24,9 @@ export const LESSON_VISUALS: VisualRegistry = {
   borrow: BorrowVisual,
   'zero-borrow': ZeroBorrowVisual,
   'sub-check': SubCheckVisual,
+  'sub-carry': SubCarryVisual,
+  'sub-parts': SubPartsVisual,
+  'sub-line': SubLineVisual,
   'five-plus-one': FivePlusOneVisual,
   'even-six-rhyme': EvenSixRhymeVisual,
   'double-chain': DoubleChainVisual,
@@ -37,6 +41,9 @@ export const LESSON_VISUALS: VisualRegistry = {
   'fact-family': FactFamilyVisual,
   galera: GaleraVisual,
   'division-check': DivisionCheckVisual,
+  'bar-model': BarModelVisual,
+  'div-parts': DivPartsVisual,
+  'div-climb': DivClimbVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

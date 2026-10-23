@@ -89,7 +89,7 @@
   display: grid;
   place-items: center;
   touch-action: manipulation;
-  transition: transform var(--dur-fast) var(--ease-bounce);
+  transition: transform var(--dur-fast) var(--ease-out);
 }
 .die:disabled { cursor: default; opacity: .9; }
 .die:not(:disabled):active { transform: scale(.95); }

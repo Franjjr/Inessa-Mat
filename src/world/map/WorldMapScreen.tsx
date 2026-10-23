@@ -33,12 +33,13 @@ export default function WorldMapScreen() {
   const { worldId = '' } = useParams()
   const { child, loading } = useActiveChild()
   const progress = useProgress(child?.id)
-  const world = getWorld(worldId)
 
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
-  if (!world) return <Navigate to="/play" replace />
   if (!progress) return <Spinner />
+  // The world of the child's season: the 2.º adventure has its own stops on the same map.
+  const world = getWorld(worldId, progress.seasonId)
+  if (!world) return <Navigate to="/play" replace />
   if (!isWorldUnlocked(progress, world.id)) return <Navigate to="/play" replace />
   return <WorldMap world={world} child={child} progress={progress} />
 }
@@ -145,7 +146,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                 type="button"
                 ref={isCurrent ? currentRef : undefined}
                 className={`${s.node} ${isCurrent ? s.current : ''} ${locked ? s.locked : ''} ${done ? s.done : ''}`}
-                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%` }}
+                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%`, ['--x' as string]: node.pos.x }}
                 aria-label={`${label}${stateText}`}
                 aria-disabled={locked || undefined}
                 onClick={() => openNode(node, locked)}

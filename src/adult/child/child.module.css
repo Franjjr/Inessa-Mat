@@ -30,3 +30,25 @@
 .heroTop { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-4); }
 .errorCount { flex: none; min-width: 84px; text-align: center; padding: 4px 10px; border-radius: var(--r-pill); background: var(--c-surface); border: 2px solid var(--sticker-line); font-family: var(--font-display); font-weight: 700; color: var(--c-ink); }
 .statRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--sp-3); }
+
+/* Lo que aprende: temario by block, mistakes by kind, tests. */
+.blockList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-2); }
+.block { border-radius: var(--r-lg); background: var(--c-surface); padding: 0 var(--sp-4); }
+.blockHead { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); min-height: var(--tap-min); padding: var(--sp-2) 0; cursor: pointer; }
+.blockCount { flex: none; font-size: var(--fs-sm); font-weight: 700; color: var(--c-ink-soft); }
+.meter { flex: 1 0 100%; height: 8px; border-radius: var(--r-pill); background: var(--c-surface-2); overflow: hidden; }
+.meterFill { display: block; height: 100%; border-radius: inherit; background: var(--c-success); }
+.topicList { list-style: none; margin: 0; padding: 0 0 var(--sp-3); display: flex; flex-direction: column; }
+.topicItem { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px var(--sp-3); padding: var(--sp-2) 0; border-top: 2px solid var(--c-surface-2); }
+.topicName { flex: 1 1 14em; min-width: 0; font-size: var(--fs-sm); color: var(--c-ink); }
+.topicState { flex: none; font-size: var(--fs-sm); font-weight: 700; }
+.state-dominado { color: #14532d; }
+.state-trabajando { color: #7c2d12; }
+.state-sin-empezar { color: var(--c-ink-mute); font-weight: 400; }
+.state-pendiente { color: var(--c-ink-mute); font-weight: 400; font-style: italic; }
+.mistake { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) 0; border-bottom: 2px solid var(--c-surface-2); }
+.mistake:last-child { border-bottom: 0; }
+.mistakeHead { display: flex; align-items: center; gap: var(--sp-3); }
+.mistakeTitle { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--c-ink); }
+.advice { margin: 0; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--c-green-soft); font-size: var(--fs-sm); line-height: 1.45; color: var(--c-ink); }
+.subsection { padding-top: var(--sp-4); border-top: 2px solid var(--c-surface-2); }

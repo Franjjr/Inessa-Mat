@@ -1,9 +1,11 @@
 /* Privacy policy for families and schools (Spanish). Kept to the minimum, and only states facts verified in the code. */
 import { AdultPage } from '../shared/AdultPage'
+import { useDocumentTitle } from '@/app/useDocumentTitle'
 import s from './legal.module.css'
 import adult from '../shared/adult.module.css'
 
 export default function PrivacyScreen() {
+  useDocumentTitle('Privacidad y datos · Repasitos')
   return (
     <AdultPage title="Privacidad y datos" back="/">
       <article className={s.doc} aria-labelledby="privacy-doc-title">
@@ -66,6 +68,10 @@ export default function PrivacyScreen() {
           supabase.com/legal/dpa. Las reglas de acceso se aplican en la propia base de datos, de modo que cada familia o colegio
           solo puede ver sus propios perfiles.
         </p>
+        <p>
+          La web y nuestro servidor de voz están alojados en Vercel, que actúa como proveedor de alojamiento. La voz usa además Microsoft
+          Azure (ver el apartado 10).
+        </p>
 
         <h2>7. Cuánto tiempo los guardamos</h2>
         <p>
@@ -92,10 +98,11 @@ export default function PrivacyScreen() {
 
         <h2>10. Lectura en voz alta</h2>
         <p>
-          Repasitos puede leer las instrucciones en voz alta usando las voces del propio dispositivo, y elige siempre que puede una voz que funciona
-          sin conexión. En iPad y iPhone las voces son del propio sistema. En algunos navegadores, como Chrome, ciertas voces envían el texto a
-          los servidores del fabricante del navegador para pronunciarlo. Ese texto son las instrucciones del juego y puede incluir el apodo del
-          niño. Si lo prefieres, puedes apagar la voz en la zona de adultos, en Ajustes.
+          Repasitos lee las instrucciones en voz alta. Para que la voz suene natural, el texto de cada frase se envía a nuestro servidor, que lo
+          convierte en audio con el servicio de voz de Microsoft Azure (centro de datos en la Unión Europea, Irlanda), que actúa como
+          proveedor. Ese texto son las instrucciones y frases del juego y puede incluir el apodo del niño; no se envía ningún otro dato.
+          El audio se guarda en el dispositivo para no tener que pedirlo otra vez. Si no hay conexión, se usan las voces del propio
+          dispositivo. Si lo prefieres, en la zona de adultos, en Ajustes, puedes elegir una voz del dispositivo o apagar la voz.
         </p>
 
         <h2>11. Cambios en esta política</h2>

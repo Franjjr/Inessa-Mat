@@ -1,0 +1,239 @@
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.story {
+  position: relative;
+  background: var(--c-surface);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-1);
+  padding: var(--sp-5);
+  border-left: 8px solid var(--c-magic);
+}
+.text {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  color: var(--c-ink);
+  padding-right: 120px;
+}
+.speak {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.speak:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+
+/* The bar card: rows of pieces (one row per bar), the numbers to place below. */
+.barCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  background: var(--c-surface-2);
+  border-radius: var(--r-xl);
+  padding: var(--sp-4);
+}
+.hint {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.seg,
+.count,
+.total {
+  min-height: calc(var(--tap-min) + 12px);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: var(--r-md);
+  border: 3px solid var(--c-primary);
+  background: var(--c-primary-soft);
+  color: var(--c-ink);
+  padding: 4px 8px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.seg { flex: 1 1 96px; }
+.count { flex: 0 0 auto; min-width: 88px; background: var(--c-gold-soft); border-color: var(--c-gold); }
+.total {
+  align-self: stretch;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: var(--c-surface);
+  border-style: dashed;
+  border-color: var(--c-ink-soft);
+}
+.segUnknown { background: var(--c-surface); border-style: dashed; border-color: var(--c-gold); }
+.segName,
+.countName,
+.totalName {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+  line-height: 1.1;
+}
+.segValue {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-ink);
+  min-height: 1em;
+}
+.totalValue {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+}
+/* A piece that takes a number: a big target (tap or drop). */
+.target,
+.targetCount,
+.targetTotal {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.target .segValue:empty::after,
+.targetCount .segValue:empty::after { content: '· · ·'; color: var(--c-ink-mute); }
+.filled { background: var(--c-success-soft); border-color: var(--c-success); }
+.target:focus-visible,
+.targetCount:focus-visible,
+.targetTotal:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  min-height: calc(var(--tap-min) + 12px);
+}
+.done {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-success);
+}
+.chip {
+  min-width: calc(var(--tap-min) + 16px);
+  min-height: calc(var(--tap-min) + 16px);
+  padding: 0 var(--sp-4);
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  cursor: grab;
+  box-shadow: var(--shadow-press);
+  touch-action: none;
+  user-select: none;
+}
+.chip:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+.chipOn { border-color: var(--c-primary); background: var(--c-primary-soft); }
+.chipDrag { opacity: .55; }
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+.opsTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+.opButtons {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+}
+.opBtn {
+  min-height: calc(var(--tap-min) + 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 3px solid var(--c-line);
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-press);
+  touch-action: manipulation;
+}
+.opBtn:active { transform: scale(.96); }
+.opBtn:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
+.opOn { border-color: var(--c-primary); background: var(--c-primary-soft); }
+.opSign { font-size: var(--fs-xl); line-height: 1; color: var(--c-primary-strong); }
+
+.answer {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+.answerLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  min-width: 9ch;
+}
+.unit {
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+.guide {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+}
+
+.compact .story { padding: var(--sp-3) var(--sp-4); }
+
+@media (max-width: 480px) {
+  .opButtons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .text { padding-right: 0; }
+  .speak { position: static; margin-top: var(--sp-2); }
+  .seg { flex-basis: 84px; }
+}

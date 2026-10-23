@@ -189,7 +189,7 @@ describe('dashboards & privacy', () => {
   it('summarises the seeded demo child (fact grid, minutes, accuracy without recognition errors)', async () => {
     const { childId } = await seedDemo()
     const s = await getChildSummary(childId)
-    expect(s.nickname).toBe('Inessa')
+    expect(s.nickname).toBe('Lía')
     expect(s.companionSpecies).toBe('cat')
     expect(s.factGrid).toHaveLength(10)
     expect(s.factGrid[1][4]).toBe(5) // 2×5 mastered
@@ -211,7 +211,7 @@ describe('dashboards & privacy', () => {
     expect(blob.type).toBe('application/json')
     const doc = JSON.parse(await blob.text())
     expect(doc.format).toBe('numeria-child-export')
-    expect(doc.child.nickname).toBe('Inessa')
+    expect(doc.child.nickname).toBe('Lía')
     expect(doc.progress.childId).toBe(childId)
     expect(doc.attempts.length).toBeGreaterThan(50)
     expect(doc.sessions.length).toBe(6)

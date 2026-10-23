@@ -1,5 +1,6 @@
 /* Per-child learning settings. Sound, music and voice live in Settings (they are device-level habits). */
 import { useState } from 'react'
+import { DIV_METHODS, SUB_METHODS, TABLE_METHODS, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
 import { updateChild } from '@/data'
 import type { ChildProfile, ChildSettings } from '@/types'
 import { toast } from '@/ui'
@@ -10,7 +11,12 @@ import s from './child.module.css'
 
 export function ChildSettingsCard({ child }: { child: ChildProfile }) {
   const [error, setError] = useState<string | null>(null)
-  const settings = child.settings
+  const settings = {
+    ...child.settings,
+    subMethod: normaliseSubMethod(child.settings.subMethod),
+    divMethod: normaliseDivMethod(child.settings.divMethod),
+    tableMethod: normaliseTableMethod(child.settings.tableMethod),
+  }
 
   const change = async (patch: Partial<ChildSettings>) => {
     setError(null)
@@ -95,6 +101,66 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
               onClick={() => void change({ inputPreference: value })}
             >
               {text}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={adult.stack}>
+        <span className={adult.label} id="sub-method-label">Método favorito para restar</span>
+        <p className={adult.hint}>Las restas de la app usan este método. El niño puede cambiarlo en su lección «Cuatro caminos para restar».</p>
+        <div className={s.segGroup} role="radiogroup" aria-labelledby="sub-method-label">
+          {SUB_METHODS.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.subMethod === m.id}
+              className={adult.segment}
+              title={m.summary}
+              onClick={() => void change({ subMethod: m.id })}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={adult.stack}>
+        <span className={adult.label} id="div-method-label">Método favorito para dividir</span>
+        <p className={adult.hint}>Las divisiones de la app usan este método. El niño puede cambiarlo en su lección «Cuatro caminos para dividir».</p>
+        <div className={s.segGroup} role="radiogroup" aria-labelledby="div-method-label">
+          {DIV_METHODS.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.divMethod === m.id}
+              className={adult.segment}
+              title={m.summary}
+              onClick={() => void change({ divMethod: m.id })}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={adult.stack}>
+        <span className={adult.label} id="table-trick-label">Truco favorito para las tablas</span>
+        <p className={adult.hint}>Si el truco sirve para el hecho, es lo primero que se le recuerda en la pista. Si no se elige ninguno, la app decide.</p>
+        <div className={s.segGroup} role="radiogroup" aria-labelledby="table-trick-label">
+          {TABLE_METHODS.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={settings.tableMethod === m.id}
+              className={adult.segment}
+              title={m.summary}
+              onClick={() => void change({ tableMethod: m.id })}
+            >
+              {m.label}
             </button>
           ))}
         </div>

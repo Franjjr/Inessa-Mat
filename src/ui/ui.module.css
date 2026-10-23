@@ -91,7 +91,7 @@
   padding: var(--sp-6);
   width: min(640px, 100%);
   max-height: calc(100dvh - 48px); overflow: auto;
-  animation: popIn var(--dur-med) var(--ease-bounce);
+  animation: popIn var(--dur-med) var(--ease-out);
 }
 .modalTitle { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-xl); color: var(--c-primary-strong); margin-bottom: var(--sp-3); }
 
@@ -102,7 +102,7 @@
   padding: var(--sp-3) var(--sp-5);
   font-family: var(--font-display); font-weight: 600;
   box-shadow: 3px 4px 0 var(--c-yellow);
-  animation: popIn var(--dur-med) var(--ease-bounce);
+  animation: popIn var(--dur-med) var(--ease-out);
 }
 
 .pill {

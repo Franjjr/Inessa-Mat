@@ -38,11 +38,11 @@
   cursor: pointer;
   padding: 0;
   touch-action: manipulation;
-  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-bounce);
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
 .slot:active { transform: scale(.92); }
-.slot.on { border: 0; background: #fff; box-shadow: var(--shadow-press); animation: pop var(--dur-med) var(--ease-bounce); }
+.slot.on { border: 0; background: #fff; box-shadow: var(--shadow-press); animation: pop var(--dur-med) var(--ease-out); }
 .slot:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
 
 .count {
@@ -67,7 +67,8 @@
   cursor: pointer;
   touch-action: manipulation;
 }
-.go:disabled { background: var(--c-line); color: var(--c-ink-mute); box-shadow: none; cursor: default; }
+/* Disabled: ink-mute on surface-2 is 5.2:1 (AA); the outline keeps the button shape without the shadow. */
+.go:disabled { background: var(--c-surface-2); color: var(--c-ink-mute); box-shadow: inset 0 0 0 2px var(--c-line); cursor: default; }
 
 @keyframes pop {
   from { transform: scale(.85); }

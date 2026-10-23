@@ -5,7 +5,7 @@ import type { AnswerInputPreference } from '@/types'
 import { listInkSamples, updateChild, useActiveChild } from '@/data'
 import { InkContext, LearningStore, getSharedRecognizer, loadRecognizer, type InkContextValue, type Recognizer } from './context'
 import { DoubtPrompt } from './DoubtPrompt'
-import { detectTouchDevice, forgetPenSeen, persistPenSeen, trackPenEvent, readPenSeen, resolveInputMode } from './policy'
+import { detectPhone, detectTouchDevice, forgetPenSeen, persistPenSeen, trackPenEvent, readPenSeen, resolveInputMode } from './policy'
 
 export interface InkProviderProps {
   children: ReactNode
@@ -99,7 +99,8 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
   const noteKeyboard = useCallback(() => setKeyboardUsed(true), [])
 
   const [isTouchDevice] = useState(detectTouchDevice)
-  const mode = resolveInputMode({ preference, penSeen, isTouchDevice, keyboardUsed })
+  const [isPhone] = useState(detectPhone)
+  const mode = resolveInputMode({ preference, penSeen, isTouchDevice, keyboardUsed, isPhone })
 
   const bigCells = settings?.bigCells ?? false
   const handedness = settings?.handedness ?? 'right'

@@ -19,6 +19,7 @@ export const w4Arrival = story('w4-arrival', 'Un bloque de hielo', [
     say('lumi', 'Para ayudar a Nieve hay que RESTAR. Y su chocolate caliente derretirá el hielo.', 'talk'),
     say('polarbear', '¡Eso es! Ayúdame, {child}, y te daré el cristal celeste.', 'happy'),
     say('companion', '¡Que sea rápido, porfa! ¡Se me está congelando la nariz!', 'worried'),
+    say('lumi', 'En lo alto hay un refugio con tienda. ¡Allí se paga con euros y céntimos!', 'happy'),
   ]),
 ])
 

@@ -9,27 +9,111 @@
    div:2x1:exact|rem|long
    concept:groups|array|commutative|share|family|placevalue
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
+   num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
+   <key>:999            numbers up to 999 (2.º): num:place:*, num:compare, num:order, num:line:10|100, add:3d:cK
+   mental:dobles|mitades|completar10|completar100|completar1000|decenas|centenas|compensar           (cálculo mental)
+   eq:flex                                                                                          (signo igual flexible)
+   bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
+   hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
+   check:add|sub|div        comprobar (claim + the check operation)
+   div:3x1:exact|rem        3-digit dividend ÷ 1-digit divisor
+   clock:read:30|15|5   reloj de agujas: leer (30 = en punto y media, 15 = cuartos, 5 = cada 5 minutos)
+   clock:set:30|5       reloj de agujas: poner la hora (30 = cuartos, 5 = cada 5 minutos)
+   clock:convert:day    reloj digital de 24 h ↔ frase con mañana, tarde o noche
+   time:end | time:elapsed   duraciones: hora de llegada, o minutos que pasan (recta de horas)
+   time:units | cal:weekday | cal:month   unidades de tiempo, días de la semana, días de un mes
+   frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
+   frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
+   frac:add | frac:sub        adding and subtracting fractions with the same denominator (4.º)
+   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
+                              geometry (block E, geometría): see src/engine/geometry.ts
+   money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
+   money:pay:e | money:add:e   whole euros, no céntimos (2.º)
+   chart:pict|pict:x|bars|mode   gráficos: pictogram (an icon is 1, or 2/5/10), bar chart, moda (src/engine/data.ts)
+   prob:chance              seguro, posible o imposible
+   pattern:shapes|numbers|predict   series: next figure, missing number, a term further on (src/engine/patterns.ts)
+   pos:relative|next|route  posición en una cuadrícula y recorridos (src/engine/position.ts)
+   mul:3x1:c0|c1            3-digit × 1-digit in columns, without / with carries (4.º, src/engine/bigops.ts)
+   div:4x1:exact|rem        4-digit dividend ÷ 1-digit divisor (4.º)
+   div:3x2:exact|rem        2- or 3-digit dividend ÷ 2-digit divisor, quotient of 1 or 2 digits (4.º)
+   mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
+   measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
+   measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
+   measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
 */
-import type { DivisionExercise, ExerciseKind, SkillKey } from '@/types'
+import type {
+  BarOp, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode, SkillKey,
+} from '@/types'
+
+/* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
+export const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12] as const
+export type FractionDenominator = (typeof FRACTION_DENOMINATORS)[number]
+export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare' | 'add' | 'sub'
+export type GeoOp =
+  | 'poly:name' | 'poly:sides' | 'line:type' | 'line:rel' | 'angle:type' | 'angle:tap' | 'circle'
+  | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter' | 'area' | 'symmetry'
+export const GEO_OPS: GeoOp[] = [
+  'poly:name', 'poly:sides', 'line:type', 'line:rel', 'angle:type', 'angle:tap', 'circle',
+  'solid:name', 'solid:roll', 'solid:faces', 'perimeter', 'area', 'symmetry',
+]
 
 export type DivisionVariant = DivisionExercise['variant']
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
 export type WordOp = 'add' | 'sub' | 'mul' | 'div'
+export type BarSkillOp = BarOp | 'two'
+export type HuntOp = 'add' | 'sub' | 'mul'
+export type CheckOp = 'add' | 'sub' | 'div'
 
 export const CONCEPTS: ConceptName[] = ['groups', 'array', 'commutative', 'share', 'family', 'placevalue']
 export const WORD_OPS: WordOp[] = ['add', 'sub', 'mul', 'div']
+export const BAR_SKILL_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two']
+export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
+export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
+export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
+export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
+export const ROUND_TARGETS = [10, 100] as const
+export const LINE_STEPS = [10, 100, 1000] as const
 
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
   | { type: 'div'; p: number; d: number; q: number }
   | { type: 'skip'; n: number }
-  | { type: 'add'; digits: 2 | 3 | 4; carries: number }
+  | { type: 'add'; digits: 2 | 3 | 4; carries: number; max?: 999 }
   | { type: 'sub'; digits: 2 | 3 | 4; borrows: number | null; zero: boolean }
   | { type: 'mul2x1'; carry: boolean }
   | { type: 'div2x1'; variant: DivisionVariant }
+  | { type: 'div3x1'; variant: 'exact' | 'rem' }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
+  | { type: 'place'; mode: PlaceMode; max?: 999 }
+  | { type: 'compare'; max?: 999 }
+  | { type: 'order'; max?: 999 }
+  | { type: 'round'; to: 10 | 100 | 1000 }
+  | { type: 'line'; step: 10 | 100 | 1000; max?: 999 }
+  | { type: 'mental'; family: MentalFamily }
+  | { type: 'equation' }
+  | { type: 'bar'; op: BarSkillOp }
+  | { type: 'hunt'; op: HuntOp }
+  | { type: 'check'; op: CheckOp }
+  | { type: 'clock-read'; step: 30 | 15 | 5 }
+  | { type: 'clock-set'; step: 30 | 5 }
+  | { type: 'clock-convert' }
+  | { type: 'time-duration'; ask: 'end' | 'elapsed' }
+  | { type: 'calendar'; topic: 'units' | 'weekday' | 'month' }
+  | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
+  | { type: 'fraction'; op: 'equal' | 'compare' | 'add' | 'sub' }
+  | { type: 'geo'; op: GeoOp }
+  | { type: 'money'; mode: MoneyMode; whole?: true }
+  | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
+  | { type: 'mul3x1'; carry: boolean }
+  | { type: 'div4x1'; variant: 'exact' | 'rem' }
+  | { type: 'div3x2'; variant: 'exact' | 'rem' }
+  | { type: 'mulParts'; digits: 2 | 3 }
+  | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
+  | { type: 'chance' }
+  | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
+  | { type: 'position'; variant: 'relative' | 'next' | 'route' }
 
 // ---------------------------------------------------------------- builders
 
@@ -42,8 +126,9 @@ export function divSkill(dividend: number, divisor: number): SkillKey {
 export function skipSkill(n: number): SkillKey {
   return `skip:${n}`
 }
-export function addSkill(digits: number, carries: number): SkillKey {
-  return `add:${digits}d:c${carries}`
+/** `max` 999: the sum stays below 1 000 (2.º). */
+export function addSkill(digits: number, carries: number, max?: 999): SkillKey {
+  return `add:${digits}d:c${carries}${max ? `:${max}` : ''}`
 }
 export function subSkill(digits: number, borrows: number, zero = false): SkillKey {
   return zero ? `sub:${digits}d:z` : `sub:${digits}d:b${borrows}`
@@ -59,6 +144,65 @@ export function conceptSkill(name: ConceptName): SkillKey {
 }
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
+}
+export function placeSkill(mode: PlaceMode, max?: 999): SkillKey {
+  return `num:place:${mode}${max ? `:${max}` : ''}`
+}
+export function compareSkill(max?: 999): SkillKey {
+  return max ? `num:compare:${max}` : 'num:compare'
+}
+export function orderSkill(max?: 999): SkillKey {
+  return max ? `num:order:${max}` : 'num:order'
+}
+export function roundSkill(to: 10 | 100 | 1000): SkillKey {
+  return `num:round:${to}`
+}
+export function lineSkill(step: 10 | 100 | 1000, max?: 999): SkillKey {
+  return `num:line:${step}${max ? `:${max}` : ''}`
+}
+export function mentalSkill(family: MentalFamily): SkillKey {
+  return `mental:${family}`
+}
+export function barSkill(op: BarSkillOp): SkillKey {
+  return `bar:${op}`
+}
+export function huntSkill(op: HuntOp): SkillKey {
+  return `hunt:${op}`
+}
+export function checkSkill(op: CheckOp): SkillKey {
+  return `check:${op}`
+}
+export function div3x1Skill(variant: 'exact' | 'rem'): SkillKey {
+  return `div:3x1:${variant}`
+}
+export function clockReadSkill(step: 30 | 15 | 5): SkillKey {
+  return `clock:read:${step}`
+}
+export function clockSetSkill(step: 30 | 5): SkillKey {
+  return `clock:set:${step}`
+}
+export function clockConvertSkill(): SkillKey {
+  return 'clock:convert:day'
+}
+export function timeDurationSkill(ask: 'end' | 'elapsed'): SkillKey {
+  return ask === 'end' ? 'time:end' : 'time:elapsed'
+}
+export function calendarSkill(topic: 'units' | 'weekday' | 'month'): SkillKey {
+  return topic === 'units' ? 'time:units' : topic === 'weekday' ? 'cal:weekday' : 'cal:month'
+}
+/** frac:shade|read|name|of with a denominator; frac:equal, frac:compare, frac:add and frac:sub without one. */
+export function fractionSkill(op: FractionOp, d?: number): SkillKey {
+  return op === 'equal' || op === 'compare' || op === 'add' || op === 'sub' ? `frac:${op}` : `frac:${op}:${d}`
+}
+export function geoSkill(op: GeoOp): SkillKey {
+  return `geo:${op}`
+}
+/** `whole`: prices in whole euros, no céntimos (only pay and add). */
+export function moneySkill(mode: MoneyMode, whole = false): SkillKey {
+  return whole ? `money:${mode}:e` : `money:${mode}`
+}
+export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension): SkillKey {
+  return `measure:${mode}:${dimension}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -85,9 +229,10 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     const n = Number(m[1])
     return n >= 2 && n <= 10 ? { type: 'skip', n } : null
   }
-  if ((m = key.match(/^add:([234])d:c(\d)$/))) {
+  if ((m = key.match(/^add:([234])d:c(\d)(:999)?$/))) {
     const digits = Number(m[1]) as 2 | 3 | 4
     const carries = Number(m[2])
+    if (m[3]) return digits === 3 && carries <= 2 ? { type: 'add', digits, carries, max: 999 } : null
     return carries <= MAX_CARRIES[digits] ? { type: 'add', digits, carries } : null
   }
   if ((m = key.match(/^sub:([234])d:(b(\d)|z)$/))) {
@@ -97,14 +242,88 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return borrows <= digits - 1 ? { type: 'sub', digits, borrows, zero: false } : null
   }
   if ((m = key.match(/^mul:2x1:c([01])$/))) return { type: 'mul2x1', carry: m[1] === '1' }
+  if ((m = key.match(/^mul:3x1:c([01])$/))) return { type: 'mul3x1', carry: m[1] === '1' }
+  if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
+  if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
   if ((m = key.match(/^concept:(\w+)$/))) {
     const name = m[1] as ConceptName
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
+  if ((m = key.match(/^num:place:(blocks|expanded|words)(:999)?$/))) return { type: 'place', mode: m[1] as PlaceMode, ...(m[2] ? { max: 999 as const } : {}) }
+  if (key === 'num:compare') return { type: 'compare' }
+  if (key === 'num:order') return { type: 'order' }
+  if (key === 'num:compare:999') return { type: 'compare', max: 999 }
+  if (key === 'num:order:999') return { type: 'order', max: 999 }
+  if ((m = key.match(/^num:round:(10|100|1000)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 | 1000 }
+  if ((m = key.match(/^num:line:(10|100|1000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 }
+  if ((m = key.match(/^num:line:(10|100):999$/))) return { type: 'line', step: Number(m[1]) as 10 | 100, max: 999 }
+  if ((m = key.match(/^mental:(\w+)$/))) {
+    const family = m[1] as MentalFamily
+    return MENTAL_FAMILIES.includes(family) ? { type: 'mental', family } : null
+  }
+  if (key === 'eq:flex') return { type: 'equation' }
+  if ((m = key.match(/^div:3x1:(exact|rem)$/))) return { type: 'div3x1', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
+  if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
+  if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
+  if ((m = key.match(/^clock:read:(30|15|5)$/))) return { type: 'clock-read', step: Number(m[1]) as 30 | 15 | 5 }
+  if ((m = key.match(/^clock:set:(30|5)$/))) return { type: 'clock-set', step: Number(m[1]) as 30 | 5 }
+  if (key === 'clock:convert:day') return { type: 'clock-convert' }
+  if ((m = key.match(/^time:(end|elapsed)$/))) return { type: 'time-duration', ask: m[1] as 'end' | 'elapsed' }
+  if (key === 'time:units') return { type: 'calendar', topic: 'units' }
+  if (key === 'cal:weekday') return { type: 'calendar', topic: 'weekday' }
+  if (key === 'cal:month') return { type: 'calendar', topic: 'month' }
+  if ((m = key.match(/^frac:(shade|read|name|of):(\d+)$/))) {
+    const d = Number(m[2])
+    return (FRACTION_DENOMINATORS as readonly number[]).includes(d) ? { type: 'fraction', op: m[1] as 'shade' | 'read' | 'name' | 'of', d } : null
+  }
+  if ((m = key.match(/^frac:(equal|compare|add|sub)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' | 'add' | 'sub' }
+  if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
+  if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
+  if ((m = key.match(/^money:(pay|add):e$/))) return { type: 'money', mode: m[1] as MoneyMode, whole: true }
+  if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)$/))) {
+    return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension }
+  }
+  if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
+  if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
+  if (key === 'measure:estimate') return { type: 'measure', mode: 'estimate', dimension: null }
+  if ((m = key.match(/^chart:(pict|pict:x|bars|mode)$/))) return { type: 'chart', variant: m[1] as 'pict' | 'pict:x' | 'bars' | 'mode' }
+  if (key === 'prob:chance') return { type: 'chance' }
+  if ((m = key.match(/^pattern:(shapes|numbers|predict)$/))) return { type: 'pattern', variant: m[1] as 'shapes' | 'numbers' | 'predict' }
+  if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
   return null
 }
+
+/** Skill keys practised by one of the fraction and geometry kinds (free play, and the universe of a selector). */
+export function blockSkillsOf(kind: ExerciseKind): SkillKey[] {
+  switch (kind) {
+    case 'fraction-shade': return FRACTION_DENOMINATORS.map((d) => fractionSkill('shade', d))
+    case 'fraction-read': return FRACTION_DENOMINATORS.map((d) => fractionSkill('read', d))
+    case 'fraction-of': return FRACTION_DENOMINATORS.map((d) => fractionSkill('of', d))
+    case 'fraction-equal': return [fractionSkill('equal')]
+    case 'shape-choice': return [
+      ...FRACTION_DENOMINATORS.map((d) => fractionSkill('name', d)), fractionSkill('compare'),
+      ...GEO_OPS.filter((op) => !['poly:sides', 'angle:tap', 'perimeter', 'area'].includes(op)).map(geoSkill),
+    ]
+    case 'angle-tap': return [geoSkill('angle:tap')]
+    case 'perimeter': return [geoSkill('perimeter')]
+    case 'shape-count': return [geoSkill('poly:sides')]
+    case 'area': return [geoSkill('area')]
+    case 'fraction-add': return [fractionSkill('add'), fractionSkill('sub')]
+    default: return []
+  }
+}
+
+/** Cálculo mental skills (the warm-up of the daily session takes them). */
+export function isMentalSkill(key: SkillKey): boolean {
+  return parseSkill(key)?.type === 'mental'
+}
+
+/** Skills whose exercises are judged as one short answer (not in columns): the kinds added for 3.º numbers and mental. */
+export const NUMERIC_KINDS: ExerciseKind[] = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation']
 
 export function isValidSkill(key: SkillKey): boolean {
   return parseSkill(key) !== null
@@ -146,6 +365,44 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'sub': return ['column-sub', 'word-problem']
     case 'mul2x1': return ['column-mul', 'word-problem']
     case 'div2x1': return ['division', 'word-problem']
+    case 'div3x1': return ['division']
+    case 'mul3x1': return ['column-mul']
+    case 'div4x1': return ['division']
+    case 'div3x2': return ['division']
+    case 'mulParts': return ['mul-parts']
+    case 'bar': return ['bar-problem']
+    case 'hunt': return ['error-hunt']
+    case 'check': return ['check-calc']
+    case 'clock-read': return ['clock-read']
+    case 'clock-set': return ['clock-set']
+    case 'clock-convert': return ['time-convert']
+    case 'time-duration': return ['time-duration']
+    case 'calendar': return ['calendar']
+    case 'fraction':
+      switch (p.op) {
+        case 'shade': return ['fraction-shade']
+        case 'read': return ['fraction-read']
+        case 'name': return ['shape-choice']
+        case 'of': return ['fraction-of']
+        case 'equal': return ['fraction-equal']
+        case 'compare': return ['shape-choice']
+        case 'add': case 'sub': return ['fraction-add']
+      }
+      break
+    case 'geo':
+      switch (p.op) {
+        case 'poly:sides': return ['shape-count']
+        case 'angle:tap': return ['angle-tap']
+        case 'perimeter': return ['perimeter']
+        case 'area': return ['area']
+        default: return ['shape-choice']
+      }
+    case 'money': return ['money']
+    case 'measure': return ['measure']
+    case 'chart': return ['chart']
+    case 'chance': return ['chance']
+    case 'pattern': return ['pattern']
+    case 'position': return ['position']
     case 'concept':
       switch (p.name) {
         case 'groups': return ['groups']
@@ -157,6 +414,13 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
       }
       break
     case 'word': return ['word-problem']
+    case 'place': return ['place-value']
+    case 'compare': return ['compare']
+    case 'order': return ['order']
+    case 'round': return ['round']
+    case 'line': return ['number-line']
+    case 'mental': return ['mental']
+    case 'equation': return ['equation']
   }
   /* c8 ignore next */
   return []

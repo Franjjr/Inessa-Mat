@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ActivityRunner, LessonPlayer } from '@/activities'
 import {
-  applyNodeResult, FINALE_STORY_ID, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
+  applyNodeResult, finaleStoryId, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
   newStickers, COMPLETION_STARS,
 } from '@/content'
 import { starsFor } from '@/engine'
@@ -43,13 +43,16 @@ type Phase =
 export default function NodeScreen() {
   const { worldId = '', nodeId = '' } = useParams()
   const { child, loading } = useActiveChild()
-  const world = getWorld(worldId)
-  const node = getNode(worldId, nodeId)
+  const progress = useProgress(child?.id)
 
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
+  if (!progress) return <Spinner />
+  // The node of the child's season: the 2.º adventure has its own stops on the same map.
+  const world = getWorld(worldId, progress.seasonId)
+  const node = getNode(worldId, nodeId, progress.seasonId)
   if (!world || !node) return <Navigate to="/play" replace />
-  return <NodeRunner key={`${world.id}/${node.id}`} world={world} node={node} child={child} />
+  return <NodeRunner key={`${progress.seasonId}/${world.id}/${node.id}`} world={world} node={node} child={child} />
 }
 
 function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; child: ChildProfile }) {
@@ -204,7 +207,7 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       const stickers = newStickers(before, after)
       const reward = rewardPhase({ kind: 'crystal', stars, letter: earnedLetter, stickers })
       const finale: Phase = world.index === 8
-        ? { name: 'story', storyId: FINALE_STORY_ID, then: rewardPhase({ kind: 'season', stars, letter: earnedLetter, stickers }) }
+        ? { name: 'story', storyId: finaleStoryId(after.seasonId), then: rewardPhase({ kind: 'season', stars, letter: earnedLetter, stickers }) }
         : reward
       setPhase({ name: 'story', storyId: rescueStory, then: finale })
     } catch {

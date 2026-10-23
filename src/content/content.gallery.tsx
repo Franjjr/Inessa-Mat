@@ -24,6 +24,7 @@ const CHAR_NAME: Record<CharacterId, string> = {
 const ACTIVITY_EMOJI: Record<ActivityKind, string> = {
   facts: '✏️', race: '⏱️', missing: '❓', wheel: '🎡', necklace: '📿', chain: '🔗', family: '🔺', maze: '🌀', pixel: '🎨',
   memory: '🃏', bubbles: '🫧', groups: '🍄', array: '🌸', column: '🧮', division: '🏠', share: '🧺', word: '📜', board: '🎲',
+  exercises: '🧩',
 }
 
 function nodeEmoji(n: NodeDef, w: WorldDef): string {

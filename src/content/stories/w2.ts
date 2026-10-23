@@ -19,6 +19,7 @@ export const w2Arrival = story('w2-arrival', 'El puente de piedras mágicas', [
     say('lumi', 'Son sumas de números grandes, {child}. Pero tenemos trucos para eso.', 'happy'),
     say('frog', 'Suma bien y te daré el cristal azul. La burbuja traerá a {pet} a la orilla.', 'happy'),
     say('companion', '¡Mientras, yo floto aquí sin prisa! ¡Qué vistas tan bonitas!', 'happy'),
+    say('lumi', 'Junto al río hay un embarcadero con un reloj enorme. ¡Las barcas salen a su hora!', 'happy'),
   ]),
 ])
 

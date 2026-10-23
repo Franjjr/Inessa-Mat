@@ -62,7 +62,7 @@
   height: 14px;
   border-radius: 50%;
   background: var(--c-line);
-  transition: background var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-bounce);
+  transition: background var(--dur-med) var(--ease-out), transform var(--dur-med) var(--ease-out);
 }
 
 .dotDone { background: var(--guardian, var(--c-primary)); }

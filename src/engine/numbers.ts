@@ -23,10 +23,12 @@ export function maxCarries(digits: number): number {
 
 /**
  * Two addends: the first has exactly `digits` digits, the second `secondDigits` (digits or digits-1), with exactly
- * `carries` columns producing a carry.
+ * `carries` columns producing a carry. `capped`: no carry out of the top column, so the sum keeps `digits` digits.
  */
-export function genAddOperands(rng: Rng, digits: number, carries: number, secondDigits = digits): [number, number] | null {
-  const carryable = carryableColumns(digits).filter((c) => secondDigits === digits || c < secondDigits || digits < 4)
+export function genAddOperands(rng: Rng, digits: number, carries: number, secondDigits = digits, capped = false): [number, number] | null {
+  // capped: the sum keeps `digits` digits (no carry out of the top column), as in 2.º sums up to 999.
+  const columns = capped ? range(0, digits - 2) : carryableColumns(digits)
+  const carryable = columns.filter((c) => secondDigits === digits || c < secondDigits || digits < 4)
   if (carries > carryable.length || carries < 0) return null
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     const set = new Set(shuffle(rng, carryable).slice(0, carries))

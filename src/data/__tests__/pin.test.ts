@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { hasAdultPin, setAdultPin, verifyAdultPin, clearAdultPin, DataError } from '@/data'
+import { hasAdultPin, setAdultPin, verifyAdultPin, clearAdultPin, readAdultGateLock, writeAdultGateLock, DataError } from '@/data'
 import { toDataError } from '../errors'
-import { META, getMeta } from '../meta'
-import { sha256, sha256Sync, toHex } from '../sha256'
+import { META, getMeta, setMeta } from '../meta'
+import { sha256, sha256Sync, toBase64, toHex } from '../sha256'
 import { resetAll } from './helpers'
 
 beforeEach(async () => {
@@ -50,12 +50,44 @@ describe('adult PIN', () => {
     expect(a?.hash).not.toBe(b?.hash)
   })
 
-  it('works without crypto.subtle (plain-http LAN dev on an iPad)', async () => {
+  it('uses PBKDF2-SHA256 with 600 000 iterations (format v2)', async () => {
+    await setAdultPin('2468')
+    const rec = await getMeta<{ v: number; kdf: string; iterations: number }>(META.adultPin)
+    expect(rec).toMatchObject({ v: 2, kdf: 'pbkdf2-sha256', iterations: 600_000 })
+  })
+
+  it('without crypto.subtle (plain-http LAN dev) it refuses to store a new PIN', async () => {
     vi.spyOn(globalThis.crypto, 'subtle', 'get').mockReturnValue(undefined as unknown as SubtleCrypto)
-    await setAdultPin('9876')
-    expect(await verifyAdultPin('9876')).toBe(true)
+    await expect(setAdultPin('9876')).rejects.toThrow('HTTPS')
     vi.restoreAllMocks()
-    expect(await verifyAdultPin('9876')).toBe(true) // same hash with subtle
+    expect(await hasAdultPin()).toBe(false)
+  })
+
+  it('verifies a legacy v1 PIN and rewrites it as v2 on the first correct entry', async () => {
+    const salt = new Uint8Array(16).fill(7)
+    let block = new Uint8Array([...salt, ...enc('4321')])
+    for (let i = 0; i < 1024; i++) {
+      const d = sha256Sync(block)
+      block = new Uint8Array(d.length + salt.length)
+      block.set(d)
+      block.set(salt, d.length)
+    }
+    await setMeta(META.adultPin, { v: 1, salt: toBase64(salt), hash: toHex(block.subarray(0, 32)), iterations: 1024, createdAt: '2026-01-01T00:00:00.000Z' })
+
+    expect(await verifyAdultPin('4322')).toBe(false)
+    expect(await getMeta<{ v: number }>(META.adultPin)).toMatchObject({ v: 1 }) // a wrong PIN does not rewrite it
+    expect(await verifyAdultPin('4321')).toBe(true)
+    expect(await getMeta<{ v: number }>(META.adultPin)).toMatchObject({ v: 2 })
+    expect(await verifyAdultPin('4321')).toBe(true)
+    expect(await verifyAdultPin('4322')).toBe(false)
+  })
+
+  it('keeps the gate lock in IndexedDB as well', async () => {
+    expect(await readAdultGateLock()).toBeNull()
+    await writeAdultGateLock({ failures: 3, lockedUntil: 0 })
+    expect(await readAdultGateLock()).toEqual({ failures: 3, lockedUntil: 0 })
+    await writeAdultGateLock({ failures: 0, lockedUntil: 0 })
+    expect(await readAdultGateLock()).toBeNull()
   })
 
   it('validates the PIN format and can be cleared', async () => {

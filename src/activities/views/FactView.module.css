@@ -20,7 +20,7 @@
   text-align: center;
   color: var(--c-success);
   background: var(--c-success-soft);
-  animation: reveal var(--dur-med) var(--ease-bounce);
+  animation: reveal var(--dur-med) var(--ease-out);
 }
 
 .answerRevealed {

@@ -1,4 +1,5 @@
 import type { GrammaticalGender, ID, ISODate } from './common'
+import type { DivMethod, SubMethod, TableMethod } from './exercise'
 
 /** The 8 companion animals a child can pick during setup. Art lives in src/art/companions. */
 export type CompanionSpecies =
@@ -48,6 +49,8 @@ export interface ChildSettings {
   music: boolean
   /** Lumi reads instructions aloud (Web Speech API). Stories are meant to be read by the child; a "listen" button stays available. */
   voice: boolean
+  /** Stories are read aloud by Lumi (true) or the child reads them (false; a «Escuchar» button stays available). */
+  storyVoice: boolean
   /** Allow timed activities (race). Parents can disable time pressure entirely. */
   timedActivities: boolean
   handedness: 'right' | 'left'
@@ -55,6 +58,12 @@ export interface ChildSettings {
   bigCells: boolean
   /** Subjects the adult has enabled for this child (adult area). The child only sees these. */
   subjects: SubjectId[]
+  /** Favourite subtraction method: the column/parts/line exercises use it. Chosen by the child in the lesson, editable by the adult. */
+  subMethod: SubMethod
+  /** Favourite division method: the division exercises use it. Chosen by the child in «Cuatro caminos para dividir», editable by the adult. */
+  divMethod: DivMethod
+  /** Favourite trick for the tables (null = none chosen yet). Chosen in «Los trucos de Lumi», editable by the adult. */
+  tableMethod: TableMethod | null
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
@@ -63,10 +72,14 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   sound: true,
   music: true,
   voice: true,
+  storyVoice: true,
   timedActivities: true,
   handedness: 'right',
   bigCells: false,
   subjects: ['math'],
+  subMethod: 'borrow',
+  divMethod: 'galera',
+  tableMethod: null,
 }
 
 export interface ChildProfile {

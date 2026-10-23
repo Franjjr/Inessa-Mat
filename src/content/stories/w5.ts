@@ -19,6 +19,7 @@ export const w5Arrival = story('w5-arrival', '¡Achís de tinta!', [
     say('octopus', 'Si me ayudas, {child}, limpiaré a {pet} con agua del lago.', 'talk'),
     say('octopus', '¡Y el cristal violeta será tuyo!', 'happy'),
     say('companion', '¡Sí, por favor! ¡Ahora mismo parezco una mora gigante!', 'worried'),
+    say('lumi', 'En el muelle del lago tendremos que medir con la regla y leer el reloj de cinco en cinco minutos.', 'happy'),
   ]),
 ])
 

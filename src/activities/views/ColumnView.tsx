@@ -1,9 +1,13 @@
 /* Exercise view "column": column addition, column subtraction and 2-digit × 1-digit multiplication written in the
-   Spanish column layout. The result is written UNITS FIRST (right to left, focus follows the order). Carries (suma,
-   multiplication) and borrow marks (resta) sit above the columns: they help the child but are never graded. */
+   Spanish column layout. The result is written UNITS FIRST (right to left, focus follows the order).
+   Addition and multiplication carries are never graded. Subtraction steps are graded where the child writes them:
+   - 'borrow' (pedir prestado arriba): the lender's new top digit goes small above it; the +10 appears above the
+     column that received the ten once that step is right.
+   - 'carry' (me llevo una abajo): the +1 for the next column goes small under its subtrahend digit.
+   An empty step is never wrong; a written step must match what the method needs. */
 import { useMemo, useState, type ReactNode } from 'react'
-import type { Answer, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, ExerciseViewProps } from '@/types'
-import { toDigits } from '@/engine'
+import type { Answer, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, ExerciseViewProps, SubMethod } from '@/types'
+import { analyzeSub, borrowMarks, compensationSteps, hintsFor, toDigits } from '@/engine'
 import { CellGroup, DigitCell } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
@@ -27,7 +31,7 @@ interface Layout {
   op: '+' | '−' | '×'
   /** Number of result columns (units = column 0). */
   cols: number
-  /** Optional cells above the columns: carries (add, mul) or borrow marks (sub). Never graded. */
+  /** Optional cells beside the columns: carries (add, mul) or written steps (sub). Never graded for add and mul. */
   auxKind: 'carry' | 'borrow'
 }
 
@@ -44,7 +48,7 @@ function layoutOf(ex: ColEx): Layout {
 }
 
 export default function ColumnView(props: ColumnViewProps) {
-  const { exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, proof } = props
+  const { exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, proof, method } = props
   if (exercise.kind !== 'column-add' && exercise.kind !== 'column-sub' && exercise.kind !== 'column-mul') return null
   return (
     <ColumnRound
@@ -56,6 +60,7 @@ export default function ColumnView(props: ColumnViewProps) {
       showFeedback={showFeedback}
       compact={compact}
       proof={proof}
+      method={method}
     />
   )
 }
@@ -68,15 +73,39 @@ interface RoundProps {
   showFeedback: boolean
   compact?: boolean
   proof?: boolean
+  method?: SubMethod
 }
 
-function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, proof }: RoundProps) {
+function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, proof, method }: RoundProps) {
   const host = useActivityHost()
   const layout = useMemo(() => layoutOf(ex), [ex])
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
+  const subMethod: 'borrow' | 'carry' = ex.kind === 'column-sub' && method === 'carry' ? 'carry' : 'borrow'
+  const hints = useMemo(() => hintsFor(ex, ex.kind === 'column-sub' ? subMethod : undefined), [ex, subMethod])
+  const flow = useAnswerFlow(ex, {
+    onAnswered,
+    showFeedback,
+    allowHints,
+    hints,
+    method: ex.kind === 'column-sub' ? subMethod : undefined,
+  })
   const { cols, rows, op, auxKind } = layout
   const [res, setRes] = useState<(number | null)[]>(() => Array.from({ length: cols }, () => null))
   const [aux, setAux] = useState<(number | null)[]>(() => Array.from({ length: cols }, () => null))
+
+  /** Subtraction: the steps the method expects (written marks) and the columns that receive a ten. */
+  const steps = useMemo(() => {
+    if (ex.kind !== 'column-sub') return null
+    if (subMethod === 'carry') return { marks: compensationSteps(ex.minuend, ex.subtrahend).marks, receivers: null as boolean[] | null }
+    return { marks: borrowMarks(ex.minuend, ex.subtrahend), receivers: analyzeSub(ex.minuend, ex.subtrahend).borrowed }
+  }, [ex, subMethod])
+
+  /** «Pedir prestado»: the +10 shows above a column once the step that lends it to that column is written right. */
+  const giftOn = (i: number) => {
+    if (!steps || subMethod !== 'borrow' || !steps.receivers?.[i]) return false
+    const lender = i + 1
+    const want = steps.marks[lender]
+    return want !== null && aux[lender] === want
+  }
 
   // Focus order: units result, then the optional cell above the next column, then its result, and so on.
   const order = useMemo(() => {
@@ -97,7 +126,12 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
 
   const check = () => {
     if (!res.some((v) => v !== null)) return
-    const answer: Answer = { type: 'digits', digits: res.slice(), ...(auxKind === 'carry' ? { carries: aux.slice() } : {}) }
+    const answer: Answer = {
+      type: 'digits',
+      digits: res.slice(),
+      carries: aux.slice(),
+      ...(ex.kind === 'column-sub' ? { method: subMethod } : {}),
+    }
     const c = flow.submit(answer)
     if (c.correct) celebrate('small')
   }
@@ -107,23 +141,39 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const cells: ReactNode[] = []
   let row = 1
   const hasAux = cols > 1
-  if (hasAux) {
-    for (let i = 1; i < cols; i++) {
-      cells.push(
-        <div key={`ax${i}`} className={s.cellSlot} style={{ gridRow: row, gridColumn: colOf(i) }}>
-          <DigitCell
-            cellId={`x${i}`}
-            variant="carry"
-            size="sm"
-            place={placeOf(i)}
-            value={aux[i]}
-            onChange={(d) => setAux((prev) => prev.map((v, k) => (k === i ? d : v)))}
-            ariaLabel={auxKind === 'carry' ? `llevada de ${PLACE_NAMES[i]} (opcional)` : `marca de ${PLACE_NAMES[i]} (opcional)`}
-            showClear
-          />
+  const auxCells = (at: number): ReactNode[] => {
+    const out: ReactNode[] = []
+    const first = subMethod === 'borrow' && ex.kind === 'column-sub' ? 0 : 1
+    for (let i = first; i < cols; i++) {
+      const isMark = i >= 1
+      const label = ex.kind === 'column-sub' && subMethod === 'carry'
+        ? `compensación de ${PLACE_NAMES[i]} (opcional)`
+        : `marca de ${PLACE_NAMES[i]} (opcional)`
+      out.push(
+        <div key={`ax${i}-${at}`} className={`${s.cellSlot} ${s.auxSlot}`} style={{ gridRow: at, gridColumn: colOf(i) }}>
+          {giftOn(i) && <span className={s.gift} aria-hidden>+10</span>}
+          {isMark && (
+            <DigitCell
+              cellId={`x${i}`}
+              variant="carry"
+              size="sm"
+              place={placeOf(i)}
+              value={aux[i]}
+              onChange={(d) => setAux((prev) => prev.map((v, k) => (k === i ? d : v)))}
+              ariaLabel={ex.kind === 'column-add' || ex.kind === 'column-mul' ? `llevada de ${PLACE_NAMES[i]} (opcional)` : label}
+              showClear
+            />
+          )}
         </div>,
       )
     }
+    return out
+  }
+  // Borrow marks sit above the minuend; the carry (compensation) marks sit under the subtrahend, before the line.
+  const auxAbove = hasAux && (auxKind === 'carry' || subMethod === 'borrow')
+  const auxBelow = hasAux && ex.kind === 'column-sub' && subMethod === 'carry'
+  if (auxAbove) {
+    cells.push(...auxCells(row))
     row += 1
   }
   if (guided) {
@@ -154,6 +204,10 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     }
     row += 1
   })
+  if (auxBelow) {
+    cells.push(...auxCells(row))
+    row += 1
+  }
   cells.push(
     <div key="line" className={s.line} style={{ gridRow: row, gridColumn: `1 / ${cols + 2}` }} aria-hidden />,
   )
@@ -179,7 +233,9 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const prompt = ex.kind === 'column-add'
     ? 'Suma en columna. Escribe el resultado empezando por las unidades.'
     : ex.kind === 'column-sub'
-      ? 'Resta en columna. Empieza por las unidades, la casa azul.'
+      ? subMethod === 'carry'
+        ? 'Resta en columna con «me llevo una». Empieza por las unidades.'
+        : 'Resta en columna. Empieza por las unidades, la casa azul.'
       : 'Multiplicación en columna. Empieza por las unidades.'
 
   const magic = proof && ex.kind === 'column-sub' && allRight

@@ -34,7 +34,7 @@
 .toggle[aria-pressed='true'] { background: var(--c-primary-soft); }
 
 .toggleWrap { position: relative; display: inline-flex; }
-.nudge { animation: nudge 900ms var(--ease-bounce) 2; border-color: var(--c-primary); }
+.nudge { animation: nudge 900ms var(--ease-out) 2; border-color: var(--c-primary); }
 @keyframes nudge {
   0%, 100% { transform: scale(1); }
   40% { transform: scale(1.18) rotate(-6deg); }

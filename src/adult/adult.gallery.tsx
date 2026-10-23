@@ -5,6 +5,37 @@ import { FactHeatmap, FactLegend } from './shared/FactHeatmap'
 import { NumberPad, PinDots } from './shared/NumberPad'
 import { SwitchRow } from './child/SwitchRow'
 import { averageGrid } from './shared/heatmap'
+import { MistakesCard, TemarioCard, TestsCard } from './child/LearningCards'
+import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
+import { errorReport, newMastery, placementRuns, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
+import type { AttemptRecord, ErrorType, MasteryMap } from '@/types'
+
+const NOW = new Date('2026-10-22T10:00:00.000Z')
+const ago = (days: number, ms = 0) => new Date(NOW.getTime() - days * 86_400_000 + ms).toISOString()
+
+function sampleMastery(syllabus = GRADE3_SYLLABUS): MasteryMap {
+  const topics = teachingOrder(syllabus).filter((t) => t.status === 'disponible' && t.skills.length > 0)
+  const map: MasteryMap = {}
+  topics.slice(0, 9).forEach((t) => t.skills.forEach((s) => { map[s] = { ...newMastery(s, NOW), box: 3 } }))
+  topics[9].skills.slice(0, 2).forEach((s) => { map[s] = { ...newMastery(s, NOW), box: 2 } })
+  return map
+}
+
+function sampleAttempts(): AttemptRecord[] {
+  const out: AttemptRecord[] = []
+  const add = (createdAt: string, correct: boolean, errorType: ErrorType | null, over: Partial<AttemptRecord> = {}) => out.push({
+    id: `g${out.length}`, childId: 'g', sessionId: 's', skill: 'mul:6x7', kind: 'fact-mul', correct, given: '', expected: '',
+    ms: 3000, inputMode: 'keypad', hintsUsed: 0, errorType, context: {}, createdAt, ...over,
+  })
+  const recent: [ErrorType, number][] = [['carry-forgot', 5], ['carry-wrong', 2], ['fact', 4], ['clock-hour', 1]]
+  recent.forEach(([t, k]) => { for (let i = 0; i < k; i++) add(ago(2 + i), false, t) })
+  for (let i = 0; i < 9; i++) add(ago(35 + i), false, 'fact')
+  for (let i = 0; i < 3; i++) add(ago(40 + i), false, 'operation')
+  for (let i = 0; i < 60; i++) add(ago(i % 28), true, null)
+  for (let i = 0; i < PLACEMENT_COUNT; i++) add(ago(50, i * 30_000), i % 2 === 0, null, { sessionId: 'p1', skill: i < 6 ? 'add:3d:1' : 'mul:6x7', context: { activity: PLACEMENT_ACTIVITY } })
+  for (let i = 0; i < PLACEMENT_COUNT; i++) add(ago(3, i * 30_000), i % 5 !== 0, null, { sessionId: 'p2', skill: i < 6 ? 'add:3d:1' : 'mul:6x7', context: { activity: PLACEMENT_ACTIVITY } })
+  return out.sort((x, y) => y.createdAt.localeCompare(x.createdAt))
+}
 
 function sampleGrid(seed: number): number[][] {
   const grid = Array.from({ length: 10 }, () => Array(10).fill(-1) as number[])
@@ -24,6 +55,33 @@ function sampleGrid(seed: number): number[][] {
 }
 
 const entries: GalleryEntry[] = [
+  {
+    title: 'TemarioCard',
+    width: 720,
+    render: () => <TemarioCard report={syllabusReport(GRADE3_SYLLABUS, sampleMastery())} childName="Lía" />,
+  },
+  {
+    title: 'TemarioCard de 2.º',
+    width: 720,
+    render: () => <TemarioCard report={syllabusReport(GRADE2_SYLLABUS, sampleMastery(GRADE2_SYLLABUS))} childName="Hugo" />,
+  },
+  {
+    title: 'MistakesCard',
+    width: 720,
+    render: () => <MistakesCard report={errorReport(sampleAttempts(), NOW)} childName="Lía" />,
+  },
+  {
+    title: 'TestsCard',
+    width: 720,
+    render: () => (
+      <TestsCard
+        runs={placementRuns(sampleAttempts())}
+        recall={{ minDays: 14, checked: 38, remembered: 31 }}
+        childName="Lía"
+        offer={{ requested: false, busy: false, onOffer: () => {} }}
+      />
+    ),
+  },
   {
     title: 'FactHeatmap · child (full)',
     width: 560,

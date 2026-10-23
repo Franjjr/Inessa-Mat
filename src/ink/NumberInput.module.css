@@ -23,7 +23,9 @@
 
 .pad {
   position: relative;
-  flex: none;
+  /* shrinks before the tools do, so the check never leaves a narrow card */
+  flex: 0 1 auto;
+  min-width: 150px;
   width: var(--padW);
   max-width: calc(100vw - 180px);
   height: var(--padH);
@@ -85,7 +87,7 @@
   line-height: 1;
   color: var(--c-ink);
   pointer-events: none;
-  animation: digitIn var(--dur-slow) var(--ease-bounce) both;
+  animation: digitIn var(--dur-slow) var(--ease-out) both;
 }
 .unknown { color: var(--c-ink-mute); }
 .unsure {
@@ -120,7 +122,7 @@
   color: var(--c-ink);
   pointer-events: none;
 }
-.typedDigit { display: inline-block; animation: typedIn var(--dur-med) var(--ease-bounce) both; }
+.typedDigit { display: inline-block; animation: typedIn var(--dur-med) var(--ease-out) both; }
 
 .anchor { position: absolute; pointer-events: none; }
 
@@ -151,7 +153,7 @@
 .tool[aria-pressed='true'] { background: var(--c-primary-soft); }
 .erase { grid-column: 1; grid-row: 1; }
 .toggleWrap { grid-column: 1; grid-row: 2; position: relative; display: inline-flex; }
-.nudge { animation: nudge 900ms var(--ease-bounce) 2; border-color: var(--c-primary); }
+.nudge { animation: nudge 900ms var(--ease-out) 2; border-color: var(--c-primary); }
 
 .check {
   grid-column: 2;
@@ -178,6 +180,15 @@
   cursor: default;
 }
 .lg .check { width: 100px; height: 100px; }
+.tools { flex: none; }
+
+@media (max-width: 480px) {
+  .row { gap: var(--sp-3); }
+  .tools { gap: 8px; }
+  /* The pad gives way so that the ✓ stays inside a phone card (pad + tools + ✓ ≈ 290px). */
+  .pad { min-width: 130px; max-width: calc(100vw - 240px); }
+  .check, .lg .check { width: 64px; height: 64px; }
+}
 
 /* ---- statuses */
 .st_correct .pad { border-color: var(--c-success); background: var(--c-success-soft); }

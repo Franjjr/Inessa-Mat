@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import * as engine from '@/engine'
 import type { AttemptForMastery, GenerateOptions, SessionPlan } from '@/engine'
 import type {
-  ActivityKind, Answer, CheckResult, ChildProfile, ErrorType, Exercise, FactStrategy, Hint, InputMode, MasteryMap,
+  Answer, CheckResult, ChildProfile, ErrorType, Exercise, FactStrategy, Hint, InputMode, MasteryMap,
   ProgressState, Rng, SkillKey, SkillMastery, SkillSelector,
 } from '@/types'
 
@@ -35,7 +35,7 @@ const sameAttempt: Same<AttemptForMastery, {
   skill: SkillKey; correct: boolean; ms: number; inputMode: InputMode; hintsUsed: number; errorType?: ErrorType | null
 }> = true
 const samePlan: Same<SessionPlan, {
-  minutes: number; warmup: SkillKey[]; next: { worldId: string; nodeId: string } | null; review: SkillKey[]; game: ActivityKind
+  minutes: number; next: { worldId: string; nodeId: string } | null; review: SkillKey[]
 }> = true
 
 describe('public contract', () => {

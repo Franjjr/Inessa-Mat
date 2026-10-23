@@ -56,10 +56,11 @@ Column ops are judged on accuracy only (no speed).
 ## Column algorithms (Spain)
 
 - Addition: units first, carry written small above the next column ("me llevo una").
-- Subtraction: the app teaches regrouping ("pedir prestado a la vecina": neighbour −1, this column +10),
-  shown with crossed digits. Many Spanish schools teach the compensation method ("llevando": add 1 to the
-  subtrahend's next column) — the check must accept the correct RESULT regardless of method; borrow cells are
-  optional scratch space, never graded.
+- Subtraction: four methods, see «Varios métodos por operación» below. The default and the lesson's first
+  method is «pedir prestado arriba» (the neighbour gives a ten: its digit is crossed and goes down by one, this
+  column reads +10). «Me llevo una abajo» (compensation: +10 on top, +1 on the next subtrahend digit) is the other
+  school method. Both accept the correct RESULT; a written step (the lender's new digit, the +1) is graded only
+  where the child writes it, and an empty step is never wrong.
 - Multiplication 2×1: units first, carry above tens, added after multiplying.
 - Division "galera" (Spanish layout): dividend left, divisor right inside the bracket, quotient below the divisor,
   remainder below the dividend. Check: cociente × divisor + resto = dividendo; resto < divisor.
@@ -72,3 +73,33 @@ Short, warm, concrete, in Spanish, and through the companion/Lumi. Examples:
 - carry-forgot: "¡Ojo con la mochila! Te has dejado la llevada en las {column}."
 - smaller-from-larger: "Arriba hay un número más pequeño: ¡pide ayuda a la vecina!"
 - remainder-too-big: "El resto tiene que ser más pequeño que {divisor}. ¡Cabe una vez más!"
+
+## Varios métodos por operación (patrón)
+
+Un mismo ejercicio se puede resolver con varios caminos, y el niño debe ver cuál le resulta más fácil. Así se
+hace en Repasitos (resta; el mismo patrón servirá para división y tablas):
+
+1. **Registro de métodos** (`src/engine/methods.ts`): una lista por operación (`METHODS.sub`), con id, nombre
+   para el niño y resumen para el adulto. Un método nuevo es una entrada más.
+2. **Tipo** (`src/types/exercise.ts`): el id del método (`SubMethod`), y `Answer` con los pasos que el método pide
+   (`digits` con `carries` para las marcas de la columna; `steps` para «por partes» y «saltos»).
+3. **Comprobación** (`src/engine/check.ts`): la respuesta final siempre cuenta. Los pasos que el método pide
+   (marcas, saltos, resultados parciales) se comprueban **solo cuando el niño los escribe**; un paso vacío no
+   es un error, un paso escrito que no corresponde al método sí. El fallo se da en el paso concreto («¡Casi!
+   Revisa el paso 2»), sin enseñar la respuesta.
+4. **Pistas** (`src/engine/hints.ts`, `hintsFor(ex, method)`): tres niveles por método. Nivel 1, la estrategia;
+   nivel 2, el apoyo visual; nivel 3, un paso intermedio. Ninguna pista dice la diferencia ni el resultado final.
+   Hay una prueba que lo verifica para cada método.
+5. **Vista**: un componente por método dentro de la misma operación (`SubtractionView` elige: columna para
+   «pedir prestado» y «me llevo una»; `SubPartsView`; `SubLineView`). La actividad usa el método preferido del
+   niño (`ChildSettings.subMethod`, por defecto `borrow`); la lección «Cuatro caminos para restar» prueba cada
+   método con su propio «¡pruébalo tú!».
+6. **Preferencia**: el niño la elige al final de la lección (paso `choose`); el adulto la cambia en los ajustes
+   del niño. Se guarda en `ChildSettings.subMethod`.
+7. **Registro**: cada intento lleva el método en `context.method` (sin cambiar el esquema de la base de datos).
+   El informe del adulto lo resume: «Resta: prefiere X; aciertos por método…». Solo cuentan los últimos 30 días
+   y los errores de lectura no cuentan. Un método se compara solo con tres o más intentos.
+
+Lo que aún no tiene método propio: división (galera, reparto y restas sucesivas) y multiplicación 2 × 1
+(descomposición o cuadrícula). Cuando se añadan, cada uno tiene su entrada en `METHODS`, su tipo de paso y sus
+pistas, y la preferencia se guarda en un campo propio de `ChildSettings`.

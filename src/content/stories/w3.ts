@@ -19,6 +19,7 @@ export const w3Arrival = story('w3-arrival', 'Las mariquitas luminosas', [
     say('lumi', 'Tranquilidad. Tengo dos trucos secretos para ti.', 'happy'),
     say('ladybug', 'Si conquistas la tabla del 6, mis mariquitas abrirán el túnel para {pet}.', 'talk'),
     say('companion', '¡Daos prisa, que me pica la nariz y no me la puedo rascar!', 'worried'),
+    say('lumi', 'Las piedras de esta cueva tienen formas: triángulos, cuadrados… ¡Fíjate bien en sus lados!', 'happy'),
   ]),
 ])
 

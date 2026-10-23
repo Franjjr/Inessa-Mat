@@ -5,7 +5,7 @@ import { addInkSample } from '@/data'
 import { createRecognizer } from './ml/recognizer'
 import { PENDING_TTL_MS } from './constants'
 import { hasEmbedding, makeSample, selectPersonalSamples, selectSamples, type PersonalSampleLite } from './learning'
-import { detectTouchDevice, forgetPenSeen, readPenSeen, resolveInputMode } from './policy'
+import { detectPhone, detectTouchDevice, forgetPenSeen, readPenSeen, resolveInputMode } from './policy'
 
 /** What the ink UI needs from a recogniser (src/ink/ml/recognizer.ts provides it; tests/gallery may fake it). */
 export type Recognizer = DigitRecognizer & { setPersonalSamples(samples: PersonalSampleLite[]): void }
@@ -248,7 +248,7 @@ function fallbackValue(): InkContextValue {
     recognizer: null,
     ready: false,
     childId: null,
-    mode: resolveInputMode({ preference: 'auto', penSeen, isTouchDevice }),
+    mode: resolveInputMode({ preference: 'auto', penSeen, isTouchDevice, isPhone: detectPhone() }),
     preference: 'auto',
     setPreferred() {},
     isTouchDevice,

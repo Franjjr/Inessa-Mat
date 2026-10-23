@@ -1,0 +1,289 @@
+/* Shared look of the numeric and cálculo mental views (3.º, block A): big numbers, tappable signs, place-value blocks. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.words {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+  line-height: 1.4;
+}
+
+.instructions {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+}
+
+.cardNumber {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sign {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.signPad {
+  display: flex;
+  gap: var(--sp-3);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.signBtn {
+  min-width: 88px;
+  min-height: 88px;
+  padding: 0 var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.signBtn:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.signOn {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.cellLabel {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+}
+
+/* Place-value blocks: each class has its own colour from the place-value palette. */
+.blocks {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--sp-4);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.groupLabel {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 4px;
+  max-width: 220px;
+}
+
+.mil {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  background-color: var(--pv-um-soft);
+  border: 2px solid var(--pv-um);
+  background-image: linear-gradient(var(--pv-um) 1px, transparent 1px), linear-gradient(90deg, var(--pv-um) 1px, transparent 1px);
+  background-size: 13px 13px;
+}
+
+.cent {
+  width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  background: var(--pv-c-soft);
+  border: 2px solid var(--pv-c);
+}
+
+.dec {
+  width: 8px;
+  height: 22px;
+  border-radius: 2px;
+  background: var(--pv-d);
+}
+
+.uni {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--pv-u);
+}
+
+/* Number line */
+.line {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-3) var(--sp-4);
+  min-width: 0;
+}
+
+.line::before {
+  content: '';
+  position: absolute;
+  left: var(--sp-3);
+  right: var(--sp-3);
+  bottom: calc(var(--sp-4) + 14px);
+  height: 4px;
+  border-radius: 2px;
+  background: var(--c-ink-soft);
+}
+
+.tick {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.tickMark {
+  width: 4px;
+  height: 14px;
+  background: var(--c-ink-soft);
+  border-radius: 2px;
+}
+
+.tickLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.start {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--c-magic);
+  border: 3px solid var(--c-surface);
+  box-shadow: var(--shadow-1);
+}
+
+.jumpLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-magic);
+}
+
+/* Equations */
+.eq {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.eqSide {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.eqEq {
+  color: var(--c-primary-strong);
+}
+
+.eqOp {
+  color: var(--c-ink-soft);
+}
+
+@media (max-width: 480px) {
+  .prompt { font-size: var(--fs-lg); }
+  .signBtn { min-width: 72px; min-height: 72px; font-size: 2.2rem; }
+  .card { padding: var(--sp-3) var(--sp-4); }
+  .line { gap: 2px; padding-left: 0; padding-right: 0; }
+  .tickLabel { font-size: var(--fs-xs); }
+  .eq { font-size: var(--fs-lg); }
+}

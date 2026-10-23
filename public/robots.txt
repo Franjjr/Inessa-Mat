@@ -1,4 +1,5 @@
-# Repasitos is an app for children: keep the child and adult areas out of search engines.
+# Repasitos es una app para niños: las zonas de niños y de adultos quedan fuera de los buscadores.
+# Los rastreadores de IA siguen estas mismas reglas (pueden leer la portada y la privacidad).
 User-agent: *
 Allow: /$
 Allow: /welcome
@@ -7,3 +8,8 @@ Disallow: /kids
 Disallow: /play
 Disallow: /adult
 Disallow: /dev/
+Disallow: /login
+Disallow: /signup
+Disallow: /api/
+
+Sitemap: https://repasitos.es/sitemap.xml

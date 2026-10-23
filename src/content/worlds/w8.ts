@@ -12,7 +12,7 @@ export const w8 = world({
   crystalName: 'dorado',
   predicament: 'net',
   hook: '¡Borrón ha atrapado a {pet} con una red!',
-  skillsSummary: 'Dividir: repartos, familias de números, la división en galera y el resto',
+  skillsSummary: 'Dividir: repartos, familias de números, la división en galera y el resto; fracciones de muchas partes',
   path: [[0.12, 0.84], [0.36, 0.86], [0.56, 0.74], [0.38, 0.58], [0.16, 0.5], [0.24, 0.26], [0.46, 0.3], [0.68, 0.44], [0.86, 0.3], [0.7, 0.12]],
   nodes: [
     storyNode('arrival', 'La red de Borrón', 'w8-arrival'),
@@ -41,6 +41,7 @@ export const w8 = world({
       params: { showTrick: true },
     }),
     lessonNode('lesson-galera', 'La casita de la división', 'w8-galera'),
+    lessonNode('lesson-div-ways', 'Cuatro caminos para dividir', 'w8-div-ways'),
     activityNode('division', {
       kind: 'division',
       title: 'Divisiones exactas y con resto',
@@ -51,12 +52,22 @@ export const w8 = world({
     }),
     storyNode('mid', 'Borrón mira desde la torre', 'w8-mid'),
     activityNode('division-expert', {
-      kind: 'division',
+      kind: 'exercises',
       title: 'El reto de la torre ⭐',
-      instructions: 'Como en 72 ÷ 3: lo que sobra en las decenas se junta con las unidades.',
-      selector: { kinds: ['division'], divisionVariants: ['long'] },
-      count: 3,
+      instructions: 'Divide con 2 o 3 cifras: baja una cifra cada vez. Y comprueba: ¿está bien esa cuenta?',
+      selector: {
+        kinds: ['division', 'check-calc', 'error-hunt'],
+        skills: ['div:2x1:long', 'div:3x1:exact', 'div:3x1:rem', 'check:sub', 'check:div', 'hunt:add', 'hunt:sub'],
+      },
+      count: 4,
       params: { guided: true },
+    }),
+    activityNode('castle-flags', {
+      kind: 'exercises',
+      title: 'Las banderas del castillo',
+      instructions: 'Cada bandera está partida en muchas partes iguales. Lee la fracción coloreada.',
+      selector: { skills: ['frac:read:6', 'frac:read:8', 'frac:shade:5', 'frac:name:10', 'frac:read:12'] },
+      count: 5,
     }),
     guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),
   ],

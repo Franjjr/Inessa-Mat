@@ -1,0 +1,11 @@
+# Repasitos
+
+> Repasitos es una app web en español para que niños de 7 a 9 años repasen las tablas de multiplicar, sumas, restas, multiplicaciones y divisiones con un juego de aventuras. La familia o el colegio ven qué domina cada niño. Se puede probar sin cuenta.
+
+## Páginas
+- [Portada y explicación](https://repasitos.es/welcome): qué es, para quién es, cómo funciona y asignaturas
+- [Privacidad y datos](https://repasitos.es/legal/privacidad): qué datos se guardan, para qué y cómo borrarlos
+
+## Notas
+- Dirigida a niños de 7 a 9 años; las cuentas las gestionan los adultos.
+- Matemáticas disponible; Lengua, Inglés, Ciencias e Historia, próximamente.

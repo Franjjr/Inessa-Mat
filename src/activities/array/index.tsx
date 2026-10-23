@@ -75,7 +75,6 @@ function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
           </button>
         ))}
       </div>
-      <p className={s.count} aria-live="polite">{count} / {total}</p>
       <button type="button" className={s.go} disabled={!done} onClick={() => setBuilt(true)}>
         {done ? host.t('¡Ya está! ¿Cuántos hay?') : host.t('Llena todos los huecos')}
       </button>

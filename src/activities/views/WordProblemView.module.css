@@ -77,7 +77,7 @@
   cursor: pointer;
   box-shadow: var(--shadow-press);
   touch-action: manipulation;
-  transition: transform var(--dur-fast) var(--ease-bounce), border-color var(--dur-fast);
+  transition: transform var(--dur-fast) var(--ease-out), border-color var(--dur-fast);
 }
 .opBtn:active { transform: scale(.96); }
 .opBtn:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }

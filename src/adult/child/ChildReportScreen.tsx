@@ -1,14 +1,13 @@
 /* One child's report for the grown-ups. Order: the conclusion first (which tables to praise and which to review),
-   the four figures for the last 7 days, the times-table grid with its legend, the most frequent mistakes and the
-   worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
+   the four figures for the last 7 days, what the child is learning (temario, mistakes by kind, tests), then the
+   times-table grid with its legend and the worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
    deletion). A picture of the story so far can be shared. */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
 import { clearInkSamples, eraseChild, exportChildData, getChildSummary, getProgress, useChildren } from '@/data'
-import { describeError } from '@/engine'
-import { season1 } from '@/content'
-import type { ChildSummary, CompanionSpecies, ErrorType, ProgressState } from '@/types'
+import { season1, seasonOf } from '@/content'
+import type { ChildSummary, CompanionSpecies, ProgressState } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
@@ -19,6 +18,9 @@ import { downloadBlob, slug } from '../shared/download'
 import { errorMessage } from '../shared/messages'
 import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { ChildSettingsCard } from './ChildSettingsCard'
+import { SubtractionMethodsCard } from './SubtractionMethodsCard'
+import { OtherMethodsCard } from './OtherMethodsCard'
+import { LearningSection } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -124,7 +126,7 @@ export default function ChildReportScreen() {
   const share = async () => {
     setSharing(true)
     try {
-      const currentName = season1.worlds.find((w) => w.id === summary.currentWorld)?.name ?? null
+      const currentName = seasonOf(progress).worlds.find((w) => w.id === summary.currentWorld)?.name ?? null
       const blob = await renderSummaryPng({
         nickname: name,
         companionName: child?.companion.name ?? '',
@@ -141,9 +143,11 @@ export default function ChildReportScreen() {
     }
   }
 
-  const worldStates = season1.worlds.map((w, i) => {
+  // The names of the child's season: the 2.º adventure renames two worlds.
+  const season = seasonOf(progress)
+  const worldStates = season.worlds.map((w, i) => {
     const wp = progress.worlds[w.id]
-    const firstOpen = season1.worlds.find((x) => progress.worlds[x.id]?.unlocked && !progress.worlds[x.id]?.crystal)
+    const firstOpen = season.worlds.find((x) => progress.worlds[x.id]?.unlocked && !progress.worlds[x.id]?.crystal)
     if (wp?.crystal) return { id: w.id, index: i, name: w.name, state: 'done' as const }
     if (wp?.unlocked) return { id: w.id, index: i, name: w.name, state: firstOpen?.id === w.id ? ('current' as const) : ('open' as const) }
     return { id: w.id, index: i, name: w.name, state: 'locked' as const }
@@ -198,6 +202,8 @@ export default function ChildReportScreen() {
         </div>
       </section>
 
+      <LearningSection childId={childId} childName={name} grade={child?.grade} progress={progress} />
+
       <div className={s.twoCol}>
         <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">
           <div className={s.heatWrap}>
@@ -217,24 +223,8 @@ export default function ChildReportScreen() {
         </section>
 
         <div className={adult.stack}>
-          <section className={adult.card} aria-labelledby="errors-title">
-            <h2 id="errors-title" className={adult.subheading}>Errores más frecuentes</h2>
-            <p className={adult.muted}>Del último mes. Los errores de lectura de la letra no cuentan.</p>
-            {summary.topErrors.length === 0 ? (
-              <p className={adult.lead}>Todavía no hay errores que destacar.</p>
-            ) : (
-              <ul className={adult.list} aria-label="Errores más frecuentes">
-                {summary.topErrors.map((e) => (
-                  <li key={e.errorType} className={s.errorRow}>
-                    <span className={s.errorCount}>{e.count} {e.count === 1 ? 'vez' : 'veces'}</span>
-                    <span className={adult.lead} style={{ fontSize: 'var(--fs-sm)' }}>
-                      {describeError(e.errorType as ErrorType)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <SubtractionMethodsCard info={summary.subtractionMethods} />
+          <OtherMethodsCard division={summary.divisionMethods} tables={summary.tableTricks} />
 
           <section className={adult.card} aria-labelledby="worlds-title">
             <div className={adult.cardHead}>

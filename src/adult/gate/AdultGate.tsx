@@ -3,7 +3,7 @@
    one, answer a multiplication question. Five wrong PINs pause the keypad for 30 seconds. */
 import { useEffect, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearAdultPin, hasAdultPin, setAdultPin, useAuth, verifyAdultPin } from '@/data'
+import { clearAdultPin, hasAdultPin, readAdultGateLock, setAdultPin, useAuth, verifyAdultPin, writeAdultGateLock } from '@/data'
 import { BackButton, Button, Spinner } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { NumberPad, PinDots } from '../shared/NumberPad'
@@ -20,7 +20,9 @@ const MAX_DIGITS = 8
 let unlockedUntil = 0
 
 // Failed attempts and the lock survive a reload, so a reload cannot reset the five-try limit.
-// Per-device only (localStorage); storage may be unavailable, in which case the limit is in memory.
+// Kept twice on this device: localStorage (read at once) and IndexedDB (next to the PIN, read on mount and merged
+// by taking the stricter value), so deleting only one of them does not reset the limit. Storage may be unavailable,
+// in which case the limit is in memory for this visit.
 const LOCK_KEY = 'numeria.adultGate.lock'
 
 interface LockState {
@@ -49,6 +51,9 @@ function writeLockState(state: LockState): void {
   } catch {
     // Storage blocked: the in-memory state still applies for this visit.
   }
+  writeAdultGateLock(state).catch(() => {
+    // IndexedDB unavailable: localStorage (or memory) still holds the state.
+  })
 }
 
 /** True while the adult area is open on this device (kept in memory: a reload asks again). */
@@ -72,10 +77,11 @@ export interface MathQuestion {
   answer: number
 }
 
-/** Adult fallback question (two 2-digit numbers). `random` is injectable for tests. */
+/** Adult fallback question: a 2-digit number times a 3-digit one (result 2 300 to 44 051), which a child of 7–9
+    does not work out mentally. `random` is injectable for tests. */
 export function makeMathQuestion(random: () => number = Math.random): MathQuestion {
-  const a = 12 + Math.floor(random() * 8)
-  const b = 12 + Math.floor(random() * 8)
+  const a = 23 + Math.floor(random() * 27)
+  const b = 101 + Math.floor(random() * 799)
   return { a, b, answer: a * b }
 }
 
@@ -227,6 +233,31 @@ export function AdultGate({ children }: { children: ReactNode }) {
       setMessage({ tone: 'ok', text: 'Muy bien. Ahora crea un PIN nuevo.' })
     }
   }
+
+  // Merge the IndexedDB copy of the lock: the stricter of the two wins (clearing localStorage alone does not help).
+  useEffect(() => {
+    let alive = true
+    readAdultGateLock()
+      .then((stored) => {
+        if (!alive || !stored) return
+        const cur = readLockState()
+        const merged: LockState = {
+          failures: Math.max(cur.failures, Number(stored.failures) || 0),
+          lockedUntil: Math.max(cur.lockedUntil, Number(stored.lockedUntil) || 0),
+        }
+        if (merged.failures === cur.failures && merged.lockedUntil === cur.lockedUntil) return
+        writeLockState(merged)
+        setFailures(merged.failures)
+        setLockedUntil(merged.lockedUntil)
+        setNow(Date.now())
+      })
+      .catch(() => {
+        // Unreadable: the localStorage copy applies.
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   // Physical keyboards on tablets and computers.
   useEffect(() => {

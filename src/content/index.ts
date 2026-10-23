@@ -17,9 +17,17 @@ import { renderTemplate as render, templateContext as ctxOf, type TemplateContex
 export type { TemplateContext } from './template'
 
 export const season1: SeasonDef = seasonData.season1
+/** The 2.º adventure: the same maps with the stops, stories and guardians of 2.º (src/content/c2). */
+export const seasonC2: SeasonDef = seasonData.seasonC2
+export const SEASONS: SeasonDef[] = seasonData.SEASONS
+export function getSeason(id?: string): SeasonDef { return seasonData.getSeason(id) }
+/** The season a progress plays. */
+export function seasonOf(progress: Pick<ProgressState, 'seasonId'> | null | undefined): SeasonDef { return seasonData.getSeason(progress?.seasonId) }
+export function seasonIdForGrade(grade?: number): string { return seasonData.seasonIdForGrade(grade) }
 
-export function getWorld(id: string): WorldDef | undefined { return seasonData.getWorld(id) }
-export function getNode(worldId: string, nodeId: string): NodeDef | undefined { return seasonData.getNode(worldId, nodeId) }
+/** World and node lookups take the season id ('s1', the 3.º adventure, by default). */
+export function getWorld(id: string, seasonId?: string): WorldDef | undefined { return seasonData.getWorld(id, seasonId) }
+export function getNode(worldId: string, nodeId: string, seasonId?: string): NodeDef | undefined { return seasonData.getNode(worldId, nodeId, seasonId) }
 export function getStory(id: string): StoryDef | undefined { return seasonData.getStory(id) }
 export function getLesson(id: string): LessonDef | undefined { return seasonData.getLesson(id) }
 export function getGuardian(id: string): GuardianDef | undefined { return seasonData.getGuardian(id) }
@@ -28,6 +36,8 @@ export function getGuardian(id: string): GuardianDef | undefined { return season
 export const PROLOGUE_STORY_ID = 'prologue'
 /** Finale after the 8th crystal (horn lights up, Borrón's redemption, the chest). */
 export const FINALE_STORY_ID = 'finale'
+/** The finale of a season: the 2.º adventure has its own (the trick Borrón learns is from 2.º). */
+export function finaleStoryId(seasonId?: string): string { return seasonId === 'c2' ? 'c2-finale' : FINALE_STORY_ID }
 
 export const companions: CompanionDef[] = COMPANIONS
 export function getCompanionDef(species: CompanionSpecies): CompanionDef | undefined { return companionDef(species) }
@@ -46,8 +56,8 @@ export function pickPhrase(kind: ReactionKind, rng: () => number, errorType?: Er
 }
 
 /** Initial progress for a new child (world 1 unlocked). */
-export function initialProgress(childId: string, now: Date = new Date()): ProgressState {
-  return progression.initialProgress(childId, now)
+export function initialProgress(childId: string, now: Date = new Date(), seasonId?: string): ProgressState {
+  return progression.initialProgress(childId, now, seasonId)
 }
 
 export function isNodeUnlocked(progress: ProgressState, worldId: string, nodeId: string): boolean {
@@ -76,7 +86,7 @@ export function startingWorldForGrade(grade?: number): string { return progressi
 /** Progression helpers: world unlocks, stickers diff, crystals/letters for LumiHorn, shop purchase rules. */
 export {
   buyAccessory, canBuyAccessory, COMPLETION_STARS, crystalsOf, isWorldUnlocked, lettersOf, localDay, MAX_RECORDS,
-  newStickers, spendableStars, unlockThroughWorld,
+  newStickers, spendableStars, switchSeason, unlockThroughWorld,
 } from './progression'
 export type { BuyCheck } from './progression'
 /** Lookups beyond the contract. */
@@ -92,4 +102,8 @@ export { FALLBACK_CHILD_NAME, TEMPLATE_PLACEHOLDERS } from './template'
 /** Guardian spell codes (workbook scroll) and Borrón's decoy letters. */
 export { SPELL_CODES, SPELL_DECOYS } from './guardians'
 /** Finale extras: optional teach-back activity, season-2 teaser, diploma and chest copy. */
-export { CHEST_TEXT, DIPLOMA_TEXT, SEASON2_TEASER, TEACH_BACK_ACTIVITY } from './meta'
+export { CHEST_TEXT, DIPLOMA_BODY_C2, DIPLOMA_TEXT, SEASON2_TEASER, TEACH_BACK_ACTIVITY } from './meta'
+
+/** Temarios de 2.º, 3.º y 4.º as data and their pure queries (src/content/syllabus). */
+export { GRADE2_SYLLABUS, GRADE2_STAGES, GRADE4_SYLLABUS, GRADE4_STAGES, syllabusForGrade, GRADE3_SYLLABUS, MASTERED_BOX, MASTERED_SHARE, availableSkills, availableTopics, currentTopic, isTopicMastered, topicProgress, blockIdOfTopic, allTopics, teachingOrder, stageOfTopic, GRADE3_STAGES, SYLLABUS_RUNGS } from './syllabus'
+export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './syllabus'

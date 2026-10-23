@@ -1,20 +1,38 @@
 /* Progressive hints: level 1 recalls the strategy (text only), level 2 shows a visual scaffold, level 3 works
    one step and leaves the final answer for the child ("= ?"). Params feed the HintVisual renderer. */
 import type {
-  ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, Exercise, Hint, SkipCountExercise,
-  WordProblemExercise,
+  ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, DivisionExercise, DivMethod, Exercise, Hint, SkipCountExercise,
+  SubMethod, TableMethod, WordProblemExercise,
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName } from './feedback'
 import { strategyDetail } from './strategies'
+import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
+import { hintsCalc } from './calc'
+import { hintsNumeric } from './numeric'
+import { hintsClock } from './clock'
+import { barHints } from './bars'
+import { hintsMoney } from './money'
+import { hintsMeasure } from './measure'
+import { hintsChance, hintsChart } from './data'
+import { hintsPattern } from './patterns'
+import { hintsMulParts } from './bigops'
+import { hintsPosition } from './position'
+import { checkHints, huntHints } from './bugs'
+import { divisionParts } from './divParts'
+import { TABLE_METHODS } from './methods'
+import { fractionHints } from './fractions'
+import { geometryHints } from './geometry'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
 
-function factHints(a: number, b: number): Hint[] {
+/** The favourite trick (when it applies to the fact) replaces the first hint; the visual and the worked step stay. */
+function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint[] {
   const d = strategyDetail(a, b)
+  const trick = tableMethod ? TABLE_METHODS.find((t) => t.id === tableMethod && t.applies(a, b)) : undefined
   return [
-    hint(1, d.strategy.text, 'none'),
+    hint(1, trick ? trick.hint : d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
     hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
@@ -77,6 +95,74 @@ function columnSubHints(ex: ColumnSubExercise): Hint[] {
   ]
 }
 
+/* «Me llevo una abajo»: the same first column as «pedir prestado», but the ten goes to the top number and the 1 to the
+   bottom number of the next column. The hints name the intermediate numbers only, never the difference. */
+function carrySubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const { borrows, adjusted } = compensationSteps(m, s)
+  const i = borrows.findIndex(Boolean)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  if (i < 0) {
+    return [
+      hint(1, 'Empieza por las unidades y resta casa por casa: arriba menos abajo.', 'none'),
+      hint(2, 'Mira las casas: unidades con unidades, decenas con decenas…', 'place-value', params),
+      hint(3, `Unidades: ${digitAt(m, 0)} − ${digitAt(s, 0)} = ?`, 'borrow', { ...params, column: 0 }),
+    ]
+  }
+  const next = i + 1
+  const top = digitAt(m, i) + 10
+  return [
+    hint(1, 'Si arriba hay menos que abajo: ¡me llevo una! Súmale 10 al de arriba, y a la cifra de abajo de la casa de al lado súmale 1.', 'none'),
+    hint(2, `Cuando la cifra de arriba es menor, no te quedes parado: ${columnName(i)} arriba suman 10 y la casa de al lado de abajo cuenta 1 más.`, 'borrow', { ...params, column: i }),
+    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en las ${columnName(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
+  ]
+}
+
+/* «Por partes»: the subtrahend is split into its non-zero parts and taken away one at a time. The worked hint shows
+   the first result only; the last one is left to the child. */
+function partsSubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const parts = subtrahendParts(s)
+  const results = partsResults(m, s)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  const split = parts.join(' + ')
+  const worked = parts.length > 1
+    ? `${m} − ${parts[0]} = ${results[0]}. Ahora quita ${parts[1]}: ${results[0]} − ${parts[1]} = ?`
+    : `${m} − ${parts[0]} = ?`
+  return [
+    hint(1, `Separa el número de abajo en partes: ${s} = ${split}. Quita una parte cada vez.`, 'none'),
+    hint(2, `Empieza por la parte más grande: ${m} − ${parts[0]} = ?`, 'place-value', params),
+    hint(3, worked, 'place-value', params),
+  ]
+}
+
+/* «Saltos en la recta»: count forward from the subtrahend, first to a round number. The worked hint names the first
+   jump's length (an intermediate), never the total. */
+function lineSubHints(ex: ColumnSubExercise): Hint[] {
+  const { minuend: m, subtrahend: s } = ex
+  const stops = lineStops(s, m)
+  const params = { a: m, b: s, digits: digitCount(m) }
+  const first = stops[0]
+  return [
+    hint(1, `Empieza en ${s} y cuenta hacia delante hasta ${m}. Salta primero a un número redondo.`, 'none'),
+    hint(2, first !== undefined
+      ? `Desde ${s}, el primer salto cae en ${first}. ¿Cuánto hay de ${s} a ${first}?`
+      : `Desde ${s} salta hasta ${m}: ¿cuántos saltos de 10 caben en el camino?`, 'none'),
+    hint(3, first !== undefined
+      ? `De ${s} a ${first} hay ${first - s}. Sigue contando: ¿cuánto hay de ${first} al siguiente salto?`
+      : `Cuenta de ${s} hacia ${m} con saltos de 10 y de 1. ¿Cuántos has dado?`, 'none', params),
+  ]
+}
+
+function subtractionHints(ex: ColumnSubExercise, method: SubMethod | undefined): Hint[] {
+  switch (method) {
+    case 'carry': return carrySubHints(ex)
+    case 'parts': return partsSubHints(ex)
+    case 'line': return lineSubHints(ex)
+    default: return columnSubHints(ex)
+  }
+}
+
 function columnMulHints(ex: ColumnMulExercise): Hint[] {
   const t = Math.floor(ex.top / 10)
   const u = ex.top % 10
@@ -93,8 +179,48 @@ function columnMulHints(ex: ColumnMulExercise): Hint[] {
   ]
 }
 
-function divisionHints(ex: DivisionExercise): Hint[] {
+/* «Repartir por partes»: the dividend in its parts; the first part is the step the hint names (never the total). */
+function partsDivisionHints(ex: DivisionExercise): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  const steps = divisionParts(n, d)
+  const params = { total: n, groups: d, dividend: n, divisor: d }
+  return [
+    hint(1, 'Parte el número en partes fáciles: centenas, decenas y unidades. Reparte cada parte y después suma.', 'none'),
+    hint(2, `Parte el ${n}: ${steps.map((s) => s.part).join(' + ')}. Reparte cada parte entre ${d}.`, 'place-value', params),
+    hint(3, `Empieza por la parte más grande: ${steps[0].partial} ÷ ${d} = ?`, 'share', params),
+  ]
+}
+
+/* «Multiplicar hacia arriba»: the child climbs the multiples; the hints say how, not where it stops. */
+function climbDivisionHints(ex: DivisionExercise): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  return [
+    hint(1, `Pregúntate: ¿qué número por ${d} da ${n}, o se acerca sin pasarse?`, 'none'),
+    hint(2, `Sube de ${d} en ${d}: cada fila suma ${d} más. Para cuando la fila llegue a ${n} o lo pase.`, 'none'),
+    hint(3, `Escribe la fila siguiente: ${d} × el número de la fila = ? ¿Pasa de ${n}?`, 'none'),
+  ]
+}
+
+const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo el cociente.'
+
+/* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
+function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  const round = Math.round(d / 10) * 10
+  const params = { total: n, groups: d, dividend: n, divisor: d }
+  return [
+    hint(1, short ? SHORT_GALERA_HINT : `En cada paso pregúntate cuántas veces cabe el ${d}. Prueba un número y multiplícalo por ${d}.`, 'none'),
+    hint(2, `Para estimar, piensa en el ${d} como si fuera ${round}. Después comprueba multiplicando por ${d} de verdad.`, 'share', params),
+    hint(3, `Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
+  ]
+}
+
+function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
+  if (method === 'div-parts' && ex.divisor < 10) return partsDivisionHints(ex)
+  if (method === 'climb' && ex.quotient < 10) return climbDivisionHints(ex)
+  const short = method === 'galera-short'
   const { dividend: n, divisor: d, quotient: q } = ex
+  if (d >= 10) return twoDigitDivisorHints(ex, short)
   const t = Math.floor(n / 10)
   const u = n % 10
   const params = { total: n, groups: d, dividend: n, divisor: d }
@@ -102,7 +228,7 @@ function divisionHints(ex: DivisionExercise): Hint[] {
   let worked: string
   if (q < 10) {
     l1 = `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`
-    worked = `${d} × ${q} = ${d * q}. Sobran ${n} − ${d * q} = ?`
+    worked = `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}. ¿En qué fila vas?`
   } else if (ex.variant === 'exact') {
     l1 = 'Primero reparte las decenas y después las unidades.'
     worked = `Decenas: ${t} ÷ ${d} = ${Math.floor(t / d)}. Ahora las unidades: ${u} ÷ ${d} = ?`
@@ -115,7 +241,7 @@ function divisionHints(ex: DivisionExercise): Hint[] {
       : `Decenas: ${t} ÷ ${d} = ${qt} y no sobra nada. Ahora baja el ${u}: ${u} ÷ ${d} = ?`
   }
   return [
-    hint(1, l1, 'none'),
+    hint(1, short ? SHORT_GALERA_HINT : l1, 'none'),
     hint(2, `Reparte ${n} en ${d} grupos iguales. Lo que no se pueda repartir es el resto.`, 'share', params),
     hint(3, worked, 'share', params),
   ]
@@ -183,10 +309,16 @@ function wordHints(ex: WordProblemExercise): Hint[] {
   }
 }
 
+/** The methods the child is using, when they change the hints (see methods.ts). */
+export interface HintOptions {
+  divMethod?: DivMethod
+  tableMethod?: TableMethod | null
+}
+
 /** Progressive hints (level 1 strategy → level 3 worked step) for this exercise. */
-export function hintsFor(ex: Exercise): Hint[] {
+export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions = {}): Hint[] {
   switch (ex.kind) {
-    case 'fact-mul': return factHints(ex.a, ex.b)
+    case 'fact-mul': return factHints(ex.a, ex.b, options.tableMethod)
     case 'fact-div': {
       const { dividend: p, divisor: d, answer: q } = ex
       const seq = Array.from({ length: Math.min(q, 10) }, (_, i) => d * (i + 1)).join(', ')
@@ -244,10 +376,42 @@ export function hintsFor(ex: Exercise): Hint[] {
         hint(3, `${ex.a} × ${ex.b} = ${ex.product}. Con el espejo: ${ex.b} × ${ex.a} = ${ex.product}. Ahora reparte: ${ex.product} ÷ ${ex.a} = ?`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
       ]
     case 'column-add': return columnAddHints(ex)
-    case 'column-sub': return columnSubHints(ex)
+    case 'column-sub': return subtractionHints(ex, method)
     case 'column-mul': return columnMulHints(ex)
-    case 'division': return divisionHints(ex)
+    case 'division': return divisionHints(ex, options.divMethod)
     case 'word-problem': return wordHints(ex)
+    case 'place-value':
+    case 'compare':
+    case 'order':
+    case 'round':
+    case 'number-line': return hintsNumeric(ex) ?? []
+    case 'mental':
+    case 'equation': return hintsCalc(ex) ?? []
+    case 'bar-problem': return barHints(ex)
+    case 'error-hunt': return huntHints(ex)
+    case 'check-calc': return checkHints(ex)
+    case 'clock-read':
+    case 'clock-set':
+    case 'time-convert':
+    case 'time-duration':
+    case 'calendar': return hintsClock(ex) ?? []
+    case 'fraction-shade':
+    case 'fraction-read':
+    case 'fraction-of':
+    case 'fraction-equal':
+    case 'fraction-add': return fractionHints(ex)
+    case 'shape-choice':
+    case 'angle-tap':
+    case 'perimeter':
+    case 'shape-count': return geometryHints(ex)
+    case 'money': return hintsMoney(ex) ?? []
+    case 'measure': return hintsMeasure(ex) ?? []
+    case 'chart': return hintsChart(ex)
+    case 'chance': return hintsChance(ex)
+    case 'pattern': return hintsPattern(ex)
+    case 'position': return hintsPosition(ex)
+    case 'mul-parts': return hintsMulParts(ex)
+    case 'area': return geometryHints(ex)
   }
 }
 

@@ -3,6 +3,7 @@
 import { motion } from 'motion/react'
 import type { VisualProps } from './types'
 import { FINAL, GLIDE, POP, digitsLE, lastStateOf, motionT, numParam, padLE, stateOf } from './types'
+import { compensationSteps, lineStops, partsResults, subtrahendParts } from '@/engine/subMethods'
 import s from './visuals.module.css'
 
 /** The borrowing chain of a subtraction, computed once (units first everywhere). */
@@ -181,6 +182,169 @@ export function SubCheckVisual({ params, phase, runLength, reduced }: VisualProp
           <p className={s.eq}>{a + 10} − {b + 10} = {c}</p>
         </motion.div>
       )}
+    </div>
+  )
+}
+
+/* The three methods added with the «Cuatro caminos para restar» lesson. Each one draws its own steps; the numbers
+   default to 352 − 127 so every method is shown with the same example. */
+
+/** How many of `total` pieces a run has revealed at this phase: the last step of a run always shows them all. */
+export function revealedCount(total: number, phase: number, runLength: number): number {
+  if (runLength <= 1) return total
+  return Math.min(total, Math.ceil(((phase + 1) / runLength) * total))
+}
+
+/** «Me llevo una abajo»: the top digit gets +10 and the next digit of the subtrahend gets +1 (small, in magic colour). */
+export function SubCarryVisual({ params, phase, runLength }: VisualProps) {
+  const a = Math.max(0, Math.floor(numParam(params, 'a', 352)))
+  const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
+  const c = a - b
+  const comp = compensationSteps(a, b)
+  const width = Math.max(digitsLE(a).length, digitsLE(b).length, digitsLE(c).length)
+  const topD = padLE(digitsLE(a), width)
+  const botD = padLE(digitsLE(b), width)
+  const resD = padLE(digitsLE(c), width)
+  const shownCols = revealedCount(width, phase, runLength)
+  const revealed = (k: number) => k < shownCols
+  const st = stateOf({ phase, runLength })
+  const colOf = (p: number) => width - 1 - p
+  const cellVars = { '--col-w': 'clamp(54px, 9vmin, 80px)', '--col-h': 'clamp(56px, 9vmin, 84px)' } as React.CSSProperties
+  const lastK = (() => {
+    for (let k = width - 1; k >= 0; k--) if (revealed(k)) return k
+    return -1
+  })()
+  return (
+    <div className={s.stage}>
+      <div className={s.grid} style={{ ...cellVars, gridTemplateColumns: `auto repeat(${width}, var(--col-w))` }} data-testid="sub-carry-columns">
+        <div />
+        {Array.from({ length: width }, (_, p) => {
+          const k = colOf(p)
+          const gift = revealed(k) && comp.borrows[k] === 1
+          return (
+            <div key={`t${p}`} className={s.cell}>
+              {gift && <span className={s.tag} style={{ position: 'absolute', top: -24, background: 'var(--c-warn-soft)', color: 'var(--c-warn)' }} data-testid="sub-carry-gift">+10</span>}
+              {k < digitsLE(a).length ? topD[k] : ''}
+            </div>
+          )
+        })}
+        <div />
+        {Array.from({ length: width }, (_, p) => {
+          const k = colOf(p)
+          const bumped = k >= 1 && revealed(k - 1) && comp.borrows[k - 1] === 1
+          return (
+            <div key={`b${p}`} className={s.cell}>
+              {bumped && (
+                <span style={{ position: 'absolute', top: -22, fontSize: 'var(--fs-sm)', color: 'var(--c-ink-mute)', textDecoration: 'line-through' }} data-testid="sub-carry-struck">
+                  {botD[k]}
+                </span>
+              )}
+              {bumped ? <span style={{ color: 'var(--c-magic)' }} data-testid="sub-carry-mark">{comp.adjusted[k] % 10}</span> : k < digitsLE(b).length ? botD[k] : ''}
+            </div>
+          )
+        })}
+        <div className={s.sign}>−</div>
+        <div className={s.line} style={{ gridColumn: `1 / span ${width + 1}` }} />
+        {Array.from({ length: width }, (_, p) => {
+          const k = colOf(p)
+          return (
+            <div key={`r${p}`} className={s.cell}>
+              {revealed(k) ? resD[k] : <span className={s.cellEmpty} style={{ position: 'absolute', inset: 8 }} />}
+            </div>
+          )
+        })}
+        <div />
+        <div className={s.work} style={{ gridColumn: `2 / span ${width}`, minHeight: 28 }} data-testid="sub-carry-work">
+          {st === FINAL
+            ? `${a} − ${b} = ${c}`
+            : lastK >= 0
+              ? `${topD[lastK] + 10 * comp.borrows[lastK]} − ${comp.adjusted[lastK] % 10} = ${resD[lastK]}`
+              : ''}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** «Por partes»: 352 − 100 = 252, 252 − 20 = 232, 232 − 7 = 225. One line per part. */
+export function SubPartsVisual({ params, phase, runLength, reduced }: VisualProps) {
+  const a = Math.max(0, Math.floor(numParam(params, 'a', 352)))
+  const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
+  const parts = subtrahendParts(b)
+  const results = partsResults(a, b)
+  const shown = revealedCount(parts.length, phase, runLength)
+  return (
+    <div className={s.stage}>
+      <p className={`${s.eq} ${s.eqBig}`} data-testid="sub-parts-question">
+        {a} − {b} = {a} {parts.map((p) => `− ${p}`).join(' ')}
+      </p>
+      <div className={s.panel} style={{ maxWidth: 420, width: 'auto' }}>
+        {parts.slice(0, shown).map((p, k) => {
+          const from = k === 0 ? a : results[k - 1]
+          return (
+            <motion.p
+              key={`step-${k}`}
+              className={s.eq}
+              initial={reduced ? false : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={motionT(reduced, GLIDE)}
+              data-testid="sub-parts-step"
+            >
+              {from} − {p} = <span className={s.hl}>{results[k]}</span>
+            </motion.p>
+          )
+        })}
+        {shown === 0 && <p className={s.muted}>{a}</p>}
+      </div>
+    </div>
+  )
+}
+
+/** «Saltos en la recta»: from b up to a, one arc per jump. The arc lengths are the jumps; their sum is a − b. */
+export function SubLineVisual({ params, phase, runLength, reduced }: VisualProps) {
+  const a = Math.max(0, Math.floor(numParam(params, 'a', 352)))
+  const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
+  const stops = lineStops(b, a)
+  const points = [b, ...stops, a]
+  const span = Math.max(1, a - b)
+  const x = (v: number) => 24 + ((v - b) / span) * 432
+  const jumps = points.length - 1
+  const shown = revealedCount(jumps, phase, runLength)
+  const total = shown > 0 ? points[shown] - b : 0
+  return (
+    <div className={s.stage}>
+      <svg viewBox="0 0 480 170" width="100%" style={{ maxWidth: 520 }} role="img" aria-label={`Recta numérica: de ${b} a ${a}`} data-testid="sub-line">
+        <line x1={24} y1={120} x2={456} y2={120} stroke="var(--c-ink)" strokeWidth={3} strokeLinecap="round" />
+        {points.map((v, k) => (
+          <g key={`p${k}`}>
+            <line x1={x(v)} y1={112} x2={x(v)} y2={128} stroke="var(--c-ink)" strokeWidth={2} />
+            <text x={x(v)} y={150} textAnchor="middle" fontSize={15} fill="var(--c-ink-soft)">{v}</text>
+          </g>
+        ))}
+        {points.slice(0, -1).map((from, k) => {
+          const to = points[k + 1]
+          if (k >= shown) return null
+          const mx = (x(from) + x(to)) / 2
+          const h = 28 + Math.min(60, (to - from) / span * 60)
+          return (
+            <g key={`j${k}`} data-testid="sub-line-jump">
+              <motion.path
+                d={`M ${x(from)} 112 Q ${mx} ${112 - h} ${x(to)} 112`}
+                fill="none"
+                stroke="var(--c-magic)"
+                strokeWidth={3}
+                initial={reduced ? false : { pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={motionT(reduced, GLIDE)}
+              />
+              <text x={mx} y={112 - h - 6} textAnchor="middle" fontSize={16} fontWeight={700} fill="var(--c-magic)">+{to - from}</text>
+            </g>
+          )
+        })}
+      </svg>
+      <p className={s.eq} data-testid="sub-line-total">
+        {shown === jumps ? `${b} + ${total} = ${a}` : `${b} + ${total} = ?`}
+      </p>
     </div>
   )
 }

@@ -75,6 +75,10 @@
   position: absolute;
   left: 0;
   top: 0;
+  /* Until the first stroke sizes it (inline style), a canvas is 300 × 150: keep it inside the cell so it never widens
+     a scrolling parent such as the galera. */
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   color: var(--c-ink); /* deep plum ink, read by the renderer */
   transition: opacity var(--dur-med) var(--ease-out), filter var(--dur-med) var(--ease-out);
@@ -94,9 +98,9 @@
   line-height: 1;
   color: var(--digit);
   pointer-events: none;
-  animation: digitIn var(--dur-slow) var(--ease-bounce) both;
+  animation: digitIn var(--dur-slow) var(--ease-out) both;
 }
-.typed { animation: typedIn var(--dur-med) var(--ease-bounce) both; }
+.typed { animation: typedIn var(--dur-med) var(--ease-out) both; }
 .carry .digit { font-size: calc(var(--h) * var(--scale) * .68); padding-top: 0; }
 .given .digit { animation: none; }
 
@@ -118,7 +122,7 @@
   background: var(--c-gold-soft);
   box-shadow: 0 0 0 2px var(--c-gold), 0 2px 6px rgba(245, 158, 11, .35);
   pointer-events: none;
-  animation: nudge 900ms var(--ease-bounce) 1 both;
+  animation: nudge 900ms var(--ease-out) 1 both;
 }
 .carry .unsure { top: -8px; right: -8px; width: 20px; height: 20px; font-size: 13px; }
 
@@ -139,7 +143,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 0 2px var(--c-line), 0 3px 8px rgba(46, 26, 71, .14);
-  animation: typedIn var(--dur-med) var(--ease-bounce) both;
+  animation: typedIn var(--dur-med) var(--ease-out) both;
 }
 .clear::before { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
 .clear:active { background: var(--c-primary-soft); }

@@ -49,8 +49,6 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     () => Array.from({ length: ex.groups }, (_, g) => Array.from({ length: ex.perGroup }, (_, i) => `${g}-${i}`)),
     [ex.groups, ex.perGroup],
   )
-  const total = ex.groups * ex.perGroup
-  const countedCount = counted.size
 
   const toggle = (id: string) => {
     if (flow.submitted) return
@@ -104,11 +102,7 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
         ))}
       </div>
 
-      <div className={s.counter} aria-live="polite">
-        <span className={s.counterNum}>{countedCount}</span>
-        <span className={s.counterOf}>/ {total}</span>
-        <span className={s.counterText}>{host.t('contados')}</span>
-      </div>
+      {/* No running count: the child counts (better, by groups); the marks only show which ones are done. */}
 
       {showSum && <p className={s.sum}>{repeated} = ?</p>}
 

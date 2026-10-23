@@ -10,10 +10,10 @@ import { speakFact } from '../facts/shared/speak'
 import shared from '../facts/shared/shared.module.css'
 import s from './FactView.module.css'
 
-export default function FactView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact }: ExerciseViewProps) {
+export default function FactView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, tableMethod }: ExerciseViewProps) {
   const ex = exercise as FactMulExercise | FactDivExercise
   const host = useActivityHost()
-  const flow = useAnswerFlow({ exercise, onAnswered, guided, allowHints })
+  const flow = useAnswerFlow({ exercise, onAnswered, guided, allowHints, tableMethod })
   const [draft, setDraft] = useState<number | null>(null)
   const isDiv = ex.kind === 'fact-div'
   const left = isDiv ? ex.dividend : ex.a

@@ -6,6 +6,8 @@ export const META = {
   /** 'local-only' once the adult chose "usar sin cuenta" on this device. */
   mode: 'mode',
   adultPin: 'adultPin',
+  /** Failed adult-gate attempts and lock (mirrors the localStorage copy). */
+  adultGateLock: 'adultGate.lock',
   lastSyncedAt: 'sync.lastSyncedAt',
   lastUserId: 'auth.lastUserId',
   activeOrg: (userId: string) => `auth.activeOrg:${userId}`,

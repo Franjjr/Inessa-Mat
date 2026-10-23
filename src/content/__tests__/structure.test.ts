@@ -4,14 +4,17 @@ import {
   FINALE_STORY_ID, PROLOGUE_STORY_ID, getGuardian, getLesson, getNode, getStory, getWorld, guardians, lessons, season1,
   stories, SPELL_CODES,
 } from '@/content'
+import { isValidSkill } from '@/engine'
 import { allActivities, allCopy, allSelectors, wordCount } from './helpers'
 
+/** Node cap per world: 10 planned nodes, plus the method content (w3, w4, w8) and the stops of each world's stage
+    of the temario (money, clock, measure, fractions, shapes). */
+const MAX_NODES: Record<string, number> = { w1: 12, w2: 12, w3: 12, w4: 13, w5: 12, w6: 12, w7: 12, w8: 12 }
 const EXERCISE_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
-  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
 ]
 const CHARACTERS: CharacterId[] = ['lumi', 'companion', 'borron', 'owl', 'frog', 'ladybug', 'polarbear', 'octopus', 'fairy', 'dragon', 'queen', 'narrator']
-const SKILL_RE = /^(mul:([1-9]|10)x([1-9]|10)|div:\d+\/\d+|skip:\d+|add:[34]d:c[0-4]|add:2d:c[0-2]|sub:[34]d:(b[0-3]|z)|sub:2d:b[01]|mul:2x1:c[01]|div:2x1:(exact|rem|long)|concept:(groups|array|commutative|share|family|placevalue)|word:(add|sub|mul|div))$/
 
 /** Required params of every lesson visual (src/types/content.ts). */
 const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
@@ -23,6 +26,9 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   borrow: ['a', 'b'],
   'zero-borrow': ['a', 'b'],
   'sub-check': ['a', 'b'],
+  'sub-carry': ['a', 'b'],
+  'sub-parts': ['a', 'b'],
+  'sub-line': ['a', 'b'],
   'five-plus-one': ['b'],
   'even-six-rhyme': [],
   'double-chain': ['start', 'steps'],
@@ -37,13 +43,16 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'fact-family': ['a', 'b'],
   galera: ['dividend', 'divisor'],
   'division-check': ['dividend', 'divisor'],
+  'bar-model': ['a', 'b', 'total'],
+  'div-parts': ['dividend', 'divisor'],
+  'div-climb': ['divisor', 'quotient'],
 }
 
 function checkSelector(where: string, sel: SkillSelector) {
   const ctx = `${where}: ${JSON.stringify(sel)}`
   expect(sel.kinds?.length || sel.skills?.length, ctx).toBeTruthy()
   for (const k of sel.kinds ?? []) expect(EXERCISE_KINDS, ctx).toContain(k)
-  for (const s of sel.skills ?? []) expect(s, ctx).toMatch(SKILL_RE)
+  for (const s of sel.skills ?? []) expect(isValidSkill(s), `${ctx}: ${s}`).toBe(true)
   for (const t of sel.tables ?? []) expect(Number.isInteger(t) && t >= 1 && t <= 10, ctx).toBe(true)
   if (sel.factorRange) {
     const [lo, hi] = sel.factorRange
@@ -60,13 +69,20 @@ function checkSelector(where: string, sel: SkillSelector) {
     expect(sel.digits !== undefined || sel.skills?.length, `${ctx} needs digits or skills`).toBeTruthy()
   }
   if (kinds.includes('division')) expect(sel.divisionVariants?.length || sel.skills?.length, `${ctx} needs variants`).toBeTruthy()
+  if (kinds.includes('bar-problem') || kinds.includes('error-hunt') || kinds.includes('check-calc')) {
+    expect(sel.skills?.length, `${ctx} new kinds use explicit skills`).toBeTruthy()
+  }
   if (kinds.includes('word-problem')) expect(sel.skills?.length, `${ctx} word problems use explicit skills`).toBeTruthy()
   if (sel.skills?.length && kinds.length) {
     // explicit skills must be producible by the listed kinds
     for (const s of sel.skills) {
       const ok =
         (s.startsWith('mul:') && !s.startsWith('mul:2x1') && kinds.some((k) => ['fact-mul', 'missing-factor', 'double-chain'].includes(k))) ||
-        (s.startsWith('div:') && !s.startsWith('div:2x1') && kinds.includes('fact-div')) ||
+        (s.startsWith('div:') && !s.startsWith('div:2x1') && !s.startsWith('div:3x1') && kinds.includes('fact-div')) ||
+        (s.startsWith('div:3x1') && kinds.includes('division')) ||
+        (s.startsWith('bar:') && kinds.includes('bar-problem')) ||
+        (s.startsWith('hunt:') && kinds.includes('error-hunt')) ||
+        (s.startsWith('check:') && kinds.includes('check-calc')) ||
         (s.startsWith('add:') && kinds.some((k) => k === 'column-add' || k === 'word-problem')) ||
         (s.startsWith('sub:') && kinds.some((k) => k === 'column-sub' || k === 'word-problem')) ||
         (s.startsWith('mul:2x1') && kinds.some((k) => k === 'column-mul' || k === 'word-problem')) ||
@@ -95,10 +111,10 @@ describe('season 1 structure', () => {
     expect(season1.worlds.map((w) => w.background)).toEqual(['forest', 'river', 'cave', 'mountain', 'lake', 'rainbow-garden', 'volcano', 'castle'])
   })
 
-  it('every world has 7–10 nodes: arrival story first, guardian last, 3–5 varied activities', () => {
+  it('every world has 7–13 nodes: arrival story first, guardian last, 3–7 varied activities', () => {
     for (const w of season1.worlds) {
       expect(w.nodes.length, w.id).toBeGreaterThanOrEqual(7)
-      expect(w.nodes.length, w.id).toBeLessThanOrEqual(10)
+      expect(w.nodes.length, w.id).toBeLessThanOrEqual(MAX_NODES[w.id] ?? 10)
       expect(w.nodes[0].kind, w.id).toBe('story')
       expect(w.nodes[0].ref, w.id).toBe(`${w.id}-arrival`)
       expect(w.nodes[w.nodes.length - 1].kind, w.id).toBe('guardian')
@@ -106,7 +122,7 @@ describe('season 1 structure', () => {
       expect(w.nodes.some((n) => n.kind === 'lesson'), w.id).toBe(true)
       const acts = w.nodes.filter((n) => n.kind === 'activity')
       expect(acts.length, w.id).toBeGreaterThanOrEqual(3)
-      expect(acts.length, w.id).toBeLessThanOrEqual(5)
+      expect(acts.length, w.id).toBeLessThanOrEqual(7)
       expect(new Set(acts.map((n) => n.activity!.kind)).size, `${w.id} varied kinds`).toBeGreaterThanOrEqual(3)
     }
   })
@@ -206,6 +222,7 @@ describe('activities', () => {
     share: { emoji: 'string', container: 'string' },
     word: { chooseOp: 'boolean' },
     board: { squares: 'number', opponent: 'string', specials: 'other' },
+    exercises: { guided: 'boolean' },
   }
 
   it('every activity has a title, instructions, a selector and a sensible count', () => {
@@ -297,7 +314,8 @@ describe('lessons', () => {
   it('use the visuals with exactly the documented params, Lumi narration and some try steps', () => {
     for (const l of lessons) {
       expect(l.steps.length, l.id).toBeGreaterThanOrEqual(4)
-      expect(l.steps.length, l.id).toBeLessThanOrEqual(12)
+      // «Cuatro caminos para restar» shows four methods (two steps and a try each) and the choice: 14 steps.
+      expect(l.steps.length, l.id).toBeLessThanOrEqual(l.id === 'w4-four-ways' ? 14 : 12)
       const tries = l.steps.filter((s) => s.interaction === 'try')
       expect(tries.length, `${l.id} has try steps`).toBeGreaterThanOrEqual(1)
       expect(l.steps[l.steps.length - 1].interaction === 'try' || l.steps.length > 1).toBe(true)

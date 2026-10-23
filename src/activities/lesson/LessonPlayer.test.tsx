@@ -43,6 +43,12 @@ async function playThrough(lesson: LessonDef) {
       await user.click(screen.getByRole('button', { name: 'Responder bien' }))
       expect(nextButton()).toBeEnabled()
     }
+    if (step.interaction === 'choose') {
+      // A choice: nothing to go on with until one option is picked; the pick is saved through the host.
+      expect(nextButton()).toBeDisabled()
+      await user.click(screen.getByRole('radio', { name: step.choices?.[0].label }))
+      expect(nextButton()).toBeEnabled()
+    }
     await user.click(nextButton())
   }
   expect(onDone).toHaveBeenCalledTimes(1)
@@ -202,6 +208,41 @@ describe('LessonPlayer: empty lesson', () => {
     const onDone = vi.fn()
     render(<LessonPlayer lesson={{ id: 'empty', title: 'Vacía', steps: [] }} onDone={onDone} />)
     await user.click(screen.getByRole('button', { name: 'Continuar' }))
+    expect(onDone).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('LessonPlayer: choose step', () => {
+  it('saves the picked method through the host and only then goes on', async () => {
+    const user = userEvent.setup()
+    const setPreference = vi.fn()
+    const onDone = vi.fn()
+    const choose: LessonDef = {
+      id: 'test-choose',
+      title: 'Elige',
+      steps: [
+        {
+          visual: 'sub-check',
+          params: { a: 352, b: 127 },
+          text: '¿Cuál te ha resultado más fácil?',
+          interaction: 'choose',
+          choices: [
+            { label: 'Por partes', value: 'parts' },
+            { label: 'Saltos en la recta', value: 'line' },
+          ],
+        },
+      ],
+    }
+    render(
+      <ActivityHostProvider value={{ ...defaultActivityHost, setPreference }}>
+        <LessonPlayer lesson={choose} onDone={onDone} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getByRole('button', { name: /Lo he entendido/ })).toBeDisabled()
+    await user.click(screen.getByRole('radio', { name: 'Saltos en la recta' }))
+    expect(setPreference).toHaveBeenCalledWith('subMethod', 'line')
+    expect(screen.getByRole('status')).toHaveTextContent('Saltos en la recta')
+    await user.click(screen.getByRole('button', { name: /Lo he entendido/ }))
     expect(onDone).toHaveBeenCalledTimes(1)
   })
 })

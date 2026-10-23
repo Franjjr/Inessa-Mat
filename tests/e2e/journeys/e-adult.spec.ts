@@ -26,9 +26,12 @@ test.describe('E · zona de adultos', () => {
     await page.getByRole('button', { name: 'Ver informe' }).first().click()
     await expect(page).toHaveURL(/\/adult\/child\//)
 
-    // Report: the times-table heatmap and the most frequent errors.
+    // Report: the temario, the mistakes by kind, the tests and the times-table heatmap.
+    await expect(page.getByRole('heading', { name: 'Temario de 3.º' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'En qué falla' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Pruebas', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Recuerdo' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Tablas de multiplicar' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Errores más frecuentes' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Datos y privacidad' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Descargar sus datos (JSON)' })).toBeVisible()
 

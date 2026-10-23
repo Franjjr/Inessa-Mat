@@ -1,0 +1,441 @@
+/* Tiempo views (3.º, block D): the analogue clock, the phrases, the time line, the week and the months.
+   Tablet first (iPad landscape with the Pencil); the layout wraps at phone width (390 px) with no horizontal scroll. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.instructions {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.target {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+/* ---- the clock face */
+.face {
+  width: min(78vw, 340px);
+  height: auto;
+  aspect-ratio: 1;
+  display: block;
+  overflow: visible;
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+}
+
+.interactive {
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.dial {
+  fill: var(--c-surface);
+  stroke: var(--c-ink);
+  stroke-width: 4;
+}
+
+.tickBig { stroke: var(--c-ink); stroke-width: 4; stroke-linecap: round; }
+.tickSmall { stroke: var(--c-ink-mute); stroke-width: 2; stroke-linecap: round; }
+
+.num {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  fill: var(--c-ink);
+}
+
+.hourHand {
+  stroke: var(--c-ink);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.minuteHand {
+  stroke: var(--c-primary);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.handle {
+  fill: var(--c-magic-soft);
+  stroke: var(--c-ink);
+  stroke-width: 2.5;
+}
+
+.hub {
+  fill: var(--c-ink);
+}
+
+/* ---- set: stepper buttons */
+.setRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-5);
+  min-width: 0;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.steppers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.stepRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.stepLabel {
+  flex: 1 1 180px;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.stepBtn {
+  min-width: 64px;
+  min-height: 64px;
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.stepBtn:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+/* ---- read: the phrases to choose from */
+.phrases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: min(100%, 420px);
+  align-self: center;
+}
+
+.phraseBtn {
+  min-height: 72px;
+  padding: var(--sp-3) var(--sp-4);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.phraseBtn:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.phraseOn {
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+}
+
+/* ---- answer boxes: hour and minutes */
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--sp-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+
+.fieldLabel {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+}
+
+.colon {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  padding-bottom: 14px;
+}
+
+/* ---- digital card (time-convert, to-phrase) */
+.digital {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  max-width: 100%;
+}
+
+/* ---- time line (time-duration) */
+.track {
+  width: min(100%, 640px);
+  box-sizing: border-box;
+  padding: 0 88px;
+  margin: var(--sp-4) auto 0;
+}
+
+.trackInner {
+  position: relative;
+  height: 120px;
+}
+
+.trackLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 56px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--c-line);
+}
+
+.trackTick {
+  position: absolute;
+  top: 46px;
+  width: 4px;
+  height: 26px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--c-ink);
+  left: var(--pos);
+}
+
+.trackLabel {
+  position: absolute;
+  top: 84px;
+  transform: translateX(-50%);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink);
+  left: var(--pos);
+  white-space: nowrap;
+}
+
+.trackMark {
+  position: absolute;
+  top: 46px;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  border-radius: 50%;
+  border: 3px solid var(--c-ink);
+  background: var(--c-magic-soft);
+  left: var(--pos);
+}
+
+.trackMarkLabel {
+  position: absolute;
+  top: 8px;
+  transform: translate(-50%, 0);
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+  left: var(--pos);
+  white-space: nowrap;
+}
+
+/* ---- calendar */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--sp-2);
+  width: min(100%, 720px);
+  align-self: center;
+}
+
+.day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: var(--sp-2);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.dayToday {
+  background: var(--c-blue-soft);
+  font-weight: 700;
+}
+
+.choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.choiceBtn {
+  min-height: 72px;
+  min-width: 140px;
+  padding: var(--sp-3) var(--sp-5);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  text-transform: capitalize;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.choiceBtn:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.months {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--sp-2);
+  width: min(100%, 560px);
+  align-self: center;
+}
+
+.month {
+  padding: var(--sp-2);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
+  text-align: center;
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.monthOn {
+  border-color: var(--c-primary);
+  background: var(--c-primary-soft);
+  color: var(--c-primary-strong);
+  font-weight: 700;
+}
+
+.units {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.arrow {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  color: var(--c-ink-soft);
+}
+
+.cardNumber {
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.answerNumber {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* Phone width: keep every block inside the 16 px gutter. */
+@media (max-width: 480px) {
+  .week { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .months { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .choiceBtn { min-width: 0; flex: 1 1 140px; }
+}

@@ -7,21 +7,42 @@
 import type { Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillSelector } from '@/types'
 import { digitCount } from './arith'
 import {
-  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDoubleChain, makeFactDiv, makeFactFamily,
-  makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
+  makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDivision3, makeDoubleChain, makeFactDiv,
+  makeFactFamily, makeFactMul, makeGroups, makeMissingFactor, makeSkipCount, makeWordProblem,
 } from './make'
+import { BAR_OPS, genBarProblem } from './bars'
+import { genCheckCalc, genErrorHunt } from './bugs'
 import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from './numbers'
+import { buildEquation, buildMental, mentalSkillsOf } from './calc'
+import { buildNumericExercise, numericSkillsOf } from './numeric'
+import { buildClock, clockSkillsOf } from './clock'
+import { genFractionAdd, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade } from './fractions'
+import { genGeometry } from './geometry'
+import { buildMoney, MONEY_MODES } from './money'
+import { buildMeasure } from './measure'
+import { CHART_SKILLS, buildChance, buildChart } from './data'
+import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
+import { PATTERN_SKILLS, buildPattern } from './patterns'
+import { POSITION_SKILLS, buildPosition } from './position'
+import { moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
-  DIVISION_VARIANTS, addSkill, conceptSkill, div2x1Skill, divSkill, isEasyFact, isFactSkill, kindsForSkill,
-  mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill, type DivisionVariant, type ParsedSkill, type WordOp,
+  CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
+  divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
 import { fillTemplate, templatesFor } from './wordProblems'
 
 export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
-  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
+  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation',
+  // tiempo (block D, src/engine/clock.ts)
+  'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
+  'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
+  'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
+  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -29,6 +50,8 @@ export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '�
 type Regroup = NonNullable<SkillSelector['regroup']>
 
 export interface Ctx {
+  /** Mastery of the child: a bar problem the child has mastered comes without the drawing (the ladder). */
+  mastery?: MasteryMap
   tables?: number[]
   range: [number, number]
   rangeExplicit: boolean
@@ -187,9 +210,58 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
     case 'division':
       for (const v of ctx.variants) addItem(map, div2x1Skill(v), kind, 1)
       break
+    case 'bar-problem':
+      for (const op of BAR_OPS) addItem(map, barSkill(op), kind, 1)
+      break
+    case 'error-hunt':
+      for (const op of HUNT_OPS) addItem(map, huntSkill(op), kind, 1)
+      break
+    case 'check-calc':
+      for (const op of CHECK_OPS) addItem(map, checkSkill(op), kind, 1)
+      break
     case 'word-problem':
       for (const op of wordOps(ctx)) addItem(map, wordSkill(op), kind, 1)
       break
+    case 'clock-read': case 'clock-set': case 'time-convert': case 'time-duration': case 'calendar':
+      for (const skill of clockSkillsOf(kind)) addItem(map, skill, kind, 1)
+      break
+    case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal': case 'fraction-add':
+    case 'shape-choice': case 'angle-tap': case 'perimeter': case 'shape-count':
+      for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
+      break
+    case 'money':
+      for (const mode of MONEY_MODES) addItem(map, moneySkill(mode), kind, 1)
+      break
+    case 'measure':
+      for (const dim of ['length', 'mass', 'capacity'] as const) {
+        addItem(map, measureSkill('unit', dim), kind, 1)
+        addItem(map, measureSkill('convert', dim), kind, 1)
+      }
+      for (const skill of ['measure:ruler', 'measure:add', 'measure:estimate']) addItem(map, skill, kind, 1)
+      break
+    case 'chart':
+      for (const v of CHART_SKILLS) addItem(map, `chart:${v}`, kind, 1)
+      break
+    case 'chance':
+      addItem(map, 'prob:chance', kind, 1)
+      break
+    case 'mul-parts':
+      addItem(map, 'mul:2dx2d', kind, 1)
+      addItem(map, 'mul:3dx2d', kind, 1)
+      break
+    case 'area':
+      addItem(map, 'geo:area', kind, 1)
+      break
+    case 'pattern':
+      for (const v of PATTERN_SKILLS) addItem(map, `pattern:${v}`, kind, 1)
+      break
+    case 'position':
+      for (const v of POSITION_SKILLS) addItem(map, `pos:${v}`, kind, 1)
+      break
+    default: {
+      const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
+      for (const skill of skills) addItem(map, skill, kind, 1)
+    }
   }
   return [...map.values()]
 }
@@ -492,10 +564,13 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
   if (p.type === 'add' || (p.type === 'concept' && p.name === 'placevalue')) {
     const digits = p.type === 'add' ? p.digits : 3
     const carries = p.type === 'add' ? p.carries : 0
+    const capped = p.type === 'add' && p.max === 999
     return retry(() => {
-      const [a, b] = addNumbers(rng, digits, Math.min(carries, maxCarries(digits)))
+      const [a, b] = capped
+        ? genAddOperands(rng, digits, carries, digits, true) ?? [123, 456]
+        : addNumbers(rng, digits, Math.min(carries, maxCarries(digits)))
       const ops = digitCount(a) === digitCount(b) && rng() < 0.5 ? [b, a] : [a, b]
-      return makeColumnAdd(ops, p.type === 'concept' ? skill : undefined)
+      return makeColumnAdd(ops, p.type === 'concept' || capped ? skill : undefined)
     }, used, rng)!
   }
   if (p.type === 'sub') {
@@ -510,6 +585,26 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
   // division
   const variant = p.type === 'div2x1' ? p.variant : 'exact'
   return retry(() => { const [dd, dv] = genDivision(rng, variant, TABLES_2_9(ctx)); return makeDivision(dd, dv) }, used, rng)!
+}
+
+/** A bar problem. The ladder: until the child has mastered the bar of the operation, the drawing is shown. */
+function buildBar(op: BarSkillOp, skill: SkillKey, ctx: Ctx, rng: Rng): Exercise {
+  const withBar = (ctx.mastery?.[skill]?.box ?? -1) < 2
+  return genBarProblem(op, rng, withBar)
+}
+
+/** A 3-digit dividend (100..999) by a 1-digit divisor: exact (no remainder) or with a remainder. */
+export function genDivision3(rng: Rng, withRemainder: boolean): [number, number] {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const d = randInt(rng, 2, 9)
+    const r = withRemainder ? randInt(rng, 1, d - 1) : 0
+    const qMin = Math.ceil((100 - r) / d)
+    const qMax = Math.floor((999 - r) / d)
+    if (qMax < qMin) continue
+    const q = randInt(rng, Math.max(qMin, 11), qMax)
+    return [d * q + r, d]
+  }
+  return [372, 4]
 }
 
 function buildWord(p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
@@ -579,10 +674,64 @@ function buildWord(p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exerc
   return retry(make, used, rng, 24) ?? makeWordProblem('add-peces', fillTemplate('En el río nadan {a} peces dorados y {b} peces azules. ¿Cuántos peces hay en total?', 245, 132), 'add', 245, 132, 'peces')
 }
 
+/** Fractions and geometry (blocks E). The ladder: fraction of a quantity and perimeter start with the drawing and
+    move to the numbers (or the story) once the skill is learnt (mastery box 2 or more). */
+function buildBlock(skill: SkillKey, p: ParsedSkill, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
+  const learnt = (ctx.mastery?.[skill]?.box ?? -1) >= 2
+  if (p.type === 'fraction') {
+    switch (p.op) {
+      case 'shade': return retry(() => genFractionShade(rng, p.d), used, rng)!
+      case 'read': return retry(() => genFractionRead(rng, p.d), used, rng)!
+      case 'name': return retry(() => genFractionName(rng, p.d), used, rng)!
+      case 'of': return retry(() => genFractionOf(rng, p.d, learnt ? 'numbers' : 'drawing', pick(rng, ['🍬', '🌸'] as const)), used, rng)!
+      case 'equal': return retry(() => genFractionEqual(rng), used, rng)!
+      case 'compare': return retry(() => genFractionCompare(rng), used, rng)!
+      case 'add': case 'sub': return retry(() => genFractionAdd(rng, p.op as 'add' | 'sub', learnt ? 'numbers' : 'drawing'), used, rng)!
+    }
+  }
+  if (p.type === 'geo') {
+    return retry(() => genGeometry(p.op, rng, learnt ? 'story' : 'drawing') as Exercise, used, rng)!
+  }
+  throw new Error(`engine.generate: '${skill}' is not a fraction or geometry skill`)
+}
+
 export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng: Rng, used: Set<string>): Exercise {
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  // Tiempo (block D): the clock and calendar generators (src/engine/clock.ts). Read items show the phrase while the child learns.
+  if (p.type === 'clock-read' || p.type === 'clock-set' || p.type === 'clock-convert' || p.type === 'time-duration' || p.type === 'calendar') {
+    const writeMode = p.type === 'clock-read' && (ctx.mastery?.[skill]?.box ?? 0) >= 2
+    const built = buildClock(skill, rng, used, writeMode)
+    if (built) return built
+  }
+  if (NUMERIC_KINDS.includes(kind)) {
+    // Numbers up to 9 999 and cálculo mental: their own generators (src/engine/numeric.ts, calc.ts).
+    if (p.type === 'mental') return buildMental(p.family, rng, used)
+    if (p.type === 'equation') return buildEquation(rng, used)
+    const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
+    if (built) return built
+  }
+  if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
+  if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
+  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
+  if (p.type === 'chart') return retry(() => buildChart(p.variant, rng), used, rng)!
+  if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
+  if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!
+  if (p.type === 'position') return retry(() => buildPosition(p.variant, rng), used, rng)!
+  if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng)
+  if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
+  if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
+  if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
+  if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
+  if (p.type === 'div3x1') {
+    return retry(() => {
+      const [dd, dv] = genDivision3(rng, p.variant === 'rem')
+      return makeDivision3(dd, dv)
+    }, used, rng)!
+  }
   switch (p.type) {
     case 'mul':
       return buildFact(kind, p, ctx, rng, used)
@@ -628,7 +777,7 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
   if (n === 0) return []
   const rng = opts.rng ?? createRng(seedFor(selector, opts.now))
   const now = opts.now ?? new Date()
-  const ctx = resolveContext(selector)
+  const ctx: Ctx = { ...resolveContext(selector), mastery: opts.mastery }
   let groups = buildGroups(selector, ctx)
   if (groups.length === 0) groups = [{ items: kindUniverse('fact-mul', ctx) }]
   const avoid = new Set(opts.avoidIds ?? [])

@@ -15,6 +15,7 @@ import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
 import { Keypad } from './Keypad'
+import { focusPad, useIsActivePad } from './activePad'
 import { CheckIcon, EraserIcon, KeypadIcon, PencilIcon } from './icons'
 import { NudgeBubble, useNudge } from './Nudge'
 import s from './NumberInput.module.css'
@@ -29,6 +30,11 @@ export interface NumberInputExtraProps {
    * or 'right' (3×4 grid beside the pad — keeps the pad centred, e.g. inline after "6 × 7 =").
    */
   keypadPosition?: 'below' | 'right'
+  /**
+   * Show the pad's own ✓ (default true). Views with several boxes side by side (euros and céntimos, the parts of a
+   * number, a fraction, hour and minutes) hide it and check with their shared «Comprobar»; Enter still submits.
+   */
+  checkButton?: boolean
 }
 
 interface SegView {
@@ -60,7 +66,7 @@ function placeholderFor(mode: string): string {
 
 export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const {
-    value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true,
+    value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true, checkButton = true,
     keypadPosition = 'below',
   } = props
   const ink = useInk()
@@ -86,7 +92,9 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const latest = useRef({ props, ink })
   useLayoutEffect(() => { latest.current = { props, ink } })
 
-  const keypadVisible = ink.mode === 'keypad' || toggled
+  // In keypad mode only one box on the screen shows the keypad: the one touched last.
+  const activePad = useIsActivePad(uid)
+  const keypadVisible = (ink.mode === 'keypad' && activePad) || toggled
   const palm = usePalmGuard()
   const [nudging, nudge] = useNudge()
   /** A finger on the pad although a pen is in use (Pencil lost?): point to the keypad toggle. */
@@ -352,6 +360,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           aria-label={ariaLabel ?? 'Escribe tu respuesta'}
           aria-disabled={disabled || undefined}
           aria-invalid={status === 'wrong' || undefined}
+          onFocus={() => focusPad(uid)}
           onKeyDown={onKeyDown}
         >
           <span className={s.guide} aria-hidden />
@@ -422,7 +431,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
               </button>
             </span>
           )}
-          {!keypadVisible && (
+          {!keypadVisible && checkButton && (
             <button
               type="button"
               className={s.check}

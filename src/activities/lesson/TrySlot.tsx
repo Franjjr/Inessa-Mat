@@ -4,7 +4,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { createRng, generate } from '@/engine'
-import type { ExerciseOutcome, SkillSelector } from '@/types'
+import type { DivMethod, ExerciseOutcome, SkillSelector, SubMethod } from '@/types'
 import { Button } from '@/ui'
 import s from './TrySlot.module.css'
 
@@ -24,6 +24,10 @@ interface Props {
   onSettled: (solved: boolean) => void
   /** Set when the step was already settled (the child came back to it): shows the outcome, offers no exercise. */
   settled?: boolean
+  /** Subtraction method the exercise is solved with (a lesson step that teaches one method). */
+  method?: SubMethod
+  /** Division method the exercise is solved with (the division methods lesson). */
+  divMethod?: DivMethod
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -42,7 +46,7 @@ export function fitScale(available: number, natural: number): number {
   return Math.max(MIN_FIT_SCALE, available / natural)
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled }: Props) {
+export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -108,6 +112,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled }: Props
       inputMode: outcome.inputMode,
       hintsUsed: outcome.hintsUsed,
       recognitionFixes: outcome.recognitionFixes,
+      method: method ?? divMethod,
     })
     if (check.correct) {
       host.react('correct')
@@ -135,7 +140,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled }: Props
     <div ref={wrapRef} className={s.wrap} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
-          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints showFeedback={false} />
+          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints showFeedback={false} method={method} divMethod={divMethod} />
         </div>
       </div>
       <div ref={footerRef} className={s.footer} role="status" aria-live="polite">

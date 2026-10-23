@@ -1,6 +1,6 @@
 /* Free play rules (pure): which times tables and which minigames the child has unlocked, and the config of a
    table drill. Only what the child has reached is offered; nothing here changes progress. */
-import { isNodeUnlocked, season1 } from '@/content'
+import { isNodeUnlocked, seasonOf } from '@/content'
 import type { ActivityConfig, ActivityKind, ProgressState, WorldDef, NodeDef } from '@/types'
 
 export interface FreeGame {
@@ -13,7 +13,7 @@ export interface FreeGame {
 /** Times tables that appear in an unlocked activity (sorted). */
 export function unlockedTables(progress: ProgressState): number[] {
   const tables = new Set<number>()
-  for (const world of season1.worlds) {
+  for (const world of seasonOf(progress).worlds) {
     for (const node of world.nodes) {
       if (!node.activity || !isNodeUnlocked(progress, world.id, node.id)) continue
       for (const t of node.activity.selector.tables ?? []) tables.add(t)
@@ -25,7 +25,7 @@ export function unlockedTables(progress: ProgressState): number[] {
 /** Every minigame the child has unlocked, in season order. Review nodes and story nodes are not games. */
 export function unlockedGames(progress: ProgressState): FreeGame[] {
   const games: FreeGame[] = []
-  for (const world of season1.worlds) {
+  for (const world of seasonOf(progress).worlds) {
     for (const node of world.nodes) {
       if (!node.activity || !isNodeUnlocked(progress, world.id, node.id)) continue
       games.push({ worldId: world.id, world, node, config: node.activity })
@@ -51,6 +51,7 @@ const KIND_LABEL: Record<ActivityKind, string> = {
   necklace: 'Collar de cuentas', chain: 'Cadena de dobles', family: 'Familias de números', maze: 'Laberinto',
   pixel: 'Dibujo secreto', memory: 'Memoria', bubbles: 'Burbujas', groups: 'Grupos', array: 'Filas y columnas',
   column: 'Cuentas en columna', division: 'Repartos', share: 'Repartir', word: 'Problemas', board: 'Carrera al castillo',
+  exercises: 'Ejercicios',
 }
 
 export function kindLabel(kind: ActivityKind): string {

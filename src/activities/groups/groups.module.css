@@ -39,7 +39,7 @@
   place-items: center;
   cursor: pointer;
   touch-action: manipulation;
-  transition: transform var(--dur-fast) var(--ease-bounce);
+  transition: transform var(--dur-fast) var(--ease-out);
   -webkit-tap-highlight-color: transparent;
 }
 .token:active { transform: scale(.9); }
@@ -63,7 +63,7 @@
   border-radius: var(--r-lg);
   background: var(--c-surface);
   border: 3px dashed var(--c-line);
-  transition: border-color var(--dur-med), transform var(--dur-med) var(--ease-bounce);
+  transition: border-color var(--dur-med), transform var(--dur-med) var(--ease-out);
 }
 .basketOpen { border-color: var(--c-primary); transform: translateY(-3px); }
 .basketFull { border-style: solid; border-color: var(--c-success); background: var(--c-success-soft); }
@@ -105,7 +105,7 @@
   text-align: center;
 }
 
-.ready { animation: pop var(--dur-med) var(--ease-bounce); }
+.ready { animation: pop var(--dur-med) var(--ease-out); }
 
 @keyframes pop {
   from { transform: scale(.9); opacity: 0; }

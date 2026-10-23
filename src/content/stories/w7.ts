@@ -18,6 +18,7 @@ export const w7Arrival = story('w7-arrival', 'El farolillo de la forja', [
     say('dragon', 'Pero mis tablas se quedaron en la niebla. Y ese candado solo se abre multiplicando.', 'sad'),
     say('lumi', 'Las multiplicaciones grandes son como una pizza: ¡se hacen por trocitos!', 'happy'),
     say('companion', '¿Pizza? ¿Alguien ha dicho pizza? ¡Yo quiero un trocito!', 'surprised'),
+    say('lumi', 'En la forja se pesa el metal y se trabaja por turnos. ¡Necesitaremos el reloj y la balanza!', 'happy'),
   ]),
 ])
 

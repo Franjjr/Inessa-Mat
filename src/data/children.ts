@@ -2,7 +2,7 @@
    (orgId null) when the device is used without an account. Deletion is soft (tombstone for sync). */
 import { useCallback, useMemo } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { initialProgress } from '@/content'
+import { initialProgress, seasonIdForGrade } from '@/content'
 import { COMPANION_SPECIES, DEFAULT_CHILD_SETTINGS, type ChildProfile, type NewChildInput } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
@@ -97,7 +97,7 @@ export async function createChild(input: NewChildInput): Promise<ChildProfile> {
 
   await db.transaction('rw', [db.children, db.progress, db.outbox, db.meta], async () => {
     await db.children.add(child)
-    await db.progress.put(initialProgress(child.id, new Date(now)))
+    await db.progress.put(initialProgress(child.id, new Date(now), seasonIdForGrade(grade)))
     await enqueue('children', child.id, child.id)
     await enqueue('progress', child.id, child.id)
     const active = await db.meta.get(META.activeChildId)

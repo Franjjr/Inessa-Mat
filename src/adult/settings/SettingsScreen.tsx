@@ -299,6 +299,12 @@ function SoundCard({ profiles }: { profiles: ChildProfile[] }) {
         checked={child.settings.voice}
         onChange={(v) => void change({ voice: v })}
       />
+      <SwitchRow
+        label="Leer las historias en voz alta"
+        hint="Apágalo si prefieres que las historias las lea el niño. Siempre puede pulsar «Escuchar»."
+        checked={child.settings.storyVoice !== false}
+        onChange={(v) => void change({ storyVoice: v })}
+      />
       <VoicePicker />
       {error && <p className={adult.error} role="alert">{error}</p>}
     </section>
