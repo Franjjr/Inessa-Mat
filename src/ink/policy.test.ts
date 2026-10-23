@@ -7,10 +7,13 @@ describe('palm rejection (pointerRole)', () => {
     expect(pointerRole('touch', { penSeen: true, mode: 'pen' })).toBe('tap')
   })
 
-  it('always lets the pen and the mouse write', () => {
+  it('always lets the pen write; the mouse writes only when writing is the chosen mode', () => {
     for (const penSeen of [false, true]) {
       expect(pointerRole('pen', { penSeen, mode: 'pen' })).toBe('write')
-      expect(pointerRole('mouse', { penSeen, mode: 'keyboard' })).toBe('write')
+      expect(pointerRole('pen', { penSeen, mode: 'keypad' })).toBe('write')
+      expect(pointerRole('mouse', { penSeen, mode: 'pen' })).toBe('write')
+      expect(pointerRole('mouse', { penSeen, mode: 'keypad' })).toBe('tap')
+      expect(pointerRole('mouse', { penSeen, mode: 'keyboard' })).toBe('tap')
     }
   })
 
@@ -53,7 +56,8 @@ describe('resolveInputMode', () => {
   it('auto: pen if seen, touch on tablets, keyboard on computers', () => {
     expect(resolveInputMode({ preference: 'auto', penSeen: true, isTouchDevice: true })).toBe('pen')
     expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: true })).toBe('touch')
-    expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: false })).toBe('keyboard')
+    expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: false })).toBe('keypad')
+    expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: false, keyboardUsed: true })).toBe('keypad')
     expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: true, keyboardUsed: true })).toBe('keyboard')
   })
 

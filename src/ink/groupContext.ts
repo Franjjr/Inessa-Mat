@@ -5,6 +5,8 @@ import type { Direction } from './order'
 export interface CellEntry {
   el: HTMLElement
   cellId?: string
+  /** An optional cell (a carry mark): typing never moves the cursor into it; the child taps it to write there. */
+  optional?: boolean
   focusable(): boolean
   focus(): void
   input(d: number, via: 'keyboard' | 'keypad'): void

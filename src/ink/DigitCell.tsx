@@ -349,6 +349,7 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     return register(uid, {
       el,
       cellId,
+      optional: (latest.current.props.variant ?? 'result') === 'carry',
       focusable: () => !latest.current.props.disabled && (latest.current.props.variant ?? 'result') !== 'given',
       focus: () => el.focus({ preventScroll: true }),
       input: (d, via) => apiRef.current.input(d, via),

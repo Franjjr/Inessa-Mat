@@ -19,7 +19,9 @@ export function normalizePointerType(t: string): PointerKind {
  */
 export function pointerRole(pointerType: string, opts: { penSeen: boolean; mode: InputMode; isPrimary?: boolean }): PointerRole {
   const kind = normalizePointerType(pointerType)
-  if (kind === 'pen' || kind === 'mouse') return 'write'
+  if (kind === 'pen') return 'write'
+  // A mouse cannot write digits well: with the keypad (or the physical keyboard) it only selects a box.
+  if (kind === 'mouse') return opts.mode === 'keypad' || opts.mode === 'keyboard' ? 'tap' : 'write'
   if (opts.isPrimary === false) return 'ignore'
   if (opts.penSeen) return 'tap'
   if (opts.mode === 'keypad') return 'tap'
@@ -60,14 +62,19 @@ export function forgetPenSeen(): void {
   }
 }
 
-/** iPadOS reports itself as a Mac, so rely on touch points / coarse pointer rather than the user agent. */
+/** A device the child writes on with a finger or a pen (tablet, phone). iPadOS reports itself as a Mac, so rely on
+    the pointer media queries rather than the user agent. A computer with a touch screen still has a mouse or
+    trackpad as its main pointer, so it counts as a computer (its pen, if it has one, is detected on use). */
 export function detectTouchDevice(): boolean {
-  if (typeof navigator !== 'undefined' && (navigator.maxTouchPoints ?? 0) > 0) return true
   try {
-    return typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+    if (typeof matchMedia === 'function') {
+      if (matchMedia('(pointer: coarse)').matches) return true
+      if (matchMedia('(any-pointer: fine)').matches) return false
+    }
   } catch {
-    return false
+    /* fall back to touch points */
   }
+  return typeof navigator !== 'undefined' && (navigator.maxTouchPoints ?? 0) > 0
 }
 
 /** A phone: a touch screen whose short side is under 600 px (an iPad mini is 744). Handwritten cells are too small
@@ -80,7 +87,8 @@ export function detectPhone(): boolean {
 
 /**
  * auto → pen if a pen has been seen, else touch on touch devices (keyboard if the child is typing on a
- * physical keyboard attached to the tablet, the on-screen keypad on a phone), else keyboard.
+ * physical keyboard attached to the tablet, the on-screen keypad on a phone), else (a computer) the on-screen keypad,
+ * which the physical keyboard can also type into.
  */
 export function resolveInputMode(opts: {
   preference: AnswerInputPreference
@@ -97,7 +105,7 @@ export function resolveInputMode(opts: {
     default:
       if (penSeen) return 'pen'
       if (isTouchDevice) return keyboardUsed ? 'keyboard' : isPhone ? 'keypad' : 'touch'
-      return 'keyboard'
+      return 'keypad'
   }
 }
 

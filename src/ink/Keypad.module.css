@@ -59,6 +59,12 @@
 
 .spacer { width: var(--key); height: var(--key); }
 
+/* Phones: two rows of six keys across the screen (1–5 ⌫ / 6–0 ✓), low enough to fit under the exercise. */
+@media (max-width: 480px) {
+  .wide { width: min(calc(100vw - 48px), 420px); grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+  .wide .key, .wide .spacer { width: auto; min-width: 0; height: 56px; font-size: 28px; border-radius: 16px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .key, .key:active:not(:disabled) { transition: none; transform: none; }
 }

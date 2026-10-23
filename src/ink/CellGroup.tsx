@@ -58,6 +58,11 @@ export function CellGroup({
   }, [])
 
   const orderNow = useCallback(() => computeOrder(items(), latest.current.order), [items])
+  /** The order for typing (auto-advance, Backspace back): optional cells are skipped, except the one `uid` is in. */
+  const typingOrder = useCallback(
+    (uid: string) => orderNow().filter((id) => id === uid || !entries.current.get(id)?.optional),
+    [orderNow],
+  )
 
   const focusCell = useCallback((uid: string | null) => {
     if (!uid) return
@@ -71,7 +76,8 @@ export function CellGroup({
     setCurrentId((cur) => {
       const e = cur ? entries.current.get(cur) : null
       if (e && e.focusable()) return cur
-      return orderNow()[0] ?? null
+      const first = orderNow()
+      return first.find((id) => !entries.current.get(id)?.optional) ?? first[0] ?? null
     })
   }, [version, orderKey, orderNow])
 
@@ -85,9 +91,9 @@ export function CellGroup({
   }, [])
   const afterInput = useCallback((uid: string) => {
     if (!latest.current.autoAdvance) return
-    const next = step(orderNow(), uid, 1)
+    const next = step(typingOrder(uid), uid, 1)
     if (next) focusCell(next)
-  }, [orderNow, focusCell])
+  }, [typingOrder, focusCell])
   const move = useCallback((uid: string, dir: Direction) => focusCell(neighbor(items(), uid, dir)), [items, focusCell])
   const tab = useCallback((uid: string, backward: boolean) => {
     const next = step(orderNow(), uid, backward ? -1 : 1)
@@ -96,11 +102,11 @@ export function CellGroup({
     return true
   }, [orderNow, focusCell])
   const back = useCallback((uid: string) => {
-    const prev = step(orderNow(), uid, -1)
+    const prev = step(typingOrder(uid), uid, -1)
     if (!prev) return
     focusCell(prev)
     entries.current.get(prev)?.clear()
-  }, [orderNow, focusCell])
+  }, [typingOrder, focusCell])
   const submit = useCallback(() => {
     let flushed = false
     for (const e of entries.current.values()) flushed = e.flush() || flushed
