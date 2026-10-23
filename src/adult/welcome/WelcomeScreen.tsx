@@ -1,6 +1,7 @@
 /* Public front page for grown-ups (direction C «lúdica y colorista»), full width: every section is a band from edge to
    edge. It reads as one story: the hero says what Repasitos does (a short daily review that follows the child's course,
-   inside an adventure, with a report for the grown-up) for Primaria, not only maths; then how it works in three steps,
+   inside an adventure, with a report for the grown-up) for Primaria, not only maths, next to an animated demo of the
+   app (HeroDemo); then how it works in three steps,
    each with a real capture (the last one is the grown-up's report); who it is for; the subjects (Matemáticas now, the
    others later); the trust promises right before the closing choice between a local-only try, signing in or creating
    an account. Children never see this page. */
@@ -9,6 +10,7 @@ import { SUBJECTS } from '@/types'
 import { useAuth } from '@/data'
 import { Button } from '@/ui'
 import { DEFAULT_TITLE, useDocumentTitle } from '@/app/useDocumentTitle'
+import HeroDemo from './HeroDemo'
 import s from './welcome.module.css'
 
 interface Shot { src: string; small: string; alt: string }
@@ -16,7 +18,6 @@ interface Shot { src: string; small: string; alt: string }
 /** Captures are 1100 × 764 with a 660 px copy for phones. */
 const shot = (name: string, alt: string): Shot => ({ src: `/landing/${name}.webp`, small: `/landing/${name}-660.webp`, alt })
 
-const HERO = shot('nino-inicio', 'Pantalla de inicio del niño: su compañero animal, Lumi la guía y el siguiente paso de la aventura')
 
 const STEPS: { title: string; text: string; caption: string; shot: Shot; tone: string }[] = [
   {
@@ -123,6 +124,7 @@ export default function WelcomeScreen() {
                   <span key={name} className={s.chip}>{name} · pronto</span>
                 ))}
               </div>
+              <p className={s.tryLine}>Pruébalo con tu hijo unos días: puedes empezar sin crear cuenta.</p>
               <div className={s.row}>
                 {accountButtons}
                 <Button variant="secondary" size="lg" onClick={tryWithoutAccount}>Probar sin cuenta</Button>
@@ -136,15 +138,9 @@ export default function WelcomeScreen() {
                 <p className={s.small}>Hoy puedes probarlo sin cuenta. Las cuentas y las clases llegan pronto.</p>
               )}
             </div>
-            <figure className={s.heroArt}>
-              <span className={s.tag}>Captura real, en iPad</span>
-              <div className={s.shot}>
-                <Capture shot={HERO} eager />
-              </div>
-              <div className={s.lumi} aria-hidden>
-                <img src="/landing/lumi.svg" alt="" width={92} height={92} />
-              </div>
-            </figure>
+            <div className={s.heroArt}>
+              <HeroDemo />
+            </div>
           </div>
         </section>
 
