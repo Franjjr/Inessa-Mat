@@ -1,12 +1,12 @@
 /* Public front page, direction C «lúdica y colorista»: sticker panels (thick ink outline, hard offset shadow),
    Baloo 2 headings, colours from tokens. Full width: each section is a band from edge to edge with its own background;
-   the content inside keeps a side gutter (and a cap only on very wide screens). The header stays on top only where it
+   the content uses the whole width with a side gutter (no cap). The hero fills the first screen. The header stays on top only where it
    fits in one row (wide screens); section anchors leave room for it. Works at 390 px wide, iPad portrait and
    landscape, Android tablet and desktop. */
 
 .root {
-  --gutter: clamp(16px, 4.5vw, 80px);
-  --header-h: 96px;
+  --gutter: clamp(16px, 4vw, 96px);
+  --header-h: 99px;
   height: 100dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -23,10 +23,13 @@
 
 /* Bands: full-bleed backgrounds; .inner holds the content with the gutter. */
 .band { margin: 0; padding: clamp(40px, 6vw, 88px) var(--gutter); }
-.inner { width: 100%; max-width: 1760px; margin: 0 auto; }
+.inner { width: 100%; }
 .stack { display: flex; flex-direction: column; gap: var(--sp-5); }
 .heroBand {
-  padding-top: clamp(24px, 4vw, 56px);
+  /* The first screen: the hero fills what the header leaves, its content centred. */
+  min-height: calc(100dvh - var(--header-h));
+  display: flex; align-items: center;
+  padding-block: clamp(32px, 5vw, 96px);
   background:
     radial-gradient(circle at 92% 8%, var(--c-pink-soft) 0, transparent 38%),
     radial-gradient(circle at 4% 96%, var(--c-blue-soft) 0, transparent 40%),
@@ -49,7 +52,7 @@
 .cBlue { background: var(--c-blue-soft); }
 .cPink { background: var(--c-pink-soft); }
 
-.band h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 4vw, 50px); line-height: 1.08; margin: 0; max-width: 22em; }
+.band h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(30px, 3.4vw, 72px); line-height: 1.08; margin: 0; max-width: 22em; }
 
 /* Header */
 .top {
@@ -58,7 +61,7 @@
   background: var(--c-surface); border-bottom: var(--sticker-border);
 }
 .topInner {
-  width: 100%; max-width: 1760px; margin: 0 auto;
+  width: 100%;
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-4);
 }
 .logo {
@@ -91,13 +94,15 @@
 }
 .title {
   margin: 0; font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(40px, 6vw, 80px); line-height: 1.12; color: var(--c-ink);
+  font-size: clamp(40px, 5.4vw, 136px); line-height: 1.1; color: var(--c-ink);
 }
 .hl {
-  background: var(--c-yellow); padding: 0 .12em; border-radius: 14px;
+  /* A marker stroke inside the line box, so it never reaches the paragraph below. */
+  background: linear-gradient(transparent 14%, var(--c-yellow) 14%, var(--c-yellow) 90%, transparent 90%);
+  padding: 0 .12em; border-radius: 14px;
   box-decoration-break: clone; -webkit-box-decoration-break: clone;
 }
-.deck { margin: 0; max-width: 34em; font-size: clamp(19px, 2vw, 22px); color: var(--c-ink-soft); }
+.deck { margin: 0; max-width: 36em; font-size: clamp(19px, 1.45vw, 30px); color: var(--c-ink-soft); }
 .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .row > * { flex: 0 1 auto; }
 .small { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
@@ -210,9 +215,19 @@
 }
 .footLogo { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--c-ink); }
 
+/* Very wide screens: the small text grows with the page. */
+@media (min-width: 1800px) {
+  .nav a, .chip, .pill { font-size: 18px; }
+  .badge { font-size: 20px; }
+  .card h3, .subj h3 { font-size: 34px; }
+  .card ul, .notFor ul, .subj p, .trustCard p, .small { font-size: 20px; }
+  .trustCard h3, .notFor h3 { font-size: 28px; }
+  .stepFig figcaption { font-size: 22px; }
+}
 /* Below the width where the header fits in one row: it scrolls away, and the section links go under the logo. */
 @media (max-width: 1100px) {
   .root { --header-h: 0px; }
+  .heroBand { min-height: 0; }
   .top { position: static; }
   .topInner { flex-wrap: wrap; }
   .nav { order: 3; width: 100%; flex-wrap: wrap; }
