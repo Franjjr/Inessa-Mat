@@ -105,6 +105,7 @@
 .deck { margin: 0; max-width: 36em; font-size: clamp(19px, 1.45vw, 30px); color: var(--c-ink-soft); }
 .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .row > * { flex: 0 1 auto; }
+.tryLine { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(18px, 1.4vw, 26px); color: var(--c-ink); }
 .small { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
 .small button { min-height: 44px; }
 
@@ -117,7 +118,7 @@
 }
 .chipOn { border-style: solid; background: #15803d; color: #fff; box-shadow: var(--sticker-shadow-sm); }
 
-.heroArt { position: relative; margin: 0; padding: 0 var(--sp-3) var(--sp-5) 0; }
+.heroArt { position: relative; margin: 0; min-width: 0; }
 .tag {
   position: absolute; left: -10px; top: 18px; z-index: 1;
   background: var(--c-pink-soft); font-family: var(--font-display); font-weight: 800; font-size: 18px; line-height: 1.1;
