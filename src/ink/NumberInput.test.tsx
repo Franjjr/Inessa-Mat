@@ -7,7 +7,7 @@ import { useInkLearning } from './hooks'
 import { notePenContact } from './policy'
 import { scriptedRecognizer, type ScriptedAnswer } from './dev/scripted'
 import { replayStrokes, tap } from './dev/autoplay'
-import { fixedElementSize, mockCanvas } from './dev/testing'
+import { asTablet, fixedElementSize, mockCanvas } from './dev/testing'
 import { handwriteNumber, scribble } from './fixtures'
 
 vi.mock('@/data', () => ({
@@ -21,8 +21,9 @@ vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), suc
 const W = 320
 const H = 120
 let restore: () => void
-beforeAll(() => { mockCanvas(); restore = fixedElementSize(W, H) })
-afterAll(() => restore())
+let restoreTablet: () => void
+beforeAll(() => { mockCanvas(); restore = fixedElementSize(W, H); restoreTablet = asTablet() })
+afterAll(() => { restore(); restoreTablet() })
 beforeEach(() => { vi.useFakeTimers() })
 afterEach(() => { vi.useRealTimers() })
 

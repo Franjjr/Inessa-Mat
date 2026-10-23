@@ -36,3 +36,15 @@ export function fixedElementSize(width: number, height: number): () => void {
     if (h) Object.defineProperty(HTMLElement.prototype, 'clientHeight', h)
   }
 }
+
+/** Makes the device look like a tablet (coarse main pointer): «auto» input writes by hand. Without it jsdom looks like a
+    computer, where «auto» shows the on-screen keypad. Returns a restore function. */
+export function asTablet(): () => void {
+  const had = Object.prototype.hasOwnProperty.call(window, 'matchMedia')
+  const prev = window.matchMedia
+  window.matchMedia = ((query: string) => ({
+    matches: query === '(pointer: coarse)', media: query, onchange: null,
+    addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia
+  return () => { if (had) window.matchMedia = prev; else delete (window as { matchMedia?: unknown }).matchMedia }
+}

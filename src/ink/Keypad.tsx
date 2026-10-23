@@ -25,7 +25,8 @@ const keepFocus = (e: MouseEvent) => e.preventDefault()
 const NARROW = '(max-width: 480px)'
 const narrowNow = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(NARROW).matches
 
-/** A phone-width screen: six keys in a row do not fit, so the wide keypad becomes the 3-column grid. */
+/** A phone-width screen: the keypad becomes two rows of six keys across the screen, the lowest it can be, so it fits
+    under the exercise. */
 function useNarrow(): boolean {
   const [narrow, setNarrow] = useState(narrowNow)
   useEffect(() => {
@@ -40,7 +41,7 @@ function useNarrow(): boolean {
 
 export function Keypad({ onDigit, onDelete, onSubmit, disabled, layout: asked = 'grid', size = 'md', className, submitDisabled }: KeypadProps) {
   const narrow = useNarrow()
-  const layout = narrow ? 'grid' : asked
+  const layout = narrow ? 'wide' : asked
   const palm = usePalmGuard()
   const press = (fn: () => void) => palm.guard(() => {
     if (disabled) return

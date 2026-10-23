@@ -102,6 +102,13 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
   const [isPhone] = useState(detectPhone)
   const mode = resolveInputMode({ preference, penSeen, isTouchDevice, keyboardUsed, isPhone })
 
+  // Lets the styles know how the child answers (the keypad mode uses smaller cells).
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.inputMode = mode
+    return () => { delete root.dataset.inputMode }
+  }, [mode])
+
   const bigCells = settings?.bigCells ?? false
   const handedness = settings?.handedness ?? 'right'
 

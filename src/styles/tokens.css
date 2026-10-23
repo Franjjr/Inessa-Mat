@@ -102,6 +102,12 @@
   --z-toast: 80;
   --z-ink: 90;
 }
+/* With the on-screen keypad nobody writes inside the cells, so they can be smaller and the keypad fits under them on a
+   phone (InkProvider sets data-input-mode on <html>). */
+:root[data-input-mode='keypad'] {
+  --cell-size: clamp(52px, 8vmin, 72px);
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   :root { --dur-fast: 1ms; --dur-med: 1ms; --dur-slow: 1ms; }

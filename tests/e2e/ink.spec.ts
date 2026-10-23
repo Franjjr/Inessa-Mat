@@ -134,13 +134,16 @@ test.describe('ink · handwriting input', () => {
     test.skip(!(await modelAvailable(page)), 'Digit model not available yet (public/models/digits/model.json, ml module) — skipping recognition e2e')
     await expect(page.getByTestId('ink-e2e-ready')).toHaveText('listo', { timeout: 10_000 })
     const value = page.getByTestId('ink-e2e-number-value')
-    const erase = page.locator('[data-testid="ink-e2e-number"] button[aria-label="Borrar"]')
+    // The eraser tool; on a computer (synthetic pen events do not count as a real pen) the on-screen keypad is shown
+    // instead, whose «Borrar» key only deletes one digit, so Escape clears the pad there.
+    const erase = page.locator('[data-testid="ink-e2e-number"] button[aria-label="Borrar"]:not([data-ink-keypad] *)')
     for (const n of ['42', '56', '48', '63', '72']) {
       const [a, b] = n.split('').map(Number)
       await drawDigit(page, PAD, schoolDigit(a), { x: 0.16, y: 0.08, w: 0.28, h: 0.84 })
       await drawDigit(page, PAD, schoolDigit(b), { x: 0.47, y: 0.08, w: 0.28, h: 0.84 })
       await expect(value, n).toHaveText(n, { timeout: 4000 })
-      await erase.click()
+      if (await erase.count()) await erase.click()
+      else await page.locator(PAD).press('Escape')
       await expect(value).toHaveText('–')
     }
   })
