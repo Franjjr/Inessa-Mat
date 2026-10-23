@@ -221,14 +221,14 @@ export function genFractionOf(rng: Rng, d: number, mode: 'drawing' | 'numbers', 
 /** Denominators of the sums and subtractions (4.º): never halves, so there is always more than one part to move. */
 const ADD_DENOMINATORS = [3, 4, 5, 6, 8, 10, 12]
 
-/** a/d + b/d (the sum is at most one whole) or a/d − b/d (something is left). Drawing mode: the bars, with the parts
+/** a/d + b/d (now and then the sum is exactly one whole, d/d) or a/d − b/d (something is left). Drawing mode: the bars, with the parts
     coloured from the start, the same size and the same direction so the parts line up. */
 export function genFractionAdd(rng: Rng, op: 'add' | 'sub', mode: 'drawing' | 'numbers'): FractionAddExercise {
   const d = pick(rng, ADD_DENOMINATORS)
   let a: number, b: number, answer: number
   if (op === 'add') {
     a = randInt(rng, 1, d - 2)
-    b = randInt(rng, 1, d - 1 - a)
+    b = rng() < 0.2 ? d - a : randInt(rng, 1, d - 1 - a)
     answer = a + b
   } else {
     a = randInt(rng, 3, d)
@@ -320,7 +320,9 @@ export function checkFractionAdd(ex: FractionAddExercise, answer: Answer): Check
   const { numerator: n, denominator: dd } = answer
   if (n === null || dd === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
   const given = `${n}/${dd}`
-  if (n === ex.answer && dd === d) return { correct: true, given, expected, feedback: FB.right }
+  if (n === ex.answer && dd === d) {
+    return { correct: true, given, expected, feedback: n === d ? `¡Muy bien! ${d}/${d} es la unidad entera: todas las partes.` : FB.right }
+  }
   if (dd !== d) {
     const combined = ex.op === 'add' ? dd === 2 * d : dd === 0
     return { correct: false, given, expected, errorType: 'fraction-count', feedback: combined ? (ex.op === 'add' ? FB.addBottom : FB.subBottom) : FB.sameBottom }

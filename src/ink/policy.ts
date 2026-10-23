@@ -70,24 +70,33 @@ export function detectTouchDevice(): boolean {
   }
 }
 
+/** A phone: a touch screen whose short side is under 600 px (an iPad mini is 744). Handwritten cells are too small
+    there, so «auto» answers with the on-screen keypad. */
+export function detectPhone(): boolean {
+  if (!detectTouchDevice() || typeof screen === 'undefined') return false
+  const side = Math.min(screen.width || 0, screen.height || 0)
+  return side > 0 && side < 600
+}
+
 /**
  * auto → pen if a pen has been seen, else touch on touch devices (keyboard if the child is typing on a
- * physical keyboard attached to the tablet), else keyboard.
+ * physical keyboard attached to the tablet, the on-screen keypad on a phone), else keyboard.
  */
 export function resolveInputMode(opts: {
   preference: AnswerInputPreference
   penSeen: boolean
   isTouchDevice: boolean
   keyboardUsed?: boolean
+  isPhone?: boolean
 }): InputMode {
-  const { preference, penSeen, isTouchDevice, keyboardUsed } = opts
+  const { preference, penSeen, isTouchDevice, keyboardUsed, isPhone } = opts
   switch (preference) {
     case 'keyboard': return 'keyboard'
     case 'keypad': return 'keypad'
     case 'pen': return penSeen || !isTouchDevice ? 'pen' : 'touch'
     default:
       if (penSeen) return 'pen'
-      if (isTouchDevice) return keyboardUsed ? 'keyboard' : 'touch'
+      if (isTouchDevice) return keyboardUsed ? 'keyboard' : isPhone ? 'keypad' : 'touch'
       return 'keyboard'
   }
 }

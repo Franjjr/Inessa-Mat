@@ -57,7 +57,8 @@ function verify(ex: Exercise): void {
     case 'fraction-add':
       expect(ex.op === 'add' ? ex.a + ex.b : ex.a - ex.b).toBe(ex.answer)
       expect(ex.answer).toBeGreaterThan(0)
-      expect(ex.answer).toBeLessThan(ex.denominator)
+      expect(ex.answer).toBeLessThanOrEqual(ex.denominator)
+      if (ex.op === 'sub') expect(ex.answer).toBeLessThan(ex.denominator)
       expect(ex.figures.length === 0).toBe(ex.mode === 'numbers')
       break
     case 'mul-parts':
@@ -127,6 +128,15 @@ describe('4.º: operations, numbers and geometry', () => {
     expect(check(ex, { type: 'fraction', numerator: ex.answer, denominator: 2 * d })).toMatchObject({ correct: false, errorType: 'fraction-count', feedback: expect.stringContaining('no se suma') })
     expect(check(ex, { type: 'fraction', numerator: ex.answer + 1, denominator: d })).toMatchObject({ correct: false, errorType: 'other' })
     expect(check(ex, { type: 'fraction', numerator: ex.answer, denominator: null })).toMatchObject({ correct: false, errorType: 'incomplete' })
+  })
+
+  it('a sum that makes one whole: d/d is right and called the whole', () => {
+    const wholes = Array.from({ length: 60 }, (_, seed) => generate({ skills: ['frac:add'] }, 1, { rng: createRng(seed + 1) })[0])
+      .filter((ex) => ex.kind === 'fraction-add' && ex.answer === ex.denominator)
+    expect(wholes.length).toBeGreaterThan(0)
+    const ex = wholes[0]
+    if (ex.kind !== 'fraction-add') throw new Error(ex.kind)
+    expect(check(ex, { type: 'fraction', numerator: ex.denominator, denominator: ex.denominator })).toMatchObject({ correct: true, feedback: expect.stringContaining('unidad entera') })
   })
 
   it('a 2-digit divisor: the galera steps hold for any divisor and remainders below it', () => {

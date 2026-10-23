@@ -1,7 +1,7 @@
 /* <Keypad> — big friendly on-screen number pad: 0–9, ⌫ and ✓.
    Buttons never steal focus from the cell they type into (mousedown is prevented). */
 import clsx from 'clsx'
-import type { MouseEvent } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { haptics, sfx } from '@/audio'
 import { BackspaceIcon, CheckIcon } from './icons'
 import { usePalmGuard } from './usePalmGuard'
@@ -22,7 +22,25 @@ export interface KeypadProps {
 
 const keepFocus = (e: MouseEvent) => e.preventDefault()
 
-export function Keypad({ onDigit, onDelete, onSubmit, disabled, layout = 'grid', size = 'md', className, submitDisabled }: KeypadProps) {
+const NARROW = '(max-width: 480px)'
+const narrowNow = () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(NARROW).matches
+
+/** A phone-width screen: six keys in a row do not fit, so the wide keypad becomes the 3-column grid. */
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(narrowNow)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia(NARROW)
+    const update = () => setNarrow(mq.matches)
+    mq.addEventListener?.('change', update)
+    return () => mq.removeEventListener?.('change', update)
+  }, [])
+  return narrow
+}
+
+export function Keypad({ onDigit, onDelete, onSubmit, disabled, layout: asked = 'grid', size = 'md', className, submitDisabled }: KeypadProps) {
+  const narrow = useNarrow()
+  const layout = narrow ? 'grid' : asked
   const palm = usePalmGuard()
   const press = (fn: () => void) => palm.guard(() => {
     if (disabled) return

@@ -57,6 +57,13 @@ describe('resolveInputMode', () => {
     expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: true, keyboardUsed: true })).toBe('keyboard')
   })
 
+  it('auto on a phone: the on-screen keypad, unless a pen or a keyboard is in use; a chosen mode stays', () => {
+    expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: true, isPhone: true })).toBe('keypad')
+    expect(resolveInputMode({ preference: 'auto', penSeen: true, isTouchDevice: true, isPhone: true })).toBe('pen')
+    expect(resolveInputMode({ preference: 'auto', penSeen: false, isTouchDevice: true, isPhone: true, keyboardUsed: true })).toBe('keyboard')
+    expect(resolveInputMode({ preference: 'pen', penSeen: false, isTouchDevice: true, isPhone: true })).toBe('touch')
+  })
+
   it('respects explicit preferences', () => {
     expect(resolveInputMode({ preference: 'keypad', penSeen: true, isTouchDevice: true })).toBe('keypad')
     expect(resolveInputMode({ preference: 'keyboard', penSeen: true, isTouchDevice: true })).toBe('keyboard')
