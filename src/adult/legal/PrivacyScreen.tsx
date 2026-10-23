@@ -47,7 +47,6 @@ export default function PrivacyScreen() {
 
         <h2>4. Qué no hacemos</h2>
         <ul>
-          <li>No usamos publicidad ni la vendemos.</li>
           <li>No incluimos herramientas de analítica ni rastreo de terceros en la aplicación.</li>
           <li>Los niños no crean cuentas ni dan sus datos directamente: los gestiona un adulto.</li>
         </ul>

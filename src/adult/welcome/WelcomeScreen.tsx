@@ -1,5 +1,7 @@
-/* Public front page for grown-ups (direction C «lúdica y colorista»): what Repasitos is, who it is for and who it
-   is not for, how it works, real captures of the game, the trust promises, the subjects, and the choice between a
+/* Public front page for grown-ups (direction C «lúdica y colorista»), full width: every section is a band from edge to
+   edge. The hero says what Repasitos does (a short daily review that follows the child's course, inside an adventure,
+   with a report for the grown-up) for Primaria, not only maths: Matemáticas is the first subject and the others come
+   later. Then the trust promises, who it is for, how it works, real captures, the subjects, and the choice between a
    local-only try, signing in or creating an account. Children never see this page. */
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { SUBJECTS } from '@/types'
@@ -15,8 +17,16 @@ const SHOTS = {
 } as const
 
 const SUBJECT_TEXT: Record<string, string> = {
-  math: 'Tablas, sumas, restas, multiplicaciones y divisiones.',
+  math: 'Números, cálculo, problemas, medidas, geometría y fracciones, con el temario de cada curso.',
 }
+
+/** What Repasitos does, in four tiles under the hero. */
+const FEATURES = [
+  { icon: '📚', title: 'Sigue su curso', text: 'El temario de 2.º, 3.º y 4.º de Primaria, por trimestres y volviendo sobre lo ya visto.', tone: 'cGreen' },
+  { icon: '⏱️', title: '15 minutos al día', text: 'Calentamiento, lo nuevo, un repaso mezclado y un problema. Más práctica que juego.', tone: 'cBlue' },
+  { icon: '🎯', title: 'Se adapta a cada niño', text: 'Vuelve sobre lo que le cuesta y avanza en lo que domina. Las pistas ayudan sin dar la respuesta.', tone: 'cYellow' },
+  { icon: '📊', title: 'Informe para el adulto', text: 'La familia o el profesor ven qué domina, en qué se equivoca y qué conviene repasar.', tone: 'cPink' },
+] as const
 
 export default function WelcomeScreen() {
   const { status, backendAvailable, continueLocalOnly } = useAuth()
@@ -33,19 +43,21 @@ export default function WelcomeScreen() {
   const accountButtons = backendAvailable && (
     <Button variant="gold" size="lg" onClick={() => navigate('/signup')}>Crear cuenta</Button>
   )
+  const comingSoon = SUBJECTS.filter((subject) => !subject.available).map((subject) => subject.name)
+  const available = SUBJECTS.filter((subject) => subject.available).map((subject) => subject.name)
 
   return (
     <main className={`${s.root} scrollable`}>
-      <div className={s.page}>
-        <header className={s.top}>
+      <header className={s.top}>
+        <div className={s.topInner}>
           <a className={s.logo} href="#inicio" aria-label="Repasitos, inicio">
             <img src="/landing/lumi.svg" alt="" width={46} height={46} />
             <span>Repasitos</span>
           </a>
           <nav className={s.nav} aria-label="Secciones">
+            <a href="#que-hace">Qué hace</a>
             <a href="#como">Cómo funciona</a>
             <a href="#capturas">Capturas</a>
-            <a href="#confianza">Confianza</a>
             <a href="#asignaturas">Asignaturas</a>
           </nav>
           <div className={s.topCta}>
@@ -54,18 +66,29 @@ export default function WelcomeScreen() {
             )}
             {accountButtons}
           </div>
-        </header>
+        </div>
+      </header>
 
-        <section id="inicio" className={s.hero} aria-labelledby="welcome-title">
+      <section id="inicio" className={`${s.band} ${s.heroBand}`} aria-labelledby="welcome-title">
+        <div className={`${s.inner} ${s.hero}`}>
           <div className={s.heroText}>
-            <span className={s.badge}>Matemáticas · 7 a 9 años</span>
+            <span className={s.badge}>Repaso para Primaria · 2.º a 4.º</span>
             <h1 id="welcome-title" className={s.title}>
-              Repasa las cuentas <span className={s.hl}>rescatando</span> a tu compañero.
+              El repaso de cada día, convertido en una <span className={s.hl}>aventura</span>.
             </h1>
             <p className={s.deck}>
-              Tablas, sumas, restas, multiplicaciones y divisiones en ocho mundos mágicos. Cada niño elige un animal y lo
-              rescata con cada respuesta.
+              Repasitos prepara cada día una sesión corta con lo que toca según el curso del niño y lo que más le cuesta.
+              Practica dentro de una aventura con su compañero animal, y la familia o el colegio ven en un informe qué
+              domina y qué conviene repasar.
             </p>
+            <div className={s.subjectChips} aria-label="Asignaturas">
+              {available.map((name) => (
+                <span key={name} className={`${s.chip} ${s.chipOn}`}>✓ {name}</span>
+              ))}
+              {comingSoon.map((name) => (
+                <span key={name} className={s.chip}>{name} · pronto</span>
+              ))}
+            </div>
             <div className={s.row}>
               {accountButtons}
               <Button variant="secondary" size="lg" onClick={tryWithoutAccount}>Probar sin cuenta</Button>
@@ -97,9 +120,22 @@ export default function WelcomeScreen() {
               <img src="/landing/lumi.svg" alt="" width={92} height={92} />
             </div>
           </figure>
-        </section>
+        </div>
 
-        <section className={s.trust} id="confianza" aria-labelledby="conf">
+        <div className={`${s.inner} ${s.features}`} id="que-hace">
+          <h2 className={s.visuallyHiddenTitle}>Qué hace Repasitos</h2>
+          {FEATURES.map((f) => (
+            <article key={f.title} className={`${s.sticker} ${s.feature} ${s[f.tone]}`}>
+              <span className={s.featureIcon} aria-hidden>{f.icon}</span>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className={`${s.band} ${s.trustBand}`} id="confianza" aria-labelledby="conf">
+        <div className={`${s.inner} ${s.trust}`}>
           <h2 id="conf" className={s.visuallyHiddenTitle}>Confianza</h2>
           <article className={`${s.sticker} ${s.trustCard} ${s.cGreen}`}>
             <span className={s.check} aria-hidden>✓</span>
@@ -109,33 +145,29 @@ export default function WelcomeScreen() {
             <span className={s.check} aria-hidden>✓</span>
             <div><h3>Prueba sin cuenta</h3><p>Sin cuenta, el progreso se guarda solo en este dispositivo. Creas la cuenta cuando quieras.</p></div>
           </article>
-        </section>
+          <article className={`${s.sticker} ${s.trustCard} ${s.cYellow}`}>
+            <span className={s.check} aria-hidden>✓</span>
+            <div><h3>En cualquier pantalla</h3><p>Tablet, móvil u ordenador. Se escribe con el lápiz, el dedo o el teclado.</p></div>
+          </article>
+        </div>
+      </section>
 
-        <section className={s.band} aria-labelledby="que-t">
-          <div className={`${s.sticker} ${s.whatCard}`}>
-            <h2 id="que-t">¿Qué es Repasitos?</h2>
-            <p>
-              Una app para repasar en casa y en el colegio, en tablet, móvil u ordenador. El niño practica a su ritmo; la
-              familia o el colegio ven qué domina y qué toca repasar. Se escribe con el lápiz, el dedo o el teclado.
-            </p>
-          </div>
-        </section>
-
-        <section className={s.band} aria-labelledby="para">
+      <section className={s.band} aria-labelledby="para">
+        <div className={`${s.inner} ${s.stack}`}>
           <h2 id="para">¿Para quién es?</h2>
           <div className={s.cards3}>
             <article className={`${s.sticker} ${s.card} ${s.cGreen}`}>
-              <h3>Niños de 7 a 9</h3>
+              <h3>Niños de Primaria</h3>
               <ul>
-                <li>Eligen su compañero animal y le ponen nombre.</li>
-                <li>Ganan un cristal por cada mundo.</li>
+                <li>Practican a su ritmo lo de su curso.</li>
+                <li>Eligen su compañero animal y ganan un cristal por cada mundo.</li>
               </ul>
             </article>
             <article className={`${s.sticker} ${s.card} ${s.cBlue}`}>
               <h3>Familias</h3>
               <ul>
-                <li>Ven qué tablas domina cada hijo.</li>
-                <li>Eligen el premio del Gran Cofre.</li>
+                <li>Ven qué domina cada hijo y qué toca repasar.</li>
+                <li>Eligen las asignaturas y el premio del Gran Cofre.</li>
               </ul>
             </article>
             <article className={`${s.sticker} ${s.card} ${s.cPink}`}>
@@ -152,30 +184,34 @@ export default function WelcomeScreen() {
               <li>Para quien busque sustituir al colegio o al profesor: Repasitos es un complemento para practicar, no un sustituto de las clases.</li>
             </ul>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={s.band} id="como" aria-labelledby="como-t">
+      <section className={`${s.band} ${s.howBand}`} id="como" aria-labelledby="como-t">
+        <div className={`${s.inner} ${s.stack}`}>
           <h2 id="como-t">¿Cómo funciona?</h2>
           <div className={s.steps}>
             <article className={`${s.sticker} ${s.step}`}>
               <span className={`${s.n} ${s.n1}`} aria-hidden>1</span>
-              <h3>Elige compañero</h3>
-              <p>Gato, perro, zorro, conejo, panda, pingüino, dragón o unicornio bebé.</p>
+              <h3>Elige curso y compañero</h3>
+              <p>Una prueba corta mira por dónde va. Luego elige gato, perro, zorro, conejo, panda, pingüino, dragón o unicornio bebé.</p>
             </article>
             <article className={`${s.sticker} ${s.step}`}>
               <span className={`${s.n} ${s.n2}`} aria-hidden>2</span>
-              <h3>Rescátalo</h3>
-              <p>Cada mundo tiene un guardián y una prueba. Si su compañero se mete en un lío, la respuesta lo salva.</p>
+              <h3>Practica cada día</h3>
+              <p>La sesión del día reúne lo nuevo y lo que cuesta. Cada mundo tiene un guardián y una prueba que superar.</p>
             </article>
             <article className={`${s.sticker} ${s.step}`}>
               <span className={`${s.n} ${s.n3}`} aria-hidden>3</span>
-              <h3>Repasa lo que toca</h3>
-              <p>El Repaso del día reúne lo que cuesta. Con los ocho cristales se abre el Gran Cofre.</p>
+              <h3>Mira cómo avanza</h3>
+              <p>El informe enseña lo que ya domina y lo que falla. Con los ocho cristales se abre el Gran Cofre.</p>
             </article>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={s.band} id="capturas" aria-labelledby="cap">
+      <section className={`${s.band} ${s.shotsBand}`} id="capturas" aria-labelledby="cap">
+        <div className={`${s.inner} ${s.stack}`}>
           <h2 id="cap">Mira cómo se juega</h2>
           <div className={s.gallery}>
             <figure>
@@ -205,10 +241,16 @@ export default function WelcomeScreen() {
               <figcaption>Una lección, un paso cada vez.</figcaption>
             </figure>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={s.band} id="asignaturas" aria-labelledby="asig">
+      <section className={s.band} id="asignaturas" aria-labelledby="asig">
+        <div className={`${s.inner} ${s.stack}`}>
           <h2 id="asig">Asignaturas</h2>
+          <p className={s.lead}>
+            Empezamos por Matemáticas. Las demás asignaturas llegarán con el mismo sistema: el temario del curso, una
+            sesión corta cada día y el informe para el adulto.
+          </p>
           <div className={s.subjects}>
             {SUBJECTS.map((subject) => (
               <article
@@ -221,26 +263,30 @@ export default function WelcomeScreen() {
               </article>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className={`${s.sticker} ${s.closing}`} aria-label="Empezar">
+      <section className={`${s.band} ${s.closingBand}`} aria-label="Empezar">
+        <div className={`${s.inner} ${s.closing}`}>
           <div>
-            <h2>¿Lista la primera aventura?</h2>
+            <h2>¿Empezamos la primera aventura?</h2>
             <p>Crea una cuenta para guardar una copia segura, o prueba sin cuenta en este dispositivo.</p>
           </div>
           <div className={s.row}>
             {accountButtons}
             <Button variant="secondary" size="lg" onClick={tryWithoutAccount}>Probar sin cuenta</Button>
           </div>
-        </section>
+        </div>
+      </section>
 
-        <footer className={s.foot}>
+      <footer className={s.foot}>
+        <div className={`${s.inner} ${s.footInner}`}>
           <span className={s.footLogo}>Repasitos</span>
           <span>
             <Link to="/legal/privacidad">Privacidad y datos</Link>
           </span>
-        </footer>
-      </div>
+        </div>
+      </footer>
     </main>
   )
 }

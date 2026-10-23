@@ -1,5 +1,7 @@
 /* Public front page, direction C «lúdica y colorista»: sticker panels (thick ink outline, hard offset shadow),
-   Baloo 2 headings, colours from tokens. Works at 390 px wide, iPad portrait and landscape, and desktop. */
+   Baloo 2 headings, colours from tokens. Full width: each section is a band from edge to edge with its own background;
+   the content inside keeps a side gutter (and a cap only on very wide screens). Works at 390 px wide, iPad portrait
+   and landscape, and desktop. */
 
 .root {
   height: 100dvh;
@@ -14,14 +16,25 @@
   -webkit-user-select: text;
   user-select: text;
 }
-.page {
-  width: min(1120px, calc(100% - 32px));
-  margin: 0 auto;
-  padding: var(--sp-3) 0 calc(var(--sp-7) + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-6);
+.root { --gutter: clamp(16px, 4.5vw, 80px); }
+
+/* Bands: full-bleed backgrounds; .inner holds the content with the gutter. */
+.band { margin: 0; padding: clamp(40px, 6vw, 88px) var(--gutter); }
+.inner { width: 100%; max-width: 1760px; margin: 0 auto; }
+.stack { display: flex; flex-direction: column; gap: var(--sp-4); }
+.heroBand {
+  padding-top: clamp(24px, 4vw, 56px);
+  background:
+    radial-gradient(circle at 92% 8%, var(--c-pink-soft) 0, transparent 38%),
+    radial-gradient(circle at 4% 96%, var(--c-blue-soft) 0, transparent 40%),
+    var(--c-yellow-soft);
+  border-bottom: var(--sticker-border);
+  display: flex; flex-direction: column; gap: clamp(32px, 5vw, 64px);
 }
+.trustBand { padding-block: clamp(28px, 4vw, 48px); background: var(--c-surface); border-bottom: var(--sticker-border); }
+.howBand { background: var(--c-primary-soft); border-block: var(--sticker-border); }
+.shotsBand { background: var(--c-blue-soft); border-bottom: var(--sticker-border); }
+.closingBand { background: var(--c-primary); color: #fff; border-top: var(--sticker-border); }
 
 .sticker {
   background: var(--c-surface);
@@ -41,9 +54,14 @@
 
 /* Header */
 .top {
+  position: sticky; top: 0; z-index: 5;
+  padding: var(--sp-3) var(--gutter);
+  background: var(--c-surface); border-bottom: var(--sticker-border);
+}
+.topInner {
+  width: 100%; max-width: 1760px; margin: 0 auto;
   display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3) var(--sp-4);
   flex-wrap: wrap;
-  padding: var(--sp-3) 0;
 }
 .logo {
   display: flex; align-items: center; gap: 10px;
@@ -63,7 +81,7 @@
 /* Hero */
 .hero {
   display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-  gap: var(--sp-6); align-items: center; margin: 0; padding-top: var(--sp-3);
+  gap: clamp(24px, 5vw, 80px); align-items: center;
 }
 .heroText { display: flex; flex-direction: column; gap: var(--sp-4); min-width: 0; }
 .badge {
@@ -81,7 +99,7 @@
   background: var(--c-yellow); padding: .02em .12em .06em; border-radius: 14px;
   box-decoration-break: clone; -webkit-box-decoration-break: clone;
 }
-.deck { margin: 0; max-width: 30em; font-size: clamp(19px, 2vw, 21px); color: var(--c-ink-soft); }
+.deck { margin: 0; max-width: 34em; font-size: clamp(19px, 2vw, 21px); color: var(--c-ink-soft); }
 .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .row > * { flex: 0 1 auto; }
 .small { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
@@ -107,8 +125,27 @@
 }
 .lumi img { width: 128px; height: 128px; }
 
+/* Subjects in the hero: the one available now and the ones coming. */
+.subjectChips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1;
+  padding: 9px 12px; border-radius: var(--r-pill);
+  border: 2px dashed var(--sticker-line); background: var(--c-surface); color: var(--c-ink-soft);
+}
+.chipOn { border-style: solid; background: #15803d; color: #fff; box-shadow: var(--sticker-shadow-sm); }
+
+/* What Repasitos does: four tiles under the hero. */
+.features { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-4); }
+.feature { padding: var(--sp-5); display: flex; flex-direction: column; gap: 8px; }
+.featureIcon {
+  width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; font-size: 30px;
+  background: var(--c-surface); border: 3px solid var(--sticker-line);
+}
+.feature h3 { margin: 6px 0 0; font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
+.feature p { margin: 0; color: var(--c-ink-soft); font-size: 17px; }
+
 /* Trust strip (right under the hero) */
-.trust { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-4); margin: 0; }
+.trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
 .trustCard { display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-5); }
 .trustCard h3 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1.1; }
 .trustCard p { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
@@ -119,12 +156,9 @@
   font-family: var(--font-display); font-weight: 800; font-size: 24px; line-height: 1;
 }
 
-/* Bands */
-.band { margin: 0; display: flex; flex-direction: column; gap: var(--sp-4); }
+/* Section titles */
+.lead { margin: 0; max-width: 48em; font-size: clamp(18px, 2vw, 20px); color: var(--c-ink-soft); }
 .band h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 4.4vw, 52px); line-height: 1.05; margin: 0; }
-.whatCard { padding: var(--sp-6); background: var(--c-yellow-soft); }
-.whatCard h2 { margin-bottom: 12px; }
-.whatCard p { margin: 0; font-size: clamp(18px, 2vw, 20px); color: var(--c-ink-soft); max-width: 46em; }
 .cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
 .card { padding: var(--sp-5); }
 .card h3 { margin: 0 0 10px; font-family: var(--font-display); font-weight: 800; font-size: 28px; line-height: 1.05; }
@@ -169,22 +203,23 @@
 .subjOff h3 { color: var(--c-ink-mute); }
 
 /* Closing and footer */
-.closing {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center;
-  padding: 40px; background: var(--c-primary); color: #fff;
-  box-shadow: 6px 7px 0 var(--sticker-line);
-}
+.closing { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-5); align-items: center; }
 .closing h2 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; }
 .closing p { margin: 10px 0 0; font-size: 19px; }
 .closing .row > * { flex: 0 1 auto; }
 
 .foot {
-  display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); justify-content: space-between;
-  font-size: var(--fs-sm); color: var(--c-ink-soft); padding-top: var(--sp-3);
+  padding: var(--sp-5) var(--gutter) calc(var(--sp-5) + env(safe-area-inset-bottom, 0px));
+  font-size: var(--fs-sm); color: var(--c-ink-soft); background: var(--c-surface);
 }
+.footInner { display: flex; flex-wrap: wrap; gap: var(--sp-3) var(--sp-5); justify-content: space-between; }
 .foot a { color: var(--c-primary-strong); font-weight: 700; }
 .footLogo { font-family: var(--font-display); font-weight: 800; font-size: 22px; color: var(--c-ink); }
 
+/* Small desktop and iPad landscape: the four tiles go two by two. */
+@media (max-width: 1200px) {
+  .features { grid-template-columns: 1fr 1fr; }
+}
 /* Tablet portrait and small desktop */
 @media (max-width: 900px) {
   .hero { grid-template-columns: minmax(0, 1fr); }
@@ -192,6 +227,7 @@
   .nav { display: none; }
   .lumi { right: 0; }
   .cards3, .steps, .trust { grid-template-columns: 1fr; }
+  .features { grid-template-columns: 1fr 1fr; }
   .gallery { grid-template-columns: 1fr; }
   .subjects { grid-template-columns: 1fr 1fr; }
   .closing { grid-template-columns: 1fr; }
@@ -210,7 +246,6 @@
   .lumi { width: 108px; height: 108px; right: -6px; bottom: -6px; }
   .lumi img { width: 90px; height: 90px; }
   .subjects { grid-template-columns: 1fr; }
-  .closing { padding: 26px; }
-  .whatCard { padding: var(--sp-5); }
+  .features { grid-template-columns: 1fr; }
   .notFor { padding: var(--sp-4) var(--sp-5); }
 }
