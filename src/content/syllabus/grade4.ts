@@ -3,12 +3,13 @@
    reparto por curso (docs/curriculum/MATEMATICAS_PRIMARIA.md): números hasta 9 999, las cuatro operaciones con
    flexibilidad, fracciones con denominador hasta 12, km, m y cm, kg y g, l y ml, superficie y ángulos, simetrías,
    gráficos, la moda y la probabilidad intuitiva, patrones con predicción. Lo propio de 4.º (práctica habitual, no ley):
-   multiplicar por dos cifras (aquí por partes, el paso previo al algoritmo), dividir números de 4 cifras, redondear a
-   millares, números romanos. Sus etapas no van ligadas a los mundos de la aventura. */
+   multiplicar por dos cifras (aquí por partes, el paso previo al algoritmo), dividir números de 4 cifras y entre dos
+   cifras, sumar y restar fracciones de igual denominador, redondear a millares, números romanos. Sus etapas no van
+   ligadas a los mundos de la aventura. */
 import { fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage } from './model'
-import { pending, tableSkills, withStageTerms } from './helpers'
+import { tableSkills, withStageTerms } from './helpers'
 
 const fractions = (ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): SkillKey[] => ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
 
@@ -68,7 +69,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'div-repaso', name: 'Dividir 2 y 3 cifras entre 1 (repaso)', skills: ['div:2x1:rem', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera paso a paso y la prueba' } },
         { id: 'div-4x1', name: 'Dividir 4 cifras entre 1', skills: ['div:4x1:exact', 'div:4x1:rem'], status: 'disponible', rungs: { numeros: 'La galera bajando una cifra cada vez', uso: 'Comprobar con divisor × cociente + resto' } },
-        pending('div-2-cifras', 'Dividir entre un número de 2 cifras', 'Falta la galera con divisor de dos cifras.', { numeros: 'Cuántas veces cabe 23 en 96' }),
+        { id: 'div-2-cifras', name: 'Dividir entre un número de 2 cifras', skills: ['div:3x2:exact', 'div:3x2:rem'], status: 'disponible', rungs: { numeros: 'Cuántas veces cabe 23 en 96: estimar y comprobar', uso: 'La galera con restos de dos cifras' } },
       ],
     },
     {
@@ -95,7 +96,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'fracciones-12', name: 'Fracciones con denominador hasta 12', skills: fractions(['shade', 'read', 'name'], [5, 6, 8, 10, 12]), status: 'disponible', rungs: { dibujo: 'Figuras partidas en partes iguales', numeros: 'Leer y escribir 5/8, 7/12' } },
         { id: 'fraccion-cantidad-4', name: 'Fracción de una cantidad', skills: fractions(['of'], [3, 4, 5, 6, 8, 10]), status: 'disponible', rungs: { dibujo: 'Grupos iguales', numeros: '3/4 de 20: 20 : 4 × 3', uso: 'Problemas de repartos' } },
         { id: 'fracciones-comparar', name: 'Comparar fracciones', skills: [fractionSkill('compare')], status: 'disponible', rungs: { dibujo: 'Dos barras iguales partidas', numeros: '3/8 y 5/8: mismo denominador, más partes' } },
-        pending('fracciones-sumar', 'Sumar y restar fracciones de igual denominador', 'Faltan los ejercicios de sumar y restar fracciones.', { dibujo: 'Juntar partes de una misma barra', numeros: '2/7 + 3/7 = 5/7' }),
+        { id: 'fracciones-sumar', name: 'Sumar y restar fracciones de igual denominador', skills: [fractionSkill('add'), fractionSkill('sub')], status: 'disponible', rungs: { dibujo: 'Juntar o quitar partes de barras iguales', numeros: '2/8 + 3/8: el número de abajo no cambia' } },
       ],
     },
     {

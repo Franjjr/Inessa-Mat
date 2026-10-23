@@ -130,8 +130,11 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
      redondear a millares, números romanos, sumas y restas de 4 cifras, multiplicar 3 × 1, por 10/100/1 000 y por dos
      cifras **por partes** (23 × 14 = 23 × 4 + 23 × 10), dividir 4 cifras entre 1, fracciones hasta doceavos, cambio en
      euros, km/m/cm, kg/g, l/ml, reloj digital y duraciones, ángulos, perímetro, **área en cuadraditos**, **ejes de
-     simetría**, gráficos, moda y probabilidad. 5.º y 6.º usan el de 4.º hasta tener el suyo. Pendiente en 4.º: dividir
-     entre dos cifras y sumar fracciones de igual denominador. En 3.º ya están multiplicar 3 × 1 y por 10, 100 y 1 000.
+     simetría**, gráficos, moda y probabilidad. 5.º y 6.º usan el de 4.º hasta tener el suyo. En 3.º ya están
+     multiplicar 3 × 1 y por 10, 100 y 1 000. Después: **dividir entre dos cifras** (`div:3x2:exact|rem`, divisor de 12
+     a 39, la galera con restos de dos cifras y pistas de estimar y comprobar) y **sumar y restar fracciones de igual
+     denominador** (`frac:add|sub`, con barras primero y solo números cuando se domina; el fallo de sumar los
+     denominadores tiene su propio aviso). En el móvil la galera estrecha sus columnas para caber sin desplazarse.
    - **Hecho (octubre de 2026): la aventura de 2.º.** Una segunda temporada ('c2', `src/content/c2/`) en los mismos
      mapas, con los mismos guardianes, cristales y la palabra VALIENTE: cada mundo lleva las paradas de su etapa de 2.º
      (las etapas de 2.º se ordenaron por temas: grupos y números, sumas, figuras y series, restas, dobles y medidas,

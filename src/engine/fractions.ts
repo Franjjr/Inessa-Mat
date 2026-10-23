@@ -4,7 +4,7 @@
    Figures are data (src/types/exercise.ts FractionFigure); the SVG is drawn in src/activities/views/FigureSvg.tsx.
    Hints guide the strategy and never state the answer. Pure: no React. */
 import type {
-  Answer, CheckResult, ErrorType, Figure, FractionEqualExercise, FractionFigure, FractionOfExercise, FractionReadExercise,
+  Answer, CheckResult, ErrorType, Figure, FractionAddExercise, FractionEqualExercise, FractionFigure, FractionOfExercise, FractionReadExercise,
   FractionShadeExercise, Hint, Rng, ShapeChoiceExercise,
 } from '@/types'
 import { pick, randInt, range, shuffle } from './rng'
@@ -218,6 +218,33 @@ export function genFractionOf(rng: Rng, d: number, mode: 'drawing' | 'numbers', 
   }
 }
 
+/** Denominators of the sums and subtractions (4.º): never halves, so there is always more than one part to move. */
+const ADD_DENOMINATORS = [3, 4, 5, 6, 8, 10, 12]
+
+/** a/d + b/d (the sum is at most one whole) or a/d − b/d (something is left). Drawing mode: the bars, with the parts
+    coloured from the start, the same size and the same direction so the parts line up. */
+export function genFractionAdd(rng: Rng, op: 'add' | 'sub', mode: 'drawing' | 'numbers'): FractionAddExercise {
+  const d = pick(rng, ADD_DENOMINATORS)
+  let a: number, b: number, answer: number
+  if (op === 'add') {
+    a = randInt(rng, 1, d - 2)
+    b = randInt(rng, 1, d - 1 - a)
+    answer = a + b
+  } else {
+    a = randInt(rng, 3, d)
+    b = randInt(rng, 1, a - 1)
+    // The last hint writes a − b: what is left is never the b it names.
+    if (a === 2 * b) b = b === 1 ? 2 : b - 1
+    answer = a - b
+  }
+  const bar = (n: number): FractionFigure => ({ type: 'fraction', shape: 'bar', weights: range(0, d - 1).map(() => 1), colored: range(0, n - 1), axis: 'x' })
+  const figures = mode === 'numbers' ? [] : op === 'add' ? [bar(a), bar(b)] : [bar(a)]
+  return {
+    id: `fraction-add:${a}${op === 'add' ? '+' : '-'}${b}/${d}:${mode}`, kind: 'fraction-add', skill: fractionSkill(op),
+    difficulty: mode === 'drawing' ? 3 : 4, op, a, b, denominator: d, mode, figures, answer,
+  }
+}
+
 // ---------------------------------------------------------------- grading
 
 const FB = {
@@ -232,6 +259,11 @@ const FB = {
   missedUnequal: 'Mira otra vez: hay una figura con partes de distinto tamaño que no has tocado.',
   of: 'Revisa cuántos grupos iguales hay y cuántos son de la fracción.',
   ofWhole: 'Has contado el total, no la parte. Mira qué fracción te piden.',
+  addBottom: 'El número de abajo no se suma: las partes siguen siendo del mismo tamaño.',
+  subBottom: 'El número de abajo no se resta: las partes siguen siendo del mismo tamaño.',
+  sameBottom: 'Las dos fracciones tienen partes del mismo tamaño: el número de abajo no cambia.',
+  addTop: 'Revisa el número de arriba: junta las partes de las dos fracciones.',
+  subTop: 'Revisa el número de arriba: quita las partes que se van.',
 }
 
 const wrongShape = (expected: string): CheckResult => ({ correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' })
@@ -280,13 +312,38 @@ export function checkFractionOf(ex: FractionOfExercise, answer: Answer): CheckRe
   return { correct: false, given, expected, errorType: oneGroup ? 'fraction-count' : 'other', feedback: FB.of }
 }
 
+/** The denominator decides first (adding the denominators is the classic slip), then the numerator. */
+export function checkFractionAdd(ex: FractionAddExercise, answer: Answer): CheckResult {
+  const d = ex.denominator
+  const expected = `${ex.answer}/${d}`
+  if (answer.type !== 'fraction') return wrongShape(expected)
+  const { numerator: n, denominator: dd } = answer
+  if (n === null || dd === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
+  const given = `${n}/${dd}`
+  if (n === ex.answer && dd === d) return { correct: true, given, expected, feedback: FB.right }
+  if (dd !== d) {
+    const combined = ex.op === 'add' ? dd === 2 * d : dd === 0
+    return { correct: false, given, expected, errorType: 'fraction-count', feedback: combined ? (ex.op === 'add' ? FB.addBottom : FB.subBottom) : FB.sameBottom }
+  }
+  return { correct: false, given, expected, errorType: 'other', feedback: ex.op === 'add' ? FB.addTop : FB.subTop }
+}
+
 // ---------------------------------------------------------------- hints
 
 const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
 
 /** Hints of the fraction exercises: the strategy first, then the step, never the answer. */
-export function fractionHints(ex: FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise): Hint[] {
+export function fractionHints(ex: FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise | FractionAddExercise): Hint[] {
   switch (ex.kind) {
+    case 'fraction-add': {
+      const parts = FRACTION_WORDS[ex.denominator]?.[1] ?? 'partes'
+      const add = ex.op === 'add'
+      return [
+        hint(1, `Las dos fracciones están hechas de ${parts}: partes del mismo tamaño.`),
+        hint(2, add ? 'Al juntar, las partes no cambian de tamaño: solo hay más partes.' : 'Al quitar, las partes no cambian de tamaño: solo quedan menos.'),
+        hint(3, add ? `Arriba: ${ex.a} + ${ex.b} = ? Abajo, el mismo número de partes que antes.` : `Arriba: ${ex.a} − ${ex.b} = ? Abajo, el mismo número de partes que antes.`),
+      ]
+    }
     case 'fraction-shade':
       return [
         hint(1, 'El número de abajo dice en cuántas partes iguales se parte la figura. Cuéntalas.'),

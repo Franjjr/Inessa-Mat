@@ -2,13 +2,14 @@
    tests; here it is a plain box so the views' logic is what gets tested. */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { createRng, genFractionOf, genFractionRead, genFractionEqual, genGeometry, genFractionName, genAngleTap } from '@/engine'
+import { createRng, genFractionAdd, genFractionOf, genFractionRead, genFractionEqual, genGeometry, genFractionName, genAngleTap } from '@/engine'
 import { correctAnswer } from '@/engine/__tests__/helpers'
 import type {
   AngleTapExercise, FractionEqualExercise, FractionOfExercise, FractionReadExercise, FractionShadeExercise, PerimeterExercise, ShapeChoiceExercise,
 } from '@/types'
 import AngleTapView from './AngleTapView'
 import FigureNumberView from './FigureNumberView'
+import FractionAddView from './FractionAddView'
 import FractionEqualView from './FractionEqualView'
 import FractionOfView from './FractionOfView'
 import FractionReadView from './FractionReadView'
@@ -100,6 +101,33 @@ describe('FractionReadView', () => {
     const onAnswered = vi.fn()
     render(<FractionReadView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
     fireEvent.change(screen.getByRole('textbox', { name: 'Número de arriba' }), { target: { value: String(ex.numerator) } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Número de abajo' }), { target: { value: String(ex.denominator) } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+})
+
+describe('FractionAddView', () => {
+  it('drawing mode: two bars for a sum, one for a subtraction; adding the denominators is wrong', () => {
+    const sum = genFractionAdd(createRng(2), 'add', 'drawing')
+    const onAnswered = vi.fn()
+    const { unmount } = render(<FractionAddView exercise={sum} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getAllByRole('img', { name: /Barra con/ })).toHaveLength(2)
+    fireEvent.change(screen.getByRole('textbox', { name: 'Número de arriba' }), { target: { value: String(sum.answer) } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Número de abajo' }), { target: { value: String(2 * sum.denominator) } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+    unmount()
+    render(<FractionAddView exercise={genFractionAdd(createRng(2), 'sub', 'drawing')} onAnswered={() => {}} showFeedback={false} />)
+    expect(screen.getAllByRole('img', { name: /Barra con/ })).toHaveLength(1)
+  })
+
+  it('numbers mode: no drawing, and the right fraction is correct', () => {
+    const ex = genFractionAdd(createRng(5), 'sub', 'numbers')
+    const onAnswered = vi.fn()
+    render(<FractionAddView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.queryByRole('img', { name: /Barra con/ })).toBeNull()
+    fireEvent.change(screen.getByRole('textbox', { name: 'Número de arriba' }), { target: { value: String(ex.answer) } })
     fireEvent.change(screen.getByRole('textbox', { name: 'Número de abajo' }), { target: { value: String(ex.denominator) } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)

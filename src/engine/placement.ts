@@ -36,7 +36,7 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'concept': return p.name === 'placevalue' ? 'numeros' : null
     case 'add': case 'sub': return 'sumas-restas'
     case 'mul': return 'tablas'
-    case 'div': case 'div2x1': case 'div3x1': case 'div4x1': return 'dividir'
+    case 'div': case 'div2x1': case 'div3x1': case 'div4x1': case 'div3x2': return 'dividir'
     case 'mul3x1': case 'mulParts': return 'tablas'
     case 'word': case 'bar': return 'problemas'
     case 'clock-read': case 'clock-set': case 'clock-convert': case 'time-duration': case 'calendar': return 'tiempo'

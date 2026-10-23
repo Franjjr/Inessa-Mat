@@ -48,7 +48,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'clock-read': 25, 'clock-set': 60, 'time-convert': 30, 'time-duration': 60, calendar: 25,
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
-  money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30,
+  money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -130,6 +130,7 @@ export function statementOf(ex: Exercise): string {
     case 'position': return positionStatement(ex) ?? ex.skill
     case 'mul-parts': return mulPartsStatement(ex)
     case 'area': return '¿Cuántos cuadraditos ocupa la figura?'
+    case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
@@ -217,7 +218,7 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
     if (first.type === 'add') return 'add'
     if (first.type === 'sub') return 'sub'
     if (first.type === 'mul' || first.type === 'mul2x1' || first.type === 'mul3x1' || first.type === 'mulParts') return 'mul'
-    if (first.type === 'div' || first.type === 'div2x1' || first.type === 'div4x1') return 'div'
+    if (first.type === 'div' || first.type === 'div2x1' || first.type === 'div4x1' || first.type === 'div3x2') return 'div'
   }
   const count: Record<WordOp, number> = { add: 0, sub: 0, mul: 0, div: 0 }
   for (const m of Object.values(mastery)) {

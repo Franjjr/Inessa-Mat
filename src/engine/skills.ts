@@ -24,6 +24,7 @@
    time:units | cal:weekday | cal:month   unidades de tiempo, días de la semana, días de un mes
    frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
    frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
+   frac:add | frac:sub        adding and subtracting fractions with the same denominator (4.º)
    geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
@@ -34,6 +35,7 @@
    pos:relative|next|route  posición en una cuadrícula y recorridos (src/engine/position.ts)
    mul:3x1:c0|c1            3-digit × 1-digit in columns, without / with carries (4.º, src/engine/bigops.ts)
    div:4x1:exact|rem        4-digit dividend ÷ 1-digit divisor (4.º)
+   div:3x2:exact|rem        2- or 3-digit dividend ÷ 2-digit divisor, quotient of 1 or 2 digits (4.º)
    mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
@@ -46,7 +48,7 @@ import type {
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
 export const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12] as const
 export type FractionDenominator = (typeof FRACTION_DENOMINATORS)[number]
-export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare'
+export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare' | 'add' | 'sub'
 export type GeoOp =
   | 'poly:name' | 'poly:sides' | 'line:type' | 'line:rel' | 'angle:type' | 'angle:tap' | 'circle'
   | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter' | 'area' | 'symmetry'
@@ -100,12 +102,13 @@ export type ParsedSkill =
   | { type: 'time-duration'; ask: 'end' | 'elapsed' }
   | { type: 'calendar'; topic: 'units' | 'weekday' | 'month' }
   | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
-  | { type: 'fraction'; op: 'equal' | 'compare' }
+  | { type: 'fraction'; op: 'equal' | 'compare' | 'add' | 'sub' }
   | { type: 'geo'; op: GeoOp }
   | { type: 'money'; mode: MoneyMode; whole?: true }
   | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
   | { type: 'mul3x1'; carry: boolean }
   | { type: 'div4x1'; variant: 'exact' | 'rem' }
+  | { type: 'div3x2'; variant: 'exact' | 'rem' }
   | { type: 'mulParts'; digits: 2 | 3 }
   | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
   | { type: 'chance' }
@@ -187,9 +190,9 @@ export function timeDurationSkill(ask: 'end' | 'elapsed'): SkillKey {
 export function calendarSkill(topic: 'units' | 'weekday' | 'month'): SkillKey {
   return topic === 'units' ? 'time:units' : topic === 'weekday' ? 'cal:weekday' : 'cal:month'
 }
-/** frac:shade|read|name|of with a denominator; frac:equal and frac:compare without one. */
+/** frac:shade|read|name|of with a denominator; frac:equal, frac:compare, frac:add and frac:sub without one. */
 export function fractionSkill(op: FractionOp, d?: number): SkillKey {
-  return op === 'equal' || op === 'compare' ? `frac:${op}` : `frac:${op}:${d}`
+  return op === 'equal' || op === 'compare' || op === 'add' || op === 'sub' ? `frac:${op}` : `frac:${op}:${d}`
 }
 export function geoSkill(op: GeoOp): SkillKey {
   return `geo:${op}`
@@ -242,6 +245,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^mul:3x1:c([01])$/))) return { type: 'mul3x1', carry: m[1] === '1' }
   if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
   if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
   if ((m = key.match(/^concept:(\w+)$/))) {
     const name = m[1] as ConceptName
@@ -276,7 +280,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     const d = Number(m[2])
     return (FRACTION_DENOMINATORS as readonly number[]).includes(d) ? { type: 'fraction', op: m[1] as 'shade' | 'read' | 'name' | 'of', d } : null
   }
-  if ((m = key.match(/^frac:(equal|compare)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' }
+  if ((m = key.match(/^frac:(equal|compare|add|sub)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' | 'add' | 'sub' }
   if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
   if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
   if ((m = key.match(/^money:(pay|add):e$/))) return { type: 'money', mode: m[1] as MoneyMode, whole: true }
@@ -308,6 +312,7 @@ export function blockSkillsOf(kind: ExerciseKind): SkillKey[] {
     case 'perimeter': return [geoSkill('perimeter')]
     case 'shape-count': return [geoSkill('poly:sides')]
     case 'area': return [geoSkill('area')]
+    case 'fraction-add': return [fractionSkill('add'), fractionSkill('sub')]
     default: return []
   }
 }
@@ -363,6 +368,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'div3x1': return ['division']
     case 'mul3x1': return ['column-mul']
     case 'div4x1': return ['division']
+    case 'div3x2': return ['division']
     case 'mulParts': return ['mul-parts']
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
@@ -380,6 +386,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
         case 'of': return ['fraction-of']
         case 'equal': return ['fraction-equal']
         case 'compare': return ['shape-choice']
+        case 'add': case 'sub': return ['fraction-add']
       }
       break
     case 'geo':

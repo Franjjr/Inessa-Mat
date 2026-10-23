@@ -16,12 +16,12 @@ import { genAddOperands, genDivision, genMul2x1, genSubPair, maxCarries } from '
 import { buildEquation, buildMental, mentalSkillsOf } from './calc'
 import { buildNumericExercise, numericSkillsOf } from './numeric'
 import { buildClock, clockSkillsOf } from './clock'
-import { genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade } from './fractions'
+import { genFractionAdd, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade } from './fractions'
 import { genGeometry } from './geometry'
 import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
 import { CHART_SKILLS, buildChance, buildChart } from './data'
-import { genDivision4, genMul3x1, genMulParts } from './bigops'
+import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
 import { PATTERN_SKILLS, buildPattern } from './patterns'
 import { POSITION_SKILLS, buildPosition } from './position'
 import { moneySkill, measureSkill } from './skills'
@@ -42,7 +42,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
   'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
-  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area',
+  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -225,7 +225,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
     case 'clock-read': case 'clock-set': case 'time-convert': case 'time-duration': case 'calendar':
       for (const skill of clockSkillsOf(kind)) addItem(map, skill, kind, 1)
       break
-    case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal':
+    case 'fraction-shade': case 'fraction-read': case 'fraction-of': case 'fraction-equal': case 'fraction-add':
     case 'shape-choice': case 'angle-tap': case 'perimeter': case 'shape-count':
       for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
       break
@@ -686,6 +686,7 @@ function buildBlock(skill: SkillKey, p: ParsedSkill, ctx: Ctx, rng: Rng, used: S
       case 'of': return retry(() => genFractionOf(rng, p.d, learnt ? 'numbers' : 'drawing', pick(rng, ['🍬', '🌸'] as const)), used, rng)!
       case 'equal': return retry(() => genFractionEqual(rng), used, rng)!
       case 'compare': return retry(() => genFractionCompare(rng), used, rng)!
+      case 'add': case 'sub': return retry(() => genFractionAdd(rng, p.op as 'add' | 'sub', learnt ? 'numbers' : 'drawing'), used, rng)!
     }
   }
   if (p.type === 'geo') {
@@ -723,6 +724,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
   if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
   if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {

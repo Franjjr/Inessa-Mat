@@ -23,7 +23,8 @@ export interface DivisionViewProps extends ExerciseViewProps {
 
 /** The method the view can really show: the climb needs a one-digit quotient, otherwise the galera is shown. */
 export function effectiveDivMethod(method: DivMethod | undefined, ex: DivisionExercise): DivMethod {
-  if (method === 'div-parts') return 'div-parts'
+  // Splitting into parts is for one-digit divisors: with two digits the galera is shown.
+  if (method === 'div-parts') return ex.divisor < 10 ? 'div-parts' : 'galera'
   if (method === 'climb') return ex.quotient < 10 ? 'climb' : 'galera'
   if (method === 'galera-short') return 'galera-short'
   return 'galera'
@@ -73,11 +74,16 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const digits = String(ex.dividend).split('')
   const n = digits.length
   const k = steps.length
-  const width = Math.max(k, 1)
+  // The quotient columns: at least as many as the divisor's digits, so a 2-digit divisor fits above them.
+  const width = Math.max(k, String(ex.divisor).length)
+  // A remainder is smaller than the divisor: with a 2-digit divisor each remainder has a tens cell too (blank = 0).
+  const twoDigitRem = ex.divisor >= 10
   const showRemainder = ex.variant === 'rem' || remainderOf(steps) !== 0
 
   const [qs, setQs] = useState<(number | null)[]>(() => steps.map(() => null))
   const [rs, setRs] = useState<(number | null)[]>(() => steps.map(() => null))
+  const [rts, setRts] = useState<(number | null)[]>(() => steps.map(() => null))
+  const remOf = (j: number) => (rs[j] === null ? null : (rts[j] ?? 0) * 10 + rs[j])
 
   // Without subtractions, only the last step writes a remainder (the one left over at the end).
   const needsRem = (j: number) => !short || j === k - 1
@@ -87,9 +93,13 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const complete = steps.every((_, j) => filled(j))
   const active = steps.findIndex((_, j) => open(j) && !filled(j))
 
-  const order = useMemo(() => steps.flatMap((_, j) => (needsRem(j) ? [`q${j}`, `r${j}`] : [`q${j}`])), [steps, short]) // eslint-disable-line react-hooks/exhaustive-deps
+  // The remainder is written like a subtraction: units first, then tens.
+  const order = useMemo(
+    () => steps.flatMap((_, j) => (needsRem(j) ? [`q${j}`, `r${j}`, ...(twoDigitRem ? [`rt${j}`] : [])] : [`q${j}`])),
+    [steps, short, twoDigitRem], // eslint-disable-line react-hooks/exhaustive-deps
+  )
   const qWrong = (j: number) => !!flow.result && !flow.result.correct && qs[j] !== null && qs[j] !== steps[j].quotientDigit
-  const rWrong = (j: number) => !!flow.result && !flow.result.correct && rs[j] !== null && rs[j] !== steps[j].remainder
+  const rWrong = (j: number) => !!flow.result && !flow.result.correct && rs[j] !== null && remOf(j) !== steps[j].remainder
   const statusOf = (j: number, wrong: boolean) => {
     if (flow.result?.correct) return 'correct' as const
     if (wrong) return 'wrong' as const
@@ -100,7 +110,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const check = () => {
     if (!complete) return
     const quotient = Number(qs.join(''))
-    const remainder = rs[k - 1] ?? 0
+    const remainder = remOf(k - 1) ?? 0
     const c = flow.submit({ type: 'division', quotient, remainder })
     if (c.correct) celebrate('small')
   }
@@ -184,6 +194,20 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
         />
       </div>,
     )
+    if (!twoDigitRem || st.endIndex < 1) return
+    cells.push(
+      <div key={`rt${j}`} className={s.cell} style={{ gridRow: remainderRow, gridColumn: st.endIndex }}>
+        <DigitCell
+          cellId={`rt${j}`}
+          variant="result"
+          size="md"
+          value={rts[j]}
+          status={statusOf(j, rWrong(j))}
+          onChange={(v) => setRts((prev) => prev.map((x, i) => (i === j ? v : x)))}
+          ariaLabel={showRemainder && j === k - 1 ? 'resto, decenas' : `resto del paso ${j + 1}, decenas`}
+        />
+      </div>,
+    )
   })
 
   const stepLine = (st: GaleraStep, j: number) => {
@@ -208,7 +232,10 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
         <div
           className={s.galera}
-          style={{ gridTemplateColumns: `repeat(${n}, var(--galera-col)) var(--galera-gutter) repeat(${width}, var(--galera-col))` }}
+          style={{
+            gridTemplateColumns: `repeat(${n}, var(--galera-col)) var(--galera-gutter) repeat(${width}, var(--galera-col))`,
+            ['--galera-cols' as string]: n + width,
+          }}
         >
           <div className={s.bracket} style={{ gridRow: `1 / ${lastRow + 1}`, gridColumn: n + 1 }} aria-hidden />
           <div className={s.topBar} style={{ gridRow: 2, gridColumn: `${n + 1} / span ${width + 1}` }} aria-hidden />

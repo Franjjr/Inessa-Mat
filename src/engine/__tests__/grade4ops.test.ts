@@ -3,10 +3,12 @@
 import { describe, expect, it } from 'vitest'
 import { check, createRng, describeSkill, generate, hintsFor, isValidSkill, makeMulParts, parseSkill, statementOf } from '@/engine'
 import type { Answer, Exercise } from '@/types'
+import { galeraSteps, quotientOf, remainderOf } from '@/activities/division/galera'
 
 const SKILLS = [
   'mul:3x1:c0', 'mul:3x1:c1', 'div:4x1:exact', 'div:4x1:rem', 'mul:2dx2d', 'mul:3dx2d',
-  'mental:por10', 'mental:romanos', 'num:round:1000', 'geo:area', 'geo:symmetry',
+  'mental:por10', 'mental:romanos', 'num:round:1000', 'geo:area', 'geo:symmetry', 'div:3x2:exact', 'div:3x2:rem',
+  'frac:add', 'frac:sub',
 ]
 
 /** Roman numeral read back with the subtraction rule, independently of the engine. */
@@ -22,6 +24,7 @@ function rightAnswer(ex: Exercise): Answer {
     case 'column-mul': return { type: 'number', value: ex.answer }
     case 'division': return { type: 'division', quotient: ex.quotient, remainder: ex.remainder }
     case 'mul-parts': return { type: 'numbers', values: [...ex.partials, ex.answer] }
+    case 'fraction-add': return { type: 'fraction', numerator: ex.answer, denominator: ex.denominator }
     case 'shape-choice': return { type: 'choice', index: ex.answer }
     default: return { type: 'number', value: (ex as { answer: number }).answer }
   }
@@ -37,11 +40,25 @@ function verify(ex: Exercise): void {
       break
     }
     case 'division':
-      expect(ex.dividend).toBeGreaterThanOrEqual(1000)
-      expect(ex.dividend).toBeLessThanOrEqual(9999)
+      if (ex.skill.startsWith('div:4x1')) {
+        expect(ex.dividend).toBeGreaterThanOrEqual(1000)
+        expect(ex.dividend).toBeLessThanOrEqual(9999)
+        expect(ex.divisor).toBeLessThan(10)
+      } else {
+        expect(ex.dividend).toBeLessThanOrEqual(999)
+        expect(ex.divisor).toBeGreaterThanOrEqual(12)
+        expect(ex.divisor).toBeLessThanOrEqual(39)
+        expect(ex.quotient).toBeGreaterThanOrEqual(2)
+      }
       expect(ex.quotient * ex.divisor + ex.remainder).toBe(ex.dividend)
       expect(ex.remainder).toBeLessThan(ex.divisor)
-      expect(ex.remainder === 0).toBe(ex.skill === 'div:4x1:exact')
+      expect(ex.remainder === 0).toBe(ex.skill.endsWith(':exact'))
+      break
+    case 'fraction-add':
+      expect(ex.op === 'add' ? ex.a + ex.b : ex.a - ex.b).toBe(ex.answer)
+      expect(ex.answer).toBeGreaterThan(0)
+      expect(ex.answer).toBeLessThan(ex.denominator)
+      expect(ex.figures.length === 0).toBe(ex.mode === 'numbers')
       break
     case 'mul-parts':
       expect(ex.units + ex.tens).toBe(ex.bottom)
@@ -90,7 +107,7 @@ describe('4.º: operations, numbers and geometry', () => {
         const hints = hintsFor(ex)
         expect(hints).toHaveLength(3)
         if (ex.kind !== 'shape-choice') {
-          const answer = String((ex as { answer: number }).answer)
+          const answer = String(ex.kind === 'division' ? ex.quotient : (ex as { answer: number }).answer)
           for (const h of hints) expect(h.text.replace(/(\d) (\d)/g, '$1$2').split(/\D+/), `${ex.id}: ${h.text}`).not.toContain(answer)
         }
         expect(statementOf(ex).length).toBeGreaterThan(0)
@@ -101,6 +118,27 @@ describe('4.º: operations, numbers and geometry', () => {
   it('the fact skills 2×2 and 3×2 are still facts: the new keys do not clash', () => {
     expect(parseSkill('mul:2x2')).toEqual({ type: 'mul', a: 2, b: 2 })
     expect(parseSkill('mul:2dx2d')).toEqual({ type: 'mulParts', digits: 2 })
+  })
+
+  it('adding fractions: adding the denominators is named, and so is a wrong numerator', () => {
+    const [ex] = generate({ skills: ['frac:add'] }, 1, { rng: createRng(3) })
+    if (ex.kind !== 'fraction-add') throw new Error(ex.kind)
+    const d = ex.denominator
+    expect(check(ex, { type: 'fraction', numerator: ex.answer, denominator: 2 * d })).toMatchObject({ correct: false, errorType: 'fraction-count', feedback: expect.stringContaining('no se suma') })
+    expect(check(ex, { type: 'fraction', numerator: ex.answer + 1, denominator: d })).toMatchObject({ correct: false, errorType: 'other' })
+    expect(check(ex, { type: 'fraction', numerator: ex.answer, denominator: null })).toMatchObject({ correct: false, errorType: 'incomplete' })
+  })
+
+  it('a 2-digit divisor: the galera steps hold for any divisor and remainders below it', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const ex of generate({ skills: ['div:3x2:rem'] }, 3, { rng: createRng(seed) })) {
+        if (ex.kind !== 'division') throw new Error(ex.kind)
+        const steps = galeraSteps(ex.dividend, ex.divisor)
+        expect(quotientOf(steps)).toBe(ex.quotient)
+        expect(remainderOf(steps)).toBe(ex.remainder)
+        for (const st of steps) expect(st.remainder).toBeLessThan(ex.divisor)
+      }
+    }
   })
 
   it('multiplying by parts names the forgotten zero and a wrong partial', () => {

@@ -203,11 +203,24 @@ function climbDivisionHints(ex: DivisionExercise): Hint[] {
 
 const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo el cociente.'
 
+/* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
+function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
+  const { dividend: n, divisor: d } = ex
+  const round = Math.round(d / 10) * 10
+  const params = { total: n, groups: d, dividend: n, divisor: d }
+  return [
+    hint(1, short ? SHORT_GALERA_HINT : `En cada paso pregúntate cuántas veces cabe el ${d}. Prueba un número y multiplícalo por ${d}.`, 'none'),
+    hint(2, `Para estimar, piensa en el ${d} como si fuera ${round}. Después comprueba multiplicando por ${d} de verdad.`, 'share', params),
+    hint(3, `Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
+  ]
+}
+
 function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
-  if (method === 'div-parts') return partsDivisionHints(ex)
+  if (method === 'div-parts' && ex.divisor < 10) return partsDivisionHints(ex)
   if (method === 'climb' && ex.quotient < 10) return climbDivisionHints(ex)
   const short = method === 'galera-short'
   const { dividend: n, divisor: d, quotient: q } = ex
+  if (d >= 10) return twoDigitDivisorHints(ex, short)
   const t = Math.floor(n / 10)
   const u = n % 10
   const params = { total: n, groups: d, dividend: n, divisor: d }
@@ -385,7 +398,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'fraction-shade':
     case 'fraction-read':
     case 'fraction-of':
-    case 'fraction-equal': return fractionHints(ex)
+    case 'fraction-equal':
+    case 'fraction-add': return fractionHints(ex)
     case 'shape-choice':
     case 'angle-tap':
     case 'perimeter':

@@ -85,4 +85,5 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   // ---- 4.º: multiplicar por partes, área en cuadraditos
   'mul-parts': lazy(() => import('./views/MulPartsView')),
   area: lazy(() => import('./views/FigureNumberView')),
+  'fraction-add': lazy(() => import('./views/FractionAddView')),
 }

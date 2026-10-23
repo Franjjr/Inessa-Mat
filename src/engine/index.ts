@@ -65,7 +65,7 @@ export {
 } from './methods'
 export type { MethodInfo, MethodOp, TableTrick } from './methods'
 /** Fracciones and geometría (block E): generators, grading and hints (see fractions.ts and geometry.ts). */
-export { fractionName, fractionHints, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade, unequalWeights } from './fractions'
+export { fractionName, fractionHints, genFractionAdd, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade, unequalWeights } from './fractions'
 export {
   genAngleTap, genAngleType, genCircle, genGeometry, genLineRelation, genLineType, genPerimeter, genPolygonName, genPolygonSides,
   genSolidFaces, genSolidName, genSolidRoll, geometryHints, isConvex, polygonPoints, rightCorners, sideLengths, POLYGON_WORD,
@@ -87,7 +87,7 @@ export { buildMeasure, checkMeasure, DIMENSION_NAME, hintsMeasure, MEASURE_MODES
 export { CHART_SKILLS, CHANCE_OPTIONS, buildChance, buildChart, checkChance, checkChart, hintsChance, hintsChart, makeChance, makeChart, makeModeList } from './data'
 export { PATTERN_SKILLS, buildPattern, checkPattern, hintsPattern, makeNumberSeries, makePredict, makeShapePattern } from './patterns'
 export { POSITION_SKILLS, SIDES, buildPosition, checkPosition, hintsPosition, makeNext, makeRelative, makeRoute } from './position'
-export { genDivision4, genMul3x1, genMulParts, makeMulParts, checkMulParts, hintsMulParts } from './bigops'
+export { genDivision2d, genDivision4, genMul3x1, genMulParts, makeMulParts, checkMulParts, hintsMulParts } from './bigops'
 export { toRoman } from './calc'
 export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */

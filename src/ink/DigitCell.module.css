@@ -75,6 +75,10 @@
   position: absolute;
   left: 0;
   top: 0;
+  /* Until the first stroke sizes it (inline style), a canvas is 300 × 150: keep it inside the cell so it never widens
+     a scrolling parent such as the galera. */
+  width: 100%;
+  height: 100%;
   pointer-events: none;
   color: var(--c-ink); /* deep plum ink, read by the renderer */
   transition: opacity var(--dur-med) var(--ease-out), filter var(--dur-med) var(--ease-out);

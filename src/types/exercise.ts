@@ -29,6 +29,7 @@ import type { ID, InputMode } from './common'
  *   time:units | cal:weekday | cal:month   units of time, days of the week, days of a month
  *   frac:shade:D|read:D|name:D|of:D  fractions with denominator D (2|3|4|5|6|8|10|12): colour, read, name, fraction of a quantity
  *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
+ *   frac:add | frac:sub              adding and subtracting fractions with the same denominator (4.º)
  *   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
  *                                    geometry (3.º, block E): polygons, lines, angles, circle, solids, perimeter
  *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
@@ -85,6 +86,7 @@ export type ExerciseKind =
   | 'position'        // posición: left, right, above, below on a grid, and routes with arrows (pos:*)
   | 'mul-parts'       // multiplicar por dos cifras por partes: 23 × 14 = 23 × 4 + 23 × 10 (mul:2dx2d, mul:3dx2d)
   | 'area'            // área: count the unit squares of a figure on a grid (geo:area)
+  | 'fraction-add'    // sumar y restar fracciones de igual denominador: 2/7 + 3/7 = ? (frac:add, frac:sub)
 
 interface ExerciseBase {
   id: ID
@@ -468,7 +470,7 @@ export type Exercise =
   | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
-  | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise
+  | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -484,6 +486,17 @@ export interface MulPartsExercise extends ExerciseBase {
   answer: number
 }
 export interface AreaExercise extends ExerciseBase { kind: 'area'; figure: GridFigure; answer: number }
+/** a/d + b/d or a/d − b/d. Drawing mode shows the bars (two for a sum, one for a subtraction); the child writes the
+    numerator and the denominator of the result. */
+export interface FractionAddExercise extends ExerciseBase {
+  kind: 'fraction-add'
+  op: 'add' | 'sub'
+  a: number; b: number; denominator: number
+  mode: 'drawing' | 'numbers'
+  figures: FractionFigure[]
+  /** The numerator of the result (the denominator stays). */
+  answer: number
+}
 
 // ---- gráficos, probabilidad, series y posición (src/engine/data.ts, patterns.ts, position.ts)
 

@@ -67,6 +67,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'equation': return 'Signo igual: los dos lados valen lo mismo'
     case 'mul3x1': return `Multiplicaciones de 3 cifras × 1 cifra ${p.carry ? 'con llevadas' : 'sin llevadas'}`
     case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
+    case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
@@ -138,7 +139,7 @@ const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month', string> = {
 const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }
 
 /** Adult description of a fraction skill: 'frac:read:4' → 'Leer fracciones de 4 partes'. */
-function fractionText(p: { op: 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare'; d?: number }): string {
+function fractionText(p: { op: 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare' | 'add' | 'sub'; d?: number }): string {
   switch (p.op) {
     case 'shade': return `Colorear fracciones de ${p.d} partes`
     case 'read': return `Leer fracciones de ${p.d} partes`
@@ -146,6 +147,8 @@ function fractionText(p: { op: 'shade' | 'read' | 'name' | 'of' | 'equal' | 'com
     case 'of': return `Fracción de una cantidad (denominador ${p.d})`
     case 'equal': return 'Figuras partidas en partes iguales'
     case 'compare': return 'Comparar fracciones con dibujos'
+    case 'add': return 'Sumar fracciones de igual denominador'
+    case 'sub': return 'Restar fracciones de igual denominador'
   }
 }
 

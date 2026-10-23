@@ -18,9 +18,13 @@
 
 /* The galera is drawn on squared school paper (cuadrícula azul), with ink-like lines for the casita. Every digit
    column has the same width, so the printed products and the subtraction lines sit exactly under their digits. */
+/* On a narrow screen the columns shrink to fit the width (--galera-cols is set by the view), down to 40px; only a very
+   long division still scrolls sideways. */
 .galera {
-  --galera-col: calc(var(--cell-size) + 14px);
   --galera-gutter: 34px;
+  --galera-fit: calc((100vw - 120px - var(--galera-gutter)) / var(--galera-cols, 8));
+  --galera-col: max(40px, min(calc(var(--cell-size) + 14px), var(--galera-fit)));
+  --galera-cell: min(var(--cell-size), calc(var(--galera-col) - 4px));
   --paper-line: color-mix(in srgb, var(--pv-u) 15%, var(--c-surface));
   --ink-pencil: var(--c-ink-soft);
   display: inline-grid;
@@ -37,13 +41,17 @@
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-1);
   font-family: var(--font-display);
-  font-size: var(--fs-num);
+  font-size: min(var(--fs-num), calc(var(--galera-col) * .62));
   font-variant-numeric: tabular-nums;
   max-width: 100%;
   overflow-x: auto;
 }
+@media (max-width: 480px) {
+  .galera { --galera-gutter: 24px; padding: var(--sp-3) var(--sp-2); }
+}
 
 .cell {
+  --cell-size: var(--galera-cell);
   display: grid;
   place-items: center;
   width: var(--galera-col);

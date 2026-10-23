@@ -19,7 +19,7 @@ import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
 import { checkClock, expectedClock } from './clock'
-import { checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
+import { checkFractionAdd, checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
 import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 import { checkMoney } from './money'
 import { checkMeasure } from './measure'
@@ -574,6 +574,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'fraction-shade': return checkFractionShade(exercise, answer)
     case 'fraction-read': return checkFractionRead(exercise, answer)
     case 'fraction-of': return checkFractionOf(exercise, answer)
+    case 'fraction-add': return checkFractionAdd(exercise, answer)
     case 'fraction-equal': return checkFractionEqual(exercise, answer)
     case 'shape-choice': return checkShapeChoice(exercise, answer)
     case 'angle-tap': return checkAngleTap(exercise, answer)
