@@ -57,10 +57,10 @@ export function isTopicMastered(topic: SyllabusTopic, mastery: MasteryMap): bool
 }
 
 /**
- * Topics the child has not met at all that sit before a topic already started or mastered in teaching order. They are
- * «behind»: a new step added to a stage the child has passed. «Lo nuevo» does not pull the child back to them; the
- * daily mix practises their first step instead. A topic counts as met through the skills no earlier topic teaches:
- * the multiplication tables share facts (3 × 2 is in the 2 and in the 3), and a shared fact does not start a table.
+ * Late topics (`late: true`, split out of an existing topic) that the child has not met at all while a later topic is
+ * started or mastered. They are «behind»: «Lo nuevo» does not pull the child back to them; the daily mix practises their
+ * first step instead. Any other topic is never behind. A topic counts as met through the skills no earlier topic
+ * teaches: the multiplication tables share facts (3 × 2 is in the 2 and in the 3), and a shared fact does not start one.
  */
 export function behindTopics(syllabus: Syllabus, mastery: MasteryMap, term?: number): SyllabusTopic[] {
   const topics = availableTopics(syllabus, term)
@@ -71,11 +71,11 @@ export function behindTopics(syllabus: Syllabus, mastery: MasteryMap, term?: num
     return own.some((s) => mastery[s] !== undefined)
   })
   const lastMet = met.lastIndexOf(true)
-  return topics.filter((t, i) => i < lastMet && !met[i] && !isTopicMastered(t, mastery))
+  return topics.filter((t, i) => t.late && i < lastMet && !met[i] && !isTopicMastered(t, mastery))
 }
 
 /** The topic the child is working on: the first available one in teaching order that is not mastered yet, skipping the
-    topics behind (they come back in the mix); when only those are left, the first of them. */
+    late topics that are behind (they come back in the mix). Without late topics it is the first one not mastered. */
 export function currentTopic(syllabus: Syllabus, mastery: MasteryMap, term?: number): SyllabusTopic | null {
   const open = availableTopics(syllabus, term).filter((t) => !isTopicMastered(t, mastery))
   const behind = new Set(behindTopics(syllabus, mastery, term).map((t) => t.id))

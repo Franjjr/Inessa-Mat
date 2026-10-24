@@ -33,7 +33,7 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'doble-triple', 'prob-multiplicar', 'poligonos', 'rectas', 'rectas-segmentos'] },
   // 2.º trimestre
   { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio'] },
-  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'angulos-clase', 'graficos', 'graficos-tablas'] },
+  { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'angulos-clase', 'graficos-tablas', 'graficos'] },
   { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos', 'recorridos'] },
   // 3.er trimestre
   { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['numeros-5-cifras', 'mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error', 'probabilidad'] },
@@ -177,7 +177,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'rectas', name: 'Rectas, curvas, paralelas y perpendiculares', skills: [geoSkill('line:type'), geoSkill('line:rel')], status: 'disponible', rungs: { concreto: 'Dos tiras de papel que se cruzan o no', dibujo: 'La línea que se prolonga sin fin', numeros: 'Paralelas nunca se cruzan; perpendiculares forman cruz' } },
         { id: 'rectas-segmentos', name: 'Rectas, semirrectas y segmentos', skills: [geoSkill('line:kind')], status: 'disponible', rungs: { concreto: 'Tiras de papel con puntos y flechas en los extremos', dibujo: 'Un punto marca dónde se acaba la línea; una flecha, que sigue sin fin' } },
         { id: 'angulos-rectos', name: 'Ángulos rectos', skills: [geoSkill('angle:type'), geoSkill('angle:tap')], status: 'disponible', rungs: { concreto: 'La esquina de una hoja de papel', dibujo: 'Comparar cada ángulo con la esquina del papel', uso: 'Encontrar las esquinas rectas de una habitación' } },
-        { id: 'angulos-clase', name: 'Ángulos agudos y obtusos', skills: [geoSkill('angle:class')], status: 'disponible', rungs: { dibujo: 'Más pequeño o más grande que la esquina del papel' } },
+        { id: 'angulos-clase', name: 'Ángulos agudos y obtusos', skills: [geoSkill('angle:class')], status: 'disponible', late: true, rungs: { dibujo: 'Más pequeño o más grande que la esquina del papel' } },
         { id: 'circulo-cuerpos', name: 'Círculo, circunferencia y cuerpos', skills: [geoSkill('circle'), geoSkill('solid:name'), geoSkill('solid:roll'), geoSkill('solid:faces')], status: 'disponible', rungs: { concreto: 'Pelotas, cajas, latas y conos', dibujo: 'Caras planas y partes redondas', numeros: 'Cuántas caras planas tiene cada cuerpo' } },
         { id: 'perimetro', name: 'Perímetro: sumar los lados', skills: [geoSkill('perimeter')], status: 'disponible', rungs: { dibujo: 'Figuras con la medida de cada lado', uso: '¿Cuántos metros de valla hacen falta para rodear el jardín?' } },
         { id: 'recorridos', name: 'Recorridos en una cuadrícula', skills: ['pos:route'], status: 'disponible', rungs: { concreto: 'Caminar por la clase contando pasos', dibujo: 'Flechas en una cuadrícula', uso: 'Dar indicaciones para llegar a un sitio' } },
@@ -188,7 +188,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       name: 'Gráficos y probabilidad',
       topics: [
         { id: 'graficos', name: 'Pictogramas y gráficas de barras', skills: ['chart:pict:x', 'chart:bars'], status: 'disponible', rungs: { concreto: 'Contar votos de la clase', dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
-        { id: 'graficos-tablas', name: 'Tablas de datos', skills: ['chart:table'], status: 'disponible', rungs: { numeros: 'Contar y anotar en una tabla: cuántos de cada cosa' } },
+        { id: 'graficos-tablas', name: 'Tablas de datos', skills: ['chart:table'], status: 'disponible', late: true, rungs: { numeros: 'Contar y anotar en una tabla: cuántos de cada cosa' } },
         { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance'], status: 'disponible', rungs: { concreto: 'Sacar bolas de una bolsa sin mirar', uso: '¿Puede salir una bola verde?' } },
       ],
     },
