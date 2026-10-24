@@ -14,7 +14,7 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): 
 // ---------------------------------------------------------------- mental
 
 const DIFFICULTY: Record<MentalFamily, number> = {
-  dobles: 2, mitades: 2, completar10: 1, completar100: 2, completar1000: 3, decenas: 2, centenas: 2, compensar: 3, por10: 2, romanos: 3,
+  dobles: 2, triples: 2, mitades: 2, completar10: 1, completar100: 2, completar1000: 3, decenas: 2, centenas: 2, compensar: 3, por10: 2, romanos: 3,
 }
 
 /** Makes a mental item; `a` and `b` carry the numbers the hints work with (see mentalHints). */
@@ -33,6 +33,11 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
     case 'dobles': {
       const n = rng() < 0.3 ? 10 * randInt(rng, 1, 6) : randInt(rng, 2, 60)
       return makeMental(family, n, 0, 2 * n, `¿Cuánto es el doble de ${n}?`)
+    }
+    case 'triples': {
+      // Up to 30, and the tens up to 90: the triple never passes 270.
+      const n = rng() < 0.3 ? 10 * randInt(rng, 1, 9) : randInt(rng, 2, 30)
+      return makeMental(family, n, 0, 3 * n, `¿Cuánto es el triple de ${n}?`)
     }
     case 'mitades': {
       const n = 2 * randInt(rng, 1, 49)
@@ -127,6 +132,7 @@ export function mentalSkillsOf(): SkillKey[] {
 
 const TIP: Record<MentalFamily, string> = {
   dobles: 'Parte el número en decenas y unidades, y dobla cada parte.',
+  triples: 'Parte el número en decenas y unidades, y triplica cada parte.',
   mitades: 'Reparte el número en dos partes iguales: primero las decenas, luego las unidades.',
   completar10: 'Cuenta hasta el número redondo: primero las unidades, luego las decenas.',
   completar100: 'Completa primero hasta la decena siguiente y después hasta 100.',
@@ -163,6 +169,29 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         hint(1, TIP.dobles),
         hint(2, `${a} = ${t} + ${u}. Dobla cada parte.`),
         hint(3, `Dobla las decenas: ${t} + ${t} = ?. Después dobla las unidades: ${u} + ${u}.`),
+      ]
+    }
+    case 'triples': {
+      if (a % 10 === 0) {
+        return [
+          hint(1, 'Para el triple de unas decenas, piensa en cuántas decenas hay.'),
+          hint(2, `${fmt(a)} son ${a / 10} decenas. Cuenta el triple de decenas.`),
+          hint(3, `Triplica las decenas: ${a / 10} × 3 = ? decenas.`),
+        ]
+      }
+      if (a < 10) {
+        return [
+          hint(1, 'El triple es sumar el mismo número tres veces.'),
+          hint(2, `${a} + ${a} + ${a}: ¿cuánto da?`),
+          hint(3, `Primero ${a} + ${a} = ${2 * a}. Ahora suma otro ${a}: ¿cuánto da?`),
+        ]
+      }
+      const t = a - (a % 10)
+      const u = a % 10
+      return [
+        hint(1, TIP.triples),
+        hint(2, `${a} = ${t} + ${u}. Triplica cada parte.`),
+        hint(3, `Triplica las decenas: ${t} × 3 = ?. Después triplica las unidades: ${u} × 3 = ?.`),
       ]
     }
     case 'mitades': {

@@ -24,7 +24,7 @@ export const GRADE4_STAGES: SyllabusStage[] = [
   { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'prob-dos-pasos', 'masa-capacidad-4', 'duraciones-4', 'probabilidad'] },
   // 3.er trimestre
   { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
-  { id: 'etapa-8', term: 3, topics: ['poligonos-cuerpos', 'div-2-cifras'] },
+  { id: 'etapa-8', term: 3, topics: ['poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras'] },
 ]
 
 export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
@@ -59,8 +59,9 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1', name: 'Multiplicar 2 cifras por 1 (repaso)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con llevada' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: '213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas' } },
         { id: 'por-10-100-1000', name: 'Multiplicar y dividir por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven en la tabla de valor posicional', numeros: '37 × 100 = 3 700; 4 500 : 100 = 45' } },
-        { id: 'mul-2-cifras', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d'], status: 'disponible', rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10', uso: 'Problemas de cajas y filas' } },
-        { id: 'mul-3x2', name: 'Multiplicar 3 cifras por 2 cifras (por partes)', skills: ['mul:3dx2d'], status: 'disponible', rungs: { numeros: '125 × 23 = 125 × 3 + 125 × 20', uso: 'Problemas con números grandes' } },
+        { id: 'mul-2-cifras', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d', 'mul:col:2x2'], status: 'disponible', ordered: true, rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10', uso: 'Problemas de cajas y filas' } },
+        { id: 'mul-3x2', name: 'Multiplicar 3 cifras por 2 cifras (por partes)', skills: ['mul:3dx2d', 'mul:col:3x2'], status: 'disponible', ordered: true, rungs: { numeros: '125 × 23 = 125 × 3 + 125 × 20', uso: 'Problemas con números grandes' } },
+        { id: 'mul-3-cifras', name: 'Multiplicar por un número de 3 cifras', skills: ['mul:col:3x3'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con tres filas parciales' } },
       ],
     },
     {

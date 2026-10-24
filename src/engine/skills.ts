@@ -11,7 +11,7 @@
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
    num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
    <key>:999            numbers up to 999 (2.º): num:place:*, num:compare, num:order, num:line:10|100, add:3d:cK
-   mental:dobles|mitades|completar10|completar100|completar1000|decenas|centenas|compensar           (cálculo mental)
+   mental:dobles|triples|mitades|completar10|completar100|completar1000|decenas|centenas|compensar   (cálculo mental)
    eq:flex                                                                                          (signo igual flexible)
    bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
    bar:mul:small            the 2.º groups problem: groups of 2, 3, 4, 5 or 10 (the tables of 2.º)
@@ -38,6 +38,7 @@
    div:4x1:exact|rem        4-digit dividend ÷ 1-digit divisor (4.º)
    div:3x2:exact|rem        2- or 3-digit dividend ÷ 2-digit divisor, quotient of 1 or 2 digits (4.º)
    mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
+   mul:col:2x2|3x2|3x3      multiplying in columns, with partial rows: 2- or 3-digit top × 2- or 3-digit bottom (4.º, src/engine/longmul.ts)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
@@ -72,7 +73,7 @@ export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
 export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
-export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
+export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'triples', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
 export const ROUND_TARGETS = [10, 100] as const
 export const LINE_STEPS = [10, 100, 1000] as const
 
@@ -111,6 +112,7 @@ export type ParsedSkill =
   | { type: 'div4x1'; variant: 'exact' | 'rem' }
   | { type: 'div3x2'; variant: 'exact' | 'rem' }
   | { type: 'mulParts'; digits: 2 | 3 }
+  | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
   | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
   | { type: 'chance' }
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
@@ -133,6 +135,10 @@ export function addSkill(digits: number, carries: number, max?: 999): SkillKey {
 }
 export function subSkill(digits: number, borrows: number, zero = false): SkillKey {
   return zero ? `sub:${digits}d:z` : `sub:${digits}d:b${borrows}`
+}
+/** Multiplying in columns with partial rows: the digits of the top and of the bottom (2 or 3 each). */
+export function mulColSkill(top: 2 | 3, bottom: 2 | 3): SkillKey {
+  return `mul:col:${top}x${bottom}`
 }
 export function mul2x1Skill(carry: boolean): SkillKey {
   return carry ? 'mul:2x1:c1' : 'mul:2x1:c0'
@@ -246,6 +252,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^mul:2x1:c([01])$/))) return { type: 'mul2x1', carry: m[1] === '1' }
   if ((m = key.match(/^mul:3x1:c([01])$/))) return { type: 'mul3x1', carry: m[1] === '1' }
   if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
+  if ((m = key.match(/^mul:col:([23])x([23])$/))) return { type: 'mulCol', top: Number(m[1]) as 2 | 3, bottom: Number(m[2]) as 2 | 3 }
   if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
@@ -373,6 +380,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'div4x1': return ['division']
     case 'div3x2': return ['division']
     case 'mulParts': return ['mul-parts']
+    case 'mulCol': return ['long-mul']
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']

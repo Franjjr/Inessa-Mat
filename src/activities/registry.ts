@@ -86,4 +86,6 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'mul-parts': lazy(() => import('./views/MulPartsView')),
   area: lazy(() => import('./views/FigureNumberView')),
   'fraction-add': lazy(() => import('./views/FractionAddView')),
+  // ---- 4.º: multiplicar en columna con filas parciales
+  'long-mul': lazy(() => import('./views/LongMulView')),
 }

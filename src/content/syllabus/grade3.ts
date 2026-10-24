@@ -30,14 +30,14 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   // 1.er trimestre
   { id: 'etapa-1', term: 1, worldId: 'w1', topics: ['descomponer-9999', 'leer-escribir-9999', 'comparar-ordenar-9999', 'tabla-2', 'tabla-5', 'tabla-10', 'completar', 'monedas-billetes'] },
   { id: 'etapa-2', term: 1, worldId: 'w2', topics: ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'redondear', 'decenas-centenas', 'igualdad', 'prob-sumar', 'reloj-en-punto-media-cuarto'] },
-  { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'prob-multiplicar', 'poligonos', 'rectas'] },
+  { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'doble-triple', 'prob-multiplicar', 'poligonos', 'rectas'] },
   // 2.º trimestre
   { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio'] },
   { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'graficos'] },
   { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos', 'recorridos'] },
   // 3.er trimestre
   { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error', 'probabilidad'] },
-  { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes'] },
+  { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes', 'mul-2-cifras-intro'] },
 ]
 
 export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
@@ -82,6 +82,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1-llevando', name: 'Multiplicar 2 cifras por 1 (con llevada)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { dibujo: 'Llevadas de las unidades', numeros: 'La cuenta en columna con llevada', uso: 'Problemas de grupos' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: 'Descomponer 213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de grupos grandes' } },
         { id: 'mul-10-100', name: 'Multiplicar por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven a la izquierda en la tabla de valor posicional', numeros: '37 × 100 = 3 700: dos ceros a la derecha' } },
+        { id: 'mul-2-cifras-intro', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d'], status: 'disponible', rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10' } },
       ],
     },
     {
@@ -119,6 +120,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       name: 'Cálculo mental',
       topics: [
         { id: 'dobles-mitades', name: 'Dobles y mitades', skills: ['mental:dobles', 'mental:mitades'], status: 'disponible', rungs: { concreto: 'Dos montones iguales', numeros: 'El doble de 35 = 30 + 30 + 5 + 5' } },
+        { id: 'doble-triple', name: 'Doble y triple', skills: ['mental:dobles', 'mental:triples'], status: 'disponible', ordered: true, rungs: { concreto: 'Tres montones iguales', numeros: 'El triple de 14 = 10 + 10 + 10 + 4 + 4 + 4' } },
         { id: 'completar', name: 'Completar a 10, 100 y 1 000', skills: ['mental:completar10', 'mental:completar100', 'mental:completar1000'], status: 'disponible', rungs: { dibujo: 'La recta: cuánto falta para el número redondo', numeros: 'Contar hasta el número redondo' } },
         { id: 'decenas-centenas', name: 'Sumar y restar decenas y centenas', skills: ['mental:decenas', 'mental:centenas', 'num:line:10', 'num:line:100', 'num:line:1000'], status: 'disponible', rungs: { concreto: 'Bloques de decenas y centenas', dibujo: 'Saltos de 10, 100 y 1 000 en la recta', numeros: '340 + 200 = 540' } },
         { id: 'compensar', name: 'Compensar (+9 = +10 − 1)', skills: ['mental:compensar'], status: 'disponible', rungs: { numeros: '48 + 9 = 48 + 10 − 1' } },

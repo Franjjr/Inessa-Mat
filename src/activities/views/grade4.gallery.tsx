@@ -1,4 +1,4 @@
-/* Dev gallery of the 4.º exercises: multiplying by parts, 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
+/* Dev gallery of the 4.º exercises: multiplying by parts and in columns (partial rows), 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
    área, simetría, romanos, por 10 and redondear a millares, at iPad and phone widths. Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
@@ -8,6 +8,7 @@ import ColumnView from './ColumnView'
 import DivisionView from './DivisionView'
 import FigureNumberView from './FigureNumberView'
 import FractionAddView from './FractionAddView'
+import LongMulView from './LongMulView'
 import MentalView from './MentalView'
 import MulPartsView from './MulPartsView'
 import RoundView from './RoundView'
@@ -24,6 +25,8 @@ const one = (skill: string, seed: number): Exercise => generate({ skills: [skill
 const entries: GalleryEntry[] = [
   { title: 'Multiplicar por partes (ipad)', ...ipad, render: () => frame(<MulPartsView exercise={one('mul:2dx2d', 3)} onAnswered={noop} />) },
   { title: 'Multiplicar por partes (teléfono)', ...phone, render: () => frame(<MulPartsView exercise={one('mul:3dx2d', 4)} onAnswered={noop} />) },
+  { title: 'Multiplicar en columna por filas parciales (ipad)', ...ipad, render: () => frame(<LongMulView exercise={one('mul:col:3x2', 7)} onAnswered={noop} />) },
+  { title: 'Multiplicar en columna por filas parciales (teléfono)', ...phone, render: () => frame(<LongMulView exercise={one('mul:col:2x2', 8)} onAnswered={noop} />) },
   { title: 'Multiplicar 3 cifras por 1 (ipad vertical)', ...portrait, render: () => frame(<ColumnView exercise={one('mul:3x1:c1', 2)} onAnswered={noop} />) },
   { title: 'Dividir 4 cifras entre 1 (ipad)', ...ipad, render: () => frame(<DivisionView exercise={one('div:4x1:rem', 5)} onAnswered={noop} />) },
   { title: 'Dividir 4 cifras entre 1 (teléfono)', ...phone, render: () => frame(<DivisionView exercise={one('div:4x1:exact', 6)} onAnswered={noop} />) },

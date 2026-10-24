@@ -17,6 +17,7 @@ import { hintsMeasure } from './measure'
 import { hintsChance, hintsChart } from './data'
 import { hintsPattern } from './patterns'
 import { hintsMulParts } from './bigops'
+import { hintsLongMul } from './longmul'
 import { hintsPosition } from './position'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
@@ -411,6 +412,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'pattern': return hintsPattern(ex)
     case 'position': return hintsPosition(ex)
     case 'mul-parts': return hintsMulParts(ex)
+    case 'long-mul': return hintsLongMul(ex)
     case 'area': return geometryHints(ex)
   }
 }

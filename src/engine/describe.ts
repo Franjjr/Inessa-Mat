@@ -23,6 +23,7 @@ const PLACE_TEXT: Record<string, string> = {
 
 const MENTAL_TEXT: Record<string, string> = {
   dobles: 'Dobles (de cabeza)',
+  triples: 'Triples (de cabeza)',
   mitades: 'Mitades (de cabeza)',
   completar10: 'Completar hasta 10 y 100',
   completar100: 'Completar hasta 100',
@@ -69,6 +70,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
     case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
+    case 'mulCol': return `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': if (p.small) return 'Problemas con barras (grupos de 2, 3, 4, 5 y 10)'
       return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`

@@ -16,7 +16,7 @@ import type { ID, InputMode } from './common'
  *   num:compare | num:order           compare with < > = ; order 3–4 numbers
  *   num:round:10|100                  round to decenas or centenas
  *   num:line:10|100|1000              number line with jumps (tick missing, or jump from a point)
- *   mental:<family>                   cálculo mental exprés (dobles, mitades, completar10|100|1000, decenas, centenas, compensar)
+ *   mental:<family>                   cálculo mental exprés (dobles, triples, mitades, completar10|100|1000, decenas, centenas, compensar)
  *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
  *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
@@ -38,6 +38,7 @@ import type { ID, InputMode } from './common'
  *   measure:ruler                                     read a measure on an on-screen ruler (start not always 0)
  *   measure:word                                      add two measures (mixed units) in a word problem
  *   measure:estimate                                  ¿es razonable? a claimed measure
+ *   mul:col:2x2|3x2|3x3                               multiplicar en columna, con filas parciales (4.º, src/engine/longmul.ts)
  */
 export type SkillKey = string
 
@@ -87,6 +88,7 @@ export type ExerciseKind =
   | 'mul-parts'       // multiplicar por dos cifras por partes: 23 × 14 = 23 × 4 + 23 × 10 (mul:2dx2d, mul:3dx2d)
   | 'area'            // área: count the unit squares of a figure on a grid (geo:area)
   | 'fraction-add'    // sumar y restar fracciones de igual denominador: 2/7 + 3/7 = ? (frac:add, frac:sub)
+  | 'long-mul'        // multiplicar en columna con filas parciales: 23 × 14 = 92 + 230 (mul:col:AxB)
 
 interface ExerciseBase {
   id: ID
@@ -137,7 +139,7 @@ export interface DivisionExercise extends ExerciseBase {
   variant: 'exact' | 'rem' | 'long'
 }
 export type PlaceMode = 'blocks' | 'expanded' | 'words'
-export type MentalFamily = 'dobles' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
+export type MentalFamily = 'dobles' | 'triples' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
 /** A term of an equation side: a number, an operator, or null for the blank the child fills. */
 export type EqTerm = number | '+' | '−' | null
 
@@ -471,6 +473,7 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
+  | LongMulExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -483,6 +486,15 @@ export interface MulPartsExercise extends ExerciseBase {
   tens: number
   /** [top × units, top × tens]. */
   partials: [number, number]
+  answer: number
+}
+/** Multiplicar en columna (4.º): top × bottom with one partial row per digit of the bottom, each already shifted. */
+export interface LongMulExercise extends ExerciseBase {
+  kind: 'long-mul'
+  top: number
+  bottom: number
+  /** top × each digit of bottom, units first, already shifted: 23 × 14 → [92, 230]. */
+  partials: number[]
   answer: number
 }
 export interface AreaExercise extends ExerciseBase { kind: 'area'; figure: GridFigure; answer: number }
@@ -582,6 +594,7 @@ export type Answer =
   | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
   | { type: 'option'; value: string | null }                               // dinero and medida: the option tapped
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
+  | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per

@@ -22,13 +22,14 @@ import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
 import { CHART_SKILLS, buildChance, buildChart } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
+import { genLongMul } from './longmul'
 import { PATTERN_SKILLS, buildPattern } from './patterns'
 import { POSITION_SKILLS, buildPosition } from './position'
 import { moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
-  divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulColSkill, mulSkill, parseSkill, skipSkill, subSkill, wordSkill,
   type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
@@ -42,7 +43,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   'clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar',
   'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
-  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add',
+  'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add', 'long-mul',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -248,6 +249,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
     case 'mul-parts':
       addItem(map, 'mul:2dx2d', kind, 1)
       addItem(map, 'mul:3dx2d', kind, 1)
+      break
+    case 'long-mul':
+      for (const [t, b] of [[2, 2], [3, 2], [3, 3]] as const) addItem(map, mulColSkill(t, b), kind, 1)
       break
     case 'area':
       addItem(map, 'geo:area', kind, 1)
@@ -726,6 +730,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
   if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
+  if (p.type === 'mulCol') return retry(() => genLongMul(rng, p.top, p.bottom), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {
       const [dd, dv] = genDivision3(rng, p.variant === 'rem')

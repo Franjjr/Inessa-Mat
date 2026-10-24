@@ -88,6 +88,7 @@ export { CHART_SKILLS, CHANCE_OPTIONS, buildChance, buildChart, checkChance, che
 export { PATTERN_SKILLS, buildPattern, checkPattern, hintsPattern, makeNumberSeries, makePredict, makeShapePattern } from './patterns'
 export { POSITION_SKILLS, SIDES, buildPosition, checkPosition, hintsPosition, makeNext, makeRelative, makeRoute } from './position'
 export { genDivision2d, genDivision4, genMul3x1, genMulParts, makeMulParts, checkMulParts, hintsMulParts } from './bigops'
+export { checkLongMul, genLongMul, hintsLongMul, makeLongMul } from './longmul'
 export { toRoman } from './calc'
 export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */
