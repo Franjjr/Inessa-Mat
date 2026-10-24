@@ -9,7 +9,7 @@ import { sfx } from '@/audio'
 import { IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
 import { useInk } from './context'
 import { isScribble, overlapFraction, segmentStrokes, segmentZone, spreadCentres, strokeBBox, strokesNear, type BBox } from './geometry'
-import { msSincePenContact, pointerRole } from './policy'
+import { msSincePenContact, pointerRole, isPalmPress } from './policy'
 import { useInkSurface } from './useInkSurface'
 import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
@@ -369,8 +369,14 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           aria-invalid={status === 'wrong' || undefined}
           onFocus={() => focusPad(uid)}
           // The capture layer prevents the default of a press, so a tap never focuses the box by itself: it takes the
-          // keypad (and the focus) here, so the keypad goes to the box the child touched.
-          onPointerDown={() => { if (!disabled) { focusPad(uid); padRef.current?.focus({ preventScroll: true }) } }}
+          // keypad (and the focus) here. A palm (a finger during pen contact) or an ignored pointer does not move it.
+          onPointerDown={(e) => {
+            if (disabled || isPalmPress(e.pointerType)) return
+            const role = pointerRole(e.pointerType, { penSeen: latest.current.ink.penSeen, mode: latest.current.ink.mode, isPrimary: e.isPrimary })
+            if (role === 'ignore') return
+            focusPad(uid)
+            padRef.current?.focus({ preventScroll: true })
+          }}
           onKeyDown={onKeyDown}
         >
           <span className={s.guide} aria-hidden />

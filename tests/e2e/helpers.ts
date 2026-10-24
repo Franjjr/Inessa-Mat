@@ -144,8 +144,8 @@ export async function activeChildId(page: Page): Promise<string> {
  *  Returns null when no such equation is on screen. */
 export async function solveVisibleEquation(page: Page): Promise<number | null> {
   const text = ((await page.locator('main').first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ')
-  // left operand known: "8 × [blank] = 40" (the blank box may have no text on screen, so the blank can be empty)
-  const known = [...text.matchAll(/(\d+)\s*([×÷])\s*(\?|\d+|[^\d=]{0,40}?)\s*=\s*(\d+)/g)].at(-1)
+  // left operand known: "8 × [blank] = 40"
+  const known = [...text.matchAll(/(\d+)\s*([×÷])\s*(\?|\d+|[^\d=]{1,40}?)\s*=\s*(\d+)/g)].at(-1)
   if (known) {
     const [, a, op, b, c] = known
     const blank = !/^\d+$/.test(b)

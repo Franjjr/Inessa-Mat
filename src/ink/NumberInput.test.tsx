@@ -193,6 +193,39 @@ describe('NumberInput · keypad and lost Pencil', () => {
   })
 })
 
+describe('NumberInput · a press on a box moves the keypad only for a real tap', () => {
+  afterEach(() => localStorage.clear())
+
+  function twoBoxes() {
+    localStorage.setItem(PEN_SEEN_KEY, '2026-10-01') // a pen was used: fingers tap, they do not write
+    render(
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        <Probe />
+        <NumberInput value={null} onChange={() => {}} onSubmit={() => {}} ariaLabel="A" />
+        <NumberInput value={null} onChange={() => {}} onSubmit={() => {}} ariaLabel="B" />
+      </InkProvider>,
+    )
+    return { a: screen.getByRole('textbox', { name: 'A' }), b: screen.getByRole('textbox', { name: 'B' }) }
+  }
+
+  it('a finger tap on the other box takes the focus and the keypad', () => {
+    const { a, b } = twoBoxes()
+    a.focus()
+    notePenContact(false, performance.now() - 10_000)
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(b)
+  })
+
+  it('a touch during pen contact (a palm on the neighbouring box) does not move the keypad', () => {
+    const { a, b } = twoBoxes()
+    a.focus()
+    notePenContact(true)
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(a)
+    notePenContact(false)
+  })
+})
+
 describe('NumberInput · a low-confidence digit is in doubt until confirmed', () => {
   it('a doubtful digit is held for confirmation; a confident one is not', () => {
     const { pad } = setup([{ digit: 4, confidence: 0.95 }, { digit: 7, confidence: 0.4 }])
