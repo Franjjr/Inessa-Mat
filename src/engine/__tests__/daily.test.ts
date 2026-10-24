@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AttemptRecord, ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
 import { GRADE3_SYLLABUS, allTopics, currentTopic, teachingOrder, type Syllabus } from '@/content/syllabus'
@@ -8,6 +8,17 @@ import {
 import { newMastery } from '../mastery'
 import { isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
 import { createRng } from '../rng'
+
+/** Skill keys the generator is told to make nothing for (empty set = the real generator). */
+const unmakeable = vi.hoisted(() => new Set<string>())
+vi.mock('../generate', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../generate')>()
+  return {
+    ...real,
+    generate: (opts: Parameters<typeof real.generate>[0], n: number, ctx: Parameters<typeof real.generate>[2]) =>
+      opts.skills?.some((s) => unmakeable.has(s)) ? [] : real.generate(opts, n, ctx),
+  }
+})
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 86400000
@@ -181,7 +192,7 @@ describe('planDailySession', () => {
       expect(next.every((s) => s === 'mul:2x1:c1')).toBe(true)
     })
 
-    it('an ordered topic skips a step that cannot be generated', () => {
+    it('an ordered topic skips a step that is not a valid skill', () => {
       const plan = planDailySession({
         child, mastery: {}, attempts: [], now,
         syllabus: orderedSyllabus(['xx:nope', 'mul:2x1:c0']),
@@ -189,6 +200,19 @@ describe('planDailySession', () => {
       const next = newSkills(plan)
       expect(next.length).toBeGreaterThan(0)
       expect(next.every((s) => s === 'mul:2x1:c0')).toBe(true)
+    })
+
+    afterEach(() => unmakeable.clear())
+
+    it('an ordered topic skips a valid step the generator cannot make, and teaches the next one', () => {
+      unmakeable.add('mul:2x1:c0')
+      const plan = planDailySession({
+        child, mastery: {}, attempts: [], now,
+        syllabus: orderedSyllabus(['mul:2x1:c0', 'mul:2x1:c1']),
+      })
+      const next = newSkills(plan)
+      expect(next.length).toBeGreaterThan(0)
+      expect(next.every((s) => s === 'mul:2x1:c1')).toBe(true)
     })
   })
 

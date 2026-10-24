@@ -264,6 +264,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
     if (ex) used.push(ex.id)
     return ex ?? null
   }
+  // Same generator as make(), with its own seed per (day, skill) so probing does not move the session's rng.
+  const canMake = (s: SkillKey) => generate({ skills: [s] }, 1, { rng: createRng(hashString(`step:${today}:${s}`)), now, mastery }).length > 0
 
   // 1. Calentamiento: learnt cálculo mental and facts not seen today, the most urgent first. Never introduces a skill.
   const seenBeforeToday = (m: SkillMastery) => m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today
@@ -282,9 +284,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
   const newItems: DailyItem[] = []
   if (topic) {
     const open = topic.skills.filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
-    // An ordered topic's skills are steps: only the first open one is new; the next one waits until it is mastered.
+    // An ordered topic's skills are steps: only the first open one the generator can make is new, the next waits until it
+    // is mastered. A step it cannot make is skipped, or the topic would stay stuck on it.
+    const step = topic.ordered ? open.find(canMake) : undefined
     const candidates = topic.ordered
-      ? open.slice(0, 1)
+      ? (step ? [step] : [])
       : open.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
     const allowed: SkillKey[] = []
     for (const s of candidates) {
