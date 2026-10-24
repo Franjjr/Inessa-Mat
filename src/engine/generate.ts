@@ -272,7 +272,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       for (const v of POSITION_SKILLS) addItem(map, `pos:${v}`, kind, 1)
       break
     default: {
-      const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex'] : numericSkillsOf(kind)
+      const skills = kind === 'mental' ? mentalSkillsOf() : kind === 'equation' ? ['eq:flex', 'eq:same'] : numericSkillsOf(kind)
       for (const skill of skills) addItem(map, skill, kind, 1)
     }
   }
@@ -721,7 +721,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (NUMERIC_KINDS.includes(kind)) {
     // Numbers up to 9 999 and cálculo mental: their own generators (src/engine/numeric.ts, calc.ts).
     if (p.type === 'mental') return buildMental(p.family, rng, used)
-    if (p.type === 'equation') return buildEquation(rng, used)
+    if (p.type === 'equation') return buildEquation(rng, used, p.mode)
     const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
     if (built) return built
   }

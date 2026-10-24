@@ -225,6 +225,7 @@ describe('signo igual flexible: the balance holds', () => {
       if (ex.kind !== 'equation') throw new Error('expected equation')
       const blanks = [...ex.left, ...ex.right].filter((t) => t === null).length
       expect(blanks).toBe(1)
+      if (typeof ex.answer !== 'number') throw new Error('expected a number blank')
       expect(holds(ex, ex.answer), ex.id).toBe(true)
       expect(ex.answer).toBeGreaterThanOrEqual(1)
     }

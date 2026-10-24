@@ -15,8 +15,8 @@ const fractions = (ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): Ski
 
 export const GRADE4_STAGES: SyllabusStage[] = [
   // 1.er trimestre
-  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'numeros-99999', 'romanos', 'suma-resta-4d', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'graficos-4'] },
-  { id: 'etapa-2', term: 1, topics: ['redondear-millares', 'mul-2x1', 'mul-3x1', 'por-10-100-1000', 'prob-multiplicar', 'reloj-4', 'angulos'] },
+  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'numeros-99999', 'romanos', 'suma-resta-4d', 'combinadas', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'estimar', 'graficos-4'] },
+  { id: 'etapa-2', term: 1, topics: ['redondear-millares', 'mul-2x1', 'mul-3x1', 'propiedades', 'por-10-100-1000', 'prob-multiplicar', 'reloj-4', 'angulos'] },
   { id: 'etapa-3', term: 1, topics: ['div-repaso', 'div-4x1', 'prob-dividir', 'comprobar', 'perimetro', 'series-4'] },
   // 2.º trimestre
   { id: 'etapa-4', term: 2, topics: ['mul-2-cifras', 'recta-1000', 'cambio-presupuesto', 'area', 'moda'] },
@@ -47,9 +47,10 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Sumas y restas',
       topics: [
         { id: 'suma-resta-4d', name: 'Sumas y restas de 4 cifras', skills: ['add:4d:c2', 'add:4d:c3', 'sub:4d:b2', 'sub:4d:z'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con llevadas y con ceros', uso: 'Problemas de juntar y de quitar' } },
+        { id: 'combinadas', name: 'Operaciones combinadas y el orden de las operaciones', skills: ['mental:combinadas', 'mental:jerarquia', 'mental:parentesis'], status: 'disponible', ordered: true, rungs: { numeros: '48 + 35 − 20; 3 + 2 × 4; (3 + 2) × 4', uso: 'Leer una cuenta con varias operaciones y decidir cuál va primero' } },
         { id: 'comprobar', name: 'Comprobar un resultado', skills: ['check:add', 'check:sub', 'check:div'], status: 'disponible', rungs: { numeros: 'La operación contraria', uso: 'Comprobar antes de dar un resultado' } },
         { id: 'encuentra-error', name: 'Encuentra el error', skills: ['hunt:add', 'hunt:sub', 'hunt:mul'], status: 'disponible', rungs: { dibujo: 'Marcar la columna donde falla', numeros: 'Decidir si está bien y corregirla' } },
-        { id: 'igualdad', name: 'Signo igual: los dos lados valen lo mismo', skills: ['eq:flex'], status: 'disponible', rungs: { concreto: 'Balanza con dos platillos', numeros: '25 + 8 = __ + 10' } },
+        { id: 'igualdad', name: 'Signo igual: los dos lados valen lo mismo', skills: ['eq:flex', 'eq:same'], status: 'disponible', rungs: { concreto: 'Balanza con dos platillos', numeros: '25 + 8 = __ + 10; ¿25 + 8 y 40 − 7 valen lo mismo?' } },
       ],
     },
     {
@@ -60,6 +61,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1', name: 'Multiplicar 2 cifras por 1 (repaso)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con llevada' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: '213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas' } },
         { id: 'por-10-100-1000', name: 'Multiplicar y dividir por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven en la tabla de valor posicional', numeros: '37 × 100 = 3 700; 4 500 : 100 = 45' } },
+        { id: 'propiedades', name: 'Propiedades conmutativa, asociativa y distributiva', skills: ['concept:commutative', 'mental:asociativa', 'mental:distributiva'], status: 'disponible', ordered: true, rungs: { dibujo: 'Un rectángulo que se parte en dos', numeros: '2 × 7 × 5 = 10 × 7; 6 × 12 = 6 × 10 + 6 × 2' } },
         { id: 'mul-2-cifras', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d', 'mul:col:2x2'], status: 'disponible', ordered: true, rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10', uso: 'Problemas de cajas y filas' } },
         { id: 'mul-3x2', name: 'Multiplicar 3 cifras por 2 cifras (por partes)', skills: ['mul:3dx2d', 'mul:col:3x2'], status: 'disponible', ordered: true, rungs: { numeros: '125 × 23 = 125 × 3 + 125 × 20', uso: 'Problemas con números grandes' } },
         { id: 'mul-3-cifras', name: 'Multiplicar por un número de 3 cifras', skills: ['mul:col:3x3'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con tres filas parciales' } },
@@ -79,6 +81,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Cálculo mental',
       topics: [
         { id: 'mental-4', name: 'Completar a 1 000, centenas, compensar y dobles', skills: ['mental:completar1000', 'mental:centenas', 'mental:compensar', 'mental:dobles'], status: 'disponible', rungs: { numeros: '1 000 − 650; 48 + 19 = 48 + 20 − 1' } },
+        { id: 'estimar', name: 'Estimar: redondear y operar', skills: ['mental:estimar'], status: 'disponible', rungs: { numeros: 'Redondear 47 a 50 y 38 a 40: 50 + 40 = 90', uso: '¿Es razonable este resultado?' } },
       ],
     },
     {

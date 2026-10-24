@@ -207,4 +207,27 @@ describe('MentalView and EquationView', () => {
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
+
+  it('equation, same: no blank box; the child taps = or ≠ and checks it', () => {
+    const onAnswered = vi.fn()
+    const same: EquationExercise = {
+      id: 'equation:same:2+3?4+2', kind: 'equation', skill: 'eq:same', difficulty: 2, mode: 'same', left: [2, '+', 3], right: [4, '+', 2], answer: '≠',
+    }
+    render(<EquationView exercise={same} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.queryByRole('textbox')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'distinto de' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('equation, same: the wrong sign is judged wrong', () => {
+    const onAnswered = vi.fn()
+    const same: EquationExercise = {
+      id: 'equation:same:2+3?4+2', kind: 'equation', skill: 'eq:same', difficulty: 2, mode: 'same', left: [2, '+', 3], right: [4, '+', 2], answer: '≠',
+    }
+    render(<EquationView exercise={same} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.click(screen.getByRole('button', { name: 'igual a' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
 })

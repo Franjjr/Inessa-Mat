@@ -125,7 +125,7 @@ export function statementOf(ex: Exercise): string {
     case 'order': return `Ordena ${ex.values.map(fmt).join(', ')}`
     case 'round': return `Redondea ${fmt(ex.value)} a ${ex.to === 1000 ? 'los millares' : `las ${roundWords(ex.to).plural}`}`
     case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
-    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
+    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} ${ex.mode === 'same' ? '?' : '='} ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     case 'bar-problem': return ex.text
     case 'fraction-shade': return `Colorea ${ex.numerator} de ${ex.denominator} partes`
     case 'fraction-read': return 'Escribe la fracción que está coloreada'

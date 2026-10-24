@@ -17,8 +17,10 @@ import type { ID, InputMode } from './common'
  *   num:round:10|100                  round to decenas or centenas
  *   num:line:10|100|1000|10000        number line with jumps (tick missing, or jump from a point)
  *   <key>:19999 | <key>:99999         the same number keys up to 19 999 (3.º) or 99 999 (4.º); num:round:1000:99999
- *   mental:<family>                   cálculo mental exprés (dobles, triples, mitades, completar10|100|1000, decenas, centenas, compensar)
+ *   mental:<family>                   cálculo mental exprés (dobles, triples, mitades, completar10|100|1000, decenas, centenas, compensar,
+ *                                     combinadas, jerarquia, parentesis, asociativa, distributiva, estimar)
  *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
+ *   eq:same                           signo igual o distinto: dos expresiones, el niño elige = o ≠
  *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
  *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
@@ -150,6 +152,7 @@ export interface DivisionExercise extends ExerciseBase {
 }
 export type PlaceMode = 'blocks' | 'expanded' | 'words'
 export type MentalFamily = 'dobles' | 'triples' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
+  | 'combinadas' | 'jerarquia' | 'parentesis' | 'asociativa' | 'distributiva' | 'estimar'
 /** A term of an equation side: a number, an operator, or null for the blank the child fills. */
 export type EqTerm = number | '+' | '−' | null
 
@@ -180,9 +183,16 @@ export interface NumberLineExercise extends ExerciseBase {
 }
 export interface MentalExercise extends ExerciseBase {
   kind: 'mental'; family: MentalFamily; prompt: string; a: number; b: number; answer: number
+  /** The third number of the families with three (combinadas, jerarquia, parentesis, asociativa). */
+  c?: number
+  /** estimar: the place the two numbers are rounded to (10 or 100). */
+  place?: 10 | 100
 }
 export interface EquationExercise extends ExerciseBase {
-  kind: 'equation'; left: EqTerm[]; right: EqTerm[]; answer: number
+  kind: 'equation'; left: EqTerm[]; right: EqTerm[]
+  /** fill (default): the number of the blank. same: no blank; '=' when both sides have the same value, '≠' when not. */
+  mode?: 'fill' | 'same'
+  answer: number | '=' | '≠'
 }
 
 export interface WordProblemExercise extends ExerciseBase {
@@ -607,7 +617,7 @@ export type Answer =
   | { type: 'steps'; method: 'parts' | 'line'; values: (number | null)[]; total?: number | null }   // resta por partes / saltos
   | { type: 'division'; quotient: number | null; remainder: number | null }
   | { type: 'facts'; facts: string[] }                                     // fact-family, e.g. '6x7=42', '42/6=7'
-  | { type: 'sign'; sign: '<' | '>' | '=' | null }                          // compare: the sign the child tapped
+  | { type: 'sign'; sign: '<' | '>' | '=' | '≠' | null }                   // compare: the sign the child tapped; eq:same: = or ≠
   | { type: 'bar'; placed: (number | null)[]; ops: (BarOp | null)[]; results: (number | null)[] } // bar: per slot, per step
   | { type: 'hunt'; ok: boolean | null; column: number | null; value: number | null }  // encuentra el error
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check

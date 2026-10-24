@@ -1,7 +1,9 @@
 /* Cálculo mental exprés and signo igual flexible (PLAN_DOCENTE §5 and §8). Pure: generators, makers, checks and hints.
    Mental items are short answers (no columns): doubles and halves, complements to 10/100/1000, decenas and centenas,
-   compensation (+9 = +10 − 1). The equation items are balances: 5 + 3 = __ + 6, 7 = 3 + __.
-   Hints never contain the answer: level 3 works one step and leaves the final number to the child. */
+   compensation (+9 = +10 − 1), 4.º: combined operations and their order, brackets, the associative and distributive
+   properties, estimating. The equation items are balances: 5 + 3 = __ + 6, 7 = 3 + __; and eq:same asks = or ≠ between
+   two expressions. Hints never contain the answer nor a result one trivial step away: level 3 works another example
+   with other numbers (or one step with no numbers) and leaves the asked result to the child. */
 import type {
   Answer, CheckResult, EqTerm, EquationExercise, Exercise, Hint, MentalExercise, MentalFamily, Rng, SkillKey,
 } from '@/types'
@@ -15,14 +17,16 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): 
 
 const DIFFICULTY: Record<MentalFamily, number> = {
   dobles: 2, triples: 2, mitades: 2, completar10: 1, completar100: 2, completar1000: 3, decenas: 2, centenas: 2, compensar: 3, por10: 2, romanos: 3,
+  combinadas: 2, jerarquia: 3, parentesis: 3, asociativa: 2, distributiva: 3, estimar: 3,
 }
 
-/** Makes a mental item; `a` and `b` carry the numbers the hints work with (see mentalHints). */
-export function makeMental(family: MentalFamily, a: number, b: number, answer: number, prompt: string): MentalExercise {
-  return {
-    id: `mental:${family}:${a}:${b}`, kind: 'mental', skill: mentalSkill(family), difficulty: DIFFICULTY[family],
-    family, prompt, a, b, answer,
-  }
+/** Makes a mental item; `a` and `b` carry the numbers the hints work with (see mentalHints). `extra` carries the third
+ *  number (c) or the rounding place of estimar. */
+export function makeMental(
+  family: MentalFamily, a: number, b: number, answer: number, prompt: string, extra: { c?: number; place?: 10 | 100 } = {},
+): MentalExercise {
+  const id = ['mental', family, a, b, extra.c, extra.place].filter((v) => v !== undefined).join(':')
+  return { id, kind: 'mental', skill: mentalSkill(family), difficulty: DIFFICULTY[family], family, prompt, a, b, answer, ...extra }
 }
 
 const sign = (ex: MentalExercise) => (ex.answer >= ex.a ? '+' : '−')
@@ -94,8 +98,64 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       if ([5, 10, 50].includes(n)) return mentalItem(family, rng)
       return makeMental(family, n, 0, n, `¿Qué número es ${toRoman(n)}?`)
     }
+    case 'combinadas': {
+      // a + b − c, from left to right: a + b stays up to 1 000 and the answer is never negative.
+      const a = randInt(rng, 10, 890)
+      const b = randInt(rng, 10, 1000 - a)
+      const c = randInt(rng, 1, Math.min(a + b - 1, 199))
+      return makeMental(family, a, b, a + b - c, `${fmt(a)} + ${fmt(b)} − ${fmt(c)} = ?`, { c })
+    }
+    case 'jerarquia': {
+      // a + b × c, or a − b : c: the × or the : goes first. Results up to 200; the division is exact.
+      const c = randInt(rng, 2, 9)
+      if (rng() < 0.6) {
+        const a = randInt(rng, 2, 99)
+        const b = randInt(rng, 2, 9)
+        return makeMental(family, a, b, a + b * c, `${a} + ${b} × ${c} = ?`, { c })
+      }
+      const k = randInt(rng, 2, 9)
+      const b = c * k
+      const a = randInt(rng, k + 1, 99)
+      return makeMental(family, a, b, a - k, `${a} − ${b} : ${c} = ?`, { c })
+    }
+    case 'parentesis': {
+      // (a + b) × c: the sum inside the brackets goes first; the result is up to 200.
+      const c = randInt(rng, 2, 9)
+      const s = randInt(rng, 4, Math.floor(200 / c))
+      const a = randInt(rng, 2, s - 2)
+      return makeMental(family, a, s - a, s * c, `(${a} + ${s - a}) × ${c} = ?`, { c })
+    }
+    case 'asociativa': {
+      // 5 × y × x with y = 2 or 4: the 5 and the even factor make a round number (10 or 20), then the rest is easy.
+      const y = pick(rng, [2, 4])
+      const x = pick(rng, [2, 3, 4, 6, 7, 8, 9])
+      const [f1, f2, f3] = shuffle(rng, [5, y, x])
+      return makeMental(family, y, x, 5 * y * x, `${f1} × ${f2} × ${f3} = ?`)
+    }
+    case 'distributiva': {
+      // a × b = a × t + a × __, with b = t + u: the child gives the units part u of the second factor.
+      const a = randInt(rng, 2, 9)
+      const t = 10 * randInt(rng, 1, 4)
+      const u = randInt(rng, 1, 9)
+      return makeMental(family, a, t + u, u, `${a} × ${t + u} = ${a} × ${t} + ${a} × __`)
+    }
+    case 'estimar': {
+      // Two numbers rounded to the decena or the centena, then added or subtracted: the answer is the estimate.
+      const place = pick(rng, [10, 100] as const)
+      const plus = rng() < 0.6
+      const lo = place === 10 ? 11 : 101
+      const hi = place === 10 ? 99 : 898
+      const a = plus ? randInt(rng, lo, hi) : randInt(rng, lo + 1, hi)
+      const b = plus ? randInt(rng, lo, Math.min(hi, 999 - a)) : randInt(rng, lo, a - 1)
+      const answer = plus ? roundToPlace(a, place) + roundToPlace(b, place) : roundToPlace(a, place) - roundToPlace(b, place)
+      const word = place === 10 ? 'decenas' : 'centenas'
+      return makeMental(family, a, b, answer, `Estima redondeando a las ${word}: ${fmt(a)} ${plus ? '+' : '−'} ${fmt(b)} = ?`, { place })
+    }
   }
 }
+
+/** Rounds to the nearest multiple of `place` (halves go up): 47 → 50 with 10, 340 → 300 with 100. */
+const roundToPlace = (n: number, place: number) => Math.round(n / place) * place
 
 const ROMAN: [number, string][] = [[100, 'C'], [90, 'XC'], [50, 'L'], [40, 'XL'], [10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']]
 
@@ -131,6 +191,12 @@ export function mentalSkillsOf(): SkillKey[] {
 }
 
 const TIP: Record<MentalFamily, string> = {
+  combinadas: 'Se calcula de izquierda a derecha: primero la primera suma o resta, y con ese resultado la siguiente.',
+  jerarquia: 'Primero se multiplica y se divide; después se suma y se resta.',
+  parentesis: 'Primero se hace lo que está entre paréntesis; después, lo demás.',
+  asociativa: 'Puedes agrupar los factores como quieras: busca los que sean fáciles de juntar.',
+  distributiva: 'Parte el número grande en decenas y unidades, y multiplica cada parte.',
+  estimar: 'Redondea los dos números al lugar que pide el enunciado y opera con los redondeados.',
   dobles: 'Parte el número en decenas y unidades, y dobla cada parte.',
   triples: 'Parte el número en decenas y unidades, y triplica cada parte.',
   mitades: 'Reparte el número en dos partes iguales: primero las decenas, luego las unidades.',
@@ -144,9 +210,39 @@ const TIP: Record<MentalFamily, string> = {
   romanos: 'I vale 1, V vale 5, X vale 10, L vale 50 y C vale 100.',
 }
 
+/** Every tuple of the given ranges, in order: the candidates of a worked example. */
+function* tuples(...ranges: number[][]): Generator<number[]> {
+  if (ranges.length === 0) {
+    yield []
+    return
+  }
+  const [first, ...rest] = ranges
+  for (const v of first) for (const tail of tuples(...rest)) yield [v, ...tail]
+}
+
+/** The numbers from lo to hi, step by step. */
+const span = (lo: number, hi: number, step = 1): number[] => Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, i) => lo + i * step)
+
+/** A worked example of level 3 with other numbers: the first candidate that shares no number with the asked item
+ *  (its operands, intermediate results and answer). `build` returns null for an example that would not be valid. */
+function workedExample(candidates: Iterable<number[]>, asked: number[], build: (t: number[]) => { text: string; nums: number[] } | null): string {
+  let first: string | null = null
+  for (const t of candidates) {
+    const example = build(t)
+    if (!example) continue
+    if (first === null) first = example.text
+    if (example.nums.every((n) => !asked.includes(n))) return example.text
+  }
+  return first ?? ''
+}
+
+const DECENAS = span(12, 98)
+const CENTENAS = span(120, 980, 10)
+
 /** Hints of a mental item. Level 3 works one step and never writes the final answer. */
 export function mentalHints(ex: MentalExercise): Hint[] {
   const { a, b, family } = ex
+  const c = ex.c ?? 0
   switch (family) {
     case 'dobles': {
       if (a % 10 === 0) {
@@ -293,6 +389,108 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         hint(3, `Lee por trozos, de izquierda a derecha: ${pieces.join(' + ')}. Después suma los trozos.`),
       ]
     }
+    case 'combinadas': {
+      const asked = [a, b, c, a + b, a + b - c]
+      const example = workedExample(tuples(span(20, 120, 10), span(20, 120, 10), span(10, 60, 5)), asked, ([x, y, z]) => {
+        if (z >= x + y) return null
+        return {
+          text: `Ejemplo: ${fmt(x)} + ${fmt(y)} − ${fmt(z)}. Primero ${fmt(x)} + ${fmt(y)} = ${fmt(x + y)}; después ${fmt(x + y)} − ${fmt(z)} = ${fmt(x + y - z)}.`,
+          nums: [x, y, z, x + y, x + y - z],
+        }
+      })
+      return [
+        hint(1, TIP.combinadas),
+        hint(2, `Empieza por ${fmt(a)} + ${fmt(b)}. Después quita ${fmt(c)} al resultado.`),
+        hint(3, example),
+      ]
+    }
+    case 'jerarquia': {
+      const times = ex.prompt.includes('×')
+      const asked = times ? [a, b, c, b * c, a + b * c] : [a, b, c, b / c, a - b / c]
+      const example = times
+        ? workedExample(tuples(span(11, 29), span(2, 12), span(2, 12)), asked, ([x, y, z]) => ({
+          text: `Ejemplo: ${x} + ${y} × ${z}. Primero ${y} × ${z} = ${y * z}; después ${x} + ${y * z} = ${x + y * z}.`,
+          nums: [x, y, z, y * z, x + y * z],
+        }))
+        : workedExample(tuples(span(11, 49), span(2, 9), span(2, 12)), asked, ([x, z, k]) => {
+          const y = z * k
+          if (x <= k) return null
+          return {
+            text: `Ejemplo: ${x} − ${y} : ${z}. Primero ${y} : ${z} = ${k}; después ${x} − ${k} = ${x - k}.`,
+            nums: [x, y, z, k, x - k],
+          }
+        })
+      return [
+        hint(1, TIP.jerarquia),
+        hint(2, times ? 'Busca primero la multiplicación: va antes que la suma.' : 'Busca primero la división: va antes que la resta.'),
+        hint(3, example),
+      ]
+    }
+    case 'parentesis': {
+      const asked = [a, b, c, a + b, (a + b) * c]
+      const example = workedExample(tuples(span(11, 29), span(2, 12), span(2, 9)), asked, ([x, y, z]) => ({
+        text: `Ejemplo: (${x} + ${y}) × ${z}. Primero ${x} + ${y} = ${x + y}; después ${x + y} × ${z} = ${(x + y) * z}.`,
+        nums: [x, y, z, x + y, (x + y) * z],
+      }))
+      return [
+        hint(1, TIP.parentesis),
+        hint(2, 'Haz primero la suma de dentro del paréntesis, sin mirar lo que hay fuera.'),
+        hint(3, example),
+      ]
+    }
+    case 'asociativa':
+      return [
+        hint(1, TIP.asociativa),
+        hint(2, 'Mira si hay un 5: un 5 y un número par, juntos, dan una decena exacta.'),
+        hint(3, 'Agrupa primero el 5 con el número par y multiplica después el resultado por el otro factor.'),
+      ]
+    case 'distributiva': {
+      // The asked item: a × b with b = t + u (the blank is u); its partial products are a × t and a × u.
+      const t = b - ex.answer
+      const u = ex.answer
+      const asked = [a, b, t, u, a * u, a * t]
+      const example = workedExample(tuples(span(11, 19), span(1, 9), span(20, 90, 10)), asked, ([x, v, tens]) => {
+        const y = tens + v
+        return {
+          text: `Ejemplo: ${x} × ${y} = ${x} × ${tens} + ${x} × ${v}, porque ${y} son ${tens} y ${v}.`,
+          nums: [x, y, v, tens, x * v, x * tens],
+        }
+      })
+      return [
+        hint(1, TIP.distributiva),
+        hint(2, `Separa ${b} en decenas y unidades: las unidades son lo que sobra después de las decenas.`),
+        hint(3, example),
+      ]
+    }
+    case 'estimar': {
+      const place = ex.place ?? 10
+      const ra = roundToPlace(a, place)
+      const rb = roundToPlace(b, place)
+      const plus = ex.prompt.includes(' + ')
+      const op = plus ? '+' : '−'
+      const word = place === 10 ? 'decenas' : 'centenas'
+      const asked = [a, b, ra, rb, ex.answer]
+      const candidates = place === 10
+        ? tuples(DECENAS, DECENAS)
+        : tuples(CENTENAS, CENTENAS)
+      const example = workedExample(candidates, asked, ([x, y]) => {
+        if (!plus && x <= y) return null
+        const rx = roundToPlace(x, place)
+        const ry = roundToPlace(y, place)
+        const res = plus ? rx + ry : rx - ry
+        return {
+          text: `Ejemplo: ${fmt(x)} ${op} ${fmt(y)}. Redondeados a las ${word}: ${fmt(rx)} ${op} ${fmt(ry)} = ${fmt(res)}.`,
+          nums: [x, y, rx, ry, res],
+        }
+      })
+      return [
+        hint(1, TIP.estimar),
+        hint(2, place === 10
+          ? 'Mira la cifra de las unidades de cada número: de cinco en adelante, la decena sube; si no, se queda.'
+          : 'Mira las decenas de cada número: desde cincuenta en adelante, la centena sube; si no, se queda.'),
+        hint(3, example),
+      ]
+    }
   }
 }
 
@@ -300,11 +498,41 @@ export function mentalHints(ex: MentalExercise): Hint[] {
 
 const NUM = (v: EqTerm): v is number => typeof v === 'number'
 
-/** Balanced equation with one blank: 'T = p + q' (blank p or q, sides swapped at random) or 'p + q = r + s'. */
-export function buildEquation(rng: Rng, used: Set<string>): EquationExercise {
-  let ex = equationItem(rng)
-  for (let i = 0; i < 12 && used.has(ex.id); i++) ex = equationItem(rng)
+/** Balanced equation with one blank: 'T = p + q' (blank p or q, sides swapped at random) or 'p + q = r + s'.
+ *  mode same: two expressions and the child says = or ≠ (eq:same). */
+export function buildEquation(rng: Rng, used: Set<string>, mode: 'fill' | 'same' = 'fill'): EquationExercise {
+  const make = () => (mode === 'same' ? sameItem(rng) : equationItem(rng))
+  let ex = make()
+  for (let i = 0; i < 12 && used.has(ex.id); i++) ex = make()
   return ex
+}
+
+/** Two expressions of one operation each, equal or a little apart: 4 + 2 and 9 − 1. Half of them are equal. */
+function sameItem(rng: Rng): EquationExercise {
+  for (;;) {
+    const v = randInt(rng, 2, 40)
+    const equal = rng() < 0.5
+    const w = equal ? v : v + pick(rng, [-3, -2, -1, 1, 2, 3, 10])
+    if (w < 2) continue
+    const left = sameExpr(rng, v)
+    const right = sameExpr(rng, w)
+    const text = (side: EqTerm[]) => side.map(show).join(' ')
+    if (text(left) === text(right)) continue
+    const id = `equation:same:${text(left)}?${text(right)}`
+    return {
+      id, kind: 'equation', skill: 'eq:same', difficulty: 2, mode: 'same', left, right, answer: equal ? '=' : '≠',
+    }
+  }
+}
+
+/** A two-term side worth `value` (≥ 2): a sum, or a difference that stays above zero. */
+function sameExpr(rng: Rng, value: number): EqTerm[] {
+  if (rng() < 0.5) {
+    const p = randInt(rng, 1, value - 1)
+    return [p, '+', value - p]
+  }
+  const q = randInt(rng, 1, 15)
+  return [value + q, '−', q]
 }
 
 function equationItem(rng: Rng): EquationExercise {
@@ -396,7 +624,17 @@ export function checkMental(ex: MentalExercise, answer: Answer): CheckResult {
   return res(false, given, expected, { errorType: near ? 'fact' : 'other', feedback })
 }
 
+/** eq:same: the child taps = or ≠. The feedback never names the right sign. */
+function checkSame(ex: EquationExercise, answer: Answer): CheckResult {
+  const expected = String(ex.answer)
+  if (answer.type !== 'sign') return res(false, '', expected, { errorType: 'other', feedback: 'Elige = o ≠.' })
+  if (answer.sign === null) return res(false, '?', expected, { errorType: 'incomplete', feedback: 'Elige el signo: = o ≠.' })
+  if (answer.sign === ex.answer) return res(true, answer.sign, expected, { feedback: '¡Muy bien! Has comparado los dos lados.' })
+  return res(false, answer.sign, expected, { errorType: 'other', feedback: '¡Casi! Calcula cuánto vale cada lado y compáralos.' })
+}
+
 export function checkEquation(ex: EquationExercise, answer: Answer): CheckResult {
+  if (ex.mode === 'same') return checkSame(ex, answer)
   const expected = String(ex.answer)
   if (answer.type !== 'number') return res(false, '', expected, { errorType: 'other', feedback: 'Escribe el número que falta.' })
   if (answer.value === null) return res(false, '?', expected, { errorType: 'incomplete', feedback: 'Escribe el número que falta.' })
@@ -423,7 +661,28 @@ export function hintsCalc(ex: Exercise): Hint[] | null {
   return null
 }
 
+/** eq:same hints: the two sides are worked out one by one. They never say = or ≠, nor whether the sides agree. */
+function sameHints(ex: EquationExercise): Hint[] {
+  const leftValue = sideValue(ex.left, 0)
+  const rightValue = sideValue(ex.right, 0)
+  // The worked example uses other numbers and values: none of the asked numbers or side values.
+  const asked = [...ex.left, ...ex.right].filter(NUM).concat([leftValue, rightValue])
+  const example = workedExample(tuples(span(2, 12), span(1, 9), span(6, 20), span(1, 9)), asked, ([x, y, r, q]) => {
+    if (r - q <= 0 || x + y === r - q) return null
+    return {
+      text: `Ejemplo con otros números: ${x} + ${y} vale ${x + y}, y ${r} − ${q} vale ${r - q}. Haz lo mismo con los tuyos y compara los dos resultados.`,
+      nums: [x, y, r, q, x + y, r - q],
+    }
+  })
+  return [
+    hint(1, 'Calcula cuánto vale cada lado por separado, antes de decidir.'),
+    hint(2, 'Empieza por el lado de la izquierda: haz sus cuentas y guarda el resultado.'),
+    hint(3, example),
+  ]
+}
+
 function equationHints(ex: EquationExercise): Hint[] {
+  if (ex.mode === 'same') return sameHints(ex)
   const complete = ex.left.every((t) => t !== null) ? ex.left : ex.right
   const total = sideValue(complete, 0)
   return [

@@ -27,6 +27,12 @@ const rangeWord = (max?: 999 | 19999 | 99999): string => (max === 999 ? '999' : 
 const MENTAL_TEXT: Record<string, string> = {
   dobles: 'Dobles (de cabeza)',
   triples: 'Triples (de cabeza)',
+  combinadas: 'Sumas y restas combinadas (de cabeza)',
+  jerarquia: 'Orden de las operaciones: primero × y :',
+  parentesis: 'Paréntesis: primero lo de dentro',
+  asociativa: 'Propiedad asociativa: agrupar para que sea fácil',
+  distributiva: 'Propiedad distributiva: partir un factor',
+  estimar: 'Estimar redondeando a decenas y centenas',
   mitades: 'Mitades (de cabeza)',
   completar10: 'Completar hasta 10 y 100',
   completar100: 'Completar hasta 100',
@@ -68,7 +74,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : p.to === 100 ? 'centenas' : 'millares'}`
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
-    case 'equation': return 'Signo igual: los dos lados valen lo mismo'
+    case 'equation': return p.mode === 'same' ? 'Signo igual o distinto: ¿los dos lados valen lo mismo?' : 'Signo igual: los dos lados valen lo mismo'
     case 'mul3x1': return `Multiplicaciones de 3 cifras × 1 cifra ${p.carry ? 'con llevadas' : 'sin llevadas'}`
     case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
     case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'

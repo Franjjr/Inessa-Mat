@@ -14,7 +14,9 @@
    <key>:19999|:99999   numbers up to 19 999 (3.º intro) or 99 999 (4.º): num:place:*, num:compare, num:order;
                         num:round:1000:99999 (round to millares); num:line:10000 (jumps of 10 000, always up to 99 999)
    mental:dobles|triples|mitades|completar10|completar100|completar1000|decenas|centenas|compensar   (cálculo mental)
+   mental:combinadas|jerarquia|parentesis|asociativa|distributiva|estimar                          (4.º: operaciones combinadas, propiedades, estimar)
    eq:flex                                                                                          (signo igual flexible)
+   eq:same                                                                                          (signo igual o distinto: = o ≠)
    bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
    bar:mul:small            the 2.º groups problem: groups of 2, 3, 4, 5 or 10 (the tables of 2.º)
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
@@ -85,7 +87,10 @@ export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
 export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
-export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'triples', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
+export const MENTAL_FAMILIES: MentalFamily[] = [
+  'dobles', 'triples', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos',
+  'combinadas', 'jerarquia', 'parentesis', 'asociativa', 'distributiva', 'estimar',
+]
 export const ROUND_TARGETS = [10, 100] as const
 export const LINE_STEPS = [10, 100, 1000, 10000] as const
 /** The range suffix of the number skills: absent = up to 9 999, 999 = up to 999 (2.º), 19999 / 99999 = 5 digits. */
@@ -108,7 +113,7 @@ export type ParsedSkill =
   | { type: 'round'; to: 10 | 100 | 1000; max?: 99999 }
   | { type: 'line'; step: 10 | 100 | 1000 | 10000; max?: 999 }
   | { type: 'mental'; family: MentalFamily }
-  | { type: 'equation' }
+  | { type: 'equation'; mode: 'fill' | 'same' }
   | { type: 'bar'; op: BarSkillOp; small?: true }
   | { type: 'hunt'; op: HuntOp }
   | { type: 'check'; op: CheckOp }
@@ -314,7 +319,8 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     const family = m[1] as MentalFamily
     return MENTAL_FAMILIES.includes(family) ? { type: 'mental', family } : null
   }
-  if (key === 'eq:flex') return { type: 'equation' }
+  if (key === 'eq:flex') return { type: 'equation', mode: 'fill' }
+  if (key === 'eq:same') return { type: 'equation', mode: 'same' }
   if ((m = key.match(/^div:3x1:(exact|rem)$/))) return { type: 'div3x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
   if (key === 'bar:mul:small') return { type: 'bar', op: 'mul', small: true }
