@@ -125,7 +125,27 @@ describe('hintsFor', () => {
     expect(hintsFor(makeDivision(84, 4))[2].text).toContain('8 ÷ 4 = 2')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('sobra 1')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('12 ÷ 3 = ?')
-    expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('6, 12, 18, 24, 30, 36, 42')
+    // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
+    expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
+    expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
+    // The share visual draws one group of the divisor: the number of groups (the quotient) is never in its params.
+    expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 1, perGroup: 6 })
+    // The skip count of a ten-fact stops one jump before the product, the last chip is blank.
+    expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
+  })
+
+  it('the worked division of the level-3 hint never shows the child\'s own dividend, divisor or answer', () => {
+    for (let d = 2; d <= 10; d++) {
+      for (let q = 1; q <= 10; q++) {
+        const p = d * q
+        const text = hintsFor(makeFactDiv(p, d))[2].text
+        const example = /Ejemplo con otro caso: (.*?)\. Ahora/.exec(text)![1]
+        const shown = (example.match(/\d+/g) ?? []).map(Number)
+        expect(shown.length, `${p} : ${d}`).toBeGreaterThan(0)
+        for (const n of [p, d, q]) expect(shown, `${p} : ${d} = ${q} shows ${n}: ${example}`).not.toContain(n)
+        expect(text).toContain(`Ahora cuenta tú de ${d} en ${d} hasta ${p}`)
+      }
+    }
   })
 
   it('skip-count and array hints', () => {

@@ -1,11 +1,12 @@
-/* Dinero (docs/curriculum/PLAN_DOCENTE.md §1.9 and §5.8, 3.º de Primaria). Pure: generators, checks and hints for
-   recognising coins and notes, paying an exact price, giving the change, adding prices, comparing them and converting
-   euros and céntimos (1 € = 100 céntimos). Amounts are céntimos (integers): 3,40 € = 340.
+/* Dinero (docs/curriculum/PLAN_DOCENTE.md §1.9 and §5.8, 3.º de Primaria; the budget of 4.º). Pure: generators, checks and
+   hints for recognising coins and notes, paying an exact price, giving the change, adding prices, comparing them,
+   converting euros and céntimos (1 € = 100 céntimos) and the budget (¿te llega?, ¿cuánto te falta o te sobra?, ¿qué compra
+   cabe?). Amounts are céntimos (integers): 3,40 € = 340.
    Ladder: coins on screen (pay, recognise) → prices written (add, compare) → word problem (change, add in a story).
    Hints guide the strategy and never state the answer: no level-3 hint contains the result. */
 import type {
-  Answer, CheckResult, Exercise, Hint, MoneyAddExercise, MoneyChangeExercise, MoneyCompareExercise, MoneyConvertExercise,
-  MoneyItem, MoneyMode, MoneyPayExercise, MoneyRecogniseExercise, Rng,
+  Answer, BudgetAsk, CheckResult, Exercise, Hint, MoneyAddExercise, MoneyBudgetExercise, MoneyChangeExercise, MoneyCompareExercise,
+  MoneyConvertExercise, MoneyItem, MoneyMode, MoneyPayExercise, MoneyRecogniseExercise, Rng,
 } from '@/types'
 import { pick, randInt, shuffle } from './rng'
 import { moneySkill } from './skills'
@@ -147,7 +148,61 @@ export function makeConvert(direction: 'to-cents' | 'to-euros', amount: number):
   }
 }
 
+export function makeBudget(ask: BudgetAsk, budget: number, items: MoneyItem[]): MoneyBudgetExercise {
+  const total = items.reduce((sum, it) => sum + it.price, 0)
+  const fitting = items.filter((it) => it.price <= budget)
+  const answer = ask === 'enough' ? (total <= budget ? 'Sí' : 'No')
+    : ask === 'short' ? total - budget
+      : ask === 'left' ? budget - total
+        : fitting[0]?.name ?? ''
+  const question = BUDGET_QUESTION[ask]
+  return {
+    id: `money:budget:${ask}:${budget}:${items.map((it) => it.price).join('+')}`, kind: 'money', skill: moneySkill('budget'),
+    difficulty: ask === 'short' || ask === 'left' ? 3 : 2, mode: 'budget', ask, budget, items: [...items],
+    text: `Tienes ${euros(budget)}. Estos son los precios:`, question, answer,
+  }
+}
+
+const BUDGET_QUESTION: Record<BudgetAsk, string> = {
+  enough: '¿Te llega?',
+  short: '¿Cuánto te falta?',
+  left: '¿Cuánto te sobra?',
+  afford: '¿Qué compra no pasa del presupuesto?',
+}
+
 // ---------------------------------------------------------------- generation
+
+/** Two to three things from the shop, with a total of at least 70 céntimos and at most 2 500. */
+function shopList(rng: Rng): MoneyItem[] {
+  const n = rng() < 0.6 ? 2 : 3
+  let items: MoneyItem[] = shuffle(rng, SHOP).slice(0, n)
+  for (let k = 0; k < 6 && items.reduce((s, it) => s + it.price, 0) > 2500; k++) items = shuffle(rng, SHOP).slice(0, n)
+  return items
+}
+
+/** The budget (4.º). Budgets are whole multiples of 50 céntimos; the answer is what the question asks, never negative. */
+export function genBudget(rng: Rng): MoneyBudgetExercise {
+  const ask = pick(rng, ['enough', 'enough', 'short', 'left', 'afford'] as BudgetAsk[])
+  if (ask === 'afford') {
+    // Three things with distinct prices: the budget reaches only the cheapest one (a price above 1 €, so the budget is real).
+    for (let k = 0; k < 60; k++) {
+      const [a, b, c] = shuffle(rng, SHOP).slice(0, 3).sort((x, y) => x.price - y.price)
+      const lo = Math.max(a.price, 100)
+      if (b.price - lo < 20) continue
+      const budget = lo + 5 * randInt(rng, 0, Math.floor((b.price - lo - 1) / 5))
+      return makeBudget('afford', budget, shuffle(rng, [a, b, c]))
+    }
+  }
+  const items = shopList(rng)
+  const total = items.reduce((s, it) => s + it.price, 0)
+  if (ask === 'enough') {
+    const yes = rng() < 0.5
+    const budget = yes ? Math.ceil(total / 50) * 50 + 50 * randInt(rng, 0, 2) : 50 * randInt(rng, 1, Math.floor((total - 1) / 50))
+    return makeBudget('enough', budget, items)
+  }
+  if (ask === 'short') return makeBudget('short', 50 * randInt(rng, 1, Math.floor((total - 1) / 50)), items)
+  return makeBudget('left', Math.ceil((total + 1) / 50) * 50 + 50 * randInt(rng, 0, 2), items)
+}
 
 /** `whole`: whole euros, no céntimos (2.º); only pay and add have it. */
 export function buildMoney(mode: MoneyMode, rng: Rng, used: Set<string>, whole = false): Exercise {
@@ -194,6 +249,8 @@ export function buildMoney(mode: MoneyMode, rng: Rng, used: Set<string>, whole =
         if (rng() < 0.5) return makeConvert('to-cents', randInt(rng, 1, 19) * 100 + (rng() < 0.6 ? randInt(rng, 1, 99) : 0))
         return makeConvert('to-euros', randInt(rng, 1, 19) * 100 + randInt(rng, 1, 99))
       }, used)
+    case 'budget':
+      return fresh(() => genBudget(rng), used)
   }
 }
 
@@ -209,6 +266,7 @@ export function moneyStatement(ex: Exercise): string {
     case 'add': return ex.story ? ex.text : 'Suma los precios'
     case 'compare': return ex.question === 'more' ? '¿Qué cuesta más?' : '¿Qué cuesta menos?'
     case 'convert': return ex.direction === 'to-cents' ? `¿Cuántos céntimos son ${euros(ex.amount)}?` : `¿Cuántos euros son ${ex.amount} céntimos?`
+    case 'budget': return `${ex.text} ${ex.question}`
   }
 }
 
@@ -300,6 +358,22 @@ function checkConvert(ex: MoneyConvertExercise, answer: Answer): CheckResult {
   return res(false, String(v), expected, { errorType: 'other', feedback: '¡Casi! Recuerda que un euro tiene cien céntimos.' })
 }
 
+function checkBudget(ex: MoneyBudgetExercise, answer: Answer): CheckResult {
+  if (ex.ask === 'short' || ex.ask === 'left') {
+    const r = judgeAmount(ex.answer as number, answer)
+    if (r.correct || r.errorType !== 'other') return r
+    return { ...r, feedback: '¡Casi! Resta: lo que cuesta todo menos el dinero que tienes. Euros con euros y céntimos con céntimos.' }
+  }
+  const expected = String(ex.answer)
+  if (answer.type !== 'option') return res(false, '', expected, { errorType: 'other', feedback: 'Elige una opción.' })
+  if (answer.value === null) return res(false, '?', expected, { errorType: 'incomplete', feedback: 'Elige una opción.' })
+  if (answer.value === expected) return res(true, answer.value, expected, { feedback: '¡Muy bien! Has comparado el total con tu dinero.' })
+  const feedback = ex.ask === 'enough'
+    ? '¡Casi! Suma los precios de todo y compara el total con el dinero que tienes.'
+    : '¡Casi! Busca la cosa que cuesta lo mismo que tienes o menos.'
+  return res(false, answer.value, expected, { errorType: 'other', feedback })
+}
+
 /** Grades a money exercise. Pure and deterministic. */
 export function checkMoney(ex: Exercise, answer: Answer): CheckResult {
   if (ex.kind !== 'money') return res(false, '', '', { errorType: 'other', feedback: 'Revisa tu respuesta.' })
@@ -310,6 +384,7 @@ export function checkMoney(ex: Exercise, answer: Answer): CheckResult {
     case 'add': return checkAdd(ex, answer)
     case 'compare': return checkCompare(ex, answer)
     case 'convert': return checkConvert(ex, answer)
+    case 'budget': return checkBudget(ex, answer)
   }
 }
 
@@ -323,7 +398,7 @@ export function hintsMoney(ex: Exercise): Hint[] | null {
   switch (ex.mode) {
     case 'recognise': return [
       hint(1, 'Mira el número que lleva impreso: ahí está el valor.'),
-      hint(2, 'Las monedas pequeñas son de cobre; las de 10, 20 y 50 céntimos son doradas; los billetes son de colores y valen más que las monedas.'),
+      hint(2, 'Las monedas pequeñas son de cobre; las doradas son las de céntimos de valor medio; los billetes son de colores y valen más que las monedas.'),
       hint(3, 'Compara el tamaño y el color con las monedas y billetes que ya conoces.'),
     ]
     case 'pay': return [
@@ -361,8 +436,34 @@ export function hintsMoney(ex: Exercise): Hint[] | null {
         hint(2, 'Cuenta cuántos grupos de cien caben: son los euros. Lo que sobra son los céntimos.'),
         hint(3, 'Las dos últimas cifras del número son los céntimos y las de delante son los euros.'),
       ]
+    case 'budget': return hintsBudget(ex)
+  }
+}
+
+function hintsBudget(ex: MoneyBudgetExercise): Hint[] {
+  switch (ex.ask) {
+    case 'enough': return [
+      hint(1, 'Piensa en todo lo que quieres comprar a la vez: ¿cuánto pagarías en total?'),
+      hint(2, 'Suma primero los euros y después los céntimos, con las comas una debajo de otra. Luego compara ese total con el dinero que tienes.'),
+      hint(3, 'Ejemplo con otros números: 2,50 € más 3 € son 5,50 €. Ese total se compara con lo que tienes: el que sea más grande manda.'),
+    ]
+    case 'short': return [
+      hint(1, 'Calcula primero cuánto cuesta todo junto, como si fueras a pagarlo.'),
+      hint(2, 'Después mira cuánto dinero tienes y pregúntate cuánto más te haría falta para llegar al total.'),
+      hint(3, 'Ejemplo con otros números: si el total es 9,70 € y tienes 4 €, te faltan 5,70 €. Resta el dinero del total, céntimos con céntimos.'),
+    ]
+    case 'left': return [
+      hint(1, 'Calcula primero cuánto cuesta todo junto.'),
+      hint(2, 'Después compara ese total con el dinero que tienes: lo que queda al pagarlo es lo que sobra.'),
+      hint(3, 'Ejemplo con otros números: si tienes 7,30 € y todo cuesta 4,80 €, sobran 2,50 €. Resta el total del dinero, céntimos con céntimos.'),
+    ]
+    case 'afford': return [
+      hint(1, 'Mira el precio de cada cosa y compáralo con el dinero que tienes.'),
+      hint(2, 'Una cosa cabe en el presupuesto si cuesta lo mismo que tienes o menos. Revisa las cosas una a una.'),
+      hint(3, 'Ejemplo con otros números: con 3 € no te cabe una pulsera de 3,50 €, pero un sombrero de 2,80 € cabe.'),
+    ]
   }
 }
 
 /** The chosen answer of a money mode, for the grid of the gallery and the tests (kept with the generators). */
-export const MONEY_MODES: MoneyMode[] = ['recognise', 'pay', 'change', 'add', 'compare', 'convert']
+export const MONEY_MODES: MoneyMode[] = ['recognise', 'pay', 'change', 'add', 'compare', 'convert', 'budget']

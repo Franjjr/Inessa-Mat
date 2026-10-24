@@ -1,5 +1,6 @@
 /* Dinero (money:*): recognise a coin or note, pay an exact price by tapping or dragging pieces into a tray, give the
-   change, add prices, compare them, and convert euros and céntimos. The tray never shows a total: the child counts.
+   change, add prices, compare them, convert euros and céntimos, and the budget (¿te llega?, ¿cuánto te falta o te sobra?,
+   ¿qué compra cabe?). The tray never shows a total: the child counts.
    Amounts with céntimos are typed in two boxes (euros and céntimos); a whole number of céntimos in one box. */
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
@@ -9,7 +10,7 @@ import { euros, pieceName } from '@/engine'
 import { useActivityHost } from '@/activities/host'
 import type {
   Answer, ExerciseViewProps, MoneyAddExercise, MoneyChangeExercise, MoneyCompareExercise, MoneyConvertExercise,
-  MoneyItem, MoneyPayExercise, MoneyRecogniseExercise,
+  MoneyBudgetExercise, MoneyItem, MoneyPayExercise, MoneyRecogniseExercise,
 } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
@@ -23,6 +24,7 @@ const PURSE = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
 const PURSE_WHOLE = [100, 200, 500, 1000, 2000]
 
 type MoneyEx = MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
+  | MoneyBudgetExercise
 
 export default function MoneyView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'money') return null
@@ -44,6 +46,7 @@ function MoneyRound({ ex, onAnswered, showFeedback, allowHints }: { ex: MoneyEx 
           case 'add': return <Add ex={ex} flow={flow} />
           case 'compare': return <Compare ex={ex} flow={flow} />
           case 'convert': return ex.direction === 'to-cents' ? <ConvertToCents ex={ex} flow={flow} /> : <ConvertToEuros ex={ex} flow={flow} />
+          case 'budget': return <Budget ex={ex} flow={flow} />
         }
       })()}
     </section>
@@ -320,6 +323,68 @@ function ConvertToEuros({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
         <span className={m.equals}>son</span>
       </div>
       <AmountAnswer flow={flow} ask="" />
+    </>
+  )
+}
+
+// ---------------------------------------------------------------- budget (¿te llega?, ¿cuánto te falta o te sobra?, ¿qué compra cabe?)
+
+function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
+  const [picked, setPicked] = useState<string | null>(null)
+  const locked = !!flow.result?.correct
+  const ask = ex.ask
+  return (
+    <>
+      <p className={s.instructions}>{ex.text}</p>
+      <div className={m.stage}>
+        <span className={m.bigAmount}>{euros(ex.budget)}</span>
+      </div>
+      {ask === 'afford' ? (
+        <div className={m.cards} role="group" aria-label="Elige">
+          {ex.items.map((it) => (
+            <button
+              key={it.name}
+              type="button"
+              className={clsx(m.card, m.cardButton, picked === it.name && m.cardOn)}
+              aria-pressed={picked === it.name}
+              onClick={() => { if (!locked) setPicked(it.name) }}
+            >
+              <span className={m.cardEmoji} aria-hidden>{it.emoji}</span>
+              <span className={m.cardName}>{it.name}</span>
+              <span className={m.tag}>{euros(it.price)}</span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <PriceCards items={ex.items} />
+      )}
+      {ask === 'enough' || ask === 'afford' ? (
+        <>
+          <p className={s.instructions}>{ex.question}</p>
+          {ask === 'enough' && (
+            <div className={m.choices} role="group" aria-label="Respuesta">
+              {['Sí', 'No'].map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  className={clsx(m.choice, picked === v && m.choiceOn)}
+                  aria-pressed={picked === v}
+                  onClick={() => { if (!locked) setPicked(v) }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
+          <AnswerBar
+            flow={flow}
+            onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: picked }) }}
+            canCheck={picked !== null}
+          />
+        </>
+      ) : (
+        <AmountAnswer flow={flow} ask={ex.question} />
+      )}
     </>
   )
 }

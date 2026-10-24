@@ -56,9 +56,30 @@ export function isTopicMastered(topic: SyllabusTopic, mastery: MasteryMap): bool
   return topic.skills.length > 0 && topicProgress(topic, mastery) >= MASTERED_SHARE
 }
 
-/** The topic the child is working on: the first available one in teaching order that is not mastered yet. */
+/**
+ * Late topics (`late: true`, split out of an existing topic) that the child has not met at all while a later topic is
+ * started or mastered. They are «behind»: «Lo nuevo» does not pull the child back to them; the daily mix practises their
+ * first step instead. Any other topic is never behind. A topic counts as met through the skills no earlier topic
+ * teaches: the multiplication tables share facts (3 × 2 is in the 2 and in the 3), and a shared fact does not start one.
+ */
+export function behindTopics(syllabus: Syllabus, mastery: MasteryMap, term?: number): SyllabusTopic[] {
+  const topics = availableTopics(syllabus, term)
+  const earlier = new Set<SkillKey>()
+  const met = topics.map((t) => {
+    const own = t.skills.filter((s) => !earlier.has(s))
+    for (const s of t.skills) earlier.add(s)
+    return own.some((s) => mastery[s] !== undefined)
+  })
+  const lastMet = met.lastIndexOf(true)
+  return topics.filter((t, i) => t.late && i < lastMet && !met[i] && !isTopicMastered(t, mastery))
+}
+
+/** The topic the child is working on: the first available one in teaching order that is not mastered yet, skipping the
+    late topics that are behind (they come back in the mix). Without late topics it is the first one not mastered. */
 export function currentTopic(syllabus: Syllabus, mastery: MasteryMap, term?: number): SyllabusTopic | null {
-  return availableTopics(syllabus, term).find((t) => !isTopicMastered(t, mastery)) ?? null
+  const open = availableTopics(syllabus, term).filter((t) => !isTopicMastered(t, mastery))
+  const behind = new Set(behindTopics(syllabus, mastery, term).map((t) => t.id))
+  return open.find((t) => !behind.has(t.id)) ?? open[0] ?? null
 }
 
 /** Share of a topic's skills at the mastered box or above, 0..1. */

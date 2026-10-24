@@ -50,6 +50,11 @@ export function refZeroBorrow(m: number, s: number): boolean {
   return b.some((x, i) => x && md[i + 1] === 0)
 }
 
+/** The writing cells of a decimal in hundredths: whole part, décimas, and centésimas (null at 1 place). */
+function cellsOf(hundredths: number, places: 1 | 2): (number | null)[] {
+  return [Math.floor(hundredths / 100), Math.floor((hundredths % 100) / 10), places === 2 ? hundredths % 10 : null]
+}
+
 /** The answer a perfect child would give, in the Answer shape the views send. */
 export function correctAnswer(ex: Exercise): Answer {
   switch (ex.kind) {
@@ -86,6 +91,12 @@ export function correctAnswer(ex: Exercise): Answer {
     case 'perimeter':
     case 'shape-count':
       return { type: 'number', value: ex.answer }
+    case 'decimal':
+      if (ex.mode === 'compare') return { type: 'sign', sign: ex.answer as '<' | '>' | '=' }
+      if (ex.mode === 'money') return { type: 'numbers', values: [Math.floor(ex.value / 100), ex.value % 100] }
+      return { type: 'numbers', values: cellsOf(ex.value, ex.places) }
+    case 'decimal-op':
+      return { type: 'numbers', values: cellsOf(ex.answer, ex.places) }
     default:
       return { type: 'number', value: ex.answer as number }
   }

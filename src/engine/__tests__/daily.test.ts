@@ -1,13 +1,24 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { AttemptRecord, ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { GRADE3_SYLLABUS, allTopics, currentTopic, teachingOrder } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, allTopics, currentTopic, teachingOrder, type Syllabus } from '@/content/syllabus'
 import {
   DAILY_MINUTES, NEW_FACT_BUDGET, estimateSeconds, planDailySession, scaffoldedSkills, statementOf,
 } from '../daily'
 import { newMastery } from '../mastery'
 import { isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
 import { createRng } from '../rng'
+
+/** Skill keys the generator is told to make nothing for (empty set = the real generator). */
+const unmakeable = vi.hoisted(() => new Set<string>())
+vi.mock('../generate', async (importOriginal) => {
+  const real = await importOriginal<typeof import('../generate')>()
+  return {
+    ...real,
+    generate: (opts: Parameters<typeof real.generate>[0], n: number, ctx: Parameters<typeof real.generate>[2]) =>
+      opts.skills?.some((s) => unmakeable.has(s)) ? [] : real.generate(opts, n, ctx),
+  }
+})
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 86400000
@@ -149,6 +160,60 @@ describe('planDailySession', () => {
     expect(plan.topic).toBeNull()
     expect(plan.example).toBeNull()
     expect(plan.blocks.flatMap((b) => b.items).length).toBeGreaterThan(0)
+  })
+
+  describe('ordered topics (their skills are steps)', () => {
+    /** A one-topic syllabus whose only topic is ordered: its skills are taught one step at a time. */
+    const orderedSyllabus = (skills: string[]): Syllabus => ({
+      id: 'test-ordered', course: 3,
+      blocks: [{ id: 'b', name: 'Bloque', topics: [{ id: 'pasos', name: 'Pasos', skills, status: 'disponible', ordered: true, rungs: {} }] }],
+    })
+    const newSkills = (plan: ReturnType<typeof planDailySession>) =>
+      plan.blocks.find((b) => b.id === 'new')!.items.map((i) => i.exercise.skill)
+
+    it('an ordered topic teaches only its first unmastered step', () => {
+      const plan = planDailySession({
+        child, mastery: {}, attempts: [], now,
+        syllabus: orderedSyllabus(['mul:2x1:c0', 'mul:2x1:c1']),
+      })
+      expect(plan.topic?.id).toBe('pasos')
+      const next = newSkills(plan)
+      expect(next.length).toBeGreaterThan(0)
+      expect(next.every((s) => s === 'mul:2x1:c0')).toBe(true)
+    })
+
+    it('an ordered topic moves to the next step once the first is mastered', () => {
+      const plan = planDailySession({
+        child, mastery: { 'mul:2x1:c0': m('mul:2x1:c0', 2, { seenDays: -1 }) }, attempts: [], now,
+        syllabus: orderedSyllabus(['mul:2x1:c0', 'mul:2x1:c1']),
+      })
+      const next = newSkills(plan)
+      expect(next.length).toBeGreaterThan(0)
+      expect(next.every((s) => s === 'mul:2x1:c1')).toBe(true)
+    })
+
+    it('an ordered topic skips a step that is not a valid skill', () => {
+      const plan = planDailySession({
+        child, mastery: {}, attempts: [], now,
+        syllabus: orderedSyllabus(['xx:nope', 'mul:2x1:c0']),
+      })
+      const next = newSkills(plan)
+      expect(next.length).toBeGreaterThan(0)
+      expect(next.every((s) => s === 'mul:2x1:c0')).toBe(true)
+    })
+
+    afterEach(() => unmakeable.clear())
+
+    it('an ordered topic skips a valid step the generator cannot make, and teaches the next one', () => {
+      unmakeable.add('mul:2x1:c0')
+      const plan = planDailySession({
+        child, mastery: {}, attempts: [], now,
+        syllabus: orderedSyllabus(['mul:2x1:c0', 'mul:2x1:c1']),
+      })
+      const next = newSkills(plan)
+      expect(next.length).toBeGreaterThan(0)
+      expect(next.every((s) => s === 'mul:2x1:c1')).toBe(true)
+    })
   })
 
   it('examples and statements are readable and never empty', () => {

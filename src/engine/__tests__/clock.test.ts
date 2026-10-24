@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { Answer, Exercise } from '@/types'
-import { buildClock, checkClock, clockSkillsOf, expectedClock, hintsClock, makeClockRead, makeTimeConvert, makeTimeDuration, statementClock } from '../clock'
-import { check, createRng, describeSkill, generate, kindsForSkill, parseSkill, placementBlockOf, planDailySession } from '../index'
+import type { Answer, Exercise, MasteryMap } from '@/types'
+import {
+  buildClock, checkClock, clockSkillsOf, expectedClock, hintsClock, makeCalendarSeconds, makeClockRead, makeTimeConvert, makeTimeDuration,
+  statementClock,
+} from '../clock'
+import { check, createRng, describeSkill, generate, kindsForSkill, newMastery, parseSkill, placementBlockOf, planDailySession } from '../index'
 import { availableSkills, GRADE3_SYLLABUS } from '@/content/syllabus'
 import { clockPhrase, digital } from '../time'
 
@@ -238,3 +241,96 @@ describe('statements', () => {
   })
 })
 
+
+describe('tiempo: time:seconds (minutos y segundos)', () => {
+  const hintsLeakClock = (texts: string[], answer: number) =>
+    texts.some((t) => new RegExp(`(^|\\D)${answer}(\\D|$)`).test(t.replace(/\s/g, '')))
+
+  it('parses the key as a calendar item and describes it', () => {
+    expect(parseSkill('time:seconds')).toEqual({ type: 'calendar', topic: 'seconds' })
+    expect(kindsForSkill('time:seconds')).toEqual(['calendar'])
+    expect(describeSkill('time:seconds').length).toBeGreaterThan(5)
+    expect(placementBlockOf('time:seconds')).toBe('tiempo')
+  })
+
+  it('300 items: a minute has 60 seconds, the answers are whole, and no item goes past 10 minutes', () => {
+    const rng = createRng(111)
+    const forms = new Set<string>()
+    for (let i = 0; i < 300; i++) {
+      const ex = buildClock('time:seconds', rng, new Set(), false, true)
+      if (!ex || ex.kind !== 'calendar' || !ex.seconds) throw new Error('calendar seconds')
+      const item = ex.seconds
+      forms.add(item.form)
+      expect(Number.isInteger(ex.answer)).toBe(true)
+      expect(ex.answer).toBeGreaterThan(0)
+      if (item.form === 'min-to-s') {
+        expect(item.minutes).toBeGreaterThanOrEqual(2)
+        expect(item.minutes).toBeLessThanOrEqual(10)
+        expect(ex.answer).toBe(item.minutes * 60)
+      } else if (item.form === 'mixed') {
+        expect(item.seconds % 5).toBe(0)
+        expect(item.seconds).toBeGreaterThan(0)
+        expect(item.seconds).toBeLessThan(60)
+        expect(ex.answer).toBe(item.minutes * 60 + item.seconds)
+      } else {
+        expect(item.total % 60).toBe(0)
+        expect(ex.answer * 60).toBe(item.total)
+      }
+      expect(ex.answer).toBeLessThanOrEqual(600)
+      expect(check(ex, { type: 'number', value: ex.answer } as Answer)).toMatchObject({ correct: true })
+      expect(check(ex, { type: 'number', value: ex.answer + 1 } as Answer)).toMatchObject({ correct: false })
+      expect(expectedClock(ex)).toBe(String(ex.answer))
+    }
+    expect([...forms].sort()).toEqual(['min-to-s', 'mixed', 's-to-min'])
+  })
+
+  it('hints give three levels and never state the answer, plain or with spaces', () => {
+    const rng = createRng(112)
+    for (let i = 0; i < 300; i++) {
+      const ex = buildClock('time:seconds', rng, new Set(), false, true)
+      if (!ex || ex.kind !== 'calendar') throw new Error('calendar seconds')
+      const hints = hintsClock(ex)
+      expect(hints?.map((h) => h.level)).toEqual([1, 2, 3])
+      if (ex.answer >= 10) {
+        const texts = hints!.map((h) => h.text)
+        expect(hintsLeakClock(texts, ex.answer), JSON.stringify(ex)).toBe(false)
+        const formatted = ex.answer.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+        for (const t of texts) expect(t, JSON.stringify(ex)).not.toContain(formatted)
+      }
+    }
+  })
+
+  it('the minutes-to-seconds hint never gives the product for the item (2 min is never 2 × 60)', () => {
+    const ex = makeCalendarSeconds({ form: 'min-to-s', minutes: 2 })
+    const texts = hintsClock(ex)!.map((h) => h.text).join(' ')
+    expect(texts).not.toMatch(/2 × 60|2 veces|dos minutos son/)
+    expect(hintsClock(ex)![0].text).not.toContain('120')
+  })
+
+  it('before it is learnt, time:seconds is only minutes to seconds; learnt, it mixes the three forms', () => {
+    const rng = createRng(113)
+    const notLearnt = new Set<string>()
+    for (let i = 0; i < 300; i++) {
+      const ex = buildClock('time:seconds', rng, new Set(), false, false)
+      if (!ex || ex.kind !== 'calendar' || !ex.seconds) throw new Error('calendar seconds')
+      notLearnt.add(ex.seconds.form)
+    }
+    expect([...notLearnt]).toEqual(['min-to-s'])
+    const learnt = new Set<string>()
+    for (let i = 0; i < 300; i++) {
+      const ex = buildClock('time:seconds', rng, new Set(), false, true)
+      if (!ex || ex.kind !== 'calendar' || !ex.seconds) throw new Error('calendar seconds')
+      learnt.add(ex.seconds.form)
+    }
+    expect([...learnt].sort()).toEqual(['min-to-s', 'mixed', 's-to-min'])
+  })
+
+  it('through generate: no mastery gives minutes to seconds; a mastered skill (box 2) gives the other forms', () => {
+    const now = new Date('2026-10-24T10:00:00Z')
+    const plain = generate({ skills: ['time:seconds'] }, 60, { rng: createRng(114), mastery: {}, now })
+    expect(plain.every((e) => e.kind === 'calendar' && e.seconds?.form === 'min-to-s')).toBe(true)
+    const mastered = { 'time:seconds': { ...newMastery('time:seconds', now), box: 2 } } as MasteryMap
+    const learnt = generate({ skills: ['time:seconds'] }, 60, { rng: createRng(114), mastery: mastered, now })
+    expect(learnt.some((e) => e.kind === 'calendar' && e.seconds?.form !== 'min-to-s')).toBe(true)
+  })
+})

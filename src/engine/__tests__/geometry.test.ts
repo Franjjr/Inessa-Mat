@@ -1,11 +1,12 @@
 /* Geometría (block E): polygons, lines, angles, circle, solids, right angles and perimeter. */
 import { describe, expect, it } from 'vitest'
-import type { AngleTapExercise, PerimeterExercise, ShapeChoiceExercise, ShapeCountExercise } from '@/types'
+import type { AngleTapExercise, Figure, GridFigure, PerimeterExercise, ShapeChoiceExercise, ShapeCountExercise } from '@/types'
 import { check, createRng, generate, hintsFor, isValidSkill, kindsForSkill, parseSkill, blockSkillsOf, geoSkill, GEO_OPS } from '@/engine'
 import {
-  checkPerimeter, genAngleTap, genAngleType, genCircle, genGeometry, genLineRelation, genLineType, genPerimeter,
-  genPolygonName, genPolygonSides, genSolidFaces, genSolidName, genSolidRoll, isConvex, polygonPoints, POLYGON_SIDES, POLYGON_WORD,
-  rightCorners, sideLengths, SOLID_FLAT_FACES, SOLID_ROLLS,
+  checkPerimeter, genAngleClass, genAngleTap, genAngleType, genCircle, genCircleParts, genGeometry, genLineKind, genLineRelation,
+  genLineType, genPerimeter, genPolygonName, genPolygonSides, genQuadName, genSolidCount, genSolidFaces, genSolidName, genSolidRoll,
+  genTranslate, genTriAngles, genTriSides, isConvex, polygonPoints, POLYGON_SIDES, POLYGON_WORD, rightCorners, sideLengths,
+  SOLID_FLAT_FACES, SOLID_ROLLS,
 } from '../geometry'
 import { correctAnswer } from './helpers'
 import type { PolygonName } from '../geometry'
@@ -102,7 +103,7 @@ describe('lines and angles', () => {
     for (const seed of SEEDS) {
       const ex: ShapeChoiceExercise = genLineType(createRng(seed))
       const f = ex.figures[0]
-      if (f.type !== 'line') throw new Error('expected a line')
+      if (f.type !== 'line' || f.kind === 'ray' || f.kind === 'segment') throw new Error('expected a recta, curva or poligonal')
       expect(f.points).toHaveLength(counts[f.kind])
       const word = { straight: 'recta', curve: 'curva', broken: 'poligonal' }[f.kind]
       expect(ex.options[ex.answer]).toBe(word)
@@ -255,5 +256,234 @@ describe('the generators are reachable through the public selector', () => {
     expect(genAngleTap(createRng(77))).toEqual(genAngleTap(createRng(77)))
     expect(genPolygonName(createRng(77))).toEqual(genPolygonName(createRng(77)))
     expect(genGeometry('perimeter', createRng(2), 'story')).toMatchObject({ mode: 'story' })
+  })
+})
+
+// ---------------------------------------------------------------- 3.º and 4.º: lines, angles, triangles, quadrilaterals, circle, translation, solids
+
+const WIDE = Array.from({ length: 200 }, (_, i) => i * 13 + 5)
+const NEW_MAKERS: [string, (rng: ReturnType<typeof createRng>) => ShapeChoiceExercise][] = [
+  ['line:kind', genLineKind], ['angle:class', genAngleClass], ['tri:sides', genTriSides], ['tri:angles', genTriAngles],
+  ['quad:name', genQuadName], ['circle:parts', genCircleParts], ['translate', genTranslate], ['solid:count', genSolidCount],
+]
+
+/** Words are checked as substrings (lowercased); numbers as whole numbers, so 8 is not found inside 18. */
+function mentions(text: string, option: string): boolean {
+  if (/^\d+$/.test(option)) return new RegExp(`(^|\\D)${option}(\\D|$)`).test(text)
+  return text.toLowerCase().includes(option.toLowerCase())
+}
+
+const pts = (f: Figure): [number, number][] => {
+  if (f.type !== 'polygon') throw new Error('expected a polygon')
+  return f.points
+}
+/** Cosine-free corner test: the dot product of the two sides that meet at p (zero = right angle). */
+const dot = (a: [number, number], p: [number, number], b: [number, number]) =>
+  (a[0] - p[0]) * (b[0] - p[0]) + (a[1] - p[1]) * (b[1] - p[1])
+/** Parallel directions: the normalised cross product of the two sides is about 0. */
+function parallel(a0: [number, number], a1: [number, number], b0: [number, number], b1: [number, number]): boolean {
+  const u = [a1[0] - a0[0], a1[1] - a0[1]]
+  const v = [b1[0] - b0[0], b1[1] - b0[1]]
+  return Math.abs(u[0] * v[1] - u[1] * v[0]) / (Math.hypot(...u) * Math.hypot(...v)) < 0.01
+}
+
+describe('new geometry operations (3.º and 4.º)', () => {
+  it('every new operation answers with one of its options, grades it right and has three hints', () => {
+    for (const [op, make] of NEW_MAKERS) {
+      for (const seed of WIDE) {
+        const ex = make(createRng(seed))
+        expect(ex.kind, op).toBe('shape-choice')
+        expect(new Set(ex.options).size, `${op} ${seed}`).toBe(ex.options.length)
+        expect(ex.answer, `${op} ${seed}`).toBeGreaterThanOrEqual(0)
+        expect(ex.answer, `${op} ${seed}`).toBeLessThan(ex.options.length)
+        expect(check(ex, correctAnswer(ex)), `${op} ${seed}`).toMatchObject({ correct: true })
+        expect(hintsFor(ex).map((h) => h.level), `${op} ${seed}`).toEqual([1, 2, 3])
+      }
+    }
+  })
+
+  it('geo:angle:type: no hint names any of the three options (it is a step of the ordered 3.º topic)', () => {
+    for (const seed of WIDE) {
+      const ex = genAngleType(createRng(seed))
+      for (const h of hintsFor(ex)) {
+        for (const option of ex.options) expect(mentions(h.text, option), `${seed} ${option}: ${h.text}`).toBe(false)
+      }
+    }
+  })
+
+  it('no hint of a new operation contains the right option (Review Focus 3)', () => {
+    for (const [op, make] of NEW_MAKERS) {
+      for (const seed of WIDE) {
+        const ex = make(createRng(seed))
+        const right = ex.options[ex.answer]
+        for (const h of hintsFor(ex)) expect(mentions(h.text, right), `${op} ${seed}: ${h.text}`).toBe(false)
+      }
+    }
+  })
+
+  it('line:kind: a recta has arrows at both ends, a semirrecta a dot and an arrow, a segmento two dots', () => {
+    const word = { straight: 'recta', ray: 'semirrecta', segment: 'segmento' } as const
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genLineKind(createRng(seed))
+      const f = ex.figures[0]
+      if (f.type !== 'line' || f.kind === 'curve' || f.kind === 'broken') throw new Error('expected a recta, semirrecta or segmento')
+      expect(f.points).toHaveLength(2)
+      expect(ex.options[ex.answer]).toBe(word[f.kind])
+      seen.add(f.kind)
+    }
+    expect(seen).toEqual(new Set(['straight', 'ray', 'segment']))
+  })
+
+  it('angle:class: agudo is under 90 degrees, recto is 90, obtuso is from 91 to 179', () => {
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genAngleClass(createRng(seed))
+      const f = ex.figures[0]
+      if (f.type !== 'angle') throw new Error('expected an angle')
+      const right = ex.options[ex.answer]
+      if (right === 'agudo') expect(f.deg).toBeLessThan(90)
+      if (right === 'recto') expect(f.deg).toBe(90)
+      if (right === 'obtuso') {
+        expect(f.deg).toBeGreaterThanOrEqual(91)
+        expect(f.deg).toBeLessThanOrEqual(179)
+      }
+      seen.add(right)
+    }
+    expect(seen).toEqual(new Set(['agudo', 'recto', 'obtuso']))
+  })
+
+  it('tri:sides: the lengths written on the triangle obey the triangle inequality and match the name', () => {
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genTriSides(createRng(seed))
+      const f = ex.figures[0]
+      if (f.type !== 'polygon' || !f.labels) throw new Error('expected a labelled triangle')
+      const [a, b, c] = f.labels.map((l) => Number.parseFloat(l))
+      expect(a + b, `${seed}`).toBeGreaterThan(c)
+      expect(a + c).toBeGreaterThan(b)
+      expect(b + c).toBeGreaterThan(a)
+      const right = ex.options[ex.answer]
+      const equal = [a === b, b === c, a === c].filter(Boolean).length
+      if (right === 'equilátero') expect(equal).toBe(3)
+      if (right === 'isósceles') expect(equal).toBe(1)
+      if (right === 'escaleno') expect(equal).toBe(0)
+      // The drawn sides are the labelled ones (label i sits on side i).
+      sideLengths(pts(f)).forEach((l, i) => expect(Math.abs(l - [a, b, c][i])).toBeLessThan(0.05))
+      seen.add(right)
+    }
+    expect(seen).toEqual(new Set(['equilátero', 'isósceles', 'escaleno']))
+  })
+
+  it('tri:angles: the answer is the kind of the drawn corners', () => {
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genTriAngles(createRng(seed))
+      const p = pts(ex.figures[0])
+      const dots = p.map((v, i) => dot(p[(i + 1) % 3], v, p[(i + 2) % 3]))
+      const right = ex.options[ex.answer]
+      if (right === 'rectángulo') expect(dots.filter((d) => d === 0), `${seed}`).toHaveLength(1)
+      if (right === 'acutángulo') expect(dots.every((d) => d > 0), `${seed}`).toBe(true)
+      if (right === 'obtusángulo') expect(dots.some((d) => d < 0), `${seed}`).toBe(true)
+      seen.add(right)
+    }
+    expect(seen).toEqual(new Set(['acutángulo', 'rectángulo', 'obtusángulo']))
+  })
+
+  it('quad:name: each name matches its sides (equal or parallel) and its corners', () => {
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genQuadName(createRng(seed))
+      const p = pts(ex.figures[0])
+      const sides = sideLengths(p)
+      const allEqual = sides.every((l) => Math.abs(l - sides[0]) < 0.05)
+      const pairsEqual = Math.abs(sides[0] - sides[2]) < 0.05 && Math.abs(sides[1] - sides[3]) < 0.05
+      const cosines = p.map((v, i) => Math.abs(dot(p[(i + 1) % 4], v, p[(i + 3) % 4])) / (sides[i] * sides[(i + 3) % 4]))
+      const allRight = cosines.every((c) => c < 0.02)
+      const par1 = parallel(p[0], p[1], p[2], p[3])
+      const par2 = parallel(p[1], p[2], p[3], p[0])
+      const right = ex.options[ex.answer]
+      if (right === 'cuadrado') expect(allEqual && allRight, `${seed}`).toBe(true)
+      if (right === 'rectángulo') expect(pairsEqual && allRight && !allEqual, `${seed}`).toBe(true)
+      if (right === 'rombo') expect(allEqual && !allRight, `${seed}`).toBe(true)
+      if (right === 'romboide') expect(par1 && par2 && pairsEqual && !allEqual && !allRight, `${seed}`).toBe(true)
+      if (right === 'trapecio') expect(par1 !== par2, `${seed}`).toBe(true)
+      seen.add(right)
+    }
+    expect(seen).toEqual(new Set(['cuadrado', 'rectángulo', 'rombo', 'romboide', 'trapecio']))
+  })
+
+  it('circle:parts: the highlighted part is the one named by the right option', () => {
+    const seen = new Set<string>()
+    const word = { radius: 'radio', diameter: 'diámetro', chord: 'cuerda', arc: 'arco' } as const
+    for (const seed of WIDE) {
+      const ex = genCircleParts(createRng(seed))
+      const f = ex.figures[0]
+      if (f.type !== 'circle' || !f.highlight) throw new Error('expected a highlighted circle')
+      expect(ex.options[ex.answer]).toBe(word[f.highlight])
+      seen.add(word[f.highlight])
+    }
+    expect(seen).toEqual(new Set(['radio', 'diámetro', 'cuerda', 'arco']))
+  })
+
+  it('translate: the moved copy is the outline shifted, and the answer names that move', () => {
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genTranslate(createRng(seed))
+      const f = ex.figures[0] as GridFigure
+      if (f.type !== 'grid' || !f.ghost) throw new Error('expected a grid with an outline')
+      const dr = Math.min(...f.filled.map((c) => c[0])) - Math.min(...f.ghost.map((c) => c[0]))
+      const dc = Math.min(...f.filled.map((c) => c[1])) - Math.min(...f.ghost.map((c) => c[1]))
+      const shifted = f.ghost.map(([r, c]) => `${r + dr},${c + dc}`).sort()
+      expect(f.filled.map(([r, c]) => `${r},${c}`).sort(), `${seed}`).toEqual(shifted)
+      expect(f.filled.every(([r, c]) => r >= 0 && r < f.rows && c >= 0 && c < f.cols), `${seed}`).toBe(true)
+      const count = Math.abs(dr) + Math.abs(dc)
+      const where = dr === 0 ? (dc > 0 ? 'a la derecha' : 'a la izquierda') : dr > 0 ? 'hacia abajo' : 'hacia arriba'
+      expect(ex.options[ex.answer]).toBe(`${count} ${where}`)
+      seen.add(where)
+    }
+    expect(seen).toEqual(new Set(['a la derecha', 'a la izquierda', 'hacia arriba', 'hacia abajo']))
+  })
+
+  it('solid:count: caras, vértices and aristas of the cube, the prism and the pyramid as drawn', () => {
+    const table = {
+      cubo: { caras: 6, vértices: 8, aristas: 12 }, prisma: { caras: 5, vértices: 6, aristas: 9 }, piramide: { caras: 5, vértices: 5, aristas: 8 },
+    } as const
+    const seen = new Set<string>()
+    for (const seed of WIDE) {
+      const ex = genSolidCount(createRng(seed))
+      const f = ex.figures[0]
+      if (f.type !== 'solid' || !(f.name in table)) throw new Error('expected a cube, a prism or a pyramid')
+      const ask = (['caras', 'vértices', 'aristas'] as const).find((w) => ex.question.includes(w))
+      if (!ask) throw new Error(`the question does not say what to count: ${ex.question}`)
+      expect(ex.options[ex.answer]).toBe(String(table[f.name as keyof typeof table][ask]))
+      seen.add(ask)
+    }
+    expect(seen).toEqual(new Set(['caras', 'vértices', 'aristas']))
+  })
+})
+
+describe('the quadrilateral level-3 hint is a contrast: it never describes or names the asked shape', () => {
+  it('each asked kind gets another quadrilateral as its example, and the five examples differ', () => {
+    // The asked shape's defining description and its name: the level-3 text must contain neither.
+    const asked: Record<string, { name: string; defining: string }> = {
+      cuadrado: { name: 'cuadrado', defining: 'cuatro lados iguales y cuatro esquinas como la del papel' },
+      rectángulo: { name: 'rectángulo', defining: 'cuatro esquinas como la del papel, y dos lados largos y dos cortos' },
+      rombo: { name: 'rombo', defining: 'cuatro lados iguales, pero ninguna esquina como la del papel' },
+      romboide: { name: 'romboide', defining: 'dos pares de lados iguales, pero ninguna esquina como la del papel' },
+      trapecio: { name: 'trapecio', defining: 'solo un par de lados va en la misma dirección' },
+    }
+    const seen = new Map<string, string>()
+    for (let seed = 1; seed < 400 && seen.size < 5; seed++) {
+      const ex = genQuadName(createRng(seed))
+      const kind = ex.options[ex.answer]
+      if (seen.has(kind)) continue
+      const text = hintsFor(ex)[2].text
+      seen.set(kind, text)
+      expect(text.toLowerCase(), kind).not.toContain(asked[kind].defining)
+      expect(text.toLowerCase(), kind).not.toContain(asked[kind].name)
+    }
+    expect(seen.size).toBe(5)
+    expect(new Set(seen.values()).size).toBe(5)
   })
 })

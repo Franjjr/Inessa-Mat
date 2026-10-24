@@ -71,7 +71,7 @@ export {
   genSolidFaces, genSolidName, genSolidRoll, geometryHints, isConvex, polygonPoints, rightCorners, sideLengths, POLYGON_WORD,
   genArea, genSymmetry, isSymmetric, checkArea,
 } from './geometry'
-export { blockSkillsOf, fractionSkill, geoSkill, FRACTION_DENOMINATORS, GEO_OPS } from './skills'
+export { blockSkillsOf, decimalSkill, fractionSkill, geoSkill, FRACTION_DENOMINATORS, GEO_OPS } from './skills'
 export type { FractionDenominator, FractionOp, GeoOp } from './skills'
 /** Problemas con barras: the generator, the grading and the hints (see bars.ts). */
 export { BAR_OPS, barChips, barHints, checkBar, genBarProblem } from './bars'
@@ -84,10 +84,14 @@ export { borrowMarks, compensationSteps, lineStops, partsResults, subtrahendPart
 /** Dinero and medida (3.º, block C): generators, checks, hints and statements (see money.ts and measure.ts). */
 export { buildMoney, checkMoney, euros, hintsMoney, isNote, moneyStatement, MONEY_MODES, PIECES, pieceName, splitCents, SHOP } from './money'
 export { buildMeasure, checkMeasure, DIMENSION_NAME, hintsMeasure, MEASURE_MODES, measureStatement, THINGS, UNITS } from './measure'
-export { CHART_SKILLS, CHANCE_OPTIONS, buildChance, buildChart, checkChance, checkChart, hintsChance, hintsChart, makeChance, makeChart, makeModeList } from './data'
+export { CHART_SKILLS, CHANCE_OPTIONS, bare, buildChance, buildChart, checkChance, checkChart, hintsChance, hintsChart, makeChance, makeChart, makeModeList } from './data'
 export { PATTERN_SKILLS, buildPattern, checkPattern, hintsPattern, makeNumberSeries, makePredict, makeShapePattern } from './patterns'
 export { POSITION_SKILLS, SIDES, buildPosition, checkPosition, hintsPosition, makeNext, makeRelative, makeRoute } from './position'
 export { genDivision2d, genDivision4, genMul3x1, genMulParts, makeMulParts, checkMulParts, hintsMulParts } from './bigops'
+export { checkLongMul, genLongMul, hintsLongMul, makeLongMul } from './longmul'
+export { checkOrdinal, genOrdinal, hintsOrdinal, ordinalNumeral, ordinalPrompt, ordinalWord } from './ordinals'
+/** Décimas y centésimas (4.º): the numbers in hundredths, the two boxes, grading and hints (src/engine/decimals.ts). */
+export { checkDecimal, checkDecimalOp, decimalFromCells, decimalWords, fmtDecimal, genDecimal, genDecimalOp, hintsDecimal } from './decimals'
 export { toRoman } from './calc'
 export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */

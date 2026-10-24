@@ -66,11 +66,13 @@ export function HintVisual({ hint }: { hint: Hint }) {
       const count = num(p.count, 0) || num(p.length, 0)
       const start = num(p.start, 1)
       const index = p.index === undefined ? -1 : num(p.index, -1)
+      // blank: the chip at `index` is a «?» (the answer is the value it stands for; it is never drawn).
+      const blank = p.blank === 1
       if (step <= 0 || count <= 0) return null
       return (
         <div className={s.hintVisual} aria-hidden>
           {Array.from({ length: Math.min(count, 12) }, (_, i) => (
-            <span key={i} className={`${s.chip} ${i === index ? s.chipHot : ''}`}>{step * (start + i)}</span>
+            <span key={i} className={`${s.chip} ${i === index ? s.chipHot : ''}`}>{blank && i === index ? '?' : step * (start + i)}</span>
           ))}
         </div>
       )

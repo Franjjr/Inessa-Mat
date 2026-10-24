@@ -86,4 +86,11 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'mul-parts': lazy(() => import('./views/MulPartsView')),
   area: lazy(() => import('./views/FigureNumberView')),
   'fraction-add': lazy(() => import('./views/FractionAddView')),
+  // ---- 4.º: multiplicar en columna con filas parciales
+  'long-mul': lazy(() => import('./views/LongMulView')),
+  // ---- 4.º: décimas y centésimas, sumar y restar decimales
+  decimal: lazy(() => import('./views/DecimalView')),
+  'decimal-op': lazy(() => import('./views/DecimalOpView')),
+  // ---- 3.º: ordinales hasta el 30
+  ordinal: lazy(() => import('./views/OrdinalView')),
 }

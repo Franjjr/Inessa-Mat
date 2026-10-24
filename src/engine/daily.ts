@@ -8,7 +8,7 @@
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillMastery } from '@/types'
-import { availableSkills, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { availableSkills, behindTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
@@ -20,6 +20,8 @@ import { dataStatement } from './data'
 import { patternStatement } from './patterns'
 import { positionStatement } from './position'
 import { mulPartsStatement } from './bigops'
+import { ordinalPrompt } from './ordinals'
+import { decimalWords, fmtDecimal } from './decimals'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -49,6 +51,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
   money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
+  'long-mul': 90, ordinal: 20, decimal: 40, 'decimal-op': 60,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -91,6 +94,16 @@ export interface DailyPlan {
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
 const DAY_MS = 24 * 60 * 60 * 1000
 
+/** The prompt of a decimal exercise: the drawing is the question, or the words, the two numbers, the euros. */
+function decimalStatement(ex: Extract<Exercise, { kind: 'decimal' }>): string {
+  switch (ex.mode) {
+    case 'shade': return '¿Qué número está coloreado? Escríbelo con coma.'
+    case 'read': return `Escribe con cifras: ${decimalWords(ex)}`
+    case 'compare': return `${fmtDecimal(ex.value, ex.places)} y ${fmtDecimal(ex.other ?? 0, ex.places)}: ¿qué signo va entre ellos?`
+    case 'money': return `${fmtDecimal(ex.value, 2)} €: ¿cuántos euros y cuántos céntimos son?`
+  }
+}
+
 /** Human statement of an exercise, for the worked example and for adults' reports. */
 export function statementOf(ex: Exercise): string {
   switch (ex.kind) {
@@ -112,7 +125,7 @@ export function statementOf(ex: Exercise): string {
     case 'order': return `Ordena ${ex.values.map(fmt).join(', ')}`
     case 'round': return `Redondea ${fmt(ex.value)} a ${ex.to === 1000 ? 'los millares' : `las ${roundWords(ex.to).plural}`}`
     case 'number-line': return ex.mode === 'jump' ? `Salta ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)}` : 'Mira la recta y busca la marca que falta'
-    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
+    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} ${ex.mode === 'same' ? '?' : '='} ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     case 'bar-problem': return ex.text
     case 'fraction-shade': return `Colorea ${ex.numerator} de ${ex.denominator} partes`
     case 'fraction-read': return 'Escribe la fracción que está coloreada'
@@ -129,8 +142,12 @@ export function statementOf(ex: Exercise): string {
     case 'pattern': return patternStatement(ex) ?? ex.skill
     case 'position': return positionStatement(ex) ?? ex.skill
     case 'mul-parts': return mulPartsStatement(ex)
+    case 'long-mul': return `${fmt(ex.top)} × ${fmt(ex.bottom)} = ?`
+    case 'ordinal': return ordinalPrompt(ex)
     case 'area': return '¿Cuántos cuadraditos ocupa la figura?'
     case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
+    case 'decimal': return decimalStatement(ex)
+    case 'decimal-op': return `${fmtDecimal(ex.left, ex.places)} ${ex.op === 'add' ? '+' : '−'} ${fmtDecimal(ex.right, ex.places)} = ?`
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
@@ -235,6 +252,7 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
 /** The operation of the problem block: the two-step topic asks two-step bars, the others the operation of the topic. */
 function barOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): BarSkillOp {
   if (topic?.id === 'prob-dos-pasos') return 'two'
+  if (topic?.id === 'prob-tres-pasos') return 'three'
   return wordOpFor(topic, mastery)
 }
 
@@ -264,6 +282,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
     if (ex) used.push(ex.id)
     return ex ?? null
   }
+  // Same generator as make(), with its own seed per (day, skill) so probing does not move the session's rng.
+  const canMake = (s: SkillKey) => generate({ skills: [s] }, 1, { rng: createRng(hashString(`step:${today}:${s}`)), now, mastery }).length > 0
 
   // 1. Calentamiento: learnt cálculo mental and facts not seen today, the most urgent first. Never introduces a skill.
   const seenBeforeToday = (m: SkillMastery) => m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today
@@ -281,9 +301,13 @@ export function planDailySession(input: PlanInput): DailyPlan {
   let example: DailyPlan['example'] = null
   const newItems: DailyItem[] = []
   if (topic) {
-    const candidates = topic.skills
-      .filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
-      .sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
+    const open = topic.skills.filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
+    // An ordered topic's skills are steps: only the first open one the generator can make is new, the next waits until it
+    // is mastered. A step it cannot make is skipped, or the topic would stay stuck on it.
+    const step = topic.ordered ? open.find(canMake) : undefined
+    const candidates = topic.ordered
+      ? (step ? [step] : [])
+      : open.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
     const allowed: SkillKey[] = []
     for (const s of candidates) {
       if (isNewHard(s)) {
@@ -305,6 +329,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   const newSkills = new Set(newItems.map((i) => i.exercise.skill))
 
+  // A topic behind (not met, before one the child has started) is not taught in «Lo nuevo»: its first step is practised
+  // once in the mix, so the child meets it without being pulled back (its own budget rule applies).
+  const repaso = behindTopics(syllabus, mastery, input.term).find((t) => t.id !== topic?.id)
+  const repasoSkill = repaso?.skills.find((s) => parseSkill(s) !== null && canMake(s))
+
   // 3. Mezcla: most urgent skills, interleaved by family. Falls back to available non-new skills.
   const urgent = urgencyOrder(mastery, now).map((m) => m.skill)
   let pool = interleavedPick(urgent, MIX_MAX, newSkills)
@@ -314,7 +343,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   if (pool.length === 0) pool = interleavedPick(availableSkills(syllabus, input.term).filter((s) => !isNewHard(s)), MIX_MAX, new Set())
   const mixItems: DailyItem[] = []
-  for (const s of pool.slice(0, MIX_MAX)) {
+  const mixCap = repasoSkill ? MIX_MAX - 1 : MIX_MAX
+  for (const s of pool.slice(0, mixCap)) {
     const ex = make(s, rng)
     if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: scaffold.has(s) && isFactSkill(s), isNew: false })
   }
@@ -331,8 +361,16 @@ export function planDailySession(input: PlanInput): DailyPlan {
     .sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
   const hunt = huntNow ? make(huntNow, rng, ['error-hunt']) : null
   if (hunt) {
-    if (mixItems.length >= MIX_MAX) mixItems.pop()
+    if (mixItems.length >= mixCap) mixItems.pop()
     mixItems.push({ exercise: hunt, block: 'mix', scaffold: false, isNew: false })
+  }
+  if (repasoSkill && (!isNewHard(repasoSkill) || newFacts.size < NEW_FACT_BUDGET)) {
+    const ex = make(repasoSkill, rng)
+    if (ex) {
+      const isNew = isNewHard(repasoSkill)
+      if (isNew) newFacts.add(repasoSkill)
+      mixItems.push({ exercise: ex, block: 'mix', scaffold: false, isNew })
+    }
   }
 
   // Fill: when the items are short (facts), the mix goes on with the same urgent skills until the practice fills

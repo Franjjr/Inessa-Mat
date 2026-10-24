@@ -66,3 +66,21 @@ export function climbQuotient(dividend: number, divisor: number): number {
   const last = products[products.length - 1]
   return last === dividend ? products.length : products.length - 1
 }
+
+/** The numbers the galera hints write in their worked step (dividend 10s, its first quotient, the leftover, the units,
+    and the leftover with the units). A final answer equal to one of them would sit in the hint, so the generators leave
+    such divisions out (the worked step then never shows the answer). Only quotients of two digits have that step. */
+export function galeraWorkedNumbers(dividend: number, divisor: number): number[] {
+  const t = Math.floor(dividend / 10)
+  const u = dividend % 10
+  const qt = Math.floor(t / divisor)
+  const left = t - qt * divisor
+  return [t, qt, left, u, left * 10 + u]
+}
+
+/** True when the galera worked step of this division would show its quotient or (with remainder) its remainder. */
+export function galeraShowsAnswer(dividend: number, divisor: number, quotient: number, remainder: number, withRemainder: boolean): boolean {
+  if (quotient < 10) return false
+  const shown = galeraWorkedNumbers(dividend, divisor)
+  return shown.includes(quotient) || (withRemainder && remainder > 0 && shown.includes(remainder))
+}

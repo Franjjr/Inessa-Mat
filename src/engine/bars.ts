@@ -3,8 +3,8 @@
    piece is the «?». Then the child chooses the operation and writes the result. The same problem can be asked
    without the drawing: that is the second rung of the ladder (withBar false).
    Kinds (PLAN §5): cambio (change), comparación (compare), combinación (combine), reparto (share and groups), and
-   two-step problems (dos pasos). Pure: no React. Numbers are generated so that no result equals an operand, which
-   keeps the hints free of the answer. */
+   two-step problems (dos pasos) and three-step ones (varios pasos, bar:three). Pure: no React. Numbers are generated so
+   that no result equals a number of the story, which keeps the hints free of the answer. */
 import type {
   Answer, BarOp, BarProblemExercise, BarProblemKind, BarSlot, BarStep, CheckResult, Hint, Rng,
 } from '@/types'
@@ -36,6 +36,9 @@ const stepOf = (op: BarOp, a: number, b: number): BarStep => {
 
 /** A result that a child can meet on its own: positive and not one of the numbers of the story. */
 const fine = (result: number, given: number[]) => result >= 1 && !given.includes(result)
+
+/** A chain of steps where no intermediate or final result is one of the numbers of the story (the given ones). */
+const chainFine = (steps: BarStep[], given: number[]) => steps.every((s) => fine(s.result, given))
 
 /** Tries `make` a few times; the builders return null when the numbers do not read well. */
 function tries(make: () => Built | null, n = 25): Built | null {
@@ -183,6 +186,78 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
       }),
     },
   ],
+  three: [
+    {
+      id: 'three-groups-sub-add', problem: 'multi-step',
+      build: (rng) => tries(() => {
+        const n = randInt(rng, 2, 5)
+        const p = randInt(rng, 4, 9)
+        const g = randInt(rng, 3, n * p - 3)
+        const q = randInt(rng, 4, 20)
+        const s1 = stepOf('mul', n, p)
+        const s2 = stepOf('sub', s1.result, g)
+        const s3 = stepOf('add', s2.result, q)
+        if (!chainFine([s1, s2, s3], [n, p, g, q])) return null
+        if (s3.result === s1.result || s3.result === s2.result) return null
+        return {
+          text: `{child} compra ${n} paquetes de ${p} cromos, luego regala ${g} y después le dan ${q} más. ¿Cuántos cromos tiene ahora?`,
+          bar: [
+            cell('packs', 'Paquetes', 0, 'count', n), cell('per', 'Cada paquete', 0, 'segment', p), cell('bought', 'Cromos', 0, 'total', null),
+            cell('gave', 'Regala', 1, 'segment', g), cell('left', 'Le quedan', 1, 'segment', null), cell('had', 'Tenía', 1, 'total', null),
+            cell('left2', 'Le quedan', 2, 'segment', null), cell('got', 'Le dan', 2, 'segment', q), cell('now', 'Ahora', 2, 'total', null),
+          ],
+          steps: [s1, s2, s3], unit: 'cromos',
+        }
+      }),
+    },
+    {
+      id: 'three-bags-share-add', problem: 'multi-step',
+      build: (rng) => tries(() => {
+        const n = randInt(rng, 2, 5)
+        const p = randInt(rng, 2, 9)
+        const total = n * p
+        const ks = [2, 3, 4, 5, 6].filter((k) => total % k === 0 && total / k >= 2 && total / k !== total)
+        if (ks.length === 0) return null
+        const k = pick(rng, ks)
+        const q = randInt(rng, 2, 9)
+        const s1 = stepOf('mul', n, p)
+        const s2 = stepOf('div', total, k)
+        const s3 = stepOf('add', s2.result, q)
+        if (!chainFine([s1, s2, s3], [n, p, k, q]) || s3.result === s1.result) return null
+        return {
+          text: `En la tienda hay ${n} bolsas con ${p} caramelos en cada una. Se reparten por igual entre ${k} niños y, después, a cada niño le dan ${q} más. ¿Cuántos caramelos tiene cada niño ahora?`,
+          bar: [
+            cell('bags', 'Bolsas', 0, 'count', n), cell('each', 'Cada bolsa', 0, 'segment', p), cell('all', 'Caramelos', 0, 'total', null),
+            cell('kids', 'Niños', 1, 'count', k), cell('share', 'Cada niño', 1, 'segment', null), cell('shared', 'Lo reparten', 1, 'total', null),
+            cell('share2', 'Cada niño', 2, 'segment', null), cell('extra', 'Le dan', 2, 'segment', q), cell('final', 'Ahora', 2, 'total', null),
+          ],
+          steps: [s1, s2, s3], unit: 'caramelos',
+        }
+      }),
+    },
+    {
+      id: 'three-marbles-change', problem: 'multi-step',
+      build: (rng) => tries(() => {
+        const a = randInt(rng, 10, 40)
+        const b = randInt(rng, 5, 30)
+        const g = randInt(rng, 3, a + b - 3)
+        const h = randInt(rng, 4, 30)
+        const s1 = stepOf('add', a, b)
+        const s2 = stepOf('sub', s1.result, g)
+        const s3 = stepOf('add', s2.result, h)
+        if (!chainFine([s1, s2, s3], [a, b, g, h]) || s3.result === s1.result) return null
+        return {
+          text: `{child} tiene ${a} canicas y en el recreo gana ${b}. Luego pierde ${g} y su hermano le da ${h}. ¿Cuántas canicas tiene ahora?`,
+          bar: [
+            cell('had', 'Tenía', 0, 'segment', a), cell('won', 'Gana', 0, 'segment', b), cell('total1', 'Tiene', 0, 'total', null),
+            cell('lost', 'Pierde', 1, 'segment', g), cell('left', 'Le quedan', 1, 'segment', null), cell('before', 'Tenía', 1, 'total', null),
+            cell('left2', 'Le quedan', 2, 'segment', null), cell('brother', 'Le da', 2, 'segment', h), cell('now', 'Ahora', 2, 'total', null),
+          ],
+          steps: [s1, s2, s3], unit: 'canicas',
+        }
+      }),
+    },
+  ],
   two: [
     {
       id: 'two-groups-sub', problem: 'two-step',
@@ -230,7 +305,7 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
 }
 
 /** Skill keys of the bar problems, for the planner and the syllabus. */
-export const BAR_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two']
+export const BAR_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two', 'three']
 
 function difficultyOf(skill: BarSkillOp, steps: number): number {
   if (steps > 1) return 4
@@ -281,6 +356,7 @@ const STRATEGY: Record<BarProblemKind, string> = {
   combine: 'Dibuja una barra con sus partes: el total es la barra entera.',
   share: 'Dibuja la barra entera y repártela en partes iguales: ¿cuánto cabe en cada parte?',
   'two-step': 'Hazlo por pasos: primero la barra de la primera parte de la historia, después la de la segunda.',
+  'multi-step': 'Hazlo por pasos: una barra por cada parte de la historia, y cada resultado es el punto de partida de la siguiente.',
 }
 
 /** Hints for a bar problem: strategy → the drawing → the operation of the first step (the numbers, not the result). */

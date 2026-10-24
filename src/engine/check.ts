@@ -19,6 +19,7 @@ import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
 import { checkClock, expectedClock } from './clock'
+import { checkDecimal, checkDecimalOp } from './decimals'
 import { checkFractionAdd, checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
 import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 import { checkMoney } from './money'
@@ -26,8 +27,12 @@ import { checkMeasure } from './measure'
 import { checkChance, checkChart } from './data'
 import { checkPattern } from './patterns'
 import { checkMulParts } from './bigops'
+import { checkLongMul } from './longmul'
+import { checkOrdinal } from './ordinals'
 import { checkArea } from './geometry'
 import { checkPosition } from './position'
+import { WORD_SENSE_SKILL } from './skills'
+import { checkSense } from './wordProblems'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -576,7 +581,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'fraction-of': return checkFractionOf(exercise, answer)
     case 'fraction-add': return checkFractionAdd(exercise, answer)
     case 'fraction-equal': return checkFractionEqual(exercise, answer)
-    case 'shape-choice': return checkShapeChoice(exercise, answer)
+    case 'shape-choice': return exercise.skill === WORD_SENSE_SKILL ? checkSense(exercise, answer) : checkShapeChoice(exercise, answer)
     case 'angle-tap': return checkAngleTap(exercise, answer)
     case 'perimeter': return checkPerimeter(exercise, answer)
     case 'shape-count': return checkShapeCount(exercise, answer)
@@ -587,6 +592,10 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'pattern': return checkPattern(exercise, answer)
     case 'position': return checkPosition(exercise, answer)
     case 'mul-parts': return checkMulParts(exercise, answer)
+    case 'long-mul': return checkLongMul(exercise, answer)
+    case 'ordinal': return checkOrdinal(exercise, answer)
+    case 'decimal': return checkDecimal(exercise, answer)
+    case 'decimal-op': return checkDecimalOp(exercise, answer)
     case 'area': return checkArea(exercise, answer)
   }
 }

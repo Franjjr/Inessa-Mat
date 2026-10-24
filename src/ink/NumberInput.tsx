@@ -9,13 +9,13 @@ import { sfx } from '@/audio'
 import { IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
 import { useInk } from './context'
 import { isScribble, overlapFraction, segmentStrokes, segmentZone, spreadCentres, strokeBBox, strokesNear, type BBox } from './geometry'
-import { msSincePenContact, pointerRole } from './policy'
+import { msSincePenContact, pointerRole, isPalmPress } from './policy'
 import { useInkSurface } from './useInkSurface'
 import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
 import { Keypad } from './Keypad'
-import { focusPad, useIsActivePad } from './activePad'
+import { focusPad, moveToPad, nextEmptyPad, useIsActivePad, usePadSlot } from './activePad'
 import { CheckIcon, EraserIcon, KeypadIcon, PencilIcon } from './icons'
 import { NudgeBubble, useNudge } from './Nudge'
 import s from './NumberInput.module.css'
@@ -94,6 +94,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   // In keypad mode only one box on the screen shows the keypad: the one touched last.
   const activePad = useIsActivePad(uid)
+  usePadSlot(uid, value != null, () => padRef.current?.focus({ preventScroll: true }))
   const keypadVisible = (ink.mode === 'keypad' && activePad) || toggled
   const palm = usePalmGuard()
   const [nudging, nudge] = useNudge()
@@ -216,6 +217,12 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     if (idle.current || surface.capture.current?.writing) {
       waits.current = 99 // no more waiting: recognise with whatever is available
       v = recognizeAll()
+    }
+    // Several boxes share one «Comprobar»: with this box filled, ✓ (or Enter) goes on to the next empty one.
+    const next = latest.current.props.checkButton === false && v != null ? nextEmptyPad(uid) : null
+    if (next) {
+      moveToPad(next)
+      return
     }
     latest.current.props.onSubmit(v)
   }
@@ -361,6 +368,15 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           aria-disabled={disabled || undefined}
           aria-invalid={status === 'wrong' || undefined}
           onFocus={() => focusPad(uid)}
+          // The capture layer prevents the default of a press, so a tap never focuses the box by itself: it takes the
+          // keypad (and the focus) here. A palm (a finger during pen contact) or an ignored pointer does not move it.
+          onPointerDown={(e) => {
+            if (disabled || isPalmPress(e.pointerType)) return
+            const role = pointerRole(e.pointerType, { penSeen: latest.current.ink.penSeen, mode: latest.current.ink.mode, isPrimary: e.isPrimary })
+            if (role === 'ignore') return
+            focusPad(uid)
+            padRef.current?.focus({ preventScroll: true })
+          }}
           onKeyDown={onKeyDown}
         >
           <span className={s.guide} aria-hidden />

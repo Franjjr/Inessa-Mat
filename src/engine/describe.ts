@@ -18,11 +18,21 @@ const CONCEPT_TEXT: Record<string, string> = {
 const PLACE_TEXT: Record<string, string> = {
   blocks: 'Números con bloques de millar, centena, decena y unidad',
   expanded: 'Descomponer números (4 325 = 4 000 + 300 + 20 + 5)',
-  words: 'Leer y escribir números hasta 9 999',
+  words: 'Leer y escribir números hasta',
 }
+
+/** The top of a number skill's range, as the adult reads it (no suffix = up to 9 999). */
+const rangeWord = (max?: 999 | 19999 | 99999): string => (max === 999 ? '999' : max === 19999 ? '19 999' : max === 99999 ? '99 999' : '9 999')
 
 const MENTAL_TEXT: Record<string, string> = {
   dobles: 'Dobles (de cabeza)',
+  triples: 'Triples (de cabeza)',
+  combinadas: 'Sumas y restas combinadas (de cabeza)',
+  jerarquia: 'Orden de las operaciones: primero × y :',
+  parentesis: 'Paréntesis: primero lo de dentro',
+  asociativa: 'Propiedad asociativa: agrupar para que sea fácil',
+  distributiva: 'Propiedad distributiva: partir un factor',
+  estimar: 'Estimar redondeando a decenas y centenas',
   mitades: 'Mitades (de cabeza)',
   completar10: 'Completar hasta 10 y 100',
   completar100: 'Completar hasta 100',
@@ -58,20 +68,29 @@ export function describeSkill(skill: SkillKey): string {
           : 'Divisiones de 2 cifras bajando cifras (nivel experto)'
     case 'concept': return CONCEPT_TEXT[p.name]
     case 'word': return WORD_TEXT[p.op]
-    case 'place': return PLACE_TEXT[p.mode]
-    case 'compare': return `Comparar números hasta ${p.max === 999 ? '999' : '9 999'} con < > =`
-    case 'order': return `Ordenar números hasta ${p.max === 999 ? '999' : '9 999'}`
-    case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : 'centenas'}`
+    case 'place': return p.mode === 'words' ? `${PLACE_TEXT.words} ${rangeWord(p.max)}` : PLACE_TEXT[p.mode]
+    case 'compare': return `Comparar números hasta ${rangeWord(p.max)} con < > =`
+    case 'order': return `Ordenar números hasta ${rangeWord(p.max)}`
+    case 'round': return `Redondear a ${p.to === 10 ? 'las decenas' : p.to === 100 ? 'las centenas' : 'los millares'}`
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
-    case 'equation': return 'Signo igual: los dos lados valen lo mismo'
+    case 'equation': return p.mode === 'same' ? 'Signo igual o distinto: ¿los dos lados valen lo mismo?' : 'Signo igual: los dos lados valen lo mismo'
     case 'mul3x1': return `Multiplicaciones de 3 cifras × 1 cifra ${p.carry ? 'con llevadas' : 'sin llevadas'}`
     case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
-    case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
+    case 'div3x2':
+      if (p.variant === 'round') return 'Divisiones entre decenas redondas (20, 30… 90)'
+      return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
+    case 'mulCol': return `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
+    case 'decimal': return p.mode === 'shade' ? `Colorear y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
+      : p.mode === 'read' ? `Leer y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
+        : p.mode === 'compare' ? 'Comparar decimales con los signos < = >' : 'Euros y céntimos escritos como decimal (2,45 €)'
+    case 'decimal-op': return `${p.op === 'add' ? 'Sumar' : 'Restar'} decimales en columna (${p.places === 1 ? 'décimas' : 'centésimas'})`
+    case 'ordinal': return p.top === 10 ? 'Ordinales hasta el 10.º (tocar el lugar en una fila)' : `Ordinales hasta el ${p.top}.º (leer y escribir)`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': if (p.small) return 'Problemas con barras (grupos de 2, 3, 4, 5 y 10)'
-      return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
+      if (p.op === 'two') return 'Problemas de dos pasos con barras'
+      return p.op === 'three' ? 'Problemas de tres pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
     case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
     case 'check': return `Comprobar resultados de ${HUNT_TEXT[p.op === 'div' ? 'mul' : p.op]}`
     case 'clock-read': return CLOCK_READ_TEXT[p.step]
@@ -82,9 +101,10 @@ export function describeSkill(skill: SkillKey): string {
     case 'fraction': return fractionText(p)
     case 'geo': return GEO_TEXT[p.op]
     case 'money': return MONEY_TEXT[p.mode]
-    case 'measure': return measureText(p.mode, p.dimension)
+    case 'word-sense': return '¿Tiene sentido la respuesta? Problemas con una solución propuesta'
+    case 'measure': return measureText(p.mode, p.dimension, p.all === true)
     case 'chart': return CHART_TEXT[p.variant]
-    case 'chance': return 'Seguro, posible o imposible'
+    case 'chance': return p.variant === 'likely' ? 'Qué color es más (o menos) probable sacar' : 'Seguro, posible o imposible'
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
   }
@@ -94,6 +114,8 @@ const CHART_TEXT = {
   pict: 'Leer pictogramas',
   'pict:x': 'Pictogramas en los que cada dibujo vale 2, 5 o 10',
   bars: 'Leer gráficas de barras',
+  table: 'Leer tablas de doble entrada: grupos y opciones',
+  freq: 'Frecuencia: cuántas veces sale cada dato de una lista',
   mode: 'La moda: el dato que más se repite',
 }
 const PATTERN_TEXT = {
@@ -114,12 +136,15 @@ const MONEY_TEXT: Record<MoneyMode, string> = {
   add: 'Sumar precios (euros y céntimos)',
   compare: 'Comparar precios: ¿qué cuesta más?',
   convert: 'Euros y céntimos: 1 € = 100 céntimos',
+  budget: 'Presupuesto: ¿te llega el dinero? ¿cuánto falta o sobra?',
 }
 
-function measureText(mode: MeasureMode, dimension: MeasureDimension | null): string {
+function measureText(mode: MeasureMode, dimension: MeasureDimension | null, all: boolean): string {
   switch (mode) {
     case 'unit': return `Elegir la unidad de ${DIMENSION_NAME[dimension ?? 'length']}`
-    case 'convert': return `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}`
+    case 'convert': return all
+      ? `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}: todos los múltiplos y submúltiplos`
+      : `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}`
     case 'ruler': return 'Medir con la regla (cm)'
     case 'add': return 'Sumar medidas con unidades distintas'
     case 'estimate': return '¿Es razonable? Estimar medidas'
@@ -131,10 +156,11 @@ const CLOCK_READ_TEXT: Record<30 | 15 | 5, string> = {
   15: 'Leer el reloj: cuartos (y cuarto, menos cuarto)',
   5: 'Leer el reloj de cinco en cinco minutos',
 }
-const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month', string> = {
+const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month' | 'seconds', string> = {
   units: 'Unidades de tiempo: hora, minuto, día, semana',
   weekday: 'Días de la semana: qué día será dentro de unos días',
   month: 'Días de cada mes',
+  seconds: 'Minutos y segundos: pasar de minutos a segundos y al revés',
 }
 
 const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }
@@ -167,6 +193,14 @@ const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
   perimeter: 'Perímetro: sumar los lados',
   area: 'Área: contar los cuadraditos',
   symmetry: 'Ejes de simetría',
+  'line:kind': 'Recta, semirrecta y segmento',
+  'angle:class': 'Ángulos: agudo, recto y obtuso',
+  'tri:sides': 'Triángulos por sus lados: equilátero, isósceles y escaleno',
+  'tri:angles': 'Triángulos por sus ángulos: acutángulo, rectángulo y obtusángulo',
+  'quad:name': 'Cuadriláteros: cuadrado, rectángulo, rombo, romboide y trapecio',
+  'circle:parts': 'Radio, diámetro, cuerda y arco de una circunferencia',
+  translate: 'Traslación: mover una figura en una cuadrícula',
+  'solid:count': 'Contar caras, vértices y aristas de cubo, prisma y pirámide',
 }
 
 const ERROR_TEXT: Record<ErrorType, string> = {

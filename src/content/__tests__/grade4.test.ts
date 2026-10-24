@@ -25,6 +25,20 @@ describe('temario de 4.º', () => {
     }
   })
 
+  it('the pending topic has no skills yet and gives the adult its note; every other topic has skills that generate', () => {
+    const topics = allTopics(GRADE4_SYLLABUS)
+    const pending = topics.filter((t) => t.status === 'pendiente')
+    expect(pending.map((t) => t.id)).toEqual(['programacion'])
+    for (const t of pending) {
+      expect(t.skills).toEqual([])
+      expect(t.pendingNote).toBeTruthy()
+    }
+    for (const t of topics.filter((t) => t.status !== 'pendiente')) {
+      expect(t.skills.length, t.id).toBeGreaterThan(0)
+      for (const s of t.skills) expect(generate({ skills: [s] }, 1, { now }), `${t.id} ${s}`).toHaveLength(1)
+    }
+  })
+
   it('the session starts with the review of numbers and moves on once etapa 1 is learnt', () => {
     expect(currentTopic(GRADE4_SYLLABUS, {})?.id).toBe('repaso-numeros')
     const byId = new Map(allTopics(GRADE4_SYLLABUS).map((t) => [t.id, t]))
@@ -38,6 +52,32 @@ describe('temario de 4.º', () => {
     expect(items).toHaveLength(PLACEMENT_COUNT)
     const skills = items.map((i) => i.exercise.skill)
     for (const s of ['mul:2dx2d', 'div:4x1:exact', 'num:round:1000', 'mental:romanos', 'geo:area']) expect(skills).toContain(s)
+  })
+
+  it('a step learnt later is its own topic: with mul:2dx2d at box 2, the plan teaches the column topic mul:col:2x2', () => {
+    const byId = new Map(allTopics(GRADE4_SYLLABUS).map((t) => [t.id, t]))
+    const mastery: MasteryMap = {}
+    const before = GRADE4_STAGES.slice(0, 3).flatMap((st) => st.topics)
+    for (const id of before) for (const s of byId.get(id)!.skills) mastery[s] = { ...newMastery(s, now), box: 3 }
+    mastery['mul:2dx2d'] = { ...newMastery('mul:2dx2d', now), box: 2 }
+    expect(currentTopic(GRADE4_SYLLABUS, mastery)?.id).toBe('mul-2-cifras-columna')
+    const child: ChildProfile = {
+      id: 'child-4', orgId: null, nickname: 'Leo', gender: 'm', grade: 4,
+      companion: { species: 'dog', name: 'Toby', gender: 'm', colorway: 'default', equipped: [] },
+      settings: { ...DEFAULT_CHILD_SETTINGS }, createdAt: now.toISOString(), updatedAt: now.toISOString(),
+    }
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE4_SYLLABUS, now })
+    const fresh = plan.blocks.find((b) => b.id === 'new')!.items.map((i) => i.exercise.skill)
+    expect(fresh.length).toBeGreaterThan(0)
+    expect(fresh.every((sk) => sk === 'mul:col:2x2')).toBe(true)
+
+    // Before the by-parts step is learnt, the plan teaches only that step, not the column one.
+    const earlier: MasteryMap = { ...mastery }
+    delete earlier['mul:2dx2d']
+    const first = planDailySession({ child, mastery: earlier, attempts: [], syllabus: GRADE4_SYLLABUS, now })
+    const newFirst = first.blocks.find((b) => b.id === 'new')!.items.map((i) => i.exercise.skill)
+    expect(newFirst.length).toBeGreaterThan(0)
+    expect(newFirst.every((sk) => sk === 'mul:2dx2d')).toBe(true)
   })
 
   it('the daily session of a 4.º child only asks what its temario has', () => {

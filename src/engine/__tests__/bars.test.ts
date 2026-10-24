@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { Answer, BarProblemExercise, MasteryMap } from '@/types'
 import { barChips, barHints, checkBar, createRng, generate, genBarProblem, newMastery, type BarSkillOp } from '@/engine'
 
-const OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two']
+const OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two', 'three']
 
 function samples(skill: BarSkillOp, n = 60, withBar = true): BarProblemExercise[] {
   const rng = createRng(1000 + skill.length * 17)
@@ -53,15 +53,15 @@ describe('bar problems: generation', () => {
         for (const b of known) expect(ex.text, ex.id).toContain(String(b.value))
         const unknown = ex.bar.filter((b) => b.value === null)
         expect(unknown.length, ex.id).toBeGreaterThanOrEqual(1)
-        if (op !== 'two') expect(unknown.length, ex.id).toBe(1)
+        if (op !== 'two' && op !== 'three') expect(unknown.length, ex.id).toBe(1)
       }
     }
   })
 
-  it('covers the four kinds of PLAN §5 (cambio, comparación, combinación, reparto) and two-step problems', () => {
+  it('covers the four kinds of PLAN §5 (cambio, comparación, combinación, reparto), two-step and multi-step problems', () => {
     const kinds = new Set<string>()
     for (const op of OPS) for (const ex of samples(op, 40)) kinds.add(ex.problem)
-    expect([...kinds].sort()).toEqual(['change', 'combine', 'compare', 'share', 'two-step'])
+    expect([...kinds].sort()).toEqual(['change', 'combine', 'compare', 'multi-step', 'share', 'two-step'])
   })
 
   it('is deterministic for a seed, and the drawing only changes the flag (the same numbers without it)', () => {
@@ -188,5 +188,61 @@ describe('bar:mul:small (2.º)', () => {
     const rng = createRng(9)
     const sizes = new Set(Array.from({ length: 200 }, () => genBarProblem('mul', rng).steps[0].b))
     expect([...sizes].some((p) => p >= 6)).toBe(true)
+  })
+})
+
+describe('bar:three (three steps, 4.º)', () => {
+  it('every problem has exactly three operations, each one of a different story step, and its own skill', () => {
+    const rng = createRng(303)
+    for (let i = 0; i < 300; i++) {
+      const ex = genBarProblem('three', rng, i % 2 === 0)
+      expect(ex.skill).toBe('bar:three')
+      expect(ex.steps, ex.id).toHaveLength(3)
+      expect(ex.rows, ex.id).toBe(3)
+      expect(ex.answer, ex.id).toBe(ex.steps[2].result)
+      for (const st of ex.steps) {
+        expect(Number.isInteger(st.result) && st.result >= 1, ex.id).toBe(true)
+      }
+      // Each step takes the result of the one before as its first number (a chain, not three separate sums).
+      expect(ex.steps[1].a, ex.id).toBe(ex.steps[0].result)
+      expect(ex.steps[2].a, ex.id).toBe(ex.steps[1].result)
+    }
+  })
+
+  it('the answer and the intermediate results are never one of the given numbers of the story', () => {
+    const rng = createRng(304)
+    for (let i = 0; i < 300; i++) {
+      const ex = genBarProblem('three', rng)
+      const given = ex.bar.flatMap((b) => (b.value === null ? [] : [b.value]))
+      for (const st of ex.steps) expect(given.includes(st.result), ex.id).toBe(false)
+      expect(ex.steps.some((st) => st.result === ex.answer && st !== ex.steps[2]), ex.id).toBe(false)
+    }
+  })
+
+  it('the hints never state the answer nor a partial result (only the operation of the first step)', () => {
+    const rng = createRng(305)
+    for (let i = 0; i < 200; i++) {
+      const ex = genBarProblem('three', rng)
+      const texts = barHints(ex).map((h) => h.text).join(' ')
+      for (const st of ex.steps) {
+        expect(new RegExp(`(^|[^0-9])${st.result}([^0-9]|$)`).test(texts), `${ex.id}: ${st.result}`).toBe(false)
+      }
+      expect(barHints(ex)[2].text).toContain(`${ex.steps[0].a}`)
+    }
+  })
+
+  it('a wrong intermediate result is graded as its own step, the final one as the fact', () => {
+    const ex = samples('three', 30).find((e) => e.steps.length === 3)!
+    const perfect: Answer = {
+      type: 'bar',
+      placed: ex.bar.map((b) => (ex.withBar ? b.value : null)),
+      ops: ex.steps.map((s) => s.op),
+      results: ex.steps.map((s) => s.result),
+    }
+    expect(checkBar(ex, perfect).correct).toBe(true)
+    const midWrong = checkBar(ex, { ...perfect, results: [ex.steps[0].result + 1, ex.steps[1].result, ex.steps[2].result] } as Answer)
+    expect(midWrong.errorType).toBe('step')
+    const finalWrong = checkBar(ex, { ...perfect, results: [ex.steps[0].result, ex.steps[1].result, ex.answer + 1] } as Answer)
+    expect(finalWrong.errorType).toBe('fact')
   })
 })

@@ -18,6 +18,32 @@ export function focusPad(id: string): void {
   emit()
 }
 
+const filled = new Map<string, boolean>()
+const focusers = new Map<string, () => void>()
+
+/** Says whether this pad holds a number and how to move the child into it (its ✓ uses them to go to the next box). */
+export function usePadSlot(id: string, hasValue: boolean, focus: () => void): void {
+  useEffect(() => {
+    filled.set(id, hasValue)
+    focusers.set(id, focus)
+  })
+  useEffect(() => () => { filled.delete(id); focusers.delete(id) }, [id])
+}
+
+/** The next empty box on the screen after this one (going round to the first), or null when all the others hold a
+    number. */
+export function nextEmptyPad(id: string): string | null {
+  const i = mounted.indexOf(id)
+  const order = [...mounted.slice(i + 1), ...mounted.slice(0, Math.max(i, 0))]
+  return order.find((other) => other !== id && filled.get(other) === false) ?? null
+}
+
+/** Moves the child to another box: it takes the keypad and the focus. */
+export function moveToPad(id: string): void {
+  focusPad(id)
+  focusers.get(id)?.()
+}
+
 /** Registers the pad while it is on screen and says whether it is the one that shows the keypad. */
 export function useIsActivePad(id: string): boolean {
   useEffect(() => {

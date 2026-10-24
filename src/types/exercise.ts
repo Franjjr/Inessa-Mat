@@ -15,10 +15,13 @@ import type { ID, InputMode } from './common'
  *   num:place:blocks|expanded|words   numbers up to 9 999: blocks, expanded form, reading the words
  *   num:compare | num:order           compare with < > = ; order 3–4 numbers
  *   num:round:10|100                  round to decenas or centenas
- *   num:line:10|100|1000              number line with jumps (tick missing, or jump from a point)
- *   mental:<family>                   cálculo mental exprés (dobles, mitades, completar10|100|1000, decenas, centenas, compensar)
+ *   num:line:10|100|1000|10000        number line with jumps (tick missing, or jump from a point)
+ *   <key>:19999 | <key>:99999         the same number keys up to 19 999 (3.º) or 99 999 (4.º); num:round:1000:99999
+ *   mental:<family>                   cálculo mental exprés (dobles, triples, mitades, completar10|100|1000, decenas, centenas, compensar,
+ *                                     combinadas, jerarquia, parentesis, asociativa, distributiva, estimar)
  *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
- *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
+ *   eq:same                           signo igual o distinto: dos expresiones, el niño elige = o ≠
+ *   bar:add|sub|mul|div|two|three   problem on a bar diagram (two, three = two or three steps), with and without the bar (ladder)
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
  *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
  *   div:3x1:exact|rem         3-digit dividend ÷ 1-digit divisor
@@ -27,17 +30,28 @@ import type { ID, InputMode } from './common'
  *   clock:convert:day        digital 24 h ↔ the phrase with mañana, tarde, noche
  *   time:end | time:elapsed  duration problems: end time, or the minutes that pass (time line)
  *   time:units | cal:weekday | cal:month   units of time, days of the week, days of a month
+ *   time:seconds                             minutes to seconds and back, and durations with seconds (up to 10 min)
  *   frac:shade:D|read:D|name:D|of:D  fractions with denominator D (2|3|4|5|6|8|10|12): colour, read, name, fraction of a quantity
  *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
  *   frac:add | frac:sub              adding and subtracting fractions with the same denominator (4.º)
- *   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
- *                                    geometry (3.º, block E): polygons, lines, angles, circle, solids, perimeter
- *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
+ *   geo:poly:name|sides, geo:line:type|rel|kind, geo:angle:type|tap|class, geo:circle|circle:parts, geo:solid:name|roll|faces|count,
+ *   geo:perimeter, geo:tri:sides|angles, geo:quad:name, geo:translate
+ *                                    geometry (3.º and 4.º, block E): polygons, lines, angles, circle, solids, perimeter, triangles,
+ *                                    quadrilaterals, translation
+ *   money:recognise|pay|change|add|compare|convert|budget   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos);
+ *                                                     budget (4.º): ¿te llega?, ¿cuánto te falta o te sobra?, ¿qué compra cabe?
  *   measure:unit:length|mass|capacity                 choose the unit of a real object
  *   measure:convert:length|mass|capacity              simple conversions (1 m = 100 cm, medio kilo = 500 g)
+ *   measure:convert:length|mass|capacity:all          every unit of the dimension (km … mm, kg … mg, kl … ml), whole numbers only
  *   measure:ruler                                     read a measure on an on-screen ruler (start not always 0)
  *   measure:word                                      add two measures (mixed units) in a word problem
  *   measure:estimate                                  ¿es razonable? a claimed measure
+ *   mul:col:2x2|3x2|3x3                               multiplicar en columna, con filas parciales (4.º, src/engine/longmul.ts)
+ *   num:ordinal:10|20|30                              ordinales (3.º): tocar el n-.º de una fila (10), leer y escribir el ordinal (20, 30)
+ *   dec:shade:1|2 | dec:read:1|2                      décimas (1) and centésimas (2): colour the bar or the grid of 100, read the words and write the number
+ *   dec:compare | dec:money                           comparing two decimals with < = >; euros with céntimos as a decimal (2,45 € = 2 euros y 45 céntimos)
+ *   dec:add:1|2 | dec:sub:1|2                         adding and subtracting decimals in columns, comma under comma, never negative (4.º)
+ *   word:sense                                        ¿tiene sentido?: a word problem with a proposed answer; the child decides yes or no (4.º, shape-choice)
  */
 export type SkillKey = string
 
@@ -69,7 +83,7 @@ export type ExerciseKind =
   | 'clock-set'       // analogue clock: set the hands by dragging or with the +/− buttons (clock:set:*)
   | 'time-convert'    // digital 24 h ↔ phrase with mañana / tarde / noche (clock:convert:day)
   | 'time-duration'   // start + duration → end time, or minutes that pass, on a time line (time:end, time:elapsed)
-  | 'calendar'        // days of the week, days of a month, units of time (cal:weekday, cal:month, time:units)
+  | 'calendar'        // days of the week, days of a month, units of time and minutes↔seconds (cal:weekday, cal:month, time:units, time:seconds)
   | 'fraction-shade'  // colour n parts of a figure split in d equal parts (frac:shade:D)
   | 'fraction-read'   // write the fraction that is coloured: numerator over denominator (frac:read:D)
   | 'fraction-of'     // a fraction of a quantity: with the objects in groups first, then with numbers (frac:of:D)
@@ -80,13 +94,17 @@ export type ExerciseKind =
   | 'shape-count'     // how many sides (or corners) a polygon has (geo:poly:sides)
   | 'money'           // dinero: recognise, pay, change, add prices, compare, convert (money:*)
   | 'measure'         // medida: unit, conversion, ruler, add, estimate (measure:*)
-  | 'chart'           // gráficos: read a pictogram or a bar chart, or find the moda of a list (chart:*)
-  | 'chance'          // probabilidad: seguro, posible o imposible (prob:chance)
+  | 'chart'           // gráficos: read a pictogram, a bar chart or a table, the moda, or how often a value comes out (chart:*)
+  | 'chance'          // probabilidad: seguro, posible o imposible (prob:chance), the most likely colour (prob:likely)
   | 'pattern'         // series: the next figure of a pattern, the missing number, or a later term (pattern:*)
   | 'position'        // posición: left, right, above, below on a grid, and routes with arrows (pos:*)
   | 'mul-parts'       // multiplicar por dos cifras por partes: 23 × 14 = 23 × 4 + 23 × 10 (mul:2dx2d, mul:3dx2d)
   | 'area'            // área: count the unit squares of a figure on a grid (geo:area)
   | 'fraction-add'    // sumar y restar fracciones de igual denominador: 2/7 + 3/7 = ? (frac:add, frac:sub)
+  | 'long-mul'        // multiplicar en columna con filas parciales: 23 × 14 = 92 + 230 (mul:col:AxB)
+  | 'ordinal'         // ordinales (3.º): the n-.º of a row, or the word and the number of an ordinal (num:ordinal:*)
+  | 'decimal'         // décimas y centésimas: shade, read, compare, money (dec:shade|read:D, dec:compare, dec:money)
+  | 'decimal-op'      // sumar y restar decimales en columna (dec:add|sub:D)
 
 interface ExerciseBase {
   id: ID
@@ -137,7 +155,8 @@ export interface DivisionExercise extends ExerciseBase {
   variant: 'exact' | 'rem' | 'long'
 }
 export type PlaceMode = 'blocks' | 'expanded' | 'words'
-export type MentalFamily = 'dobles' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
+export type MentalFamily = 'dobles' | 'triples' | 'mitades' | 'completar10' | 'completar100' | 'completar1000' | 'decenas' | 'centenas' | 'compensar' | 'por10' | 'romanos'
+  | 'combinadas' | 'jerarquia' | 'parentesis' | 'asociativa' | 'distributiva' | 'estimar'
 /** A term of an equation side: a number, an operator, or null for the blank the child fills. */
 export type EqTerm = number | '+' | '−' | null
 
@@ -156,7 +175,7 @@ export interface RoundExercise extends ExerciseBase { kind: 'round'; value: numb
 export interface NumberLineExercise extends ExerciseBase {
   kind: 'number-line'
   mode: 'tick' | 'jump'
-  step: 10 | 100 | 1000
+  step: 10 | 100 | 1000 | 10000
   /** Five labelled marks, consecutive multiples of step. */
   ticks: number[]
   /** tick mode: index in ticks of the blank mark. */
@@ -168,9 +187,16 @@ export interface NumberLineExercise extends ExerciseBase {
 }
 export interface MentalExercise extends ExerciseBase {
   kind: 'mental'; family: MentalFamily; prompt: string; a: number; b: number; answer: number
+  /** The third number of the families with three (combinadas, jerarquia, parentesis, asociativa). */
+  c?: number
+  /** estimar: the place the two numbers are rounded to (10 or 100). */
+  place?: 10 | 100
 }
 export interface EquationExercise extends ExerciseBase {
-  kind: 'equation'; left: EqTerm[]; right: EqTerm[]; answer: number
+  kind: 'equation'; left: EqTerm[]; right: EqTerm[]
+  /** fill (default): the number of the blank. same: no blank; '=' when both sides have the same value, '≠' when not. */
+  mode?: 'fill' | 'same'
+  answer: number | '=' | '≠'
 }
 
 export interface WordProblemExercise extends ExerciseBase {
@@ -186,7 +212,7 @@ export interface WordProblemExercise extends ExerciseBase {
 }
 
 export type BarOp = 'add' | 'sub' | 'mul' | 'div'
-export type BarProblemKind = 'change' | 'compare' | 'combine' | 'share' | 'two-step'
+export type BarProblemKind = 'change' | 'compare' | 'combine' | 'share' | 'two-step' | 'multi-step'
 
 /** One piece of a bar diagram. value null = the unknown (no chip for it; the answer goes there). */
 export interface BarSlot {
@@ -281,9 +307,9 @@ export interface TimeDurationExercise extends ExerciseBase {
   kind: 'time-duration'; ask: 'end' | 'elapsed'; start: ClockTime; duration: number; end: ClockTime
   answer: ClockTime | number
 }
-/** cal:weekday — weekday choice (`options`, answer = index); cal:month and time:units — a number (answer). */
+/** cal:weekday — weekday choice (`options`, answer = index); cal:month, time:units and time:seconds — a number (answer). */
 export interface CalendarExercise extends ExerciseBase {
-  kind: 'calendar'; topic: 'units' | 'weekday' | 'month'; prompt: string
+  kind: 'calendar'; topic: 'units' | 'weekday' | 'month' | 'seconds'; prompt: string
   options: string[]
   answer: number
   /** weekday: index of today (0 = lunes) and the days to count. */
@@ -292,6 +318,8 @@ export interface CalendarExercise extends ExerciseBase {
   units?: { amount: number; from: string; to: string }
   /** month: the month asked about. */
   month?: string
+  /** seconds: the form of the item. min-to-s: minutes → seconds; mixed: minutes and seconds → seconds; s-to-min: seconds → minutes. */
+  seconds?: { form: 'min-to-s'; minutes: number } | { form: 'mixed'; minutes: number; seconds: number } | { form: 's-to-min'; total: number }
 }
 
 // ---------------------------------------------------------------- fractions and geometry (3.º, block E)
@@ -309,20 +337,24 @@ export interface FractionFigure {
 }
 /** A closed polygon in free coordinates (the view fits it to the box). labels: text on each side, side i joins point i and i+1. */
 export interface PolygonFigure { type: 'polygon'; points: [number, number][]; labels?: string[] }
-export interface CircleFigure { type: 'circle'; filled: boolean }
-/** straight: 2 points; curve: 3 points (the middle one is the control point); broken: the points joined in order. */
-export interface LineFigure { type: 'line'; kind: 'straight' | 'curve' | 'broken'; points: [number, number][] }
+/** highlight: the part drawn in red (radio, diámetro, cuerda or arco); turn: degrees the highlighted part is turned round. */
+export interface CircleFigure { type: 'circle'; filled: boolean; highlight?: 'radius' | 'diameter' | 'chord' | 'arc'; turn?: number }
+/** straight: 2 points, a recta (arrows at both ends); ray: 2 points, a dot at the first and an arrow at the second;
+    segment: 2 points, a dot at each; curve: 3 points (the middle one is the control point); broken: the points joined in order. */
+export interface LineFigure { type: 'line'; kind: 'straight' | 'curve' | 'broken' | 'ray' | 'segment'; points: [number, number][] }
 /** Two straight segments, each two points. */
 export interface LinesFigure { type: 'lines'; segments: [[number, number], [number, number]][] }
 /** An angle with its vertex at the centre: one ray horizontal, the other `deg` degrees from it; the whole turned by `rotation`. */
 export interface AngleFigure { type: 'angle'; deg: number; rotation: number }
 export type SolidName = 'cubo' | 'prisma' | 'piramide' | 'cilindro' | 'cono' | 'esfera'
 export interface SolidFigure { type: 'solid'; name: SolidName }
-/** Squares on a grid (área, simetría). filled: [row, col] of the coloured squares. axis: a dashed line between columns
-    (v, at = the column boundary) or rows (h). */
+/** Squares on a grid (área, simetría, traslación). filled: [row, col] of the coloured squares. axis: a dashed line between
+    columns (v, at = the column boundary) or rows (h). ghost: a figure before it was moved, drawn as a dashed outline
+    (filled is then the moved copy). */
 export interface GridFigure {
   type: 'grid'; rows: number; cols: number; filled: [number, number][]
   axis?: { dir: 'v' | 'h'; at: number }
+  ghost?: [number, number][]
 }
 export type Figure = FractionFigure | PolygonFigure | CircleFigure | LineFigure | LinesFigure | AngleFigure | SolidFigure | GridFigure
 
@@ -352,6 +384,7 @@ export interface FractionEqualExercise extends ExerciseBase {
 export interface ShapeChoiceExercise extends ExerciseBase {
   kind: 'shape-choice'
   question: string
+  /** Empty for the word problems of «¿tiene sentido?» (word:sense): the question carries the whole story. */
   figures: Figure[]
   options: string[]
   /** Index in options. */
@@ -382,7 +415,7 @@ export interface ShapeCountExercise extends ExerciseBase {
 // ---------------------------------------------------------------- dinero and medida (3.º, block C)
 
 /** Money mode: recognise a coin or note, pay exactly, give the change, add prices, compare, convert. */
-export type MoneyMode = 'recognise' | 'pay' | 'change' | 'add' | 'compare' | 'convert'
+export type MoneyMode = 'recognise' | 'pay' | 'change' | 'add' | 'compare' | 'convert' | 'budget'
 /** A priced thing of a story or a shop card. price in céntimos. */
 export interface MoneyItem { name: string; emoji: string; price: number }
 
@@ -411,6 +444,23 @@ export interface MoneyCompareExercise extends ExerciseBase {
   kind: 'money'; mode: 'compare'; items: MoneyItem[]; question: 'more' | 'less'
   /** Name of the item that is the answer. */
   answer: string
+}
+/** Budget (4.º): a sum of money and a price list. The question decides the answer: 'enough' is «Sí» or «No»,
+    'short' and 'left' are céntimos (the amount missing or left over), 'afford' is the name of the one item that fits. */
+export type BudgetAsk = 'enough' | 'short' | 'left' | 'afford'
+export interface MoneyBudgetExercise extends ExerciseBase {
+  kind: 'money'; mode: 'budget'
+  ask: BudgetAsk
+  /** The money to spend, in céntimos. */
+  budget: number
+  /** The price list (shop cards). */
+  items: MoneyItem[]
+  /** Text before the list: «Tienes 5 €. Estos son los precios:». */
+  text: string
+  /** The question, as the child reads it. */
+  question: string
+  /** enough: 'Sí' | 'No'. short, left: céntimos. afford: the name of the item. */
+  answer: string | number
 }
 export interface MoneyConvertExercise extends ExerciseBase {
   kind: 'money'; mode: 'convert'; direction: 'to-cents' | 'to-euros'; amount: number
@@ -441,6 +491,8 @@ export interface MeasureConvertExercise extends ExerciseBase {
   /** true when the blank is the big unit (300 cm = ___ m). */
   toBig: boolean
   answer: number
+  /** `:all` keys only: the unit of the given amount (the blank is `unit`) and the steps of the unit ladder between them (1 step = ×10). */
+  ladder?: { from: string; steps: number }
 }
 export interface MeasureRulerExercise extends ExerciseBase {
   kind: 'measure'; mode: 'ruler'; start: number; end: number; max: number
@@ -468,9 +520,10 @@ export type Exercise =
   | ClockReadExercise | ClockSetExercise | TimeConvertExercise | TimeDurationExercise | CalendarExercise
   | EquationExercise | FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise
   | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
-  | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
+  | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -483,6 +536,27 @@ export interface MulPartsExercise extends ExerciseBase {
   tens: number
   /** [top × units, top × tens]. */
   partials: [number, number]
+  answer: number
+}
+/** Multiplicar en columna (4.º): top × bottom with one partial row per digit of the bottom, each already shifted. */
+export interface LongMulExercise extends ExerciseBase {
+  kind: 'long-mul'
+  top: number
+  bottom: number
+  /** top × each digit of bottom, units first, already shifted: 23 × 14 → [92, 230]. */
+  partials: number[]
+  answer: number
+}
+/** Ordinales (3.º, src/engine/ordinals.ts). row: tap the n-th object of a queue (answer = its position, 0-based).
+    read: the number is shown, the child picks its word. write: the word is shown, the child picks the number. */
+export interface OrdinalExercise extends ExerciseBase {
+  kind: 'ordinal'
+  mode: 'row' | 'read' | 'write'
+  n: number
+  /** row: the objects of the queue, all alike; empty in read and write. */
+  items: string[]
+  /** read: the words; write: the numerals («7.º»); empty in row. */
+  options: string[]
   answer: number
 }
 export interface AreaExercise extends ExerciseBase { kind: 'area'; figure: GridFigure; answer: number }
@@ -501,17 +575,27 @@ export interface FractionAddExercise extends ExerciseBase {
 // ---- gráficos, probabilidad, series y posición (src/engine/data.ts, patterns.ts, position.ts)
 
 export interface ChartCategory { label: string; emoji: string; value: number }
+/** A double-entry table: rows are groups, columns are options; `at` is the cell asked about ([row, col]). */
+export interface ChartTable {
+  rows: string[]
+  cols: { label: string; emoji: string }[]
+  cells: number[][]
+  at: [number, number]
+}
 export interface ChartExercise extends ExerciseBase {
   kind: 'chart'
-  /** pictogram: rows of icons; bars: a bar chart with a scale; data: a list of values (the moda). */
-  mode: 'pictogram' | 'bars' | 'data'
+  /** pictogram: rows of icons; bars: a bar chart with a scale; data: a list of values (the moda); table: a double-entry
+   *  table (chart:table); tally: a list of values and how many times one comes out (chart:freq). */
+  mode: 'pictogram' | 'bars' | 'data' | 'table' | 'tally'
   title: string
   categories: ChartCategory[]
   /** Pictogram: what one icon is worth (1, 2, 5 or 10). Bars: the step of the scale. */
   per: number
-  /** data mode: the values in the list. */
+  /** data and tally modes: the values in the list. */
   data: number[]
-  ask: 'count' | 'difference' | 'total' | 'most' | 'least' | 'mode'
+  /** table mode only: the cells. */
+  table?: ChartTable
+  ask: 'count' | 'difference' | 'total' | 'most' | 'least' | 'mode' | 'cell' | 'freq'
   question: string
   /** most / least: the labels to choose from (the answer is an index). Empty when a number is written. */
   options: string[]
@@ -522,9 +606,11 @@ export interface ChanceExercise extends ExerciseBase {
   /** What is in the bag (or on the spinner), with how many of each. */
   bag: { label: string; emoji: string; count: number }[]
   question: string
-  /** Always ['Seguro', 'Posible', 'Imposible']; the answer is an index. */
+  /** Seguro, posible, imposible (prob:chance); the colours in the bag (prob:likely). The answer is an index. */
   options: string[]
   answer: number
+  /** prob:likely only: the most (more) or the least (less) likely colour. */
+  ask?: 'more' | 'less'
 }
 export interface PatternExercise extends ExerciseBase {
   kind: 'pattern'
@@ -569,7 +655,7 @@ export type Answer =
   | { type: 'steps'; method: 'parts' | 'line'; values: (number | null)[]; total?: number | null }   // resta por partes / saltos
   | { type: 'division'; quotient: number | null; remainder: number | null }
   | { type: 'facts'; facts: string[] }                                     // fact-family, e.g. '6x7=42', '42/6=7'
-  | { type: 'sign'; sign: '<' | '>' | '=' | null }                          // compare: the sign the child tapped
+  | { type: 'sign'; sign: '<' | '>' | '=' | '≠' | null }                   // compare: the sign the child tapped; eq:same: = or ≠
   | { type: 'bar'; placed: (number | null)[]; ops: (BarOp | null)[]; results: (number | null)[] } // bar: per slot, per step
   | { type: 'hunt'; ok: boolean | null; column: number | null; value: number | null }  // encuentra el error
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
@@ -582,6 +668,7 @@ export type Answer =
   | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
   | { type: 'option'; value: string | null }                               // dinero and medida: the option tapped
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
+  | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
@@ -692,4 +779,31 @@ export interface AttemptInput {
   recognitionFixes?: number
   /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
   method?: string
+}
+
+// ---- 4.º: décimas y centésimas (src/engine/decimals.ts). Values are whole hundredths: 2,45 → 245.
+
+export type DecimalMode = 'shade' | 'read' | 'compare' | 'money'
+/** The writing cells: 1 = décimas (one digit after the comma), 2 = décimas and centésimas (one digit each, see decimalFromCells). */
+export type DecimalPlaces = 1 | 2
+/** shade: the bar of 10 or the grid of 100 with the parts coloured → write the number. read: the words («tres décimas»)
+    → write the number. compare: two decimals → < = >. money: 2,45 € → euros and céntimos. */
+export interface DecimalExercise extends ExerciseBase {
+  kind: 'decimal'
+  mode: DecimalMode
+  places: DecimalPlaces
+  /** The number in hundredths (shade, read, money) or the first of the two (compare). */
+  value: number
+  /** compare only: the second number, in hundredths. */
+  other?: number
+  answer: number | '<' | '>' | '='
+}
+/** A ± B in a column with the commas aligned. Both operands and the result in hundredths; the result is never negative. */
+export interface DecimalOpExercise extends ExerciseBase {
+  kind: 'decimal-op'
+  op: 'add' | 'sub'
+  places: DecimalPlaces
+  left: number
+  right: number
+  answer: number
 }

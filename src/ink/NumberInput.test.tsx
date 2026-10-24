@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { IDLE_MS, PEN_SEEN_KEY } from './constants'
 import { InkProvider } from './InkProvider'
 import { NumberInput } from './NumberInput'
-import { useInkLearning } from './hooks'
+import { useInkLearning, useInputMode } from './hooks'
 import { notePenContact } from './policy'
 import { scriptedRecognizer, type ScriptedAnswer } from './dev/scripted'
 import { replayStrokes, tap } from './dev/autoplay'
@@ -136,6 +136,39 @@ describe('NumberInput · keyboard', () => {
   })
 })
 
+describe('NumberInput · several boxes with one «Comprobar»', () => {
+  function Parts({ onSubmit }: { onSubmit: () => void }) {
+    const [v, setV] = useState<(number | null)[]>([null, null, null])
+    const set = (i: number) => (x: number | null) => setV((old) => old.map((y, k) => (k === i ? x : y)))
+    return (
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        {v.map((x, i) => (
+          <NumberInput key={i} value={x} onChange={set(i)} onSubmit={onSubmit} checkButton={false} ariaLabel={`caja ${i}`} />
+        ))}
+      </InkProvider>
+    )
+  }
+
+  it('Enter on a filled box goes to the next empty one; with all filled it submits', () => {
+    const onSubmit = vi.fn()
+    render(<Parts onSubmit={onSubmit} />)
+    const box = (i: number) => screen.getByRole('textbox', { name: `caja ${i}` })
+    box(0).focus()
+    fireEvent.keyDown(box(0), { key: '3' })
+    fireEvent.keyDown(box(0), { key: 'Enter' })
+    expect(document.activeElement).toBe(box(1))
+    fireEvent.keyDown(box(1), { key: 'Enter' }) // empty: stays and lets the view decide
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    box(2).focus()
+    fireEvent.keyDown(box(2), { key: '5' })
+    fireEvent.keyDown(box(2), { key: 'Enter' })
+    expect(document.activeElement).toBe(box(1)) // goes round to the empty one
+    fireEvent.keyDown(box(1), { key: '7' })
+    fireEvent.keyDown(box(1), { key: 'Enter' })
+    expect(onSubmit).toHaveBeenCalledTimes(2)
+  })
+})
+
 describe('NumberInput · keypad and lost Pencil', () => {
   afterEach(() => localStorage.clear())
 
@@ -157,6 +190,94 @@ describe('NumberInput · keypad and lost Pencil', () => {
     const keys = within(screen.getByRole('group', { name: 'Teclado de números' })).getAllByRole('button').map((b) => b.getAttribute('aria-label'))
     expect(keys.slice(0, 3)).toEqual(['1', '2', '3']) // grid layout: 1 2 3 / 4 5 6 / 7 8 9 / ⌫ 0 ✓
     expect(keys.slice(9)).toEqual(['Borrar', '0', 'Comprobar'])
+  })
+})
+
+describe('NumberInput · a press on a box moves the keypad only for a real tap', () => {
+  afterEach(() => localStorage.clear())
+
+  function twoBoxes() {
+    localStorage.setItem(PEN_SEEN_KEY, '2026-10-01') // a pen was used: fingers tap, they do not write
+    render(
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        <Probe />
+        <NumberInput value={null} onChange={() => {}} onSubmit={() => {}} ariaLabel="A" />
+        <NumberInput value={null} onChange={() => {}} onSubmit={() => {}} ariaLabel="B" />
+      </InkProvider>,
+    )
+    return { a: screen.getByRole('textbox', { name: 'A' }), b: screen.getByRole('textbox', { name: 'B' }) }
+  }
+
+  it('a finger tap on the other box takes the focus and the keypad', () => {
+    const { a, b } = twoBoxes()
+    a.focus()
+    notePenContact(false, performance.now() - 10_000)
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(b)
+  })
+
+  it('a touch during pen contact (a palm on the neighbouring box) does not move the keypad', () => {
+    const { a, b } = twoBoxes()
+    a.focus()
+    notePenContact(true)
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(a)
+    notePenContact(false)
+  })
+})
+
+/** Sets the answer preference to the keypad for this subtree (the child's own setting, as the adult would store it). */
+function KeypadPreference() {
+  const { setPreferred } = useInputMode()
+  useEffect(() => { setPreferred('keypad') }, [setPreferred])
+  return null
+}
+
+describe('NumberInput · keypad mode: the keypad follows the box the child taps', () => {
+  afterEach(() => localStorage.clear())
+
+  function twoKeypadBoxes() {
+    const onA = vi.fn()
+    const onB = vi.fn()
+    function Two() {
+      const [a, setA] = useState<number | null>(null)
+      const [b, setB] = useState<number | null>(null)
+      return (
+        <>
+          <NumberInput value={a} onChange={(x) => { onA(x); setA(x) }} onSubmit={() => {}} ariaLabel="A" />
+          <NumberInput value={b} onChange={(x) => { onB(x); setB(x) }} onSubmit={() => {}} ariaLabel="B" />
+        </>
+      )
+    }
+    render(
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        <KeypadPreference />
+        <Two />
+      </InkProvider>,
+    )
+    return { a: screen.getByRole('textbox', { name: 'A' }), b: screen.getByRole('textbox', { name: 'B' }), onA, onB }
+  }
+
+  it('a finger tap on the other box moves the keypad to it: its digits go to that box', () => {
+    const { a, b, onA, onB } = twoKeypadBoxes()
+    notePenContact(false, performance.now() - 10_000) // no pen contact just before: the touches are fingers
+    fireEvent.pointerDown(a, { pointerType: 'touch', isPrimary: true })
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(b)
+    fireEvent.click(within(screen.getByRole('group', { name: 'Teclado de números' })).getByRole('button', { name: '7' }))
+    expect(onB).toHaveBeenLastCalledWith(7)
+    expect(onA).not.toHaveBeenCalled()
+  })
+
+  it('a second finger on the other box (not the primary pointer) leaves the keypad where it was', () => {
+    const { a, b, onA, onB } = twoKeypadBoxes()
+    notePenContact(false, performance.now() - 10_000)
+    fireEvent.pointerDown(a, { pointerType: 'touch', isPrimary: true })
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: false })
+    expect(document.activeElement).toBe(a)
+    fireEvent.click(within(screen.getByRole('group', { name: 'Teclado de números' })).getByRole('button', { name: '4' }))
+    expect(onA).toHaveBeenLastCalledWith(4)
+    expect(onB).not.toHaveBeenCalled()
   })
 })
 

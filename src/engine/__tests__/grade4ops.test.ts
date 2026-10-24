@@ -7,7 +7,7 @@ import { galeraSteps, quotientOf, remainderOf } from '@/activities/division/gale
 
 const SKILLS = [
   'mul:3x1:c0', 'mul:3x1:c1', 'div:4x1:exact', 'div:4x1:rem', 'mul:2dx2d', 'mul:3dx2d',
-  'mental:por10', 'mental:romanos', 'num:round:1000', 'geo:area', 'geo:symmetry', 'div:3x2:exact', 'div:3x2:rem',
+  'mental:por10', 'mental:romanos', 'num:round:1000', 'geo:area', 'geo:symmetry', 'div:3x2:round', 'div:3x2:exact', 'div:3x2:rem',
   'frac:add', 'frac:sub',
 ]
 
@@ -44,6 +44,11 @@ function verify(ex: Exercise): void {
         expect(ex.dividend).toBeGreaterThanOrEqual(1000)
         expect(ex.dividend).toBeLessThanOrEqual(9999)
         expect(ex.divisor).toBeLessThan(10)
+      } else if (ex.skill === 'div:3x2:round') {
+        expect(ex.dividend).toBeLessThanOrEqual(999)
+        expect(ex.divisor % 10).toBe(0)
+        expect(ex.divisor).toBeGreaterThanOrEqual(20)
+        expect(ex.divisor).toBeLessThanOrEqual(90)
       } else {
         expect(ex.dividend).toBeLessThanOrEqual(999)
         expect(ex.divisor).toBeGreaterThanOrEqual(12)
@@ -52,7 +57,12 @@ function verify(ex: Exercise): void {
       }
       expect(ex.quotient * ex.divisor + ex.remainder).toBe(ex.dividend)
       expect(ex.remainder).toBeLessThan(ex.divisor)
-      expect(ex.remainder === 0).toBe(ex.skill.endsWith(':exact'))
+      // The variants are listed: the 'rem' keys leave a remainder, the exact keys (and the round divisors) none.
+      const WITH_REMAINDER = ['div:4x1:rem', 'div:3x2:rem']
+      const EXACT = ['div:4x1:exact', 'div:3x2:exact', 'div:3x2:round']
+      if (WITH_REMAINDER.includes(ex.skill)) expect(ex.remainder, ex.id).toBeGreaterThan(0)
+      else expect(EXACT, ex.id).toContain(ex.skill)
+      if (EXACT.includes(ex.skill)) expect(ex.remainder, ex.id).toBe(0)
       break
     case 'fraction-add':
       expect(ex.op === 'add' ? ex.a + ex.b : ex.a - ex.b).toBe(ex.answer)
@@ -149,6 +159,23 @@ describe('4.º: operations, numbers and geometry', () => {
         for (const st of steps) expect(st.remainder).toBeLessThan(ex.divisor)
       }
     }
+  })
+
+  it('the round-divisor step divides only by 20, 30… 90, exactly (the first step of the 2-digit divisors)', () => {
+    const divisors = new Set<number>()
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const ex of generate({ skills: ['div:3x2:round'] }, 3, { rng: createRng(seed) })) {
+        if (ex.kind !== 'division') throw new Error(ex.kind)
+        expect(ex.skill).toBe('div:3x2:round')
+        expect(ex.divisor % 10, ex.id).toBe(0)
+        expect(ex.divisor, ex.id).toBeLessThanOrEqual(90)
+        expect(ex.remainder, ex.id).toBe(0)
+        divisors.add(ex.divisor)
+      }
+    }
+    expect([...divisors].sort((a, b) => a - b)).toEqual([20, 30, 40, 50, 60, 70, 80, 90].filter((d) => divisors.has(d)))
+    expect(divisors.size).toBeGreaterThan(3)
+    expect(parseSkill('div:3x2:round')).toEqual({ type: 'div3x2', variant: 'round' })
   })
 
   it('multiplying by parts names the forgotten zero and a wrong partial', () => {

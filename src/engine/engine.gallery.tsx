@@ -25,7 +25,7 @@ function show(ex: Exercise): string {
     case 'round': return `${fmt(ex.value)} a ${ex.to === 1000 ? 'los millares' : `las ${roundWords(ex.to).plural}`}`
     case 'number-line': return ex.mode === 'tick' ? `recta de ${ex.step}: marca ${ex.blank + 1} vacía` : `recta de ${ex.step}: desde ${fmt(ex.start ?? 0)}`
     case 'mental': return ex.prompt
-    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} = ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
+    case 'equation': return `${ex.left.map((t) => (t === null ? '__' : String(t))).join(' ')} ${ex.mode === 'same' ? '?' : '='} ${ex.right.map((t) => (t === null ? '__' : String(t))).join(' ')}`
     default: return ex.id
   }
 }
@@ -51,6 +51,7 @@ function showAnswer(a: Answer): string {
     case 'marks': return a.marked.length ? a.marked.map((i) => i + 1).join(', ') : 'ninguna'
     case 'option': return a.value ?? '—'
     case 'pieces': return a.pieces.length ? a.pieces.join(' + ') : '—'
+    case 'long-mul': return `${a.rows.map((r) => r.map((d) => d ?? '·').reverse().join('')).join(' + ')} = ${a.total.map((d) => d ?? '·').reverse().join('')}`
   }
 }
 

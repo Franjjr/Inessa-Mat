@@ -125,6 +125,19 @@ describe('PlaceValueView', () => {
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
+
+  it('blocks mode up to 99 999: the decenas de millar are piles of ten blocks of mil, and the box takes five digits', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    const { container } = render(<PlaceValueView exercise={makePlaceValue(45300, 'blocks', 99999)} onAnswered={onAnswered} showFeedback={false} />)
+    // 4 decenas de millar (four piles of ten mil blocks), 5 millares, 3 centenas, no decenas, no unidades.
+    expect(container.querySelectorAll('[title="4 decenas de millar"]').length).toBe(1)
+    expect(container.querySelectorAll('[title="4 decenas de millar"] > div > span').length).toBe(4)
+    expect(screen.getByText('Decenas de millar')).toBeTruthy()
+    await user.type(box('Número de los bloques'), '45300')
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
 })
 
 describe('OrderView', () => {
@@ -193,5 +206,28 @@ describe('MentalView and EquationView', () => {
     await user.type(box('Número que falta'), '2')
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('equation, same: no blank box; the child taps = or ≠ and checks it', () => {
+    const onAnswered = vi.fn()
+    const same: EquationExercise = {
+      id: 'equation:same:2+3?4+2', kind: 'equation', skill: 'eq:same', difficulty: 2, mode: 'same', left: [2, '+', 3], right: [4, '+', 2], answer: '≠',
+    }
+    render(<EquationView exercise={same} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.queryByRole('textbox')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'distinto de' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('equation, same: the wrong sign is judged wrong', () => {
+    const onAnswered = vi.fn()
+    const same: EquationExercise = {
+      id: 'equation:same:2+3?4+2', kind: 'equation', skill: 'eq:same', difficulty: 2, mode: 'same', left: [2, '+', 3], right: [4, '+', 2], answer: '≠',
+    }
+    render(<EquationView exercise={same} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.click(screen.getByRole('button', { name: 'igual a' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
   })
 })

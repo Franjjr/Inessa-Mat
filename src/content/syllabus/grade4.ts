@@ -4,27 +4,27 @@
    flexibilidad, fracciones con denominador hasta 12, km, m y cm, kg y g, l y ml, superficie y ángulos, simetrías,
    gráficos, la moda y la probabilidad intuitiva, patrones con predicción. Lo propio de 4.º (práctica habitual, no ley):
    multiplicar por dos cifras (aquí por partes, el paso previo al algoritmo), dividir números de 4 cifras y entre dos
-   cifras, sumar y restar fracciones de igual denominador, redondear a millares, números romanos. Sus etapas no van
-   ligadas a los mundos de la aventura. */
-import { fractionSkill, geoSkill } from '@/engine/skills'
+   cifras, sumar y restar fracciones de igual denominador, décimas y centésimas, sumar y restar decimales, redondear a
+   millares, números romanos. Sus etapas no van ligadas a los mundos de la aventura. */
+import { decimalSkill, fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage } from './model'
-import { tableSkills, withStageTerms } from './helpers'
+import { pending, tableSkills, withStageTerms } from './helpers'
 
 const fractions = (ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): SkillKey[] => ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
 
 export const GRADE4_STAGES: SyllabusStage[] = [
   // 1.er trimestre
-  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'romanos', 'suma-resta-4d', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'graficos-4'] },
-  { id: 'etapa-2', term: 1, topics: ['redondear-millares', 'mul-2x1', 'mul-3x1', 'por-10-100-1000', 'prob-multiplicar', 'reloj-4', 'angulos'] },
+  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'numeros-99999', 'romanos', 'suma-resta-4d', 'combinadas', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'estimar', 'graficos-4'] },
+  { id: 'etapa-2', term: 1, topics: ['redondear-millares', 'mul-2x1', 'mul-3x1', 'propiedades', 'por-10-100-1000', 'prob-multiplicar', 'reloj-4', 'angulos'] },
   { id: 'etapa-3', term: 1, topics: ['div-repaso', 'div-4x1', 'prob-dividir', 'comprobar', 'perimetro', 'series-4'] },
   // 2.º trimestre
-  { id: 'etapa-4', term: 2, topics: ['mul-2-cifras', 'recta-1000', 'cambio-presupuesto', 'area', 'moda'] },
-  { id: 'etapa-5', term: 2, topics: ['fracciones-12', 'fraccion-cantidad-4', 'longitud-4', 'simetria', 'igualdad'] },
-  { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'prob-dos-pasos', 'masa-capacidad-4', 'duraciones-4', 'probabilidad'] },
+  { id: 'etapa-4', term: 2, topics: ['mul-2-cifras', 'mul-2-cifras-columna', 'recta-1000', 'cambio-presupuesto', 'presupuesto', 'area', 'frecuencia', 'moda'] },
+  { id: 'etapa-5', term: 2, topics: ['fracciones-12', 'decimales', 'fraccion-cantidad-4', 'longitud-4', 'longitud-conversiones', 'simetria', 'traslacion', 'igualdad', 'igualdad-dos-cuentas'] },
+  { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'mul-3x2-columna', 'prob-dos-pasos', 'prob-tres-pasos', 'masa-capacidad-4', 'masa-capacidad-conversiones', 'duraciones-segundos', 'duraciones-4', 'probabilidad', 'probabilidad-probable'] },
   // 3.er trimestre
-  { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
-  { id: 'etapa-8', term: 3, topics: ['poligonos-cuerpos', 'div-2-cifras'] },
+  { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'decimales-operar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
+  { id: 'etapa-8', term: 3, topics: ['triangulos-cuadrilateros', 'poligonos-cuerpos', 'cuerpos-contar', 'circunferencia-elementos', 'div-2-cifras-redondos', 'div-2-cifras', 'mul-3-cifras', 'programacion'] },
 ]
 
 export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
@@ -33,9 +33,10 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
   blocks: [
     {
       id: 'numeros',
-      name: 'Números hasta 9 999',
+      name: 'Números hasta 99 999',
       topics: [
         { id: 'repaso-numeros', name: 'Leer, escribir, descomponer y comparar (repaso)', skills: ['num:place:expanded', 'num:place:words', 'num:compare', 'num:order'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: '7 045 = 7 000 + 40 + 5' } },
+        { id: 'numeros-99999', name: 'Números hasta 99 999 (decenas de millar)', skills: ['num:place:blocks:99999', 'num:place:expanded:99999', 'num:place:words:99999', 'num:compare:99999', 'num:order:99999', 'num:round:1000:99999', 'num:line:10000'], status: 'disponible', ordered: true, rungs: { concreto: 'Pilas de diez cuadros de mil', numeros: '45 300 = 40 000 + 5 000 + 300' } },
         { id: 'redondear-millares', name: 'Redondear a centenas y millares', skills: ['num:round:100', 'num:round:1000'], status: 'disponible', rungs: { dibujo: 'La recta con el millar más cercano', numeros: 'Mirar la cifra de las centenas' } },
         { id: 'recta-1000', name: 'La recta numérica: saltos de 100 y de 1 000', skills: ['num:line:100', 'num:line:1000'], status: 'disponible', rungs: { dibujo: 'Saltos de 100 y de 1 000', numeros: '3 450 + 1 000 = 4 450' } },
         { id: 'romanos', name: 'Números romanos', skills: ['mental:romanos'], status: 'disponible', rungs: { concreto: 'Relojes y capítulos de libros', numeros: 'I, V, X, L, C; IV = 5 − 1' } },
@@ -46,9 +47,11 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Sumas y restas',
       topics: [
         { id: 'suma-resta-4d', name: 'Sumas y restas de 4 cifras', skills: ['add:4d:c2', 'add:4d:c3', 'sub:4d:b2', 'sub:4d:z'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con llevadas y con ceros', uso: 'Problemas de juntar y de quitar' } },
+        { id: 'combinadas', name: 'Operaciones combinadas y el orden de las operaciones', skills: ['mental:combinadas', 'mental:jerarquia', 'mental:parentesis'], status: 'disponible', ordered: true, rungs: { numeros: '48 + 35 − 20; 3 + 2 × 4; (3 + 2) × 4', uso: 'Leer una cuenta con varias operaciones y decidir cuál va primero' } },
         { id: 'comprobar', name: 'Comprobar un resultado', skills: ['check:add', 'check:sub', 'check:div'], status: 'disponible', rungs: { numeros: 'La operación contraria', uso: 'Comprobar antes de dar un resultado' } },
         { id: 'encuentra-error', name: 'Encuentra el error', skills: ['hunt:add', 'hunt:sub', 'hunt:mul'], status: 'disponible', rungs: { dibujo: 'Marcar la columna donde falla', numeros: 'Decidir si está bien y corregirla' } },
         { id: 'igualdad', name: 'Signo igual: los dos lados valen lo mismo', skills: ['eq:flex'], status: 'disponible', rungs: { concreto: 'Balanza con dos platillos', numeros: '25 + 8 = __ + 10' } },
+        { id: 'igualdad-dos-cuentas', name: 'Dos cuentas que valen lo mismo', skills: ['eq:same'], status: 'disponible', late: true, rungs: { numeros: '¿25 + 8 y 40 − 7 valen lo mismo? Sin hacer las cuentas' } },
       ],
     },
     {
@@ -59,8 +62,12 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1', name: 'Multiplicar 2 cifras por 1 (repaso)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con llevada' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: '213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas' } },
         { id: 'por-10-100-1000', name: 'Multiplicar y dividir por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven en la tabla de valor posicional', numeros: '37 × 100 = 3 700; 4 500 : 100 = 45' } },
+        { id: 'propiedades', name: 'Propiedades conmutativa, asociativa y distributiva', skills: ['concept:commutative', 'mental:asociativa', 'mental:distributiva'], status: 'disponible', ordered: true, rungs: { dibujo: 'Un rectángulo que se parte en dos', numeros: '2 × 7 × 5 = 10 × 7; 6 × 12 = 6 × 10 + 6 × 2' } },
         { id: 'mul-2-cifras', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d'], status: 'disponible', rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10', uso: 'Problemas de cajas y filas' } },
+        { id: 'mul-2-cifras-columna', name: 'Multiplicar por 2 cifras en columna', skills: ['mul:col:2x2'], status: 'disponible', late: true, rungs: { numeros: 'La cuenta en columna: primero por las unidades, luego por las decenas' } },
         { id: 'mul-3x2', name: 'Multiplicar 3 cifras por 2 cifras (por partes)', skills: ['mul:3dx2d'], status: 'disponible', rungs: { numeros: '125 × 23 = 125 × 3 + 125 × 20', uso: 'Problemas con números grandes' } },
+        { id: 'mul-3x2-columna', name: 'Multiplicar 3 cifras por 2 en columna', skills: ['mul:col:3x2'], status: 'disponible', late: true, rungs: { numeros: 'La cuenta en columna con dos filas parciales' } },
+        { id: 'mul-3-cifras', name: 'Multiplicar por un número de 3 cifras', skills: ['mul:col:3x3'], status: 'disponible', rungs: { numeros: 'La cuenta en columna con tres filas parciales' } },
       ],
     },
     {
@@ -69,6 +76,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'div-repaso', name: 'Dividir 2 y 3 cifras entre 1 (repaso)', skills: ['div:2x1:rem', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera paso a paso y la prueba' } },
         { id: 'div-4x1', name: 'Dividir 4 cifras entre 1', skills: ['div:4x1:exact', 'div:4x1:rem'], status: 'disponible', rungs: { numeros: 'La galera bajando una cifra cada vez', uso: 'Comprobar con divisor × cociente + resto' } },
+        { id: 'div-2-cifras-redondos', name: 'Dividir entre decenas exactas (20, 30…)', skills: ['div:3x2:round'], status: 'disponible', late: true, rungs: { numeros: 'Primero entre 20, 30… (números redondos)' } },
         { id: 'div-2-cifras', name: 'Dividir entre un número de 2 cifras', skills: ['div:3x2:exact', 'div:3x2:rem'], status: 'disponible', rungs: { numeros: 'Cuántas veces cabe 23 en 96: estimar y comprobar', uso: 'La galera con restos de dos cifras' } },
       ],
     },
@@ -77,6 +85,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Cálculo mental',
       topics: [
         { id: 'mental-4', name: 'Completar a 1 000, centenas, compensar y dobles', skills: ['mental:completar1000', 'mental:centenas', 'mental:compensar', 'mental:dobles'], status: 'disponible', rungs: { numeros: '1 000 − 650; 48 + 19 = 48 + 20 − 1' } },
+        { id: 'estimar', name: 'Estimar: redondear y operar', skills: ['mental:estimar'], status: 'disponible', rungs: { numeros: 'Redondear 47 a 50 y 38 a 40: 50 + 40 = 90', uso: '¿Es razonable este resultado?' } },
       ],
     },
     {
@@ -87,16 +96,19 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'prob-multiplicar', name: 'Problemas de multiplicar', skills: ['bar:mul', 'word:mul'], status: 'disponible', rungs: { dibujo: 'Barras iguales', uso: 'Escribir la operación' } },
         { id: 'prob-dividir', name: 'Problemas de repartir', skills: ['bar:div', 'word:div'], status: 'disponible', rungs: { dibujo: 'Barra repartida en partes iguales', uso: 'Escribir la operación' } },
         { id: 'prob-dos-pasos', name: 'Problemas de dos pasos', skills: ['bar:two'], status: 'disponible', rungs: { dibujo: 'Dos barras: primero una cuenta, luego otra', uso: 'Dos operaciones seguidas' } },
+        { id: 'prob-tres-pasos', name: 'Problemas de tres pasos y sentido de la respuesta', skills: ['bar:three', 'word:sense'], status: 'disponible', ordered: true, late: true, rungs: { dibujo: 'Tres barras: una cuenta detrás de otra', uso: '¿Tiene sentido la respuesta?' } },
       ],
     },
     {
       id: 'fracciones',
-      name: 'Fracciones',
+      name: 'Fracciones y decimales',
       topics: [
         { id: 'fracciones-12', name: 'Fracciones con denominador hasta 12', skills: fractions(['shade', 'read', 'name'], [5, 6, 8, 10, 12]), status: 'disponible', rungs: { dibujo: 'Figuras partidas en partes iguales', numeros: 'Leer y escribir 5/8, 7/12' } },
+        { id: 'decimales', name: 'Décimas y centésimas', skills: [decimalSkill('shade', 1), decimalSkill('read', 1), decimalSkill('shade', 2), decimalSkill('read', 2), decimalSkill('compare'), decimalSkill('money')], status: 'disponible', ordered: true, rungs: { dibujo: 'Una barra de 10 partes y una cuadrícula de 100 partes iguales', numeros: '0,3 son 3 décimas; 2,45 € son 2 euros y 45 céntimos' } },
         { id: 'fraccion-cantidad-4', name: 'Fracción de una cantidad', skills: fractions(['of'], [3, 4, 5, 6, 8, 10]), status: 'disponible', rungs: { dibujo: 'Grupos iguales', numeros: '3/4 de 20: 20 : 4 × 3', uso: 'Problemas de repartos' } },
         { id: 'fracciones-comparar', name: 'Comparar fracciones', skills: [fractionSkill('compare')], status: 'disponible', rungs: { dibujo: 'Dos barras iguales partidas', numeros: '3/8 y 5/8: mismo denominador, más partes' } },
         { id: 'fracciones-sumar', name: 'Sumar y restar fracciones de igual denominador', skills: [fractionSkill('add'), fractionSkill('sub')], status: 'disponible', rungs: { dibujo: 'Juntar o quitar partes de barras iguales', numeros: '2/8 + 3/8: el número de abajo no cambia' } },
+        { id: 'decimales-operar', name: 'Sumar y restar decimales', skills: [decimalSkill('add', 1), decimalSkill('sub', 1), decimalSkill('add', 2), decimalSkill('sub', 2)], status: 'disponible', ordered: true, rungs: { dibujo: 'Barras de décimas que se juntan o se quitan', numeros: '3,4 + 1,8: las comas una debajo de otra', uso: 'Cuentas del dinero con céntimos' } },
       ],
     },
     {
@@ -104,6 +116,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Dinero',
       topics: [
         { id: 'cambio-presupuesto', name: 'Precios, cambio y euros con céntimos', skills: ['money:change', 'money:add', 'money:convert'], status: 'disponible', rungs: { numeros: '3,75 € + 2,40 €; cambio de 10 €', uso: 'Problemas de compra' } },
+        { id: 'presupuesto', name: 'Presupuesto: ¿te llega el dinero?', skills: ['money:budget'], status: 'disponible', late: true, rungs: { uso: '¿Te llega con 10 € para dos cosas?' } },
       ],
     },
     {
@@ -111,7 +124,9 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Medida',
       topics: [
         { id: 'longitud-4', name: 'Longitud: km, m y cm', skills: ['measure:unit:length', 'measure:convert:length'], status: 'disponible', rungs: { numeros: '1 km = 1 000 m; 1 m = 100 cm', uso: 'Elegir la unidad de una distancia' } },
+        { id: 'longitud-conversiones', name: 'Convertir entre km, m y cm', skills: ['measure:convert:length:all'], status: 'disponible', late: true, rungs: { numeros: '2 km y 300 m = 2 300 m' } },
         { id: 'masa-capacidad-4', name: 'Masa y capacidad: kg y g, l y ml', skills: ['measure:convert:mass', 'measure:convert:capacity'], status: 'disponible', rungs: { numeros: '1 kg = 1 000 g; 1 l = 1 000 ml' } },
+        { id: 'masa-capacidad-conversiones', name: 'Convertir entre kg, g, l y ml', skills: ['measure:convert:mass:all', 'measure:convert:capacity:all'], status: 'disponible', ordered: true, late: true, rungs: { numeros: '2 kg y 500 g = 2 500 g' } },
         { id: 'medir-problemas', name: 'Sumar medidas y estimar', skills: ['measure:add', 'measure:estimate'], status: 'disponible', rungs: { uso: '¿Es razonable este resultado?' } },
       ],
     },
@@ -121,6 +136,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'reloj-4', name: 'Reloj de agujas y digital', skills: ['clock:read:5', 'clock:convert:day'], status: 'disponible', rungs: { numeros: '17:35 = las seis menos veinticinco de la tarde' } },
         { id: 'duraciones-4', name: 'Duraciones y unidades de tiempo', skills: ['time:end', 'time:elapsed', 'time:units'], status: 'disponible', rungs: { dibujo: 'Recta de horas', uso: 'Horarios de la vida diaria' } },
+        { id: 'duraciones-segundos', name: 'Segundos, minutos y horas', skills: ['time:seconds'], status: 'disponible', late: true, rungs: { numeros: '1 minuto = 60 segundos' } },
       ],
     },
     {
@@ -131,8 +147,19 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'perimetro', name: 'Perímetro', skills: [geoSkill('perimeter')], status: 'disponible', rungs: { dibujo: 'Figuras con la medida de cada lado', uso: 'Vallas y marcos' } },
         { id: 'area', name: 'Área: contar cuadraditos', skills: [geoSkill('area')], status: 'disponible', rungs: { concreto: 'Cubrir una figura con baldosas', dibujo: 'Figuras en una cuadrícula', numeros: 'Contar fila a fila' } },
         { id: 'simetria', name: 'Ejes de simetría', skills: [geoSkill('symmetry')], status: 'disponible', rungs: { concreto: 'Doblar papel y recortar', dibujo: 'La línea que parte la figura en dos mitades iguales' } },
+        { id: 'traslacion', name: 'Traslación: mover una figura en la cuadrícula', skills: [geoSkill('translate')], status: 'disponible', late: true, rungs: { dibujo: 'Mover la figura casilla a casilla, sin girarla' } },
         { id: 'recorridos', name: 'Recorridos en una cuadrícula', skills: ['pos:route'], status: 'disponible', rungs: { dibujo: 'Flechas en una cuadrícula', uso: 'Dar indicaciones' } },
+        { id: 'triangulos-cuadrilateros', name: 'Triángulos y cuadriláteros', skills: [geoSkill('tri:sides'), geoSkill('tri:angles'), geoSkill('quad:name')], status: 'disponible', ordered: true, rungs: { concreto: 'Tiras de papel para formar triángulos y cuadriláteros', dibujo: 'Marcar los lados iguales y las esquinas', numeros: 'Equilátero, isósceles, escaleno; acutángulo, rectángulo, obtusángulo' } },
+        { id: 'circunferencia-elementos', name: 'Circunferencia: radio, diámetro, cuerda y arco', skills: [geoSkill('circle'), geoSkill('circle:parts')], status: 'disponible', ordered: true, rungs: { concreto: 'Un plato y un hilo que pasa por el centro', dibujo: 'Señalar cada elemento', numeros: 'El diámetro es dos radios' } },
         { id: 'poligonos-cuerpos', name: 'Polígonos, círculo y cuerpos', skills: [geoSkill('poly:name'), geoSkill('circle'), geoSkill('solid:faces')], status: 'disponible', rungs: { concreto: 'Cajas, latas y pelotas', numeros: 'Lados, caras y vértices' } },
+        { id: 'cuerpos-contar', name: 'Vértices y aristas de los cuerpos', skills: [geoSkill('solid:count')], status: 'disponible', late: true, rungs: { numeros: 'Caras, vértices y aristas de un cubo' } },
+      ],
+    },
+    {
+      id: 'programacion',
+      name: 'Programación',
+      topics: [
+        pending('programacion', 'Primeros pasos en programación por bloques', 'Necesita una herramienta de bloques; no hay ejercicios todavía', { uso: 'Ordenar bloques para que un personaje llegue a la meta' }),
       ],
     },
     {
@@ -141,7 +168,9 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'graficos-4', name: 'Gráficas de barras y pictogramas', skills: ['chart:bars', 'chart:pict:x'], status: 'disponible', rungs: { dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
         { id: 'moda', name: 'La moda', skills: ['chart:mode'], status: 'disponible', rungs: { numeros: 'El dato que más se repite' } },
+        { id: 'frecuencia', name: 'Tablas de frecuencia', skills: ['chart:freq'], status: 'disponible', late: true, rungs: { numeros: 'Marcas de recuento: cuántas veces sale cada dato' } },
         { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance'], status: 'disponible', rungs: { concreto: 'Sacar bolas de una bolsa sin mirar' } },
+        { id: 'probabilidad-probable', name: 'Más probable o menos probable', skills: ['prob:likely'], status: 'disponible', late: true, rungs: { concreto: 'Comparar bolsas con más bolas de un color' } },
         { id: 'series-4', name: 'Series: qué número habrá más adelante', skills: ['pattern:predict', 'pattern:numbers'], status: 'disponible', rungs: { numeros: '25, 50, 75… ¿qué número estará en el puesto 10?' } },
       ],
     },

@@ -1,8 +1,8 @@
 /* The teaching order: eight stages, one per world, three trimesters. The adventure and the daily session follow it. */
 import { describe, expect, it } from 'vitest'
 import type { MasteryMap } from '@/types'
-import { newMastery } from '@/engine'
-import { GRADE3_STAGES, GRADE3_SYLLABUS, allTopics, currentTopic, stageOfTopic, teachingOrder } from '@/content/syllabus'
+import { generate, newMastery } from '@/engine'
+import { GRADE3_STAGES, GRADE3_SYLLABUS, allTopics, availableSkills, currentTopic, stageOfTopic, teachingOrder } from '@/content/syllabus'
 import { guardians } from '../guardians'
 import { season1 } from '../season'
 
@@ -47,6 +47,14 @@ describe('stages of the temario', () => {
       expect(total, g.id).toBeGreaterThanOrEqual(6)
       expect(total, g.id).toBeLessThanOrEqual(8)
     }
+  })
+
+  it('every skill of the temario generates its own exercises, and the proof of the subtraction and division is one topic (etapa 8)', () => {
+    for (const s of availableSkills(GRADE3_SYLLABUS)) {
+      expect(generate({ skills: [s] }, 1, { now: new Date('2026-10-22T10:00:00.000Z') }), s).toHaveLength(1)
+    }
+    expect(stageOfTopic(GRADE3_SYLLABUS, 'comprobar-resultado')?.id).toBe('etapa-8')
+    expect(allTopics(GRADE3_SYLLABUS).filter((t) => t.skills.includes('check:sub')).map((t) => t.id)).toEqual(['comprobar-resultado'])
   })
 
   it('the session starts at etapa 1 and moves on to etapa 2 once it is learnt', () => {

@@ -37,8 +37,12 @@ export function placementBlockOf(skill: SkillKey): PlacementBlockId | null {
     case 'add': case 'sub': return 'sumas-restas'
     case 'mul': return 'tablas'
     case 'div': case 'div2x1': case 'div3x1': case 'div4x1': case 'div3x2': return 'dividir'
-    case 'mul3x1': case 'mulParts': return 'tablas'
-    case 'word': case 'bar': return 'problemas'
+    case 'mul3x1': case 'mulParts': case 'mulCol': return 'tablas'
+    case 'word': case 'word-sense': case 'bar': case 'chart': case 'chance': case 'pattern': return 'problemas'
+    case 'check': return p.op === 'div' ? 'dividir' : 'sumas-restas'
+    case 'equation': return 'sumas-restas'
+    case 'decimal': case 'decimal-op': return 'fracciones-geometria'
+    case 'ordinal': return 'numeros'
     case 'clock-read': case 'clock-set': case 'clock-convert': case 'time-duration': case 'calendar': return 'tiempo'
     case 'fraction': case 'geo': case 'position': return 'fracciones-geometria'
     case 'money': case 'measure': return 'dinero-medida'
@@ -66,13 +70,13 @@ function grade2Plan(rng: Rng): { block: PlacementBlockId; skills: SkillKey[] }[]
 function grade4Plan(rng: Rng): { block: PlacementBlockId; skills: SkillKey[] }[] {
   const facts = shuffle(rng, [6, 7, 8, 9].flatMap((t) => [6, 7, 8, 9].map((n) => mulSkill(t, n))))
   return [
-    { block: 'numeros', skills: ['num:place:words', 'num:compare', 'num:round:1000', 'mental:romanos', 'num:line:1000'] },
+    { block: 'numeros', skills: ['num:place:words:99999', 'num:compare', 'num:round:1000', 'mental:romanos', 'num:line:1000'] },
     { block: 'sumas-restas', skills: ['add:4d:c2', 'sub:4d:b2', 'sub:4d:z'] },
     { block: 'tablas', skills: [...facts.slice(0, 2), 'mul:3x1:c1', 'mul:2dx2d'] },
     { block: 'dividir', skills: ['div:3x1:rem', 'div:4x1:exact'] },
     { block: 'problemas', skills: ['bar:two', 'bar:div'] },
     { block: 'tiempo', skills: ['clock:read:5'] },
-    { block: 'fracciones-geometria', skills: ['frac:of:4', 'geo:area'] },
+    { block: 'fracciones-geometria', skills: ['dec:read:1', 'geo:area'] },
     { block: 'dinero-medida', skills: ['money:change'] },
   ]
 }

@@ -1,0 +1,92 @@
+/* Ordinal views (3.º): a queue of objects with the exit arrow, and sticker option buttons. Every tap target is at least
+   64px; the row wraps and never widens the page (phone 390 px). */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.exit {
+  flex: 0 0 auto;
+  width: 100%;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+.item {
+  min-width: 64px;
+  min-height: 64px;
+  padding: var(--sp-2);
+  font-size: var(--fs-xl);
+  line-height: 1;
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.item:focus-visible,
+.option:focus-visible {
+  outline: 4px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.itemOn {
+  background: var(--c-magic-soft);
+}
+
+.optionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.option {
+  min-height: 72px;
+  min-width: 120px;
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.optionOn {
+  background: var(--c-magic-soft);
+}

@@ -35,7 +35,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
       value={value}
       onChange={setValue}
       onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
-      maxDigits={4}
+      maxDigits={Math.max(4, String(last).length)}
       size="lg"
       status={status}
       ariaLabel={isJump ? 'Adónde caes' : 'Marca que falta'}
@@ -54,7 +54,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
 
       {isJump && ex.start !== null && (
         <div className={s.row} aria-label={`Empiezas en ${fmt(ex.start)}`}>
-          <span className={s.jumpLabel}>Empiezas en {fmt(ex.start)} · salto {ex.jump > 0 ? '+' : '−'}{fmt(ex.step)}</span>
+          <span className={s.jumpLabel}>Empiezas en {fmt(ex.start)}</span>
         </div>
       )}
 

@@ -252,3 +252,11 @@ describe('feedback, templates and misc', () => {
     expect(inferKinds({ skills: ['skip:6', 'sub:3d:z'] })).toEqual(['skip-count', 'column-sub'])
   })
 })
+
+describe('the round wording agrees with the place', () => {
+  it('rounds to the decenas, the centenas and the millares with the right article', () => {
+    expect(describeSkill('num:round:10')).toBe('Redondear a las decenas')
+    expect(describeSkill('num:round:100')).toBe('Redondear a las centenas')
+    expect(describeSkill('num:round:1000')).toBe('Redondear a los millares')
+  })
+})

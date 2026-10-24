@@ -13,10 +13,13 @@ import { hintsNumeric } from './numeric'
 import { hintsClock } from './clock'
 import { barHints } from './bars'
 import { hintsMoney } from './money'
+import { hintsDecimal } from './decimals'
 import { hintsMeasure } from './measure'
 import { hintsChance, hintsChart } from './data'
 import { hintsPattern } from './patterns'
 import { hintsMulParts } from './bigops'
+import { hintsLongMul } from './longmul'
+import { hintsOrdinal } from './ordinals'
 import { hintsPosition } from './position'
 import { checkHints, huntHints } from './bugs'
 import { divisionParts } from './divParts'
@@ -32,7 +35,7 @@ function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint
   const d = strategyDetail(a, b)
   const trick = tableMethod ? TABLE_METHODS.find((t) => t.id === tableMethod && t.applies(a, b)) : undefined
   return [
-    hint(1, trick ? trick.hint : d.strategy.text, 'none'),
+    hint(1, trick ? (typeof trick.hint === 'function' ? trick.hint(a, b) : trick.hint) : d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
     hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
@@ -206,11 +209,11 @@ const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al reparti
 /* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
 function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
   const { dividend: n, divisor: d } = ex
-  const round = Math.round(d / 10) * 10
   const params = { total: n, groups: d, dividend: n, divisor: d }
+  const estimate = d % 10 === 0 ? `${d} ya es redondo` : `Para estimar, redondea el ${d} a la decena más cercana`
   return [
     hint(1, short ? SHORT_GALERA_HINT : `En cada paso pregúntate cuántas veces cabe el ${d}. Prueba un número y multiplícalo por ${d}.`, 'none'),
-    hint(2, `Para estimar, piensa en el ${d} como si fuera ${round}. Después comprueba multiplicando por ${d} de verdad.`, 'share', params),
+    hint(2, `${estimate} y piensa con ese número. Después comprueba multiplicando por ${d} de verdad.`, 'share', params),
     hint(3, `Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
   ]
 }
@@ -321,11 +324,11 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'fact-mul': return factHints(ex.a, ex.b, options.tableMethod)
     case 'fact-div': {
       const { dividend: p, divisor: d, answer: q } = ex
-      const seq = Array.from({ length: Math.min(q, 10) }, (_, i) => d * (i + 1)).join(', ')
       return [
         hint(1, `Dividir es lo contrario de multiplicar: ¿${d} por cuánto da ${p}?`, 'none'),
-        hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: q, perGroup: d }),
-        hint(3, `Cuenta de ${d} en ${d} hasta llegar a ${p}: ${seq}. ¿Cuántos saltos has dado?`, 'skip-count', { step: d, count: q }),
+        // One group of d shows the size of each group; the number of groups is what the child finds.
+        hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: 1, perGroup: d }),
+        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
       ]
     }
     case 'missing-factor': {
@@ -411,8 +414,32 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'pattern': return hintsPattern(ex)
     case 'position': return hintsPosition(ex)
     case 'mul-parts': return hintsMulParts(ex)
+    case 'long-mul': return hintsLongMul(ex)
+    case 'ordinal': return hintsOrdinal(ex)
+    case 'decimal': case 'decimal-op': return hintsDecimal(ex)
     case 'area': return geometryHints(ex)
   }
+}
+
+/* Level 3 of a division fact works a different case: the skip count of an example, then the child counts the jumps of the
+   real one. The example never uses a number of the child's own fact (dividend, divisor, answer), or the answer would show. */
+function divisionExample(p: number, d: number, q: number) {
+  for (let e = 2; e <= 9; e++) {
+    for (let k = 2; k <= 9; k++) {
+      const jumps = Array.from({ length: k }, (_, i) => e * (i + 1))
+      const shown = [e * k, e, k, ...jumps]
+      if (!shown.includes(p) && !shown.includes(d) && !shown.includes(q)) return { p: e * k, d: e, q: k, jumps }
+    }
+  }
+  throw new Error(`no division example avoids ${p} : ${d} = ${q}`)
+}
+const DIVISION_EXAMPLE_TEXT = (p: number, d: number, q: number) => {
+  const e = divisionExample(p, d, q)
+  return `Ejemplo con otro caso: ${e.p} : ${e.d}. De ${e.d} en ${e.d}: ${e.jumps.join(', ')}, son ${e.q} saltos.`
+}
+const DIVISION_EXAMPLE_PARAMS = (p: number, d: number, q: number) => {
+  const e = divisionExample(p, d, q)
+  return { step: e.d, count: e.q }
 }
 
 function cap(s: string): string {

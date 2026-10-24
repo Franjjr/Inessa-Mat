@@ -55,6 +55,10 @@ export function isConvex(points: readonly [number, number][]): boolean {
   return sign !== 0
 }
 
+/** The dot product of the two sides that meet at corner p, from a to p and from p to b (zero = right angle). */
+export const cornerDot = (a: [number, number], p: [number, number], b: [number, number]) =>
+  (a[0] - p[0]) * (b[0] - p[0]) + (a[1] - p[1]) * (b[1] - p[1])
+
 /** Indexes of the corners whose inside angle is exactly a right angle: the two sides are perpendicular (dot product 0)
     and the corner turns the way the polygon turns (a concave corner of 270° is not a right angle). Exact coordinates. */
 export function rightCorners(points: readonly [number, number][]): number[] {
@@ -71,7 +75,7 @@ export function rightCorners(points: readonly [number, number][]): number[] {
     const p = points[i]
     const prev = points[(i - 1 + n) % n]
     const next = points[(i + 1) % n]
-    const dot = (prev[0] - p[0]) * (next[0] - p[0]) + (prev[1] - p[1]) * (next[1] - p[1])
+    const dot = cornerDot(prev, p, next)
     const turn = (p[0] - prev[0]) * (next[1] - p[1]) - (p[1] - prev[1]) * (next[0] - p[0])
     if (dot === 0 && Math.sign(turn) === orientation) out.push(i)
   }
@@ -151,7 +155,7 @@ export function genPolygonName(rng: Rng): ShapeChoiceExercise {
       quad
         ? 'Con cuatro lados, mira si son todos iguales o si dos son más largos que los otros dos.'
         : 'Mira si todos los lados son iguales o si alguno es más largo que los demás.',
-      'Triángulo: 3 lados. Cuadrado y rectángulo: 4. Pentágono: 5. Hexágono: 6. Con 4 lados, el cuadrado tiene los cuatro iguales.',
+      'Cuenta los lados: 3, 4, 5 o 6. Con 4 lados, mira si los cuatro son iguales y si las esquinas son rectas.',
     ],
   }
 }
@@ -189,8 +193,8 @@ export function genLineType(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué tipo de línea es?', figures: [figure], options, answer,
     hints: [
       'Mira si la línea tiene esquinas, si se dobla o si va siempre derecha.',
-      'Una línea poligonal está hecha de rectas unidas: se ven las esquinas.',
-      'Una recta no se dobla. Una curva se dobla sin esquinas. Una poligonal tiene esquinas y trozos rectos.',
+      'Una línea hecha de trozos rectos unidos se ve con esquinas.',
+      'Si no se dobla nunca, va derecha. Si se dobla sin esquinas, es redondeada. Si tiene esquinas y trozos rectos, está hecha de rectas unidas.',
     ],
   }
 }
@@ -221,8 +225,8 @@ export function genLineRelation(rng: Rng): ShapeChoiceExercise {
     question: '¿Cómo son estas dos rectas?', figures: [figure], options, answer,
     hints: [
       'Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?',
-      'Si se cruzan formando una esquina recta, como la cruz de sumar, son perpendiculares.',
-      'Si nunca se cruzan y siempre están a la misma distancia, son paralelas. Si se cruzan de otra forma, se cruzan.',
+      'Si se juntan formando una esquina recta, como la cruz de sumar, forman ángulos rectos.',
+      'Si nunca se tocan y siempre están a la misma distancia, no hay cruce. Si se tocan de otra forma, la cruz está torcida.',
     ],
   }
 }
@@ -240,8 +244,8 @@ export function genAngleType(rng: Rng): ShapeChoiceExercise {
     question: '¿Este ángulo es recto, menor o mayor que un recto?', figures: [figure], options, answer,
     hints: [
       'Compara el ángulo con la esquina de una hoja de papel: ¿encaja justo, o se abre más, o se abre menos?',
-      'Si las dos líneas se abren más que la esquina del papel, el ángulo es mayor que un recto.',
-      'Si se abren menos que la esquina del papel, es menor que un recto.',
+      'Si las dos líneas se abren más que la esquina del papel, el ángulo se abre más que ella.',
+      'Si se abren menos que la esquina del papel, el ángulo se cierra más que ella.',
     ],
   }
 }
@@ -296,7 +300,7 @@ export function genCircle(rng: Rng): ShapeChoiceExercise {
     hints: [
       'Mira si la figura está pintada por dentro o si solo tiene la línea del borde.',
       'Piensa en dos cosas distintas: la línea que rodea, sin relleno, y toda la superficie de dentro.',
-      'La circunferencia es solo la línea que rodea la figura. El círculo es toda la superficie de dentro, con su borde.',
+      'Si solo se ve la línea que rodea la figura, es el borde; si la superficie de dentro está pintada, es toda la figura con su borde.',
     ],
   }
 }
@@ -311,8 +315,8 @@ export const SOLID_ROLLS: Record<SolidName, boolean> = { cubo: false, prisma: fa
 
 const SOLID_HINT_NAME = [
   'Mira si tiene caras planas, partes redondas o las dos cosas.',
-  'Una esfera no tiene caras ni esquinas: es como una pelota.',
-  'Cubo: caras cuadradas. Prisma: dos caras iguales y caras de lados. Pirámide: una punta y caras triangulares. Cilindro: dos tapas redondas. Cono: una punta y una base redonda.',
+  'Si no tiene caras ni esquinas y rueda en todas direcciones, es como una pelota.',
+  'Mira las caras: si todas son cuadradas; si hay dos tapas iguales unidas por caras de lados; si hay una punta con caras triangulares; si hay dos tapas redondas; o si hay una punta con una base redonda.',
 ]
 
 /** «¿Qué cuerpo es?» */
@@ -360,6 +364,313 @@ export function genSolidFaces(rng: Rng): ShapeChoiceExercise {
       'Cuenta las caras una a una: la de arriba, la de abajo y las de los lados.',
       'Imagina que el cuerpo está apoyado sobre una cara: ¿cuántas caras planas ves en total?',
       'Un cubo tiene caras cuadradas por todas partes. Un prisma tiene dos bases iguales y caras de lado. Una pirámide tiene su base y las caras que llegan a la punta.',
+    ],
+  }
+}
+
+// ---------------------------------------------------------------- rectas, ángulos, triángulos, cuadriláteros, circunferencia, traslación, cuerpos (3.º y 4.º)
+// Level-3 hints never reuse the asked case: they show a worked example of another one, without naming the right option.
+
+/** «¿Qué es esta línea?»: a recta has arrows at both ends, a semirrecta a dot and an arrow, a segmento a dot at each end. */
+export function genLineKind(rng: Rng): ShapeChoiceExercise {
+  const kind = pick(rng, ['straight', 'ray', 'segment'] as const)
+  const points: [number, number][] = [[randInt(rng, 10, 26), randInt(rng, 25, 75)], [randInt(rng, 74, 90), randInt(rng, 25, 75)]]
+  const figure: LineFigure = { type: 'line', kind, points }
+  const right = { straight: 'recta', ray: 'semirrecta', segment: 'segmento' }[kind]
+  const { options, answer } = optionsWith(rng, right, ['recta', 'semirrecta', 'segmento'])
+  const example = {
+    straight: 'Ejemplo: un punto en un extremo y una flecha en el otro: la línea empieza en el punto y sigue sin fin por ese lado.',
+    ray: 'Ejemplo: dos puntos, uno en cada extremo: la línea se acaba en los dos lados.',
+    segment: 'Ejemplo: dos flechas, una en cada extremo: la línea sigue sin fin por los dos lados.',
+  }[kind]
+  return {
+    id: `shape-choice:line-kind:${kind}:${points.map((p) => p.join(',')).join(';')}`,
+    kind: 'shape-choice', skill: geoSkill('line:kind'), difficulty: DIFFICULTY_GEO,
+    question: '¿Qué es esta línea?', figures: [figure], options, answer,
+    hints: [
+      'Mira los dos extremos de la línea: ¿acaban en un punto, en una flecha o en las dos cosas?',
+      'Un punto marca dónde se acaba la línea. Una flecha dice que sigue sin fin por ese lado.',
+      example,
+    ],
+  }
+}
+
+/** «¿Este ángulo es agudo, recto u obtuso?»: agudo is under 90°, recto is 90°, obtuso is from 91° to 179°. */
+export function genAngleClass(rng: Rng): ShapeChoiceExercise {
+  const cls = pick(rng, ['agudo', 'recto', 'obtuso'] as const)
+  const deg = cls === 'recto' ? 90 : cls === 'agudo' ? randInt(rng, 20, 80) : randInt(rng, 100, 160)
+  const figure: AngleFigure = { type: 'angle', deg, rotation: randInt(rng, 0, 359) }
+  const { options, answer } = optionsWith(rng, cls, ['agudo', 'recto', 'obtuso'])
+  const example = {
+    agudo: 'Ejemplo: si encaja justo en la esquina del papel, sin que sobre ni falte, no se abre ni se cierra.',
+    recto: 'Ejemplo: si se abre mucho más que la esquina del papel, se queda muy abierto.',
+    obtuso: 'Ejemplo: si se cierra más que la esquina del papel, parece la punta de un lápiz.',
+  }[cls]
+  return {
+    id: `shape-choice:angle-class:${deg}:${figure.rotation}`,
+    kind: 'shape-choice', skill: geoSkill('angle:class'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Este ángulo es agudo, recto u obtuso?', figures: [figure], options, answer,
+    hints: [
+      'Compara el ángulo con la esquina de una hoja de papel: ¿encaja justo, se abre más o se cierra más?',
+      'Si se abre más que la esquina del papel, es de los muy abiertos; si se cierra más, es de los que apenas se abren.',
+      example,
+    ],
+  }
+}
+
+
+/** «¿Cómo son los lados de este triángulo?»: equilátero (3 equal), isósceles (2 equal), escaleno (none), with the lengths written. */
+export function genTriSides(rng: Rng): ShapeChoiceExercise {
+  const kind = pick(rng, ['equilátero', 'isósceles', 'escaleno'] as const)
+  let sides: [number, number, number] | null = null
+  for (let attempt = 0; attempt < 500 && !sides; attempt++) {
+    if (kind === 'equilátero') {
+      const s = randInt(rng, 3, 9)
+      sides = [s, s, s]
+    } else if (kind === 'isósceles') {
+      const e = randInt(rng, 3, 9)
+      const base = randInt(rng, 2, 12)
+      if (base !== e && base < 2 * e) sides = [e, e, base]
+    } else {
+      const x = randInt(rng, 3, 12)
+      const y = randInt(rng, 3, 12)
+      const z = randInt(rng, 3, 12)
+      const longest = Math.max(x, y, z)
+      if (x !== y && y !== z && x !== z && longest < x + y + z - longest) sides = [x, y, z]
+    }
+  }
+  if (!sides) throw new Error('geometry: no triangle could be built')
+  // Corners A (0,0), B (c,0) and C; a = BC, b = CA, c = AB. Side i of the drawing joins point i and i + 1.
+  const [a, b, c] = shuffle(rng, sides)
+  const x = (b * b + c * c - a * a) / (2 * c)
+  const y = Math.sqrt(b * b - x * x)
+  const points = rotatePoints([[0, 0], [c, 0], [x, y]], randInt(rng, 0, 359))
+  const figure: PolygonFigure = { type: 'polygon', points, labels: [`${c} cm`, `${a} cm`, `${b} cm`] }
+  const { options, answer } = optionsWith(rng, kind, ['equilátero', 'isósceles', 'escaleno'])
+  return {
+    id: `shape-choice:tri-sides:${kind}:${a},${b},${c}`,
+    kind: 'shape-choice', skill: geoSkill('tri:sides'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Cómo son los lados de este triángulo?', figures: [figure], options, answer,
+    hints: [
+      'Lee las tres medidas escritas en el triángulo, una a una.',
+      'Compara las medidas de dos en dos y anota cuántos pares son iguales.',
+      kind === 'equilátero' ? 'Ejemplo: 3 cm, 5 cm y 6 cm: ninguna medida se repite.' : 'Ejemplo: 4 cm, 4 cm y 4 cm: las tres medidas coinciden.',
+    ],
+  }
+}
+
+/** «¿Cómo son los ángulos de este triángulo?»: acutángulo (three corners narrower than a paper corner), rectángulo (one
+    exactly that corner), obtusángulo (one wider). Whole-number corners, so the kind is exact. */
+export function genTriAngles(rng: Rng): ShapeChoiceExercise {
+  const kind = pick(rng, ['acutángulo', 'rectángulo', 'obtusángulo'] as const)
+  for (let attempt = 0; attempt < 5000; attempt++) {
+    const p = Array.from({ length: 3 }, () => [randInt(rng, 0, 10), randInt(rng, 0, 8)] as [number, number])
+    const cross = (p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[1][1] - p[0][1]) * (p[2][0] - p[0][0])
+    if (cross === 0) continue
+    const dots = p.map((v, i) => cornerDot(p[(i + 1) % 3], v, p[(i + 2) % 3]))
+    const lens = sideLengths(p)
+    if (lens.some((l) => l < 3)) continue
+    // A corner close to a right angle but not one would be read by eye as one: keep the others well away from 90°.
+    const cosines = p.map((_, i) => dots[i] / (lens[i] * lens[(i + 2) % 3]))
+    if (cosines.some((c) => c !== 0 && Math.abs(c) < 0.2)) continue
+    const actual = dots.some((d) => d < 0) ? 'obtusángulo' : dots.filter((d) => d === 0).length === 1 ? 'rectángulo' : 'acutángulo'
+    if (actual !== kind) continue
+    const figure: PolygonFigure = { type: 'polygon', points: p }
+    const { options, answer } = optionsWith(rng, kind, ['acutángulo', 'rectángulo', 'obtusángulo'])
+    const example = {
+      acutángulo: 'Ejemplo: un triángulo con una esquina que se abre mucho más que la del papel: esa sola esquina decide.',
+      rectángulo: 'Ejemplo: si las tres esquinas se cierran más que la del papel, ninguna encaja con ella.',
+      obtusángulo: 'Ejemplo: una esquina que encaja justo en la del papel y otras dos que se cierran más.',
+    }[kind]
+    return {
+      id: `shape-choice:tri-angles:${kind}:${p.map((v) => v.join(',')).join(';')}`,
+      kind: 'shape-choice', skill: geoSkill('tri:angles'), difficulty: DIFFICULTY_GEO + 1,
+      question: '¿Cómo son los ángulos de este triángulo?', figures: [figure], options, answer,
+      hints: [
+        'Compara cada esquina con la esquina de una hoja de papel: ¿encaja justo, se abre más o se cierra más?',
+        'Busca primero las esquinas que encajan justo en la del papel. Luego mira si alguna se abre más que la del papel: eso cambia la clase.',
+        example,
+      ],
+    }
+  }
+  throw new Error('geometry: no triangle of the angle kind could be built')
+}
+
+/** The level-3 example of each asked quadrilateral is ANOTHER quadrilateral (a contrast): it never gives the asked shape
+    away. Five distinct sentences, one per example. */
+const QUAD_EXAMPLE: Record<'cuadrado' | 'rectángulo' | 'rombo' | 'romboide' | 'trapecio', string> = {
+  cuadrado: 'Ejemplo: solo un par de lados va en la misma dirección y los otros dos no.',
+  rectángulo: 'Ejemplo: cuatro lados iguales, pero ninguna esquina como la del papel.',
+  rombo: 'Ejemplo: cuatro esquinas como la del papel, y dos lados largos y dos cortos.',
+  romboide: 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
+  trapecio: 'Ejemplo: dos pares de lados iguales, pero ninguna esquina como la del papel.',
+}
+
+/** «¿Qué cuadrilátero es?»: cuadrado, rectángulo, rombo, romboide or trapecio, by its sides and its corners. */
+export function genQuadName(rng: Rng): ShapeChoiceExercise {
+  const kind = pick(rng, ['cuadrado', 'rectángulo', 'rombo', 'romboide', 'trapecio'] as const)
+  let base: [number, number][] = []
+  if (kind === 'cuadrado') {
+    const s = randInt(rng, 3, 7)
+    base = [[0, 0], [s, 0], [s, s], [0, s]]
+  } else if (kind === 'rectángulo') {
+    // Two different sides: the lengths never match (5 to 9 against 2 to 4).
+    const a = randInt(rng, 5, 9)
+    const b = randInt(rng, 2, 4)
+    base = [[0, 0], [a, 0], [a, b], [0, b]]
+  } else if (kind === 'rombo') {
+    // Equal sides from diagonals of different length: no right corner.
+    const p = randInt(rng, 2, 6)
+    let q = randInt(rng, 2, 6)
+    if (q === p) q = p === 6 ? 5 : p + 1
+    base = [[-p, 0], [0, -q], [p, 0], [0, q]]
+  } else if (kind === 'romboide') {
+    // A slanted parallelogram: the sides differ and no corner is square.
+    let a = 0
+    let h = 0
+    let d = 0
+    do {
+      a = randInt(rng, 5, 9)
+      h = randInt(rng, 2, 4)
+      d = randInt(rng, 1, 3)
+    } while (d * d + h * h === a * a)
+    base = [[0, 0], [a, 0], [a + d, h], [d, h]]
+  } else {
+    // One pair of parallel sides (the bases differ) and two slanted sides.
+    const a = randInt(rng, 6, 10)
+    const t = randInt(rng, 3, a - 3)
+    const d = randInt(rng, 1, a - t - 1)
+    const h = randInt(rng, 2, 4)
+    base = [[0, 0], [a, 0], [d + t, h], [d, h]]
+  }
+  const figure: PolygonFigure = { type: 'polygon', points: rotatePoints(base, randInt(rng, 0, 359)) }
+  const { options, answer } = optionsWith(rng, kind, ['cuadrado', 'rectángulo', 'rombo', 'romboide', 'trapecio'])
+  return {
+    id: `shape-choice:quad-name:${kind}:${figure.points.map((p) => p.join(',')).join(';')}`,
+    kind: 'shape-choice', skill: geoSkill('quad:name'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Qué cuadrilátero es?', figures: [figure], options, answer,
+    hints: [
+      'Mira los lados: ¿son todos iguales? ¿Hay dos pares de lados que van en la misma dirección?',
+      'Fíjate en las esquinas: ¿son todas como la del papel? Y cuenta cuántos pares de lados nunca se cruzan.',
+      QUAD_EXAMPLE[kind],
+    ],
+  }
+}
+
+/** «¿Qué es la línea roja?»: the radio, diámetro, cuerda or arco of a circunferencia, drawn in red. */
+export function genCircleParts(rng: Rng): ShapeChoiceExercise {
+  const part = pick(rng, ['radius', 'diameter', 'chord', 'arc'] as const)
+  const figure: CircleFigure = { type: 'circle', filled: false, highlight: part, turn: randInt(rng, 0, 359) }
+  const right = { radius: 'radio', diameter: 'diámetro', chord: 'cuerda', arc: 'arco' }[part]
+  const { options, answer } = optionsWith(rng, right, ['radio', 'diámetro', 'cuerda', 'arco'])
+  const example = {
+    radius: 'Ejemplo: una línea de borde a borde que pasa por el centro: está hecha de dos trozos iguales.',
+    diameter: 'Ejemplo: una línea que sale del centro y llega al borde.',
+    chord: 'Ejemplo: un trozo de la línea que rodea el círculo, sin salirse de él.',
+    arc: 'Ejemplo: una línea recta que une dos puntos del borde sin pasar por el centro.',
+  }[part]
+  return {
+    id: `shape-choice:circle-parts:${part}:${figure.turn}`,
+    kind: 'shape-choice', skill: geoSkill('circle:parts'), difficulty: DIFFICULTY_GEO + 1,
+    question: '¿Qué es la línea roja?', figures: [figure], options, answer,
+    hints: [
+      'Busca el centro del círculo, el punto del medio. ¿La línea roja llega hasta él?',
+      'Mira dónde acaban los extremos de la línea roja: en el borde, en el centro o en los dos. Y comprueba si la línea pasa por el centro.',
+      example,
+    ],
+  }
+}
+
+const SHIFT_WORDS = { right: 'a la derecha', left: 'a la izquierda', up: 'hacia arriba', down: 'hacia abajo' } as const
+
+/** «¿Cuántas casillas y hacia dónde se ha movido la figura de color?»: an outline and its copy, moved straight up, down,
+    left or right by 1 to 4 squares (the copy is not turned). */
+export function genTranslate(rng: Rng): ShapeChoiceExercise {
+  const rows = 6
+  const cols = 8
+  for (let attempt = 0; attempt < 500; attempt++) {
+    // A connected shape of 3 to 5 squares in a box of at most 3 × 3, from the top-left corner.
+    const size = randInt(rng, 3, 5)
+    const cells = new Set<string>(['0,0'])
+    for (let tries = 0; cells.size < size && tries < 60; tries++) {
+      const [r, c] = pick(rng, [...cells]).split(',').map(Number)
+      const [dr, dc] = pick(rng, [[0, 1], [0, -1], [1, 0], [-1, 0]] as const)
+      if (r + dr < 0 || c + dc < 0 || r + dr > 2 || c + dc > 2) continue
+      cells.add(`${r + dr},${c + dc}`)
+    }
+    const shape = [...cells].map((s) => s.split(',').map(Number) as [number, number])
+    const bh = Math.max(...shape.map((p) => p[0])) + 1
+    const bw = Math.max(...shape.map((p) => p[1])) + 1
+    const dir = pick(rng, ['right', 'left', 'up', 'down'] as const)
+    const count = randInt(rng, 1, 4)
+    const [dr, dc] = { right: [0, count], left: [0, -count], up: [-count, 0], down: [count, 0] }[dir]
+    // The outline's top-left corner, so that both the outline and the copy stay on the grid.
+    const r0Lo = Math.max(0, -dr)
+    const r0Hi = Math.min(rows - bh, rows - bh - dr)
+    const c0Lo = Math.max(0, -dc)
+    const c0Hi = Math.min(cols - bw, cols - bw - dc)
+    if (r0Lo > r0Hi || c0Lo > c0Hi) continue
+    const r0 = randInt(rng, r0Lo, r0Hi)
+    const c0 = randInt(rng, c0Lo, c0Hi)
+    const ghost = shape.map(([r, c]) => [r0 + r, c0 + c] as [number, number]).sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    const filled = shape.map(([r, c]) => [r0 + r + dr, c0 + c + dc] as [number, number]).sort((a, b) => a[0] - b[0] || a[1] - b[1])
+    const outline = new Set(ghost.map((p) => p.join(',')))
+    if (filled.some((p) => outline.has(p.join(',')))) continue
+    const figure: GridFigure = { type: 'grid', rows, cols, filled, ghost }
+    const right = `${count} ${SHIFT_WORDS[dir]}`
+    const all = (Object.keys(SHIFT_WORDS) as (keyof typeof SHIFT_WORDS)[]).flatMap((d) => [1, 2, 3, 4].map((n) => `${n} ${SHIFT_WORDS[d]}`))
+    const { options, answer } = optionsWith(rng, right, shuffle(rng, all.filter((o) => o !== right)))
+    // The worked example moves in the other direction of the pair (vertical when the asked move is horizontal).
+    const example = dir === 'left' || dir === 'right'
+      ? 'Ejemplo: si la copia está 2 filas más arriba que la figura de contorno, se ha movido 2 hacia arriba.'
+      : 'Ejemplo: si la copia está 2 columnas a la izquierda de la figura de contorno, se ha movido 2 a la izquierda.'
+    return {
+      id: `shape-choice:translate:${dir}:${count}:${filled.map((p) => p.join(',')).join(';')}`,
+      kind: 'shape-choice', skill: geoSkill('translate'), difficulty: DIFFICULTY_GEO + 2,
+      question: '¿Cuántas casillas se ha movido la figura de color, y hacia dónde?', figures: [figure], options, answer,
+      hints: [
+        'Compara la figura de color con la de contorno: ¿hacia qué lado se ha desplazado, sin girar?',
+        'Elige un cuadradito de la figura y cuenta cuántas casillas hay hasta su copia de color, en la misma fila o en la misma columna.',
+        example,
+      ],
+    }
+  }
+  throw new Error('geometry: no translation could be built')
+}
+
+/** The faces, vertices and edges of the solids that carry them as drawn (triangular prism, square pyramid, cube). */
+export const SOLID_TOTALS = {
+  cubo: { caras: 6, vértices: 8, aristas: 12 },
+  prisma: { caras: 5, vértices: 6, aristas: 9 },
+  piramide: { caras: 5, vértices: 5, aristas: 8 },
+} as const
+type SolidAsk = 'caras' | 'vértices' | 'aristas'
+const SOLID_ASK_QUESTION: Record<SolidAsk, string> = {
+  caras: '¿Cuántas caras tiene este cuerpo?', vértices: '¿Cuántos vértices tiene este cuerpo?', aristas: '¿Cuántas aristas tiene este cuerpo?',
+}
+const SOLID_ASK_STEP: Record<SolidAsk, string> = {
+  caras: 'Cuenta las caras una a una: arriba, abajo y las de los lados, sin repetir ninguna.',
+  vértices: 'Cuenta las esquinas una a una, tocándolas con el dedo: cada punto donde se juntan tres bordes o más.',
+  aristas: 'Cuenta los bordes uno a uno: cada línea donde se juntan dos caras.',
+}
+
+/** «¿Cuántas caras (vértices, aristas) tiene este cuerpo?» with numeric options. */
+export function genSolidCount(rng: Rng): ShapeChoiceExercise {
+  const solid = pick(rng, ['cubo', 'prisma', 'piramide'] as const)
+  const ask = pick(rng, ['caras', 'vértices', 'aristas'] as const)
+  const answer = SOLID_TOTALS[solid][ask]
+  const figure: SolidFigure = { type: 'solid', name: solid }
+  const { options, answer: index } = optionsWith(rng, String(answer), shuffle(rng, [4, 5, 6, 8, 9, 12].filter((n) => n !== answer)).map(String))
+  // The worked example counts another solid, and its number is not the answer.
+  const other = (['cubo', 'prisma', 'piramide'] as const).find((s) => s !== solid && SOLID_TOTALS[s][ask] !== answer)!
+  return {
+    id: `shape-choice:solid-count:${solid}:${ask}`,
+    kind: 'shape-choice', skill: geoSkill('solid:count'), difficulty: DIFFICULTY_GEO + 1,
+    question: SOLID_ASK_QUESTION[ask], figures: [figure], options, answer: index,
+    hints: [
+      'Mira qué te piden contar: caras (superficies planas), vértices (esquinas) o aristas (bordes), y cuenta solo eso.',
+      SOLID_ASK_STEP[ask],
+      `Ejemplo: el ${SOLID_WORD[other]} tiene ${SOLID_TOTALS[other][ask]} ${ask}.`,
     ],
   }
 }
@@ -420,6 +731,14 @@ export function genGeometry(op: GeoOp, rng: Rng, perimeterMode: 'drawing' | 'sto
     case 'solid:name': return genSolidName(rng)
     case 'solid:roll': return genSolidRoll(rng)
     case 'solid:faces': return genSolidFaces(rng)
+    case 'line:kind': return genLineKind(rng)
+    case 'angle:class': return genAngleClass(rng)
+    case 'tri:sides': return genTriSides(rng)
+    case 'tri:angles': return genTriAngles(rng)
+    case 'quad:name': return genQuadName(rng)
+    case 'circle:parts': return genCircleParts(rng)
+    case 'translate': return genTranslate(rng)
+    case 'solid:count': return genSolidCount(rng)
     case 'perimeter': return genPerimeter(rng, perimeterMode)
     case 'area': return genArea(rng)
     case 'symmetry': return genSymmetry(rng)
@@ -512,7 +831,7 @@ export function genSymmetry(rng: Rng): ShapeChoiceExercise {
       hints: [
         'Imagina que doblas la hoja por la línea roja.',
         'Compara cada cuadradito con el que le toca al otro lado, a la misma distancia de la línea.',
-        'Si todos los cuadraditos tienen pareja al otro lado, la línea es un eje; si alguno se queda solo, no lo es.',
+        'Si todos los cuadraditos tienen pareja al otro lado, la línea sirve de eje. Si alguno se queda sin pareja, esa línea queda descartada.',
       ],
     }
   }

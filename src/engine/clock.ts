@@ -6,6 +6,7 @@ import type {
   Answer, CalendarExercise, CheckResult, ClockReadExercise, ClockSetExercise, ClockTime, Exercise, Hint, Rng,
   SkillKey, TimeConvertExercise, TimeDurationExercise,
 } from '@/types'
+import { fmt } from './numeric'
 import { pick, randInt, range, shuffle } from './rng'
 import { clockConvertSkill, calendarSkill, clockReadSkill, clockSetSkill, parseSkill, timeDurationSkill, type ParsedSkill } from './skills'
 import { addFace, clockPhrase, digital, faceHour, MONTHS_30_31, parseClockPhrase, WEEKDAYS } from './time'
@@ -102,6 +103,39 @@ export function makeCalendarUnits(fact: (typeof UNIT_FACTS)[number]): CalendarEx
   }
 }
 
+type SecondsItem = NonNullable<CalendarExercise['seconds']>
+
+/** time:seconds: the seconds of a minutes-and-seconds item, or the minutes of a number of seconds (always whole). */
+function secondsAnswer(item: SecondsItem): number {
+  if (item.form === 'min-to-s') return item.minutes * 60
+  if (item.form === 'mixed') return item.minutes * 60 + item.seconds
+  return item.total / 60
+}
+
+export function makeCalendarSeconds(item: SecondsItem): CalendarExercise {
+  const prompt = item.form === 'min-to-s'
+    ? `¿Cuántos segundos son ${item.minutes} minutos?`
+    : item.form === 'mixed'
+      ? `¿Cuántos segundos son ${item.minutes} minutos y ${item.seconds} segundos?`
+      : `¿Cuántos minutos son ${item.total} segundos?`
+  return {
+    id: `calendar:seconds:${prompt}`, kind: 'calendar', skill: calendarSkill('seconds'), difficulty: item.form === 'min-to-s' ? 2 : 3,
+    topic: 'seconds', prompt, options: [], answer: secondsAnswer(item), seconds: item,
+    ...(item.form === 'min-to-s' ? { units: { amount: item.minutes, from: 'minuto', to: 'segundos' } } : {}),
+  }
+}
+
+/**
+ * A random time:seconds item. Before the skill is learnt only minutes to seconds (2 to 10 minutes); once learnt, also
+ * minutes and seconds, and seconds to minutes.
+ */
+function buildCalendarSeconds(rng: Rng, learnt: boolean): CalendarExercise {
+  const shape = rng()
+  if (!learnt || shape < 0.4) return makeCalendarSeconds({ form: 'min-to-s', minutes: randInt(rng, 2, 10) })
+  if (shape < 0.7) return makeCalendarSeconds({ form: 'mixed', minutes: randInt(rng, 1, 9), seconds: pick(rng, range(1, 11).map((i) => i * 5)) })
+  return makeCalendarSeconds({ form: 's-to-min', total: randInt(rng, 2, 10) * 60 })
+}
+
 export function makeCalendarWeekday(today: number, days: number, rng: Rng): CalendarExercise {
   const target = (today + days) % 7
   const distractors = shuffle(rng, [(target + 1) % 7, (target + 6) % 7, (today) % 7, (target + 3) % 7, (target + 2) % 7])
@@ -124,8 +158,11 @@ export function makeCalendarMonth(month: { name: string; days: number }): Calend
 
 // ---------------------------------------------------------------- generation
 
-/** One exercise of a clock, time or calendar skill. `writeMode`: the read item asks for the hour and minutes (not the phrase). */
-export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMode: boolean): Exercise | null {
+/**
+ * One exercise of a clock, time or calendar skill. `writeMode`: the read item asks for the hour and minutes (not the phrase).
+ * `learnt`: the skill is known (time:seconds then mixes its three forms).
+ */
+export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMode: boolean, learnt = false): Exercise | null {
   const p: ParsedSkill | null = parseSkill(skill)
   if (!p) return null
   switch (p.type) {
@@ -145,6 +182,7 @@ export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMo
       }, used)
     case 'calendar':
       if (p.topic === 'units') return fresh(() => makeCalendarUnits(pick(rng, UNIT_FACTS)), used)
+      if (p.topic === 'seconds') return fresh(() => buildCalendarSeconds(rng, learnt), used)
       if (p.topic === 'weekday') return fresh(() => makeCalendarWeekday(randInt(rng, 0, 6), randInt(rng, 1, 6), rng), used)
       return fresh(() => makeCalendarMonth(pick(rng, MONTHS_30_31)), used)
     default:
@@ -159,7 +197,7 @@ export function clockSkillsOf(kind: Exercise['kind']): SkillKey[] {
     case 'clock-set': return [clockSetSkill(30), clockSetSkill(5)]
     case 'time-convert': return [clockConvertSkill()]
     case 'time-duration': return [timeDurationSkill('end'), timeDurationSkill('elapsed')]
-    case 'calendar': return [calendarSkill('units'), calendarSkill('weekday'), calendarSkill('month')]
+    case 'calendar': return [calendarSkill('units'), calendarSkill('weekday'), calendarSkill('month'), calendarSkill('seconds')]
     default: return []
   }
 }
@@ -270,7 +308,11 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
       if (answer.value === ex.answer) return res(true, given, String(ex.answer), { feedback: '¡Muy bien! Lo sabes.' })
       const feedback = ex.topic === 'month'
         ? '¡Casi! Mira los nudillos: los meses de los nudillos son los largos.'
-        : '¡Casi! Piensa en cuántas partes pequeñas tiene cada una.'
+        : ex.topic === 'seconds'
+          ? (ex.seconds?.form === 's-to-min'
+            ? '¡Casi! Cuenta cuántos grupos de segundos de un minuto hay en esa cantidad.'
+            : '¡Casi! Recuerda cuántos segundos tiene un minuto.')
+          : '¡Casi! Piensa en cuántas partes pequeñas tiene cada una.'
       return res(false, given, String(ex.answer), { errorType: 'fact', feedback })
     }
     default:
@@ -334,7 +376,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
       if (ex.topic === 'weekday' && ex.week) {
         return [
           hint(1, 'Cuenta los días uno a uno, empezando por el día siguiente a hoy.', 'week'),
-          hint(2, 'La semana es: lunes, martes, miércoles, jueves, viernes, sábado y domingo. Después del domingo vuelve el lunes.', 'week'),
+          hint(2, 'La semana tiene siete días y, al acabar el último, vuelve el primero. Cuenta sin saltarte ninguno, con las tarjetas.', 'week'),
           hint(3, `Hoy es ${WEEKDAYS[ex.week.today]}. Cuenta ${ex.week.days === 1 ? 'un día' : `${ex.week.days} días`} desde ahí, uno a uno.`, 'week'),
         ]
       }
@@ -345,6 +387,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
           hint(3, `Busca ${ex.month} en esa cuenta: ¿cae en un nudillo o en un hueco?`, 'units'),
         ]
       }
+      if (ex.seconds) return hintsSeconds(ex.seconds, ex.answer)
       if (ex.units) {
         const { amount, from, to } = ex.units
         return [
@@ -357,6 +400,36 @@ export function hintsClock(ex: Exercise): Hint[] | null {
     default:
       return null
   }
+}
+
+/**
+ * The hints of a time:seconds item. Levels 1 and 2 name the strategy without the number of seconds in a minute (the
+ * child has to know it); level 3 works another item with other numbers, so the answer is never one step away.
+ */
+function hintsSeconds(item: SecondsItem, answer: number): Hint[] {
+  if (item.form === 'min-to-s') {
+    const k = [4, 3, 5, 6, 7, 8, 9].find((n) => n !== item.minutes) ?? 4
+    return [
+      hint(1, 'Piensa en la unidad que pide el problema: ¿cuántos segundos caben en un minuto?', 'units'),
+      hint(2, 'Cada minuto tiene un número fijo de segundos. Si hay varios minutos, se repite ese mismo reparto: cuenta cuántos minutos son.', 'units'),
+      hint(3, `Ejemplo: ${k} minutos son ${k} veces los 60 segundos de un minuto: ${k} × 60 = ${fmt(k * 60)} segundos.`, 'units'),
+    ]
+  }
+  if (item.form === 'mixed') {
+    const k = [4, 3, 5, 6, 7, 8].find((n) => n !== item.minutes) ?? 4
+    const t = [15, 25, 35, 45, 10, 20].find((v) => v !== item.seconds) ?? 15
+    return [
+      hint(1, 'Pasa primero los minutos a segundos y después suma los segundos que sobran.', 'units'),
+      hint(2, 'Cada minuto tiene un número fijo de segundos: multiplica los minutos por ese número y, al resultado, suma los segundos.', 'units'),
+      hint(3, `Ejemplo: ${k} minutos y ${t} segundos: ${k} × 60 = ${fmt(k * 60)}, y ${fmt(k * 60)} + ${t} = ${fmt(k * 60 + t)} segundos.`, 'units'),
+    ]
+  }
+  const k = [4, 3, 5, 6, 7, 8, 9].find((n) => n !== answer) ?? 4
+  return [
+    hint(1, 'Piensa cuántos segundos caben en un minuto y mira cuántos minutos completos hay en esa cantidad de segundos.', 'units'),
+    hint(2, 'Haz grupos de segundos del tamaño de un minuto y cuenta cuántos grupos completos salen.', 'units'),
+    hint(3, `Ejemplo: ${fmt(k * 60)} segundos son ${k} minutos, porque ${fmt(k * 60)} ÷ 60 = ${k}.`, 'units'),
+  ]
 }
 
 // ---------------------------------------------------------------- statements

@@ -1,13 +1,14 @@
 /* Gráficos y probabilidad (sentido estocástico, docs/curriculum/MATEMATICAS_PRIMARIA.md): read a pictogram or a bar
-   chart (how many, how many more, how many in all, which has the most or the fewest), find the moda of a list, and say
-   whether drawing something from a bag is seguro, posible o imposible. Pure: generators, checks, hints, statements.
-   Hints guide the reading and never give the answer. */
+   chart (how many, how many more, how many in all, which has the most or the fewest), read a double-entry table, count
+   how many times a value comes out in a list (the frequency) and find the moda, and say whether drawing something from a
+   bag is seguro, posible o imposible, or which colour is the most (or the least) likely. Pure: generators, checks, hints,
+   statements. Hints guide the reading and never give the answer. */
 import type { Answer, ChanceExercise, ChartCategory, ChartExercise, CheckResult, Exercise, Hint, Rng } from '@/types'
 import { pick, randInt, shuffle } from './rng'
 
-/** chart:pict (an icon is one), chart:pict:x (an icon is 2, 5 or 10), chart:bars, chart:mode; prob:chance. */
-export type ChartSkill = 'pict' | 'pict:x' | 'bars' | 'mode'
-export const CHART_SKILLS: ChartSkill[] = ['pict', 'pict:x', 'bars', 'mode']
+/** chart:pict (an icon is one), chart:pict:x (an icon is 2, 5 or 10), chart:bars, chart:table, chart:freq, chart:mode. */
+export type ChartSkill = 'pict' | 'pict:x' | 'bars' | 'table' | 'freq' | 'mode'
+export const CHART_SKILLS: ChartSkill[] = ['pict', 'pict:x', 'bars', 'table', 'freq', 'mode']
 
 interface Theme { title: string; unit: string; items: { label: string; emoji: string }[] }
 
@@ -33,6 +34,9 @@ const THEMES: Theme[] = [
     { label: 'el sol', emoji: '☀️' }, { label: 'las nubes', emoji: '☁️' }, { label: 'la lluvia', emoji: '🌧️' },
   ] },
 ]
+
+/** The themes a class votes on: a table of groups by option needs options a group can prefer. */
+const TABLE_THEMES = THEMES.filter((t) => t.unit === 'votos')
 
 const MODE_THEMES = [
   { title: 'Las notas de un examen', unit: 'nota', lo: 4, hi: 10 },
@@ -111,7 +115,45 @@ export function makeModeList(title: string, data: number[]): ChartExercise {
   }
 }
 
+/** A double-entry table: 2 or 3 groups (rows) by 3 or 4 options (columns), each cell a count from 1 to 9. */
+export function makeTable(title: string, rows: string[], cols: { label: string; emoji: string }[], cells: number[][], at: [number, number]): ChartExercise {
+  const [r, c] = at
+  return {
+    id: `chart:table:${title}:${cells.map((row) => row.join('.')).join('|')}:${r}${c}`, kind: 'chart', skill: 'chart:table',
+    difficulty: 2, mode: 'table', title, categories: [], per: 1, data: [],
+    table: { rows: [...rows], cols: cols.map((x) => ({ ...x })), cells: cells.map((row) => [...row]), at: [r, c] },
+    ask: 'cell', question: `¿Cuántos niños de ${rows[r]} prefieren ${cols[c].label}?`, options: [], answer: cells[r][c],
+  }
+}
+
+export function buildTable(rng: Rng): ChartExercise {
+  const theme = pick(rng, TABLE_THEMES)
+  const rows = ['3.º A', '3.º B', '3.º C'].slice(0, rng() < 0.5 ? 2 : 3)
+  const cols = shuffle(rng, theme.items).slice(0, rng() < 0.5 ? 3 : 4)
+  const cells = rows.map(() => cols.map(() => randInt(rng, 1, 9)))
+  return makeTable(theme.title, rows, cols, cells, [randInt(rng, 0, rows.length - 1), randInt(rng, 0, cols.length - 1)])
+}
+
+/** A list of values and «¿cuántas veces sale el 4?»: the frequency of one value. */
+export function makeFreq(title: string, data: number[], target: number): ChartExercise {
+  return {
+    id: `chart:data:freq:${data.join('.')}:${target}`, kind: 'chart', skill: 'chart:freq', difficulty: 2, mode: 'tally', title,
+    categories: [], per: 1, data: [...data], ask: 'freq', question: `¿Cuántas veces sale el ${target}?`, options: [],
+    answer: data.filter((v) => v === target).length,
+  }
+}
+
+/** Twelve throws of a die; the value asked about comes out at least twice, so the child has something to count. */
+export function buildFreq(rng: Rng): ChartExercise {
+  const data = Array.from({ length: 12 }, () => randInt(rng, 1, 6))
+  const repeated = [1, 2, 3, 4, 5, 6].filter((v) => data.filter((x) => x === v).length >= 2)
+  const target = repeated.length ? pick(rng, repeated) : data[0]
+  return makeFreq('Tiradas de un dado', shuffle(rng, data), target)
+}
+
 export function buildChart(variant: ChartSkill, rng: Rng): ChartExercise {
+  if (variant === 'table') return buildTable(rng)
+  if (variant === 'freq') return buildFreq(rng)
   if (variant === 'mode') {
     const t = pick(rng, MODE_THEMES)
     const best = randInt(rng, t.lo, t.hi)
@@ -146,6 +188,7 @@ const BALLS = [
   { label: 'roja', emoji: '🔴' }, { label: 'azul', emoji: '🔵' }, { label: 'verde', emoji: '🟢' }, { label: 'amarilla', emoji: '🟡' },
 ]
 export const CHANCE_OPTIONS = ['Seguro', 'Posible', 'Imposible']
+const LIKELY_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8]
 
 export function makeChance(bag: ChanceExercise['bag'], ask: { label: string }): ChanceExercise {
   const inBag = bag.find((b) => b.label === ask.label && b.count > 0)
@@ -157,6 +200,24 @@ export function makeChance(bag: ChanceExercise['bag'], ask: { label: string }): 
     question: `Sacas una bola sin mirar. ¿Es seguro, posible o imposible que sea ${ask.label}?`,
     options: [...CHANCE_OPTIONS], answer,
   }
+}
+
+/** prob:likely: a bag with distinct amounts of each colour; «¿Qué es más probable sacar?» (or menos), the colours as options. */
+export function makeLikely(bag: ChanceExercise['bag'], ask: 'more' | 'less'): ChanceExercise {
+  const counts = bag.map((b) => b.count)
+  const target = ask === 'more' ? Math.max(...counts) : Math.min(...counts)
+  return {
+    id: `likely:${ask}:${bag.map((b) => `${b.emoji}${b.count}`).join('.')}`, kind: 'chance', skill: 'prob:likely', difficulty: 2,
+    bag: bag.map((b) => ({ ...b })), ask,
+    question: ask === 'more' ? '¿Qué es más probable sacar?' : '¿Qué es menos probable sacar?',
+    options: bag.map((b) => cap(b.label)), answer: counts.indexOf(target),
+  }
+}
+
+export function buildLikely(rng: Rng): ChanceExercise {
+  const colours = shuffle(rng, BALLS).slice(0, randInt(rng, 2, 4))
+  const counts = shuffle(rng, LIKELY_COUNTS).slice(0, colours.length)
+  return makeLikely(colours.map((c, k) => ({ ...c, count: counts[k] })), rng() < 0.3 ? 'less' : 'more')
 }
 
 export function buildChance(rng: Rng): ChanceExercise {
@@ -194,6 +255,8 @@ export function checkChart(ex: ChartExercise, answer: Answer): CheckResult {
   if (v === ex.answer) return { correct: true, given: String(v), expected, feedback: '¡Muy bien! Has leído bien el gráfico.' }
   let feedback = '¡Casi! Vuelve a contar con el dedo.'
   if (ex.ask === 'mode') feedback = '¡Casi! Cuenta cuántas veces sale cada número: la moda es el que más veces aparece.'
+  else if (ex.ask === 'freq') feedback = '¡Casi! Cuenta solo las veces que sale ese número, una a una.'
+  else if (ex.ask === 'cell') feedback = '¡Casi! Busca la fila del grupo y la columna de la opción: el número donde se cruzan.'
   else if (ex.mode === 'pictogram' && ex.per > 1) feedback = `¡Casi! Recuerda que cada dibujo vale ${ex.per}.`
   else if (ex.ask === 'difference') feedback = '¡Casi! Busca cuánto le falta a la más corta para llegar a la más larga.'
   else if (ex.ask === 'total') feedback = '¡Casi! Suma lo que tiene cada una, sin dejarte ninguna.'
@@ -201,6 +264,7 @@ export function checkChart(ex: ChartExercise, answer: Answer): CheckResult {
 }
 
 export function checkChance(ex: ChanceExercise, answer: Answer): CheckResult {
+  if (ex.ask) return judgeChoice(ex.options, ex.answer, answer, `¡Casi! Cuenta cuántas bolas hay de cada color: gana el que tiene ${ex.ask === 'more' ? 'más' : 'menos'}.`)
   return judgeChoice(ex.options, ex.answer, answer, '¡Casi! Mira qué bolas hay en la bolsa: ¿hay alguna de ese color? ¿Son todas de ese color?')
 }
 
@@ -208,7 +272,33 @@ export function checkChance(ex: ChanceExercise, answer: Answer): CheckResult {
 
 const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
 
+const ROW_WORDS = ['primera', 'segunda', 'tercera']
+const COL_WORDS = ['primera', 'segunda', 'tercera', 'cuarta']
+
+/** The example cell is another one (its row and its column both differ), named by position, never by its value. */
+function hintsTable(ex: ChartExercise): Hint[] {
+  const t = ex.table!
+  const [r, c] = t.at
+  const r2 = (r + 1) % t.rows.length
+  const c2 = (c + 1) % t.cols.length
+  return [
+    hint(1, 'Busca la fila del grupo que te preguntan y la columna de la opción que te preguntan.'),
+    hint(2, 'Sigue con el dedo la columna hasta llegar a la fila: el número donde se cruzan es el que buscas.'),
+    hint(3, `Ejemplo con otro cuadro: para la ${ROW_WORDS[r2]} fila y la ${COL_WORDS[c2]} columna, bajas por esa columna hasta esa fila y lees el número del cruce.`),
+  ]
+}
+
+function hintsFreq(): Hint[] {
+  return [
+    hint(1, 'Busca en la lista solo los números que son el de la pregunta.'),
+    hint(2, 'Recorre la lista de izquierda a derecha y pon una raya cada vez que aparece ese número.'),
+    hint(3, 'Ejemplo con otra lista: en «rojo, verde, rojo, rojo», pones una raya en cada rojo y después cuentas las rayas. Haz lo mismo aquí.'),
+  ]
+}
+
 export function hintsChart(ex: ChartExercise): Hint[] {
+  if (ex.mode === 'table') return hintsTable(ex)
+  if (ex.ask === 'freq') return hintsFreq()
   if (ex.ask === 'mode') return [
     hint(1, 'La moda es el dato que más se repite.'),
     hint(2, 'Ordena los números de menor a mayor: los iguales quedan juntos.'),
@@ -227,18 +317,31 @@ export function hintsChart(ex: ChartExercise): Hint[] {
   return []
 }
 
+/** The hints name no colour: an option is never given away, not even one step ahead. */
+function hintsLikely(ask: 'more' | 'less'): Hint[] {
+  return [
+    hint(1, 'Mira cuántas bolas hay de cada color.'),
+    ask === 'more'
+      ? hint(2, 'Piensa en qué color tiene más posibilidades de salir si metes la mano sin mirar.')
+      : hint(2, 'Piensa en qué color tiene menos posibilidades de salir si metes la mano sin mirar.'),
+    ask === 'more'
+      ? hint(3, 'Ejemplo: si un color tiene pocas bolas y otro tiene muchas, es más probable sacar el de muchas.')
+      : hint(3, 'Ejemplo: si un color tiene pocas bolas y otro tiene muchas, es menos probable sacar el de pocas.'),
+  ]
+}
+
 export function hintsChance(ex: ChanceExercise): Hint[] {
-  void ex
+  if (ex.ask) return hintsLikely(ex.ask)
   return [
     hint(1, 'Mira todas las bolas de la bolsa.'),
-    hint(2, 'Si todas son de ese color, es seguro. Si no hay ninguna, es imposible.'),
-    hint(3, 'Si hay algunas de ese color y también de otros, puede salir o no: es posible.'),
+    hint(2, 'Mira cuántas bolas son de ese color: todas, algunas o ninguna. Con todas, el resultado ya está decidido; con ninguna, nunca sale.'),
+    hint(3, 'Si hay algunas de ese color y también de otras, puede salir o no. ¿Qué palabra describe eso?'),
   ]
 }
 
 /** Statement for the worked example and the adult reports: names the question, never the answer. */
 export function dataStatement(ex: Exercise): string | null {
-  if (ex.kind === 'chart') return ex.mode === 'data' ? `${ex.title}: ${ex.data.join(', ')}. ${ex.question}` : `${ex.title}. ${ex.question}`
+  if (ex.kind === 'chart') return ex.mode === 'data' || ex.mode === 'tally' ? `${ex.title}: ${ex.data.join(', ')}. ${ex.question}` : `${ex.title}. ${ex.question}`
   if (ex.kind === 'chance') return ex.question
   return null
 }

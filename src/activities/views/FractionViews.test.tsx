@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createRng, genFractionAdd, genFractionOf, genFractionRead, genFractionEqual, genGeometry, genFractionName, genAngleTap } from '@/engine'
 import { correctAnswer } from '@/engine/__tests__/helpers'
+import { genWordSense } from '@/engine/wordProblems'
 import type {
   AngleTapExercise, FractionEqualExercise, FractionOfExercise, FractionReadExercise, FractionShadeExercise, PerimeterExercise, ShapeChoiceExercise,
 } from '@/types'
@@ -61,6 +62,17 @@ describe('ShapeChoiceView', () => {
     fireEvent.click(screen.getByRole('button', { name: wrong }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('a word problem without figures (word:sense) shows the story and its two options, and the right one is correct', () => {
+    const ex = genWordSense(createRng(9))
+    const onAnswered = vi.fn()
+    render(<ShapeChoiceView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getByText(ex.question)).toBeTruthy()
+    expect(screen.queryByRole('img')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: ex.options[ex.answer] }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 })
 

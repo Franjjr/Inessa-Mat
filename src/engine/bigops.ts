@@ -5,6 +5,7 @@ import type { Answer, CheckResult, ColumnMulExercise, DivisionExercise, ErrorTyp
 import { makeColumnMul } from './make'
 import { fmt } from './numeric'
 import { randInt } from './rng'
+import { galeraShowsAnswer } from './divParts'
 
 /** 3-digit × 1-digit: c0 = no column carries; c1 = at least one carry. */
 export function genMul3x1(rng: Rng, carry: boolean): ColumnMulExercise {
@@ -27,6 +28,7 @@ export function genDivision4(rng: Rng, withRemainder: boolean): DivisionExercise
     const q = randInt(rng, Math.ceil((1000 - r) / d), Math.floor((9999 - r) / d))
     const dividend = d * q + r
     if (dividend < 1000 || dividend > 9999) continue
+    if (galeraShowsAnswer(dividend, d, q, r, withRemainder)) continue
     const variant = withRemainder ? 'rem' : 'exact'
     return {
       id: `division:${dividend}/${d}`, kind: 'division', skill: `div:4x1:${variant}`, difficulty: withRemainder ? 5 : 4,
@@ -37,20 +39,21 @@ export function genDivision4(rng: Rng, withRemainder: boolean): DivisionExercise
 }
 
 /** A dividend of 2 or 3 digits by a 2-digit divisor (12..39, not a round ten): half the time a one-digit quotient
-    («¿cuántas veces cabe 23 en 96?»), otherwise a two-digit one. Exact or with a remainder. */
-export function genDivision2d(rng: Rng, withRemainder: boolean): DivisionExercise {
-  const variant = withRemainder ? 'rem' : 'exact'
+    («¿cuántas veces cabe 23 en 96?»), otherwise a two-digit one. Exact or with a remainder. `round`: the divisor is a
+    round ten (20, 30… 90), always exact: the first step before the other divisors. */
+export function genDivision2d(rng: Rng, withRemainder: boolean, round = false): DivisionExercise {
+  const variant = withRemainder && !round ? 'rem' : 'exact'
   for (let attempt = 0; attempt < 200; attempt++) {
-    const d = randInt(rng, 12, 39)
-    if (d % 10 === 0) continue
-    const r = withRemainder ? randInt(rng, 1, d - 1) : 0
+    const d = round ? 10 * randInt(rng, 2, 9) : randInt(rng, 12, 39)
+    if (!round && d % 10 === 0) continue
+    const r = variant === 'rem' ? randInt(rng, 1, d - 1) : 0
     const q = rng() < 0.5 ? randInt(rng, 2, 9) : randInt(rng, 10, Math.floor((999 - r) / d))
     const dividend = d * q + r
     // The hints name the divisor and its round ten: the quotient is never one of them.
     if (dividend < 24 || dividend > 999 || q === d || q === Math.round(d / 10) * 10) continue
     return {
-      id: `division:${dividend}/${d}`, kind: 'division', skill: `div:3x2:${variant}`, difficulty: withRemainder ? 6 : 5,
-      dividend, divisor: d, quotient: q, remainder: r, variant,
+      id: `division:${dividend}/${d}`, kind: 'division', skill: round ? 'div:3x2:round' : `div:3x2:${variant}`,
+      difficulty: round ? 4 : withRemainder ? 6 : 5, dividend, divisor: d, quotient: q, remainder: r, variant,
     }
   }
   return { id: 'division:96/24', kind: 'division', skill: 'div:3x2:exact', difficulty: 5, dividend: 96, divisor: 24, quotient: 4, remainder: 0, variant: 'exact' }
@@ -106,7 +109,7 @@ const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: '
 export function hintsMulParts(ex: MulPartsExercise): Hint[] {
   return [
     hint(1, `Parte el ${ex.bottom} en ${ex.tens} y ${ex.units}.`),
-    hint(2, `Multiplica ${fmt(ex.top)} por ${ex.units}. Después ${fmt(ex.top)} por ${ex.tens}: es multiplicar por ${ex.tens / 10} y poner un cero detrás.`),
+    hint(2, `Multiplica el número de arriba por ${ex.units}. Después, por las decenas: es multiplicar por ${ex.tens / 10} y poner un cero detrás.`),
     hint(3, 'Suma las dos partes en columna, con las unidades debajo de las unidades.'),
   ]
 }
