@@ -3,7 +3,8 @@
    and its first step comes back in the daily mix. */
 import { describe, expect, it } from 'vitest'
 import type { MasteryMap, SkillKey } from '@/types'
-import { buildPlacement, newMastery, planDailySession, type PlanInput } from '@/engine'
+import { buildPlacement, newMastery, planDailySession } from '@/engine'
+import type { PlanInput } from '@/engine/daily'
 import type { Syllabus } from '@/content/syllabus'
 import {
   GRADE3_STAGES, GRADE3_SYLLABUS, GRADE4_STAGES, GRADE4_SYLLABUS, allTopics, currentTopic, isTopicMastered, stageOfTopic,
@@ -84,7 +85,7 @@ describe('skills added to a stage the child has passed', () => {
 describe('a topic behind a stage the child has passed (4.º)', () => {
   const child = {
     id: 'child-4', orgId: null, nickname: 'Leo', gender: 'm' as const, grade: 4,
-    companion: { species: 'dog', name: 'Toby', gender: 'm' as const, colorway: 'default' as const, equipped: [] },
+    companion: { species: 'dog' as const, name: 'Toby', gender: 'm' as const, colorway: 'default' as const, equipped: [] },
     settings: { ...DEFAULT_CHILD_SETTINGS }, createdAt: now.toISOString(), updatedAt: now.toISOString(),
   }
   const planWith = (mastery: MasteryMap, extra: Partial<PlanInput> = {}) =>
