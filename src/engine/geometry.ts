@@ -496,7 +496,6 @@ export function genTriAngles(rng: Rng): ShapeChoiceExercise {
   throw new Error('geometry: no triangle of the angle kind could be built')
 }
 
-/** Level-3 example per asked quadrilateral: it describes another one, never the asked one's defining feature. */
 /** The level-3 example of each asked quadrilateral is ANOTHER quadrilateral (a contrast): it never gives the asked shape
     away. Five distinct sentences, one per example. */
 const QUAD_EXAMPLE: Record<'cuadrado' | 'rectángulo' | 'rombo' | 'romboide' | 'trapecio', string> = {
