@@ -94,7 +94,6 @@ export interface DailyPlan {
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Human statement of an exercise, for the worked example and for adults' reports. */
 /** The prompt of a decimal exercise: the drawing is the question, or the words, the two numbers, the euros. */
 function decimalStatement(ex: Extract<Exercise, { kind: 'decimal' }>): string {
   switch (ex.mode) {
@@ -105,6 +104,7 @@ function decimalStatement(ex: Extract<Exercise, { kind: 'decimal' }>): string {
   }
 }
 
+/** Human statement of an exercise, for the worked example and for adults' reports. */
 export function statementOf(ex: Exercise): string {
   switch (ex.kind) {
     case 'fact-mul': return `${ex.a} × ${ex.b} = ?`

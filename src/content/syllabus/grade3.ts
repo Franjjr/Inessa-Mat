@@ -46,7 +46,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
   blocks: [
     {
       id: 'numeros',
-      name: 'Números hasta 9 999',
+      name: 'Números hasta 9 999 (y primeros de 5 cifras)',
       topics: [
         { id: 'descomponer-9999', name: 'Descomponer (4 325 = 4 000 + 300 + 20 + 5)', skills: ['num:place:blocks', 'num:place:expanded'], status: 'disponible', rungs: { concreto: 'Bloques de millar, centena, decena y unidad', numeros: 'Las partes escritas: 4 000 + 300 + 20 + 5' } },
         { id: 'leer-escribir-9999', name: 'Leer y escribir hasta 9 999', skills: ['num:place:words'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: 'El número en palabras, sin cifras' } },

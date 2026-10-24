@@ -188,8 +188,9 @@ function buildConvert(dim: MeasureDimension, rng: Rng): MeasureConvertExercise {
 }
 
 /**
- * Numbers of a `:all` item stay within four digits, the writing pad of the conversion (9 999). This is a deliberate cap:
- * the longest chains (km to mm, kg to mg, kl to ml) would reach 9 000 000, beyond 4.º, so they are not generated.
+ * Upper bound of the number a `:all` conversion writes. It holds through the step cap (one to three steps, ×1 000 at
+ * most, from a source of at most 9), so the numbers stay within four digits. The longest chains (km to mm, kg to mg,
+ * kl to ml) need six steps and would reach 9 000 000, beyond 4.º, so they are not generated.
  */
 const ALL_MAX = 9999
 

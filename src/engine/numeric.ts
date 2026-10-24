@@ -453,6 +453,12 @@ const SIGN_WORD: Record<number, string> = { 10: 'las decenas', 100: 'las centena
 
 
 /** Progressive hints for the numeric kinds. Level 3 never contains the answer. */
+/** The columns a comparison goes through, from the largest place of the numbers: five digits add the decenas de millar. */
+function columnsOf(digits: number, fromCentenas = false): string {
+  if (digits >= 5) return fromCentenas ? 'decenas de millar, millares, centenas, decenas y unidades' : 'decenas de millar, millares, centenas, decenas, unidades'
+  return fromCentenas ? 'centenas, decenas y unidades' : 'millares, centenas, decenas, unidades'
+}
+
 export function hintsNumeric(ex: Exercise): Hint[] | null {
   switch (ex.kind) {
     case 'place-value': {
@@ -492,7 +498,7 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
       const where = i < 0 ? 'todas las casas son iguales' : `en ${PLACE_WITH_ARTICLE[width - 1 - i]} cambian las cifras`
       return [
         hint(1, `Mira primero la cifra de más a la izquierda: la de ${PLACE_WITH_ARTICLE[width - 1]}.`, 'place-value', { left: ex.left, right: ex.right }),
-        hint(2, 'Escribe los dos números en columnas (millares, centenas, decenas, unidades) y compara casa por casa.', 'place-value', { left: ex.left, right: ex.right }),
+        hint(2, `Escribe los dos números en columnas (${columnsOf(width)}) y compara casa por casa.`, 'place-value', { left: ex.left, right: ex.right }),
         hint(3, i < 0 ? 'Compara casa por casa: ¿hay alguna casa distinta?' : `Empieza por la primera casa donde cambian: ${where}.`, 'place-value', { left: ex.left, right: ex.right }),
       ]
     }
@@ -501,7 +507,7 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
       const dir = ex.direction === 'asc' ? 'el que tiene menos va primero' : 'el que tiene más va primero'
       return [
         hint(1, `Compara primero ${top}: ${dir}.`, 'none'),
-        hint(2, 'Si empatan en esa cifra, sigue hacia la derecha, casa por casa: centenas, decenas y unidades.', 'place-value', { values: [...ex.values] }),
+        hint(2, `Si empatan en esa cifra, sigue hacia la derecha, casa por casa: ${columnsOf(Math.max(...ex.values.map((v) => String(v).length)), true)}.`, 'place-value', { values: [...ex.values] }),
         hint(3, `Mira ${top} de todos los números. ¿Cuál tiene ${ex.direction === 'asc' ? 'menos' : 'más'}? Ese va primero.`, 'place-value', { values: [...ex.values] }),
       ]
     }

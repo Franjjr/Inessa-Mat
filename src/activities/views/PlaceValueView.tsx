@@ -147,7 +147,7 @@ function BlockGroup({ place, count }: { place: number; count: number }) {
 /** The decenas de millar: each one is a pile of ten blocks of mil, so the child counts piles, then the tiles of a pile. */
 function TenThousandGroup({ count }: { count: number }) {
   return (
-    <div className={s.group} title={`${count} decenas de millar`}>
+    <div className={s.group} title={count === 1 ? 'una decena de millar' : `${count} decenas de millar`}>
       <div className={s.tiles}>
         {Array.from({ length: count }, (_, k) => (
           <span key={k} className={s.pile} aria-hidden>

@@ -71,7 +71,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'place': return p.mode === 'words' ? `${PLACE_TEXT.words} ${rangeWord(p.max)}` : PLACE_TEXT[p.mode]
     case 'compare': return `Comparar números hasta ${rangeWord(p.max)} con < > =`
     case 'order': return `Ordenar números hasta ${rangeWord(p.max)}`
-    case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : p.to === 100 ? 'centenas' : 'millares'}`
+    case 'round': return `Redondear a ${p.to === 10 ? 'las decenas' : p.to === 100 ? 'las centenas' : 'los millares'}`
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
     case 'equation': return p.mode === 'same' ? 'Signo igual o distinto: ¿los dos lados valen lo mismo?' : 'Signo igual: los dos lados valen lo mismo'

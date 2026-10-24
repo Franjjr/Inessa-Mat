@@ -128,8 +128,8 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
      gráficas de barras, la moda, seguro/posible/imposible, series de figuras y de números (y qué número habrá más
      adelante), izquierda/derecha/encima/debajo en una cuadrícula y recorridos con flechas. Entran en 2.º, en 3.º
      (gráficos, probabilidad y recorridos, que la ley pide en el segundo ciclo) y en 4.º.
-   - **Hecho (octubre de 2026): 4.º.** `GRADE4_SYLLABUS` (`src/content/syllabus/grade4.ts`), 8 etapas: repaso de números,
-     redondear a millares, números romanos, sumas y restas de 4 cifras, multiplicar 3 × 1, por 10/100/1 000 y por dos
+   - **Hecho (octubre de 2026): 4.º.** `GRADE4_SYLLABUS` (`src/content/syllabus/grade4.ts`), 8 etapas: números hasta
+     99 999 (decenas de millar), repaso de números, redondear a millares, números romanos, sumas y restas de 4 cifras, multiplicar 3 × 1, por 10/100/1 000 y por dos
      cifras **por partes** (23 × 14 = 23 × 4 + 23 × 10), dividir 4 cifras entre 1, fracciones hasta doceavos, cambio en
      euros, km/m/cm, kg/g, l/ml, reloj digital y duraciones, ángulos, perímetro, **área en cuadraditos**, **ejes de
      simetría**, gráficos, moda y probabilidad. 5.º y 6.º usan el de 4.º hasta tener el suyo. En 3.º ya están

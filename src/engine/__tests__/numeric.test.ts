@@ -12,7 +12,7 @@ import { newMastery } from '../mastery'
 import { correctAnswer } from './helpers'
 import type { ChildProfile } from '@/types'
 import { buildMental, makeMental } from '../calc'
-import { makePlaceValue } from '../numeric'
+import { makeCompare, makeOrder, makePlaceValue } from '../numeric'
 
 const NEW_KINDS: ExerciseKind[] = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation']
 
@@ -497,3 +497,12 @@ function onScreen(ex: Exercise): string {
     default: return ''
   }
 }
+
+describe('compare and order hints name the columns of the numbers', () => {
+  it('five digits add the decenas de millar; four digits keep the millares', () => {
+    expect(hintsFor(makeCompare(45300, 45030))[1].text).toBe('Escribe los dos números en columnas (decenas de millar, millares, centenas, decenas, unidades) y compara casa por casa.')
+    expect(hintsFor(makeCompare(4530, 4503))[1].text).toBe('Escribe los dos números en columnas (millares, centenas, decenas, unidades) y compara casa por casa.')
+    expect(hintsFor(makeOrder([45300, 4530, 45030], 'asc'))[1].text).toContain('decenas de millar, millares, centenas, decenas y unidades')
+    expect(hintsFor(makeOrder([453, 45, 4], 'asc'))[1].text).toContain('centenas, decenas y unidades')
+  })
+})

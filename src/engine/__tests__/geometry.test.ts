@@ -462,3 +462,24 @@ describe('new geometry operations (3.º and 4.º)', () => {
     expect(seen).toEqual(new Set(['caras', 'vértices', 'aristas']))
   })
 })
+
+describe('the quadrilateral example of the level-3 hint describes its own shape', () => {
+  it('each kind names its own sides and corners', () => {
+    const want: Record<string, string> = {
+      cuadrado: 'cuatro lados iguales y cuatro esquinas como la del papel',
+      rectángulo: 'cuatro esquinas como la del papel, y dos lados largos y dos cortos',
+      rombo: 'cuatro lados iguales, pero ninguna esquina como la del papel',
+      romboide: 'dos pares de lados iguales, pero ninguna esquina como la del papel',
+      trapecio: 'solo un par de lados va en la misma dirección',
+    }
+    const seen = new Map<string, string>()
+    for (let seed = 1; seed < 400 && seen.size < 5; seed++) {
+      const ex = genQuadName(createRng(seed))
+      const kind = ex.options[ex.answer]
+      if (!seen.has(kind)) seen.set(kind, hintsFor(ex)[2].text)
+    }
+    expect(seen.size).toBe(5)
+    for (const [kind, text] of seen) expect(text, kind).toContain(want[kind])
+    expect(new Set(seen.values()).size).toBe(5)
+  })
+})
