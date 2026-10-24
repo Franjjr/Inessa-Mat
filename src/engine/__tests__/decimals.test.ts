@@ -217,9 +217,13 @@ describe('the review of the hints', () => {
       const asked = [fmtDecimal(ex.value, ex.places), fmtDecimal(ex.other ?? 0, ex.places)]
       const hints = hintsDecimal(ex)
       for (const t of tokens(hints[2].text)) expect(asked.includes(t), `${seed}: ${hints[2].text}`).toBe(false)
+      // The example names the larger number first, so its claim is true.
+      const [first = '', second = ''] = tokens(hints[2].text)
+      expect(hundredthsOf(first) > hundredthsOf(second), `${seed}: ${hints[2].text}`).toBe(true)
+      expect(hints[2].text).toContain(`${first} vale más que ${second}`)
       if (ex.places === 2) {
         expect(hints[0].text).toContain('centésimas')
-        expect(hints[0].text).not.toBe('Mira primero la parte entera; si es igual, compara las décimas.')
+        expect(hints[0].text).not.toContain('compara las décimas')
       } else {
         expect(hints[0].text).toBe('Mira primero la parte entera; si es igual, compara las décimas.')
       }

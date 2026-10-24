@@ -216,16 +216,17 @@ export function hintsDecimal(ex: DecimalExercise | DecimalOpExercise): Hint[] {
     numbers that neither asked number is part of. */
 function hintsCompare(ex: DecimalExercise): Hint[] {
   const centesimas = ex.places === 2
+  // Every pair lists the larger number first: the example sentence says «a vale más que b».
   const pairs: [number, number][] = centesimas
-    ? [[462, 427], [308, 305], [271, 279]]
-    : [[460, 420], [380, 350], [270, 290]]
+    ? [[462, 427], [308, 305], [279, 271]]
+    : [[460, 420], [380, 350], [290, 270]]
   const asked = new Set([ex.value, ex.other ?? 0])
   const [a, b] = pairs.find(([x, y]) => !asked.has(x) && !asked.has(y)) ?? pairs[0]
   const parts = (v: number) => (centesimas ? v % 100 : Math.floor((v % 100) / 10))
   const unitWord = centesimas ? 'centésimas' : 'décimas'
   return [
     hint(1, centesimas
-      ? 'Mira primero la parte entera; si es igual, compara las décimas y después las centésimas.'
+      ? 'Mira primero la parte entera; si es igual, pasa a las décimas y después a las centésimas.'
       : 'Mira primero la parte entera; si es igual, compara las décimas.'),
     hint(2, 'Si las partes enteras son distintas, el número con más unidades es el que vale más.'),
     hint(3, `Ejemplo: ${fmtDecimal(a, ex.places)} y ${fmtDecimal(b, ex.places)}. La parte entera es la misma (${Math.floor(a / 100)}). Como ${parts(a)} ${unitWord} son más que ${parts(b)} ${unitWord}, ${fmtDecimal(a, ex.places)} vale más que ${fmtDecimal(b, ex.places)}.`),
