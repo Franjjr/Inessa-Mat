@@ -91,7 +91,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'prob-sumar-restar', name: 'Problemas de sumar y restar', skills: ['bar:add', 'bar:sub', 'word:add', 'word:sub'], status: 'disponible', rungs: { dibujo: 'Barra con las partes y el total', uso: 'Escribir la operación' } },
         { id: 'prob-multiplicar', name: 'Problemas de multiplicar', skills: ['bar:mul', 'word:mul'], status: 'disponible', rungs: { dibujo: 'Barras iguales', uso: 'Escribir la operación' } },
         { id: 'prob-dividir', name: 'Problemas de repartir', skills: ['bar:div', 'word:div'], status: 'disponible', rungs: { dibujo: 'Barra repartida en partes iguales', uso: 'Escribir la operación' } },
-        { id: 'prob-dos-pasos', name: 'Problemas de dos pasos', skills: ['bar:two'], status: 'disponible', rungs: { dibujo: 'Dos barras: primero una cuenta, luego otra', uso: 'Dos operaciones seguidas' } },
+        { id: 'prob-dos-pasos', name: 'Problemas de varios pasos', skills: ['bar:two', 'bar:three', 'word:sense'], status: 'disponible', ordered: true, rungs: { dibujo: 'Dos o tres barras: primero una cuenta, luego otra', uso: 'Varias operaciones seguidas, y ¿tiene sentido la respuesta?' } },
       ],
     },
     {
@@ -110,7 +110,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       id: 'dinero',
       name: 'Dinero',
       topics: [
-        { id: 'cambio-presupuesto', name: 'Precios, cambio y euros con céntimos', skills: ['money:change', 'money:add', 'money:convert'], status: 'disponible', rungs: { numeros: '3,75 € + 2,40 €; cambio de 10 €', uso: 'Problemas de compra' } },
+        { id: 'cambio-presupuesto', name: 'Precios, cambio y euros con céntimos', skills: ['money:change', 'money:add', 'money:convert', 'money:budget'], status: 'disponible', rungs: { numeros: '3,75 € + 2,40 €; cambio de 10 €', uso: 'Problemas de compra y presupuesto: ¿te llega?' } },
       ],
     },
     {

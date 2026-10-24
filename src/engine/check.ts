@@ -31,6 +31,8 @@ import { checkLongMul } from './longmul'
 import { checkOrdinal } from './ordinals'
 import { checkArea } from './geometry'
 import { checkPosition } from './position'
+import { WORD_SENSE_SKILL } from './skills'
+import { checkSense } from './wordProblems'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -579,7 +581,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'fraction-of': return checkFractionOf(exercise, answer)
     case 'fraction-add': return checkFractionAdd(exercise, answer)
     case 'fraction-equal': return checkFractionEqual(exercise, answer)
-    case 'shape-choice': return checkShapeChoice(exercise, answer)
+    case 'shape-choice': return exercise.skill === WORD_SENSE_SKILL ? checkSense(exercise, answer) : checkShapeChoice(exercise, answer)
     case 'angle-tap': return checkAngleTap(exercise, answer)
     case 'perimeter': return checkPerimeter(exercise, answer)
     case 'shape-count': return checkShapeCount(exercise, answer)

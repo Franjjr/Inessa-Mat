@@ -260,7 +260,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
             ))}
           </div>
           <div className={s.answer}>
-            <span className={s.answerLabel}>{steps > 1 && k < steps - 1 ? host.t('Primero:') : host.t('Respuesta:')}</span>
+            <span className={s.answerLabel}>{k < steps - 1 ? host.t(k === 0 ? 'Primero:' : 'Después:') : host.t('Respuesta:')}</span>
             <NumberInput
               value={res[k]}
               onChange={(v) => setResult(k, v)}
@@ -272,7 +272,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
               maxDigits={4}
               size="lg"
               status={status}
-              ariaLabel={steps > 1 && k < steps - 1 ? 'Resultado del primer paso' : 'Respuesta'}
+              ariaLabel={steps > 1 && k < steps - 1 ? `Resultado del paso ${k + 1}` : 'Respuesta'}
               placeholder="?"
               autoFocus={k === 0}
             />

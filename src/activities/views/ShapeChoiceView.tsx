@@ -1,5 +1,6 @@
 /* Shapes and fractions with options (shape-choice): a figure, a question, and the answer among the options (big
-   buttons, no typing). Used for names of polygons, lines, angles, circles, solids, fraction names and comparisons. */
+   buttons, no typing). Used for names of polygons, lines, angles, circles, solids, fraction names and comparisons, and for
+   the word problems «¿tiene sentido?» (word:sense), which have no figure. */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { celebrate } from '@/fx'
@@ -28,13 +29,15 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
   return (
     <section className={s.view} aria-label="Elegir la respuesta" data-kind={ex.kind} data-status={status}>
       <p className={s.prompt}>{ex.question}</p>
-      <div className={s.figureRow}>
-        {ex.figures.map((f, i) => (
-          <div key={i} className={s.figureBox}>
-            <FigureSvg figure={f} label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'} className={`${s.figure} ${ex.figures.length > 1 ? s.figureSmall : ''}`} />
-          </div>
-        ))}
-      </div>
+      {ex.figures.length > 0 && (
+        <div className={s.figureRow}>
+          {ex.figures.map((f, i) => (
+            <div key={i} className={s.figureBox}>
+              <FigureSvg figure={f} label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'} className={`${s.figure} ${ex.figures.length > 1 ? s.figureSmall : ''}`} />
+            </div>
+          ))}
+        </div>
+      )}
       <div className={s.optionGrid} role="group" aria-label="Respuestas">
         {ex.options.map((o, i) => (
           <button

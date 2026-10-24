@@ -9,6 +9,7 @@
    div:2x1:exact|rem|long
    concept:groups|array|commutative|share|family|placevalue
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
+   word:sense                ¿tiene sentido?: a story with a proposed answer, yes or no (4.º, src/engine/wordProblems.ts)
    num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
    <key>:999            numbers up to 999 (2.º): num:place:*, num:compare, num:order, num:line:10|100, add:3d:cK
    <key>:19999|:99999   numbers up to 19 999 (3.º intro) or 99 999 (4.º): num:place:*, num:compare, num:order;
@@ -17,7 +18,7 @@
    mental:combinadas|jerarquia|parentesis|asociativa|distributiva|estimar                          (4.º: operaciones combinadas, propiedades, estimar)
    eq:flex                                                                                          (signo igual flexible)
    eq:same                                                                                          (signo igual o distinto: = o ≠)
-   bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
+   bar:add|sub|mul|div|two|three  bar-diagram problems (two, three = two or three steps); the ladder with/without the bar is in bars.ts
    bar:mul:small            the 2.º groups problem: groups of 2, 3, 4, 5 or 10 (the tables of 2.º)
    hunt:add|sub|mul         encuentra el error (column calculation that may be wrong)
    check:add|sub|div        comprobar (claim + the check operation)
@@ -39,6 +40,7 @@
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
    money:pay:e | money:add:e   whole euros, no céntimos (2.º)
+   money:budget             presupuesto (4.º): ¿te llega?, ¿cuánto te falta o te sobra?, ¿qué compra cabe? (src/engine/money.ts)
    chart:pict|pict:x|bars|table|freq|mode   gráficos: pictogram (an icon is 1, or 2/5/10), bar chart, double-entry table, frequency, moda (src/engine/data.ts)
    prob:chance|likely       seguro, posible o imposible; the most (or least) likely colour of a bag
    pattern:shapes|numbers|predict   series: next figure, missing number, a term further on (src/engine/patterns.ts)
@@ -78,13 +80,13 @@ export type DivisionVariant = DivisionExercise['variant']
 export type OrdinalMax = 10 | 20 | 30
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
 export type WordOp = 'add' | 'sub' | 'mul' | 'div'
-export type BarSkillOp = BarOp | 'two'
+export type BarSkillOp = BarOp | 'two' | 'three'
 export type HuntOp = 'add' | 'sub' | 'mul'
 export type CheckOp = 'add' | 'sub' | 'div'
 
 export const CONCEPTS: ConceptName[] = ['groups', 'array', 'commutative', 'share', 'family', 'placevalue']
 export const WORD_OPS: WordOp[] = ['add', 'sub', 'mul', 'div']
-export const BAR_SKILL_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two']
+export const BAR_SKILL_OPS: BarSkillOp[] = ['add', 'sub', 'mul', 'div', 'two', 'three']
 export const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const CHECK_OPS: CheckOp[] = ['add', 'sub', 'div']
 export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
@@ -109,6 +111,7 @@ export type ParsedSkill =
   | { type: 'div3x1'; variant: 'exact' | 'rem' }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
+  | { type: 'word-sense' }
   | { type: 'place'; mode: PlaceMode; max?: NumberMax }
   | { type: 'compare'; max?: NumberMax }
   | { type: 'order'; max?: NumberMax }
@@ -180,6 +183,8 @@ export function conceptSkill(name: ConceptName): SkillKey {
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
 }
+/** ¿Tiene sentido? (4.º): a story with a proposed answer that the child judges. */
+export const WORD_SENSE_SKILL: SkillKey = 'word:sense'
 export function placeSkill(mode: PlaceMode, max?: NumberMax): SkillKey {
   return `num:place:${mode}${max ? `:${max}` : ''}`
 }
@@ -305,6 +310,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
+  if (key === WORD_SENSE_SKILL) return { type: 'word-sense' }
   if ((m = key.match(/^num:place:(blocks|expanded|words)(?::(999|19999|99999))?$/))) {
     return { type: 'place', mode: m[1] as PlaceMode, ...(m[2] ? { max: Number(m[2]) as NumberMax } : {}) }
   }
@@ -326,7 +332,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'eq:flex') return { type: 'equation', mode: 'fill' }
   if (key === 'eq:same') return { type: 'equation', mode: 'same' }
   if ((m = key.match(/^div:3x1:(exact|rem)$/))) return { type: 'div3x1', variant: m[1] as 'exact' | 'rem' }
-  if ((m = key.match(/^bar:(add|sub|mul|div|two)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
+  if ((m = key.match(/^bar:(add|sub|mul|div|two|three)$/))) return { type: 'bar', op: m[1] as BarSkillOp }
   if (key === 'bar:mul:small') return { type: 'bar', op: 'mul', small: true }
   if ((m = key.match(/^hunt:(add|sub|mul)$/))) return { type: 'hunt', op: m[1] as HuntOp }
   if ((m = key.match(/^check:(add|sub|div)$/))) return { type: 'check', op: m[1] as CheckOp }
@@ -344,7 +350,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   }
   if ((m = key.match(/^frac:(equal|compare|add|sub)$/))) return { type: 'fraction', op: m[1] as 'equal' | 'compare' | 'add' | 'sub' }
   if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
-  if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
+  if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert|budget)$/))) return { type: 'money', mode: m[1] as MoneyMode }
   if ((m = key.match(/^money:(pay|add):e$/))) return { type: 'money', mode: m[1] as MoneyMode, whole: true }
   if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)(:all)?$/))) {
     if (m[3] && m[1] !== 'convert') return null
@@ -483,6 +489,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
       }
       break
     case 'word': return ['word-problem']
+    case 'word-sense': return ['shape-choice']
     case 'place': return ['place-value']
     case 'compare': return ['compare']
     case 'order': return ['order']

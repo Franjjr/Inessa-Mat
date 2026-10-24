@@ -3,7 +3,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createRng, buildMeasure, THINGS, UNITS } from '@/engine'
-import { makeAdd, makeChange, makeCompare, makeConvert as makeMoneyConvert, makePay, makeRecognise, SHOP } from '@/engine/money'
+import { makeAdd, makeBudget, makeChange, makeCompare, makeConvert as makeMoneyConvert, makePay, makeRecognise, SHOP } from '@/engine/money'
 import { makeConvert, makeEstimate, makeRuler, makeUnit } from '@/engine/measure'
 import MeasureView from './MeasureView'
 import MoneyView from './MoneyView'
@@ -117,6 +117,35 @@ describe('MoneyView', () => {
     fireEvent.change(box('Céntimos'), { target: { value: '50' } })
     fireEvent.click(comprobar())
     expect(second.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('budget: «¿Te llega?» is answered with Sí or No; the right one is correct', () => {
+    const onAnswered = vi.fn()
+    // 2,50 € + 1,35 € = 3,85 €, with 5 € it is enough.
+    render(<MoneyView exercise={makeBudget('enough', 500, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getByText('¿Te llega?')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('budget: «¿Te llega?» answered No when the total is more than the money', () => {
+    const onAnswered = vi.fn()
+    render(<MoneyView exercise={makeBudget('enough', 300, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('budget: «¿Cuánto te falta?» is typed in euros and céntimos; the difference is correct', () => {
+    const onAnswered = vi.fn()
+    // 2,50 € + 1,35 € = 3,85 €; with 2 € we are short by 1,85 €.
+    render(<MoneyView exercise={makeBudget('short', 200, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getByText('¿Cuánto te falta?')).toBeTruthy()
+    fireEvent.change(box('Euros'), { target: { value: '1' } })
+    fireEvent.change(box('Céntimos'), { target: { value: '85' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 })
 

@@ -35,7 +35,7 @@ import {
   type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
-import { fillTemplate, templatesFor } from './wordProblems'
+import { fillTemplate, genWordSense, templatesFor } from './wordProblems'
 
 export const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
@@ -727,6 +727,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
     const built = buildNumericExercise(kind, skill, rng, used, ctx.digits)
     if (built) return built
   }
+  if (p.type === 'word-sense') return retry(() => genWordSense(rng), used, rng)!
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
   if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
   if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used, p.all === true, (ctx.mastery?.[skill]?.box ?? -1) >= 2)

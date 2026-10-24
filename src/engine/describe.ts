@@ -87,7 +87,8 @@ export function describeSkill(skill: SkillKey): string {
     case 'ordinal': return p.top === 10 ? 'Ordinales hasta el 10.º (tocar el lugar en una fila)' : `Ordinales hasta el ${p.top}.º (leer y escribir)`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': if (p.small) return 'Problemas con barras (grupos de 2, 3, 4, 5 y 10)'
-      return p.op === 'two' ? 'Problemas de dos pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
+      if (p.op === 'two') return 'Problemas de dos pasos con barras'
+      return p.op === 'three' ? 'Problemas de tres pasos con barras' : `Problemas con barras (${WORD_TEXT[p.op].toLowerCase()})`
     case 'hunt': return `Encuentra el error en cuentas de ${HUNT_TEXT[p.op]}`
     case 'check': return `Comprobar resultados de ${HUNT_TEXT[p.op === 'div' ? 'mul' : p.op]}`
     case 'clock-read': return CLOCK_READ_TEXT[p.step]
@@ -98,6 +99,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'fraction': return fractionText(p)
     case 'geo': return GEO_TEXT[p.op]
     case 'money': return MONEY_TEXT[p.mode]
+    case 'word-sense': return '¿Tiene sentido la respuesta? Problemas con una solución propuesta'
     case 'measure': return measureText(p.mode, p.dimension, p.all === true)
     case 'chart': return CHART_TEXT[p.variant]
     case 'chance': return p.variant === 'likely' ? 'Qué color es más (o menos) probable sacar' : 'Seguro, posible o imposible'
@@ -132,6 +134,7 @@ const MONEY_TEXT: Record<MoneyMode, string> = {
   add: 'Sumar precios (euros y céntimos)',
   compare: 'Comparar precios: ¿qué cuesta más?',
   convert: 'Euros y céntimos: 1 € = 100 céntimos',
+  budget: 'Presupuesto: ¿te llega el dinero? ¿cuánto falta o sobra?',
 }
 
 function measureText(mode: MeasureMode, dimension: MeasureDimension | null, all: boolean): string {

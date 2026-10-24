@@ -4,8 +4,11 @@
      add  {a} + {b}
      sub  {a} − {b}  ({a} is always the larger number)
      mul  {a} groups of {b}  ({a} is a single digit; {b} may be 2-digit in 2×1 problems)
-     div  {a} ÷ {b}  ({a} dividend, {b} divisor) */
-import type { WordOp } from './skills'
+     div  {a} ÷ {b}  ({a} dividend, {b} divisor)
+   Also the «¿tiene sentido?» problems (word:sense, 4.º): a story with a proposed answer that the child judges (genWordSense). */
+import type { Answer, CheckResult, Rng, ShapeChoiceExercise } from '@/types'
+import { pick, randInt, shuffle } from './rng'
+import { WORD_SENSE_SKILL, type WordOp } from './skills'
 
 export interface WordTemplate {
   id: string
@@ -108,4 +111,102 @@ export function fillTemplate(text: string, a: number, b: number): string {
 
 export function getWordTemplate(id: string): WordTemplate | undefined {
   return WORD_TEMPLATES.find((t) => t.id === id)
+}
+
+// ---------------------------------------------------------------- ¿tiene sentido? (word:sense, 4.º)
+
+/** The stories of word:sense: the bank's stories without a placeholder (the question is shown as text, not rendered). */
+const SENSE_STORIES = WORD_TEMPLATES.filter((t) => !/\{(child|pet)\}/.test(t.text))
+
+const SENSE_OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido'] as const
+
+/** The three hints are the same for every problem: the strategy, the rounding, and a worked example in words (other numbers). */
+const SENSE_HINTS: [string, string, string] = [
+  'Antes de calcular, piensa si la respuesta tiene un tamaño razonable para lo que cuenta el cuento.',
+  'Redondea los números del cuento a decenas o a centenas, haz la cuenta de cabeza y mira si la respuesta que dan está cerca de ese resultado o muy lejos.',
+  'Ejemplo con otros números: doscientas más trescientas son unas quinientas; cinco mil sería demasiado. Compara igual la respuesta con esa cuenta redondeada.',
+]
+
+/** A wrong answer for the story: off by an order of magnitude (×10, or ÷10 when that stays whole), or impossible for the story. */
+function wrongAnswer(rng: Rng, op: WordOp, a: number, b: number, right: number): number {
+  const options = [right * 10]
+  if (right % 10 === 0 && right >= 20) options.push(right / 10)
+  if (op === 'add') options.push(randInt(rng, 1, Math.max(a, b) - 1)) // a total smaller than one of its parts
+  else if (op === 'sub') options.push(a + randInt(rng, 1, a)) // more left than there was to start with
+  else if (op === 'mul') options.push(randInt(rng, 1, b - 1)) // fewer than one group
+  else options.push(a + randInt(rng, 1, a)) // each share bigger than the whole
+  return pick(rng, options)
+}
+
+/** Thousands with a space, as the book writes them: 3770 → 3 770. */
+const withSpaces = (n: number) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+
+/** A word:sense problem with its facts: the operands, the true result and the proposed one. */
+export interface SenseProblem {
+  op: WordOp
+  a: number
+  b: number
+  /** The true result of the story. */
+  right: number
+  /** The answer the story's character gives: right, or a wrong one (see wrongAnswer). */
+  shown: number
+  exercise: ShapeChoiceExercise
+}
+
+/**
+ * A story with a proposed answer. The child decides whether the answer makes sense: half of the proposals are the true
+ * result, the rest are absurd (see wrongAnswer). The options are «Sí» and «No», in a random order.
+ */
+export function genWordSense(rng: Rng): ShapeChoiceExercise {
+  return buildSense(rng).exercise
+}
+
+export function buildSense(rng: Rng): SenseProblem {
+  const t = pick(rng, SENSE_STORIES)
+  const op = t.op
+  let a: number
+  let b: number
+  let right: number
+  if (op === 'add') {
+    a = randInt(rng, 10, 999)
+    b = randInt(rng, 10, 999)
+    right = a + b
+  } else if (op === 'sub') {
+    a = randInt(rng, 20, 999)
+    b = randInt(rng, 2, a - 2)
+    right = a - b
+  } else if (op === 'mul') {
+    a = randInt(rng, 2, 9)
+    b = t.fixed ?? randInt(rng, 2, 9)
+    right = a * b
+  } else {
+    b = t.fixed ?? randInt(rng, 2, 9)
+    right = randInt(rng, 2, 19)
+    a = b * right
+  }
+  const shown = rng() < 0.5 ? right : wrongAnswer(rng, op, a, b, right)
+  const story = fillTemplate(t.text, a, b)
+  const question = `${story} Lumi responde: «${withSpaces(shown)} ${t.unit}». ¿Tiene sentido esa respuesta?`
+  const order = shuffle(rng, [0, 1])
+  const correct = shown === right ? 0 : 1
+  const exercise: ShapeChoiceExercise = {
+    id: `word-sense:${t.id}:${a}.${b}:${shown}`, kind: 'shape-choice', skill: WORD_SENSE_SKILL, difficulty: 3,
+    question, figures: [], options: order.map((i) => SENSE_OPTIONS[i]), answer: order.indexOf(correct), hints: SENSE_HINTS,
+  }
+  return { op, a, b, right, shown, exercise }
+}
+
+/** Grades a word:sense answer: the option tapped against the right one. */
+export function checkSense(ex: ShapeChoiceExercise, answer: Answer): CheckResult {
+  const expected = ex.options[ex.answer]
+  if (answer.type !== 'choice') return { correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' }
+  if (answer.index === null || answer.index === undefined) {
+    return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: 'Elige una respuesta antes de comprobar.' }
+  }
+  const given = ex.options[answer.index] ?? '?'
+  if (answer.index === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Has comparado la respuesta con el cuento.' }
+  return {
+    correct: false, given, expected, errorType: 'other',
+    feedback: '¡Casi! Haz una cuenta aproximada con números redondos y compara con la respuesta que dan.',
+  }
 }

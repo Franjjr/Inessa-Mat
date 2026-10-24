@@ -250,3 +250,102 @@ describe('dinero: statements name the question, not the result', () => {
     }
   })
 })
+
+/** A budget hint must not state an amount of the answer: the euros with its comma, the whole euros, or the céntimos. */
+function amountLeaks(text: string, cents: number): boolean {
+  const [e, c] = splitCents(cents)
+  const forms = [`${e},${String(c).padStart(2, '0')}`, ...(c === 0 ? [`${e} €`] : []), ...(cents >= 10 ? [String(cents)] : [])]
+  return forms.some((f) => new RegExp(`(^|[^\\d,])${f}(?![\\d,])`).test(text))
+}
+
+describe('dinero: presupuesto (money:budget, 4.º)', () => {
+  it('parses the skill and maps it to the money kind', () => {
+    expect(parseSkill('money:budget')).toEqual({ type: 'money', mode: 'budget' })
+    expect(kindsForSkill('money:budget')).toEqual(['money'])
+    expect(describeSkill('money:budget').length).toBeGreaterThan(3)
+  })
+
+  it('the four questions occur, and each answer is the one its question asks for, never negative', () => {
+    const rng = createRng(41)
+    const asks = new Set<string>()
+    let yes = 0
+    let no = 0
+    for (let i = 0; i < SAMPLES * 3; i++) {
+      const ex = buildMoney('budget', rng, new Set())
+      if (ex.kind !== 'money' || ex.mode !== 'budget') throw new Error('mode')
+      asks.add(ex.ask)
+      const total = ex.items.reduce((s, it) => s + it.price, 0)
+      expect(ex.items.length, ex.id).toBeGreaterThanOrEqual(2)
+      expect(new Set(ex.items.map((it) => it.name)).size, ex.id).toBe(ex.items.length)
+      expect(ex.budget, ex.id).toBeGreaterThan(0)
+      if (ex.ask === 'enough') {
+        expect(ex.answer, ex.id).toBe(total <= ex.budget ? 'Sí' : 'No')
+        if (ex.answer === 'Sí') yes++
+        else no++
+      } else if (ex.ask === 'short') {
+        expect(total > ex.budget, ex.id).toBe(true)
+        expect(ex.answer, ex.id).toBe(total - ex.budget)
+        expect(ex.question).toBe('¿Cuánto te falta?')
+      } else if (ex.ask === 'left') {
+        expect(total < ex.budget, ex.id).toBe(true)
+        expect(ex.answer, ex.id).toBe(ex.budget - total)
+        expect(ex.question).toBe('¿Cuánto te sobra?')
+      } else {
+        const fitting = ex.items.filter((it) => it.price <= ex.budget)
+        expect(fitting, ex.id).toHaveLength(1)
+        expect(ex.answer, ex.id).toBe(fitting[0].name)
+      }
+      if (typeof ex.answer === 'number') expect(ex.answer, ex.id).toBeGreaterThanOrEqual(1)
+    }
+    expect([...asks].sort()).toEqual(['afford', 'enough', 'left', 'short'])
+    expect(yes).toBeGreaterThan(0)
+    expect(no).toBeGreaterThan(0)
+  })
+
+  it('is graded by its question: Sí or No, the euros and céntimos, or the one item that fits', () => {
+    const rng = createRng(42)
+    for (let i = 0; i < SAMPLES; i++) {
+      const ex = buildMoney('budget', rng, new Set())
+      if (ex.kind !== 'money' || ex.mode !== 'budget') throw new Error('mode')
+      if (ex.ask === 'enough') {
+        expect(checkMoney(ex, { type: 'option', value: ex.answer as string }).correct).toBe(true)
+        const other = ex.answer === 'Sí' ? 'No' : 'Sí'
+        expect(checkMoney(ex, { type: 'option', value: other }).correct).toBe(false)
+      } else if (ex.ask === 'short' || ex.ask === 'left') {
+        const [e, c] = splitCents(ex.answer as number)
+        expect(checkMoney(ex, { type: 'numbers', values: [e, c] }).correct).toBe(true)
+        expect(checkMoney(ex, { type: 'numbers', values: [e + 1, c] }).correct).toBe(false)
+      } else {
+        expect(checkMoney(ex, { type: 'option', value: ex.answer as string }).correct).toBe(true)
+        const other = ex.items.find((it) => it.name !== ex.answer)!
+        expect(checkMoney(ex, { type: 'option', value: other.name }).correct).toBe(false)
+      }
+    }
+  })
+
+  it('hints never give the answer, at any level, for any of the four questions', () => {
+    const rng = createRng(43)
+    for (let i = 0; i < SAMPLES * 3; i++) {
+      const ex = buildMoney('budget', rng, new Set())
+      if (ex.kind !== 'money' || ex.mode !== 'budget') throw new Error('mode')
+      const hints = hintsFor(ex)
+      expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
+      for (const h of hints) {
+        const where = `${ex.id}: ${h.text}`
+        if (ex.ask === 'enough') expect(/\b(sí|no)\b/i.test(h.text), where).toBe(false)
+        else if (ex.ask === 'afford') expect(h.text.toLowerCase().includes(String(ex.answer).toLowerCase()), where).toBe(false)
+        else expect(amountLeaks(h.text, ex.answer as number), where).toBe(false)
+      }
+    }
+  })
+
+  it('the statement names the question with the budget, and never the answer', () => {
+    const rng = createRng(44)
+    for (let i = 0; i < 40; i++) {
+      const ex = buildMoney('budget', rng, new Set())
+      if (ex.kind !== 'money' || ex.mode !== 'budget') throw new Error('mode')
+      expect(moneyStatement(ex)).toContain(ex.question)
+      expect(moneyStatement(ex)).not.toContain(String(ex.answer))
+    }
+  })
+})

@@ -21,7 +21,7 @@ import type { ID, InputMode } from './common'
  *                                     combinadas, jerarquia, parentesis, asociativa, distributiva, estimar)
  *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
  *   eq:same                           signo igual o distinto: dos expresiones, el niño elige = o ≠
- *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
+ *   bar:add|sub|mul|div|two|three   problem on a bar diagram (two, three = two or three steps), with and without the bar (ladder)
  *   hunt:add|sub|mul          encuentra el error: a worked column calculation that may be wrong
  *   check:add|sub|div         comprobar: is the claim right? (the check operation is written)
  *   div:3x1:exact|rem         3-digit dividend ÷ 1-digit divisor
@@ -38,7 +38,8 @@ import type { ID, InputMode } from './common'
  *   geo:perimeter, geo:tri:sides|angles, geo:quad:name, geo:translate
  *                                    geometry (3.º and 4.º, block E): polygons, lines, angles, circle, solids, perimeter, triangles,
  *                                    quadrilaterals, translation
- *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
+ *   money:recognise|pay|change|add|compare|convert|budget   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos);
+ *                                                     budget (4.º): ¿te llega?, ¿cuánto te falta o te sobra?, ¿qué compra cabe?
  *   measure:unit:length|mass|capacity                 choose the unit of a real object
  *   measure:convert:length|mass|capacity              simple conversions (1 m = 100 cm, medio kilo = 500 g)
  *   measure:convert:length|mass|capacity:all          every unit of the dimension (km … mm, kg … mg, kl … ml), whole numbers only
@@ -50,6 +51,7 @@ import type { ID, InputMode } from './common'
  *   dec:shade:1|2 | dec:read:1|2                      décimas (1) and centésimas (2): colour the bar or the grid of 100, read the words and write the number
  *   dec:compare | dec:money                           comparing two decimals with < = >; euros with céntimos as a decimal (2,45 € = 2 euros y 45 céntimos)
  *   dec:add:1|2 | dec:sub:1|2                         adding and subtracting decimals in columns, comma under comma, never negative (4.º)
+ *   word:sense                                        ¿tiene sentido?: a word problem with a proposed answer; the child decides yes or no (4.º, shape-choice)
  */
 export type SkillKey = string
 
@@ -210,7 +212,7 @@ export interface WordProblemExercise extends ExerciseBase {
 }
 
 export type BarOp = 'add' | 'sub' | 'mul' | 'div'
-export type BarProblemKind = 'change' | 'compare' | 'combine' | 'share' | 'two-step'
+export type BarProblemKind = 'change' | 'compare' | 'combine' | 'share' | 'two-step' | 'multi-step'
 
 /** One piece of a bar diagram. value null = the unknown (no chip for it; the answer goes there). */
 export interface BarSlot {
@@ -382,6 +384,7 @@ export interface FractionEqualExercise extends ExerciseBase {
 export interface ShapeChoiceExercise extends ExerciseBase {
   kind: 'shape-choice'
   question: string
+  /** Empty for the word problems of «¿tiene sentido?» (word:sense): the question carries the whole story. */
   figures: Figure[]
   options: string[]
   /** Index in options. */
@@ -412,7 +415,7 @@ export interface ShapeCountExercise extends ExerciseBase {
 // ---------------------------------------------------------------- dinero and medida (3.º, block C)
 
 /** Money mode: recognise a coin or note, pay exactly, give the change, add prices, compare, convert. */
-export type MoneyMode = 'recognise' | 'pay' | 'change' | 'add' | 'compare' | 'convert'
+export type MoneyMode = 'recognise' | 'pay' | 'change' | 'add' | 'compare' | 'convert' | 'budget'
 /** A priced thing of a story or a shop card. price in céntimos. */
 export interface MoneyItem { name: string; emoji: string; price: number }
 
@@ -441,6 +444,23 @@ export interface MoneyCompareExercise extends ExerciseBase {
   kind: 'money'; mode: 'compare'; items: MoneyItem[]; question: 'more' | 'less'
   /** Name of the item that is the answer. */
   answer: string
+}
+/** Budget (4.º): a sum of money and a price list. The question decides the answer: 'enough' is «Sí» or «No»,
+    'short' and 'left' are céntimos (the amount missing or left over), 'afford' is the name of the one item that fits. */
+export type BudgetAsk = 'enough' | 'short' | 'left' | 'afford'
+export interface MoneyBudgetExercise extends ExerciseBase {
+  kind: 'money'; mode: 'budget'
+  ask: BudgetAsk
+  /** The money to spend, in céntimos. */
+  budget: number
+  /** The price list (shop cards). */
+  items: MoneyItem[]
+  /** Text before the list: «Tienes 5 €. Estos son los precios:». */
+  text: string
+  /** The question, as the child reads it. */
+  question: string
+  /** enough: 'Sí' | 'No'. short, left: céntimos. afford: the name of the item. */
+  answer: string | number
 }
 export interface MoneyConvertExercise extends ExerciseBase {
   kind: 'money'; mode: 'convert'; direction: 'to-cents' | 'to-euros'; amount: number
@@ -500,7 +520,7 @@ export type Exercise =
   | ClockReadExercise | ClockSetExercise | TimeConvertExercise | TimeDurationExercise | CalendarExercise
   | EquationExercise | FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise
   | ShapeChoiceExercise | AngleTapExercise | PerimeterExercise | ShapeCountExercise
-  | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
+  | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
   | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise
