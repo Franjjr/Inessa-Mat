@@ -251,6 +251,9 @@ function* tuples(...ranges: number[][]): Generator<number[]> {
 /** The numbers from lo to hi, step by step. */
 const span = (lo: number, hi: number, step = 1): number[] => Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, i) => lo + i * step)
 
+/** «1 decena», «3 decenas»: the count of tens in words the child reads. */
+const decenas = (n: number) => (n === 1 ? 'una decena' : `${n} decenas`)
+
 /** A worked example of level 3 with other numbers: the first candidate that shares no number with the asked item
  *  (its operands, intermediate results and answer). `build` returns null for an example that would not be valid.
  *  With `seed`, one of the free candidates is chosen by it (deterministic per exercise, varied across exercises). */
@@ -284,8 +287,8 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       if (a % 10 === 0) {
         return [
           hint(1, 'Para el doble de unas decenas, piensa en cuántas decenas hay.'),
-          hint(2, `${fmt(a)} son ${a / 10} decenas. Cuenta el doble de decenas.`),
-          hint(3, `Dobla las decenas: ${a / 10} decenas + ${a / 10} decenas = ? decenas.`),
+          hint(2, `${fmt(a)} son ${decenas(a / 10)}. Cuenta el doble de decenas.`),
+          hint(3, `Dobla las decenas: ${a / 10} + ${a / 10} = ? decenas.`),
         ]
       }
       if (a < 10) {
@@ -307,8 +310,8 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       if (a % 10 === 0) {
         return [
           hint(1, 'Para el triple de unas decenas, piensa en cuántas decenas hay.'),
-          hint(2, `${fmt(a)} son ${a / 10} decenas. Cuenta el triple de decenas.`),
-          hint(3, `Son tres veces ${a / 10} decenas. Cuenta cuántas decenas hay en total.`),
+          hint(2, `${fmt(a)} son ${decenas(a / 10)}. Cuenta el triple de decenas.`),
+          hint(3, `Son tres veces ${decenas(a / 10)}. Cuenta cuántas decenas hay en total.`),
         ]
       }
       if (a < 10) {
@@ -330,7 +333,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       if (a % 10 === 0) {
         return [
           hint(1, 'Para la mitad de unas decenas, piensa en cuántas decenas hay y repártelas.'),
-          hint(2, `${fmt(a)} son ${a / 10} decenas. Repártelas entre dos.`),
+          hint(2, `${fmt(a)} son ${decenas(a / 10)}. Repártelas entre dos.`),
           hint(3, 'Si sobra una decena, cámbiala por unidades y sigue repartiendo.'),
         ]
       }
@@ -387,7 +390,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       const op = sign(ex)
       return [
         hint(1, TIP.decenas),
-        hint(2, `${fmt(a)} tiene ${a / 10} decenas. Cambia solo las decenas.`),
+        hint(2, `${fmt(a)} tiene ${decenas(a / 10)}. Cambia solo las decenas.`),
         hint(3, `Haz la cuenta con las decenas: ${a / 10} ${op} ${b / 10} = ? decenas.`),
       ]
     }

@@ -72,6 +72,6 @@ export function hintsLongMul(ex: LongMulExercise): Hint[] {
   return [
     hint(1, 'Multiplica el de arriba por las unidades de abajo, como en 2 × 1.'),
     hint(2, `En la segunda fila multiplicas por las decenas: empieza dejando un 0 en las unidades.${threeRows ? ' La tercera fila va por las centenas: empieza dejando dos ceros.' : ''}`),
-    hint(3, 'Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades; las llevadas se escriben arriba.'),
+    hint(3, 'Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades.'),
   ]
 }

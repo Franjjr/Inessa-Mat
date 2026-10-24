@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { EquationExercise, MentalExercise } from '@/types'
 import { check, createRng, generate, hintsFor } from '@/engine'
 import { mentalSkill } from '../skills'
+import { makeMental } from '../calc'
 
 const now = new Date('2026-10-24T10:00:00.000Z')
 const SEEDS = 300
@@ -274,5 +275,22 @@ describe('signo igual o distinto (eq:same)', () => {
         for (const v of values) if (!mentions(statement, v)) expect(mentions(h.text, v), `${ex.id} L${h.level}: ${h.text}`).toBe(false)
       }
     }
+  })
+})
+
+describe('mental hints say the count of tens in the right number', () => {
+  it('a single ten is «una decena», more are «N decenas»', () => {
+    // 10 is one ten: the doubles, triples and halves of tens never say «1 decenas».
+    const tens = [10, 20, 30]
+    for (const a of tens) {
+      for (const family of ['dobles', 'triples', 'mitades'] as const) {
+        const ex = makeMental(family, a, 0, family === 'dobles' ? 2 * a : family === 'triples' ? 3 * a : a / 2, `prompt ${a}`)
+        const text = hintsFor(ex).map((h) => h.text).join(' ')
+        expect(text, `${family} ${a}`).not.toMatch(/\b1 decenas?\b|\b1 decenas\b/)
+      }
+    }
+    expect(hintsFor(makeMental('triples', 10, 0, 30, 'prompt'))[2].text).toBe('Son tres veces una decena. Cuenta cuántas decenas hay en total.')
+    expect(hintsFor(makeMental('dobles', 10, 0, 20, 'prompt'))[1].text).toBe('10 son una decena. Cuenta el doble de decenas.')
+    expect(hintsFor(makeMental('triples', 20, 0, 60, 'prompt'))[2].text).toBe('Son tres veces 2 decenas. Cuenta cuántas decenas hay en total.')
   })
 })

@@ -93,6 +93,11 @@ describe('checkLongMul', () => {
 })
 
 describe('hintsLongMul', () => {
+  it('the carry hint matches the view: the rows and the total are written, no separate row of carries', () => {
+    const ex = makeLongMul(23, 14)
+    expect(hintsLongMul(ex)[2].text).not.toMatch(/llevad/)
+  })
+
   it.each(SIZES)('%i × %i: no hint contains the answer or a whole partial row', (top, bottom) => {
     for (let seed = 1; seed <= 120; seed++) {
       const ex = genLongMul(createRng(seed), top, bottom)
