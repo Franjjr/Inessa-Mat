@@ -134,13 +134,19 @@ describe('hints and statements', () => {
     }
   })
 
-  it('the teens level 2 does not give the composition rule (that is level 3 only, on another number)', () => {
-    for (const n of [11, 12, 13, 14, 15, 16, 17, 18, 19]) {
-      const ex = { ...genOrdinal(createRng(1), 30), mode: 'read' as const, n }
-      const [, second, third] = hintsFor(ex)
-      expect(second.text).not.toContain('juntar')
-      expect(second.text).not.toContain('décimo')
-      expect(third.text).not.toContain(ordinalNumeral(n))
+  it('teens 11..19, read and write: levels 1-2 give neither the word, nor the unit word, nor décimo; level 3 never the answer', () => {
+    for (const mode of ['read', 'write'] as const) {
+      for (let n = 11; n <= 19; n++) {
+        const ex = { ...genOrdinal(createRng(1), 30), mode, n }
+        const [first, second, third] = hintsFor(ex)
+        for (const h of [first, second]) {
+          expect(h.text).not.toContain(ordinalWord(n))
+          if (n >= 13) expect(h.text).not.toContain(ordinalWord(n % 10))
+          expect(h.text).not.toContain('décimo')
+        }
+        expect(third.text).not.toContain(ordinalWord(n))
+        expect(third.text).not.toContain(ordinalNumeral(n))
+      }
     }
   })
 

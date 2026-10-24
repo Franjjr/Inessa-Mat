@@ -102,12 +102,12 @@ export function hintsOrdinal(ex: OrdinalExercise): Hint[] {
   const example = family === 'units' ? otherNumber(ex.n, [2, 4, 6, 8]) : family === 'teens' ? otherNumber(ex.n, [13, 15, 17]) : otherNumber(ex.n, [30, 20])
   const first = {
     units: 'Un ordinal dice el lugar que ocupa en una serie, no cuántos hay.',
-    teens: 'Los ordinales del 11 al 19 empiezan por décimo.',
+    teens: 'Los ordinales del 11 al 19 son de la misma familia: fíjate en cómo empiezan.',
     tens: 'Las decenas tienen palabra propia, que acaba en -ésimo.',
   }[family]
   const second = {
     units: 'Cuenta en voz baja hasta el número de la pregunta y fíjate en la palabra del último lugar que dices.',
-    teens: 'Mira la cifra de la unidad y piensa en su palabra en la lista del 1 al 9. El 11 y el 12 tienen palabra propia.',
+    teens: 'Busca entre las opciones las que empiezan igual y piensa en la cifra de las unidades.',
     tens: ex.n % 10 === 0
       ? 'Los números redondos, 20 y 30, tienen una sola palabra: no hay unidad que añadir.'
       : 'Mira primero la decena y después la unidad: la palabra se dice en ese orden.',
@@ -115,6 +115,8 @@ export function hintsOrdinal(ex: OrdinalExercise): Hint[] {
   return [
     hint(1, first),
     hint(2, second),
-    hint(3, `Ejemplo con otro número: el ${ordinalNumeral(example)} se dice ${ordinalWord(example)}.`),
+    family === 'teens'
+      ? hint(3, `Por ejemplo, ${ordinalNumeral(example)} es ${ordinalWord(example)}: décimo y ${ordinalWord(example - 10)} juntos.`)
+      : hint(3, `Ejemplo con otro número: el ${ordinalNumeral(example)} se dice ${ordinalWord(example)}.`),
   ]
 }
