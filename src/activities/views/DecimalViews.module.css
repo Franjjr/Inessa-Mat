@@ -49,3 +49,6 @@
 }
 
 .cellOn { background: var(--c-accent, #f5a524); }
+
+/* The décimas and centésimas boxes side by side, after the comma. */
+.cells { display: inline-flex; align-items: flex-start; gap: var(--sp-2); min-width: 0; }

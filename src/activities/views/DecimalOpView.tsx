@@ -1,6 +1,6 @@
 /* Décimas y centésimas (4.º, decimal-op): a sum or a difference written in a column with the commas one under the other.
-   The result is written in two boxes, the whole part and the decimal part, with the comma fixed between them; in
-   centésimas the decimal box fills from the left (a single 5 is 0,50). One «Comprobar» for both boxes. */
+   The result is written in cells: the whole part, then one box per decimal place. An empty centésimas box counts as 0.
+   One «Comprobar» for all the boxes. */
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
@@ -19,14 +19,15 @@ export default function DecimalOpView({ exercise, onAnswered, showFeedback = tru
 function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpExercise } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const [whole, setWhole] = useState<number | null>(null)
-  const [dec, setDec] = useState<number | null>(null)
+  const [tenths, setTenths] = useState<number | null>(null)
+  const [hund, setHund] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const add = ex.op === 'add'
   const sign = add ? '+' : '−'
 
-  const submit = (w: number | null = whole, x: number | null = dec) => {
-    if (w === null || x === null) return
-    const c = flow.submit({ type: 'numbers', values: [w, x] })
+  const submit = (w: number | null, t: number | null, h: number | null) => {
+    if (w === null || t === null) return
+    const c = flow.submit({ type: 'numbers', values: [w, t, ex.places === 2 ? h : null] })
     if (c.correct) celebrate('small')
   }
   const [lw, ld] = fmtDecimal(ex.left, ex.places).split(',')
@@ -49,7 +50,7 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
         <NumberInput
           value={whole}
           onChange={setWhole}
-          onSubmit={(v) => { setWhole(v); if (!flow.submitted) submit(v, dec) }}
+          onSubmit={(v) => { setWhole(v); if (!flow.submitted) submit(v, tenths, hund) }}
           maxDigits={2}
           size="lg"
           status={status}
@@ -59,19 +60,34 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
           autoFocus
         />
         <span className={d.comma} aria-hidden>,</span>
-        <NumberInput
-          value={dec}
-          onChange={setDec}
-          onSubmit={(v) => { setDec(v); if (!flow.submitted) submit(whole, v) }}
-          maxDigits={ex.places === 2 ? 2 : 1}
-          size="lg"
-          status={status}
-          ariaLabel="Parte decimal del resultado"
-          checkButton={false}
-          placeholder="?"
-        />
+        <div className={d.cells}>
+          <NumberInput
+            value={tenths}
+            onChange={setTenths}
+            onSubmit={(v) => { setTenths(v); if (!flow.submitted) submit(whole, v, hund) }}
+            maxDigits={1}
+            size="lg"
+            status={status}
+            ariaLabel="Décimas del resultado"
+            checkButton={false}
+            placeholder="?"
+          />
+          {ex.places === 2 && (
+            <NumberInput
+              value={hund}
+              onChange={setHund}
+              onSubmit={(v) => { setHund(v); if (!flow.submitted) submit(whole, tenths, v) }}
+              maxDigits={1}
+              size="lg"
+              status={status}
+              ariaLabel="Centésimas del resultado"
+              checkButton={false}
+              placeholder="0"
+            />
+          )}
+        </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={whole !== null && dec !== null} />
+      <AnswerBar flow={flow} onCheck={() => submit(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />
     </section>
   )
 }

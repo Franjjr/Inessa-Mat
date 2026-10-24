@@ -91,7 +91,7 @@ export { genDivision2d, genDivision4, genMul3x1, genMulParts, makeMulParts, chec
 export { checkLongMul, genLongMul, hintsLongMul, makeLongMul } from './longmul'
 export { checkOrdinal, genOrdinal, hintsOrdinal, ordinalNumeral, ordinalPrompt, ordinalWord } from './ordinals'
 /** Décimas y centésimas (4.º): the numbers in hundredths, the two boxes, grading and hints (src/engine/decimals.ts). */
-export { checkDecimal, checkDecimalOp, decimalFromBoxes, decimalWords, fmtDecimal, genDecimal, genDecimalOp, hintsDecimal } from './decimals'
+export { checkDecimal, checkDecimalOp, decimalFromCells, decimalWords, fmtDecimal, genDecimal, genDecimalOp, hintsDecimal } from './decimals'
 export { toRoman } from './calc'
 export { measureSkill, moneySkill } from './skills'
 /** Numbers up to 9 999 and cálculo mental (3.º, block A): display helpers for the views and the gallery. */

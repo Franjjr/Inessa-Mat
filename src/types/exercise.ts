@@ -736,7 +736,7 @@ export interface AttemptInput {
 // ---- 4.º: décimas y centésimas (src/engine/decimals.ts). Values are whole hundredths: 2,45 → 245.
 
 export type DecimalMode = 'shade' | 'read' | 'compare' | 'money'
-/** The writing boxes: 1 = décimas (one digit after the comma), 2 = centésimas (two digits, see decimalFromBoxes). */
+/** The writing cells: 1 = décimas (one digit after the comma), 2 = décimas and centésimas (one digit each, see decimalFromCells). */
 export type DecimalPlaces = 1 | 2
 /** shade: the bar of 10 or the grid of 100 with the parts coloured → write the number. read: the words («tres décimas»)
     → write the number. compare: two decimals → < = >. money: 2,45 € → euros and céntimos. */

@@ -1,7 +1,7 @@
 /* Décimas y centésimas (4.º, decimal): colour a bar of 10 or a grid of 100 and write its number, read the words and write
    the number, compare two decimals with < = >, and write euros and céntimos as a decimal (2,45 € → 2 euros y 45 céntimos).
-   A number is written in two boxes, the whole part and the decimal part, with the comma fixed between them. In centésimas
-   the decimal box holds up to two digits that fill from the left: a single 5 is 0,50 (see decimalFromBoxes). */
+   A number is written in cells: the whole part, then one box per decimal place, with the comma fixed after the whole part.
+   An empty centésimas box counts as 0, so a 5 in the décimas alone is 0,5. */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
@@ -45,17 +45,18 @@ const INSTRUCTION: Record<'shade' | 'read' | 'money', string> = {
   money: 'Un euro son cien céntimos. ¿Cuántos euros y cuántos céntimos son?',
 }
 
+/** The number is written in cells: the whole part, then one box per decimal place (décimas, and centésimas with places
+    2). Money: euros, then céntimos in two digits. An empty centésimas box counts as 0, so 5 in the décimas is 0,5. */
 function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFlow; status: 'idle' | 'correct' | 'wrong' }) {
   const [whole, setWhole] = useState<number | null>(null)
-  const [dec, setDec] = useState<number | null>(null)
+  const [tenths, setTenths] = useState<number | null>(null)
+  const [hund, setHund] = useState<number | null>(null)
   const money = ex.mode === 'money'
-  const check = (w: number | null, x: number | null) => {
-    if (w === null || x === null) return
-    const c = flow.submit({ type: 'numbers', values: [w, x] })
+  const check = (w: number | null, t: number | null, h: number | null) => {
+    if (w === null || t === null) return
+    const c = flow.submit({ type: 'numbers', values: money ? [w, t] : [w, t, ex.places === 2 ? h : null] })
     if (c.correct) celebrate('small')
   }
-  const wholeLabel = money ? 'Euros' : 'Parte entera'
-  const decLabel = money ? 'Céntimos' : ex.places === 1 ? 'Décimas' : 'Décimas y centésimas'
   return (
     <>
       <p className={s.instructions}>{INSTRUCTION[ex.mode as 'shade' | 'read' | 'money']}</p>
@@ -73,11 +74,11 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
               <NumberInput
                 value={whole}
                 onChange={setWhole}
-                onSubmit={(v) => { setWhole(v); if (!flow.submitted) check(v, dec) }}
+                onSubmit={(v) => { setWhole(v); if (!flow.submitted) check(v, tenths, hund) }}
                 maxDigits={2}
                 size="lg"
                 status={status}
-                ariaLabel={wholeLabel}
+                ariaLabel={money ? 'Euros' : 'Parte entera'}
                 checkButton={false}
                 placeholder={money ? '€' : '0'}
                 autoFocus
@@ -86,23 +87,40 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
             </div>
             <span className={m.comma} aria-hidden>,</span>
           </div>
-          <div className={m.amountCol}>
-            <NumberInput
-              value={dec}
-              onChange={setDec}
-              onSubmit={(v) => { setDec(v); if (!flow.submitted) check(whole, v) }}
-              maxDigits={money || ex.places === 2 ? 2 : 1}
-              size="lg"
-              status={status}
-              ariaLabel={decLabel}
-              checkButton={false}
-              placeholder="00"
-            />
-            {money && <span className={m.unit}>céntimos</span>}
+          <div className={d.cells}>
+            <div className={m.amountCol}>
+              <NumberInput
+                value={tenths}
+                onChange={setTenths}
+                onSubmit={(v) => { setTenths(v); if (!flow.submitted) check(whole, v, hund) }}
+                maxDigits={money ? 2 : 1}
+                size="lg"
+                status={status}
+                ariaLabel={money ? 'Céntimos' : 'Décimas'}
+                checkButton={false}
+                placeholder={money ? '00' : '0'}
+              />
+              {money && <span className={m.unit}>céntimos</span>}
+            </div>
+            {!money && ex.places === 2 && (
+              <div className={m.amountCol}>
+                <NumberInput
+                  value={hund}
+                  onChange={setHund}
+                  onSubmit={(v) => { setHund(v); if (!flow.submitted) check(whole, tenths, v) }}
+                  maxDigits={1}
+                  size="lg"
+                  status={status}
+                  ariaLabel="Centésimas"
+                  checkButton={false}
+                  placeholder="0"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => check(whole, dec)} canCheck={whole !== null && dec !== null} />
+      <AnswerBar flow={flow} onCheck={() => check(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />
     </>
   )
 }

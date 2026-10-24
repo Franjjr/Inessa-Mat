@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Answer, DecimalExercise, DecimalOpExercise, DecimalMode } from '@/types'
 import {
-  blockSkillsOf, check, checkDecimal, checkDecimalOp, createRng, decimalFromBoxes, decimalSkill, decimalWords, fmtDecimal, genDecimal,
+  blockSkillsOf, check, checkDecimal, checkDecimalOp, createRng, decimalFromCells, decimalSkill, decimalWords, fmtDecimal, genDecimal,
   genDecimalOp, hintsDecimal, hintsFor, isValidSkill, kindsForSkill, parseSkill,
 } from '@/engine'
 import { correctAnswer } from './helpers'
@@ -18,13 +18,14 @@ describe('the number as hundredths', () => {
     expect(fmtDecimal(400, 1)).toBe('4,0')
   })
 
-  it('reads the two boxes: in centésimas a single 5 is 0,50, and 50 is the same; in décimas the box is one tenth', () => {
-    expect(decimalFromBoxes(0, 5, 2)).toBe(50)
-    expect(decimalFromBoxes(0, 50, 2)).toBe(50)
-    expect(decimalFromBoxes(0, 5, 1)).toBe(50)
-    expect(decimalFromBoxes(2, 45, 2)).toBe(245)
-    expect(decimalFromBoxes(null, 4, 2)).toBeNull()
-    expect(decimalFromBoxes(0, null, 1)).toBeNull()
+  it('reads the writing cells: an empty centésimas cell is 0, so 5 in the décimas alone is 0,5', () => {
+    expect(decimalFromCells(0, 0, 5, 2)).toBe(5)
+    expect(decimalFromCells(0, 5, 0, 2)).toBe(50)
+    expect(decimalFromCells(0, 5, null, 2)).toBe(50)
+    expect(decimalFromCells(2, 4, 5, 2)).toBe(245)
+    expect(decimalFromCells(0, 5, 7, 1)).toBe(50)
+    expect(decimalFromCells(null, 4, null, 2)).toBeNull()
+    expect(decimalFromCells(0, null, 5, 2)).toBeNull()
   })
 
   it('says the number in words, with «una» for the feminine one', () => {
@@ -61,7 +62,7 @@ describe('skill keys of the decimals', () => {
 })
 
 describe('the generators', () => {
-  it('décimas stay between 0,1 and 0,9, and centésimas never ask 0,01 to 0,09 (the box could not hold them)', () => {
+  it('décimas stay between 0,1 and 0,9; centésimas run from 0,01 to 0,99, including 0,05 (one cell per place)', () => {
     for (const seed of MANY) {
       const tenths = genDecimal(createRng(seed), 'shade', 1)
       expect(tenths.value % 10).toBe(0)
@@ -69,11 +70,13 @@ describe('the generators', () => {
       expect(tenths.value).toBeLessThanOrEqual(90)
       for (const mode of ['shade', 'read'] as DecimalMode[]) {
         const ex = genDecimal(createRng(seed), mode, 2)
-        expect(ex.value).toBeGreaterThanOrEqual(10)
+        expect(ex.value).toBeGreaterThanOrEqual(1)
         expect(ex.value).toBeLessThanOrEqual(99)
         expect(ex.answer).toBe(ex.value)
       }
     }
+    const small = MANY.map((seed) => genDecimal(createRng(seed), 'shade', 2).value).filter((v) => v < 10)
+    expect(small.length).toBeGreaterThan(0)
   })
 
   it('compare puts a sign that matches the two numbers, and money is a decimal of euros and céntimos', () => {
@@ -99,7 +102,6 @@ describe('the generators', () => {
         expect(diff.answer).toBeGreaterThan(0)
         expect(diff.answer).toBeGreaterThanOrEqual(0)
         for (const ex of [sum, diff]) {
-          if (places === 2) expect(ex.answer % 100 === 0 || ex.answer % 100 >= 10).toBe(true)
           if (places === 1) expect(ex.left % 10).toBe(0)
         }
       }
@@ -120,25 +122,31 @@ describe('the generators', () => {
 describe('grading: the two boxes and the sign', () => {
   const half: DecimalExercise = { id: 'd', kind: 'decimal', skill: 'dec:read:2', difficulty: 3, mode: 'read', places: 2, value: 50, answer: 50 }
 
-  it('accepts 0,5 written as 0 and 5, and as 0 and 50, in centésimas', () => {
-    expect(checkDecimal(half, { type: 'numbers', values: [0, 5] })).toMatchObject({ correct: true })
-    expect(checkDecimal(half, { type: 'numbers', values: [0, 50] })).toMatchObject({ correct: true })
-    expect(checkDecimal(half, { type: 'numbers', values: [0, 4] })).toMatchObject({ correct: false })
-    expect(checkDecimal(half, { type: 'numbers', values: [1, 5] })).toMatchObject({ correct: false })
-    expect(checkDecimal(half, { type: 'numbers', values: [0, null] })).toMatchObject({ correct: false, errorType: 'incomplete' })
+  it('0,5 is right written as 0 and 5 (centésimas empty), as 0 and 50, and as 0, 5 and 0 cells', () => {
+    expect(checkDecimal(half, { type: 'numbers', values: [0, 5, null] })).toMatchObject({ correct: true })
+    expect(checkDecimal(half, { type: 'numbers', values: [0, 5, 0] })).toMatchObject({ correct: true })
+    expect(checkDecimal(half, { type: 'numbers', values: [0, 4, null] })).toMatchObject({ correct: false })
+    expect(checkDecimal(half, { type: 'numbers', values: [1, 5, null] })).toMatchObject({ correct: false })
+    expect(checkDecimal(half, { type: 'numbers', values: [0, null, null] })).toMatchObject({ correct: false, errorType: 'incomplete' })
   })
 
-  it('a column result of 3,75 is right when written as 3 and 75, and wrong when the decimals are short', () => {
+  it('0,05 is right written as 0, 0 and 5 in the cells, and 0,5 is not 0,05', () => {
+    const five: DecimalExercise = { id: 'f', kind: 'decimal', skill: 'dec:shade:2', difficulty: 2, mode: 'shade', places: 2, value: 5, answer: 5 }
+    expect(checkDecimal(five, { type: 'numbers', values: [0, 0, 5] })).toMatchObject({ correct: true, given: '0,05' })
+    expect(checkDecimal(five, { type: 'numbers', values: [0, 5, null] })).toMatchObject({ correct: false, given: '0,50' })
+  })
+
+  it('a column result of 3,75 is right written in the cells, and wrong when the decimals are short', () => {
     const op: DecimalOpExercise = { id: 'o', kind: 'decimal-op', skill: 'dec:add:2', difficulty: 3, op: 'add', places: 2, left: 125, right: 250, answer: 375 }
-    expect(checkDecimalOp(op, { type: 'numbers', values: [3, 75] })).toMatchObject({ correct: true, given: '3,75' })
-    expect(checkDecimalOp(op, { type: 'numbers', values: [3, 7] })).toMatchObject({ correct: false, given: '3,70' })
-    expect(checkDecimalOp(op, { type: 'numbers', values: [4, 75] })).toMatchObject({ correct: false })
+    expect(checkDecimalOp(op, { type: 'numbers', values: [3, 7, 5] })).toMatchObject({ correct: true, given: '3,75' })
+    expect(checkDecimalOp(op, { type: 'numbers', values: [3, 7, null] })).toMatchObject({ correct: false, given: '3,70' })
+    expect(checkDecimalOp(op, { type: 'numbers', values: [4, 7, 5] })).toMatchObject({ correct: false })
   })
 
   it('money: euros and céntimos in their own boxes, a céntimo is not a decimal place', () => {
     const money: DecimalExercise = { id: 'm', kind: 'decimal', skill: 'dec:money', difficulty: 3, mode: 'money', places: 2, value: 245, answer: 245 }
-    expect(checkDecimal(money, { type: 'numbers', values: [2, 45] })).toMatchObject({ correct: true })
-    expect(checkDecimal(money, { type: 'numbers', values: [2, 5] })).toMatchObject({ correct: false })
+    expect(checkDecimal(money, { type: 'numbers', values: [2, 45] })).toMatchObject({ correct: true, given: '2,45' })
+    expect(checkDecimal(money, { type: 'numbers', values: [2, 5] })).toMatchObject({ correct: false, given: '2,05' })
   })
 
   it('compare grades the sign tapped', () => {
@@ -148,7 +156,7 @@ describe('grading: the two boxes and the sign', () => {
     expect(check(cmp, { type: 'sign', sign: '>' } as Answer)).toMatchObject({ correct: true })
   })
 
-  it('the correct answer of every generated exercise is graded right (over many seeds)', () => {
+  it('a correct answer of every generated exercise is graded right (over many seeds)', () => {
     for (const seed of MANY) {
       for (const mode of ['shade', 'read', 'compare', 'money'] as DecimalMode[]) {
         const ex = genDecimal(createRng(seed), mode, seed % 2 ? 1 : 2)
@@ -195,5 +203,46 @@ describe('the hints never give the answer away', () => {
     expect(hintsFor(ex)).toHaveLength(3)
     expect(hintsFor(genDecimalOp(createRng(4), 'add', 2))).toHaveLength(3)
     expect(hintsFor(genDecimal(createRng(4), 'read', 2)).map((h) => h.level)).toEqual([1, 2, 3])
+  })
+})
+
+describe('the review of the hints', () => {
+  const tokens = (text: string) => text.match(/\d+,\d+/g) ?? []
+  const hundredthsOf = (tok: string) => { const [w, f] = tok.split(','); return Number(w) * 100 + Number(f.padEnd(2, '0')) }
+
+  it('no compare level-3 example uses a number asked, and centésimas exercises say centésimas', () => {
+    // The compare generator picks its own places (1 or 2), so the checks read them from the exercise.
+    for (const seed of MANY) {
+      const ex = genDecimal(createRng(seed), 'compare')
+      const asked = [fmtDecimal(ex.value, ex.places), fmtDecimal(ex.other ?? 0, ex.places)]
+      const hints = hintsDecimal(ex)
+      for (const t of tokens(hints[2].text)) expect(asked.includes(t), `${seed}: ${hints[2].text}`).toBe(false)
+      if (ex.places === 2) {
+        expect(hints[0].text).toContain('centésimas')
+        expect(hints[0].text).not.toBe('Mira primero la parte entera; si es igual, compara las décimas.')
+      } else {
+        expect(hints[0].text).toBe('Mira primero la parte entera; si es igual, compara las décimas.')
+      }
+    }
+  })
+
+  it('no column hint example uses the asked operands or the answer', () => {
+    for (const seed of MANY) {
+      for (const op of ['add', 'sub'] as const) {
+        for (const places of [1, 2] as const) {
+          const ex = genDecimalOp(createRng(seed), op, places)
+          const asked = new Set([ex.left, ex.right, ex.answer])
+          for (const h of hintsDecimal(ex)) for (const t of tokens(h.text)) expect(asked.has(hundredthsOf(t)), `${seed} ${op}: ${h.text}`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('the shade and read hints never say the whole part is zero', () => {
+    for (const seed of MANY) {
+      for (const mode of ['shade', 'read'] as DecimalMode[]) {
+        for (const h of hintsDecimal(genDecimal(createRng(seed), mode, seed % 2 ? 1 : 2))) expect(h.text.includes('cero')).toBe(false)
+      }
+    }
   })
 })

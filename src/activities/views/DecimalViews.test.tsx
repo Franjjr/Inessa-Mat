@@ -41,7 +41,8 @@ describe('DecimalOpView', () => {
     expect(screen.getByText('25')).toBeTruthy()
     expect(screen.getByText('2')).toBeTruthy()
     fireEvent.change(box('Parte entera del resultado'), { target: { value: '3' } })
-    fireEvent.change(box('Parte decimal del resultado'), { target: { value: '75' } })
+    fireEvent.change(box('Décimas del resultado'), { target: { value: '7' } })
+    fireEvent.change(box('Centésimas del resultado'), { target: { value: '5' } })
     fireEvent.click(comprobar())
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
@@ -51,7 +52,7 @@ describe('DecimalOpView', () => {
     const onAnswered = vi.fn()
     render(<DecimalOpView exercise={sum} onAnswered={onAnswered} showFeedback={false} />)
     fireEvent.change(box('Parte entera del resultado'), { target: { value: '3' } })
-    fireEvent.change(box('Parte decimal del resultado'), { target: { value: '7' } })
+    fireEvent.change(box('Décimas del resultado'), { target: { value: '7' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
   })
@@ -61,7 +62,7 @@ describe('DecimalOpView', () => {
     const onAnswered = vi.fn()
     render(<DecimalOpView exercise={diff} onAnswered={onAnswered} showFeedback={false} />)
     fireEvent.change(box('Parte entera del resultado'), { target: { value: '2' } })
-    fireEvent.change(box('Parte decimal del resultado'), { target: { value: '5' } })
+    fireEvent.change(box('Décimas del resultado'), { target: { value: '5' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
@@ -96,6 +97,26 @@ describe('DecimalView', () => {
     fireEvent.change(box('Céntimos'), { target: { value: '45' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('centésimas: 0,05 is written 0 , 0 5; 0,5 is written 0 , 5 with the centésimas empty or 0 and is graded right', () => {
+    const five: DecimalExercise = { id: 'dec-s5', kind: 'decimal', skill: 'dec:read:2', difficulty: 3, mode: 'read', places: 2, value: 5, answer: 5 }
+    const onAnswered = vi.fn()
+    const { unmount } = render(<DecimalView exercise={five} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box('Parte entera'), { target: { value: '0' } })
+    fireEvent.change(box('Décimas'), { target: { value: '0' } })
+    fireEvent.change(box('Centésimas'), { target: { value: '5' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+    unmount()
+
+    const half: DecimalExercise = { id: 'dec-s50', kind: 'decimal', skill: 'dec:read:2', difficulty: 3, mode: 'read', places: 2, value: 50, answer: 50 }
+    const second = vi.fn()
+    render(<DecimalView exercise={half} onAnswered={second} showFeedback={false} />)
+    fireEvent.change(box('Parte entera'), { target: { value: '0' } })
+    fireEvent.change(box('Décimas'), { target: { value: '5' } })
+    fireEvent.click(comprobar())
+    expect(second.mock.calls[0][0].check.correct).toBe(true)
   })
 
   it('shade: the bar of ten parts is drawn without the count, so the drawing does not give the answer', () => {
