@@ -1,5 +1,6 @@
 /* Dev gallery of the 4.º exercises: multiplying by parts and in columns (partial rows), 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
-   décimas y centésimas, sumar y restar decimales, área, simetría, romanos, por 10 and redondear a millares, at iPad and phone widths.
+   décimas y centésimas, sumar y restar decimales, área, simetría, romanos, por 10, redondear a millares, operaciones combinadas,
+   propiedades, estimar and signo igual o distinto, at iPad and phone widths.
    Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
@@ -10,6 +11,7 @@ import DivisionView from './DivisionView'
 import FigureNumberView from './FigureNumberView'
 import DecimalOpView from './DecimalOpView'
 import DecimalView from './DecimalView'
+import EquationView from './EquationView'
 import FractionAddView from './FractionAddView'
 import LongMulView from './LongMulView'
 import MentalView from './MentalView'
@@ -50,6 +52,14 @@ const entries: GalleryEntry[] = [
   { title: 'Simetría (teléfono)', ...phone, render: () => frame(<ShapeChoiceView exercise={one('geo:symmetry', 8)} onAnswered={noop} />) },
   { title: 'Números romanos (teléfono)', ...phone, render: () => frame(<MentalView exercise={one('mental:romanos', 2)} onAnswered={noop} />) },
   { title: 'Por 10, 100 y 1 000 (ipad)', ...ipad, render: () => frame(<MentalView exercise={one('mental:por10', 4)} onAnswered={noop} />) },
+  { title: 'Operaciones combinadas: a + b − c (teléfono)', ...phone, render: () => frame(<MentalView exercise={one('mental:combinadas', 5)} onAnswered={noop} />) },
+  { title: 'Orden de las operaciones: × antes de + (ipad)', ...ipad, render: () => frame(<MentalView exercise={one('mental:jerarquia', 6)} onAnswered={noop} />) },
+  { title: 'Paréntesis primero (teléfono)', ...phone, render: () => frame(<MentalView exercise={one('mental:parentesis', 3)} onAnswered={noop} />) },
+  { title: 'Propiedad asociativa: agrupar (ipad)', ...ipad, render: () => frame(<MentalView exercise={one('mental:asociativa', 2)} onAnswered={noop} />) },
+  { title: 'Propiedad distributiva: partir un factor (teléfono)', ...phone, render: () => frame(<MentalView exercise={one('mental:distributiva', 9)} onAnswered={noop} />) },
+  { title: 'Estimar redondeando (ipad)', ...ipad, render: () => frame(<MentalView exercise={one('mental:estimar', 4)} onAnswered={noop} />) },
+  { title: 'Signo igual o distinto: = o ≠ (ipad)', ...ipad, render: () => frame(<EquationView exercise={one('eq:same', 3)} onAnswered={noop} />) },
+  { title: 'Signo igual o distinto: = o ≠ (teléfono)', ...phone, render: () => frame(<EquationView exercise={one('eq:same', 8)} onAnswered={noop} />) },
   { title: 'Redondear a millares (ipad vertical)', ...portrait, render: () => frame(<RoundView exercise={one('num:round:1000', 3)} onAnswered={noop} />) },
 ]
 

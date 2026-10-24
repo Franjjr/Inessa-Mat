@@ -1,8 +1,8 @@
 /* Cálculo mental de 4.º (combinadas, jerarquía, paréntesis, asociativa, distributiva, estimar) and signo igual o distinto
    (eq:same): the answers follow the right order of operations, the estimate is the rounded one, and no hint leaks. */
 import { describe, expect, it } from 'vitest'
-import type { EquationExercise, Exercise, MentalExercise } from '@/types'
-import { check, createRng, fmt, generate, hintsFor } from '@/engine'
+import type { EquationExercise, MentalExercise } from '@/types'
+import { check, createRng, generate, hintsFor } from '@/engine'
 import { mentalSkill } from '../skills'
 
 const now = new Date('2026-10-24T10:00:00.000Z')
@@ -171,6 +171,22 @@ describe('cálculo mental de 4.º: hints never leak the answer or an intermediat
     }
   }
 
+  it('distributiva level 2 names the units without the blank value or the subtraction b − t (300 seeds)', () => {
+    for (const ex of mentalItems('distributiva')) {
+      const level2 = hintsFor(ex)[1].text
+      // b − t is the blank itself: keeping the answer out of level 2 keeps the subtraction out too.
+      expect(mentions(level2, ex.answer), `${ex.id}: ${level2}`).toBe(false)
+      expect(level2).not.toMatch(/sobra|resta|menos/i)
+    }
+  })
+
+  it('combinadas level 3 varies across exercises, and is the same for the same exercise', () => {
+    const items = mentalItems('combinadas', 120, 4)
+    const examples = new Set(items.map((ex) => hintsFor(ex)[2].text))
+    expect(examples.size).toBeGreaterThan(3)
+    for (const ex of items.slice(0, 10)) expect(hintsFor(ex)[2].text).toBe(hintsFor(ex)[2].text)
+  })
+
   for (const family of NEW_FAMILIES) {
     it(`${family}: no level mentions the answer or an intermediate result (300 seeds)`, () => {
       for (const ex of mentalItems(family)) {
@@ -223,6 +239,24 @@ describe('signo igual o distinto (eq:same)', () => {
     }
   })
 
+  it('the worked example is equal about half the time, whatever the answer', () => {
+    const counts = { '=': [0, 0], '≠': [0, 0] } as Record<'=' | '≠', [number, number]>
+    for (const ex of items(SEEDS, 17)) {
+      const m = hintsFor(ex)[2].text.match(/vale (\d+), y \d+ − \d+ vale (\d+)/)
+      expect(m, ex.id).not.toBeNull()
+      const equalExample = m![1] === m![2]
+      counts[ex.answer as '=' | '≠'][equalExample ? 0 : 1]++
+    }
+    for (const answer of ['=', '≠'] as const) {
+      const [eq, neq] = counts[answer]
+      expect(eq, `${answer} with equal examples`).toBeGreaterThan(0)
+      expect(neq, `${answer} with unequal examples`).toBeGreaterThan(0)
+      const share = eq / (eq + neq)
+      expect(share).toBeGreaterThan(0.3)
+      expect(share).toBeLessThan(0.7)
+    }
+  })
+
   it('hints: three levels that never name = or ≠, nor say whether the sides agree, nor give a side value (300 seeds)', () => {
     for (const ex of items(SEEDS, 13)) {
       const hints = hintsFor(ex)
@@ -237,7 +271,3 @@ describe('signo igual o distinto (eq:same)', () => {
     }
   })
 })
-
-/** Keeps the import of Exercise used for type narrowing in the helpers above. */
-export type _Exercise = Exercise
-export const _fmt = fmt

@@ -7,7 +7,7 @@
 import type {
   Answer, CheckResult, EqTerm, EquationExercise, Exercise, Hint, MentalExercise, MentalFamily, Rng, SkillKey,
 } from '@/types'
-import { pick, randInt, shuffle } from './rng'
+import { hashString, pick, randInt, shuffle } from './rng'
 import { fmt } from './numeric'
 import { MENTAL_FAMILIES, mentalSkill } from './skills'
 
@@ -224,15 +224,23 @@ function* tuples(...ranges: number[][]): Generator<number[]> {
 const span = (lo: number, hi: number, step = 1): number[] => Array.from({ length: Math.floor((hi - lo) / step) + 1 }, (_, i) => lo + i * step)
 
 /** A worked example of level 3 with other numbers: the first candidate that shares no number with the asked item
- *  (its operands, intermediate results and answer). `build` returns null for an example that would not be valid. */
-function workedExample(candidates: Iterable<number[]>, asked: number[], build: (t: number[]) => { text: string; nums: number[] } | null): string {
+ *  (its operands, intermediate results and answer). `build` returns null for an example that would not be valid.
+ *  With `seed`, one of the free candidates is chosen by it (deterministic per exercise, varied across exercises). */
+function workedExample(
+  candidates: Iterable<number[]>, asked: number[], build: (t: number[]) => { text: string; nums: number[] } | null, seed?: number,
+): string {
   let first: string | null = null
+  const free: string[] = []
   for (const t of candidates) {
     const example = build(t)
     if (!example) continue
     if (first === null) first = example.text
-    if (example.nums.every((n) => !asked.includes(n))) return example.text
+    if (example.nums.every((n) => !asked.includes(n))) {
+      if (seed === undefined) return example.text
+      free.push(example.text)
+    }
   }
+  if (free.length) return free[seed! % free.length]
   return first ?? ''
 }
 
@@ -397,7 +405,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
           text: `Ejemplo: ${fmt(x)} + ${fmt(y)} − ${fmt(z)}. Primero ${fmt(x)} + ${fmt(y)} = ${fmt(x + y)}; después ${fmt(x + y)} − ${fmt(z)} = ${fmt(x + y - z)}.`,
           nums: [x, y, z, x + y, x + y - z],
         }
-      })
+      }, hashString(ex.id))
       return [
         hint(1, TIP.combinadas),
         hint(2, `Empieza por ${fmt(a)} + ${fmt(b)}. Después quita ${fmt(c)} al resultado.`),
@@ -458,7 +466,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       })
       return [
         hint(1, TIP.distributiva),
-        hint(2, `Separa ${b} en decenas y unidades: las unidades son lo que sobra después de las decenas.`),
+        hint(2, `Fíjate en la cifra de las unidades de ${b}: el hueco pide esa parte, la que no forma decenas.`),
         hint(3, example),
       ]
     }
@@ -661,14 +669,16 @@ export function hintsCalc(ex: Exercise): Hint[] | null {
   return null
 }
 
-/** eq:same hints: the two sides are worked out one by one. They never say = or ≠, nor whether the sides agree. */
+/** eq:same hints: the two sides are worked out one by one. They never say = or ≠, nor whether the sides agree.
+ *  The worked example is equal or not by the id's hash (about half each), so it never cues the answer. */
 function sameHints(ex: EquationExercise): Hint[] {
   const leftValue = sideValue(ex.left, 0)
   const rightValue = sideValue(ex.right, 0)
   // The worked example uses other numbers and values: none of the asked numbers or side values.
   const asked = [...ex.left, ...ex.right].filter(NUM).concat([leftValue, rightValue])
+  const wantEqual = hashString(ex.id) % 2 === 0
   const example = workedExample(tuples(span(2, 12), span(1, 9), span(6, 20), span(1, 9)), asked, ([x, y, r, q]) => {
-    if (r - q <= 0 || x + y === r - q) return null
+    if (r - q <= 0 || (x + y === r - q) !== wantEqual) return null
     return {
       text: `Ejemplo con otros números: ${x} + ${y} vale ${x + y}, y ${r} − ${q} vale ${r - q}. Haz lo mismo con los tuyos y compara los dos resultados.`,
       nums: [x, y, r, q, x + y, r - q],
