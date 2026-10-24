@@ -99,16 +99,16 @@ describe('cálculo mental de 4.º: the answer follows the order of operations', 
     }
   })
 
-  it('distributiva: a × b = a × t + a × __, and the blank is the units part of b', () => {
+  it('distributiva: a × b = a × t + __, and the blank is the second partial product a × u, never negative', () => {
     for (const ex of mentalItems('distributiva')) {
-      const m = ex.prompt.match(/^(\d+) × (\d+) = (\d+) × (\d+) \+ (\d+) × __$/)
+      const m = ex.prompt.match(/^(\d+) × (\d+) = (\d+) × (\d+) \+ __$/)
       expect(m, ex.prompt).not.toBeNull()
-      const [, a, b, a2, t, a3] = m!.map(Number)
+      const [, a, b, a2, t] = m!.map(Number)
       expect(a2).toBe(a)
-      expect(a3).toBe(a)
-      expect(a * b).toBe(a * t + a * ex.answer)
+      expect(t).toBe(b - (b % 10))
+      expect(ex.answer).toBe(a * (b % 10))
+      expect(a * b).toBe(a * t + ex.answer)
       expect(ex.answer).toBeGreaterThanOrEqual(1)
-      expect(ex.answer).toBeLessThanOrEqual(9)
     }
   })
 
@@ -162,7 +162,7 @@ describe('cálculo mental de 4.º: hints never leak the answer or an intermediat
         const [f1, f2, f3] = sum(ex).split(' × ').map(Number)
         return [f1 * f2, f1 * f3, f2 * f3]
       }
-      case 'distributiva': return [a * (b - ex.answer), a * ex.answer]
+      case 'distributiva': return [b % 10]
       case 'estimar': {
         const place = ex.place ?? 10
         return [Math.round(a / place) * place, Math.round(b / place) * place]
@@ -171,12 +171,16 @@ describe('cálculo mental de 4.º: hints never leak the answer or an intermediat
     }
   }
 
-  it('distributiva level 2 names the units without the blank value or the subtraction b − t (300 seeds)', () => {
+  it('distributiva: levels 1 and 2 contain neither the answer nor the units digit; level 3 none of the asked numbers (300 seeds)', () => {
     for (const ex of mentalItems('distributiva')) {
-      const level2 = hintsFor(ex)[1].text
-      // b − t is the blank itself: keeping the answer out of level 2 keeps the subtraction out too.
-      expect(mentions(level2, ex.answer), `${ex.id}: ${level2}`).toBe(false)
-      expect(level2).not.toMatch(/sobra|resta|menos/i)
+      const hints = hintsFor(ex)
+      const u = ex.b % 10
+      const asked = [ex.a, ex.b, ex.b - u, u, ex.answer]
+      for (const h of hints.slice(0, 2)) {
+        expect(mentions(h.text, ex.answer), `${ex.id}: ${h.text}`).toBe(false)
+        expect(mentions(h.text, u), `${ex.id} L${h.level}: ${h.text}`).toBe(false)
+      }
+      for (const n of asked) expect(mentions(hints[2].text, n), `${ex.id} L3 mentions ${n}: ${hints[2].text}`).toBe(false)
     }
   })
 
@@ -184,7 +188,8 @@ describe('cálculo mental de 4.º: hints never leak the answer or an intermediat
     const items = mentalItems('combinadas', 120, 4)
     const examples = new Set(items.map((ex) => hintsFor(ex)[2].text))
     expect(examples.size).toBeGreaterThan(3)
-    for (const ex of items.slice(0, 10)) expect(hintsFor(ex)[2].text).toBe(hintsFor(ex)[2].text)
+    const again = mentalItems('combinadas', 120, 4)
+    expect(again.map((ex) => hintsFor(ex)[2].text)).toEqual(items.map((ex) => hintsFor(ex)[2].text))
   })
 
   for (const family of NEW_FAMILIES) {

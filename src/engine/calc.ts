@@ -133,11 +133,16 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       return makeMental(family, y, x, 5 * y * x, `${f1} × ${f2} × ${f3} = ?`)
     }
     case 'distributiva': {
-      // a × b = a × t + a × __, with b = t + u: the child gives the units part u of the second factor.
-      const a = randInt(rng, 2, 9)
-      const t = 10 * randInt(rng, 1, 4)
-      const u = randInt(rng, 1, 9)
-      return makeMental(family, a, t + u, u, `${a} × ${t + u} = ${a} × ${t} + ${a} × __`)
+      // a × b = a × t + __, with b = t + u: the blank is the second partial product a × u. u differs from a, and the
+      // answer is none of the numbers the hints name (a, b, t), so no level points at it.
+      for (;;) {
+        const a = randInt(rng, 2, 9)
+        const t = 10 * randInt(rng, 1, 4)
+        const u = randInt(rng, 1, 9)
+        const answer = a * u
+        if (u === a || [a, t + u, t].includes(answer)) continue
+        return makeMental(family, a, t + u, answer, `${a} × ${t + u} = ${a} × ${t} + __`)
+      }
     }
     case 'estimar': {
       // Two numbers rounded to the decena or the centena, then added or subtracted: the answer is the estimate.
@@ -195,7 +200,7 @@ const TIP: Record<MentalFamily, string> = {
   jerarquia: 'Primero se multiplica y se divide; después se suma y se resta.',
   parentesis: 'Primero se hace lo que está entre paréntesis; después, lo demás.',
   asociativa: 'Puedes agrupar los factores como quieras: busca los que sean fáciles de juntar.',
-  distributiva: 'Parte el número grande en decenas y unidades, y multiplica cada parte.',
+  distributiva: 'Un número se puede partir en dos sumandos: multiplicar cada uno por el otro factor y sumar los dos productos da el mismo resultado.',
   estimar: 'Redondea los dos números al lugar que pide el enunciado y opera con los redondeados.',
   dobles: 'Parte el número en decenas y unidades, y dobla cada parte.',
   triples: 'Parte el número en decenas y unidades, y triplica cada parte.',
@@ -453,20 +458,20 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         hint(3, 'Agrupa primero el 5 con el número par y multiplica después el resultado por el otro factor.'),
       ]
     case 'distributiva': {
-      // The asked item: a × b with b = t + u (the blank is u); its partial products are a × t and a × u.
-      const t = b - ex.answer
-      const u = ex.answer
-      const asked = [a, b, t, u, a * u, a * t]
-      const example = workedExample(tuples(span(11, 19), span(1, 9), span(20, 90, 10)), asked, ([x, v, tens]) => {
+      // The asked item: a × b with b = t + u; the blank is the partial product a × u (u is the units digit of b).
+      const u = b % 10
+      const t = b - u
+      const asked = [a, b, t, u, ex.answer]
+      const example = workedExample(tuples(span(11, 19), span(20, 90, 10), span(1, 9)), asked, ([x, tens, v]) => {
         const y = tens + v
         return {
-          text: `Ejemplo: ${x} × ${y} = ${x} × ${tens} + ${x} × ${v}, porque ${y} son ${tens} y ${v}.`,
-          nums: [x, y, v, tens, x * v, x * tens],
+          text: `Ejemplo: ${x} × ${y} = ${x} × ${tens} + ${x} × ${v}. Como ${x} × ${tens} = ${x * tens} y ${x} × ${v} = ${x * v}, el total es ${x * y}.`,
+          nums: [x, y, tens, v, x * tens, x * v, x * y],
         }
       })
       return [
         hint(1, TIP.distributiva),
-        hint(2, `Fíjate en la cifra de las unidades de ${b}: el hueco pide esa parte, la que no forma decenas.`),
+        hint(2, `Parte el ${fmt(b)} en ${t} y otro número; el hueco es lo que da multiplicar ${a} por ese otro número.`),
         hint(3, example),
       ]
     }
