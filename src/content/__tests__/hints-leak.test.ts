@@ -2,8 +2,8 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
-import type { Exercise, Hint } from '@/types'
+import { TABLE_METHODS, generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
+import type { Exercise, Hint, SubMethod, TableMethod } from '@/types'
 import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -37,12 +37,15 @@ function wholeToken(alternatives: string[]): RegExp {
   return new RegExp(`(?<![\\d.,:/])(?<!\\d${SPACE})${body}(?!\\d)(?![.,:/]\\d)(?!${SPACE}\\d{3}(?!\\d))`, 'u')
 }
 
+/** An answer the child must write: its pattern, its label, and the number it is when it is the exercise's answer. */
+interface Answer { label: string; pattern: RegExp; answer?: number }
+
 /** The numbers and texts the child must write for this exercise. */
-function answersOf(ex: Exercise): { label: string; pattern: RegExp }[] {
-  const out: { label: string; pattern: RegExp }[] = []
-  const numbers: number[] = []
-  const add = (v: unknown) => {
-    if (typeof v === 'number') numbers.push(v)
+function answersOf(ex: Exercise): Answer[] {
+  const out: Answer[] = []
+  const numbers: { n: number; isAnswer: boolean }[] = []
+  const add = (v: unknown, isAnswer = false) => {
+    if (typeof v === 'number') numbers.push({ n: v, isAnswer })
   }
   const e = ex as unknown as Record<string, unknown>
   if (Array.isArray(e.options) && e.options.every((o) => typeof o === 'string')) {
@@ -50,24 +53,25 @@ function answersOf(ex: Exercise): { label: string; pattern: RegExp }[] {
     const text = i !== null ? (e.options as string[])[i] : undefined
     if (text) out.push({ label: `option «${text}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(text)}(?![\\p{L}\\d])`, 'iu') })
   } else if (Array.isArray(e.answer)) {
-    e.answer.forEach(add)
+    e.answer.forEach((v) => add(v))
   } else if (typeof e.answer === 'string') {
     // Named answers (a money item, a unit) are not numbers: the text is the answer.
     if (e.answer.length > 1) out.push({ label: `«${e.answer}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(e.answer)}(?![\\p{L}\\d])`, 'iu') })
   } else {
-    add(e.answer)
+    add(e.answer, true)
   }
   if (ex.kind === 'division') {
-    add(ex.quotient)
+    add(ex.quotient, true)
     if (ex.variant === 'rem') add(ex.remainder)
   }
-  if (ex.kind === 'mul-parts') numbers.push(ex.partials[0], ex.partials[1])
-  if (ex.kind === 'long-mul') numbers.push(...ex.partials)
-  for (const n of numbers) {
+  if (ex.kind === 'mul-parts') numbers.push({ n: ex.partials[0], isAnswer: false }, { n: ex.partials[1], isAnswer: false })
+  if (ex.kind === 'long-mul') for (const n of ex.partials) numbers.push({ n, isAnswer: false })
+  for (const { n, isAnswer } of numbers) {
+    const answer = isAnswer ? n : undefined
     const plain = numberPattern(n)
-    if (plain) out.push({ label: String(n), pattern: plain })
+    if (plain) out.push({ label: String(n), pattern: plain, answer })
     const dec = decimalPattern(n)
-    if (dec) out.push({ label: String(n).replace('.', ','), pattern: dec })
+    if (dec) out.push({ label: String(n).replace('.', ','), pattern: dec, answer })
   }
   return out
 }
@@ -80,18 +84,35 @@ function shownNumbers(ex: Exercise): Set<number> {
   return out
 }
 
-/** The hints of an exercise that name one of its answers. Fact strategies that are the fact itself are left out. */
+/** The hints of an exercise that name one of its answers. The one exemption is narrow: the exercise's own answer, when
+    that very number is written on the statement (the child reads it there; «12 : 1 = ?» may be named as 12). Any other
+    number that happens to appear on the statement, a partial product or a remainder, still counts as a leak. */
 function leaksIn(ex: Exercise, hints: Hint[]): { level: number; text: string; answer: string }[] {
   const shown = shownNumbers(ex)
-  const answers = answersOf(ex).filter((a) => !shown.has(Number(a.label)) || Number.isNaN(Number(a.label)))
+  const answers = answersOf(ex).filter((a) => a.answer === undefined || !shown.has(a.answer))
   const found: { level: number; text: string; answer: string }[] = []
   for (const h of hints) for (const a of answers) if (a.pattern.test(h.text)) found.push({ level: h.level, text: h.text, answer: a.label })
   return found
 }
 
+/** The options the app passes to the hints of this exercise (facts: the table method of the child; subtraction: the
+    method of its view; the other views call hintsFor with no options). */
+function optionsOf(ex: Exercise): { method?: SubMethod; tableMethod?: TableMethod | null }[] {
+  if (ex.kind === 'fact-mul') return [{ tableMethod: null }, ...TABLE_METHODS.map((m) => ({ tableMethod: m.id as TableMethod }))]
+  if (ex.kind === 'column-sub') return (['borrow', 'carry', 'parts', 'line'] as SubMethod[]).map((method) => ({ method }))
+  return [{}]
+}
+
 function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
   if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
-  return leaksIn(ex, hintsFor(ex))
+  const found: { level: number; text: string; answer: string }[] = []
+  for (const o of optionsOf(ex)) {
+    const hints = o.tableMethod !== undefined
+      ? hintsFor(ex, undefined, { tableMethod: o.tableMethod })
+      : hintsFor(ex, o.method)
+    found.push(...leaksIn(ex, hints))
+  }
+  return found
 }
 
 describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
@@ -108,6 +129,7 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
     expect(hit(4, 'La fracción 3/4 de 20')).toBe(false)
     expect(hit(4, 'Hay 4 bolas')).toBe(true)
     expect(hit(345, 'Son 12 345 pegatinas')).toBe(false)
+    expect(hit(7, 'Son 7 flores y 3 hojas')).toBe(true)
     expect(decimalPattern(2.5)!.test('son 2,50 €')).toBe(true)
     expect(decimalPattern(2.5)!.test('son 12,5 €')).toBe(false)
   })

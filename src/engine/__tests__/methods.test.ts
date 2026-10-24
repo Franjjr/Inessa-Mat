@@ -46,7 +46,14 @@ describe('method registry', () => {
     expect(ids(4, 8)).toEqual(expect.arrayContaining(['double-double']))
     expect(ids(2, 2)).toEqual(['double'])
     expect(ids(7, 7)).not.toContain('mirror')
-    for (const t of TABLE_METHODS) expect(t.hint.length, t.id).toBeGreaterThan(10)
+    for (const t of TABLE_METHODS) expect((typeof t.hint === 'function' ? t.hint(4, 8) : t.hint).length, t.id).toBeGreaterThan(10)
+    // The trick's first hint names only its factor: for 2 × 4 (the answer is 8) and 2 × 5 (the answer is 10) it leaves the product out.
+    const text = (id: string, a: number, b: number) => {
+      const trick = TABLE_METHODS.find((t) => t.id === id)!
+      return typeof trick.hint === 'function' ? trick.hint(a, b) : trick.hint
+    }
+    expect(text('double-double', 2, 4)).not.toMatch(/\b8\b/)
+    expect(text('half-ten', 2, 5)).not.toMatch(/\b10\b/)
   })
 
   it('a favourite trick is used on a fact only when it applies to that fact', () => {

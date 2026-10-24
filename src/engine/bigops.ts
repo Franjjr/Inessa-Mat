@@ -109,7 +109,7 @@ const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: '
 export function hintsMulParts(ex: MulPartsExercise): Hint[] {
   return [
     hint(1, `Parte el ${ex.bottom} en ${ex.tens} y ${ex.units}.`),
-    hint(2, `Multiplica ${fmt(ex.top)} por ${ex.units}. Después ${fmt(ex.top)} por ${ex.tens}: es multiplicar por ${ex.tens / 10} y poner un cero detrás.`),
+    hint(2, `Multiplica el número de arriba por ${ex.units}. Después, por las decenas: es multiplicar por ${ex.tens / 10} y poner un cero detrás.`),
     hint(3, 'Suma las dos partes en columna, con las unidades debajo de las unidades.'),
   ]
 }

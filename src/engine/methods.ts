@@ -29,16 +29,17 @@ export const DIV_METHODS: readonly MethodInfo<DivMethod>[] = [
 /** A trick for the tables (the Lumi tricks). `applies` says for which facts the trick is the natural one. */
 export interface TableTrick extends MethodInfo<TableMethod> {
   applies: (a: number, b: number) => boolean
-  /** Child-facing first hint when the child's favourite trick applies to the fact. */
-  hint: string
+  /** Child-facing first hint when the child's favourite trick applies to the fact. A function when the text depends on the
+      fact: it names only the factor the trick works on, never the product (the answer). */
+  hint: string | ((a: number, b: number) => string)
 }
 
 const has = (a: number, b: number, n: number) => a === n || b === n
 
 export const TABLE_METHODS: readonly TableTrick[] = [
   { id: 'double', label: 'El doble', summary: 'Un factor es 2: es el doble del otro número.', applies: (a, b) => has(a, b, 2), hint: 'Es el doble: suma el otro número dos veces.' },
-  { id: 'double-double', label: 'Doble y doble otra vez', summary: 'Con 4 y 8: se dobla dos veces (4) o tres veces (8).', applies: (a, b) => has(a, b, 4) || has(a, b, 8), hint: 'Dobla y dobla otra vez: así sale el 4. Con el 8, dobla una vez más.' },
-  { id: 'half-ten', label: 'La mitad del 10', summary: 'Con 5: la mitad de la tabla del 10 con el mismo número.', applies: (a, b) => has(a, b, 5), hint: 'Con el 5: mira la tabla del 10 y parte ese número por la mitad.' },
+  { id: 'double-double', label: 'Doble y doble otra vez', summary: 'Con 4 y 8: se dobla dos veces (4) o tres veces (8).', applies: (a, b) => has(a, b, 4) || has(a, b, 8), hint: (a, b) => (has(a, b, 4) ? 'Dobla y dobla otra vez: el 4 son dos dobles del otro número.' : 'Dobla y dobla otra vez: el 8 son tres dobles del otro número.') },
+  { id: 'half-ten', label: 'La mitad del 10', summary: 'Con 5: la mitad de la tabla del 10 con el mismo número.', applies: (a, b) => has(a, b, 5), hint: 'Con el 5: mira la tabla del diez con el otro número y parte ese resultado por la mitad.' },
   { id: 'ten-minus-one', label: 'Diez menos una vez', summary: 'Con 9: diez veces el número, menos una vez el número.', applies: (a, b) => has(a, b, 9), hint: 'Con el 9: diez veces el número, y quita una vez el número.' },
   { id: 'five-plus-one', label: 'El 5 y uno más', summary: 'Con 6 y 7: cinco veces el otro número, y una o dos veces más.', applies: (a, b) => has(a, b, 6) || has(a, b, 7), hint: 'Cinco veces el otro número, y una o dos veces más.' },
   { id: 'mirror', label: 'El espejo', summary: 'Se cambia el orden: 7 × 6 es lo mismo que 6 × 7. Vale para cualquier hecho con dos factores distintos.', applies: (a, b) => a !== b, hint: 'Dale la vuelta al hecho: el espejo sale igual y es más fácil de recordar.' },

@@ -35,7 +35,7 @@ function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint
   const d = strategyDetail(a, b)
   const trick = tableMethod ? TABLE_METHODS.find((t) => t.id === tableMethod && t.applies(a, b)) : undefined
   return [
-    hint(1, trick ? trick.hint : d.strategy.text, 'none'),
+    hint(1, trick ? (typeof trick.hint === 'function' ? trick.hint(a, b) : trick.hint) : d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
     hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
