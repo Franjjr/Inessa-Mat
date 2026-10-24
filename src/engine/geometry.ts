@@ -497,12 +497,14 @@ export function genTriAngles(rng: Rng): ShapeChoiceExercise {
 }
 
 /** Level-3 example per asked quadrilateral: it describes another one, never the asked one's defining feature. */
+/** The level-3 example of each asked quadrilateral is ANOTHER quadrilateral (a contrast): it never gives the asked shape
+    away. Five distinct sentences, one per example. */
 const QUAD_EXAMPLE: Record<'cuadrado' | 'rectángulo' | 'rombo' | 'romboide' | 'trapecio', string> = {
-  cuadrado: 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
-  rectángulo: 'Ejemplo: cuatro esquinas como la del papel, y dos lados largos y dos cortos.',
-  rombo: 'Ejemplo: cuatro lados iguales, pero ninguna esquina como la del papel.',
-  romboide: 'Ejemplo: dos pares de lados iguales, pero ninguna esquina como la del papel.',
-  trapecio: 'Ejemplo: solo un par de lados va en la misma dirección y los otros dos no.',
+  cuadrado: 'Ejemplo: solo un par de lados va en la misma dirección y los otros dos no.',
+  rectángulo: 'Ejemplo: cuatro lados iguales, pero ninguna esquina como la del papel.',
+  rombo: 'Ejemplo: cuatro esquinas como la del papel, y dos lados largos y dos cortos.',
+  romboide: 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
+  trapecio: 'Ejemplo: dos pares de lados iguales, pero ninguna esquina como la del papel.',
 }
 
 /** «¿Qué cuadrilátero es?»: cuadrado, rectángulo, rombo, romboide or trapecio, by its sides and its corners. */

@@ -463,23 +463,27 @@ describe('new geometry operations (3.º and 4.º)', () => {
   })
 })
 
-describe('the quadrilateral example of the level-3 hint describes its own shape', () => {
-  it('each kind names its own sides and corners', () => {
-    const want: Record<string, string> = {
-      cuadrado: 'cuatro lados iguales y cuatro esquinas como la del papel',
-      rectángulo: 'cuatro esquinas como la del papel, y dos lados largos y dos cortos',
-      rombo: 'cuatro lados iguales, pero ninguna esquina como la del papel',
-      romboide: 'dos pares de lados iguales, pero ninguna esquina como la del papel',
-      trapecio: 'solo un par de lados va en la misma dirección',
+describe('the quadrilateral level-3 hint is a contrast: it never describes or names the asked shape', () => {
+  it('each asked kind gets another quadrilateral as its example, and the five examples differ', () => {
+    // The asked shape's defining description and its name: the level-3 text must contain neither.
+    const asked: Record<string, { name: string; defining: string }> = {
+      cuadrado: { name: 'cuadrado', defining: 'cuatro lados iguales y cuatro esquinas como la del papel' },
+      rectángulo: { name: 'rectángulo', defining: 'cuatro esquinas como la del papel, y dos lados largos y dos cortos' },
+      rombo: { name: 'rombo', defining: 'cuatro lados iguales, pero ninguna esquina como la del papel' },
+      romboide: { name: 'romboide', defining: 'dos pares de lados iguales, pero ninguna esquina como la del papel' },
+      trapecio: { name: 'trapecio', defining: 'solo un par de lados va en la misma dirección' },
     }
     const seen = new Map<string, string>()
     for (let seed = 1; seed < 400 && seen.size < 5; seed++) {
       const ex = genQuadName(createRng(seed))
       const kind = ex.options[ex.answer]
-      if (!seen.has(kind)) seen.set(kind, hintsFor(ex)[2].text)
+      if (seen.has(kind)) continue
+      const text = hintsFor(ex)[2].text
+      seen.set(kind, text)
+      expect(text.toLowerCase(), kind).not.toContain(asked[kind].defining)
+      expect(text.toLowerCase(), kind).not.toContain(asked[kind].name)
     }
     expect(seen.size).toBe(5)
-    for (const [kind, text] of seen) expect(text, kind).toContain(want[kind])
     expect(new Set(seen.values()).size).toBe(5)
   })
 })
