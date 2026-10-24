@@ -20,6 +20,9 @@ export interface SyllabusTopic {
   rungs: Partial<Record<SyllabusRung, string>>
   /** For pending topics: what is still missing. */
   pendingNote?: string
+  /** Its skills are steps: «Lo nuevo» teaches only the first unmastered one that can be generated; the rest wait their turn
+   *  and come back in the mix. Without it the skills are taught together, as a set. */
+  ordered?: true
 }
 
 export interface SyllabusBlock {

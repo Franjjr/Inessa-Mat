@@ -281,9 +281,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
   let example: DailyPlan['example'] = null
   const newItems: DailyItem[] = []
   if (topic) {
-    const candidates = topic.skills
-      .filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
-      .sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
+    const open = topic.skills.filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
+    // An ordered topic's skills are steps: only the first open one is new; the next one waits until it is mastered.
+    const candidates = topic.ordered
+      ? open.slice(0, 1)
+      : open.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
     const allowed: SkillKey[] = []
     for (const s of candidates) {
       if (isNewHard(s)) {
