@@ -133,6 +133,92 @@ describe('medida: generators are valid and grade their own answers', () => {
   })
 })
 
+/** The ladder of each dimension, biggest first (as the child sees it on the chart). */
+const LADDER: Record<MeasureDimension, string[]> = {
+  length: ['km', 'hm', 'dam', 'm', 'dm', 'cm', 'mm'],
+  mass: ['kg', 'hg', 'dag', 'g', 'dg', 'cg', 'mg'],
+  capacity: ['kl', 'hl', 'dal', 'l', 'dl', 'cl', 'ml'],
+}
+
+describe('medida: múltiplos y submúltiplos (:all)', () => {
+  it('parses the :all keys of the conversions only', () => {
+    for (const dim of DIMS) {
+      expect(parseSkill(measureSkill('convert', dim, true))).toEqual({ type: 'measure', mode: 'convert', dimension: dim, all: true })
+      expect(kindsForSkill(measureSkill('convert', dim, true))).toEqual(['measure'])
+      expect(describeSkill(measureSkill('convert', dim, true)).length).toBeGreaterThan(3)
+    }
+    expect(parseSkill('measure:unit:length:all')).toBeNull()
+    expect(parseSkill('measure:convert:time:all')).toBeNull()
+  })
+
+  it('300 items: whole numbers, one target unit on the same ladder, one or several steps', () => {
+    const rng = createRng(101)
+    const steps = new Set<number>()
+    for (let i = 0; i < 300; i++) {
+      const dim = DIMS[i % 3]
+      const ex = buildMeasure('convert', dim, rng, new Set(), true)
+      if (ex.kind !== 'measure' || ex.mode !== 'convert' || !ex.ladder) throw new Error('mode')
+      const [, value, from] = ex.given.match(/^([\d ]+) (\S+)$/) ?? []
+      expect(value, ex.given).toBeDefined()
+      const given = Number(value.replace(/ /g, ''))
+      const { steps: n } = ex.ladder
+      steps.add(n)
+      expect(from).toBe(ex.ladder.from)
+      expect(LADDER[dim]).toContain(from)
+      expect(LADDER[dim]).toContain(ex.unit)
+      expect(Math.abs(LADDER[dim].indexOf(from) - LADDER[dim].indexOf(ex.unit))).toBe(n)
+      expect(ex.factor).toBe(10 ** n)
+      expect(Number.isInteger(ex.answer)).toBe(true)
+      expect(Number.isInteger(given)).toBe(true)
+      // The amount in the big unit times the factor is the amount in the small one, both whole.
+      const bigAmount = ex.toBig ? ex.answer : given
+      const smallAmount = ex.toBig ? given : ex.answer
+      expect(smallAmount, ex.given).toBe(bigAmount * ex.factor)
+      expect(Number.isInteger(bigAmount), ex.given).toBe(true)
+      expect(ex.answer).toBeLessThanOrEqual(9999)
+      expect(check(ex, { type: 'number', value: ex.answer }).correct).toBe(true)
+      expect(check(ex, { type: 'number', value: ex.answer * 10 }).correct).toBe(false)
+    }
+    expect([...steps].sort()).toEqual([1, 2, 3])
+  })
+
+  it('the ladder feedback names the rungs when the answer is a power of ten away', () => {
+    const rng = createRng(102)
+    const ex = buildMeasure('convert', 'length', rng, new Set(), true)
+    if (ex.kind !== 'measure' || ex.mode !== 'convert') throw new Error('mode')
+    const r = check(ex, { type: 'number', value: ex.toBig ? ex.answer * 10 : ex.answer / 10 })
+    expect(r.correct).toBe(false)
+    expect(r.feedback).toContain('escalón')
+  })
+
+  it('no hint of a :all item states the answer, plain or with spaces (3000 or 3 000), in 300 items', () => {
+    const rng = createRng(103)
+    for (let i = 0; i < 300; i++) {
+      const dim = DIMS[i % 3]
+      const ex = buildMeasure('convert', dim, rng, new Set(), true)
+      if (ex.kind !== 'measure' || ex.mode !== 'convert') throw new Error('mode')
+      const hints = hintsFor(ex)
+      expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
+      if (ex.answer >= 10) {
+        // The answer as the child may type it (3000) and as the pad shows it (3 000): neither appears in a hint.
+        const formatted = ex.answer.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+        for (const h of hints) {
+          expect(new RegExp(`(^|\\D)${formatted}(\\D|$)`).test(h.text), JSON.stringify(ex)).toBe(false)
+        }
+        expect(hintsLeak(hints.map((h) => h.text), ex.answer), JSON.stringify(ex)).toBe(false)
+      }
+    }
+  })
+
+  it('the first hint is the ladder of units, and the third works another example', () => {
+    const rng = createRng(104)
+    const ex = buildMeasure('convert', 'capacity', rng, new Set(), true)
+    const hints = hintsFor(ex)
+    expect(hints[0].text).toContain('kl hl dal l dl cl ml')
+    expect(hints[2].text).toMatch(/^Ejemplo:/)
+  })
+})
+
 describe('medida: hints never give the result', () => {
   it('no hint of a conversion or a ruler exercise states the answer', () => {
     const rng = createRng(91)

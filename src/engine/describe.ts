@@ -98,7 +98,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'fraction': return fractionText(p)
     case 'geo': return GEO_TEXT[p.op]
     case 'money': return MONEY_TEXT[p.mode]
-    case 'measure': return measureText(p.mode, p.dimension)
+    case 'measure': return measureText(p.mode, p.dimension, p.all === true)
     case 'chart': return CHART_TEXT[p.variant]
     case 'chance': return 'Seguro, posible o imposible'
     case 'pattern': return PATTERN_TEXT[p.variant]
@@ -132,10 +132,12 @@ const MONEY_TEXT: Record<MoneyMode, string> = {
   convert: 'Euros y céntimos: 1 € = 100 céntimos',
 }
 
-function measureText(mode: MeasureMode, dimension: MeasureDimension | null): string {
+function measureText(mode: MeasureMode, dimension: MeasureDimension | null, all: boolean): string {
   switch (mode) {
     case 'unit': return `Elegir la unidad de ${DIMENSION_NAME[dimension ?? 'length']}`
-    case 'convert': return `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}`
+    case 'convert': return all
+      ? `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}: todos los múltiplos y submúltiplos`
+      : `Cambiar unidades de ${DIMENSION_NAME[dimension ?? 'length']}`
     case 'ruler': return 'Medir con la regla (cm)'
     case 'add': return 'Sumar medidas con unidades distintas'
     case 'estimate': return '¿Es razonable? Estimar medidas'
@@ -147,10 +149,11 @@ const CLOCK_READ_TEXT: Record<30 | 15 | 5, string> = {
   15: 'Leer el reloj: cuartos (y cuarto, menos cuarto)',
   5: 'Leer el reloj de cinco en cinco minutos',
 }
-const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month', string> = {
+const CALENDAR_TEXT: Record<'units' | 'weekday' | 'month' | 'seconds', string> = {
   units: 'Unidades de tiempo: hora, minuto, día, semana',
   weekday: 'Días de la semana: qué día será dentro de unos días',
   month: 'Días de cada mes',
+  seconds: 'Minutos y segundos: pasar de minutos a segundos y al revés',
 }
 
 const HUNT_TEXT: Record<'add' | 'sub' | 'mul', string> = { add: 'sumar', sub: 'restar', mul: 'multiplicar' }

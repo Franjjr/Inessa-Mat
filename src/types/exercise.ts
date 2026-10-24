@@ -30,6 +30,7 @@ import type { ID, InputMode } from './common'
  *   clock:convert:day        digital 24 h ↔ the phrase with mañana, tarde, noche
  *   time:end | time:elapsed  duration problems: end time, or the minutes that pass (time line)
  *   time:units | cal:weekday | cal:month   units of time, days of the week, days of a month
+ *   time:seconds                             minutes to seconds and back, and durations with seconds (up to 10 min)
  *   frac:shade:D|read:D|name:D|of:D  fractions with denominator D (2|3|4|5|6|8|10|12): colour, read, name, fraction of a quantity
  *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
  *   frac:add | frac:sub              adding and subtracting fractions with the same denominator (4.º)
@@ -40,6 +41,7 @@ import type { ID, InputMode } from './common'
  *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
  *   measure:unit:length|mass|capacity                 choose the unit of a real object
  *   measure:convert:length|mass|capacity              simple conversions (1 m = 100 cm, medio kilo = 500 g)
+ *   measure:convert:length|mass|capacity:all          every unit of the dimension (km … mm, kg … mg, kl … ml), whole numbers only
  *   measure:ruler                                     read a measure on an on-screen ruler (start not always 0)
  *   measure:word                                      add two measures (mixed units) in a word problem
  *   measure:estimate                                  ¿es razonable? a claimed measure
@@ -303,9 +305,9 @@ export interface TimeDurationExercise extends ExerciseBase {
   kind: 'time-duration'; ask: 'end' | 'elapsed'; start: ClockTime; duration: number; end: ClockTime
   answer: ClockTime | number
 }
-/** cal:weekday — weekday choice (`options`, answer = index); cal:month and time:units — a number (answer). */
+/** cal:weekday — weekday choice (`options`, answer = index); cal:month, time:units and time:seconds — a number (answer). */
 export interface CalendarExercise extends ExerciseBase {
-  kind: 'calendar'; topic: 'units' | 'weekday' | 'month'; prompt: string
+  kind: 'calendar'; topic: 'units' | 'weekday' | 'month' | 'seconds'; prompt: string
   options: string[]
   answer: number
   /** weekday: index of today (0 = lunes) and the days to count. */
@@ -314,6 +316,8 @@ export interface CalendarExercise extends ExerciseBase {
   units?: { amount: number; from: string; to: string }
   /** month: the month asked about. */
   month?: string
+  /** seconds: the form of the item. min-to-s: minutes → seconds; mixed: minutes and seconds → seconds; s-to-min: seconds → minutes. */
+  seconds?: { form: 'min-to-s'; minutes: number } | { form: 'mixed'; minutes: number; seconds: number } | { form: 's-to-min'; total: number }
 }
 
 // ---------------------------------------------------------------- fractions and geometry (3.º, block E)
@@ -467,6 +471,8 @@ export interface MeasureConvertExercise extends ExerciseBase {
   /** true when the blank is the big unit (300 cm = ___ m). */
   toBig: boolean
   answer: number
+  /** `:all` keys only: the unit of the given amount (the blank is `unit`) and the steps of the unit ladder between them (1 step = ×10). */
+  ladder?: { from: string; steps: number }
 }
 export interface MeasureRulerExercise extends ExerciseBase {
   kind: 'measure'; mode: 'ruler'; start: number; end: number; max: number

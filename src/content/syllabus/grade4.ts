@@ -117,8 +117,8 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       id: 'medida',
       name: 'Medida',
       topics: [
-        { id: 'longitud-4', name: 'Longitud: km, m y cm', skills: ['measure:unit:length', 'measure:convert:length'], status: 'disponible', rungs: { numeros: '1 km = 1 000 m; 1 m = 100 cm', uso: 'Elegir la unidad de una distancia' } },
-        { id: 'masa-capacidad-4', name: 'Masa y capacidad: kg y g, l y ml', skills: ['measure:convert:mass', 'measure:convert:capacity'], status: 'disponible', rungs: { numeros: '1 kg = 1 000 g; 1 l = 1 000 ml' } },
+        { id: 'longitud-4', name: 'Longitud: km, m y cm', skills: ['measure:unit:length', 'measure:convert:length', 'measure:convert:length:all'], status: 'disponible', ordered: true, rungs: { numeros: '1 km = 1 000 m; 1 m = 100 cm', uso: 'Elegir la unidad de una distancia' } },
+        { id: 'masa-capacidad-4', name: 'Masa y capacidad: kg y g, l y ml', skills: ['measure:convert:mass', 'measure:convert:capacity', 'measure:convert:mass:all', 'measure:convert:capacity:all'], status: 'disponible', ordered: true, rungs: { numeros: '1 kg = 1 000 g; 1 l = 1 000 ml' } },
         { id: 'medir-problemas', name: 'Sumar medidas y estimar', skills: ['measure:add', 'measure:estimate'], status: 'disponible', rungs: { uso: '¿Es razonable este resultado?' } },
       ],
     },
@@ -127,7 +127,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Tiempo',
       topics: [
         { id: 'reloj-4', name: 'Reloj de agujas y digital', skills: ['clock:read:5', 'clock:convert:day'], status: 'disponible', rungs: { numeros: '17:35 = las seis menos veinticinco de la tarde' } },
-        { id: 'duraciones-4', name: 'Duraciones y unidades de tiempo', skills: ['time:end', 'time:elapsed', 'time:units'], status: 'disponible', rungs: { dibujo: 'Recta de horas', uso: 'Horarios de la vida diaria' } },
+        { id: 'duraciones-4', name: 'Duraciones y unidades de tiempo', skills: ['time:end', 'time:elapsed', 'time:units', 'time:seconds'], status: 'disponible', rungs: { dibujo: 'Recta de horas', uso: 'Horarios de la vida diaria' } },
       ],
     },
     {

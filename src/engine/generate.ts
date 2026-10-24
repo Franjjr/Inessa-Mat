@@ -240,6 +240,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       for (const dim of ['length', 'mass', 'capacity'] as const) {
         addItem(map, measureSkill('unit', dim), kind, 1)
         addItem(map, measureSkill('convert', dim), kind, 1)
+        addItem(map, measureSkill('convert', dim, true), kind, 1)
       }
       for (const skill of ['measure:ruler', 'measure:add', 'measure:estimate']) addItem(map, skill, kind, 1)
       break
@@ -727,7 +728,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   }
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
   if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
-  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used)
+  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used, p.all === true)
   if (p.type === 'chart') return retry(() => buildChart(p.variant, rng), used, rng)!
   if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
   if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!

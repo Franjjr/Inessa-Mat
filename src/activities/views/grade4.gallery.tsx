@@ -1,11 +1,13 @@
 /* Dev gallery of the 4.º exercises: multiplying by parts and in columns (partial rows), 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
    décimas y centésimas, sumar y restar decimales, área, simetría, romanos, por 10, redondear a millares, operaciones combinadas,
-   propiedades, estimar and signo igual o distinto, at iPad and phone widths.
+   propiedades, estimar, signo igual o distinto, múltiplos y submúltiplos de longitud, masa y capacidad, and minutos y segundos,
+   at iPad and phone widths.
    Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { createRng, genFractionAdd, generate } from '@/engine'
 import type { Exercise } from '@/types'
+import CalendarView from './CalendarView'
 import ColumnView from './ColumnView'
 import DivisionView from './DivisionView'
 import FigureNumberView from './FigureNumberView'
@@ -14,6 +16,7 @@ import DecimalView from './DecimalView'
 import EquationView from './EquationView'
 import FractionAddView from './FractionAddView'
 import LongMulView from './LongMulView'
+import MeasureView from './MeasureView'
 import MentalView from './MentalView'
 import MulPartsView from './MulPartsView'
 import RoundView from './RoundView'
@@ -60,6 +63,11 @@ const entries: GalleryEntry[] = [
   { title: 'Estimar redondeando (ipad)', ...ipad, render: () => frame(<MentalView exercise={one('mental:estimar', 4)} onAnswered={noop} />) },
   { title: 'Signo igual o distinto: = o ≠ (ipad)', ...ipad, render: () => frame(<EquationView exercise={one('eq:same', 3)} onAnswered={noop} />) },
   { title: 'Signo igual o distinto: = o ≠ (teléfono)', ...phone, render: () => frame(<EquationView exercise={one('eq:same', 8)} onAnswered={noop} />) },
+  { title: 'Múltiplos y submúltiplos de longitud (ipad)', ...ipad, render: () => frame(<MeasureView exercise={one('measure:convert:length:all', 4)} onAnswered={noop} />) },
+  { title: 'Submúltiplos de masa: kg a g y mg (teléfono)', ...phone, render: () => frame(<MeasureView exercise={one('measure:convert:mass:all', 6)} onAnswered={noop} />) },
+  { title: 'Múltiplos y submúltiplos de capacidad (teléfono)', ...phone, render: () => frame(<MeasureView exercise={one('measure:convert:capacity:all', 9)} onAnswered={noop} />) },
+  { title: 'Minutos y segundos: pasar de min a s (ipad)', ...ipad, render: () => frame(<CalendarView exercise={one('time:seconds', 3)} onAnswered={noop} showFeedback allowHints />) },
+  { title: 'Minutos y segundos: duraciones (teléfono)', ...phone, render: () => frame(<CalendarView exercise={one('time:seconds', 8)} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Redondear a millares (ipad vertical)', ...portrait, render: () => frame(<RoundView exercise={one('num:round:1000', 3)} onAnswered={noop} />) },
 ]
 

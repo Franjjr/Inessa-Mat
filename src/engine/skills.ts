@@ -27,6 +27,7 @@
    clock:convert:day    reloj digital de 24 h ↔ frase con mañana, tarde o noche
    time:end | time:elapsed   duraciones: hora de llegada, o minutos que pasan (recta de horas)
    time:units | cal:weekday | cal:month   unidades de tiempo, días de la semana, días de un mes
+   time:seconds             minutos a segundos y al revés, y duraciones con segundos (up to 10 min; src/engine/clock.ts)
    frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
    frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
    frac:add | frac:sub        adding and subtracting fractions with the same denominator (4.º)
@@ -49,6 +50,7 @@
    mul:col:2x2|3x2|3x3      multiplying in columns, with partial rows: 2- or 3-digit top × 2- or 3-digit bottom (4.º, src/engine/longmul.ts)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
+   measure:convert:<dim>:all  every unit of the dimension (km … mm, kg … mg, kl … ml): one step first, then several; whole numbers only
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
    num:ordinal:10|20|30     ordinales (3.º): the n-.º of a row (10), or reading and writing 1.º–20.º / 1.º–30.º (src/engine/ordinals.ts)
 */
@@ -121,12 +123,12 @@ export type ParsedSkill =
   | { type: 'clock-set'; step: 30 | 5 }
   | { type: 'clock-convert' }
   | { type: 'time-duration'; ask: 'end' | 'elapsed' }
-  | { type: 'calendar'; topic: 'units' | 'weekday' | 'month' }
+  | { type: 'calendar'; topic: 'units' | 'weekday' | 'month' | 'seconds' }
   | { type: 'fraction'; op: 'shade' | 'read' | 'name' | 'of'; d: number }
   | { type: 'fraction'; op: 'equal' | 'compare' | 'add' | 'sub' }
   | { type: 'geo'; op: GeoOp }
   | { type: 'money'; mode: MoneyMode; whole?: true }
-  | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
+  | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null; all?: true }
   | { type: 'mul3x1'; carry: boolean }
   | { type: 'div4x1'; variant: 'exact' | 'rem' }
   | { type: 'decimal'; mode: DecimalMode; places?: DecimalPlaces }
@@ -222,7 +224,8 @@ export function clockConvertSkill(): SkillKey {
 export function timeDurationSkill(ask: 'end' | 'elapsed'): SkillKey {
   return ask === 'end' ? 'time:end' : 'time:elapsed'
 }
-export function calendarSkill(topic: 'units' | 'weekday' | 'month'): SkillKey {
+export function calendarSkill(topic: 'units' | 'weekday' | 'month' | 'seconds'): SkillKey {
+  if (topic === 'seconds') return 'time:seconds'
   return topic === 'units' ? 'time:units' : topic === 'weekday' ? 'cal:weekday' : 'cal:month'
 }
 /** frac:shade|read|name|of with a denominator; frac:equal, frac:compare, frac:add and frac:sub without one. */
@@ -245,8 +248,9 @@ export function geoSkill(op: GeoOp): SkillKey {
 export function moneySkill(mode: MoneyMode, whole = false): SkillKey {
   return whole ? `money:${mode}:e` : `money:${mode}`
 }
-export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension): SkillKey {
-  return `measure:${mode}:${dimension}`
+/** `all` (only convert): every unit of the dimension, `measure:convert:length:all`. */
+export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimension, all = false): SkillKey {
+  return `measure:${mode}:${dimension}${all ? ':all' : ''}`
 }
 
 // ---------------------------------------------------------------- parser
@@ -331,6 +335,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'clock:convert:day') return { type: 'clock-convert' }
   if ((m = key.match(/^time:(end|elapsed)$/))) return { type: 'time-duration', ask: m[1] as 'end' | 'elapsed' }
   if (key === 'time:units') return { type: 'calendar', topic: 'units' }
+  if (key === 'time:seconds') return { type: 'calendar', topic: 'seconds' }
   if (key === 'cal:weekday') return { type: 'calendar', topic: 'weekday' }
   if (key === 'cal:month') return { type: 'calendar', topic: 'month' }
   if ((m = key.match(/^frac:(shade|read|name|of):(\d+)$/))) {
@@ -341,8 +346,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^geo:(.+)$/))) return GEO_OPS.includes(m[1] as GeoOp) ? { type: 'geo', op: m[1] as GeoOp } : null
   if ((m = key.match(/^money:(recognise|pay|change|add|compare|convert)$/))) return { type: 'money', mode: m[1] as MoneyMode }
   if ((m = key.match(/^money:(pay|add):e$/))) return { type: 'money', mode: m[1] as MoneyMode, whole: true }
-  if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)$/))) {
-    return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension }
+  if ((m = key.match(/^measure:(unit|convert):(length|mass|capacity)(:all)?$/))) {
+    if (m[3] && m[1] !== 'convert') return null
+    return { type: 'measure', mode: m[1] as MeasureMode, dimension: m[2] as MeasureDimension, ...(m[3] ? { all: true as const } : {}) }
   }
   if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
   if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
