@@ -143,7 +143,15 @@ export async function activeChildId(page: Page): Promise<string> {
  *  The blank may show as "?" or as the input's placeholder text. Reads the visible text of the page's main region.
  *  Returns null when no such equation is on screen. */
 export async function solveVisibleEquation(page: Page): Promise<number | null> {
-  const text = ((await page.locator('main').first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ')
+  // The on-screen keypad can sit inside the equation (desktop keypad mode); its digits are not part of it.
+  const text = ((await page.locator('main').first().evaluate((main) => {
+    const copy = main.cloneNode(true) as HTMLElement
+    copy.querySelectorAll('[data-ink-keypad]').forEach((k) => k.remove())
+    document.body.append(copy)
+    const t = copy.innerText
+    copy.remove()
+    return t
+  }).catch(() => '')) ?? '').replace(/\s+/g, ' ')
   // left operand known: "8 × [blank] = 40"
   const known = [...text.matchAll(/(\d+)\s*([×÷])\s*(\?|\d+|[^\d=]{1,40}?)\s*=\s*(\d+)/g)].at(-1)
   if (known) {
