@@ -28,6 +28,9 @@
    frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
    frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
    frac:add | frac:sub        adding and subtracting fractions with the same denominator (4.º)
+   dec:shade|read:D          décimas (D = 1) and centésimas (D = 2): colour a bar or a grid, read the words (4.º, src/engine/decimals.ts)
+   dec:compare | dec:money   comparing two decimals; euros with céntimos written as a decimal
+   dec:add:D | dec:sub:D     adding and subtracting decimals in columns (4.º)
    geo:poly:name|sides, geo:line:type|rel|kind, geo:angle:type|tap|class, geo:circle|circle:parts, geo:solid:name|roll|faces|count,
    geo:perimeter, geo:tri:sides|angles, geo:quad:name, geo:translate
                               geometry (block E, geometría): see src/engine/geometry.ts
@@ -48,7 +51,8 @@
    num:ordinal:10|20|30     ordinales (3.º): the n-.º of a row (10), or reading and writing 1.º–20.º / 1.º–30.º (src/engine/ordinals.ts)
 */
 import type {
-  BarOp, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode, SkillKey,
+  BarOp, DecimalMode, DecimalPlaces, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode,
+  SkillKey,
 } from '@/types'
 
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
@@ -120,6 +124,8 @@ export type ParsedSkill =
   | { type: 'measure'; mode: MeasureMode; dimension: MeasureDimension | null }
   | { type: 'mul3x1'; carry: boolean }
   | { type: 'div4x1'; variant: 'exact' | 'rem' }
+  | { type: 'decimal'; mode: DecimalMode; places?: DecimalPlaces }
+  | { type: 'decimal-op'; op: 'add' | 'sub'; places: DecimalPlaces }
   | { type: 'div3x2'; variant: 'exact' | 'rem' }
   | { type: 'mulParts'; digits: 2 | 3 }
   | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
@@ -218,6 +224,15 @@ export function calendarSkill(topic: 'units' | 'weekday' | 'month'): SkillKey {
 export function fractionSkill(op: FractionOp, d?: number): SkillKey {
   return op === 'equal' || op === 'compare' || op === 'add' || op === 'sub' ? `frac:${op}` : `frac:${op}:${d}`
 }
+/** dec:shade|read:D and dec:add|sub:D take the places (1 or 2); dec:compare and dec:money do not. */
+export function decimalSkill(op: DecimalMode | 'add' | 'sub', places?: DecimalPlaces): SkillKey {
+  return op === 'compare' || op === 'money' ? `dec:${op}` : `dec:${op}:${places}`
+}
+/** The decimal keys of each kind: décimas and centésimas (shade, read), comparing, euros; sums and differences. */
+export const DECIMAL_SKILLS: SkillKey[] = [
+  decimalSkill('shade', 1), decimalSkill('read', 1), decimalSkill('shade', 2), decimalSkill('read', 2), decimalSkill('compare'), decimalSkill('money'),
+]
+export const DECIMAL_OP_SKILLS: SkillKey[] = [decimalSkill('add', 1), decimalSkill('sub', 1), decimalSkill('add', 2), decimalSkill('sub', 2)]
 export function geoSkill(op: GeoOp): SkillKey {
   return `geo:${op}`
 }
@@ -271,6 +286,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^num:ordinal:(10|20|30)$/))) return { type: 'ordinal', top: Number(m[1]) as OrdinalMax }
   if ((m = key.match(/^mul:col:([23])x([23])$/))) return { type: 'mulCol', top: Number(m[1]) as 2 | 3, bottom: Number(m[2]) as 2 | 3 }
   if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^dec:(shade|read):([12])$/))) return { type: 'decimal', mode: m[1] as 'shade' | 'read', places: Number(m[2]) as DecimalPlaces }
+  if ((m = key.match(/^dec:(compare|money)$/))) return { type: 'decimal', mode: m[1] as 'compare' | 'money' }
+  if ((m = key.match(/^dec:(add|sub):([12])$/))) return { type: 'decimal-op', op: m[1] as 'add' | 'sub', places: Number(m[2]) as DecimalPlaces }
   if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
   if ((m = key.match(/^concept:(\w+)$/))) {
@@ -346,6 +364,8 @@ export function blockSkillsOf(kind: ExerciseKind): SkillKey[] {
     case 'shape-count': return [geoSkill('poly:sides')]
     case 'area': return [geoSkill('area')]
     case 'fraction-add': return [fractionSkill('add'), fractionSkill('sub')]
+    case 'decimal': return DECIMAL_SKILLS
+    case 'decimal-op': return DECIMAL_OP_SKILLS
     default: return []
   }
 }
@@ -402,6 +422,8 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'mul3x1': return ['column-mul']
     case 'div4x1': return ['division']
     case 'div3x2': return ['division']
+    case 'decimal': return ['decimal']
+    case 'decimal-op': return ['decimal-op']
     case 'mulParts': return ['mul-parts']
     case 'mulCol': return ['long-mul']
     case 'ordinal': return ['ordinal']

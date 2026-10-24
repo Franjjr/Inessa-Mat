@@ -13,6 +13,7 @@ import { hintsNumeric } from './numeric'
 import { hintsClock } from './clock'
 import { barHints } from './bars'
 import { hintsMoney } from './money'
+import { hintsDecimal } from './decimals'
 import { hintsMeasure } from './measure'
 import { hintsChance, hintsChart } from './data'
 import { hintsPattern } from './patterns'
@@ -415,6 +416,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'mul-parts': return hintsMulParts(ex)
     case 'long-mul': return hintsLongMul(ex)
     case 'ordinal': return hintsOrdinal(ex)
+    case 'decimal': case 'decimal-op': return hintsDecimal(ex)
     case 'area': return geometryHints(ex)
   }
 }

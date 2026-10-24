@@ -24,6 +24,7 @@ import { CHART_SKILLS, buildChance, buildChart } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
 import { genLongMul } from './longmul'
 import { genOrdinal } from './ordinals'
+import { genDecimal, genDecimalOp } from './decimals'
 import { PATTERN_SKILLS, buildPattern } from './patterns'
 import { POSITION_SKILLS, buildPosition } from './position'
 import { moneySkill, measureSkill } from './skills'
@@ -45,6 +46,7 @@ export const ALL_KINDS: ExerciseKind[] = [
   'fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'shape-choice', 'angle-tap', 'perimeter', 'shape-count',
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
   'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add', 'long-mul', 'ordinal',
+  'decimal', 'decimal-op',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -256,6 +258,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'ordinal':
       for (const max of [10, 20, 30] as const) addItem(map, ordinalSkill(max), kind, 1)
+      break
+    case 'decimal': case 'decimal-op':
+      for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
       break
     case 'area':
       addItem(map, 'geo:area', kind, 1)
@@ -736,6 +741,8 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'mulCol') return retry(() => genLongMul(rng, p.top, p.bottom), used, rng)!
   if (p.type === 'ordinal') return retry(() => genOrdinal(rng, p.top), used, rng)!
+  if (p.type === 'decimal') return retry(() => genDecimal(rng, p.mode, p.places), used, rng)!
+  if (p.type === 'decimal-op') return retry(() => genDecimalOp(rng, p.op, p.places), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {
       const [dd, dv] = genDivision3(rng, p.variant === 'rem')

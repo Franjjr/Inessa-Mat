@@ -86,6 +86,12 @@ export function correctAnswer(ex: Exercise): Answer {
     case 'perimeter':
     case 'shape-count':
       return { type: 'number', value: ex.answer }
+    case 'decimal':
+      if (ex.mode === 'compare') return { type: 'sign', sign: ex.answer as '<' | '>' | '=' }
+      if (ex.mode === 'money') return { type: 'numbers', values: [Math.floor(ex.value / 100), ex.value % 100] }
+      return { type: 'numbers', values: [Math.floor(ex.value / 100), ex.places === 1 ? Math.floor((ex.value % 100) / 10) : ex.value % 100] }
+    case 'decimal-op':
+      return { type: 'numbers', values: [Math.floor(ex.answer / 100), ex.places === 1 ? Math.floor((ex.answer % 100) / 10) : ex.answer % 100] }
     default:
       return { type: 'number', value: ex.answer as number }
   }

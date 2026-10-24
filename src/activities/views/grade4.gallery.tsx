@@ -1,5 +1,6 @@
 /* Dev gallery of the 4.º exercises: multiplying by parts and in columns (partial rows), 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
-   área, simetría, romanos, por 10 and redondear a millares, at iPad and phone widths. Open /dev/gallery?only=grade4. */
+   décimas y centésimas, sumar y restar decimales, área, simetría, romanos, por 10 and redondear a millares, at iPad and phone widths.
+   Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { createRng, genFractionAdd, generate } from '@/engine'
@@ -7,6 +8,8 @@ import type { Exercise } from '@/types'
 import ColumnView from './ColumnView'
 import DivisionView from './DivisionView'
 import FigureNumberView from './FigureNumberView'
+import DecimalOpView from './DecimalOpView'
+import DecimalView from './DecimalView'
 import FractionAddView from './FractionAddView'
 import LongMulView from './LongMulView'
 import MentalView from './MentalView'
@@ -35,6 +38,12 @@ const entries: GalleryEntry[] = [
   { title: 'Sumar fracciones (ipad)', ...ipad, render: () => frame(<FractionAddView exercise={genFractionAdd(createRng(2), 'add', 'drawing')} onAnswered={noop} />) },
   { title: 'Restar fracciones (teléfono)', ...phone, render: () => frame(<FractionAddView exercise={genFractionAdd(createRng(3), 'sub', 'drawing')} onAnswered={noop} />) },
   { title: 'Sumar fracciones con números (teléfono)', ...phone, render: () => frame(<FractionAddView exercise={genFractionAdd(createRng(4), 'add', 'numbers')} onAnswered={noop} />) },
+  { title: 'Décimas: colorear y escribir (ipad)', ...ipad, render: () => frame(<DecimalView exercise={one('dec:shade:1', 3)} onAnswered={noop} />) },
+  { title: 'Centésimas: leer y escribir (teléfono)', ...phone, render: () => frame(<DecimalView exercise={one('dec:read:2', 6)} onAnswered={noop} />) },
+  { title: 'Comparar decimales (teléfono)', ...phone, render: () => frame(<DecimalView exercise={one('dec:compare', 8)} onAnswered={noop} />) },
+  { title: 'Euros con céntimos como decimal (ipad)', ...ipad, render: () => frame(<DecimalView exercise={one('dec:money', 2)} onAnswered={noop} />) },
+  { title: 'Sumar decimales en columna (ipad)', ...ipad, render: () => frame(<DecimalOpView exercise={one('dec:add:2', 4)} onAnswered={noop} />) },
+  { title: 'Restar décimas en columna (teléfono)', ...phone, render: () => frame(<DecimalOpView exercise={one('dec:sub:1', 5)} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (ipad)', ...ipad, render: () => frame(<FigureNumberView exercise={one('geo:area', 2)} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (teléfono)', ...phone, render: () => frame(<FigureNumberView exercise={one('geo:area', 7)} onAnswered={noop} />) },
   { title: 'Simetría (ipad)', ...ipad, render: () => frame(<ShapeChoiceView exercise={one('geo:symmetry', 3)} onAnswered={noop} />) },

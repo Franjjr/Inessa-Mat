@@ -43,6 +43,9 @@ import type { ID, InputMode } from './common'
  *   measure:estimate                                  ¿es razonable? a claimed measure
  *   mul:col:2x2|3x2|3x3                               multiplicar en columna, con filas parciales (4.º, src/engine/longmul.ts)
  *   num:ordinal:10|20|30                              ordinales (3.º): tocar el n-.º de una fila (10), leer y escribir el ordinal (20, 30)
+ *   dec:shade:1|2 | dec:read:1|2                      décimas (1) and centésimas (2): colour the bar or the grid of 100, read the words and write the number
+ *   dec:compare | dec:money                           comparing two decimals with < = >; euros with céntimos as a decimal (2,45 € = 2 euros y 45 céntimos)
+ *   dec:add:1|2 | dec:sub:1|2                         adding and subtracting decimals in columns, comma under comma, never negative (4.º)
  */
 export type SkillKey = string
 
@@ -94,6 +97,8 @@ export type ExerciseKind =
   | 'fraction-add'    // sumar y restar fracciones de igual denominador: 2/7 + 3/7 = ? (frac:add, frac:sub)
   | 'long-mul'        // multiplicar en columna con filas parciales: 23 × 14 = 92 + 230 (mul:col:AxB)
   | 'ordinal'         // ordinales (3.º): the n-.º of a row, or the word and the number of an ordinal (num:ordinal:*)
+  | 'decimal'         // décimas y centésimas: shade, read, compare, money (dec:shade|read:D, dec:compare, dec:money)
+  | 'decimal-op'      // sumar y restar decimales en columna (dec:add|sub:D)
 
 interface ExerciseBase {
   id: ID
@@ -482,7 +487,7 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise | OrdinalExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -726,4 +731,31 @@ export interface AttemptInput {
   recognitionFixes?: number
   /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
   method?: string
+}
+
+// ---- 4.º: décimas y centésimas (src/engine/decimals.ts). Values are whole hundredths: 2,45 → 245.
+
+export type DecimalMode = 'shade' | 'read' | 'compare' | 'money'
+/** The writing boxes: 1 = décimas (one digit after the comma), 2 = centésimas (two digits, see decimalFromBoxes). */
+export type DecimalPlaces = 1 | 2
+/** shade: the bar of 10 or the grid of 100 with the parts coloured → write the number. read: the words («tres décimas»)
+    → write the number. compare: two decimals → < = >. money: 2,45 € → euros and céntimos. */
+export interface DecimalExercise extends ExerciseBase {
+  kind: 'decimal'
+  mode: DecimalMode
+  places: DecimalPlaces
+  /** The number in hundredths (shade, read, money) or the first of the two (compare). */
+  value: number
+  /** compare only: the second number, in hundredths. */
+  other?: number
+  answer: number | '<' | '>' | '='
+}
+/** A ± B in a column with the commas aligned. Both operands and the result in hundredths; the result is never negative. */
+export interface DecimalOpExercise extends ExerciseBase {
+  kind: 'decimal-op'
+  op: 'add' | 'sub'
+  places: DecimalPlaces
+  left: number
+  right: number
+  answer: number
 }

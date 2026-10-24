@@ -19,6 +19,7 @@ import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
 import { checkClock, expectedClock } from './clock'
+import { checkDecimal, checkDecimalOp } from './decimals'
 import { checkFractionAdd, checkFractionEqual, checkFractionOf, checkFractionRead, checkFractionShade } from './fractions'
 import { checkAngleTap, checkPerimeter, checkShapeChoice, checkShapeCount } from './geometry'
 import { checkMoney } from './money'
@@ -591,6 +592,8 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'mul-parts': return checkMulParts(exercise, answer)
     case 'long-mul': return checkLongMul(exercise, answer)
     case 'ordinal': return checkOrdinal(exercise, answer)
+    case 'decimal': return checkDecimal(exercise, answer)
+    case 'decimal-op': return checkDecimalOp(exercise, answer)
     case 'area': return checkArea(exercise, answer)
   }
 }

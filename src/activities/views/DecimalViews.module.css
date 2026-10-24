@@ -1,0 +1,51 @@
+/* Décimas y centésimas: the column with the commas aligned, the words, the bar and the grid of the shaded number. */
+.column {
+  display: grid;
+  grid-template-columns: 1.2em auto auto auto;
+  align-items: center;
+  justify-content: center;
+  column-gap: var(--sp-1);
+  row-gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-num);
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.whole { justify-self: end; min-width: 1ch; text-align: right; }
+.dec { justify-self: start; min-width: 1ch; }
+.comma { justify-self: center; }
+.op { justify-self: center; color: var(--c-ink-soft); }
+.rule { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--sticker-line, var(--c-ink)); }
+
+.words {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  gap: 2px;
+  width: min(72vw, 280px);
+  margin: 0 auto;
+  padding: 4px;
+  border: 2px solid var(--sticker-line, var(--c-ink));
+  border-radius: 8px;
+  background: var(--c-paper, #fff);
+}
+
+/* The décimas: one bar of ten parts, taller than a grid cell. */
+.bar { grid-template-rows: 56px; }
+
+.cell {
+  aspect-ratio: 1 / 1;
+  border: 1px solid color-mix(in srgb, var(--c-ink) 25%, transparent);
+  background: transparent;
+  min-width: 0;
+}
+
+.cellOn { background: var(--c-accent, #f5a524); }

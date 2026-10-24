@@ -74,6 +74,10 @@ export function describeSkill(skill: SkillKey): string {
     case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
     case 'mulCol': return `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
+    case 'decimal': return p.mode === 'shade' ? `Colorear y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
+      : p.mode === 'read' ? `Leer y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
+        : p.mode === 'compare' ? 'Comparar decimales con los signos < = >' : 'Euros y céntimos escritos como decimal (2,45 €)'
+    case 'decimal-op': return `${p.op === 'add' ? 'Sumar' : 'Restar'} decimales en columna (${p.places === 1 ? 'décimas' : 'centésimas'})`
     case 'ordinal': return p.top === 10 ? 'Ordinales hasta el 10.º (tocar el lugar en una fila)' : `Ordinales hasta el ${p.top}.º (leer y escribir)`
     case 'div3x1': return p.variant === 'exact' ? 'Divisiones de 3 cifras entre 1 cifra (exactas)' : 'Divisiones de 3 cifras entre 1 cifra con resto'
     case 'bar': if (p.small) return 'Problemas con barras (grupos de 2, 3, 4, 5 y 10)'

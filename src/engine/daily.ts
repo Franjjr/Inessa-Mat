@@ -21,6 +21,7 @@ import { patternStatement } from './patterns'
 import { positionStatement } from './position'
 import { mulPartsStatement } from './bigops'
 import { ordinalPrompt } from './ordinals'
+import { decimalWords, fmtDecimal } from './decimals'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -50,7 +51,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
   money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
-  'long-mul': 90, ordinal: 20,
+  'long-mul': 90, ordinal: 20, decimal: 40, 'decimal-op': 60,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -94,6 +95,16 @@ const dayKey = (now: Date) => now.toISOString().slice(0, 10)
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Human statement of an exercise, for the worked example and for adults' reports. */
+/** The prompt of a decimal exercise: the drawing is the question, or the words, the two numbers, the euros. */
+function decimalStatement(ex: Extract<Exercise, { kind: 'decimal' }>): string {
+  switch (ex.mode) {
+    case 'shade': return '¿Qué número está coloreado? Escríbelo con coma.'
+    case 'read': return `Escribe con cifras: ${decimalWords(ex)}`
+    case 'compare': return `${fmtDecimal(ex.value, ex.places)} y ${fmtDecimal(ex.other ?? 0, ex.places)}: ¿qué signo va entre ellos?`
+    case 'money': return `${fmtDecimal(ex.value, 2)} €: ¿cuántos euros y cuántos céntimos son?`
+  }
+}
+
 export function statementOf(ex: Exercise): string {
   switch (ex.kind) {
     case 'fact-mul': return `${ex.a} × ${ex.b} = ?`
@@ -135,6 +146,8 @@ export function statementOf(ex: Exercise): string {
     case 'ordinal': return ordinalPrompt(ex)
     case 'area': return '¿Cuántos cuadraditos ocupa la figura?'
     case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
+    case 'decimal': return decimalStatement(ex)
+    case 'decimal-op': return `${fmtDecimal(ex.left, ex.places)} ${ex.op === 'add' ? '+' : '−'} ${fmtDecimal(ex.right, ex.places)} = ?`
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`

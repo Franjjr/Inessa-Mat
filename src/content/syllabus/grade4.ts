@@ -4,9 +4,9 @@
    flexibilidad, fracciones con denominador hasta 12, km, m y cm, kg y g, l y ml, superficie y ángulos, simetrías,
    gráficos, la moda y la probabilidad intuitiva, patrones con predicción. Lo propio de 4.º (práctica habitual, no ley):
    multiplicar por dos cifras (aquí por partes, el paso previo al algoritmo), dividir números de 4 cifras y entre dos
-   cifras, sumar y restar fracciones de igual denominador, redondear a millares, números romanos. Sus etapas no van
-   ligadas a los mundos de la aventura. */
-import { fractionSkill, geoSkill } from '@/engine/skills'
+   cifras, sumar y restar fracciones de igual denominador, décimas y centésimas, sumar y restar decimales, redondear a
+   millares, números romanos. Sus etapas no van ligadas a los mundos de la aventura. */
+import { decimalSkill, fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage } from './model'
 import { tableSkills, withStageTerms } from './helpers'
@@ -20,10 +20,10 @@ export const GRADE4_STAGES: SyllabusStage[] = [
   { id: 'etapa-3', term: 1, topics: ['div-repaso', 'div-4x1', 'prob-dividir', 'comprobar', 'perimetro', 'series-4'] },
   // 2.º trimestre
   { id: 'etapa-4', term: 2, topics: ['mul-2-cifras', 'recta-1000', 'cambio-presupuesto', 'area', 'moda'] },
-  { id: 'etapa-5', term: 2, topics: ['fracciones-12', 'fraccion-cantidad-4', 'longitud-4', 'simetria', 'igualdad'] },
+  { id: 'etapa-5', term: 2, topics: ['fracciones-12', 'decimales', 'fraccion-cantidad-4', 'longitud-4', 'simetria', 'igualdad'] },
   { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'prob-dos-pasos', 'masa-capacidad-4', 'duraciones-4', 'probabilidad'] },
   // 3.er trimestre
-  { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
+  { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'decimales-operar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
   { id: 'etapa-8', term: 3, topics: ['triangulos-cuadrilateros', 'circunferencia-elementos', 'poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras'] },
 ]
 
@@ -93,12 +93,14 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
     },
     {
       id: 'fracciones',
-      name: 'Fracciones',
+      name: 'Fracciones y decimales',
       topics: [
         { id: 'fracciones-12', name: 'Fracciones con denominador hasta 12', skills: fractions(['shade', 'read', 'name'], [5, 6, 8, 10, 12]), status: 'disponible', rungs: { dibujo: 'Figuras partidas en partes iguales', numeros: 'Leer y escribir 5/8, 7/12' } },
+        { id: 'decimales', name: 'Décimas y centésimas', skills: [decimalSkill('shade', 1), decimalSkill('read', 1), decimalSkill('shade', 2), decimalSkill('read', 2), decimalSkill('compare'), decimalSkill('money')], status: 'disponible', ordered: true, rungs: { dibujo: 'Una barra de 10 partes y una cuadrícula de 100 partes iguales', numeros: '0,3 son 3 décimas; 2,45 € son 2 euros y 45 céntimos' } },
         { id: 'fraccion-cantidad-4', name: 'Fracción de una cantidad', skills: fractions(['of'], [3, 4, 5, 6, 8, 10]), status: 'disponible', rungs: { dibujo: 'Grupos iguales', numeros: '3/4 de 20: 20 : 4 × 3', uso: 'Problemas de repartos' } },
         { id: 'fracciones-comparar', name: 'Comparar fracciones', skills: [fractionSkill('compare')], status: 'disponible', rungs: { dibujo: 'Dos barras iguales partidas', numeros: '3/8 y 5/8: mismo denominador, más partes' } },
         { id: 'fracciones-sumar', name: 'Sumar y restar fracciones de igual denominador', skills: [fractionSkill('add'), fractionSkill('sub')], status: 'disponible', rungs: { dibujo: 'Juntar o quitar partes de barras iguales', numeros: '2/8 + 3/8: el número de abajo no cambia' } },
+        { id: 'decimales-operar', name: 'Sumar y restar decimales', skills: [decimalSkill('add', 1), decimalSkill('sub', 1), decimalSkill('add', 2), decimalSkill('sub', 2)], status: 'disponible', ordered: true, rungs: { dibujo: 'Barras de décimas que se juntan o se quitan', numeros: '3,4 + 1,8: las comas una debajo de otra', uso: 'Cuentas del dinero con céntimos' } },
       ],
     },
     {
