@@ -176,14 +176,14 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         return [
           hint(1, 'Para el triple de unas decenas, piensa en cuántas decenas hay.'),
           hint(2, `${fmt(a)} son ${a / 10} decenas. Cuenta el triple de decenas.`),
-          hint(3, `Triplica las decenas: ${a / 10} × 3 = ? decenas.`),
+          hint(3, `Son tres veces ${a / 10} decenas. Cuenta cuántas decenas hay en total.`),
         ]
       }
       if (a < 10) {
         return [
           hint(1, 'El triple es sumar el mismo número tres veces.'),
-          hint(2, `${a} + ${a} + ${a}: ¿cuánto da?`),
-          hint(3, `Primero ${a} + ${a} = ${2 * a}. Ahora suma otro ${a}: ¿cuánto da?`),
+          hint(2, 'Piensa en el doble y después en uno más: el triple es el doble más otro igual.'),
+          hint(3, `Dobla ${a} y después suma otro ${a}: ¿qué número sale?`),
         ]
       }
       const t = a - (a % 10)
@@ -191,7 +191,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       return [
         hint(1, TIP.triples),
         hint(2, `${a} = ${t} + ${u}. Triplica cada parte.`),
-        hint(3, `Triplica las decenas: ${t} × 3 = ?. Después triplica las unidades: ${u} × 3 = ?.`),
+        hint(3, 'Triplica las decenas y las unidades por separado, y después suma las dos partes.'),
       ]
     }
     case 'mitades': {

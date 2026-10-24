@@ -34,9 +34,11 @@ export function genLongMul(rng: Rng, top: 2 | 3, bottom: 2 | 3): LongMulExercise
   return makeLongMul(top === 2 ? 23 : 213, bottom === 2 ? 14 : 124)
 }
 
-/** The value of a row of digits (units first); empty cells count as 0 and an all-empty row is no value at all. */
-function valueOf(digits: readonly (number | null)[]): number | null {
-  return digits.some((d) => d !== null) ? fromDigits(digits.map((d) => d ?? 0)) : null
+/** The value of partial row j (units first). The shift zeros (places below j) are written already and count as 0;
+    a row whose own cells are all empty has no value at all (the child did not write it). */
+function valueOf(digits: readonly (number | null)[], j: number): number | null {
+  if (digits.slice(j).every((d) => d === null)) return null
+  return fromDigits(digits.map((d, k) => (k < j ? 0 : d ?? 0)))
 }
 
 const ROW_NAMES = ['unidades', 'decenas', 'centenas']
@@ -52,7 +54,7 @@ export function checkLongMul(ex: LongMulExercise, answer: Answer): CheckResult {
   if (given === expected) return { correct: true, given, expected, feedback: '¡Muy bien! Has sumado las filas en columna.' }
   // A wrong row says where the slip is; a shift zero that was left out is named as such.
   for (let j = 0; j < ex.partials.length; j++) {
-    const v = valueOf(answer.rows[j] ?? [])
+    const v = valueOf(answer.rows[j] ?? [], j)
     if (v === null || v === ex.partials[j]) continue
     if (j > 0 && v * 10 ** j === ex.partials[j]) {
       return { correct: false, given, expected, errorType: 'place-value', feedback: '¡Casi! Al multiplicar por las decenas no olvides el cero de las unidades.' }
@@ -70,6 +72,6 @@ export function hintsLongMul(ex: LongMulExercise): Hint[] {
   return [
     hint(1, 'Multiplica el de arriba por las unidades de abajo, como en 2 × 1.'),
     hint(2, `En la segunda fila multiplicas por las decenas: empieza dejando un 0 en las unidades.${threeRows ? ' La tercera fila va por las centenas: empieza dejando dos ceros.' : ''}`),
-    hint(3, 'Cuando tengas las filas, súmalas en columna.'),
+    hint(3, 'Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades; las llevadas se escriben arriba.'),
   ]
 }

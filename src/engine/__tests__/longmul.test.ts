@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import { check, createRng, genLongMul, hintsFor, isValidSkill, makeLongMul, mentalSkill, parseSkill, statementOf } from '@/engine'
 import { checkLongMul, hintsLongMul } from '@/engine/longmul'
 import { toDigits } from '@/engine/arith'
-import { buildMental } from '@/engine/calc'
+import { buildMental, mentalHints } from '@/engine/calc'
 import { mulColSkill } from '@/engine/skills'
 import type { Answer, LongMulExercise } from '@/types'
 
@@ -69,6 +69,23 @@ describe('checkLongMul', () => {
     expect(checkLongMul(ex, empty).errorType).toBe('incomplete')
   })
 
+  it('a row the child did not write is not blamed (the shift zeros are pre-filled, the row cells are empty)', () => {
+    // Row 1 is 92 and row 2 is empty except for its shift zero; the total is wrong (323 for 322).
+    const blank: Answer = { type: 'long-mul', rows: [[2, 9, null], [0, null, null]], total: [3, 2, 3] }
+    const res = checkLongMul(ex, blank)
+    expect(res.correct).toBe(false)
+    expect(res.feedback).not.toMatch(/fila de las/)
+    expect(res.feedback).toMatch(/suma de las filas/)
+    expect(res.errorType).not.toBe('place-value')
+  })
+
+  it('a row the child did write wrongly is still named, even next to a blank row', () => {
+    const wrongRow: Answer = { type: 'long-mul', rows: [[1, 1, null], [0, null, null]], total: [3, 2, 3] }
+    const res = checkLongMul(ex, wrongRow)
+    expect(res.correct).toBe(false)
+    expect(res.feedback).toMatch(/fila de las unidades/)
+  })
+
   it('check() routes the long-mul answer through the dispatcher', () => {
     expect(check(ex, totalAnswer(ex)).correct).toBe(true)
     expect(check(ex, { type: 'number', value: 322 }).correct).toBe(false)
@@ -104,6 +121,20 @@ describe('statement and skills', () => {
   it('the three keys are valid skills', () => {
     for (const k of ['mul:col:2x2', 'mul:col:3x2', 'mul:col:3x3']) expect(isValidSkill(k)).toBe(true)
     expect(isValidSkill('mul:col:4x2')).toBe(false)
+  })
+})
+
+describe('mental:triples hints', () => {
+  it('no hint contains the answer 3a nor the double 2a (300 seeds, all three levels)', () => {
+    for (let seed = 1; seed <= 300; seed++) {
+      const ex = buildMental('triples', createRng(seed), new Set())
+      const hints = mentalHints(ex)
+      expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
+      for (const h of hints) {
+        expect(h.text, `a=${ex.a}`).not.toContain(String(ex.answer))
+        expect(h.text, `a=${ex.a}`).not.toContain(String(2 * ex.a))
+      }
+    }
   })
 })
 
