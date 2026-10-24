@@ -81,6 +81,8 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       const plus = rng() < 0.6
       const a = plus ? randInt(rng, 11, 89) : randInt(rng, b + 2, 89)
       const answer = plus ? a + b : a - b
+      // The hints name the round number (b + 1): it is never the answer (19 − 9 = 10 would show it).
+      if (answer === b + 1) return mentalItem(family, rng)
       return makeMental(family, a, b, answer, `${a} ${plus ? '+' : '−'} ${b} = ?`)
     }
     case 'por10': {
@@ -193,6 +195,16 @@ export function buildMental(family: MentalFamily, rng: Rng, used: Set<string>): 
 
 export function mentalSkillsOf(): SkillKey[] {
   return MENTAL_FAMILIES.map(mentalSkill)
+}
+
+/* Level 3 of «completar a la decena» works another case: its numbers never include this item's answer. */
+const COMPLETAR10_EXAMPLES = [
+  { a: 47, target: 50, missing: 3 },
+  { a: 28, target: 30, missing: 2 },
+  { a: 34, target: 40, missing: 6 },
+]
+function completar10Example(answer: number) {
+  return COMPLETAR10_EXAMPLES.find((e) => ![e.a, e.target, e.missing, e.a % 10, 10].includes(answer)) ?? COMPLETAR10_EXAMPLES[0]
 }
 
 const TIP: Record<MentalFamily, string> = {
@@ -335,10 +347,11 @@ export function mentalHints(ex: MentalExercise): Hint[] {
           hint(3, `Cuenta de uno en uno desde ${a} hasta ${b}: ¿cuántos números dices?`),
         ]
       }
+      const example = completar10Example(b - a)
       return [
         hint(1, TIP.completar10),
-        hint(2, `${a} tiene ${u} unidades. ¿Cuánto le falta a ${u} para llegar a 10?`),
-        hint(3, `${u} + ? = 10. Ese número es lo que le falta a ${a} para llegar a ${b}.`),
+        hint(2, `Mira las unidades de ${a} y cuenta hasta la decena siguiente: ¿cuántas unidades te faltan?`),
+        hint(3, `Ejemplo con otro caso: ${example.a} + ? = ${example.target}. Con las unidades de ${example.a} se llega a 10 con ${example.missing} más: ${example.a} + ${example.missing} = ${example.target}.`),
       ]
     }
     case 'completar100': {

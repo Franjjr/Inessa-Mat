@@ -77,7 +77,9 @@ export function describeSkill(skill: SkillKey): string {
     case 'equation': return p.mode === 'same' ? 'Signo igual o distinto: ¿los dos lados valen lo mismo?' : 'Signo igual: los dos lados valen lo mismo'
     case 'mul3x1': return `Multiplicaciones de 3 cifras × 1 cifra ${p.carry ? 'con llevadas' : 'sin llevadas'}`
     case 'div4x1': return p.variant === 'exact' ? 'Divisiones de 4 cifras entre 1 cifra (exactas)' : 'Divisiones de 4 cifras entre 1 cifra con resto'
-    case 'div3x2': return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
+    case 'div3x2':
+      if (p.variant === 'round') return 'Divisiones entre decenas redondas (20, 30… 90)'
+      return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
     case 'mulCol': return `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
     case 'decimal': return p.mode === 'shade' ? `Colorear y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`

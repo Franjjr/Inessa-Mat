@@ -155,7 +155,7 @@ export function genPolygonName(rng: Rng): ShapeChoiceExercise {
       quad
         ? 'Con cuatro lados, mira si son todos iguales o si dos son más largos que los otros dos.'
         : 'Mira si todos los lados son iguales o si alguno es más largo que los demás.',
-      'Triángulo: 3 lados. Cuadrado y rectángulo: 4. Pentágono: 5. Hexágono: 6. Con 4 lados, el cuadrado tiene los cuatro iguales.',
+      'Cuenta los lados: 3, 4, 5 o 6. Con 4 lados, mira si los cuatro son iguales y si las esquinas son rectas.',
     ],
   }
 }
@@ -193,8 +193,8 @@ export function genLineType(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué tipo de línea es?', figures: [figure], options, answer,
     hints: [
       'Mira si la línea tiene esquinas, si se dobla o si va siempre derecha.',
-      'Una línea poligonal está hecha de rectas unidas: se ven las esquinas.',
-      'Una recta no se dobla. Una curva se dobla sin esquinas. Una poligonal tiene esquinas y trozos rectos.',
+      'Una línea hecha de trozos rectos unidos se ve con esquinas.',
+      'Si no se dobla nunca, va derecha. Si se dobla sin esquinas, es redondeada. Si tiene esquinas y trozos rectos, está hecha de rectas unidas.',
     ],
   }
 }
@@ -225,8 +225,8 @@ export function genLineRelation(rng: Rng): ShapeChoiceExercise {
     question: '¿Cómo son estas dos rectas?', figures: [figure], options, answer,
     hints: [
       'Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?',
-      'Si se cruzan formando una esquina recta, como la cruz de sumar, son perpendiculares.',
-      'Si nunca se cruzan y siempre están a la misma distancia, son paralelas. Si se cruzan de otra forma, se cruzan.',
+      'Si se juntan formando una esquina recta, como la cruz de sumar, forman ángulos rectos.',
+      'Si nunca se tocan y siempre están a la misma distancia, no hay cruce. Si se tocan de otra forma, la cruz está torcida.',
     ],
   }
 }
@@ -300,7 +300,7 @@ export function genCircle(rng: Rng): ShapeChoiceExercise {
     hints: [
       'Mira si la figura está pintada por dentro o si solo tiene la línea del borde.',
       'Piensa en dos cosas distintas: la línea que rodea, sin relleno, y toda la superficie de dentro.',
-      'La circunferencia es solo la línea que rodea la figura. El círculo es toda la superficie de dentro, con su borde.',
+      'Si solo se ve la línea que rodea la figura, es el borde; si la superficie de dentro está pintada, es toda la figura con su borde.',
     ],
   }
 }
@@ -315,8 +315,8 @@ export const SOLID_ROLLS: Record<SolidName, boolean> = { cubo: false, prisma: fa
 
 const SOLID_HINT_NAME = [
   'Mira si tiene caras planas, partes redondas o las dos cosas.',
-  'Una esfera no tiene caras ni esquinas: es como una pelota.',
-  'Cubo: caras cuadradas. Prisma: dos caras iguales y caras de lados. Pirámide: una punta y caras triangulares. Cilindro: dos tapas redondas. Cono: una punta y una base redonda.',
+  'Si no tiene caras ni esquinas y rueda en todas direcciones, es como una pelota.',
+  'Mira las caras: si todas son cuadradas; si hay dos tapas iguales unidas por caras de lados; si hay una punta con caras triangulares; si hay dos tapas redondas; o si hay una punta con una base redonda.',
 ]
 
 /** «¿Qué cuerpo es?» */
@@ -830,7 +830,7 @@ export function genSymmetry(rng: Rng): ShapeChoiceExercise {
       hints: [
         'Imagina que doblas la hoja por la línea roja.',
         'Compara cada cuadradito con el que le toca al otro lado, a la misma distancia de la línea.',
-        'Si todos los cuadraditos tienen pareja al otro lado, la línea es un eje; si alguno se queda solo, no lo es.',
+        'Si todos los cuadraditos tienen pareja al otro lado, la línea sirve de eje. Si alguno se queda sin pareja, esa línea queda descartada.',
       ],
     }
   }

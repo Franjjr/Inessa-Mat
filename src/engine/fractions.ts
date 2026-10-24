@@ -123,7 +123,7 @@ const COMPARE_HINTS = {
   same: [
     'Si el número de abajo es el mismo, gana la fracción con más partes de color.',
     'Cuenta las partes coloreadas de cada barra.',
-    'Compara los números de arriba: ¿cuál es mayor?',
+    'Compara los números de arriba: la fracción con el número de arriba más alto tiene más partes de color.',
   ],
   equal: [
     'Mira las dos barras: ¿cubren lo mismo, aunque estén partidas de forma distinta?',

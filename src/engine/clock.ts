@@ -376,7 +376,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
       if (ex.topic === 'weekday' && ex.week) {
         return [
           hint(1, 'Cuenta los días uno a uno, empezando por el día siguiente a hoy.', 'week'),
-          hint(2, 'La semana es: lunes, martes, miércoles, jueves, viernes, sábado y domingo. Después del domingo vuelve el lunes.', 'week'),
+          hint(2, 'La semana tiene siete días y, al acabar el último, vuelve el primero. Cuenta sin saltarte ninguno, con las tarjetas.', 'week'),
           hint(3, `Hoy es ${WEEKDAYS[ex.week.today]}. Cuenta ${ex.week.days === 1 ? 'un día' : `${ex.week.days} días`} desde ahí, uno a uno.`, 'week'),
         ]
       }

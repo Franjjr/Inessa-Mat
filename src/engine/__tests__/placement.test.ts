@@ -24,6 +24,30 @@ describe('buildPlacement (prueba inicial)', () => {
     for (const { exercise } of buildPlacement('x', now)) expect(typeof exercise.skill).toBe('string')
   })
 
+  it('the 3.º and 4.º placements keep their twenty items', () => {
+    for (const grade of [3, 4]) expect(buildPlacement(`child-${grade}|2026-10-22`, now, grade), `grade ${grade}`).toHaveLength(PLACEMENT_COUNT)
+  })
+
+  it('the 4.º placement asks numbers up to 99 999 and reading a decimal', () => {
+    const skills = buildPlacement('child-4|2026-10-22', now, 4).map((i) => i.exercise.skill)
+    expect(skills).toContain('num:place:words:99999')
+    expect(skills).toContain('dec:read:1')
+    expect(skills).not.toContain('num:place:words')
+    expect(skills).not.toContain('frac:of:4')
+  })
+
+  it('maps the newer skills to the block of their subject, so the adult summary counts them', () => {
+    expect(placementBlockOf('dec:read:1')).toBe('fracciones-geometria')
+    expect(placementBlockOf('dec:add:2')).toBe('fracciones-geometria')
+    expect(placementBlockOf('num:ordinal:10')).toBe('numeros')
+    expect(placementBlockOf('mul:col:2x2')).toBe('tablas')
+    expect(placementBlockOf('div:3x2:round')).toBe('dividir')
+    expect(placementBlockOf('check:div')).toBe('dividir')
+    expect(placementBlockOf('check:sub')).toBe('sumas-restas')
+    expect(placementBlockOf('chart:freq')).toBe('problemas')
+    expect(placementBlockOf('mental:combinadas')).toBeNull()
+  })
+
   it('maps every skill to its block', () => {
     expect(placementBlockOf('add:3d:c1')).toBe('sumas-restas')
     expect(placementBlockOf('sub:3d:b0')).toBe('sumas-restas')

@@ -334,8 +334,8 @@ export function hintsChance(ex: ChanceExercise): Hint[] {
   if (ex.ask) return hintsLikely(ex.ask)
   return [
     hint(1, 'Mira todas las bolas de la bolsa.'),
-    hint(2, 'Si todas son de ese color, es seguro. Si no hay ninguna, es imposible.'),
-    hint(3, 'Si hay algunas de ese color y también de otros, puede salir o no: es posible.'),
+    hint(2, 'Mira cuántas bolas son de ese color: todas, algunas o ninguna. Con todas, el resultado ya está decidido; con ninguna, nunca sale.'),
+    hint(3, 'Si hay algunas de ese color y también de otras, puede salir o no. ¿Qué palabra describe eso?'),
   ]
 }
 

@@ -25,6 +25,20 @@ describe('temario de 4.º', () => {
     }
   })
 
+  it('the pending topic has no skills yet and gives the adult its note; every other topic has skills that generate', () => {
+    const topics = allTopics(GRADE4_SYLLABUS)
+    const pending = topics.filter((t) => t.status === 'pendiente')
+    expect(pending.map((t) => t.id)).toEqual(['programacion'])
+    for (const t of pending) {
+      expect(t.skills).toEqual([])
+      expect(t.pendingNote).toBeTruthy()
+    }
+    for (const t of topics.filter((t) => t.status !== 'pendiente')) {
+      expect(t.skills.length, t.id).toBeGreaterThan(0)
+      for (const s of t.skills) expect(generate({ skills: [s] }, 1, { now }), `${t.id} ${s}`).toHaveLength(1)
+    }
+  })
+
   it('the session starts with the review of numbers and moves on once etapa 1 is learnt', () => {
     expect(currentTopic(GRADE4_SYLLABUS, {})?.id).toBe('repaso-numeros')
     const byId = new Map(allTopics(GRADE4_SYLLABUS).map((t) => [t.id, t]))

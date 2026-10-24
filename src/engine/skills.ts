@@ -47,7 +47,8 @@
    pos:relative|next|route  posición en una cuadrícula y recorridos (src/engine/position.ts)
    mul:3x1:c0|c1            3-digit × 1-digit in columns, without / with carries (4.º, src/engine/bigops.ts)
    div:4x1:exact|rem        4-digit dividend ÷ 1-digit divisor (4.º)
-   div:3x2:exact|rem        2- or 3-digit dividend ÷ 2-digit divisor, quotient of 1 or 2 digits (4.º)
+   div:3x2:exact|rem|round  2- or 3-digit dividend ÷ 2-digit divisor, quotient of 1 or 2 digits (4.º); round: the divisor
+                            is a round ten (20, 30… 90), exact (the first step of the family)
    mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
    mul:col:2x2|3x2|3x3      multiplying in columns, with partial rows: 2- or 3-digit top × 2- or 3-digit bottom (4.º, src/engine/longmul.ts)
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
@@ -136,7 +137,7 @@ export type ParsedSkill =
   | { type: 'div4x1'; variant: 'exact' | 'rem' }
   | { type: 'decimal'; mode: DecimalMode; places?: DecimalPlaces }
   | { type: 'decimal-op'; op: 'add' | 'sub'; places: DecimalPlaces }
-  | { type: 'div3x2'; variant: 'exact' | 'rem' }
+  | { type: 'div3x2'; variant: 'exact' | 'rem' | 'round' }
   | { type: 'mulParts'; digits: 2 | 3 }
   | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
   | { type: 'ordinal'; top: OrdinalMax }
@@ -303,7 +304,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^dec:(shade|read):([12])$/))) return { type: 'decimal', mode: m[1] as 'shade' | 'read', places: Number(m[2]) as DecimalPlaces }
   if ((m = key.match(/^dec:(compare|money)$/))) return { type: 'decimal', mode: m[1] as 'compare' | 'money' }
   if ((m = key.match(/^dec:(add|sub):([12])$/))) return { type: 'decimal-op', op: m[1] as 'add' | 'sub', places: Number(m[2]) as DecimalPlaces }
-  if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
+  if ((m = key.match(/^div:3x2:(exact|rem|round)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' | 'round' }
   if ((m = key.match(/^div:2x1:(exact|rem|long)$/))) return { type: 'div2x1', variant: m[1] as DivisionVariant }
   if ((m = key.match(/^concept:(\w+)$/))) {
     const name = m[1] as ConceptName

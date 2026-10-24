@@ -80,6 +80,8 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
 11. **Geometría**: reconocer polígonos, ángulos rectos, perímetro contando lados.
 12. **Cálculo mental «exprés»** para el calentamiento.
 13. **Comprobar** un resultado dado (¿está bien 352 − 127 = 226?).
+14. **La prueba de la resta y de la división** (3.º, 2.º trimestre): sumar para comprobar una resta; divisor × cociente + resto para una división.
+15. **Primeros pasos en programación por bloques** (4.º, pendiente): ordenar bloques para llevar un personaje a la meta; necesita una herramienta de bloques, sin ejercicios todavía.
 
 ## 6. Medir que aprende (no solo que juega)
 

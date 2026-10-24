@@ -6,7 +6,7 @@
    Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
-import { createRng, genFractionAdd, generate } from '@/engine'
+import { createRng, genFractionAdd, generate, makeLongMul } from '@/engine'
 import type { Exercise } from '@/types'
 import CalendarView from './CalendarView'
 import ColumnView from './ColumnView'
@@ -39,6 +39,7 @@ const entries: GalleryEntry[] = [
   { title: 'Multiplicar por partes (teléfono)', ...phone, render: () => frame(<MulPartsView exercise={one('mul:3dx2d', 4)} onAnswered={noop} />) },
   { title: 'Multiplicar en columna por filas parciales (ipad)', ...ipad, render: () => frame(<LongMulView exercise={one('mul:col:3x2', 7)} onAnswered={noop} />) },
   { title: 'Multiplicar en columna por filas parciales (teléfono)', ...phone, render: () => frame(<LongMulView exercise={one('mul:col:2x2', 8)} onAnswered={noop} />) },
+  { title: 'Multiplicar 23 × 14 en columna (teléfono)', ...phone, render: () => frame(<LongMulView exercise={makeLongMul(23, 14)} onAnswered={noop} />) },
   { title: 'Multiplicar 3 cifras por 1 (ipad vertical)', ...portrait, render: () => frame(<ColumnView exercise={one('mul:3x1:c1', 2)} onAnswered={noop} />) },
   { title: 'Dividir 4 cifras entre 1 (ipad)', ...ipad, render: () => frame(<DivisionView exercise={one('div:4x1:rem', 5)} onAnswered={noop} />) },
   { title: 'Dividir 4 cifras entre 1 (teléfono)', ...phone, render: () => frame(<DivisionView exercise={one('div:4x1:exact', 6)} onAnswered={noop} />) },
@@ -53,6 +54,7 @@ const entries: GalleryEntry[] = [
   { title: 'Euros con céntimos como decimal (ipad)', ...ipad, render: () => frame(<DecimalView exercise={one('dec:money', 2)} onAnswered={noop} />) },
   { title: 'Sumar decimales en columna (ipad)', ...ipad, render: () => frame(<DecimalOpView exercise={one('dec:add:2', 4)} onAnswered={noop} />) },
   { title: 'Restar décimas en columna (teléfono)', ...phone, render: () => frame(<DecimalOpView exercise={one('dec:sub:1', 5)} onAnswered={noop} />) },
+  { title: 'Sumar 3,45 + 1,80 en columna (ipad)', ...ipad, render: () => frame(<DecimalOpView exercise={{ id: 'decimal-op:345+180', kind: 'decimal-op', skill: 'dec:add:2', difficulty: 3, op: 'add', places: 2, left: 345, right: 180, answer: 525 }} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (ipad)', ...ipad, render: () => frame(<FigureNumberView exercise={one('geo:area', 2)} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (teléfono)', ...phone, render: () => frame(<FigureNumberView exercise={one('geo:area', 7)} onAnswered={noop} />) },
   { title: 'Simetría (ipad)', ...ipad, render: () => frame(<ShapeChoiceView exercise={one('geo:symmetry', 3)} onAnswered={noop} />) },

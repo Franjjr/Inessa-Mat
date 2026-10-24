@@ -39,7 +39,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
     return {
       strategy: { id: 'ten', text: `Por 10, pon un 0 detrás del ${n}.`, visual: 'skip-count' },
       visualParams: { step: 10, count: n },
-      visualText: `Cuenta de 10 en 10, ${n} ${n === 1 ? 'salto' : 'saltos'}: 10, 20, 30…`,
+      visualText: `Cuenta de 10 en 10 tantas veces como indica el otro número, con los dedos.`,
       workedText: `Escribe el ${n} y pon un 0 a su derecha. ¿Qué número sale?`,
       workedVisual: 'place-value',
     }

@@ -32,7 +32,7 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   { id: 'etapa-2', term: 1, worldId: 'w2', topics: ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'redondear', 'decenas-centenas', 'igualdad', 'prob-sumar', 'reloj-en-punto-media-cuarto'] },
   { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'doble-triple', 'prob-multiplicar', 'poligonos', 'rectas', 'rectas-segmentos'] },
   // 2.º trimestre
-  { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio'] },
+  { id: 'etapa-4', term: 2, worldId: 'w4', topics: ['resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d', 'prob-restar', 'compensar', 'euros-centimos', 'pagar-cambio', 'prueba-resta-division'] },
   { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'graficos'] },
   { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos', 'recorridos'] },
   // 3.er trimestre
@@ -115,6 +115,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'encuentra-error', name: 'Encuentra el error', skills: ['hunt:add', 'hunt:sub', 'hunt:mul'], status: 'disponible', rungs: { concreto: 'Mirar la cuenta columna a columna', dibujo: 'Marcar la columna donde falla', numeros: 'Decidir si está bien y corregirla', uso: 'Revisar las cuentas de un problema' } },
         { id: 'comprobar-resultado', name: 'Comprobar un resultado', skills: ['check:add', 'check:sub', 'check:div'], status: 'disponible', rungs: { numeros: 'La operación contraria: sumar para la resta, multiplicar para la división', uso: 'Comprobar antes de dar un resultado' } },
+        { id: 'prueba-resta-division', name: 'La prueba de la resta y de la división', skills: ['check:sub', 'check:div'], status: 'disponible', ordered: true, rungs: { numeros: 'Resta: diferencia + lo que se quita = lo de partida. División: divisor × cociente + resto', uso: 'Comprobar la cuenta antes de dar el resultado' } },
       ],
     },
     {

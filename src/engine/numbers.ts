@@ -5,6 +5,7 @@ import type { Rng } from '@/types'
 import { analyzeAdd, analyzeDiv, analyzeSub, fromDigits } from './arith'
 import type { DivisionVariant } from './skills'
 import { pick, randInt, range, shuffle, weightedIndex } from './rng'
+import { galeraShowsAnswer } from './divParts'
 
 const ATTEMPTS = 60
 
@@ -152,6 +153,7 @@ const DIVISION_POOLS: Record<DivisionVariant, [number, number][]> = { exact: [],
 for (let divisor = 2; divisor <= 9; divisor++) {
   for (let dividend = 10; dividend <= 99; dividend++) {
     const { quotient, remainder, variant } = analyzeDiv(dividend, divisor)
+    if (galeraShowsAnswer(dividend, divisor, quotient, remainder, variant === 'rem')) continue
     if (variant === 'exact' && remainder === 0) DIVISION_POOLS.exact.push([dividend, divisor])
     else if (variant === 'rem' && remainder > 0 && quotient >= 2) DIVISION_POOLS.rem.push([dividend, divisor])
     else if (variant === 'long' && remainder === 0) DIVISION_POOLS.long.push([dividend, divisor])

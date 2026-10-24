@@ -23,6 +23,7 @@ import { buildMeasure } from './measure'
 import { CHART_SKILLS, buildChance, buildChart, buildLikely } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
 import { genLongMul } from './longmul'
+import { galeraShowsAnswer } from './divParts'
 import { genOrdinal } from './ordinals'
 import { genDecimal, genDecimalOp } from './decimals'
 import { PATTERN_SKILLS, buildPattern } from './patterns'
@@ -617,6 +618,7 @@ export function genDivision3(rng: Rng, withRemainder: boolean): [number, number]
     const qMax = Math.floor((999 - r) / d)
     if (qMax < qMin) continue
     const q = randInt(rng, Math.max(qMin, 11), qMax)
+    if (galeraShowsAnswer(d * q + r, d, q, r, withRemainder)) continue
     return [d * q + r, d]
   }
   return [372, 4]
@@ -740,7 +742,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
   if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
   if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
-  if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem', p.variant === 'round'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'mulCol') return retry(() => genLongMul(rng, p.top, p.bottom), used, rng)!
   if (p.type === 'ordinal') return retry(() => genOrdinal(rng, p.top), used, rng)!

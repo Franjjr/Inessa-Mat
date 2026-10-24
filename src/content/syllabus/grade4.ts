@@ -9,7 +9,7 @@
 import { decimalSkill, fractionSkill, geoSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusStage } from './model'
-import { tableSkills, withStageTerms } from './helpers'
+import { pending, tableSkills, withStageTerms } from './helpers'
 
 const fractions = (ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): SkillKey[] => ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
 
@@ -24,7 +24,7 @@ export const GRADE4_STAGES: SyllabusStage[] = [
   { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'prob-dos-pasos', 'masa-capacidad-4', 'duraciones-4', 'probabilidad'] },
   // 3.er trimestre
   { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'decimales-operar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
-  { id: 'etapa-8', term: 3, topics: ['triangulos-cuadrilateros', 'circunferencia-elementos', 'poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras'] },
+  { id: 'etapa-8', term: 3, topics: ['triangulos-cuadrilateros', 'circunferencia-elementos', 'poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras', 'programacion'] },
 ]
 
 export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
@@ -73,7 +73,7 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'div-repaso', name: 'Dividir 2 y 3 cifras entre 1 (repaso)', skills: ['div:2x1:rem', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera paso a paso y la prueba' } },
         { id: 'div-4x1', name: 'Dividir 4 cifras entre 1', skills: ['div:4x1:exact', 'div:4x1:rem'], status: 'disponible', rungs: { numeros: 'La galera bajando una cifra cada vez', uso: 'Comprobar con divisor × cociente + resto' } },
-        { id: 'div-2-cifras', name: 'Dividir entre un número de 2 cifras', skills: ['div:3x2:exact', 'div:3x2:rem'], status: 'disponible', rungs: { numeros: 'Cuántas veces cabe 23 en 96: estimar y comprobar', uso: 'La galera con restos de dos cifras' } },
+        { id: 'div-2-cifras', name: 'Dividir entre un número de 2 cifras', skills: ['div:3x2:round', 'div:3x2:exact', 'div:3x2:rem'], status: 'disponible', ordered: true, rungs: { numeros: 'Primero entre 20, 30… (números redondos); después cuántas veces cabe 23 en 96: estimar y comprobar', uso: 'La galera con restos de dos cifras' } },
       ],
     },
     {
@@ -142,6 +142,13 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'triangulos-cuadrilateros', name: 'Triángulos y cuadriláteros', skills: [geoSkill('tri:sides'), geoSkill('tri:angles'), geoSkill('quad:name')], status: 'disponible', ordered: true, rungs: { concreto: 'Tiras de papel para formar triángulos y cuadriláteros', dibujo: 'Marcar los lados iguales y las esquinas', numeros: 'Equilátero, isósceles, escaleno; acutángulo, rectángulo, obtusángulo' } },
         { id: 'circunferencia-elementos', name: 'Circunferencia: radio, diámetro, cuerda y arco', skills: [geoSkill('circle'), geoSkill('circle:parts')], status: 'disponible', ordered: true, rungs: { concreto: 'Un plato y un hilo que pasa por el centro', dibujo: 'Señalar cada elemento', numeros: 'El diámetro es dos radios' } },
         { id: 'poligonos-cuerpos', name: 'Polígonos, círculo y cuerpos', skills: [geoSkill('poly:name'), geoSkill('circle'), geoSkill('solid:faces'), geoSkill('solid:count')], status: 'disponible', rungs: { concreto: 'Cajas, latas y pelotas', numeros: 'Lados, caras, vértices y aristas' } },
+      ],
+    },
+    {
+      id: 'programacion',
+      name: 'Programación',
+      topics: [
+        pending('programacion', 'Primeros pasos en programación por bloques', 'Necesita una herramienta de bloques; no hay ejercicios todavía', { uso: 'Ordenar bloques para que un personaje llegue a la meta' }),
       ],
     },
     {

@@ -125,7 +125,9 @@ describe('hintsFor', () => {
     expect(hintsFor(makeDivision(84, 4))[2].text).toContain('8 ÷ 4 = 2')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('sobra 1')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('12 ÷ 3 = ?')
-    expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('6, 12, 18, 24, 30, 36, 42')
+    // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
+    expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
+    expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
   })
 
   it('skip-count and array hints', () => {
