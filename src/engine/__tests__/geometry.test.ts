@@ -103,9 +103,9 @@ describe('lines and angles', () => {
     for (const seed of SEEDS) {
       const ex: ShapeChoiceExercise = genLineType(createRng(seed))
       const f = ex.figures[0]
-      if (f.type !== 'line') throw new Error('expected a line')
-      expect(f.points).toHaveLength(counts[f.kind as keyof typeof counts])
-      const word = { straight: 'recta', curve: 'curva', broken: 'poligonal' }[f.kind as 'straight' | 'curve' | 'broken']
+      if (f.type !== 'line' || f.kind === 'ray' || f.kind === 'segment') throw new Error('expected a recta, curva or poligonal')
+      expect(f.points).toHaveLength(counts[f.kind])
+      const word = { straight: 'recta', curve: 'curva', broken: 'poligonal' }[f.kind]
       expect(ex.options[ex.answer]).toBe(word)
     }
   })
@@ -302,6 +302,15 @@ describe('new geometry operations (3.º and 4.º)', () => {
     }
   })
 
+  it('geo:angle:type: no hint names any of the three options (it is a step of the ordered 3.º topic)', () => {
+    for (const seed of WIDE) {
+      const ex = genAngleType(createRng(seed))
+      for (const h of hintsFor(ex)) {
+        for (const option of ex.options) expect(mentions(h.text, option), `${seed} ${option}: ${h.text}`).toBe(false)
+      }
+    }
+  })
+
   it('no hint of a new operation contains the right option (Review Focus 3)', () => {
     for (const [op, make] of NEW_MAKERS) {
       for (const seed of WIDE) {
@@ -318,9 +327,9 @@ describe('new geometry operations (3.º and 4.º)', () => {
     for (const seed of WIDE) {
       const ex = genLineKind(createRng(seed))
       const f = ex.figures[0]
-      if (f.type !== 'line') throw new Error('expected a line')
+      if (f.type !== 'line' || f.kind === 'curve' || f.kind === 'broken') throw new Error('expected a recta, semirrecta or segmento')
       expect(f.points).toHaveLength(2)
-      expect(ex.options[ex.answer]).toBe(word[f.kind as keyof typeof word])
+      expect(ex.options[ex.answer]).toBe(word[f.kind])
       seen.add(f.kind)
     }
     expect(seen).toEqual(new Set(['straight', 'ray', 'segment']))

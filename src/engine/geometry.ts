@@ -55,6 +55,10 @@ export function isConvex(points: readonly [number, number][]): boolean {
   return sign !== 0
 }
 
+/** The dot product of the two sides that meet at corner p, from a to p and from p to b (zero = right angle). */
+export const cornerDot = (a: [number, number], p: [number, number], b: [number, number]) =>
+  (a[0] - p[0]) * (b[0] - p[0]) + (a[1] - p[1]) * (b[1] - p[1])
+
 /** Indexes of the corners whose inside angle is exactly a right angle: the two sides are perpendicular (dot product 0)
     and the corner turns the way the polygon turns (a concave corner of 270° is not a right angle). Exact coordinates. */
 export function rightCorners(points: readonly [number, number][]): number[] {
@@ -71,7 +75,7 @@ export function rightCorners(points: readonly [number, number][]): number[] {
     const p = points[i]
     const prev = points[(i - 1 + n) % n]
     const next = points[(i + 1) % n]
-    const dot = (prev[0] - p[0]) * (next[0] - p[0]) + (prev[1] - p[1]) * (next[1] - p[1])
+    const dot = cornerDot(prev, p, next)
     const turn = (p[0] - prev[0]) * (next[1] - p[1]) - (p[1] - prev[1]) * (next[0] - p[0])
     if (dot === 0 && Math.sign(turn) === orientation) out.push(i)
   }
@@ -240,8 +244,8 @@ export function genAngleType(rng: Rng): ShapeChoiceExercise {
     question: '¿Este ángulo es recto, menor o mayor que un recto?', figures: [figure], options, answer,
     hints: [
       'Compara el ángulo con la esquina de una hoja de papel: ¿encaja justo, o se abre más, o se abre menos?',
-      'Si las dos líneas se abren más que la esquina del papel, el ángulo es mayor que un recto.',
-      'Si se abren menos que la esquina del papel, es menor que un recto.',
+      'Si las dos líneas se abren más que la esquina del papel, el ángulo se abre más que ella.',
+      'Si se abren menos que la esquina del papel, el ángulo se cierra más que ella.',
     ],
   }
 }
@@ -414,9 +418,6 @@ export function genAngleClass(rng: Rng): ShapeChoiceExercise {
   }
 }
 
-/** The dot product of the two sides that meet at corner p (zero = right angle). */
-const cornerDot = (a: [number, number], p: [number, number], b: [number, number]) =>
-  (a[0] - p[0]) * (b[0] - p[0]) + (a[1] - p[1]) * (b[1] - p[1])
 
 /** «¿Cómo son los lados de este triángulo?»: equilátero (3 equal), isósceles (2 equal), escaleno (none), with the lengths written. */
 export function genTriSides(rng: Rng): ShapeChoiceExercise {
@@ -451,8 +452,8 @@ export function genTriSides(rng: Rng): ShapeChoiceExercise {
     kind: 'shape-choice', skill: geoSkill('tri:sides'), difficulty: DIFFICULTY_GEO + 1,
     question: '¿Cómo son los lados de este triángulo?', figures: [figure], options, answer,
     hints: [
-      'Lee las tres medidas y compáralas entre sí: ¿cuántas son iguales?',
-      'Si las tres medidas son iguales, tiene los tres lados iguales. Si solo dos coinciden, tiene dos lados iguales. Si ninguna coincide, todos son distintos.',
+      'Lee las tres medidas escritas en el triángulo, una a una.',
+      'Compara las medidas de dos en dos y anota cuántos pares son iguales.',
       kind === 'equilátero' ? 'Ejemplo: 3 cm, 5 cm y 6 cm: ninguna medida se repite.' : 'Ejemplo: 4 cm, 4 cm y 4 cm: las tres medidas coinciden.',
     ],
   }
@@ -493,6 +494,15 @@ export function genTriAngles(rng: Rng): ShapeChoiceExercise {
     }
   }
   throw new Error('geometry: no triangle of the angle kind could be built')
+}
+
+/** Level-3 example per asked quadrilateral: it describes another one, never the asked one's defining feature. */
+const QUAD_EXAMPLE: Record<'cuadrado' | 'rectángulo' | 'rombo' | 'romboide' | 'trapecio', string> = {
+  cuadrado: 'Ejemplo: solo un par de lados va en la misma dirección y los otros dos no.',
+  rectángulo: 'Ejemplo: cuatro lados iguales, pero ninguna esquina como la del papel.',
+  rombo: 'Ejemplo: cuatro esquinas como la del papel, y dos lados más largos que los otros dos.',
+  romboide: 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
+  trapecio: 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
 }
 
 /** «¿Qué cuadrilátero es?»: cuadrado, rectángulo, rombo, romboide or trapecio, by its sides and its corners. */
@@ -541,9 +551,7 @@ export function genQuadName(rng: Rng): ShapeChoiceExercise {
     hints: [
       'Mira los lados: ¿son todos iguales? ¿Hay dos pares de lados que van en la misma dirección?',
       'Fíjate en las esquinas: ¿son todas como la del papel? Y cuenta cuántos pares de lados nunca se cruzan.',
-      kind === 'cuadrado'
-        ? 'Ejemplo: solo un par de lados va en la misma dirección y los otros dos no.'
-        : 'Ejemplo: cuatro lados iguales y cuatro esquinas como la del papel.',
+      QUAD_EXAMPLE[kind],
     ],
   }
 }
@@ -566,7 +574,7 @@ export function genCircleParts(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué es la línea roja?', figures: [figure], options, answer,
     hints: [
       'Busca el centro del círculo, el punto del medio. ¿La línea roja llega hasta él?',
-      'Mira cuántos extremos de la línea roja están en el borde y si la línea cruza por el centro. Si es solo un trozo de la línea curva, es esa parte.',
+      'Mira dónde acaban los extremos de la línea roja: en el borde, en el centro o en los dos. Y comprueba si la línea pasa por el centro.',
       example,
     ],
   }
