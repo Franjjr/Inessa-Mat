@@ -8,7 +8,7 @@
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillMastery } from '@/types'
-import { availableSkills, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { availableSkills, behindTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
@@ -252,6 +252,7 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
 /** The operation of the problem block: the two-step topic asks two-step bars, the others the operation of the topic. */
 function barOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): BarSkillOp {
   if (topic?.id === 'prob-dos-pasos') return 'two'
+  if (topic?.id === 'prob-tres-pasos') return 'three'
   return wordOpFor(topic, mastery)
 }
 
@@ -328,6 +329,11 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   const newSkills = new Set(newItems.map((i) => i.exercise.skill))
 
+  // A topic behind (not met, before one the child has started) is not taught in «Lo nuevo»: its first step is practised
+  // once in the mix, so the child meets it without being pulled back (its own budget rule applies).
+  const repaso = behindTopics(syllabus, mastery, input.term).find((t) => t.id !== topic?.id)
+  const repasoSkill = repaso?.skills.find((s) => parseSkill(s) !== null && canMake(s))
+
   // 3. Mezcla: most urgent skills, interleaved by family. Falls back to available non-new skills.
   const urgent = urgencyOrder(mastery, now).map((m) => m.skill)
   let pool = interleavedPick(urgent, MIX_MAX, newSkills)
@@ -337,7 +343,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   if (pool.length === 0) pool = interleavedPick(availableSkills(syllabus, input.term).filter((s) => !isNewHard(s)), MIX_MAX, new Set())
   const mixItems: DailyItem[] = []
-  for (const s of pool.slice(0, MIX_MAX)) {
+  const mixCap = repasoSkill ? MIX_MAX - 1 : MIX_MAX
+  for (const s of pool.slice(0, mixCap)) {
     const ex = make(s, rng)
     if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: scaffold.has(s) && isFactSkill(s), isNew: false })
   }
@@ -354,8 +361,16 @@ export function planDailySession(input: PlanInput): DailyPlan {
     .sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
   const hunt = huntNow ? make(huntNow, rng, ['error-hunt']) : null
   if (hunt) {
-    if (mixItems.length >= MIX_MAX) mixItems.pop()
+    if (mixItems.length >= mixCap) mixItems.pop()
     mixItems.push({ exercise: hunt, block: 'mix', scaffold: false, isNew: false })
+  }
+  if (repasoSkill && (!isNewHard(repasoSkill) || newFacts.size < NEW_FACT_BUDGET)) {
+    const ex = make(repasoSkill, rng)
+    if (ex) {
+      const isNew = isNewHard(repasoSkill)
+      if (isNew) newFacts.add(repasoSkill)
+      mixItems.push({ exercise: ex, block: 'mix', scaffold: false, isNew })
+    }
   }
 
   // Fill: when the items are short (facts), the mix goes on with the same urgent skills until the practice fills
