@@ -5,7 +5,7 @@ import type { AnswerInputPreference } from '@/types'
 import { listInkSamples, updateChild, useActiveChild } from '@/data'
 import { InkContext, LearningStore, getSharedRecognizer, loadRecognizer, type InkContextValue, type Recognizer } from './context'
 import { DoubtPrompt } from './DoubtPrompt'
-import { detectPhone, detectTouchDevice, forgetPenSeen, persistPenSeen, trackPenEvent, readPenSeen, resolveInputMode } from './policy'
+import { detectPhone, detectTouchDevice, forgetPenSeen, persistPenSeen, persistTouchSeen, trackPenEvent, readPenSeen, readTouchSeen, resolveInputMode } from './policy'
 
 export interface InkProviderProps {
   children: ReactNode
@@ -67,6 +67,9 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
   const [detectedPenSeen, setPenSeen] = useState<boolean>(readPenSeen)
   const penSeen = forcedPenSeen ?? detectedPenSeen
   const penSeenRef = useRef(detectedPenSeen)
+  // A finger on the screen of a computer with a touch screen: from then on it answers like a tablet.
+  const [isTouchDevice, setTouchDevice] = useState<boolean>(() => detectTouchDevice() || readTouchSeen())
+  const touchSeenRef = useRef(isTouchDevice)
   useEffect(() => {
     const onPen = (e: PointerEvent) => trackPenEvent(e)
     const onDown = (e: PointerEvent) => {
@@ -75,6 +78,11 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
         penSeenRef.current = true
         persistPenSeen()
         setPenSeen(true)
+      }
+      if (e.pointerType === 'touch' && e.isTrusted && !touchSeenRef.current) {
+        touchSeenRef.current = true
+        persistTouchSeen()
+        setTouchDevice(true)
       }
     }
     window.addEventListener('pointerdown', onDown, true)
@@ -98,7 +106,6 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
   const [keyboardUsed, setKeyboardUsed] = useState(false)
   const noteKeyboard = useCallback(() => setKeyboardUsed(true), [])
 
-  const [isTouchDevice] = useState(detectTouchDevice)
   const [isPhone] = useState(detectPhone)
   const mode = resolveInputMode({ preference, penSeen, isTouchDevice, keyboardUsed, isPhone })
 

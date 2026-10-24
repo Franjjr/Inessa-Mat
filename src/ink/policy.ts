@@ -1,7 +1,7 @@
 /* Input policy: palm rejection, pen eraser detection, pen-seen persistence and input-mode resolution.
    Pure functions + tiny storage helpers (wrapped in try/catch: private mode or blocked storage must not crash). */
 import type { AnswerInputPreference, InputMode } from '@/types'
-import { PEN_SEEN_KEY } from './constants'
+import { PEN_SEEN_KEY, TOUCH_SEEN_KEY } from './constants'
 
 export type PointerKind = 'pen' | 'touch' | 'mouse'
 
@@ -54,6 +54,23 @@ export function persistPenSeen(): void {
   }
 }
 
+/** A finger has touched the screen on this device before (see TOUCH_SEEN_KEY). */
+export function readTouchSeen(): boolean {
+  try {
+    return globalThis.localStorage?.getItem(TOUCH_SEEN_KEY) != null
+  } catch {
+    return false
+  }
+}
+
+export function persistTouchSeen(): void {
+  try {
+    globalThis.localStorage?.setItem(TOUCH_SEEN_KEY, new Date().toISOString())
+  } catch {
+    /* storage unavailable: the switch still holds for this session */
+  }
+}
+
 export function forgetPenSeen(): void {
   try {
     globalThis.localStorage?.removeItem(PEN_SEEN_KEY)
@@ -64,7 +81,8 @@ export function forgetPenSeen(): void {
 
 /** A device the child writes on with a finger or a pen (tablet, phone). iPadOS reports itself as a Mac, so rely on
     the pointer media queries rather than the user agent. A computer with a touch screen still has a mouse or
-    trackpad as its main pointer, so it counts as a computer (its pen, if it has one, is detected on use). */
+    trackpad as its main pointer, so it counts as a computer until a finger touches it (InkProvider, TOUCH_SEEN_KEY);
+    its pen, if it has one, is detected on use. */
 export function detectTouchDevice(): boolean {
   try {
     if (typeof matchMedia === 'function') {

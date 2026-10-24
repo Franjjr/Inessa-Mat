@@ -29,3 +29,5 @@ export const PEN_IDLE_FALLBACK_MS = 3000
 export const PENDING_TTL_MS = 10 * 60 * 1000
 
 export const PEN_SEEN_KEY = 'numeria.ink.penSeen'
+/** A finger has touched the screen on this device: a computer with a touch screen answers like a tablet. */
+export const TOUCH_SEEN_KEY = 'numeria.ink.touchSeen'

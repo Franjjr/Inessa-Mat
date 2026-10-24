@@ -1,7 +1,7 @@
 import { act, render, screen } from '@testing-library/react'
 import type { ChildProfile, InkSample } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { PEN_SEEN_KEY } from './constants'
+import { PEN_SEEN_KEY, TOUCH_SEEN_KEY } from './constants'
 import { InkProvider } from './InkProvider'
 import { useInputMode } from './hooks'
 import { scriptedRecognizer } from './dev/scripted'
@@ -64,6 +64,20 @@ describe('InkProvider', () => {
     act(() => { window.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'pen', bubbles: true })) })
     expect(api.penSeen).toBe(false) // untrusted (scripts, tests) never switch palm rejection on
     expect(localStorage.getItem(PEN_SEEN_KEY)).toBeNull()
+  })
+
+  it('a computer that a finger has touched answers like a tablet; synthetic touches do not switch it', () => {
+    state.child = null
+    const { unmount } = render(<InkProvider recognizer={scriptedRecognizer([])}><Probe /></InkProvider>)
+    expect(api.mode).toBe('keypad')
+    act(() => { window.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch', bubbles: true })) })
+    expect(api.mode).toBe('keypad')
+    expect(localStorage.getItem(TOUCH_SEEN_KEY)).toBeNull()
+    unmount()
+    localStorage.setItem(TOUCH_SEEN_KEY, '2026-10-24')
+    render(<InkProvider recognizer={scriptedRecognizer([])}><Probe /></InkProvider>)
+    expect(api.isTouchDevice).toBe(true)
+    expect(api.mode).toBe('touch')
   })
 
   it('forgetPen() lets fingers write again', () => {
