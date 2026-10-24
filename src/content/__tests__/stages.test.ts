@@ -49,12 +49,12 @@ describe('stages of the temario', () => {
     }
   })
 
-  it('every skill of the temario generates its own exercises, and the proof of the subtraction and division is in 2.º trimestre', () => {
+  it('every skill of the temario generates its own exercises, and the proof of the subtraction and division is one topic (etapa 8)', () => {
     for (const s of availableSkills(GRADE3_SYLLABUS)) {
       expect(generate({ skills: [s] }, 1, { now: new Date('2026-10-22T10:00:00.000Z') }), s).toHaveLength(1)
     }
-    expect(stageOfTopic(GRADE3_SYLLABUS, 'prueba-resta-division')?.term).toBe(2)
-    expect(GRADE3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === 'prueba-resta-division')).toMatchObject({ ordered: true, skills: ['check:sub', 'check:div'] })
+    expect(stageOfTopic(GRADE3_SYLLABUS, 'comprobar-resultado')?.id).toBe('etapa-8')
+    expect(allTopics(GRADE3_SYLLABUS).filter((t) => t.skills.includes('check:sub')).map((t) => t.id)).toEqual(['comprobar-resultado'])
   })
 
   it('the session starts at etapa 1 and moves on to etapa 2 once it is learnt', () => {

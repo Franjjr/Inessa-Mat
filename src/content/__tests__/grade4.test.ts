@@ -54,13 +54,13 @@ describe('temario de 4.º', () => {
     for (const s of ['mul:2dx2d', 'div:4x1:exact', 'num:round:1000', 'mental:romanos', 'geo:area']) expect(skills).toContain(s)
   })
 
-  it('an ordered step waits its turn: with mul:2dx2d at box 2, the plan teaches the column step mul:col:2x2', () => {
+  it('a step learnt later is its own topic: with mul:2dx2d at box 2, the plan teaches the column topic mul:col:2x2', () => {
     const byId = new Map(allTopics(GRADE4_SYLLABUS).map((t) => [t.id, t]))
     const mastery: MasteryMap = {}
     const before = GRADE4_STAGES.slice(0, 3).flatMap((st) => st.topics)
     for (const id of before) for (const s of byId.get(id)!.skills) mastery[s] = { ...newMastery(s, now), box: 3 }
     mastery['mul:2dx2d'] = { ...newMastery('mul:2dx2d', now), box: 2 }
-    expect(currentTopic(GRADE4_SYLLABUS, mastery)?.id).toBe('mul-2-cifras')
+    expect(currentTopic(GRADE4_SYLLABUS, mastery)?.id).toBe('mul-2-cifras-columna')
     const child: ChildProfile = {
       id: 'child-4', orgId: null, nickname: 'Leo', gender: 'm', grade: 4,
       companion: { species: 'dog', name: 'Toby', gender: 'm', colorway: 'default', equipped: [] },
