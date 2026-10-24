@@ -40,6 +40,7 @@ import type { ID, InputMode } from './common'
  *   measure:word                                      add two measures (mixed units) in a word problem
  *   measure:estimate                                  ¿es razonable? a claimed measure
  *   mul:col:2x2|3x2|3x3                               multiplicar en columna, con filas parciales (4.º, src/engine/longmul.ts)
+ *   num:ordinal:10|20|30                              ordinales (3.º): tocar el n-.º de una fila (10), leer y escribir el ordinal (20, 30)
  */
 export type SkillKey = string
 
@@ -90,6 +91,7 @@ export type ExerciseKind =
   | 'area'            // área: count the unit squares of a figure on a grid (geo:area)
   | 'fraction-add'    // sumar y restar fracciones de igual denominador: 2/7 + 3/7 = ? (frac:add, frac:sub)
   | 'long-mul'        // multiplicar en columna con filas parciales: 23 × 14 = 92 + 230 (mul:col:AxB)
+  | 'ordinal'         // ordinales (3.º): the n-.º of a row, or the word and the number of an ordinal (num:ordinal:*)
 
 interface ExerciseBase {
   id: ID
@@ -474,7 +476,7 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise
+  | LongMulExercise | OrdinalExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -496,6 +498,18 @@ export interface LongMulExercise extends ExerciseBase {
   bottom: number
   /** top × each digit of bottom, units first, already shifted: 23 × 14 → [92, 230]. */
   partials: number[]
+  answer: number
+}
+/** Ordinales (3.º, src/engine/ordinals.ts). row: tap the n-th object of a queue (answer = its position, 0-based).
+    read: the number is shown, the child picks its word. write: the word is shown, the child picks the number. */
+export interface OrdinalExercise extends ExerciseBase {
+  kind: 'ordinal'
+  mode: 'row' | 'read' | 'write'
+  n: number
+  /** row: the objects of the queue, all alike; empty in read and write. */
+  items: string[]
+  /** read: the words; write: the numerals («7.º»); empty in row. */
+  options: string[]
   answer: number
 }
 export interface AreaExercise extends ExerciseBase { kind: 'area'; figure: GridFigure; answer: number }

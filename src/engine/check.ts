@@ -27,6 +27,7 @@ import { checkChance, checkChart } from './data'
 import { checkPattern } from './patterns'
 import { checkMulParts } from './bigops'
 import { checkLongMul } from './longmul'
+import { checkOrdinal } from './ordinals'
 import { checkArea } from './geometry'
 import { checkPosition } from './position'
 
@@ -589,6 +590,7 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'position': return checkPosition(exercise, answer)
     case 'mul-parts': return checkMulParts(exercise, answer)
     case 'long-mul': return checkLongMul(exercise, answer)
+    case 'ordinal': return checkOrdinal(exercise, answer)
     case 'area': return checkArea(exercise, answer)
   }
 }

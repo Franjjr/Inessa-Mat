@@ -28,7 +28,7 @@ export function divisionFactSkills(): SkillKey[] {
 // «Encuentra el error» waits for etapa 7: its items include column multiplication.
 export const GRADE3_STAGES: SyllabusStage[] = [
   // 1.er trimestre
-  { id: 'etapa-1', term: 1, worldId: 'w1', topics: ['descomponer-9999', 'leer-escribir-9999', 'comparar-ordenar-9999', 'tabla-2', 'tabla-5', 'tabla-10', 'completar', 'monedas-billetes'] },
+  { id: 'etapa-1', term: 1, worldId: 'w1', topics: ['descomponer-9999', 'leer-escribir-9999', 'comparar-ordenar-9999', 'ordinales', 'tabla-2', 'tabla-5', 'tabla-10', 'completar', 'monedas-billetes'] },
   { id: 'etapa-2', term: 1, worldId: 'w2', topics: ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'redondear', 'decenas-centenas', 'igualdad', 'prob-sumar', 'reloj-en-punto-media-cuarto'] },
   { id: 'etapa-3', term: 1, worldId: 'w3', topics: ['tabla-3', 'tabla-4', 'tabla-6', 'dobles-mitades', 'doble-triple', 'prob-multiplicar', 'poligonos', 'rectas'] },
   // 2.º trimestre
@@ -52,6 +52,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'leer-escribir-9999', name: 'Leer y escribir hasta 9 999', skills: ['num:place:words'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: 'El número en palabras, sin cifras' } },
         { id: 'comparar-ordenar-9999', name: 'Comparar y ordenar', skills: ['num:compare', 'num:order'], status: 'disponible', rungs: { dibujo: 'Columnas de valor posicional, casa por casa', numeros: 'Signos < > = y orden de menor a mayor' } },
         { id: 'redondear', name: 'Redondear a decenas y centenas', skills: ['num:round:10', 'num:round:100'], status: 'disponible', rungs: { dibujo: 'La recta con la decena o centena más cercana', numeros: 'Mirar la cifra de al lado' } },
+        { id: 'ordinales', name: 'Ordinales hasta el 30', skills: ['num:ordinal:10', 'num:ordinal:20', 'num:ordinal:30'], status: 'disponible', ordered: true, rungs: { concreto: 'Una fila de objetos: cuenta desde la punta de la flecha', numeros: 'El 7.º es el séptimo; el 21.º, vigésimo primero' } },
         { id: 'numeros-5-cifras', name: 'Números de 5 cifras (introducción)', skills: ['num:place:blocks:19999', 'num:place:words:19999', 'num:compare:19999'], status: 'disponible', ordered: true, rungs: { concreto: 'Pilas de diez cuadros de mil: las decenas de millar', numeros: '12 345 = 10 000 + 2 000 + 300 + 40 + 5' } },
       ],
     },

@@ -20,6 +20,7 @@ import { dataStatement } from './data'
 import { patternStatement } from './patterns'
 import { positionStatement } from './position'
 import { mulPartsStatement } from './bigops'
+import { ordinalPrompt } from './ordinals'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
 
@@ -49,7 +50,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'fraction-shade': 40, 'fraction-read': 35, 'fraction-of': 35, 'fraction-equal': 35, 'shape-choice': 20,
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
   money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
-  'long-mul': 90,
+  'long-mul': 90, ordinal: 20,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -131,6 +132,7 @@ export function statementOf(ex: Exercise): string {
     case 'position': return positionStatement(ex) ?? ex.skill
     case 'mul-parts': return mulPartsStatement(ex)
     case 'long-mul': return `${fmt(ex.top)} × ${fmt(ex.bottom)} = ?`
+    case 'ordinal': return ordinalPrompt(ex)
     case 'area': return '¿Cuántos cuadraditos ocupa la figura?'
     case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
     case 'check-calc': return ex.op === 'add'

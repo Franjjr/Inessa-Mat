@@ -44,6 +44,7 @@
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
+   num:ordinal:10|20|30     ordinales (3.º): the n-.º of a row (10), or reading and writing 1.º–20.º / 1.º–30.º (src/engine/ordinals.ts)
 */
 import type {
   BarOp, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode, SkillKey,
@@ -62,6 +63,8 @@ export const GEO_OPS: GeoOp[] = [
 ]
 
 export type DivisionVariant = DivisionExercise['variant']
+/** The top of an ordinal skill: 10 (the row), 20 or 30 (reading and writing the ordinals). */
+export type OrdinalMax = 10 | 20 | 30
 export type ConceptName = 'groups' | 'array' | 'commutative' | 'share' | 'family' | 'placevalue'
 export type WordOp = 'add' | 'sub' | 'mul' | 'div'
 export type BarSkillOp = BarOp | 'two'
@@ -117,6 +120,7 @@ export type ParsedSkill =
   | { type: 'div3x2'; variant: 'exact' | 'rem' }
   | { type: 'mulParts'; digits: 2 | 3 }
   | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
+  | { type: 'ordinal'; top: OrdinalMax }
   | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
   | { type: 'chance' }
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
@@ -139,6 +143,10 @@ export function addSkill(digits: number, carries: number, max?: 999): SkillKey {
 }
 export function subSkill(digits: number, borrows: number, zero = false): SkillKey {
   return zero ? `sub:${digits}d:z` : `sub:${digits}d:b${borrows}`
+}
+/** Ordinals up to 10 (a row), 20 or 30 (reading and writing). */
+export function ordinalSkill(max: OrdinalMax): SkillKey {
+  return `num:ordinal:${max}`
 }
 /** Multiplying in columns with partial rows: the digits of the top and of the bottom (2 or 3 each). */
 export function mulColSkill(top: 2 | 3, bottom: 2 | 3): SkillKey {
@@ -257,6 +265,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^mul:2x1:c([01])$/))) return { type: 'mul2x1', carry: m[1] === '1' }
   if ((m = key.match(/^mul:3x1:c([01])$/))) return { type: 'mul3x1', carry: m[1] === '1' }
   if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
+  if ((m = key.match(/^num:ordinal:(10|20|30)$/))) return { type: 'ordinal', top: Number(m[1]) as OrdinalMax }
   if ((m = key.match(/^mul:col:([23])x([23])$/))) return { type: 'mulCol', top: Number(m[1]) as 2 | 3, bottom: Number(m[2]) as 2 | 3 }
   if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^div:3x2:(exact|rem)$/))) return { type: 'div3x2', variant: m[1] as 'exact' | 'rem' }
@@ -392,6 +401,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'div3x2': return ['division']
     case 'mulParts': return ['mul-parts']
     case 'mulCol': return ['long-mul']
+    case 'ordinal': return ['ordinal']
     case 'bar': return ['bar-problem']
     case 'hunt': return ['error-hunt']
     case 'check': return ['check-calc']
