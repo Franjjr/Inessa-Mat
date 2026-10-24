@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { IDLE_MS, PEN_SEEN_KEY } from './constants'
 import { InkProvider } from './InkProvider'
 import { NumberInput } from './NumberInput'
-import { useInkLearning } from './hooks'
+import { useInkLearning, useInputMode } from './hooks'
 import { notePenContact } from './policy'
 import { scriptedRecognizer, type ScriptedAnswer } from './dev/scripted'
 import { replayStrokes, tap } from './dev/autoplay'
@@ -223,6 +223,61 @@ describe('NumberInput · a press on a box moves the keypad only for a real tap',
     fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
     expect(document.activeElement).toBe(a)
     notePenContact(false)
+  })
+})
+
+/** Sets the answer preference to the keypad for this subtree (the child's own setting, as the adult would store it). */
+function KeypadPreference() {
+  const { setPreferred } = useInputMode()
+  useEffect(() => { setPreferred('keypad') }, [setPreferred])
+  return null
+}
+
+describe('NumberInput · keypad mode: the keypad follows the box the child taps', () => {
+  afterEach(() => localStorage.clear())
+
+  function twoKeypadBoxes() {
+    const onA = vi.fn()
+    const onB = vi.fn()
+    function Two() {
+      const [a, setA] = useState<number | null>(null)
+      const [b, setB] = useState<number | null>(null)
+      return (
+        <>
+          <NumberInput value={a} onChange={(x) => { onA(x); setA(x) }} onSubmit={() => {}} ariaLabel="A" />
+          <NumberInput value={b} onChange={(x) => { onB(x); setB(x) }} onSubmit={() => {}} ariaLabel="B" />
+        </>
+      )
+    }
+    render(
+      <InkProvider recognizer={scriptedRecognizer([])}>
+        <KeypadPreference />
+        <Two />
+      </InkProvider>,
+    )
+    return { a: screen.getByRole('textbox', { name: 'A' }), b: screen.getByRole('textbox', { name: 'B' }), onA, onB }
+  }
+
+  it('a finger tap on the other box moves the keypad to it: its digits go to that box', () => {
+    const { a, b, onA, onB } = twoKeypadBoxes()
+    notePenContact(false, performance.now() - 10_000) // no pen contact just before: the touches are fingers
+    fireEvent.pointerDown(a, { pointerType: 'touch', isPrimary: true })
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: true })
+    expect(document.activeElement).toBe(b)
+    fireEvent.click(within(screen.getByRole('group', { name: 'Teclado de números' })).getByRole('button', { name: '7' }))
+    expect(onB).toHaveBeenLastCalledWith(7)
+    expect(onA).not.toHaveBeenCalled()
+  })
+
+  it('a second finger on the other box (not the primary pointer) leaves the keypad where it was', () => {
+    const { a, b, onA, onB } = twoKeypadBoxes()
+    notePenContact(false, performance.now() - 10_000)
+    fireEvent.pointerDown(a, { pointerType: 'touch', isPrimary: true })
+    fireEvent.pointerDown(b, { pointerType: 'touch', isPrimary: false })
+    expect(document.activeElement).toBe(a)
+    fireEvent.click(within(screen.getByRole('group', { name: 'Teclado de números' })).getByRole('button', { name: '4' }))
+    expect(onA).toHaveBeenLastCalledWith(4)
+    expect(onB).not.toHaveBeenCalled()
   })
 })
 
