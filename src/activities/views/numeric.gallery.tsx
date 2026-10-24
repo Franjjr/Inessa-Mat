@@ -1,4 +1,5 @@
-/* Dev gallery of the number views: the parts of a number (descomponer), with several answer boxes and one check.
+/* Dev gallery of the number views: the parts of a number (descomponer), with several answer boxes and one check; and the
+   ordinales hasta el 30 (3.º): the n-th of a row, and reading and writing the ordinal.
    Open /dev/gallery?only=numeric. Each entry uses a fixed seed. */
 import type { ReactNode } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'

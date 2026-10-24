@@ -37,7 +37,8 @@ export function ordinalPrompt(ex: OrdinalExercise): string {
 
 const ROW_EMOJIS = ['🍎', '🍄', '⭐', '🌸', '🐞', '🧁']
 
-/** A numbers 1..max (1..10 for the row) item. The row is a queue of alike objects: only the count tells the n-th. */
+/** One item of the skill with top `max`: a row of alike objects (max 10, only the count tells the n-th), or a read or
+    write item with an ordinal from 1 to max. */
 export function genOrdinal(rng: Rng, max: OrdinalMax): OrdinalExercise {
   if (max === 10) return makeRow(rng, randInt(rng, 1, 10))
   return makeChoice(rng, pick(rng, ['read', 'write'] as const), randInt(rng, 1, max), max)
@@ -91,7 +92,7 @@ export function hintsOrdinal(ex: OrdinalExercise): Hint[] {
   if (ex.mode === 'row') {
     const e = otherNumber(ex.n, [4, 2])
     return [
-      hint(1, 'Cuenta desde el principio de la fila: primero, segundo, tercero…'),
+      hint(1, 'Cuenta desde el principio de la fila, uno a uno, sin saltarte ninguno.'),
       hint(2, 'Señala cada objeto con el dedo mientras cuentas en voz alta, sin saltarte ninguno, y para en el lugar que pide la pregunta.'),
       hint(3, `Ejemplo con otra fila: el ${ordinalWord(e)} es el que tiene delante ${e - 1} ${e - 1 === 1 ? 'objeto' : 'objetos'}.`),
     ]
@@ -100,14 +101,16 @@ export function hintsOrdinal(ex: OrdinalExercise): Hint[] {
   const family = ex.n <= 10 ? 'units' : ex.n <= 19 ? 'teens' : 'tens'
   const example = family === 'units' ? otherNumber(ex.n, [2, 4, 6, 8]) : family === 'teens' ? otherNumber(ex.n, [13, 15, 17]) : otherNumber(ex.n, [30, 20])
   const first = {
-    units: 'Un ordinal dice el lugar que ocupa en la fila, no cuántos hay.',
+    units: 'Un ordinal dice el lugar que ocupa en una serie, no cuántos hay.',
     teens: 'Los ordinales del 11 al 19 empiezan por décimo.',
     tens: 'Las decenas tienen palabra propia, que acaba en -ésimo.',
   }[family]
   const second = {
     units: 'Cuenta en voz baja hasta el número de la pregunta y fíjate en la palabra del último lugar que dices.',
-    teens: 'Del 13 al 19 la palabra sale de juntar décimo con la del número de la unidad. El 11 y el 12 tienen palabra propia.',
-    tens: 'Mira primero la decena y después la unidad: la palabra se dice en ese orden. El 30 tiene palabra propia.',
+    teens: 'Mira la cifra de la unidad y piensa en su palabra en la lista del 1 al 9. El 11 y el 12 tienen palabra propia.',
+    tens: ex.n % 10 === 0
+      ? 'Los números redondos, 20 y 30, tienen una sola palabra: no hay unidad que añadir.'
+      : 'Mira primero la decena y después la unidad: la palabra se dice en ese orden.',
   }[family]
   return [
     hint(1, first),

@@ -122,26 +122,34 @@ describe('checkOrdinal', () => {
 })
 
 describe('hints and statements', () => {
-  it('three hints, one per level, and the row hints never name the position asked', () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
-      const ex = genOrdinal(createRng(seed), 10)
+  it('three hints, one per level, and no hint of any level gives the word or the numeral asked (every mode)', () => {
+    for (let seed = 1; seed <= SEEDS * 2; seed++) {
+      const ex = genOrdinal(createRng(seed), seed % 2 ? 10 : 30)
       const hints = hintsFor(ex)
       expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
-      expect(hints.slice(1).some((h) => h.text.includes(ordinalWord(ex.n)))).toBe(false)
-      expect(hints.some((h) => h.text.includes(ordinalNumeral(ex.n)))).toBe(false)
-    }
-  })
-
-  it('read and write hints never give the word or the numeral asked', () => {
-    for (let seed = 1; seed <= SEEDS; seed++) {
-      const ex = genOrdinal(createRng(seed), 30)
-      if (ex.mode === 'row') continue
-      const hints = hintsFor(ex)
-      expect(hints).toHaveLength(3)
       for (const h of hints) {
         expect(h.text).not.toContain(ordinalWord(ex.n))
         expect(h.text).not.toContain(ordinalNumeral(ex.n))
       }
+    }
+  })
+
+  it('the teens level 2 does not give the composition rule (that is level 3 only, on another number)', () => {
+    for (const n of [11, 12, 13, 14, 15, 16, 17, 18, 19]) {
+      const ex = { ...genOrdinal(createRng(1), 30), mode: 'read' as const, n }
+      const [, second, third] = hintsFor(ex)
+      expect(second.text).not.toContain('juntar')
+      expect(second.text).not.toContain('décimo')
+      expect(third.text).not.toContain(ordinalNumeral(n))
+    }
+  })
+
+  it('round tens (20, 30) level 2 does not tell the child to add a unit', () => {
+    for (const n of [20, 30]) {
+      const ex = { ...genOrdinal(createRng(1), 30), mode: 'write' as const, n }
+      const [, second] = hintsFor(ex)
+      expect(second.text).not.toContain('después la unidad')
+      expect(second.text).toContain('no hay unidad')
     }
   })
 
