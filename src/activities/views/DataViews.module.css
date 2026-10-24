@@ -56,6 +56,40 @@
   min-width: 0;
 }
 
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+
+.table th,
+.table td {
+  padding: var(--sp-2) var(--sp-1);
+  text-align: center;
+  border-bottom: 2px solid var(--c-line);
+}
+
+.table thead th {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  line-height: 1.2;
+}
+
+.table tbody th {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table td {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+
 .legend {
   margin: var(--sp-2) 0 0;
   text-align: center;

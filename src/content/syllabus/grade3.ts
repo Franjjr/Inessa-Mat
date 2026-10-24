@@ -186,7 +186,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       id: 'estadistica',
       name: 'Gráficos y probabilidad',
       topics: [
-        { id: 'graficos', name: 'Pictogramas y gráficas de barras', skills: ['chart:pict:x', 'chart:bars'], status: 'disponible', rungs: { concreto: 'Contar votos de la clase', dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
+        { id: 'graficos', name: 'Tablas, pictogramas y gráficas de barras', skills: ['chart:table', 'chart:pict:x', 'chart:bars'], status: 'disponible', ordered: true, rungs: { concreto: 'Contar votos de la clase', dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
         { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance'], status: 'disponible', rungs: { concreto: 'Sacar bolas de una bolsa sin mirar', uso: '¿Puede salir una bola verde?' } },
       ],
     },

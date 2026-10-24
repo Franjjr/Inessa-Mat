@@ -1,6 +1,7 @@
 /* Dev gallery of the 4.º exercises: multiplying by parts and in columns (partial rows), 3 × 1, 4 ÷ 1 and dividing by two digits, adding fractions,
    décimas y centésimas, sumar y restar decimales, área, simetría, romanos, por 10, redondear a millares, operaciones combinadas,
-   propiedades, estimar, signo igual o distinto, múltiplos y submúltiplos de longitud, masa y capacidad, and minutos y segundos,
+   propiedades, estimar, signo igual o distinto, múltiplos y submúltiplos de longitud, masa y capacidad, minutos y segundos,
+   frecuencia y «más probable»,
    at iPad and phone widths.
    Open /dev/gallery?only=grade4. */
 import type { ReactNode } from 'react'
@@ -9,6 +10,7 @@ import { createRng, genFractionAdd, generate } from '@/engine'
 import type { Exercise } from '@/types'
 import CalendarView from './CalendarView'
 import ColumnView from './ColumnView'
+import DataView from './DataView'
 import DivisionView from './DivisionView'
 import FigureNumberView from './FigureNumberView'
 import DecimalOpView from './DecimalOpView'
@@ -69,6 +71,8 @@ const entries: GalleryEntry[] = [
   { title: 'Minutos y segundos: pasar de min a s (ipad)', ...ipad, render: () => frame(<CalendarView exercise={one('time:seconds', 3)} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Minutos y segundos: duraciones (teléfono)', ...phone, render: () => frame(<CalendarView exercise={one('time:seconds', 8)} onAnswered={noop} showFeedback allowHints />) },
   { title: 'Redondear a millares (ipad vertical)', ...portrait, render: () => frame(<RoundView exercise={one('num:round:1000', 3)} onAnswered={noop} />) },
+  { title: 'Frecuencia: cuántas veces sale un dato (teléfono)', ...phone, render: () => frame(<DataView exercise={one('chart:freq', 4)} onAnswered={noop} showFeedback allowHints />) },
+  { title: 'Más probable: qué color sale más (ipad)', ...ipad, render: () => frame(<DataView exercise={one('prob:likely', 3)} onAnswered={noop} showFeedback allowHints />) },
 ]
 
 export default entries

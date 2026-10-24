@@ -20,6 +20,7 @@ const entries: GalleryEntry[] = [
   { title: 'Gráficos: pictograma, cada dibujo vale 5 (teléfono)', ...phone, render: () => view(one('chart:pict:x', 4)) },
   { title: 'Gráficos: barras (ipad)', ...ipad, render: () => view(one('chart:bars', 2)) },
   { title: 'Gráficos: barras (teléfono)', ...phone, render: () => view(one('chart:bars', 5)) },
+  { title: 'Gráficos: tabla de doble entrada (teléfono)', ...phone, render: () => view(one('chart:table', 2)) },
   { title: 'Gráficos: la moda (ipad vertical)', ...portrait, render: () => view(one('chart:mode', 1)) },
   { title: 'Probabilidad: la bolsa (ipad)', ...ipad, render: () => view(one('prob:chance', 6)) },
   { title: 'Series: figuras (ipad)', ...ipad, render: () => view(one('pattern:shapes', 2)) },

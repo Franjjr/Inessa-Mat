@@ -92,8 +92,8 @@ export type ExerciseKind =
   | 'shape-count'     // how many sides (or corners) a polygon has (geo:poly:sides)
   | 'money'           // dinero: recognise, pay, change, add prices, compare, convert (money:*)
   | 'measure'         // medida: unit, conversion, ruler, add, estimate (measure:*)
-  | 'chart'           // gráficos: read a pictogram or a bar chart, or find the moda of a list (chart:*)
-  | 'chance'          // probabilidad: seguro, posible o imposible (prob:chance)
+  | 'chart'           // gráficos: read a pictogram, a bar chart or a table, the moda, or how often a value comes out (chart:*)
+  | 'chance'          // probabilidad: seguro, posible o imposible (prob:chance), the most likely colour (prob:likely)
   | 'pattern'         // series: the next figure of a pattern, the missing number, or a later term (pattern:*)
   | 'position'        // posición: left, right, above, below on a grid, and routes with arrows (pos:*)
   | 'mul-parts'       // multiplicar por dos cifras por partes: 23 × 14 = 23 × 4 + 23 × 10 (mul:2dx2d, mul:3dx2d)
@@ -555,17 +555,27 @@ export interface FractionAddExercise extends ExerciseBase {
 // ---- gráficos, probabilidad, series y posición (src/engine/data.ts, patterns.ts, position.ts)
 
 export interface ChartCategory { label: string; emoji: string; value: number }
+/** A double-entry table: rows are groups, columns are options; `at` is the cell asked about ([row, col]). */
+export interface ChartTable {
+  rows: string[]
+  cols: { label: string; emoji: string }[]
+  cells: number[][]
+  at: [number, number]
+}
 export interface ChartExercise extends ExerciseBase {
   kind: 'chart'
-  /** pictogram: rows of icons; bars: a bar chart with a scale; data: a list of values (the moda). */
-  mode: 'pictogram' | 'bars' | 'data'
+  /** pictogram: rows of icons; bars: a bar chart with a scale; data: a list of values (the moda); table: a double-entry
+   *  table (chart:table); tally: a list of values and how many times one comes out (chart:freq). */
+  mode: 'pictogram' | 'bars' | 'data' | 'table' | 'tally'
   title: string
   categories: ChartCategory[]
   /** Pictogram: what one icon is worth (1, 2, 5 or 10). Bars: the step of the scale. */
   per: number
-  /** data mode: the values in the list. */
+  /** data and tally modes: the values in the list. */
   data: number[]
-  ask: 'count' | 'difference' | 'total' | 'most' | 'least' | 'mode'
+  /** table mode only: the cells. */
+  table?: ChartTable
+  ask: 'count' | 'difference' | 'total' | 'most' | 'least' | 'mode' | 'cell' | 'freq'
   question: string
   /** most / least: the labels to choose from (the answer is an index). Empty when a number is written. */
   options: string[]
@@ -576,9 +586,11 @@ export interface ChanceExercise extends ExerciseBase {
   /** What is in the bag (or on the spinner), with how many of each. */
   bag: { label: string; emoji: string; count: number }[]
   question: string
-  /** Always ['Seguro', 'Posible', 'Imposible']; the answer is an index. */
+  /** Seguro, posible, imposible (prob:chance); the colours in the bag (prob:likely). The answer is an index. */
   options: string[]
   answer: number
+  /** prob:likely only: the most (more) or the least (less) likely colour. */
+  ask?: 'more' | 'less'
 }
 export interface PatternExercise extends ExerciseBase {
   kind: 'pattern'

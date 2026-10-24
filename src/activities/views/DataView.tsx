@@ -5,8 +5,9 @@ import clsx from 'clsx'
 import { useState, type ReactNode } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
-import type { ChanceExercise, ChartExercise, ExerciseViewProps, PatternExercise, PositionExercise } from '@/types'
+import type { ChanceExercise, ChartExercise, ChartTable, ExerciseViewProps, PatternExercise, PositionExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
+import { bare } from '@/engine'
 import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import g from './FractionsGeometry.module.css'
 import s from './DataViews.module.css'
@@ -100,7 +101,8 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
       <div className={s.card}>
         {ex.mode === 'pictogram' && <Pictogram ex={ex} />}
         {ex.mode === 'bars' && <BarChart ex={ex} />}
-        {ex.mode === 'data' && (
+        {ex.mode === 'table' && ex.table && <TwoWayTable table={ex.table} />}
+        {(ex.mode === 'data' || ex.mode === 'tally') && (
           <ul className={s.chips} aria-label="Datos">
             {ex.data.map((v, i) => <li key={i} className={s.chip}>{v}</li>)}
           </ul>
@@ -109,7 +111,30 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
     </>
   )
   if (ex.options.length) return <ChoiceRound flow={flow} options={ex.options} question={ex.question}>{picture}</ChoiceRound>
-  return <NumberRound flow={flow} question={ex.question} ariaLabel="Respuesta" maxDigits={ex.mode === 'data' ? 2 : 3}>{picture}</NumberRound>
+  const small = ex.mode === 'data' || ex.mode === 'tally' || ex.mode === 'table'
+  return <NumberRound flow={flow} question={ex.question} ariaLabel="Respuesta" maxDigits={small ? 2 : 3}>{picture}</NumberRound>
+}
+
+/** A double-entry table: the groups down the side, the options across the top, one count in each cell. */
+function TwoWayTable({ table }: { table: ChartTable }) {
+  return (
+    <table className={s.table}>
+      <thead>
+        <tr>
+          <th scope="col" aria-label="Grupo" />
+          {table.cols.map((c) => <th key={c.label} scope="col"><span aria-hidden>{c.emoji}</span> {bare(c.label)}</th>)}
+        </tr>
+      </thead>
+      <tbody>
+        {table.rows.map((row, r) => (
+          <tr key={row}>
+            <th scope="row">{row}</th>
+            {table.cells[r].map((v, c) => <td key={c}>{v}</td>)}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
 }
 
 function Pictogram({ ex }: { ex: ChartExercise }) {

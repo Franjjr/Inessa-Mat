@@ -100,7 +100,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'money': return MONEY_TEXT[p.mode]
     case 'measure': return measureText(p.mode, p.dimension, p.all === true)
     case 'chart': return CHART_TEXT[p.variant]
-    case 'chance': return 'Seguro, posible o imposible'
+    case 'chance': return p.variant === 'likely' ? 'Qué color es más (o menos) probable sacar' : 'Seguro, posible o imposible'
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
   }
@@ -110,6 +110,8 @@ const CHART_TEXT = {
   pict: 'Leer pictogramas',
   'pict:x': 'Pictogramas en los que cada dibujo vale 2, 5 o 10',
   bars: 'Leer gráficas de barras',
+  table: 'Leer tablas de doble entrada: grupos y opciones',
+  freq: 'Frecuencia: cuántas veces sale cada dato de una lista',
   mode: 'La moda: el dato que más se repite',
 }
 const PATTERN_TEXT = {

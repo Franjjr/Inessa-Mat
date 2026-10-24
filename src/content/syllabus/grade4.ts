@@ -149,8 +149,8 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
       name: 'Gráficos y probabilidad',
       topics: [
         { id: 'graficos-4', name: 'Gráficas de barras y pictogramas', skills: ['chart:bars', 'chart:pict:x'], status: 'disponible', rungs: { dibujo: 'Cada dibujo vale 2, 5 o 10', numeros: 'Cuántos más, cuántos en total' } },
-        { id: 'moda', name: 'La moda', skills: ['chart:mode'], status: 'disponible', rungs: { numeros: 'El dato que más se repite' } },
-        { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance'], status: 'disponible', rungs: { concreto: 'Sacar bolas de una bolsa sin mirar' } },
+        { id: 'moda', name: 'Frecuencia y moda', skills: ['chart:freq', 'chart:mode'], status: 'disponible', rungs: { numeros: 'El dato que más se repite' } },
+        { id: 'probabilidad', name: 'Seguro, posible o imposible', skills: ['prob:chance', 'prob:likely'], status: 'disponible', ordered: true, rungs: { concreto: 'Sacar bolas de una bolsa sin mirar' } },
         { id: 'series-4', name: 'Series: qué número habrá más adelante', skills: ['pattern:predict', 'pattern:numbers'], status: 'disponible', rungs: { numeros: '25, 50, 75… ¿qué número estará en el puesto 10?' } },
       ],
     },

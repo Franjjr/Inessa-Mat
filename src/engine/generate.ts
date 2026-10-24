@@ -20,7 +20,7 @@ import { genFractionAdd, genFractionCompare, genFractionEqual, genFractionName, 
 import { genGeometry } from './geometry'
 import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
-import { CHART_SKILLS, buildChance, buildChart } from './data'
+import { CHART_SKILLS, buildChance, buildChart, buildLikely } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
 import { genLongMul } from './longmul'
 import { genOrdinal } from './ordinals'
@@ -249,6 +249,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'chance':
       addItem(map, 'prob:chance', kind, 1)
+      addItem(map, 'prob:likely', kind, 1)
       break
     case 'mul-parts':
       addItem(map, 'mul:2dx2d', kind, 1)
@@ -730,7 +731,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
   if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used, p.all === true, (ctx.mastery?.[skill]?.box ?? -1) >= 2)
   if (p.type === 'chart') return retry(() => buildChart(p.variant, rng), used, rng)!
-  if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
+  if (p.type === 'chance') return retry(() => (p.variant === 'likely' ? buildLikely(rng) : buildChance(rng)), used, rng)!
   if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!
   if (p.type === 'position') return retry(() => buildPosition(p.variant, rng), used, rng)!
   if (p.type === 'bar') return buildBar(p.op, skill, ctx, rng, p.small)

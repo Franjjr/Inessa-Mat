@@ -1,11 +1,11 @@
 /* Gráficos, probabilidad, series y posición: every generated item is verified with independent reasoning, the right
    answer is accepted, a wrong one is not, and no hint gives the answer away. */
 import { describe, expect, it } from 'vitest'
-import { check, createRng, describeSkill, generate, hintsFor, isValidSkill, makeRelative, statementOf } from '@/engine'
+import { bare, check, createRng, describeSkill, generate, hintsFor, isValidSkill, makeRelative, statementOf } from '@/engine'
 import type { Answer, ChanceExercise, ChartExercise, Exercise, PatternExercise, PositionExercise } from '@/types'
 
 const SKILLS = [
-  'chart:pict', 'chart:pict:x', 'chart:bars', 'chart:mode', 'prob:chance',
+  'chart:pict', 'chart:pict:x', 'chart:bars', 'chart:table', 'chart:freq', 'chart:mode', 'prob:chance', 'prob:likely',
   'pattern:shapes', 'pattern:numbers', 'pattern:predict', 'pos:relative', 'pos:next', 'pos:route',
 ]
 
@@ -22,6 +22,21 @@ function wrong(ex: Exercise): Answer {
 }
 
 function verifyChart(ex: ChartExercise): void {
+  if (ex.mode === 'table') {
+    const t = ex.table!
+    const [r, c] = t.at
+    expect(ex.answer, ex.id).toBe(t.cells[r][c])
+    expect(ex.question, ex.id).toBe(`¿Cuántos niños de ${t.rows[r]} prefieren ${t.cols[c].label}?`)
+    expect(t.cells.every((row) => row.length === t.cols.length), ex.id).toBe(true)
+    expect(t.cells.flat().every((v) => v >= 1 && v <= 9), ex.id).toBe(true)
+    return
+  }
+  if (ex.mode === 'tally') {
+    const target = Number(ex.question.match(/sale el (\d)\?/)![1])
+    expect(ex.answer, ex.id).toBe(ex.data.filter((v) => v === target).length)
+    expect(ex.answer, ex.id).toBeGreaterThanOrEqual(2)
+    return
+  }
   if (ex.mode === 'data') {
     const counts = new Map<number, number>()
     for (const v of ex.data) counts.set(v, (counts.get(v) ?? 0) + 1)
@@ -40,6 +55,15 @@ function verifyChart(ex: ChartExercise): void {
 }
 
 function verifyChance(ex: ChanceExercise): void {
+  if (ex.skill === 'prob:likely') {
+    const counts = ex.bag.map((b) => b.count)
+    // The amounts are distinct, so there is never a tie for the most (or the least) likely colour.
+    expect(new Set(counts).size, ex.id).toBe(counts.length)
+    expect(ex.options, ex.id).toEqual(ex.bag.map((b) => bare(b.label)))
+    expect(counts[ex.answer], ex.id).toBe(ex.ask === 'less' ? Math.min(...counts) : Math.max(...counts))
+    expect(ex.question, ex.id).toBe(ex.ask === 'less' ? '¿Qué es menos probable sacar?' : '¿Qué es más probable sacar?')
+    return
+  }
   const colour = ex.question.match(/que sea (\w+)\?/)![1]
   const n = ex.bag.find((b) => b.label === colour)?.count ?? 0
   const total = ex.bag.reduce((s, b) => s + b.count, 0)
@@ -124,5 +148,30 @@ describe('gráficos, probabilidad, series y posición', () => {
     const r = check(ex, { type: 'choice', index: 0 })
     expect(r).toMatchObject({ correct: false, errorType: 'left-right' })
     for (const h of hintsFor(ex)) expect(h.text).not.toMatch(/escribes|escribir/)
+  })
+
+  it('the table, the frequency and the most likely colour: 300 seeds, the answer read right and no hint gives it away', () => {
+    const asks = new Set<string>()
+    for (const skill of ['chart:table', 'chart:freq', 'prob:likely']) {
+      for (let seed = 1; seed <= 300; seed++) {
+        const [ex] = generate({ skills: [skill] }, 1, { rng: createRng(seed) })
+        const hints = hintsFor(ex)
+        expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
+        if (ex.kind === 'chart') {
+          verifyChart(ex)
+          asks.add(ex.ask)
+          for (const h of hints) expect(h.text.split(/\D+/), `${ex.id} ${h.text}`).not.toContain(String(ex.answer))
+        }
+        if (ex.kind === 'chance') {
+          verifyChance(ex)
+          asks.add(ex.ask!)
+          const answer = ex.options[ex.answer].toLowerCase()
+          for (const h of hints) expect(h.text.toLowerCase(), `${ex.id} ${h.text}`).not.toMatch(new RegExp(`\\b${answer}`))
+        }
+        expect(check(ex, right(ex)).correct, ex.id).toBe(true)
+        expect(check(ex, wrong(ex)).correct, ex.id).toBe(false)
+      }
+    }
+    expect([...asks].sort()).toEqual(['cell', 'freq', 'less', 'more'])
   })
 })

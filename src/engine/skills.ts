@@ -39,8 +39,8 @@
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
    money:pay:e | money:add:e   whole euros, no céntimos (2.º)
-   chart:pict|pict:x|bars|mode   gráficos: pictogram (an icon is 1, or 2/5/10), bar chart, moda (src/engine/data.ts)
-   prob:chance              seguro, posible o imposible
+   chart:pict|pict:x|bars|table|freq|mode   gráficos: pictogram (an icon is 1, or 2/5/10), bar chart, double-entry table, frequency, moda (src/engine/data.ts)
+   prob:chance|likely       seguro, posible o imposible; the most (or least) likely colour of a bag
    pattern:shapes|numbers|predict   series: next figure, missing number, a term further on (src/engine/patterns.ts)
    pos:relative|next|route  posición en una cuadrícula y recorridos (src/engine/position.ts)
    mul:3x1:c0|c1            3-digit × 1-digit in columns, without / with carries (4.º, src/engine/bigops.ts)
@@ -137,8 +137,8 @@ export type ParsedSkill =
   | { type: 'mulParts'; digits: 2 | 3 }
   | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
   | { type: 'ordinal'; top: OrdinalMax }
-  | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'mode' }
-  | { type: 'chance' }
+  | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'table' | 'freq' | 'mode' }
+  | { type: 'chance'; variant: 'chance' | 'likely' }
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
   | { type: 'position'; variant: 'relative' | 'next' | 'route' }
 
@@ -353,8 +353,8 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if (key === 'measure:ruler') return { type: 'measure', mode: 'ruler', dimension: 'length' }
   if (key === 'measure:add') return { type: 'measure', mode: 'add', dimension: null }
   if (key === 'measure:estimate') return { type: 'measure', mode: 'estimate', dimension: null }
-  if ((m = key.match(/^chart:(pict|pict:x|bars|mode)$/))) return { type: 'chart', variant: m[1] as 'pict' | 'pict:x' | 'bars' | 'mode' }
-  if (key === 'prob:chance') return { type: 'chance' }
+  if ((m = key.match(/^chart:(pict|pict:x|bars|table|freq|mode)$/))) return { type: 'chart', variant: m[1] as 'pict' | 'pict:x' | 'bars' | 'table' | 'freq' | 'mode' }
+  if ((m = key.match(/^prob:(chance|likely)$/))) return { type: 'chance', variant: m[1] as 'chance' | 'likely' }
   if ((m = key.match(/^pattern:(shapes|numbers|predict)$/))) return { type: 'pattern', variant: m[1] as 'shapes' | 'numbers' | 'predict' }
   if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
   return null
