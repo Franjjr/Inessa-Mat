@@ -15,7 +15,7 @@ const fractions = (ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[]): Ski
 
 export const GRADE4_STAGES: SyllabusStage[] = [
   // 1.er trimestre
-  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'romanos', 'suma-resta-4d', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'graficos-4'] },
+  { id: 'etapa-1', term: 1, topics: ['repaso-numeros', 'numeros-99999', 'romanos', 'suma-resta-4d', 'prob-sumar-restar', 'tablas-repaso', 'mental-4', 'graficos-4'] },
   { id: 'etapa-2', term: 1, topics: ['redondear-millares', 'mul-2x1', 'mul-3x1', 'por-10-100-1000', 'prob-multiplicar', 'reloj-4', 'angulos'] },
   { id: 'etapa-3', term: 1, topics: ['div-repaso', 'div-4x1', 'prob-dividir', 'comprobar', 'perimetro', 'series-4'] },
   // 2.º trimestre
@@ -33,9 +33,10 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
   blocks: [
     {
       id: 'numeros',
-      name: 'Números hasta 9 999',
+      name: 'Números hasta 99 999',
       topics: [
         { id: 'repaso-numeros', name: 'Leer, escribir, descomponer y comparar (repaso)', skills: ['num:place:expanded', 'num:place:words', 'num:compare', 'num:order'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: '7 045 = 7 000 + 40 + 5' } },
+        { id: 'numeros-99999', name: 'Números hasta 99 999 (decenas de millar)', skills: ['num:place:blocks:99999', 'num:place:expanded:99999', 'num:place:words:99999', 'num:compare:99999', 'num:order:99999', 'num:round:1000:99999', 'num:line:10000'], status: 'disponible', ordered: true, rungs: { concreto: 'Pilas de diez cuadros de mil', numeros: '45 300 = 40 000 + 5 000 + 300' } },
         { id: 'redondear-millares', name: 'Redondear a centenas y millares', skills: ['num:round:100', 'num:round:1000'], status: 'disponible', rungs: { dibujo: 'La recta con el millar más cercano', numeros: 'Mirar la cifra de las centenas' } },
         { id: 'recta-1000', name: 'La recta numérica: saltos de 100 y de 1 000', skills: ['num:line:100', 'num:line:1000'], status: 'disponible', rungs: { dibujo: 'Saltos de 100 y de 1 000', numeros: '3 450 + 1 000 = 4 450' } },
         { id: 'romanos', name: 'Números romanos', skills: ['mental:romanos'], status: 'disponible', rungs: { concreto: 'Relojes y capítulos de libros', numeros: 'I, V, X, L, C; IV = 5 − 1' } },

@@ -125,6 +125,19 @@ describe('PlaceValueView', () => {
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
+
+  it('blocks mode up to 99 999: the decenas de millar are piles of ten blocks of mil, and the box takes five digits', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    const { container } = render(<PlaceValueView exercise={makePlaceValue(45300, 'blocks', 99999)} onAnswered={onAnswered} showFeedback={false} />)
+    // 4 decenas de millar (four piles of ten mil blocks), 5 millares, 3 centenas, no decenas, no unidades.
+    expect(container.querySelectorAll('[title="4 decenas de millar"]').length).toBe(1)
+    expect(container.querySelectorAll('[title="4 decenas de millar"] > div > span').length).toBe(4)
+    expect(screen.getByText('Decenas de millar')).toBeTruthy()
+    await user.type(box('Número de los bloques'), '45300')
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
 })
 
 describe('OrderView', () => {

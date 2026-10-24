@@ -34,7 +34,7 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
           value={value}
           onChange={setValue}
           onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
-          maxDigits={4}
+          maxDigits={Math.max(4, String(ex.value).length)}
           size="lg"
           status={status}
           ariaLabel="Número redondeado"

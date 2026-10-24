@@ -36,7 +36,7 @@ export const GRADE3_STAGES: SyllabusStage[] = [
   { id: 'etapa-5', term: 2, worldId: 'w5', topics: ['tabla-8', 'reloj-5-minutos', 'calendario', 'unidades-longitud', 'regla', 'angulos-rectos', 'graficos'] },
   { id: 'etapa-6', term: 2, worldId: 'w6', topics: ['tabla-7', 'tabla-9', 'fracciones-mitad-cuarto', 'fraccion-cantidad', 'sumar-precios', 'circulo-cuerpos', 'recorridos'] },
   // 3.er trimestre
-  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error', 'probabilidad'] },
+  { id: 'etapa-7', term: 3, worldId: 'w7', topics: ['numeros-5-cifras', 'mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-10-100', 'mul-3x1', 'reloj-digital', 'duraciones', 'unidades-masa-capacidad', 'medir-problemas', 'perimetro', 'fracciones-comparar', 'encuentra-error', 'probabilidad'] },
   { id: 'etapa-8', term: 3, worldId: 'w8', topics: ['div-con-tablas', 'div-exacta', 'div-resto', 'prob-dividir', 'div-larga', 'div-3x1', 'prob-dos-pasos', 'comprobar-resultado', 'fracciones-mas-partes', 'mul-2-cifras-intro'] },
 ]
 
@@ -52,6 +52,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'leer-escribir-9999', name: 'Leer y escribir hasta 9 999', skills: ['num:place:words'], status: 'disponible', rungs: { dibujo: 'Tabla de millares, centenas, decenas y unidades', numeros: 'El número en palabras, sin cifras' } },
         { id: 'comparar-ordenar-9999', name: 'Comparar y ordenar', skills: ['num:compare', 'num:order'], status: 'disponible', rungs: { dibujo: 'Columnas de valor posicional, casa por casa', numeros: 'Signos < > = y orden de menor a mayor' } },
         { id: 'redondear', name: 'Redondear a decenas y centenas', skills: ['num:round:10', 'num:round:100'], status: 'disponible', rungs: { dibujo: 'La recta con la decena o centena más cercana', numeros: 'Mirar la cifra de al lado' } },
+        { id: 'numeros-5-cifras', name: 'Números de 5 cifras (introducción)', skills: ['num:place:blocks:19999', 'num:place:words:19999', 'num:compare:19999'], status: 'disponible', ordered: true, rungs: { concreto: 'Pilas de diez cuadros de mil: las decenas de millar', numeros: '12 345 = 10 000 + 2 000 + 300 + 40 + 5' } },
       ],
     },
     {

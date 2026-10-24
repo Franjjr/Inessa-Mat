@@ -184,6 +184,21 @@
   background: var(--pv-u);
 }
 
+/* Decenas de millar: a pile of ten blocks of mil. */
+.pile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.milSlice {
+  width: 34px;
+  height: 7px;
+  border-radius: 2px;
+  background-color: var(--pv-um-soft);
+  border: 1.5px solid var(--pv-um);
+}
+
 /* Number line */
 .line {
   position: relative;

@@ -18,8 +18,11 @@ const CONCEPT_TEXT: Record<string, string> = {
 const PLACE_TEXT: Record<string, string> = {
   blocks: 'Números con bloques de millar, centena, decena y unidad',
   expanded: 'Descomponer números (4 325 = 4 000 + 300 + 20 + 5)',
-  words: 'Leer y escribir números hasta 9 999',
+  words: 'Leer y escribir números hasta',
 }
+
+/** The top of a number skill's range, as the adult reads it (no suffix = up to 9 999). */
+const rangeWord = (max?: 999 | 19999 | 99999): string => (max === 999 ? '999' : max === 19999 ? '19 999' : max === 99999 ? '99 999' : '9 999')
 
 const MENTAL_TEXT: Record<string, string> = {
   dobles: 'Dobles (de cabeza)',
@@ -59,10 +62,10 @@ export function describeSkill(skill: SkillKey): string {
           : 'Divisiones de 2 cifras bajando cifras (nivel experto)'
     case 'concept': return CONCEPT_TEXT[p.name]
     case 'word': return WORD_TEXT[p.op]
-    case 'place': return PLACE_TEXT[p.mode]
-    case 'compare': return `Comparar números hasta ${p.max === 999 ? '999' : '9 999'} con < > =`
-    case 'order': return `Ordenar números hasta ${p.max === 999 ? '999' : '9 999'}`
-    case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : 'centenas'}`
+    case 'place': return p.mode === 'words' ? `${PLACE_TEXT.words} ${rangeWord(p.max)}` : PLACE_TEXT[p.mode]
+    case 'compare': return `Comparar números hasta ${rangeWord(p.max)} con < > =`
+    case 'order': return `Ordenar números hasta ${rangeWord(p.max)}`
+    case 'round': return `Redondear a las ${p.to === 10 ? 'decenas' : p.to === 100 ? 'centenas' : 'millares'}`
     case 'line': return `Recta numérica: saltos de ${p.step}`
     case 'mental': return MENTAL_TEXT[p.family]
     case 'equation': return 'Signo igual: los dos lados valen lo mismo'

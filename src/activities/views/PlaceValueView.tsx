@@ -29,6 +29,8 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
   const [cells, setCells] = useState<(number | null)[]>(() => ex.parts.map(() => null))
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const top = ex.parts.length - 1
+  // Up to 9 999 four boxes; the five-digit numbers (10 000 and over) need five.
+  const maxDigits = Math.max(4, ex.parts.length)
 
   const submitValue = (v: number | null = value) => {
     if (v === null) return
@@ -42,7 +44,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
   }
 
   return (
-    <section className={s.view} aria-label="Números hasta 9 999" data-kind={ex.kind} data-mode={ex.mode}>
+    <section className={s.view} aria-label={ex.value >= 10000 ? 'Números de 5 cifras' : 'Números hasta 9 999'} data-kind={ex.kind} data-mode={ex.mode}>
       {ex.mode === 'blocks' && (
         <>
           <p className={s.instructions}>Cuenta los bloques de cada clase y escribe el número.</p>
@@ -56,7 +58,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
               value={value}
               onChange={setValue}
               onSubmit={(v) => { setValue(v); if (!flow.submitted) submitValue(v) }}
-              maxDigits={4}
+              maxDigits={maxDigits}
               size="lg"
               status={status}
               ariaLabel="Número de los bloques"
@@ -77,7 +79,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
               value={value}
               onChange={setValue}
               onSubmit={(v) => { setValue(v); if (!flow.submitted) submitValue(v) }}
-              maxDigits={4}
+              maxDigits={maxDigits}
               size="lg"
               status={status}
               ariaLabel="Número en cifras"
@@ -103,7 +105,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
                     value={cells[i]}
                     onChange={(v) => setCells((prev) => prev.map((c, k) => (k === i ? v : c)))}
                     onSubmit={() => submitCells()}
-                    maxDigits={4}
+                    maxDigits={maxDigits}
                     size="lg"
                     status={status}
                     ariaLabel={`Valor de ${placeName(top - i) === 'millares' ? 'los' : 'las'} ${placeName(top - i)}`}
@@ -129,6 +131,7 @@ function digitOf(n: number, place: number): number {
 
 /** One class of blocks: as many tiles as the digit says (a 0 shows no tile). */
 function BlockGroup({ place, count }: { place: number; count: number }) {
+  if (place === 4) return <TenThousandGroup count={count} />
   const label = place === 3 ? 'Millares' : place === 2 ? 'Centenas' : place === 1 ? 'Decenas' : 'Unidades'
   const tile = place === 3 ? s.mil : place === 2 ? s.cent : place === 1 ? s.dec : s.uni
   return (
@@ -137,6 +140,22 @@ function BlockGroup({ place, count }: { place: number; count: number }) {
         {Array.from({ length: count }, (_, k) => <span key={k} className={tile} aria-hidden />)}
       </div>
       <span className={s.groupLabel}>{label}</span>
+    </div>
+  )
+}
+
+/** The decenas de millar: each one is a pile of ten blocks of mil, so the child counts piles, then the tiles of a pile. */
+function TenThousandGroup({ count }: { count: number }) {
+  return (
+    <div className={s.group} title={`${count} decenas de millar`}>
+      <div className={s.tiles}>
+        {Array.from({ length: count }, (_, k) => (
+          <span key={k} className={s.pile} aria-hidden>
+            {Array.from({ length: 10 }, (_, j) => <span key={j} className={s.milSlice} />)}
+          </span>
+        ))}
+      </div>
+      <span className={s.groupLabel}>Decenas de millar</span>
     </div>
   )
 }

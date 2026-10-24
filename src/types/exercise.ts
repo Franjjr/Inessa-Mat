@@ -15,7 +15,8 @@ import type { ID, InputMode } from './common'
  *   num:place:blocks|expanded|words   numbers up to 9 999: blocks, expanded form, reading the words
  *   num:compare | num:order           compare with < > = ; order 3–4 numbers
  *   num:round:10|100                  round to decenas or centenas
- *   num:line:10|100|1000              number line with jumps (tick missing, or jump from a point)
+ *   num:line:10|100|1000|10000        number line with jumps (tick missing, or jump from a point)
+ *   <key>:19999 | <key>:99999         the same number keys up to 19 999 (3.º) or 99 999 (4.º); num:round:1000:99999
  *   mental:<family>                   cálculo mental exprés (dobles, triples, mitades, completar10|100|1000, decenas, centenas, compensar)
  *   eq:flex                           signo igual flexible: 5 + 3 = __ + 6, 7 = 3 + __
  *   bar:add|sub|mul|div|two   problem on a bar diagram (two = two steps), with and without the bar (ladder)
@@ -158,7 +159,7 @@ export interface RoundExercise extends ExerciseBase { kind: 'round'; value: numb
 export interface NumberLineExercise extends ExerciseBase {
   kind: 'number-line'
   mode: 'tick' | 'jump'
-  step: 10 | 100 | 1000
+  step: 10 | 100 | 1000 | 10000
   /** Five labelled marks, consecutive multiples of step. */
   ticks: number[]
   /** tick mode: index in ticks of the blank mark. */

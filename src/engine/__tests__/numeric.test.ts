@@ -5,7 +5,7 @@ import { DEFAULT_CHILD_SETTINGS } from '@/types'
 import { GRADE3_SYLLABUS, allTopics } from '@/content/syllabus'
 import { buildPlacement, placementBlockOf } from '../placement'
 import {
-  check, createRng, expandedParts, fmt, generate, hintsFor, holds, numberWords, roundTo, planDailySession,
+  check, createRng, expandedParts, fmt, generate, hintsFor, holds, numberWords, placeName, roundTo, planDailySession,
 } from '@/engine'
 import { isMentalSkill, isValidSkill, kindsForSkill, mentalSkill, parseSkill, placeSkill, roundSkill, lineSkill } from '../skills'
 import { newMastery } from '../mastery'
@@ -369,3 +369,130 @@ describe('placement: números hasta 9 999 are part of the numeros block', () => 
     expect(placementBlockOf(mentalSkill('dobles'))).toBeNull()
   })
 })
+
+describe('numbers up to 99 999 (and up to 19 999 in 3.º)', () => {
+  const WIDE_SKILLS: SkillKey[] = [
+    placeSkill('blocks', 19999), placeSkill('words', 19999), 'num:compare:19999',
+    placeSkill('blocks', 99999), placeSkill('expanded', 99999), placeSkill('words', 99999),
+    'num:compare:99999', 'num:order:99999', roundSkill(1000, 99999), lineSkill(10000),
+  ]
+  /** Exercises of a skill over many seeds: one per seed, as a child meets them. */
+  const sample = (skill: SkillKey, seeds = 300) =>
+    Array.from({ length: seeds }, (_, i) => generate({ skills: [skill] }, 1, { rng: createRng(i + 1), now })[0])
+
+  it('parses the range suffix (and the default stays up to 9 999)', () => {
+    expect(parseSkill('num:place:words:99999')).toEqual({ type: 'place', mode: 'words', max: 99999 })
+    expect(parseSkill('num:place:blocks:19999')).toEqual({ type: 'place', mode: 'blocks', max: 19999 })
+    expect(parseSkill('num:compare:19999')).toEqual({ type: 'compare', max: 19999 })
+    expect(parseSkill('num:order:99999')).toEqual({ type: 'order', max: 99999 })
+    expect(parseSkill('num:round:1000:99999')).toEqual({ type: 'round', to: 1000, max: 99999 })
+    expect(parseSkill('num:line:10000')).toEqual({ type: 'line', step: 10000 })
+    expect(parseSkill('num:place:words')).toEqual({ type: 'place', mode: 'words' })
+    for (const bad of ['num:place:words:29999', 'num:compare:9999', 'num:round:100:99999', 'num:round:1000:19999', 'num:line:20000']) {
+      expect(isValidSkill(bad), bad).toBe(false)
+    }
+  })
+
+  it('every wide key is valid and maps to its kind', () => {
+    for (const key of WIDE_SKILLS) expect(isValidSkill(key), key).toBe(true)
+  })
+
+  it('place value up to 99 999: five parts, between 10 000 and 99 999', () => {
+    for (const mode of ['blocks', 'expanded', 'words'] as const) {
+      for (const ex of sample(placeSkill(mode, 99999))) {
+        if (ex.kind !== 'place-value') throw new Error('expected place-value')
+        expect(ex.value >= 10000 && ex.value <= 99999, ex.id).toBe(true)
+        expect(ex.parts.length, ex.id).toBe(5)
+      }
+    }
+  })
+
+  it('place value up to 19 999 stays between 10 000 and 19 999', () => {
+    for (const ex of sample(placeSkill('blocks', 19999))) {
+      if (ex.kind !== 'place-value') throw new Error('expected place-value')
+      expect(ex.value >= 10000 && ex.value <= 19999, ex.id).toBe(true)
+    }
+  })
+
+  it('writes 5-digit numbers in Spanish words, with apocope before mil', () => {
+    expect(numberWords(45300)).toBe('cuarenta y cinco mil trescientos')
+    expect(numberWords(10000)).toBe('diez mil')
+    expect(numberWords(21000)).toBe('veintiún mil')
+    expect(numberWords(31001)).toBe('treinta y un mil uno')
+    expect(numberWords(99999)).toBe('noventa y nueve mil novecientos noventa y nueve')
+  })
+
+  it('names the decenas de millar place', () => {
+    expect(placeName(4)).toBe('decenas de millar')
+    expect(placeName(3)).toBe('millares')
+  })
+
+  it('compare and order up to 19 999 and 99 999 keep their numbers in range', () => {
+    for (const ex of sample('num:compare:19999')) {
+      if (ex.kind !== 'compare') throw new Error('expected compare')
+      for (const v of [ex.left, ex.right]) expect(v >= 10000 && v <= 19999, ex.id).toBe(true)
+    }
+    for (const ex of sample('num:order:99999')) {
+      if (ex.kind !== 'order') throw new Error('expected order')
+      for (const v of ex.values) expect(v >= 10000 && v <= 99999, ex.id).toBe(true)
+    }
+  })
+
+  it('round to thousands up to 99 999: the answer is a multiple of 1 000 inside the range', () => {
+    for (const ex of sample(roundSkill(1000, 99999))) {
+      if (ex.kind !== 'round') throw new Error('expected round')
+      expect(ex.value >= 10000 && ex.value <= 99999, ex.id).toBe(true)
+      expect(ex.answer % 1000).toBe(0)
+      expect(ex.answer >= 10000 && ex.answer <= 99000, ex.id).toBe(true)
+      expect(Math.abs(ex.answer - ex.value)).toBeLessThanOrEqual(500)
+    }
+  })
+
+  it('number line with jumps of 10 000 never goes below 0 or above 99 999', () => {
+    for (const ex of sample(lineSkill(10000), 200)) {
+      if (ex.kind !== 'number-line') throw new Error('expected line')
+      expect(ex.ticks.every((t) => t >= 0 && t <= 99999 && t % 10000 === 0), ex.id).toBe(true)
+      expect(ex.answer >= 0 && ex.answer <= 99999, ex.id).toBe(true)
+    }
+  })
+
+  it('the default ranges are unchanged: up to 9 999 with four digits', () => {
+    for (const ex of generate({ skills: [placeSkill('words')] }, 60, { rng: createRng(4), now })) {
+      if (ex.kind !== 'place-value') throw new Error('expected place-value')
+      expect(ex.value >= 1000 && ex.value <= 9999, ex.id).toBe(true)
+    }
+  })
+
+  for (const skill of WIDE_SKILLS) {
+    it(`${skill}: generated answers check as correct, and hints have three levels without the answer`, () => {
+      for (const ex of sample(skill, 60)) {
+        expect(check(ex, correctAnswer(ex)).correct, ex.id).toBe(true)
+        const hints = hintsFor(ex)
+        expect(hints.map((h) => h.level), ex.id).toEqual([1, 2, 3])
+        const answers: string[] = Array.isArray((ex as { answer?: unknown }).answer)
+          ? (ex as { answer: number[] }).answer.map(String)
+          : typeof (ex as { answer?: unknown }).answer === 'number' ? [String((ex as { answer: number }).answer)] : []
+        const shown = squash(onScreen(ex))
+        for (const h of hints) {
+          for (const a of answers) {
+            if (a.length < 2 || shown.includes(a)) continue
+            const whole = new RegExp(`(^|[^\\d])${a.split('').join('\\s?')}(?!\\d)`)
+            expect(whole.test(h.text), `${ex.id} L${h.level}: ${h.text}`).toBe(false)
+          }
+        }
+      }
+    })
+  }
+})
+
+/** What the child sees on screen for the wide tests: the words of a place-value exercise, the numbers of the rest. */
+function onScreen(ex: Exercise): string {
+  switch (ex.kind) {
+    case 'place-value': return ex.mode === 'words' ? numberWords(ex.value) : ex.mode === 'expanded' ? String(ex.value) : ''
+    case 'round': return String(ex.value)
+    case 'number-line': return ex.mode === 'jump' ? String(ex.start) : ex.ticks.filter((_, i) => i !== ex.blank).join(' ')
+    case 'compare': return `${ex.left} ${ex.right}`
+    case 'order': return ex.values.join(' ')
+    default: return ''
+  }
+}

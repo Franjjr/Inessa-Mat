@@ -11,6 +11,8 @@
    word:add|sub|mul|div word problems (engine extension: story problems resolving to one operation)
    num:place:blocks|expanded|words, num:compare, num:order, num:round:10|100, num:line:10|100|1000   (numbers up to 9 999)
    <key>:999            numbers up to 999 (2.º): num:place:*, num:compare, num:order, num:line:10|100, add:3d:cK
+   <key>:19999|:99999   numbers up to 19 999 (3.º intro) or 99 999 (4.º): num:place:*, num:compare, num:order;
+                        num:round:1000:99999 (round to millares); num:line:10000 (jumps of 10 000, always up to 99 999)
    mental:dobles|triples|mitades|completar10|completar100|completar1000|decenas|centenas|compensar   (cálculo mental)
    eq:flex                                                                                          (signo igual flexible)
    bar:add|sub|mul|div|two  bar-diagram problems (two = two steps); the ladder with/without the bar is in bars.ts
@@ -75,7 +77,9 @@ export const DIVISION_VARIANTS: DivisionVariant[] = ['exact', 'rem', 'long']
 export const PLACE_MODES: PlaceMode[] = ['blocks', 'expanded', 'words']
 export const MENTAL_FAMILIES: MentalFamily[] = ['dobles', 'triples', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos']
 export const ROUND_TARGETS = [10, 100] as const
-export const LINE_STEPS = [10, 100, 1000] as const
+export const LINE_STEPS = [10, 100, 1000, 10000] as const
+/** The range suffix of the number skills: absent = up to 9 999, 999 = up to 999 (2.º), 19999 / 99999 = 5 digits. */
+export type NumberMax = 999 | 19999 | 99999
 
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
@@ -88,11 +92,11 @@ export type ParsedSkill =
   | { type: 'div3x1'; variant: 'exact' | 'rem' }
   | { type: 'concept'; name: ConceptName }
   | { type: 'word'; op: WordOp }
-  | { type: 'place'; mode: PlaceMode; max?: 999 }
-  | { type: 'compare'; max?: 999 }
-  | { type: 'order'; max?: 999 }
-  | { type: 'round'; to: 10 | 100 | 1000 }
-  | { type: 'line'; step: 10 | 100 | 1000; max?: 999 }
+  | { type: 'place'; mode: PlaceMode; max?: NumberMax }
+  | { type: 'compare'; max?: NumberMax }
+  | { type: 'order'; max?: NumberMax }
+  | { type: 'round'; to: 10 | 100 | 1000; max?: 99999 }
+  | { type: 'line'; step: 10 | 100 | 1000 | 10000; max?: 999 }
   | { type: 'mental'; family: MentalFamily }
   | { type: 'equation' }
   | { type: 'bar'; op: BarSkillOp; small?: true }
@@ -152,19 +156,20 @@ export function conceptSkill(name: ConceptName): SkillKey {
 export function wordSkill(op: WordOp): SkillKey {
   return `word:${op}`
 }
-export function placeSkill(mode: PlaceMode, max?: 999): SkillKey {
+export function placeSkill(mode: PlaceMode, max?: NumberMax): SkillKey {
   return `num:place:${mode}${max ? `:${max}` : ''}`
 }
-export function compareSkill(max?: 999): SkillKey {
+export function compareSkill(max?: NumberMax): SkillKey {
   return max ? `num:compare:${max}` : 'num:compare'
 }
-export function orderSkill(max?: 999): SkillKey {
+export function orderSkill(max?: NumberMax): SkillKey {
   return max ? `num:order:${max}` : 'num:order'
 }
-export function roundSkill(to: 10 | 100 | 1000): SkillKey {
-  return `num:round:${to}`
+/** `max` 99999: rounding 5-digit numbers to millares (only num:round:1000:99999 exists). */
+export function roundSkill(to: 10 | 100 | 1000, max?: NumberMax): SkillKey {
+  return `num:round:${to}${max ? `:${max}` : ''}`
 }
-export function lineSkill(step: 10 | 100 | 1000, max?: 999): SkillKey {
+export function lineSkill(step: 10 | 100 | 1000 | 10000, max?: 999): SkillKey {
   return `num:line:${step}${max ? `:${max}` : ''}`
 }
 export function mentalSkill(family: MentalFamily): SkillKey {
@@ -261,13 +266,19 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
     return CONCEPTS.includes(name) ? { type: 'concept', name } : null
   }
   if ((m = key.match(/^word:(add|sub|mul|div)$/))) return { type: 'word', op: m[1] as WordOp }
-  if ((m = key.match(/^num:place:(blocks|expanded|words)(:999)?$/))) return { type: 'place', mode: m[1] as PlaceMode, ...(m[2] ? { max: 999 as const } : {}) }
-  if (key === 'num:compare') return { type: 'compare' }
-  if (key === 'num:order') return { type: 'order' }
-  if (key === 'num:compare:999') return { type: 'compare', max: 999 }
-  if (key === 'num:order:999') return { type: 'order', max: 999 }
-  if ((m = key.match(/^num:round:(10|100|1000)$/))) return { type: 'round', to: Number(m[1]) as 10 | 100 | 1000 }
-  if ((m = key.match(/^num:line:(10|100|1000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 }
+  if ((m = key.match(/^num:place:(blocks|expanded|words)(?::(999|19999|99999))?$/))) {
+    return { type: 'place', mode: m[1] as PlaceMode, ...(m[2] ? { max: Number(m[2]) as NumberMax } : {}) }
+  }
+  if ((m = key.match(/^num:(compare|order)(?::(999|19999|99999))?$/))) {
+    const max = m[2] ? (Number(m[2]) as NumberMax) : undefined
+    return m[1] === 'compare' ? { type: 'compare', ...(max ? { max } : {}) } : { type: 'order', ...(max ? { max } : {}) }
+  }
+  if ((m = key.match(/^num:round:(10|100|1000)(?::(99999))?$/))) {
+    const to = Number(m[1]) as 10 | 100 | 1000
+    if (m[2] && to !== 1000) return null
+    return { type: 'round', to, ...(m[2] ? { max: 99999 as const } : {}) }
+  }
+  if ((m = key.match(/^num:line:(10|100|1000|10000)$/))) return { type: 'line', step: Number(m[1]) as 10 | 100 | 1000 | 10000 }
   if ((m = key.match(/^num:line:(10|100):999$/))) return { type: 'line', step: Number(m[1]) as 10 | 100, max: 999 }
   if ((m = key.match(/^mental:(\w+)$/))) {
     const family = m[1] as MentalFamily

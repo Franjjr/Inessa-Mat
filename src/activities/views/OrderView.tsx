@@ -41,7 +41,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
               value={cells[i]}
               onChange={(v) => setCells((prev) => prev.map((c, k) => (k === i ? v : c)))}
               onSubmit={() => submit()}
-              maxDigits={4}
+              maxDigits={Math.max(4, String(Math.max(...ex.answer)).length)}
               size="lg"
               status={status}
               ariaLabel={`${i + 1}.º número`}

@@ -35,7 +35,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
       value={value}
       onChange={setValue}
       onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
-      maxDigits={4}
+      maxDigits={Math.max(4, String(last).length)}
       size="lg"
       status={status}
       ariaLabel={isJump ? 'Adónde caes' : 'Marca que falta'}
