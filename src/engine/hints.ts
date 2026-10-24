@@ -328,7 +328,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
         hint(1, `Dividir es lo contrario de multiplicar: ¿${d} por cuánto da ${p}?`, 'none'),
         // One group of d shows the size of each group; the number of groups is what the child finds.
         hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: 1, perGroup: d }),
-        hint(3, `${DIVISION_EXAMPLE_TEXT(q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(q)),
+        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
       ]
     }
     case 'missing-factor': {
@@ -421,22 +421,24 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
   }
 }
 
-/* Level 3 of a division fact works a different case (its numbers never include the quotient, so the hint does not show the
-   answer): the skip count of the example, then the child counts the jumps of the real one. */
-const DIVISION_EXAMPLES = [
-  { p: 12, d: 4, q: 3, jumps: [4, 8, 12] },
-  { p: 20, d: 5, q: 4, jumps: [5, 10, 15, 20] },
-  { p: 14, d: 7, q: 2, jumps: [7, 14] },
-]
-function divisionExample(q: number) {
-  return DIVISION_EXAMPLES.find((e) => ![e.p, e.d, e.q, ...e.jumps].includes(q)) ?? DIVISION_EXAMPLES[0]
+/* Level 3 of a division fact works a different case: the skip count of an example, then the child counts the jumps of the
+   real one. The example never uses a number of the child's own fact (dividend, divisor, answer), or the answer would show. */
+function divisionExample(p: number, d: number, q: number) {
+  for (let e = 2; e <= 9; e++) {
+    for (let k = 2; k <= 9; k++) {
+      const jumps = Array.from({ length: k }, (_, i) => e * (i + 1))
+      const shown = [e * k, e, k, ...jumps]
+      if (!shown.includes(p) && !shown.includes(d) && !shown.includes(q)) return { p: e * k, d: e, q: k, jumps }
+    }
+  }
+  throw new Error(`no division example avoids ${p} : ${d} = ${q}`)
 }
-const DIVISION_EXAMPLE_TEXT = (q: number) => {
-  const e = divisionExample(q)
+const DIVISION_EXAMPLE_TEXT = (p: number, d: number, q: number) => {
+  const e = divisionExample(p, d, q)
   return `Ejemplo con otro caso: ${e.p} : ${e.d}. De ${e.d} en ${e.d}: ${e.jumps.join(', ')}, son ${e.q} saltos.`
 }
-const DIVISION_EXAMPLE_PARAMS = (q: number) => {
-  const e = divisionExample(q)
+const DIVISION_EXAMPLE_PARAMS = (p: number, d: number, q: number) => {
+  const e = divisionExample(p, d, q)
   return { step: e.d, count: e.q }
 }
 
