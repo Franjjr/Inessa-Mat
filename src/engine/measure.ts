@@ -123,8 +123,11 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 // ---------------------------------------------------------------- generation
 
-/** `all` (only convert): every unit of the dimension, as in `measure:convert:<dim>:all`. */
-export function buildMeasure(mode: MeasureMode, dimension: MeasureDimension | null, rng: Rng, used: Set<string>, all = false): Exercise {
+/** `all` (only convert): every unit of the dimension, as in `measure:convert:<dim>:all`. `learnt`: the skill is known, so
+    the conversions may take two or three steps; until then only one step (the ladder is taught one rung at a time). */
+export function buildMeasure(
+  mode: MeasureMode, dimension: MeasureDimension | null, rng: Rng, used: Set<string>, all = false, learnt = false,
+): Exercise {
   switch (mode) {
     case 'unit': {
       const dim = dimension ?? 'length'
@@ -135,7 +138,7 @@ export function buildMeasure(mode: MeasureMode, dimension: MeasureDimension | nu
     }
     case 'convert': {
       const dim = dimension ?? 'length'
-      return fresh(() => (all ? buildConvertAll(dim, rng) : buildConvert(dim, rng)), used)
+      return fresh(() => (all ? buildConvertAll(dim, rng, learnt) : buildConvert(dim, rng)), used)
     }
     case 'ruler':
       return fresh(() => {
@@ -184,13 +187,19 @@ function buildConvert(dim: MeasureDimension, rng: Rng): MeasureConvertExercise {
   return makeConvert(dim, `${fmt(n * pair.factor)} ${pair.small}`, pair.big, pair.factor, null, true, n, 2)
 }
 
-/** Numbers of a `:all` item stay within four digits, the writing pad of the conversion. */
+/**
+ * Numbers of a `:all` item stay within four digits, the writing pad of the conversion (9 999). This is a deliberate cap:
+ * the longest chains (km to mm, kg to mg, kl to ml) would reach 9 000 000, beyond 4.º, so they are not generated.
+ */
 const ALL_MAX = 9999
 
-/** One `:all` conversion: one step or two or three steps of the ladder, up or down; the whole number is always exact. */
-function buildConvertAll(dim: MeasureDimension, rng: Rng): MeasureConvertExercise {
+/**
+ * One `:all` conversion, up or down the ladder; the whole number is always exact. Before the skill is learnt only one
+ * step; once learnt, two or three steps, with a share of one-step items kept (30%).
+ */
+function buildConvertAll(dim: MeasureDimension, rng: Rng, learnt: boolean): MeasureConvertExercise {
   const ladder = LADDER[dim]
-  const steps = rng() < 0.5 ? 1 : randInt(rng, 2, 3)
+  const steps = !learnt || rng() < 0.3 ? 1 : randInt(rng, 2, 3)
   const i = randInt(rng, 0, ladder.length - 1 - steps)
   const j = i + steps
   const factor = 10 ** steps
@@ -307,37 +316,43 @@ const SIZE_HINT: Record<MeasureDimension, string> = {
 }
 
 /**
- * The three hints of a `:all` conversion. Level 3 works a different example (two rungs apart, other numbers, and none of
- * its numbers is the given amount or the answer), so the child sees the method and still has to count the rungs.
+ * The three hints of a `:all` conversion. Level 3 works an example with the same number of steps as the item (one step
+ * for a one-step item), on another pair of units and with other numbers: none of its numbers is the given amount or the
+ * answer, so the child sees the method and still has to count the rungs.
  */
-function hintsLadder(ex: MeasureConvertExercise, from: string): Hint[] {
+function hintsLadder(ex: MeasureConvertExercise, ladder: { from: string; steps: number }): Hint[] {
   const names = LADDER[ex.dimension]
   const down = !ex.toBig
+  const word = ladder.steps === 1 ? 'un escalón' : `${ladder.steps === 2 ? 'dos' : 'tres'} escalones`
   return [
     hint(1, `Escalera de unidades: ${names.join(' ')}. Cada escalón hacia abajo multiplica por diez, y cada escalón hacia arriba divide entre diez.`),
-    hint(2, `Ve de ${from} a ${ex.unit} por la escalera y cuenta cuántos escalones ${down ? 'bajas' : 'subes'}. Después aplica ${down ? 'la multiplicación' : 'la división'} por diez en cada escalón.`),
-    hint(3, exampleOfLadder(ex, from)),
+    hint(2, `Ve de ${ladder.from} a ${ex.unit} por la escalera y cuenta cuántos escalones ${down ? 'bajas' : 'subes'}. Después aplica ${down ? 'la multiplicación' : 'la división'} por diez en cada escalón.`),
+    hint(3, exampleOfLadder(ex, ladder.from, ladder.steps, word)),
   ]
 }
 
-/** A worked example of two rungs in the same direction, on another pair of units and with other numbers than the exercise. */
-function exampleOfLadder(ex: MeasureConvertExercise, from: string): string {
+/** A worked example with `steps` rungs in the same direction, on another pair of units and with other numbers than the exercise. */
+function exampleOfLadder(ex: MeasureConvertExercise, from: string, steps: number, word: string): string {
   const names = LADDER[ex.dimension]
   const down = !ex.toBig
   const exNumber = down ? ex.answer / ex.factor : ex.answer
   const givenValue = down ? exNumber : exNumber * ex.factor
-  const exFrom = names.indexOf(from)
-  const exTo = names.indexOf(ex.unit)
-  const exLo = Math.min(exFrom, exTo)
-  const exHi = Math.max(exFrom, exTo)
-  const pairs = [[0, 2], [1, 3], [2, 4], [3, 5], [4, 6]].filter(([lo, hi]) => !(lo === exLo && hi === exHi))
+  const exLo = Math.min(names.indexOf(from), names.indexOf(ex.unit))
+  const exHi = Math.max(names.indexOf(from), names.indexOf(ex.unit))
+  const factor = 10 ** steps
+  const pairs: [number, number][] = []
+  for (let lo = 0; lo + steps < names.length; lo++) {
+    if (!(lo === exLo && lo + steps === exHi)) pairs.push([lo, lo + steps])
+  }
   const [lo, hi] = pairs[(exLo + exHi) % pairs.length]
+  const times = Array(steps).fill('diez').join(' × ')
+  const divs = Array(steps).fill('diez').join(' ÷ ')
   for (const n of [4, 6, 7, 3, 8, 9, 2]) {
-    const small = n * 100
+    const small = n * factor
     if ([n, small].some((x) => x === givenValue || x === ex.answer)) continue
     return down
-      ? `Ejemplo: ${n} ${names[lo]} son ${n} × diez × diez = ${fmt(small)} ${names[hi]}, porque bajas dos escalones.`
-      : `Ejemplo: ${fmt(small)} ${names[hi]} son ${n} ${names[lo]}, porque subes dos escalones: ${fmt(small)} ÷ diez ÷ diez = ${n}.`
+      ? `Ejemplo: ${n} ${names[lo]} son ${n} × ${times} = ${fmt(small)} ${names[hi]}, porque bajas ${word}.`
+      : `Ejemplo: ${fmt(small)} ${names[hi]} son ${n} ${names[lo]}, porque subes ${word}: ${fmt(small)} ÷ ${divs} = ${n}.`
   }
   throw new Error('measure: no example for a ladder conversion')
 }
@@ -352,7 +367,7 @@ export function hintsMeasure(ex: Exercise): Hint[] | null {
       hint(3, `Imagina ${ex.object} y compara: ¿cabe en la mano, en la mesa o hay que ir en coche?`),
     ]
     case 'convert': {
-      if (ex.ladder) return hintsLadder(ex, ex.ladder.from)
+      if (ex.ladder) return hintsLadder(ex, ex.ladder)
       const pair = PAIRS.find((p) => p.dimension === ex.dimension && p.factor === ex.factor) ?? PAIRS[0]
       const { big, small, bigName } = pair
       if (ex.fraction) {

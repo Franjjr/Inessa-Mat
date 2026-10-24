@@ -125,10 +125,13 @@ export function makeCalendarSeconds(item: SecondsItem): CalendarExercise {
   }
 }
 
-/** A random time:seconds item: minutes to seconds (2 to 10 minutes), minutes and seconds, or seconds to minutes. */
-function buildCalendarSeconds(rng: Rng): CalendarExercise {
+/**
+ * A random time:seconds item. Before the skill is learnt only minutes to seconds (2 to 10 minutes); once learnt, also
+ * minutes and seconds, and seconds to minutes.
+ */
+function buildCalendarSeconds(rng: Rng, learnt: boolean): CalendarExercise {
   const shape = rng()
-  if (shape < 0.4) return makeCalendarSeconds({ form: 'min-to-s', minutes: randInt(rng, 2, 10) })
+  if (!learnt || shape < 0.4) return makeCalendarSeconds({ form: 'min-to-s', minutes: randInt(rng, 2, 10) })
   if (shape < 0.7) return makeCalendarSeconds({ form: 'mixed', minutes: randInt(rng, 1, 9), seconds: pick(rng, range(1, 11).map((i) => i * 5)) })
   return makeCalendarSeconds({ form: 's-to-min', total: randInt(rng, 2, 10) * 60 })
 }
@@ -155,8 +158,11 @@ export function makeCalendarMonth(month: { name: string; days: number }): Calend
 
 // ---------------------------------------------------------------- generation
 
-/** One exercise of a clock, time or calendar skill. `writeMode`: the read item asks for the hour and minutes (not the phrase). */
-export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMode: boolean): Exercise | null {
+/**
+ * One exercise of a clock, time or calendar skill. `writeMode`: the read item asks for the hour and minutes (not the phrase).
+ * `learnt`: the skill is known (time:seconds then mixes its three forms).
+ */
+export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMode: boolean, learnt = false): Exercise | null {
   const p: ParsedSkill | null = parseSkill(skill)
   if (!p) return null
   switch (p.type) {
@@ -176,7 +182,7 @@ export function buildClock(skill: SkillKey, rng: Rng, used: Set<string>, writeMo
       }, used)
     case 'calendar':
       if (p.topic === 'units') return fresh(() => makeCalendarUnits(pick(rng, UNIT_FACTS)), used)
-      if (p.topic === 'seconds') return fresh(() => buildCalendarSeconds(rng), used)
+      if (p.topic === 'seconds') return fresh(() => buildCalendarSeconds(rng, learnt), used)
       if (p.topic === 'weekday') return fresh(() => makeCalendarWeekday(randInt(rng, 0, 6), randInt(rng, 1, 6), rng), used)
       return fresh(() => makeCalendarMonth(pick(rng, MONTHS_30_31)), used)
     default:
@@ -405,7 +411,7 @@ function hintsSeconds(item: SecondsItem, answer: number): Hint[] {
     const k = [4, 3, 5, 6, 7, 8, 9].find((n) => n !== item.minutes) ?? 4
     return [
       hint(1, 'Piensa en la unidad que pide el problema: ¿cuántos segundos caben en un minuto?', 'units'),
-      hint(2, 'Cada minuto tiene dentro muchos segundos. Si hay varios minutos, se repite ese mismo reparto: cuenta cuántos minutos son.', 'units'),
+      hint(2, 'Cada minuto tiene un número fijo de segundos. Si hay varios minutos, se repite ese mismo reparto: cuenta cuántos minutos son.', 'units'),
       hint(3, `Ejemplo: ${k} minutos son ${k} veces los 60 segundos de un minuto: ${k} × 60 = ${fmt(k * 60)} segundos.`, 'units'),
     ]
   }

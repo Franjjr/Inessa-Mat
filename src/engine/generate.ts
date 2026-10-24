@@ -716,7 +716,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   // Tiempo (block D): the clock and calendar generators (src/engine/clock.ts). Read items show the phrase while the child learns.
   if (p.type === 'clock-read' || p.type === 'clock-set' || p.type === 'clock-convert' || p.type === 'time-duration' || p.type === 'calendar') {
     const writeMode = p.type === 'clock-read' && (ctx.mastery?.[skill]?.box ?? 0) >= 2
-    const built = buildClock(skill, rng, used, writeMode)
+    const built = buildClock(skill, rng, used, writeMode, (ctx.mastery?.[skill]?.box ?? -1) >= 2)
     if (built) return built
   }
   if (NUMERIC_KINDS.includes(kind)) {
@@ -728,7 +728,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   }
   if (p.type === 'fraction' || p.type === 'geo') return buildBlock(skill, p, ctx, rng, used)
   if (p.type === 'money') return buildMoney(p.mode, rng, used, p.whole === true)
-  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used, p.all === true)
+  if (p.type === 'measure') return buildMeasure(p.mode, p.dimension, rng, used, p.all === true, (ctx.mastery?.[skill]?.box ?? -1) >= 2)
   if (p.type === 'chart') return retry(() => buildChart(p.variant, rng), used, rng)!
   if (p.type === 'chance') return retry(() => buildChance(rng), used, rng)!
   if (p.type === 'pattern') return retry(() => buildPattern(p.variant, rng), used, rng)!

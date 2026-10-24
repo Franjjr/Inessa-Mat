@@ -1,6 +1,8 @@
-/* cal:weekday, cal:month and time:units — the days of the week, the months and the units of time.
+/* cal:weekday, cal:month, time:units and time:seconds — the days of the week, the months, the units of time and the
+   minutes↔seconds conversions.
    weekday: a week strip (today marked) and four day choices; month: the twelve months with the one asked about marked,
-   and the number of days written; units: a chip with the amount and its unit, and the number written. */
+   and the number of days written; units: a chip with the amount and its unit, and the number written; seconds: the
+   question in words (a chip for minutes to seconds), and the number written. */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { NumberInput } from '@/ink'

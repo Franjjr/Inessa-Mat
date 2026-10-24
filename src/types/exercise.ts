@@ -81,7 +81,7 @@ export type ExerciseKind =
   | 'clock-set'       // analogue clock: set the hands by dragging or with the +/− buttons (clock:set:*)
   | 'time-convert'    // digital 24 h ↔ phrase with mañana / tarde / noche (clock:convert:day)
   | 'time-duration'   // start + duration → end time, or minutes that pass, on a time line (time:end, time:elapsed)
-  | 'calendar'        // days of the week, days of a month, units of time (cal:weekday, cal:month, time:units)
+  | 'calendar'        // days of the week, days of a month, units of time and minutes↔seconds (cal:weekday, cal:month, time:units, time:seconds)
   | 'fraction-shade'  // colour n parts of a figure split in d equal parts (frac:shade:D)
   | 'fraction-read'   // write the fraction that is coloured: numerator over denominator (frac:read:D)
   | 'fraction-of'     // a fraction of a quantity: with the objects in groups first, then with numbers (frac:of:D)

@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { MeasureDimension, MeasureMode } from '@/types'
 import {
-  buildMeasure, check, checkMeasure, createRng, describeSkill, DIMENSION_NAME, hintsFor, kindsForSkill, measureStatement,
-  parseSkill, THINGS, UNITS,
+  buildMeasure, check, checkMeasure, createRng, describeSkill, DIMENSION_NAME, generate, hintsFor, kindsForSkill, measureStatement,
+  newMastery, parseSkill, THINGS, UNITS,
 } from '@/engine'
+import type { MasteryMap } from '@/types'
 import { measureSkill } from '@/engine/skills'
 
 const SAMPLES = 120
@@ -156,7 +157,7 @@ describe('medida: múltiplos y submúltiplos (:all)', () => {
     const steps = new Set<number>()
     for (let i = 0; i < 300; i++) {
       const dim = DIMS[i % 3]
-      const ex = buildMeasure('convert', dim, rng, new Set(), true)
+      const ex = buildMeasure('convert', dim, rng, new Set(), true, true)
       if (ex.kind !== 'measure' || ex.mode !== 'convert' || !ex.ladder) throw new Error('mode')
       const [, value, from] = ex.given.match(/^([\d ]+) (\S+)$/) ?? []
       expect(value, ex.given).toBeDefined()
@@ -195,7 +196,7 @@ describe('medida: múltiplos y submúltiplos (:all)', () => {
     const rng = createRng(103)
     for (let i = 0; i < 300; i++) {
       const dim = DIMS[i % 3]
-      const ex = buildMeasure('convert', dim, rng, new Set(), true)
+      const ex = buildMeasure('convert', dim, rng, new Set(), true, i % 2 === 0)
       if (ex.kind !== 'measure' || ex.mode !== 'convert') throw new Error('mode')
       const hints = hintsFor(ex)
       expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
@@ -250,5 +251,51 @@ describe('medida: hints never give the result', () => {
   it('statements of measure exercises name the question', () => {
     const ex = buildMeasure('convert', 'length', createRng(93), new Set())
     expect(measureStatement(ex)).toContain('= ?')
+  })
+})
+
+describe('medida: :all se aprende por escalones (un salto antes que varios)', () => {
+  const countSteps = (learnt: boolean, seed: number) => {
+    const rng = createRng(seed)
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0 }
+    for (let i = 0; i < 300; i++) {
+      const ex = buildMeasure('convert', DIMS[i % 3], rng, new Set(), true, learnt)
+      if (ex.kind !== 'measure' || ex.mode !== 'convert' || !ex.ladder) throw new Error('mode')
+      counts[ex.ladder.steps]++
+    }
+    return counts
+  }
+
+  it('not learnt (no mastery): only one-step conversions, 300 items', () => {
+    expect(countSteps(false, 110)).toEqual({ 1: 300, 2: 0, 3: 0 })
+  })
+
+  it('learnt: two and three steps appear, and a share of one-step items is kept (about 30%)', () => {
+    const counts = countSteps(true, 111)
+    expect(counts[2]).toBeGreaterThan(0)
+    expect(counts[3]).toBeGreaterThan(0)
+    expect(counts[1] / 300).toBeGreaterThan(0.15)
+    expect(counts[1] / 300).toBeLessThan(0.45)
+  })
+
+  it('the level-3 example has as many steps as the item (one step: one ×10 or ÷10)', () => {
+    const rng = createRng(112)
+    for (let i = 0; i < 300; i++) {
+      const ex = buildMeasure('convert', DIMS[i % 3], rng, new Set(), true, true)
+      if (ex.kind !== 'measure' || ex.mode !== 'convert' || !ex.ladder) throw new Error('mode')
+      const example = hintsFor(ex)[2].text
+      expect(example.match(/diez/g)?.length ?? 0, example).toBe(ex.ladder.steps)
+    }
+  })
+
+  it('through generate: no mastery gives one-step items; a mastered skill (box 2) gives several steps', () => {
+    const now = new Date('2026-10-24T10:00:00Z')
+    const skill = 'measure:convert:length:all'
+    const plain = generate({ skills: [skill] }, 60, { rng: createRng(113), mastery: {}, now })
+    expect(plain.every((e) => e.kind === 'measure' && e.mode === 'convert' && e.ladder?.steps === 1)).toBe(true)
+    const mastered = { [skill]: { ...newMastery(skill, now), box: 2 } } as MasteryMap
+    const learnt = generate({ skills: [skill] }, 60, { rng: createRng(113), mastery: mastered, now })
+    const steps = new Set(learnt.map((e) => (e.kind === 'measure' && e.mode === 'convert' ? e.ladder?.steps : 0)))
+    expect(steps.has(2) || steps.has(3)).toBe(true)
   })
 })
