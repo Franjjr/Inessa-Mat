@@ -326,7 +326,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
       const { dividend: p, divisor: d, answer: q } = ex
       return [
         hint(1, `Dividir es lo contrario de multiplicar: ¿${d} por cuánto da ${p}?`, 'none'),
-        hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: q, perGroup: d }),
+        // One group of d shows the size of each group; the number of groups is what the child finds.
+        hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: 1, perGroup: d }),
         hint(3, `${DIVISION_EXAMPLE_TEXT(q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(q)),
       ]
     }

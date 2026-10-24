@@ -465,18 +465,17 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
         return [
           hint(1, `Cuenta cada clase de bloque por separado: ${blockClasses(five)}.`, 'place-value', params),
           hint(2, five
-            ? 'Cada decena de millar son diez cuadros de mil apilados y vale 10 000. Un cuadro de mil vale 1 000, una placa 100, una barra 10 y un cubito 1.'
-            : 'Cada cuadro de mil vale 1 000, cada placa 100, cada barra 10 y cada cubito 1.', 'place-value', params),
+            ? 'Cada decena de millar son diez cuadros de mil apilados. Un cuadro de mil vale mil, una placa cien, una barra diez y un cubito uno.'
+            : 'Un cuadro de mil vale mil, una placa cien, una barra diez y un cubito uno.', 'place-value', params),
           hint(3, `Empieza por la clase más grande: hay ${topDigit} ${topDigit === 1 ? one : many}. Ahora mira las demás clases.`, 'place-value', params),
         ]
       }
       if (ex.mode === 'expanded') {
         const top = ex.parts.length - 1
-        const digit0 = digitAtPlace(ex.value, top)
         return [
-          hint(1, 'Cada cifra vale según el lugar donde está: no es lo mismo un 3 de las decenas que un 3 de las centenas.', 'place-value', params),
-          hint(2, `El número tiene ${ex.parts.length} casillas, de la más grande a la más pequeña: ${[...ex.parts].map((_, i) => placeName(top - i)).join(', ')}.`, 'place-value', params),
-          hint(3, `Mira la primera cifra, el ${digit0}: ¿cuánto vale en las ${placeName(top)}?`, 'place-value', params),
+          hint(1, 'Cada cifra vale según el lugar donde está: la misma cifra vale distinto en las decenas que en las centenas.', 'place-value', params),
+          hint(2, `Cuenta las casillas del número, de la más grande a la más pequeña: ${[...ex.parts].map((_, i) => placeName(top - i)).join(', ')}.`, 'place-value', params),
+          hint(3, `Mira la primera cifra del número: ¿cuánto vale en las ${placeName(top)}?`, 'place-value', params),
         ]
       }
       return [

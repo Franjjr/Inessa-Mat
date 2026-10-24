@@ -28,6 +28,21 @@ describe('LongMulView', () => {
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
+  it('typed in turn, the keypad fills row 1, row 2 and the total in order (the empty places past a row are skipped)', () => {
+    const onAnswered = vi.fn()
+    render(<LongMulView exercise={makeLongMul(23, 14)} onAnswered={onAnswered} showFeedback={false} />)
+    cell(/parcial 1, unidades/).focus()
+    // 2 and 9 are row 1 (92); the hundreds of row 1 are not written, so the next digit goes to row 2.
+    for (const digit of ['2', '9', '3', '2', '2', '2', '3']) fireEvent.keyDown(document.activeElement as Element, { key: digit })
+    expect(cell(/parcial 1, unidades/)).toHaveTextContent('2')
+    expect(cell(/parcial 1, decenas/)).toHaveTextContent('9')
+    expect(cell(/parcial 2, decenas/)).toHaveTextContent('3')
+    expect(cell(/parcial 2, centenas/)).toHaveTextContent('2')
+    expect(cell(/unidades del resultado/)).toHaveTextContent('2')
+    expect(cell(/decenas del resultado/)).toHaveTextContent('2')
+    expect(cell(/centenas del resultado/)).toHaveTextContent('3')
+  })
+
   it('the zero that shifts the second row is already written and is not an input', () => {
     render(<LongMulView exercise={makeLongMul(23, 14)} onAnswered={() => {}} showFeedback={false} />)
     expect(screen.getByLabelText('cero de desplazamiento')).toBeInTheDocument()

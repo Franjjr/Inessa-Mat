@@ -177,7 +177,7 @@ export function hintsDecimal(ex: DecimalExercise | DecimalOpExercise): Hint[] {
         : `Ejemplo: ${numberWords(ex2)} partes de color de cien son ${numberWords(ex2)} centésimas: ${fmtDecimal(ex2, 2)}.`
       return [
         hint(1, ex.places === 1
-          ? 'Una décima es una de las 10 partes iguales de la unidad. Cuenta las partes de color.'
+          ? 'Una décima es una de las partes iguales en que se parte la unidad. Cuenta las partes de color.'
           : 'Una centésima es una de las 100 partes iguales de la cuadrícula. Cuenta las partes de color.'),
         hint(2, ex.places === 1
           ? 'Escribe la parte entera y, después, las décimas que cuentas.'
@@ -192,7 +192,7 @@ export function hintsDecimal(ex: DecimalExercise | DecimalOpExercise): Hint[] {
         : `Ejemplo: ${numberWords(ex2)} centésimas son ${fmtDecimal(ex2, 2)}: la primera cifra va en las décimas y la segunda en las centésimas.`
       return [
         hint(1, ex.places === 1
-          ? 'Una décima es una de las 10 partes de la unidad: se escribe después de la coma.'
+          ? 'Una décima es una de las partes iguales en que se parte la unidad: se escribe después de la coma.'
           : 'Una centésima es una de las 100 partes de la unidad: son dos cifras después de la coma.'),
         hint(2, ex.places === 1
           ? 'Escribe la parte entera y, después, las décimas.'

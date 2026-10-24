@@ -398,7 +398,7 @@ export function hintsMoney(ex: Exercise): Hint[] | null {
   switch (ex.mode) {
     case 'recognise': return [
       hint(1, 'Mira el número que lleva impreso: ahí está el valor.'),
-      hint(2, 'Las monedas pequeñas son de cobre; las de 10, 20 y 50 céntimos son doradas; los billetes son de colores y valen más que las monedas.'),
+      hint(2, 'Las monedas pequeñas son de cobre; las doradas son las de céntimos de valor medio; los billetes son de colores y valen más que las monedas.'),
       hint(3, 'Compara el tamaño y el color con las monedas y billetes que ya conoces.'),
     ]
     case 'pay': return [

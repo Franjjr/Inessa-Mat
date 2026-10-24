@@ -2,7 +2,7 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { generate, hintsFor, strategyForFact } from '@/engine'
+import { generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
 import type { Exercise, Hint } from '@/types'
 import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, availableSkills } from '@/content/syllabus'
 
@@ -13,7 +13,8 @@ const SPACE = '[\\s\\u00a0\\u202f]'
 /** Facts whose strategy is a rhyme that IS the fact («siete por siete, cuarenta y nueve»): the workbook's memory trick. */
 const RHYME_STRATEGIES = new Set(['square-rhyme', 'five-six-seven-eight', 'weeks', 'easy-one', 'even-six-rhyme'])
 
-/** A whole number as a regex: plain, or with thousands grouped by a normal, no-break or thin space. */
+/** A whole number as a regex: plain, or with thousands grouped by a normal space (U+0020), a no-break space (U+00A0)
+    or a thin space (U+202F). */
 function numberPattern(n: number): RegExp | null {
   if (!Number.isInteger(n) || n < 0) return null
   const plain = String(n)
@@ -71,23 +72,16 @@ function answersOf(ex: Exercise): { label: string; pattern: RegExp }[] {
   return out
 }
 
-/** Numbers the statement already shows (every number field that is not an answer): a hint may name them, e.g. the divisor
-    «¿2 por cuánto da 4?» when the quotient is 2 too, because the child reads it in the question. */
-const ANSWER_FIELDS = new Set(['answer', 'quotient', 'remainder', 'partials'])
+/** Whole numbers the statement text shows (statementOf: «96 : 4 = ?», «3 × 14 = ?»): a hint may name one of them, since
+    the child reads it in the question. Coordinates, chart data and other fields are not on the statement and do not count. */
 function shownNumbers(ex: Exercise): Set<number> {
   const out = new Set<number>()
-  const walk = (v: unknown) => {
-    if (typeof v === 'number') out.add(v)
-    else if (Array.isArray(v)) v.forEach(walk)
-  }
-  for (const [k, v] of Object.entries(ex)) if (!ANSWER_FIELDS.has(k)) walk(v)
+  for (const m of statementOf(ex).matchAll(/\d+(?:[ \u00a0\u202f]\d{3})*/g)) out.add(Number(m[0].replace(/[ \u00a0\u202f]/g, '')))
   return out
 }
 
 /** The hints of an exercise that name one of its answers. Fact strategies that are the fact itself are left out. */
-function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
-  if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
-  const hints: Hint[] = hintsFor(ex)
+function leaksIn(ex: Exercise, hints: Hint[]): { level: number; text: string; answer: string }[] {
   const shown = shownNumbers(ex)
   const answers = answersOf(ex).filter((a) => !shown.has(Number(a.label)) || Number.isNaN(Number(a.label)))
   const found: { level: number; text: string; answer: string }[] = []
@@ -95,15 +89,18 @@ function leaks(ex: Exercise): { level: number; text: string; answer: string }[] 
   return found
 }
 
+function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
+  if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
+  return leaksIn(ex, hintsFor(ex))
+}
+
 describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
   const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS)])].sort()
 
   it('the checker catches the answer in each written form and not inside a longer number', () => {
     const hit = (n: number, text: string) => numberPattern(n)!.test(text)
-    expect(hit(3000, 'Son 3000 euros')).toBe(true)
-    expect(hit(3000, 'Son 3 000 euros')).toBe(true)
-    expect(hit(3000, 'Son 3 000 euros')).toBe(true)
-    expect(hit(3000, 'Son 3 000 euros')).toBe(true)
+    // Plain digits, and the thousands grouped by a normal, a no-break or a thin space.
+    for (const grouped of ['3000', '3 000', '3\u00a0000', '3\u202f000']) expect(hit(3000, `Son ${grouped} euros`), grouped).toBe(true)
     expect(hit(3, 'Hay 13 bolas')).toBe(false)
     expect(hit(3, 'Hay 3 000 bolas')).toBe(false)
     expect(hit(3, 'Hay 3,5 kilos')).toBe(false)
@@ -113,6 +110,16 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
     expect(hit(345, 'Son 12 345 pegatinas')).toBe(false)
     expect(decimalPattern(2.5)!.test('son 2,50 €')).toBe(true)
     expect(decimalPattern(2.5)!.test('son 12,5 €')).toBe(false)
+  })
+
+  it('a hint that names the answer is caught even when that number is also a coordinate of the figure', () => {
+    // 12 : 3 = ?, answer 4. The 4 is a point of a figure (not on the statement): it must not exempt the hint.
+    const base = makeFactDiv(12, 3)
+    const withFigure = { ...base, figure: { type: 'polygon', points: [[4, 0], [0, 4]] } } as unknown as Exercise
+    const hint = { level: 3 as const, text: 'Cuenta de 3 en 3: 3, 6, 9, 12. Son 4 saltos.', visual: 'none' as const }
+    expect(leaksIn(withFigure, [hint])).toEqual([{ level: 3, text: hint.text, answer: '4' }])
+    // The same number on the statement («12 : 4 = ?») is the child's own question, so the hint may name it.
+    expect(leaksIn({ ...base, dividend: 4, divisor: 1, quotient: 4 } as Exercise, [{ ...hint, text: 'Son 4 saltos.' }])).toEqual([])
   })
 
   it('no hint gives the answer away', () => {

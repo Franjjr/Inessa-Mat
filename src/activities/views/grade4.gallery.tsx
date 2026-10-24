@@ -54,6 +54,7 @@ const entries: GalleryEntry[] = [
   { title: 'Euros con céntimos como decimal (ipad)', ...ipad, render: () => frame(<DecimalView exercise={one('dec:money', 2)} onAnswered={noop} />) },
   { title: 'Sumar decimales en columna (ipad)', ...ipad, render: () => frame(<DecimalOpView exercise={one('dec:add:2', 4)} onAnswered={noop} />) },
   { title: 'Restar décimas en columna (teléfono)', ...phone, render: () => frame(<DecimalOpView exercise={one('dec:sub:1', 5)} onAnswered={noop} />) },
+  { title: 'Sumar 3,45 + 1,80 en columna (teléfono)', ...phone, render: () => frame(<DecimalOpView exercise={{ id: 'decimal-op:345+180', kind: 'decimal-op', skill: 'dec:add:2', difficulty: 3, op: 'add', places: 2, left: 345, right: 180, answer: 525 }} onAnswered={noop} />) },
   { title: 'Sumar 3,45 + 1,80 en columna (ipad)', ...ipad, render: () => frame(<DecimalOpView exercise={{ id: 'decimal-op:345+180', kind: 'decimal-op', skill: 'dec:add:2', difficulty: 3, op: 'add', places: 2, left: 345, right: 180, answer: 525 }} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (ipad)', ...ipad, render: () => frame(<FigureNumberView exercise={one('geo:area', 2)} onAnswered={noop} />) },
   { title: 'Área en cuadraditos (teléfono)', ...phone, render: () => frame(<FigureNumberView exercise={one('geo:area', 7)} onAnswered={noop} />) },

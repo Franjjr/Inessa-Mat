@@ -197,6 +197,17 @@ export function mentalSkillsOf(): SkillKey[] {
   return MENTAL_FAMILIES.map(mentalSkill)
 }
 
+/* Level 3 of a half of a one-digit number works another case: its numbers never include this item's answer (a / 2). */
+const MITAD_EXAMPLES = [
+  { whole: 8, half: 4 },
+  { whole: 6, half: 3 },
+  { whole: 10, half: 5 },
+]
+function mitadExample(a: number): string {
+  const e = MITAD_EXAMPLES.find((x) => ![x.whole, x.half].includes(a / 2)) ?? MITAD_EXAMPLES[0]
+  return `Ejemplo con otro caso: ${e.whole} objetos en dos montones iguales: ${e.half} en cada uno. Ahora haz tú los dos montones con ${a} objetos.`
+}
+
 /* Level 3 of «completar a la decena» works another case: its numbers never include this item's answer. */
 const COMPLETAR10_EXAMPLES = [
   { a: 47, target: 50, missing: 3 },
@@ -327,7 +338,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
         return [
           hint(1, 'Repartir en dos mitades es dar lo mismo a cada parte.'),
           hint(2, `Haz dos montones iguales con ${a} objetos.`),
-          hint(3, `Cada montón: ${a} entre 2 = ?`),
+          hint(3, mitadExample(a)),
         ]
       }
       const t = a - (a % 10)

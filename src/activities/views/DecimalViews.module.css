@@ -52,3 +52,11 @@
 
 /* The décimas and centésimas boxes side by side, after the comma. */
 .cells { display: inline-flex; align-items: flex-start; gap: var(--sp-2); min-width: 0; }
+
+/* Under 480 px the boxes of the column take their width from --cell-size (the keypad sits under them): their minimum
+   widths of a tablet would push the column off the screen. Each box keeps its height. */
+@media (max-width: 480px) {
+  .column [role='textbox'] { min-width: 0 !important; }
+  .column > div,
+  .cells > div { --padW: calc(var(--cell-size) * 1.1 + 16px) !important; }
+}

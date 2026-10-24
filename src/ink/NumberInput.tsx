@@ -368,6 +368,9 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           aria-disabled={disabled || undefined}
           aria-invalid={status === 'wrong' || undefined}
           onFocus={() => focusPad(uid)}
+          // The capture layer prevents the default of a press, so a tap never focuses the box by itself: it takes the
+          // keypad (and the focus) here, so the keypad goes to the box the child touched.
+          onPointerDown={() => { if (!disabled) { focusPad(uid); padRef.current?.focus({ preventScroll: true }) } }}
           onKeyDown={onKeyDown}
         >
           <span className={s.guide} aria-hidden />

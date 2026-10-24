@@ -128,6 +128,10 @@ describe('hintsFor', () => {
     // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
     expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
     expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
+    // The share visual draws one group of the divisor: the number of groups (the quotient) is never in its params.
+    expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 1, perGroup: 6 })
+    // The skip count of a ten-fact stops one jump before the product, the last chip is blank.
+    expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
   })
 
   it('skip-count and array hints', () => {

@@ -93,7 +93,9 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
         <div key={`p${j}-${k}`} className={s.cellSlot} style={{ gridRow: row, gridColumn: colOf(k) }}>
           <DigitCell
             cellId={`p${j}-${k}`}
-            variant="carry"
+            // The places the partial product has are written in turn; the empty places past its last digit (the
+            // hundreds of 92) are optional, so typing goes on to the next row instead of stopping in them.
+            variant={k < String(ex.partials[j]).length ? 'result' : 'carry'}
             size="md"
             place={placeOf(k)}
             value={rows[j][k]}
