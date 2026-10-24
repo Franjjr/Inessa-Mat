@@ -24,9 +24,14 @@ function wrong(ex: Exercise): Answer {
 function verifyChart(ex: ChartExercise): void {
   if (ex.mode === 'table') {
     const t = ex.table!
-    const [r, c] = t.at
+    // Independent of `at`: the row and the column are read back from the question text.
+    const rowName = ex.question.match(/niños de (.+?) prefieren /)![1]
+    const colName = ex.question.match(/prefieren (.+)\?$/)![1]
+    const r = t.rows.indexOf(rowName)
+    const c = t.cols.findIndex((x) => x.label === colName)
+    expect(r, ex.id).toBeGreaterThanOrEqual(0)
+    expect(c, ex.id).toBeGreaterThanOrEqual(0)
     expect(ex.answer, ex.id).toBe(t.cells[r][c])
-    expect(ex.question, ex.id).toBe(`¿Cuántos niños de ${t.rows[r]} prefieren ${t.cols[c].label}?`)
     expect(t.cells.every((row) => row.length === t.cols.length), ex.id).toBe(true)
     expect(t.cells.flat().every((v) => v >= 1 && v <= 9), ex.id).toBe(true)
     return

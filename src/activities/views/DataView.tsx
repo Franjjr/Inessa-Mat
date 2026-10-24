@@ -118,22 +118,30 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
 /** A double-entry table: the groups down the side, the options across the top, one count in each cell. */
 function TwoWayTable({ table }: { table: ChartTable }) {
   return (
-    <table className={s.table}>
-      <thead>
-        <tr>
-          <th scope="col" aria-label="Grupo" />
-          {table.cols.map((c) => <th key={c.label} scope="col"><span aria-hidden>{c.emoji}</span> {bare(c.label)}</th>)}
-        </tr>
-      </thead>
-      <tbody>
-        {table.rows.map((row, r) => (
-          <tr key={row}>
-            <th scope="row">{row}</th>
-            {table.cells[r].map((v, c) => <td key={c}>{v}</td>)}
+    // The wrapper scrolls the table itself if it is ever wider than the card; the page never scrolls sideways.
+    <div className={s.tableWrap}>
+      <table className={s.table}>
+        <thead>
+          <tr>
+            <th scope="col" aria-label="Grupo" />
+            {table.cols.map((c) => (
+              <th key={c.label} scope="col">
+                <span className={s.tableEmoji} aria-hidden>{c.emoji}</span>
+                <span className={s.tableHead}>{bare(c.label)}</span>
+              </th>
+            ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {table.rows.map((row, r) => (
+            <tr key={row}>
+              <th scope="row">{row}</th>
+              {table.cells[r].map((v, c) => <td key={c}>{v}</td>)}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
 

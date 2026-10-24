@@ -56,6 +56,11 @@
   min-width: 0;
 }
 
+.tableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -67,14 +72,28 @@
 .table td {
   padding: var(--sp-2) var(--sp-1);
   text-align: center;
+  vertical-align: middle;
   border-bottom: 2px solid var(--c-line);
 }
 
+/* Each option head is its emoji above a short label that may wrap inside its column. */
 .table thead th {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--c-ink-soft);
   line-height: 1.2;
+  min-width: 4.5rem;
+  overflow-wrap: anywhere;
+}
+
+.tableEmoji {
+  display: block;
+  font-size: 26px;
+  line-height: 1.1;
+}
+
+.tableHead {
+  display: block;
 }
 
 .table tbody th {
@@ -88,6 +107,26 @@
   font-family: var(--font-display);
   font-size: var(--fs-xl);
   font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .table th,
+  .table td {
+    padding: var(--sp-1) 4px;
+  }
+
+  .table tbody th {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .table thead th {
+    min-width: 3.25rem;
+  }
+
+  .table td {
+    font-size: var(--fs-lg);
+  }
 }
 
 .legend {

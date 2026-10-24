@@ -322,8 +322,8 @@ function hintsLikely(ask: 'more' | 'less'): Hint[] {
   return [
     hint(1, 'Mira cuántas bolas hay de cada color.'),
     ask === 'more'
-      ? hint(2, 'Gana el color del que hay más bolas: cuantas más bolas hay de un color, más fácil es sacarlo.')
-      : hint(2, 'Gana el color del que hay menos bolas: cuantas menos bolas hay de un color, más difícil es sacarlo.'),
+      ? hint(2, 'Piensa en qué color tiene más posibilidades de salir si metes la mano sin mirar.')
+      : hint(2, 'Piensa en qué color tiene menos posibilidades de salir si metes la mano sin mirar.'),
     ask === 'more'
       ? hint(3, 'Ejemplo: si un color tiene pocas bolas y otro tiene muchas, es más probable sacar el de muchas.')
       : hint(3, 'Ejemplo: si un color tiene pocas bolas y otro tiene muchas, es menos probable sacar el de pocas.'),
