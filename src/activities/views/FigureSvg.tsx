@@ -118,6 +118,12 @@ function GridBody({ f }: { f: GridFigure }) {
           />
         )
       })}
+      {f.ghost?.map(([r, c]) => (
+        <rect
+          key={`ghost-${r},${c}`} x={r1(ox + c * cell)} y={r1(oy + r * cell)} width={r1(cell)} height={r1(cell)}
+          fill="none" stroke={INK} strokeWidth={3} strokeDasharray="6 5"
+        />
+      ))}
       {f.axis && (f.axis.dir === 'v'
         ? <line x1={r1(ox + f.axis.at * cell)} x2={r1(ox + f.axis.at * cell)} y1={oy - 6} y2={r1(oy + f.rows * cell + 6)} stroke="var(--c-error)" strokeWidth={4} strokeDasharray="8 6" />
         : <line y1={r1(oy + f.axis.at * cell)} y2={r1(oy + f.axis.at * cell)} x1={ox - 6} x2={r1(ox + f.cols * cell + 6)} stroke="var(--c-error)" strokeWidth={4} strokeDasharray="8 6" />)}
@@ -217,17 +223,53 @@ function rightMark(p: Pt, c: Pt): string {
   return `M ${r1(p[0] + ux)} ${r1(p[1] + uy)} L ${r1(p[0] + ux + uy)} ${r1(p[1] - ux)} L ${r1(p[0] + uy)} ${r1(p[1] - ux + uy)}`
 }
 
+/** The circle; with a highlight, the radio, diámetro, cuerda or arco drawn in red, turned by f.turn degrees. */
 function CircleBody({ f }: { f: CircleFigure }) {
-  return <circle cx={100} cy={100} r={80} fill={f.filled ? PART_ON : 'none'} stroke={INK} strokeWidth={4} />
+  const rim = <circle cx={100} cy={100} r={80} fill={f.filled ? PART_ON : 'none'} stroke={INK} strokeWidth={4} />
+  if (!f.highlight) return rim
+  const t = ((f.turn ?? 0) * Math.PI) / 180
+  const at = (deg: number): Pt => [100 + 80 * Math.cos(t + (deg * Math.PI) / 180), 100 + 80 * Math.sin(t + (deg * Math.PI) / 180)]
+  const red = { fill: 'none', stroke: 'var(--c-error)', strokeWidth: 7, strokeLinecap: 'round' as const }
+  const line = (a: Pt, b: Pt) => <path d={`M ${r1(a[0])} ${r1(a[1])} L ${r1(b[0])} ${r1(b[1])}`} {...red} />
+  const centre = <circle cx={100} cy={100} r={5} fill={INK} />
+  switch (f.highlight) {
+    case 'radius': return <g>{rim}{line([100, 100], at(0))}{centre}</g>
+    case 'diameter': return <g>{rim}{line(at(0), at(180))}{centre}</g>
+    case 'chord': return <g>{rim}{line(at(0), at(110))}</g>
+    case 'arc': {
+      const a = at(0)
+      const b = at(100)
+      return <g>{rim}<path d={`M ${r1(a[0])} ${r1(a[1])} A 80 80 0 0 1 ${r1(b[0])} ${r1(b[1])}`} {...red} /></g>
+    }
+  }
+}
+
+/** The two short strokes of an arrow head whose tip is `tip`, pointing away from `from`. */
+function arrowHead(from: Pt, tip: Pt): string {
+  const len = Math.hypot(tip[0] - from[0], tip[1] - from[1]) || 1
+  const ux = (tip[0] - from[0]) / len
+  const uy = (tip[1] - from[1]) / len
+  const bx = tip[0] - ux * 14
+  const by = tip[1] - uy * 14
+  return `M ${r1(bx - uy * 7)} ${r1(by + ux * 7)} L ${r1(tip[0])} ${r1(tip[1])} L ${r1(bx + uy * 7)} ${r1(by - ux * 7)}`
 }
 
 function LineBody({ f }: { f: LineFigure }) {
   const pts = fit(f.points, 22)
+  const ink = { fill: 'none', stroke: INK, strokeWidth: 5, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   if (f.kind === 'curve' && pts.length === 3) {
     return <path d={`M ${r1(pts[0][0])} ${r1(pts[0][1])} Q ${r1(pts[1][0])} ${r1(pts[1][1])} ${r1(pts[2][0])} ${r1(pts[2][1])}`} fill="none" stroke={INK} strokeWidth={5} strokeLinecap="round" />
   }
   const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${r1(p[0])} ${r1(p[1])}`).join(' ')
-  return <path d={d} fill="none" stroke={INK} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
+  const first = pts[0]
+  const last = pts[pts.length - 1]
+  const dot = (p: Pt) => <circle cx={r1(p[0])} cy={r1(p[1])} r={7} fill={INK} />
+  switch (f.kind) {
+    case 'segment': return <g><path d={d} {...ink} />{dot(first)}{dot(last)}</g>
+    case 'ray': return <g><path d={d} {...ink} /><path d={arrowHead(first, last)} {...ink} />{dot(first)}</g>
+    case 'straight': return <g><path d={d} {...ink} /><path d={arrowHead(last, first)} {...ink} /><path d={arrowHead(first, last)} {...ink} /></g>
+    default: return <path d={d} {...ink} />
+  }
 }
 
 function LinesBody({ f }: { f: LinesFigure }) {

@@ -31,8 +31,10 @@ import type { ID, InputMode } from './common'
  *   frac:shade:D|read:D|name:D|of:D  fractions with denominator D (2|3|4|5|6|8|10|12): colour, read, name, fraction of a quantity
  *   frac:equal | frac:compare        figures not split in equal parts; comparing two fractions with drawings
  *   frac:add | frac:sub              adding and subtracting fractions with the same denominator (4.º)
- *   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
- *                                    geometry (3.º, block E): polygons, lines, angles, circle, solids, perimeter
+ *   geo:poly:name|sides, geo:line:type|rel|kind, geo:angle:type|tap|class, geo:circle|circle:parts, geo:solid:name|roll|faces|count,
+ *   geo:perimeter, geo:tri:sides|angles, geo:quad:name, geo:translate
+ *                                    geometry (3.º and 4.º, block E): polygons, lines, angles, circle, solids, perimeter, triangles,
+ *                                    quadrilaterals, translation
  *   money:recognise|pay|change|add|compare|convert   dinero (3.º, block C): euros and céntimos (1 € = 100 céntimos)
  *   measure:unit:length|mass|capacity                 choose the unit of a real object
  *   measure:convert:length|mass|capacity              simple conversions (1 m = 100 cm, medio kilo = 500 g)
@@ -314,20 +316,24 @@ export interface FractionFigure {
 }
 /** A closed polygon in free coordinates (the view fits it to the box). labels: text on each side, side i joins point i and i+1. */
 export interface PolygonFigure { type: 'polygon'; points: [number, number][]; labels?: string[] }
-export interface CircleFigure { type: 'circle'; filled: boolean }
-/** straight: 2 points; curve: 3 points (the middle one is the control point); broken: the points joined in order. */
-export interface LineFigure { type: 'line'; kind: 'straight' | 'curve' | 'broken'; points: [number, number][] }
+/** highlight: the part drawn in red (radio, diámetro, cuerda or arco); turn: degrees the highlighted part is turned round. */
+export interface CircleFigure { type: 'circle'; filled: boolean; highlight?: 'radius' | 'diameter' | 'chord' | 'arc'; turn?: number }
+/** straight: 2 points, a recta (arrows at both ends); ray: 2 points, a dot at the first and an arrow at the second;
+    segment: 2 points, a dot at each; curve: 3 points (the middle one is the control point); broken: the points joined in order. */
+export interface LineFigure { type: 'line'; kind: 'straight' | 'curve' | 'broken' | 'ray' | 'segment'; points: [number, number][] }
 /** Two straight segments, each two points. */
 export interface LinesFigure { type: 'lines'; segments: [[number, number], [number, number]][] }
 /** An angle with its vertex at the centre: one ray horizontal, the other `deg` degrees from it; the whole turned by `rotation`. */
 export interface AngleFigure { type: 'angle'; deg: number; rotation: number }
 export type SolidName = 'cubo' | 'prisma' | 'piramide' | 'cilindro' | 'cono' | 'esfera'
 export interface SolidFigure { type: 'solid'; name: SolidName }
-/** Squares on a grid (área, simetría). filled: [row, col] of the coloured squares. axis: a dashed line between columns
-    (v, at = the column boundary) or rows (h). */
+/** Squares on a grid (área, simetría, traslación). filled: [row, col] of the coloured squares. axis: a dashed line between
+    columns (v, at = the column boundary) or rows (h). ghost: a figure before it was moved, drawn as a dashed outline
+    (filled is then the moved copy). */
 export interface GridFigure {
   type: 'grid'; rows: number; cols: number; filled: [number, number][]
   axis?: { dir: 'v' | 'h'; at: number }
+  ghost?: [number, number][]
 }
 export type Figure = FractionFigure | PolygonFigure | CircleFigure | LineFigure | LinesFigure | AngleFigure | SolidFigure | GridFigure
 

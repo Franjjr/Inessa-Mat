@@ -173,6 +173,14 @@ const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
   perimeter: 'Perímetro: sumar los lados',
   area: 'Área: contar los cuadraditos',
   symmetry: 'Ejes de simetría',
+  'line:kind': 'Recta, semirrecta y segmento',
+  'angle:class': 'Ángulos: agudo, recto y obtuso',
+  'tri:sides': 'Triángulos por sus lados: equilátero, isósceles y escaleno',
+  'tri:angles': 'Triángulos por sus ángulos: acutángulo, rectángulo y obtusángulo',
+  'quad:name': 'Cuadriláteros: cuadrado, rectángulo, rombo, romboide y trapecio',
+  'circle:parts': 'Radio, diámetro, cuerda y arco de una circunferencia',
+  translate: 'Traslación: mover una figura en una cuadrícula',
+  'solid:count': 'Contar caras, vértices y aristas de cubo, prisma y pirámide',
 }
 
 const ERROR_TEXT: Record<ErrorType, string> = {

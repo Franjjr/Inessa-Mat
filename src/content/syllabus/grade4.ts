@@ -24,7 +24,7 @@ export const GRADE4_STAGES: SyllabusStage[] = [
   { id: 'etapa-6', term: 2, topics: ['mul-3x2', 'prob-dos-pasos', 'masa-capacidad-4', 'duraciones-4', 'probabilidad'] },
   // 3.er trimestre
   { id: 'etapa-7', term: 3, topics: ['fracciones-comparar', 'fracciones-sumar', 'medir-problemas', 'recorridos', 'encuentra-error'] },
-  { id: 'etapa-8', term: 3, topics: ['poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras'] },
+  { id: 'etapa-8', term: 3, topics: ['triangulos-cuadrilateros', 'circunferencia-elementos', 'poligonos-cuerpos', 'div-2-cifras', 'mul-3-cifras'] },
 ]
 
 export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
@@ -132,9 +132,11 @@ export const GRADE4_SYLLABUS: Syllabus = withStageTerms({
         { id: 'angulos', name: 'Ángulos: rectos, mayores y menores', skills: [geoSkill('angle:type'), geoSkill('angle:tap')], status: 'disponible', rungs: { concreto: 'La esquina de una hoja de papel', dibujo: 'Comparar con el ángulo recto' } },
         { id: 'perimetro', name: 'Perímetro', skills: [geoSkill('perimeter')], status: 'disponible', rungs: { dibujo: 'Figuras con la medida de cada lado', uso: 'Vallas y marcos' } },
         { id: 'area', name: 'Área: contar cuadraditos', skills: [geoSkill('area')], status: 'disponible', rungs: { concreto: 'Cubrir una figura con baldosas', dibujo: 'Figuras en una cuadrícula', numeros: 'Contar fila a fila' } },
-        { id: 'simetria', name: 'Ejes de simetría', skills: [geoSkill('symmetry')], status: 'disponible', rungs: { concreto: 'Doblar papel y recortar', dibujo: 'La línea que parte la figura en dos mitades iguales' } },
+        { id: 'simetria', name: 'Simetría y traslación', skills: [geoSkill('symmetry'), geoSkill('translate')], status: 'disponible', ordered: true, rungs: { concreto: 'Doblar papel y recortar', dibujo: 'La línea que parte la figura en dos mitades iguales; luego, mover una figura casilla a casilla' } },
         { id: 'recorridos', name: 'Recorridos en una cuadrícula', skills: ['pos:route'], status: 'disponible', rungs: { dibujo: 'Flechas en una cuadrícula', uso: 'Dar indicaciones' } },
-        { id: 'poligonos-cuerpos', name: 'Polígonos, círculo y cuerpos', skills: [geoSkill('poly:name'), geoSkill('circle'), geoSkill('solid:faces')], status: 'disponible', rungs: { concreto: 'Cajas, latas y pelotas', numeros: 'Lados, caras y vértices' } },
+        { id: 'triangulos-cuadrilateros', name: 'Triángulos y cuadriláteros', skills: [geoSkill('tri:sides'), geoSkill('tri:angles'), geoSkill('quad:name')], status: 'disponible', ordered: true, rungs: { concreto: 'Tiras de papel para formar triángulos y cuadriláteros', dibujo: 'Marcar los lados iguales y las esquinas', numeros: 'Equilátero, isósceles, escaleno; acutángulo, rectángulo, obtusángulo' } },
+        { id: 'circunferencia-elementos', name: 'Circunferencia: radio, diámetro, cuerda y arco', skills: [geoSkill('circle'), geoSkill('circle:parts')], status: 'disponible', ordered: true, rungs: { concreto: 'Un plato y un hilo que pasa por el centro', dibujo: 'Señalar cada elemento', numeros: 'El diámetro es dos radios' } },
+        { id: 'poligonos-cuerpos', name: 'Polígonos, círculo y cuerpos', skills: [geoSkill('poly:name'), geoSkill('circle'), geoSkill('solid:faces'), geoSkill('solid:count')], status: 'disponible', rungs: { concreto: 'Cajas, latas y pelotas', numeros: 'Lados, caras, vértices y aristas' } },
       ],
     },
     {

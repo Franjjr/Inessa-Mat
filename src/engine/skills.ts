@@ -28,7 +28,8 @@
    frac:shade|read|name|of:D  fractions with denominator D (FRACTION_DENOMINATORS): colour, read, name, of a quantity
    frac:equal | frac:compare  figures not split in equal parts; comparing two fractions (block E, fracciones)
    frac:add | frac:sub        adding and subtracting fractions with the same denominator (4.º)
-   geo:poly:name|sides, geo:line:type|rel, geo:angle:type|tap, geo:circle, geo:solid:name|roll|faces, geo:perimeter
+   geo:poly:name|sides, geo:line:type|rel|kind, geo:angle:type|tap|class, geo:circle|circle:parts, geo:solid:name|roll|faces|count,
+   geo:perimeter, geo:tri:sides|angles, geo:quad:name, geo:translate
                               geometry (block E, geometría): see src/engine/geometry.ts
    money:<mode>             dinero: recognise|pay|change|add|compare|convert (src/engine/money.ts)
    money:pay:e | money:add:e   whole euros, no céntimos (2.º)
@@ -57,9 +58,11 @@ export type FractionOp = 'shade' | 'read' | 'name' | 'of' | 'equal' | 'compare' 
 export type GeoOp =
   | 'poly:name' | 'poly:sides' | 'line:type' | 'line:rel' | 'angle:type' | 'angle:tap' | 'circle'
   | 'solid:name' | 'solid:roll' | 'solid:faces' | 'perimeter' | 'area' | 'symmetry'
+  | 'line:kind' | 'angle:class' | 'tri:sides' | 'tri:angles' | 'quad:name' | 'circle:parts' | 'translate' | 'solid:count'
 export const GEO_OPS: GeoOp[] = [
   'poly:name', 'poly:sides', 'line:type', 'line:rel', 'angle:type', 'angle:tap', 'circle',
   'solid:name', 'solid:roll', 'solid:faces', 'perimeter', 'area', 'symmetry',
+  'line:kind', 'angle:class', 'tri:sides', 'tri:angles', 'quad:name', 'circle:parts', 'translate', 'solid:count',
 ]
 
 export type DivisionVariant = DivisionExercise['variant']
