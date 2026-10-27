@@ -4,6 +4,7 @@
 import type { AttemptRecord, ErrorType, MasteryMap } from '@/types'
 import { currentTopic, isTopicMastered, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
 import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf, type PlacementBlockId } from './placement'
+import { attemptsOf, masteryOf } from './subjects'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -40,7 +41,8 @@ export interface SyllabusReport {
 }
 
 /** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. */
-export function syllabusReport(syllabus: Syllabus, mastery: MasteryMap, term?: number): SyllabusReport {
+export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, term?: number): SyllabusReport {
+  const mastery = masteryOf(allMastery, 'math') // maths only
   const now = currentTopic(syllabus, mastery, term)
   let current: SyllabusReport['current'] = null
   const blocks = syllabus.blocks.map((b): BlockReport => {
@@ -85,7 +87,8 @@ export interface TopicNeeds {
 }
 
 /** Per topic of the temario, the «No lo sé» and the retried answers of the last `days` days. Topics with none are left out. */
-export function topicNeeds(syllabus: Syllabus, attempts: readonly AttemptRecord[], now: Date, days = 30): Record<string, TopicNeeds> {
+export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptRecord[], now: Date, days = 30): Record<string, TopicNeeds> {
+  const attempts = attemptsOf(allAttempts, 'math') // maths only
   const topicOf = new Map<string, string>()
   for (const b of syllabus.blocks) for (const t of b.topics) for (const sk of t.skills) topicOf.set(sk, t.id)
   const t = now.getTime()
@@ -215,7 +218,8 @@ export interface ErrorReport {
 }
 
 /** Wrong answers of the last `days` days grouped by kind, most frequent first and «otros» last. Groups with no mistake now or before are left out. */
-export function errorReport(attempts: readonly AttemptRecord[], now: Date, days = 30): ErrorReport {
+export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, days = 30): ErrorReport {
+  const attempts = attemptsOf(allAttempts, 'math') // maths only
   const t = now.getTime()
   const from = t - days * DAY_MS
   const before = from - days * DAY_MS
@@ -271,8 +275,8 @@ export interface PlacementRun {
 const RUN_GAP_MS = 2 * 60 * 60 * 1000
 
 /** Every prueba inicial the child has done, oldest first. Attempts come newest first. */
-export function placementRuns(attempts: readonly AttemptRecord[]): PlacementRun[] {
-  const items = attempts.filter((a) => a.context.activity === PLACEMENT_ACTIVITY).slice().reverse()
+export function placementRuns(allAttempts: readonly AttemptRecord[]): PlacementRun[] {
+  const items = attemptsOf(allAttempts, 'math').filter((a) => a.context.activity === PLACEMENT_ACTIVITY).slice().reverse()
   const runs: AttemptRecord[][] = []
   for (const a of items) {
     const run = runs[runs.length - 1]
@@ -312,7 +316,8 @@ export interface RecallReport {
  * Prueba de recuerdo: of what the child answered right, how much is still right when it comes back two weeks or more
  * later. Only the skill's first answer after the gap counts (the review that follows is practice, not memory).
  */
-export function recallReport(attempts: readonly AttemptRecord[], now: Date, minDays = 14, windowDays = 90): RecallReport {
+export function recallReport(allAttempts: readonly AttemptRecord[], now: Date, minDays = 14, windowDays = 90): RecallReport {
+  const attempts = attemptsOf(allAttempts, 'math') // maths only
   const from = now.getTime() - windowDays * DAY_MS
   const bySkill = new Map<string, AttemptRecord[]>()
   for (const a of attempts) {

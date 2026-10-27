@@ -3,6 +3,7 @@
 import type { ChildProfile, MasteryMap, ProgressState, SkillKey, SkillSelector } from '@/types'
 import { nextNode } from '@/content'
 import { dueSkills } from './mastery'
+import { masteryOf } from './subjects'
 import { clamp } from './rng'
 import { isFactSkill, parseSkill } from './skills'
 import type { SessionPlan } from './types'
@@ -33,7 +34,7 @@ function interleave(facts: SkillKey[], others: SkillKey[]): SkillKey[] {
 /** Review list for today: due skills first, then weak skills, interleaved. Used by the daily review screen. */
 export function planSession(input: { child: ChildProfile; progress: ProgressState; mastery: MasteryMap; now: Date }): SessionPlan {
   const { child, progress, now } = input
-  const mastery = input.mastery ?? {}
+  const mastery = masteryOf(input.mastery ?? {}, 'math')
   const minutes = clamp(Math.round(child.settings?.sessionMinutes ?? 15), 5, 60)
   const reviewN = clamp(Math.round(minutes * 0.5), 4, 10)
 

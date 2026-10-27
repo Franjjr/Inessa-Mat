@@ -101,3 +101,11 @@ describe('session run', () => {
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
   })
 })
+
+describe('sessionRewardKey', () => {
+  it('keeps the maths key and gives Lengua its own', () => {
+    expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
+    expect(sessionRewardKey(now, 'math')).toBe('sesion:2026-10-22')
+    expect(sessionRewardKey(now, 'language')).toBe('sesion-lengua:2026-10-22')
+  })
+})

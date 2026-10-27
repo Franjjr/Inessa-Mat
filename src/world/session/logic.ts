@@ -1,6 +1,6 @@
 /* Daily session runner logic (pure): the run order of the plan, the re-asks of failed items, the time-box and the
    reward key. The screen (DailySession.tsx) only renders what this file decides. */
-import { DAILY_MINUTES, type DailyItem, type DailyPlan } from '@/engine'
+import { DAILY_MINUTES, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
 import { startQueue, requeueWrong, type RunQueue } from '@/activities/shared/requeue'
 
 /** One planned item of the run, with an id unique inside the run (the same exercise id can come twice). */
@@ -42,9 +42,10 @@ export function postpone(q: RunQueue<RunItem>, pos: number): RunQueue<RunItem> {
   return { ...q, slots: [...rest, { item: { ...slot.item, postponed: true }, retry: slot.retry }] }
 }
 
-/** The day key for the once-per-day reward. */
-export function sessionRewardKey(now: Date): string {
-  return `sesion:${now.toISOString().slice(0, 10)}`
+/** The day key for the once-per-day reward. Maths keeps its original key; Lengua has its own. */
+export function sessionRewardKey(now: Date, subject: LessonSubject = 'math'): string {
+  const day = now.toISOString().slice(0, 10)
+  return subject === 'language' ? `sesion-lengua:${day}` : `sesion:${day}`
 }
 
 export function isTimeUp(activeSeconds: number): boolean {

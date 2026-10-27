@@ -1,6 +1,6 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { season1 } from '@/content'
-import { factGrid, isDivMethod, isSubMethod, isTableMethod, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
+import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
 import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
 
 /** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
@@ -46,7 +46,7 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     currentWorld,
     minutesLast7Days: Math.round(stats?.minutes ?? 0),
     accuracyLast7Days: accuracy,
-    factGrid: factGrid(mastery),
+    factGrid: factGrid(masteryOf(mastery, 'math')),
     topErrors: stats?.topErrors ?? [],
     lastPlayedAt: stats?.lastPlayedAt ?? null,
     subtractionMethods: {
@@ -65,7 +65,10 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
 }
 
 /** Stats from local rows. `attempts7` / `sessions7`: last 7 days; `attempts30`: last 30 days (for top errors). */
-export function statsFromLocal(attempts7: AttemptRecord[], attempts30: AttemptRecord[], sessions7: SessionRecord[], lastPlayedAt: string | null): ChildStats {
+export function statsFromLocal(attempts7All: AttemptRecord[], attempts30All: AttemptRecord[], sessions7: SessionRecord[], lastPlayedAt: string | null): ChildStats {
+  // Maths only: Lengua rows are not in these numbers.
+  const attempts7 = attemptsOf(attempts7All, 'math')
+  const attempts30 = attemptsOf(attempts30All, 'math')
   // Ungraded rows (a retry, see AttemptRecord.graded) are not counted in accuracy, methods or mistakes.
   const graded7 = attempts7.filter((a) => a.graded !== false)
   const counted = graded7.filter((a) => a.errorType !== 'recognition')

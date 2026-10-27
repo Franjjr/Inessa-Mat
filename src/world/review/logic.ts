@@ -1,6 +1,6 @@
 /* Daily review planning (pure). Spaced repetition comes from @/engine: skills that are due now plus weak
    skills from planSession's review list. Nothing due → an empty session (the screen shows a friendly message). */
-import { dueSkills, generate, planSession, selectorForSkills } from '@/engine'
+import { dueSkills, generate, masteryOf, planSession, selectorForSkills } from '@/engine'
 import type { ChildProfile, Exercise, MasteryMap, ProgressState, Rng } from '@/types'
 
 export const REVIEW_SIZE = 8
@@ -19,7 +19,8 @@ export function buildReviewSession(input: {
   rng: Rng
   size?: number
 }): ReviewPlan {
-  const { child, progress, mastery, now, rng } = input
+  const { child, progress, now, rng } = input
+  const mastery = masteryOf(input.mastery, 'math')
   const due = dueSkills(mastery, now, 12)
   const planned = planSession({ child, progress, mastery, now }).review
   const skills = [...new Set([...due, ...planned])]

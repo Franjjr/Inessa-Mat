@@ -24,6 +24,7 @@ import { ordinalPrompt } from './ordinals'
 import { decimalWords, fmtDecimal } from './decimals'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
+import { attemptsOf, masteryOf } from './subjects'
 
 export const DAILY_MINUTES = 15
 /** Most brand-new hard facts (not in the easy 1/2/5/10 set) introduced in one session (PEDAGOGY 4, E6). */
@@ -270,9 +271,11 @@ export interface PlanInput {
 
 /** Builds today's session. Same child and day give the same plan (seeded), so a reload does not reshuffle it. */
 export function planDailySession(input: PlanInput): DailyPlan {
-  const { child, mastery, syllabus, now } = input
+  const { child, syllabus, now } = input
+  // Maths only: the Lengua rows of the child never change a maths plan.
+  const mastery = masteryOf(input.mastery, 'math')
   const rng = input.rng ?? createRng(hashString(`daily:${child.id}:${dayKey(now)}`))
-  const scaffold = scaffoldedSkills(input.attempts ?? [], now)
+  const scaffold = scaffoldedSkills(attemptsOf(input.attempts ?? [], 'math'), now)
   const today = dayKey(now)
   const newFacts = new Set<SkillKey>()
   const isNewHard = (s: SkillKey) => isFactSkill(s) && !isEasyFact(s) && !mastery[s]

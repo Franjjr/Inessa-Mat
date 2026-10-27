@@ -7,7 +7,7 @@ import { getMastery, listAttempts, updateProgress } from '@/data'
 import { syllabusForGrade } from '@/content/syllabus'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
-  describeError, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_COUNT,
+  describeError, errorReport, placementFlags, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_COUNT,
   type ErrorReport, type PlacementRun, type RecallReport, type SyllabusReport, type TopicNeeds, type TopicState,
 } from '@/engine'
 import type { AttemptRecord, MasteryMap, ProgressState } from '@/types'
@@ -24,7 +24,7 @@ export function LearningSection({ childId, childName, grade, progress }: { child
   const [data, setData] = useState<{ mastery: MasteryMap; attempts: AttemptRecord[] } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const requested = !!progress?.flags?.placementRequested
+  const requested = !!progress?.flags?.[placementFlags('math').requested]
 
   useEffect(() => {
     let alive = true
@@ -51,7 +51,7 @@ export function LearningSection({ childId, childName, grade, progress }: { child
     setBusy(true)
     setError(null)
     try {
-      await updateProgress(childId, (p) => ({ ...p, flags: { ...p.flags, placementRequested: true }, updatedAt: new Date().toISOString() }))
+      await updateProgress(childId, (p) => ({ ...p, flags: { ...p.flags, [placementFlags('math').requested]: true }, updatedAt: new Date().toISOString() }))
       toast(`Se le ofrecerá la prueba a ${childName} en su próxima visita.`)
     } catch (e) {
       setError(errorMessage(e, 'No hemos podido preparar la prueba. Inténtalo de nuevo.'))

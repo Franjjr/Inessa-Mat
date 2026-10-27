@@ -10,7 +10,7 @@ import {
   crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
-import { DAILY_MINUTES, dueSkills } from '@/engine'
+import { DAILY_MINUTES, dueSkills, masteryOf } from '@/engine'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
@@ -70,7 +70,7 @@ export default function ChildHomeScreen() {
   const next = nextNode(progress)
   const nextWorld = next ? getWorld(next.worldId, season.id) : undefined
   const nextDef = next ? getNode(next.worldId, next.nodeId, season.id) : undefined
-  const due = dueSkills(mastery, new Date(), 50).length
+  const due = dueSkills(masteryOf(mastery, 'math'), new Date(), 50).length
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
