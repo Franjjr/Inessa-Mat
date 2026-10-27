@@ -1,7 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress, season1 } from '@/content'
+import { allTopics, syllabusForGrade } from '@/content/syllabus'
+import type { MasteryMap, SkillMastery } from '@/types'
 import { progressWithCrystals } from '@/world/rewards/testing'
-import { tableDrill, unlockedGames, unlockedTables } from './logic'
+import { reachedClasses, tableDrill, unlockedGames, unlockedTables } from './logic'
+
+const topicIds = (list: ReturnType<typeof reachedClasses>) => list.map((c) => c.topicId)
+
+/** Mastery at the mastered box for every skill of a topic of 3.º. */
+function masteredTopic(topicId: string): MasteryMap {
+  const topic = allTopics(syllabusForGrade(3)).find((t) => t.id === topicId)!
+  const map: MasteryMap = {}
+  for (const skill of topic.skills) {
+    map[skill] = { skill, box: 2, attempts: 3, correct: 3, streak: 2, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: '2026-10-01T10:00:00.000Z' } as SkillMastery
+  }
+  return map
+}
 
 describe('free play', () => {
   it('a new child has nothing to practise yet: the adventure unlocks it node by node', () => {
@@ -38,5 +52,24 @@ describe('free play', () => {
     expect(drill.kind).toBe('facts')
     expect(drill.selector.tables).toEqual([6])
     expect(drill.selector.kinds).toEqual(['fact-mul'])
+  })
+
+  it('the classes to repeat from Jugar: the done ones, the mastered topics and today\'s topic, of the child\'s grade only', () => {
+    const fresh = initialProgress('c')
+    const done = { ...fresh, flags: { ...fresh.flags, 'clase:resta-3d-prestando': true } }
+    expect(topicIds(reachedClasses({ grade: 3, mastery: {}, progress: done }))).toContain('resta-3d-prestando')
+    expect(topicIds(reachedClasses({ grade: 3, mastery: {}, progress: fresh }))).not.toContain('div-exacta')
+
+    const mastered = topicIds(reachedClasses({ grade: 3, mastery: masteredTopic('suma-2d'), progress: fresh }))
+    expect(mastered).toContain('suma-2d')
+
+    expect(reachedClasses({ grade: 2, mastery: masteredTopic('suma-2d'), progress: done })).toEqual([])
+  })
+
+  it('each reached class carries its topic title and the class definition', () => {
+    const list = reachedClasses({ grade: 3, mastery: masteredTopic('suma-2d'), progress: initialProgress('c') })
+    const item = list.find((c) => c.topicId === 'suma-2d')
+    expect(item?.title).toBe('Suma de 2 cifras')
+    expect(item?.cls.topicId).toBe('suma-2d')
   })
 })

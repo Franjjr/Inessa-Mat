@@ -1,7 +1,28 @@
 /* Free play rules (pure): which times tables and which minigames the child has unlocked, and the config of a
    table drill. Only what the child has reached is offered; nothing here changes progress. */
 import { isNodeUnlocked, seasonOf } from '@/content'
-import type { ActivityConfig, ActivityKind, ProgressState, WorldDef, NodeDef } from '@/types'
+import { classForTopic, isClassDone, type ClassDef } from '@/content/classes'
+import { allTopics, currentTopic, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import type { ActivityConfig, ActivityKind, MasteryMap, ProgressState, WorldDef, NodeDef } from '@/types'
+
+export interface FreeClass {
+  topicId: string
+  title: string
+  cls: ClassDef
+}
+
+/** The classes «Jugar» offers to repeat: those of the child's grade whose topic is mastered, is the topic of today, or
+    whose class is already done. Only what the child has reached; nothing here changes progress. */
+export function reachedClasses({ grade, mastery, progress }: { grade?: number; mastery: MasteryMap; progress: ProgressState }): FreeClass[] {
+  const course = syllabusForGrade(grade)
+  const current = currentTopic(course, mastery)?.id
+  return allTopics(course).flatMap((topic) => {
+    const cls = classForTopic(topic.id, grade)
+    if (!cls) return []
+    const reached = isTopicMastered(topic, mastery) || topic.id === current || isClassDone(progress, cls)
+    return reached ? [{ topicId: topic.id, title: topicTitle(topic), cls }] : []
+  })
+}
 
 export interface FreeGame {
   worldId: string
