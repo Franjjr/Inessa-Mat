@@ -110,3 +110,9 @@
   width: 100%;
   min-width: 0;
 }
+
+/* The frame of the typed answer: 8 px either side, so the phone keyboard (which bleeds 8 px) ends at the frame's edge. */
+.typedFrame {
+  min-width: 0;
+  padding-inline: 8px;
+}

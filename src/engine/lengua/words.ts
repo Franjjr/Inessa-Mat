@@ -194,6 +194,7 @@ export const VERBS: Verb[] = [
   { inf: 'explorar', pres: 'explora', pas: 'exploró', fut: 'explorará' },
   { inf: 'cuidar', pres: 'cuida', pas: 'cuidó', fut: 'cuidará' },
   { inf: 'ordenar', pres: 'ordena', pas: 'ordenó', fut: 'ordenará' },
+  { inf: 'pintar', pres: 'pinta', pas: 'pintó', fut: 'pintará' },
   { inf: 'llegar', pres: 'llega', pas: 'llegó', fut: 'llegará' },
   { inf: 'navegar', pres: 'navega', pas: 'navegó', fut: 'navegará' },
   { inf: 'comer', pres: 'come', pas: 'comió', fut: 'comerá' },
@@ -218,7 +219,7 @@ export const VERBS: Verb[] = [
 ]
 
 /** Words that are none of the four classes (prepositions, adverbs, possessives): the child does not tap them. */
-export const OTHER_WORDS = ['a', 'en', 'con', 'de', 'del', 'por', 'para', 'hasta', 'sus', 'su', 'ayer', 'mañana', 'pronto', 'temprano', 'despacio', 'muy', 'todo', 'y'] as const
+export const OTHER_WORDS = ['a', 'en', 'con', 'de', 'del', 'por', 'para', 'hasta', 'desde', 'sobre', 'sus', 'su', 'ayer', 'mañana', 'pronto', 'temprano', 'despacio', 'muy', 'todo', 'y'] as const
 
 /** Sentences of 5 to 10 words, built from the banks above. Every verb of a sentence is in its `tense`. */
 export const SENTENCES: Sentence[] = [
@@ -260,11 +261,67 @@ export const SENTENCES: Sentence[] = [
   { words: ['Mario', 'escuchará', 'la', 'historia', 'del', 'cuento'], subject: 1, tense: 'futuro' },
   { words: ['Elena', 'escribirá', 'un', 'cuento', 'corto', 'para', 'la', 'clase'], subject: 1, tense: 'futuro' },
   { words: ['El', 'perro', 'vivirá', 'en', 'la', 'casa', 'nueva'], subject: 2, tense: 'futuro' },
-  { words: ['La', 'rana', 'saltará', 'hasta', 'el', 'lago', 'pronto'], subject: 2, tense: 'futuro' },
+  { words: ['La', 'rana', 'saltará', 'pronto', 'hasta', 'el', 'lago'], subject: 2, tense: 'futuro' },
   { words: ['El', 'pájaro', 'recibirá', 'una', 'carta', 'de', 'Lucía'], subject: 2, tense: 'futuro' },
   { words: ['Carmen', 'decidirá', 'el', 'camino', 'del', 'bosque'], subject: 1, tense: 'futuro' },
   { words: ['El', 'oso', 'escribirá', 'una', 'carta', 'a', 'sus', 'amigos'], subject: 2, tense: 'futuro' },
   { words: ['Julia', 'abrirá', 'la', 'puerta', 'de', 'la', 'escuela'], subject: 1, tense: 'futuro' },
+  // presente (más frases)
+  { words: ['El', 'oso', 'mira', 'el', 'río', 'desde', 'la', 'montaña'], subject: 2, tense: 'presente' },
+  { words: ['La', 'ardilla', 'recoge', 'hojas', 'del', 'bosque'], subject: 2, tense: 'presente' },
+  { words: ['El', 'cangrejo', 'camina', 'por', 'la', 'playa', 'roja'], subject: 2, tense: 'presente' },
+  { words: ['La', 'jirafa', 'come', 'hojas', 'de', 'los', 'árboles'], subject: 2, tense: 'presente' },
+  { words: ['Hugo', 'escribe', 'una', 'carta', 'a', 'su', 'abuela'], subject: 1, tense: 'presente' },
+  { words: ['La', 'madre', 'prepara', 'una', 'sopa', 'salada'], subject: 2, tense: 'presente' },
+  { words: ['El', 'pulpo', 'esconde', 'un', 'tesoro', 'en', 'la', 'cueva'], subject: 2, tense: 'presente' },
+  { words: ['La', 'vaca', 'camina', 'despacio', 'por', 'el', 'campo'], subject: 2, tense: 'presente' },
+  { words: ['El', 'vecino', 'barre', 'la', 'puerta', 'azul'], subject: 2, tense: 'presente' },
+  { words: ['La', 'hermana', 'dibuja', 'un', 'sol', 'amarillo'], subject: 2, tense: 'presente' },
+  { words: ['El', 'tren', 'llega', 'a', 'la', 'escuela', 'temprano'], subject: 2, tense: 'presente' },
+  { words: ['Carmen', 'recibe', 'cartas', 'de', 'su', 'amiga'], subject: 1, tense: 'presente' },
+  { words: ['El', 'capitán', 'decide', 'el', 'camino', 'del', 'río'], subject: 2, tense: 'presente' },
+  { words: ['La', 'niña', 'cuida', 'la', 'lámpara', 'vieja'], subject: 2, tense: 'presente' },
+  { words: ['El', 'abuelo', 'ordena', 'los', 'libros', 'antiguos'], subject: 2, tense: 'presente' },
+  { words: ['Julia', 'describe', 'la', 'isla', 'misteriosa'], subject: 1, tense: 'presente' },
+  { words: ['El', 'conejo', 'vive', 'en', 'el', 'bosque', 'oscuro'], subject: 2, tense: 'presente' },
+  { words: ['La', 'serpiente', 'escucha', 'a', 'las', 'ballenas'], subject: 2, tense: 'presente' },
+  { words: ['La', 'abeja', 'visita', 'las', 'flores', 'rojas'], subject: 2, tense: 'presente' },
+  { words: ['El', 'pájaro', 'canta', 'en', 'la', 'ventana', 'grande'], subject: 2, tense: 'presente' },
+  { words: ['Daniel', 'corre', 'por', 'el', 'puente', 'largo'], subject: 1, tense: 'presente' },
+  { words: ['La', 'tortuga', 'descansa', 'en', 'la', 'playa', 'tranquila'], subject: 2, tense: 'presente' },
+  // pasado (más frases)
+  { words: ['El', 'erizo', 'escondió', 'las', 'llaves', 'en', 'la', 'cama'], subject: 2, tense: 'pasado' },
+  { words: ['La', 'rana', 'saltó', 'sobre', 'la', 'piedra', 'verde'], subject: 2, tense: 'pasado' },
+  { words: ['Lucía', 'pintó', 'la', 'puerta', 'verde', 'ayer'], subject: 1, tense: 'pasado' },
+  { words: ['El', 'capitán', 'vendió', 'su', 'barco', 'viejo'], subject: 2, tense: 'pasado' },
+  { words: ['Marta', 'visitó', 'el', 'castillo', 'antiguo', 'con', 'sus', 'padres'], subject: 1, tense: 'pasado' },
+  { words: ['El', 'gallo', 'recogió', 'las', 'hojas', 'del', 'árbol'], subject: 2, tense: 'pasado' },
+  { words: ['La', 'gallina', 'abrió', 'la', 'puerta', 'del', 'jardín'], subject: 2, tense: 'pasado' },
+  { words: ['El', 'oso', 'subió', 'a', 'la', 'montaña', 'alta'], subject: 2, tense: 'pasado' },
+  { words: ['La', 'vecina', 'escribió', 'una', 'historia', 'triste'], subject: 2, tense: 'pasado' },
+  { words: ['Pablo', 'bebió', 'leche', 'fría', 'ayer'], subject: 1, tense: 'pasado' },
+  { words: ['El', 'lobo', 'aprendió', 'una', 'canción', 'bonita'], subject: 2, tense: 'pasado' },
+  { words: ['Elena', 'barrió', 'la', 'cocina', 'muy', 'temprano'], subject: 1, tense: 'pasado' },
+  { words: ['El', 'zorro', 'escondió', 'el', 'tesoro', 'en', 'el', 'bosque'], subject: 2, tense: 'pasado' },
+  { words: ['Hugo', 'exploró', 'la', 'selva', 'oscura', 'ayer'], subject: 1, tense: 'pasado' },
+  { words: ['Carmen', 'describió', 'la', 'luna', 'brillante'], subject: 1, tense: 'pasado' },
+  // futuro (más frases)
+  { words: ['El', 'perro', 'buscará', 'el', 'mapa', 'del', 'tesoro'], subject: 2, tense: 'futuro' },
+  { words: ['La', 'ardilla', 'subirá', 'hasta', 'el', 'árbol', 'alto'], subject: 2, tense: 'futuro' },
+  { words: ['Mario', 'cuidará', 'a', 'su', 'gato', 'viejo'], subject: 1, tense: 'futuro' },
+  { words: ['La', 'mariposa', 'recibirá', 'una', 'flor', 'roja'], subject: 2, tense: 'futuro' },
+  { words: ['Julia', 'ordenará', 'los', 'cuadernos', 'de', 'la', 'clase'], subject: 1, tense: 'futuro' },
+  { words: ['El', 'tren', 'llegará', 'pronto', 'a', 'la', 'escuela'], subject: 2, tense: 'futuro' },
+  { words: ['Sara', 'abrirá', 'la', 'ventana', 'de', 'la', 'cocina'], subject: 1, tense: 'futuro' },
+  { words: ['El', 'capitán', 'navegará', 'hasta', 'el', 'puerto', 'azul'], subject: 2, tense: 'futuro' },
+  { words: ['La', 'niña', 'dibujará', 'una', 'casa', 'grande', 'mañana'], subject: 2, tense: 'futuro' },
+  { words: ['El', 'caballo', 'correrá', 'hasta', 'el', 'lago'], subject: 2, tense: 'futuro' },
+  { words: ['Lucía', 'pintará', 'la', 'puerta', 'verde'], subject: 1, tense: 'futuro' },
+  { words: ['Marta', 'escribirá', 'una', 'carta', 'bonita', 'para', 'su', 'abuelo'], subject: 1, tense: 'futuro' },
+  { words: ['El', 'abuelo', 'vivirá', 'en', 'la', 'casa', 'del', 'campo'], subject: 2, tense: 'futuro' },
+  { words: ['Elena', 'trabajará', 'en', 'el', 'jardín', 'con', 'sus', 'amigos'], subject: 1, tense: 'futuro' },
+  { words: ['El', 'pájaro', 'recogerá', 'las', 'hojas', 'verdes'], subject: 2, tense: 'futuro' },
+  { words: ['Hugo', 'decidirá', 'el', 'camino', 'hasta', 'el', 'lago'], subject: 1, tense: 'futuro' },
 ]
 
 /** Lowercase form → its class (and tense, for verbs). Built once from the banks. */

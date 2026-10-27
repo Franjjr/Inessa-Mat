@@ -13,7 +13,7 @@ describe('Lengua word banks', () => {
     expect(NOUNS.length).toBeGreaterThanOrEqual(60)
     expect(ADJECTIVES.length).toBeGreaterThanOrEqual(40)
     expect(VERBS.length).toBeGreaterThanOrEqual(40)
-    expect(SENTENCES.length).toBeGreaterThanOrEqual(30)
+    expect(SENTENCES.length).toBeGreaterThanOrEqual(80)
   })
 
   it('nouns: the plural is regular and the feminine of a pair is the masculine with -a', () => {

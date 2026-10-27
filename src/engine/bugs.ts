@@ -282,7 +282,8 @@ const MISSED: Record<ErrorType, string> = {
   'dont-know': 'Revisa la cuenta con calma.',
   'word-class': 'Esa palabra no es de la clase que se pide. Mira otra vez qué hace o cómo es.',
   'word-form': 'La palabra cambiada no es esa. Revisa el género, el número o la terminación.',
-  'sentence-part': 'Esa palabra no está en la parte de la frase que se pide. Piensa quién hace la acción.',}
+  'sentence-part': 'Esa palabra no está en la parte de la frase que se pide. Piensa quién hace la acción.',
+}
 
 export const HUNT_FEEDBACK = {
   right: '¡Muy bien! La cuenta está bien. Comprobarla también es aprender.',
@@ -370,7 +371,8 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'dont-know': 'Repasa la cuenta columna a columna.',
   'word-class': 'Mira qué hace la palabra o cómo es: ¿responde a qué pregunta?',
   'word-form': 'Cambia solo lo que se pide (género, número o tiempo) y revisa la terminación.',
-  'sentence-part': 'Pregúntate quién hace la acción: esa parte es el sujeto.',}
+  'sentence-part': 'Pregúntate quién hace la acción: esa parte es el sujeto.',
+}
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
 export function huntHints(ex: ErrorHuntExercise): Hint[] {

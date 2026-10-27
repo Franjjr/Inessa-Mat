@@ -36,17 +36,20 @@ function TransformRound({ ex, onAnswered, showFeedback, allowHints }: {
     <section className={s.view} aria-label="Escribir la palabra cambiada" data-kind={ex.kind} data-status={status}>
       <p className={s.prompt}>{grammarPrompt(ex)}</p>
       <div className={s.card} aria-label={`Palabra: ${ex.word}`}>{ex.word}</div>
-      <TextInput
-        className={s.typed}
-        value={value}
-        onChange={setValue}
-        onSubmit={submit}
-        maxLength={30}
-        ariaLabel="Escribe la palabra cambiada"
-        placeholder="Escribe aquí"
-        autoFocus
-        disabled={locked}
-      />
+      {/* The phone letter keyboard bleeds 8 px into this frame's padding, so its keys stay inside the card. */}
+      <div className={s.typedFrame}>
+        <TextInput
+          className={s.typed}
+          value={value}
+          onChange={setValue}
+          onSubmit={submit}
+          maxLength={30}
+          ariaLabel="Escribe la palabra cambiada"
+          placeholder="Escribe aquí"
+          autoFocus
+          disabled={locked}
+        />
+      </div>
       <AnswerBar flow={flow} onCheck={submit} canCheck={value.trim().length > 0} />
     </section>
   )

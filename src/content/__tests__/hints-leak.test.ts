@@ -95,7 +95,12 @@ function leaksIn(ex: Exercise, hints: Hint[]): { level: number; text: string; an
   const shown = shownNumbers(ex)
   const answers = answersOf(ex).filter((a) => a.answer === undefined || !shown.has(a.answer))
   const found: { level: number; text: string; answer: string }[] = []
-  for (const h of hints) for (const a of answers) if (a.pattern.test(h.text)) found.push({ level: h.level, text: h.text, answer: a.label })
+  for (const h of hints) {
+    // A card of examples (Lengua) is read as well as the text: the answer must not be on it either.
+    const words = h.params?.words
+    const texts: string[] = [h.text, ...(Array.isArray(words) ? words.map(String) : [])]
+    for (const a of answers) if (texts.some((t) => a.pattern.test(t))) found.push({ level: h.level, text: h.text, answer: a.label })
+  }
   return found
 }
 

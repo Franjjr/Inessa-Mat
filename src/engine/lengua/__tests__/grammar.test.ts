@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { check, createRng, generate, GRAMMAR_SKILLS, grammarStatement, hintsFor, kindsForSkill } from '@/engine'
 import type { Answer, ExerciseKind, LenguaExercise, LngSentencePartsExercise, LngTapWordsExercise, LngTransformExercise } from '@/types'
 import { correctAnswer } from '../../__tests__/helpers'
-import { SENTENCES, wordClass } from '../words'
+import { generoOf } from '../grammar'
+import { NOUNS, SENTENCES, wordClass } from '../words'
 
 const SEEDS = 40
 const pairs = GRAMMAR_SKILLS.flatMap((skill) => kindsForSkill(skill).map((kind) => [skill, kind] as const))
@@ -83,17 +84,31 @@ describe('Lengua grammar checks', () => {
     }
   })
 
-  it('a typed answer is checked exactly: a capital or a missing accent is named, not called a different word', () => {
+  it('a typed answer: capitals are forgiven, a missing accent is named and not accepted', () => {
     const ex = sample('lng:gram:verbo:pasado', 'lng-transform').find((e): e is LngTransformExercise => e.kind === 'lng-transform' && /ó$/.test(e.answer))!
     const noAccent = ex.answer.normalize('NFD').replace(/[̀-ͯ]/g, '')
     const r1 = check(ex, { type: 'text', value: noAccent })
     expect(r1.correct).toBe(false)
     expect(r1.errorType).toBe('word-form')
     expect(r1.feedback).toBe('¡Casi! Mira la tilde.')
-    const r2 = check(ex, { type: 'text', value: ex.answer[0].toUpperCase() + ex.answer.slice(1) })
-    expect(r2.correct).toBe(false)
-    expect(r2.feedback).toBe('¡Casi! Revisa las mayúsculas.')
+    expect(check(ex, { type: 'text', value: ex.answer[0].toUpperCase() + ex.answer.slice(1) }).correct).toBe(true)
     expect(check(ex, { type: 'text', value: `  ${ex.answer}  ` }).correct).toBe(true)
+  })
+
+  it('género: the key follows the gender of every noun, feminine nouns without a pair included', () => {
+    for (const n of NOUNS) {
+      expect(generoOf(n, false), n.sg).toBe(n.g === 'f' ? 'femenino' : 'masculino')
+      if (n.f) expect(generoOf(n, true), n.f.sg).toBe('femenino')
+    }
+    expect(generoOf(NOUNS.find((n) => n.sg === 'casa')!, false)).toBe('femenino')
+  })
+
+  it('género exercises: the right option is the gender of the word shown', () => {
+    for (const ex of sample('lng:gram:sustantivo:genero', 'lng-classify')) {
+      if (ex.kind !== 'lng-classify') continue
+      const noun = NOUNS.find((n) => n.sg === ex.word || n.f?.sg === ex.word)!
+      expect(ex.options[ex.answer], ex.word).toBe(generoOf(noun, noun.f?.sg === ex.word))
+    }
   })
 
   it('classify: two or three different options, and the answer is one of them', () => {

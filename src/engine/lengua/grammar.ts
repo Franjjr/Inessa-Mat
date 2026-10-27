@@ -30,6 +30,12 @@ const lower = (s: string) => s.toLocaleLowerCase('es')
 const verbForm = (v: Verb, t: Tense) => (t === 'presente' ? v.pres : t === 'pasado' ? v.pas : v.fut)
 const article = (n: Noun, plural = false) => (n.g === 'm' ? (plural ? 'los' : 'el') : (plural ? 'las' : 'la'))
 
+/** The género of a noun form: the feminine pair is «femenino»; the noun itself follows its gender (casa is femenino
+    even without a masculine pair). */
+export function generoOf(n: Noun, fem: boolean): 'masculino' | 'femenino' {
+  return fem || n.g === 'f' ? 'femenino' : 'masculino'
+}
+
 /** Options shuffled, with the index of the correct one. */
 function choice(rng: Rng, options: string[], correct: string): { options: string[]; answer: number } {
   const shuffled = shuffle(rng, options)
@@ -76,7 +82,7 @@ function genClassify(item: Item, skill: SkillKey, rng: Rng): LngClassifyExercise
     const n = pick(rng, NOUNS)
     const fem = n.f !== undefined && rng() < 0.5
     const word = fem && n.f ? n.f.sg : n.sg
-    const { options, answer } = choice(rng, ['masculino', 'femenino'], fem ? 'femenino' : 'masculino')
+    const { options, answer } = choice(rng, ['masculino', 'femenino'], generoOf(n, fem))
     return { ...base, id: `lng-classify:${skill}:${word}`, word, question: '¿Es masculino o femenino?', options, answer }
   }
   const n = pick(rng, NOUNS)
@@ -194,9 +200,10 @@ function checkTransform(ex: LngTransformExercise, answer: Answer): CheckResult {
   if (answer.type !== 'text') return { correct: false, given: '', expected: ex.answer, errorType: 'other', feedback: 'Escribe la palabra.' }
   const value = normalizeAnswer(answer.value ?? '')
   if (!value) return { correct: false, given: '', expected: ex.answer, errorType: 'incomplete', feedback: 'Escribe la palabra.' }
-  const r = compareText(value, ex.answer, 'exact')
+  // Capitals are forgiven (a name or a sentence start); accents count.
+  const r = compareText(value, ex.answer, 'ignore-case')
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
-  const feedback = r.caseOnly ? '¡Casi! Revisa las mayúsculas.' : r.accentOnly ? '¡Casi! Mira la tilde.' : 'Revisa la terminación de la palabra.'
+  const feedback = r.accentOnly ? '¡Casi! Mira la tilde.' : 'Revisa la terminación de la palabra.'
   return { correct: false, given: value, expected: ex.answer, errorType: 'word-form', feedback }
 }
 
@@ -242,7 +249,8 @@ function tapChips(ex: LngTapWordsExercise): string[] {
     case 'sustantivo': return spread(NOUNS.map((n) => n.sg), ex.id, 4, fresh)
     case 'adjetivo': return spread(ADJECTIVES.map((a) => a.m), ex.id, 4, fresh)
     case 'verbo': return spread(VERBS, ex.id, 3, (v) => fresh(v.pres) && fresh(v.pas) && fresh(v.fut)).map((v) => `${v.pres} · ${v.pas} · ${v.fut}`)
-    case 'articulo': return spread(NOUNS, ex.id, 4, (n) => fresh(n.sg)).map((n) => `${article(n)} ${n.sg}`)
+    // The article is the blank the child must find: the chips never show it.
+    case 'articulo': return spread(NOUNS, ex.id, 4, (n) => fresh(n.sg)).map((n) => `___ ${n.sg}`)
   }
 }
 
@@ -269,7 +277,7 @@ const CLASSIFY_TEXT: Record<ClassifyTopic, [string, string, string]> = {
   genero: [
     'Cada nombre tiene un género: puede ser de niño o de niña, aunque sea una cosa.',
     'Pregúntate: ¿qué artículo le iría delante, el o la?',
-    'Las palabras que acaban en -a suelen llevar la; las que acaban en -o, el. ¿Y esta palabra?',
+    'Fíjate en cómo termina la palabra, pero hay excepciones: ¿qué artículo suena bien delante?',
   ],
   numero: [
     'Mira si hay uno o si hay varios.',
@@ -306,33 +314,33 @@ function classifyChips(ex: LngClassifyExercise): string[] {
 const TRANSFORM_TEXT: Record<Change, [string, string, string]> = {
   femenino: [
     'En los nombres de persona o de animal, el femenino cambia la última letra.',
-    'Mira estos ejemplos: cambian la -o final.',
-    'Quita la -o y pon -a: ¿qué palabra sale?',
+    'Mira estos ejemplos y fíjate en cómo termina cada palabra.',
+    'Piensa: si esa persona es una chica, ¿cómo termina su nombre?',
   ],
   plural: [
     'Para hablar de varios, la palabra cambia su final.',
-    'Mira estos ejemplos: cambia el final de cada palabra.',
-    'Si acaba en vocal, añade -s; si acaba en consonante, añade -es. ¿Qué palabra sale?',
+    'Mira estos ejemplos y fíjate en cómo termina cada palabra.',
+    '¿Termina en vocal o en consonante? ¿Qué le toca al final para hablar de varios?',
   ],
   singular: [
     'Piensa si es uno solo o si son varios: al revés que el plural.',
-    'Mira estos ejemplos: cambian el final.',
-    'Quita la -s; si la palabra acaba en -es, quita -es. ¿Qué palabra sale?',
+    'Mira estos ejemplos y fíjate en cómo termina cada palabra.',
+    '¿Cómo termina la palabra cuando hablas de uno solo?',
   ],
   pasado: [
     'Pasado es lo que ya pasó: el verbo cambia su terminación.',
-    'Mira estos ejemplos: cambian solo el final.',
-    'Piensa en el infinitivo del verbo y cambia su final: -ar pasa a -ó, y -er o -ir pasan a -ió. ¿Qué palabra sale?',
+    'Mira estos ejemplos y fíjate en el final de cada verbo.',
+    '¿De qué grupo es el verbo, -ar, -er o -ir? ¿Cómo termina en pasado cada grupo?',
   ],
   futuro: [
     'Futuro es lo que todavía no pasa: el verbo cambia su final.',
-    'Mira estos ejemplos: el futuro lleva una -á al final.',
-    'Escribe el infinitivo completo y pon -á al final: ¿qué palabra sale?',
+    'Mira estos ejemplos y fíjate en cómo termina cada verbo.',
+    'Piensa en el infinitivo, el verbo completo: ¿cómo acabará cuando todavía no ha pasado?',
   ],
   presente: [
     'Presente es lo que pasa ahora: el verbo cambia su final.',
-    'Mira estos ejemplos: cambian solo el final.',
-    'Si acaba en -ó, cambia la -ó por -a; si acaba en -ió, cambia -ió por -e. ¿Qué palabra sale?',
+    'Mira estos ejemplos y fíjate en cómo termina cada verbo.',
+    '¿Qué pasa ahora? ¿Cómo termina el verbo cuando la acción pasa ahora: en -a o en -e?',
   ],
 }
 
