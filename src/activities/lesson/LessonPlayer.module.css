@@ -176,11 +176,12 @@
     align-items: flex-end;
   }
 
-  /* Lumi's bubble shows its whole text here; the board above gives up the space instead of clipping the words. */
+  /* Lumi's bubble shows its whole text here (the board gives up the space), up to 45% of the screen; a longer text
+     scrolls inside the bubble, so the footer («Atrás», «Siguiente ›») always stays on screen. */
   .speakerPortrait .bubble {
     flex: 1 1 auto;
     max-width: 420px;
-    max-height: none;
+    max-height: 45dvh;
   }
 }
 
