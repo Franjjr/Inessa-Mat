@@ -42,10 +42,14 @@ function useNarrow(): boolean {
 export function Keypad({ onDigit, onDelete, onSubmit, disabled, layout: asked = 'grid', size = 'md', className, submitDisabled }: KeypadProps) {
   const narrow = useNarrow()
   const layout = narrow ? 'wide' : asked
-  // On a short screen (a phone with its browser bars) the keypad can land under the bottom edge: bring it up once,
-  // as little as needed, so the child sees where to type.
+  // On a short screen (a phone with its browser bars) the keypad can land wholly under the bottom edge: bring it up,
+  // as little as needed, so the child sees where to type. A keypad already (partly) in sight never moves the page: it
+  // comes and goes as the child taps the pictures, and the page must not jump under the finger.
   const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => { ref.current?.scrollIntoView?.({ block: 'nearest' }) }, [])
+  useEffect(() => {
+    const el = ref.current
+    if (el && el.getBoundingClientRect().top >= window.innerHeight) el.scrollIntoView?.({ block: 'nearest' })
+  }, [])
   const palm = usePalmGuard()
   const press = (fn: () => void) => palm.guard(() => {
     if (disabled) return
