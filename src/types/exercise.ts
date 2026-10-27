@@ -667,6 +667,7 @@ export type Answer =
   | { type: 'fraction'; numerator: number | null; denominator: number | null } // fraction-read: written over and under
   | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
   | { type: 'option'; value: string | null }                               // dinero and medida: the option tapped
+  | { type: 'text'; value: string | null }                                 // a typed word or phrase (Lengua): the letter keyboard or a physical one
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
   | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
 

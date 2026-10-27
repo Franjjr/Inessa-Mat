@@ -1,0 +1,79 @@
+/* Sized from --ink-scale like Keypad: a phone gets 44 px-tall keys (≥ 32 px wide: ten to a row across 360 px). */
+.pad {
+  --lk-h: max(44px, calc(46px * var(--ink-scale, 1)));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: calc(560px * var(--ink-scale, 1));
+  margin: 0 auto;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* Phones: the keys may use the 8 px either side of the 16 px gutter, so ten of them fit a 360 px screen. */
+@media (max-width: 480px) {
+  .pad { margin-inline: -8px; width: calc(100% + 16px); max-width: none; }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  column-gap: 2px;
+}
+.row3 { grid-template-columns: 1.5fr repeat(7, minmax(0, 1fr)) 1.5fr; }
+.bottom { grid-template-columns: 2fr 1fr 1fr 4fr 2fr; }
+.symbolRow { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+
+.key {
+  min-width: 0;
+  height: var(--lk-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: calc(var(--lk-h) * 0.46);
+  line-height: 1;
+  box-shadow: 0 3px 0 var(--c-line), 0 4px 10px rgba(124, 58, 237, .06);
+  transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background var(--dur-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+.key:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-line);
+  background: var(--c-primary-soft);
+}
+.key:disabled { opacity: .45; cursor: not-allowed; }
+
+.fn {
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  font-size: calc(var(--lk-h) * 0.38);
+}
+/* A modifier that is armed (⇧, ´, ¨, the symbol row open) */
+.armed,
+.armed:active:not(:disabled) {
+  background: var(--c-primary);
+  color: var(--c-surface);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c-primary) 62%, var(--c-ink));
+}
+.space {
+  font-size: calc(var(--lk-h) * 0.36);
+  font-weight: 500;
+  color: var(--c-ink-soft);
+}
+.ok {
+  background: var(--c-success);
+  color: var(--c-surface);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c-success) 62%, var(--c-ink));
+}
+.spacer { height: var(--lk-h); }
+
+@media (prefers-reduced-motion: reduce) {
+  .key, .key:active:not(:disabled) { transition: none; transform: none; }
+}
