@@ -170,8 +170,8 @@ Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinc
 - En la **sesión**, en la tarjeta del tema nuevo, el botón **«Ver la clase otra vez»**.
 - En **«Jugar»**, la sección «Clases» lista las clases de los temas que el niño ya ha trabajado (dominados, el tema de
   hoy o con la clase hecha), para repetirlas.
-- Las **8 clases que tienen lección en el mapa** también se repiten desde el mapa, en su nodo de lección (es la misma
-  lección). Las otras 10 solo salen desde «Jugar» y desde «Hoy» o la sesión.
+- En el mapa, las **8 clases que tienen lección en el mapa**: su lección (la del ejemplo) se puede repetir en su nodo;
+  la clase completa se repite desde «Jugar». Las otras 10 clases solo salen desde «Jugar», «Hoy» o la sesión.
 - Salir a mitad (con «Salir») no marca nada: la próxima vez la clase empieza de nuevo.
 
 **Saltar:**
