@@ -11,12 +11,12 @@ const sumar2d = clase({
   title: 'Sumar con dos cifras',
   para: [
     show('place-value', { n: 34 }, 'En la feria del cole vendemos pulseras. Yo ya he hecho 34.', 'frog'),
-    show('place-value', { n: 34 }, 'Mi amiga Dani trae 25 más. ¿Cuántas hay en total? Sumamos 34 + 25.', 'ladybug'),
+    show('place-value', { n: 34 }, 'El 34 son 3 decenas y 4 unidades. Mi amiga Dani trae 25 más: sumamos 34 + 25.', 'ladybug'),
   ],
   ejemplo: [
     show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades, como siempre.'),
     show('carry', { a: 34, b: 25 }, '4 + 5 = 9. Escribo el 9 en las unidades.'),
-    show('carry', { a: 34, b: 25 }, 'Ahora las decenas: 3 + 2 = 5. ¡34 + 25 = 59!'),
+    show('carry', { a: 34, b: 25 }, 'Decenas: 3 + 2 = 5. ¡34 + 25 = 59!'),
     show('carry', { a: 38, b: 25 }, 'Ahora una con llevada: 38 + 25. Empezamos por las unidades.'),
     show('carry', { a: 38, b: 25 }, '8 + 5 = 13. Escribo el 3 y me llevo 1 decena.'),
     show('carry', { a: 38, b: 25 }, 'Decenas: 3 + 2 + 1 = 6. ¡38 + 25 = 63!'),
@@ -26,11 +26,11 @@ const sumar2d = clase({
     tryIt('carry', { a: 34, b: 25 }, '¡Otra! Primero las unidades, después las decenas.', { skills: ['add:2d:c0'] }),
   ],
   sola: [
-    tryIt('carry', { a: 38, b: 25 }, '¡Tu turno! Unidades primero.', { skills: ['add:2d:c1'] }),
+    tryIt('carry', { a: 38, b: 25 }, '¡Tu turno! Unidades primero.', { skills: ['add:2d:c0'] }),
     tryIt('carry', { a: 38, b: 25 }, '¡Tu turno! Si salen 10 o más, me llevo 1 decena.', { skills: ['add:2d:c1'] }),
-    tryIt('carry', { a: 38, b: 25 }, '¡Tu turno! Cuidado con las llevadas.', { skills: ['add:2d:c0', 'add:2d:c1'] }),
+    tryIt('carry', { a: 38, b: 25 }, '¡Tu turno! Cuidado con las llevadas.', { skills: ['add:2d:c1'] }),
   ],
-  cierre: show('carry', { a: 38, b: 25 }, 'La regla: suma primero las unidades. Si salen 10 o más, escribe la cifra de las unidades y lleva 1 a las decenas.'),
+  cierre: show('carry', { a: 38, b: 25 }, 'Se suma primero la columna de las unidades, y si salen 10 o más se escribe su cifra y se lleva 1 a las decenas.'),
 })
 
 const sumar3d = clase({
@@ -52,7 +52,7 @@ const sumar3d = clase({
     tryIt('carry', { a: 342, b: 215 }, '¡Otra! De las unidades a las centenas.', { skills: ['add:3d:c0'] }),
   ],
   sola: [
-    tryIt('carry', { a: 342, b: 215 }, '¡Tu turno! Unidades primero.', { skills: ['add:2d:c1'] }),
+    tryIt('carry', { a: 342, b: 215 }, '¡Tu turno! Unidades primero.', { skills: ['add:3d:c0'] }),
     tryIt('carry', { a: 342, b: 215 }, '¡Tu turno! Cifra con cifra.', { skills: ['add:3d:c0'] }),
     tryIt('carry', { a: 342, b: 215 }, '¡Tu turno! Sin pistas: unidades, decenas y centenas.', { skills: ['add:3d:c0'] }),
   ],
@@ -100,7 +100,7 @@ const sumar4d = clase({
     show('carry', { a: 2475, b: 1368 }, '5 + 8 = 13. Escribo el 3 y me llevo 1.'),
     show('carry', { a: 2475, b: 1368 }, 'Decenas: 7 + 6 + 1 = 14. Escribo el 4 y me llevo 1.'),
     show('carry', { a: 2475, b: 1368 }, 'Centenas: 4 + 3 + 1 = 8. Escribo el 8.'),
-    show('carry', { a: 2475, b: 1368 }, 'Unidades de mil: 2 + 1 = 3. ¡2 475 + 1 368 = 3 843!'),
+    show('carry', { a: 2475, b: 1368 }, 'Millares: 2 + 1 = 3. ¡2 475 + 1 368 = 3 843!'),
   ],
   guiada: [
     tryIt('carry', { a: 2475, b: 1368 }, '¡Te toca! Cuatro casas, de derecha a izquierda.', { skills: ['add:4d:c0'] }),
@@ -119,7 +119,7 @@ const restarSinLlevar = clase({
   topicId: 'resta-3d-sin-llevar',
   title: 'Restar con tres cifras',
   para: [
-    show('place-value', { n: 586 }, 'En el mercadillo hay 586 botellas de agua. ¡Qué calor hace!', 'frog'),
+    show('place-value', { n: 586 }, 'En la tienda del pueblo hay 586 botellas de agua. ¡Qué calor hace!', 'frog'),
     show('place-value', { n: 586 }, 'Se venden 243. ¿Cuántas quedan? Hay que restar 586 − 243.', 'frog'),
   ],
   ejemplo: [
@@ -127,11 +127,12 @@ const restarSinLlevar = clase({
     show('borrow', { a: 586, b: 243 }, 'Miro las unidades: 6 y 3.'),
     show('borrow', { a: 586, b: 243 }, 'El 6 es más grande que el 3. No hace falta pedir ayuda a la vecina.'),
     show('borrow', { a: 586, b: 243 }, 'Unidades: 6 − 3 = 3. Escribo el 3 abajo.'),
-    show('borrow', { a: 586, b: 243 }, 'Decenas: 8 − 4 = 4. Centenas: 5 − 2 = 3. ¡586 − 243 = 343!'),
+    show('borrow', { a: 586, b: 243 }, 'Decenas: 8 − 4 = 4. Escribo el 4.'),
+    show('borrow', { a: 586, b: 243 }, 'Centenas: 5 − 2 = 3. ¡586 − 243 = 343!'),
   ],
   guiada: [
     tryIt('borrow', { a: 586, b: 243 }, '¡Te toca! Empieza por las unidades.', { skills: ['sub:3d:b0'] }),
-    tryIt('borrow', { a: 586, b: 243 }, '¡Otra! Mira si arriba hay más que abajo.', { skills: ['sub:3d:b0'] }),
+    tryIt('borrow', { a: 586, b: 243 }, 'Mira si la cifra de arriba es más pequeña que la de abajo.', { skills: ['sub:3d:b0'] }),
   ],
   sola: [
     tryIt('borrow', { a: 586, b: 243 }, '¡Tu turno! Unidades primero.', { skills: ['sub:3d:b0'] }),
@@ -148,7 +149,7 @@ const restarPrestando = clase({
   mapLessonId: 'w4-borrow',
   para: [
     show('place-value', { n: 352 }, 'Un oso polar cuida 352 ovejas en la montaña.', 'polarbear'),
-    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127.', 'polarbear'),
+    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127. Cuando no alcanza, a esto lo llamamos pedir prestado arriba.', 'polarbear'),
   ],
   ejemplo: w4Borrow.steps.slice(0, 5),
   guiada: [
@@ -158,7 +159,7 @@ const restarPrestando = clase({
   sola: [
     tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno! Pide ayuda a la vecina si hace falta.', { skills: ['sub:3d:b1'] }),
     tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno! Ojo: a veces hay que pedir dos veces.', { skills: ['sub:3d:b2'] }),
-    tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno! Sin pistas, de derecha a izquierda.', { skills: ['sub:3d:b1', 'sub:3d:b2'] }),
+    tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno! Sin pistas, de derecha a izquierda.', { skills: ['sub:3d:b2'] }),
   ],
   cierre: show('borrow', { a: 352, b: 127 }, 'La regla: si arriba falta, la vecina presta 1 decena, que son 10 unidades.'),
 })
@@ -170,7 +171,7 @@ const restarCeros = clase({
   mapLessonId: 'w4-zero',
   para: [
     show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
-    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. ¡Ojo con el cero!', 'ladybug'),
+    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. Cuando no alcanza, pedimos prestado arriba. ¡Ojo con el cero!', 'ladybug'),
   ],
   ejemplo: w4Zero.steps.slice(0, 4),
   guiada: [
@@ -180,36 +181,37 @@ const restarCeros = clase({
   sola: [
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Tu turno! Cuidado con el cero.', { skills: ['sub:3d:z'] }),
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Tu turno! Ahora con cuatro casas.', { skills: ['sub:4d:z'] }),
-    tryIt('zero-borrow', { a: 503, b: 128 }, '¡Tu turno! Sin pistas: a veces con tres casas, a veces con cuatro.', { skills: ['sub:3d:z', 'sub:4d:z'] }),
+    tryIt('zero-borrow', { a: 503, b: 128 }, '¡Tu turno! Sin pistas: ahora con cuatro casas y ceros.', { skills: ['sub:4d:z'] }),
   ],
-  cierre: show('zero-borrow', { a: 503, b: 128 }, 'La regla: si el cero no tiene nada que prestar, se pide a la cifra siguiente, y el cero pasa a ser 10.'),
+  cierre: show('zero-borrow', { a: 503, b: 128 }, 'La regla: si el cero no tiene nada que prestar, se pide a la cifra siguiente, el cero pasa a ser 10 y ese 10 presta 1 a las unidades.'),
 })
 
 const restarCuatroCifras = clase({
   id: 'c3-resta-4d',
   topicId: 'resta-4d',
   title: 'Restar con cuatro cifras',
+  // The story steps use the borrow picture too: its phases go on counting into the example (one run of 7 steps).
   para: [
-    show('place-value', { n: 4352 }, 'En la fiesta del cole hay 4 352 pegatinas.', 'ladybug'),
-    show('place-value', { n: 4352 }, 'Se reparten 1 728. ¿Cuántas quedan? Restamos 4 352 − 1 728, casa por casa.', 'ladybug'),
+    show('borrow', { a: 4365, b: 1228 }, 'En la fiesta del cole hay 4 365 pegatinas.', 'ladybug'),
+    show('borrow', { a: 4365, b: 1228 }, 'Se reparten 1 228. ¿Cuántas quedan? Restamos 4 365 − 1 228. Cuando no alcanza, a esto lo llamamos pedir prestado arriba.', 'ladybug'),
   ],
   ejemplo: [
-    show('borrow', { a: 4352, b: 1728 }, 'Ahora restamos con cuatro casas. Es igual que con tres: empezamos por la derecha.'),
-    show('borrow', { a: 4352, b: 1728 }, '2 no puede con 8. Pido ayuda a la vecina de las decenas.'),
-    show('borrow', { a: 4352, b: 1728 }, 'La vecina presta 1 decena: el 5 pasa a 4, y el 2 pasa a 12.'),
-    show('borrow', { a: 4352, b: 1728 }, 'Unidades: 12 − 8 = 4. Escribo el 4. Las centenas también piden ayuda: el 3 pasa a 13, y el 4 de los millares presta 1.'),
-    show('borrow', { a: 4352, b: 1728 }, 'Decenas: 4 − 2 = 2. Centenas: 13 − 7 = 6. Millares: 3 − 1 = 2. ¡4 352 − 1 728 = 2 624!'),
+    show('borrow', { a: 4365, b: 1228 }, '5 no puede con 8. La vecina de las decenas presta 1: el 6 pasa a 5, y el 5 pasa a 15.'),
+    show('borrow', { a: 4365, b: 1228 }, 'Unidades: 15 − 8 = 7. Escribo el 7.'),
+    show('borrow', { a: 4365, b: 1228 }, 'Decenas: 5 − 2 = 3. Escribo el 3.'),
+    show('borrow', { a: 4365, b: 1228 }, 'Centenas: 3 − 2 = 1. Escribo el 1.'),
+    show('borrow', { a: 4365, b: 1228 }, 'Millares: 4 − 1 = 3. ¡4 365 − 1 228 = 3 137!'),
   ],
   guiada: [
-    tryIt('borrow', { a: 4352, b: 1728 }, '¡Te toca! Cuatro casas, de derecha a izquierda.', { skills: ['sub:4d:b0'] }),
-    tryIt('borrow', { a: 4352, b: 1728 }, '¡Otra! Empieza por las unidades.', { skills: ['sub:4d:b0'] }),
+    tryIt('borrow', { a: 4365, b: 1228 }, '¡Te toca! Cuatro casas, de derecha a izquierda.', { skills: ['sub:4d:b0'] }),
+    tryIt('borrow', { a: 4365, b: 1228 }, '¡Otra! Empieza por las unidades.', { skills: ['sub:4d:b0'] }),
   ],
   sola: [
-    tryIt('borrow', { a: 4352, b: 1728 }, '¡Tu turno! Pide ayuda a la vecina si hace falta.', { skills: ['sub:4d:b1'] }),
-    tryIt('borrow', { a: 4352, b: 1728 }, '¡Tu turno! Algunas casas piden ayuda.', { skills: ['sub:4d:b2'] }),
-    tryIt('borrow', { a: 4352, b: 1728 }, '¡Tu turno! Muchas ayudas seguidas.', { skills: ['sub:4d:b3'] }),
+    tryIt('borrow', { a: 4365, b: 1228 }, '¡Tu turno! Pide ayuda a la vecina si hace falta.', { skills: ['sub:4d:b1'] }),
+    tryIt('borrow', { a: 4365, b: 1228 }, '¡Tu turno! Algunas casas piden ayuda.', { skills: ['sub:4d:b2'] }),
+    tryIt('borrow', { a: 4365, b: 1228 }, '¡Tu turno! Muchas ayudas seguidas.', { skills: ['sub:4d:b3'] }),
   ],
-  cierre: show('borrow', { a: 4352, b: 1728 }, 'La regla no cambia con más casas: si arriba falta, pide 1 decena a la vecina.'),
+  cierre: show('borrow', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, pide 1 decena a la vecina.'),
 })
 
 export const GRADE3_CLASSES: ClassDef[] = [

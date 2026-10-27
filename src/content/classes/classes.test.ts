@@ -5,7 +5,7 @@ import { topicTitle } from '@/content/syllabus/helpers'
 import { w4Borrow } from '@/content/lessons/w4'
 import { tryIt } from '@/content/lessons/dsl'
 import { syllabusForGrade } from '@/content/syllabus'
-import { generate } from '@/engine'
+import { createRng, generate } from '@/engine'
 import { clase, CLASSES, classForTopic, isClassDone, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
@@ -104,8 +104,10 @@ describe('clases de sumar y restar (3.º)', () => {
       const tries = lesson.steps.filter((s) => s.interaction === 'try')
       expect(tries.length, cls.lesson.id).toBe(phases.guiada + phases.sola)
       for (const step of tries) {
-        const [exercise] = generate(step.trySelector!, 1)
-        expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill}`).toBe(true)
+        for (let seed = 1; seed <= 20; seed++) {
+          const [exercise] = generate(step.trySelector!, 1, { rng: createRng(seed) })
+          expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill} (seed ${seed})`).toBe(true)
+        }
       }
     }
   })
