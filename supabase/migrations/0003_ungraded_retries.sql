@@ -6,6 +6,9 @@
 -- and the top mistakes. Now the function leaves ungraded rows out of attempts, correct and top_errors. Rows without the
 -- flag (every row written before this change) count as before, because the filter is `is distinct from 'false'`.
 --
+-- The aggregates are the maths ones (accuracy and top maths mistakes): Lengua attempts (skill 'lng:…') are left out
+-- too, so a child with both subjects keeps a maths-only accuracy here.
+--
 -- Same signature, SECURITY INVOKER, search_path, and grants as 0001_init.sql. Only the function body changes.
 -- HOW TO APPLY: paste this whole file into the Supabase SQL editor and press "Run". Idempotent (create or replace,
 -- grants repeated).
@@ -37,6 +40,7 @@ as $$
     from public.attempts t
     where t.child_id = any (p_child_ids) and t.created_at >= p_since
       and (t.context->>'graded') is distinct from 'false'
+      and t.skill not like 'lng:%'
     group by t.child_id
   ),
   e as (
@@ -48,6 +52,7 @@ as $$
       where t.child_id = any (p_child_ids)
         and t.created_at >= coalesce(p_errors_since, p_since)
         and (t.context->>'graded') is distinct from 'false'
+        and t.skill not like 'lng:%'
         and not t.correct
         and t.error_type is not null and t.error_type <> 'recognition'
       group by t.child_id, t.error_type
