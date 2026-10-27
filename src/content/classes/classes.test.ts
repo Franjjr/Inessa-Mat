@@ -81,6 +81,10 @@ describe('clases de sumar y restar (3.º)', () => {
     for (const id of topicIds) expect(classForTopic(id), id).toBeDefined()
   })
 
+  it('multiplicar has its classes', () => {
+    for (const id of ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-3x1', 'mul-10-100', 'mul-2-cifras-intro']) expect(classForTopic(id), id).toBeDefined()
+  })
+
   it('every class keeps the five-phase shape and its tries generate exercises of its own topic', () => {
     expect(new Set(CLASSES.map((c) => c.lesson.id)).size).toBe(CLASSES.length)
     for (const cls of CLASSES) {

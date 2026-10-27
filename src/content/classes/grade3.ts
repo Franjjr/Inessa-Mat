@@ -1,6 +1,7 @@
 /* Clases de 3.º de Primaria, una por tema del temario (src/content/syllabus/grade3.ts). */
 import { show, tryIt } from '@/content/lessons/dsl'
 import { w4Borrow, w4Zero } from '@/content/lessons/w4'
+import { w7Carry, w7Split } from '@/content/lessons/w7'
 import { clase, type ClassDef } from './dsl'
 
 /* Sumar y restar, de menos a más. Cada clase: para qué sirve, un ejemplo resuelto, dos prácticas con pistas, tres o
@@ -214,6 +215,131 @@ const restarCuatroCifras = clase({
   cierre: show('borrow', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, pide 1 decena a la vecina.'),
 })
 
+/* Multiplicar, de menos a más. Mismo esquema: para qué sirve, un ejemplo resuelto, dos prácticas con pistas, tres o
+   cuatro sin pistas (cada una igual o más difícil) y una frase que resume la regla. */
+const mul2x1 = clase({
+  id: 'c3-mul-2x1',
+  topicId: 'mul-2x1-sin-llevar',
+  title: 'Multiplicar por una cifra',
+  mapLessonId: 'w7-split',
+  para: [
+    show('place-value', { n: 23 }, 'En la granja de Lola, cada una de las 23 gallinas pone 3 huevos al día.', 'frog'),
+    show('place-value', { n: 23 }, '¿Cuántos huevos son en total? Multiplicamos 23 × 3, por trocitos.', 'frog'),
+  ],
+  ejemplo: w7Split.steps.slice(0, 5),
+  guiada: [
+    tryIt('column-mul', { top: 23, bottom: 3 }, '¡Te toca! Primero las unidades, después las decenas.', { skills: ['mul:2x1:c0'] }),
+    tryIt('column-mul', { top: 23, bottom: 3 }, '¡Otra! Escribe el resultado de cada columna en su sitio.', { skills: ['mul:2x1:c0'] }),
+  ],
+  sola: [
+    tryIt('column-mul', { top: 23, bottom: 3 }, '¡Tu turno! Empieza por las unidades.', { skills: ['mul:2x1:c0'] }),
+    tryIt('column-mul', { top: 23, bottom: 3 }, '¡Tu turno! Cada columna, de derecha a izquierda.', { skills: ['mul:2x1:c0'] }),
+    tryIt('column-mul', { top: 23, bottom: 3 }, '¡Tu turno! Multiplica cada cifra de arriba por la de abajo.', { skills: ['mul:2x1:c0'] }),
+  ],
+  cierre: show('column-mul', { top: 23, bottom: 3 }, 'Se multiplica cada cifra de arriba por la de abajo, empezando por las unidades, y cada resultado va en su columna.'),
+})
+
+const mul2x1Llevando = clase({
+  id: 'c3-mul-2x1-llevando',
+  topicId: 'mul-2x1-llevando',
+  title: 'Multiplicar y llevar',
+  mapLessonId: 'w7-carry',
+  para: [
+    show('place-value', { n: 47 }, 'En el puesto de helados de Tomás hay 6 cucuruchos para la fiesta del barrio.', 'octopus'),
+    show('place-value', { n: 47 }, 'Cada cucurucho lleva 47 gominolas. ¿Cuántas son? Multiplicamos 47 × 6, y esta vez hay llevadas.', 'octopus'),
+  ],
+  ejemplo: w7Carry.steps.slice(0, 4),
+  guiada: [
+    tryIt('column-mul', { top: 47, bottom: 6 }, '¡Te toca! Que no se escape ninguna llevada.', { skills: ['mul:2x1:c1'] }),
+    tryIt('column-mul', { top: 47, bottom: 6 }, '¡Otra! Las llevadas van arriba, en la columna de la izquierda.', { skills: ['mul:2x1:c1'] }),
+  ],
+  sola: [
+    tryIt('column-mul', { top: 47, bottom: 6 }, '¡Tu turno! Empieza por las unidades.', { skills: ['mul:2x1:c1'] }),
+    tryIt('column-mul', { top: 47, bottom: 6 }, '¡Tu turno! Primero multiplica, luego suma la llevada.', { skills: ['mul:2x1:c1'] }),
+    tryIt('column-mul', { top: 47, bottom: 6 }, '¡Tu turno! Sin pistas: no te olvides de ninguna llevada.', { skills: ['mul:2x1:c1'] }),
+  ],
+  cierre: show('column-mul', { top: 47, bottom: 6 }, 'La llevada de una columna se suma después de multiplicar la columna siguiente: primero multiplica, luego suma la mochila.'),
+})
+
+const mul3x1 = clase({
+  id: 'c3-mul-3x1',
+  topicId: 'mul-3x1',
+  title: 'Multiplicar 3 cifras por 1',
+  para: [
+    show('place-value', { n: 213 }, 'En la panadería de Nina, cada bandeja tiene 213 magdalenas. ¡Qué bien huele!', 'ladybug'),
+    show('place-value', { n: 213 }, 'Nina llena 3 bandejas iguales. ¿Cuántas magdalenas son? Multiplicamos 213 × 3.', 'ladybug'),
+  ],
+  ejemplo: [
+    show('place-value', { n: 213 }, '213 son 200, 10 y 3. Voy a multiplicar cada parte por 3.'),
+    show('column-mul', { top: 213, bottom: 3 }, 'Unidades: 3 × 3 = 9. Escribo el 9.'),
+    show('column-mul', { top: 213, bottom: 3 }, 'Decenas: 1 × 3 = 3 decenas, que son 30. Escribo el 3 en las decenas.'),
+    show('column-mul', { top: 213, bottom: 3 }, 'Centenas: 2 × 3 = 6 centenas, que son 600.'),
+    show('column-mul', { top: 213, bottom: 3 }, '600 + 30 + 9 = 639. ¡213 × 3 = 639!'),
+  ],
+  guiada: [
+    tryIt('column-mul', { top: 213, bottom: 3 }, '¡Te toca! Empieza por las unidades, como siempre.', { skills: ['mul:3x1:c0'] }),
+    tryIt('column-mul', { top: 213, bottom: 3 }, '¡Otra! Cada columna, de derecha a izquierda.', { skills: ['mul:3x1:c0'] }),
+  ],
+  sola: [
+    tryIt('column-mul', { top: 213, bottom: 3 }, '¡Tu turno! Unidades primero.', { skills: ['mul:3x1:c0'] }),
+    tryIt('column-mul', { top: 213, bottom: 3 }, '¡Tu turno! Ahora hay llevadas: ¡ojo con las columnas grandes!', { skills: ['mul:3x1:c1'] }),
+    tryIt('column-mul', { top: 213, bottom: 3 }, '¡Tu turno! Sin pistas: no te olvides de las llevadas.', { skills: ['mul:3x1:c1'] }),
+  ],
+  cierre: show('column-mul', { top: 213, bottom: 3 }, 'Con tres cifras se hace igual: se multiplica cada columna de derecha a izquierda, y las llevadas se suman en la columna siguiente.'),
+})
+
+const mulPor10 = clase({
+  id: 'c3-mul-10-100',
+  topicId: 'mul-10-100',
+  title: 'Multiplicar por 10 y por 100',
+  para: [
+    show('place-value', { n: 34 }, 'En el huerto de Sam, cada bancal tiene 34 tomates.', 'frog'),
+    show('place-value', { n: 34 }, 'Sam tiene 10 bancales iguales. ¿Cuántos tomates son? Multiplicamos 34 × 10.', 'frog'),
+  ],
+  ejemplo: [
+    show('place-value', { n: 34 }, 'Vamos a multiplicar 34 × 10. El 34 tiene 3 decenas y 4 unidades.'),
+    show('place-value', { n: 340 }, 'Al multiplicar por 10, cada cifra sube una casa y las unidades se llenan con un 0. ¡34 × 10 = 340!'),
+    show('place-value', { n: 3400 }, 'Por 100, cada cifra sube dos casas: el 3 pasa a los millares y el 4 a las centenas. ¡34 × 100 = 3 400!'),
+  ],
+  guiada: [
+    tryIt('place-value', { n: 340 }, '¡Te toca! Cada cifra sube una casa hacia la izquierda.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 340 }, '¡Otra! Mira cuántos ceros se añaden al final.', { skills: ['mental:por10'] }),
+  ],
+  sola: [
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Cada cifra sube una casa hacia la izquierda.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Si hay más ceros, cada cifra sube más casas.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Ojo: si es una división, los ceros se quitan.', { skills: ['mental:por10'] }),
+  ],
+  cierre: show('place-value', { n: 3400 }, 'Multiplicar por 10, 100 o 1 000 es añadir ceros a la derecha: cada cifra sube tantas casas como ceros se añaden.'),
+})
+
+const mul2x2Partes = clase({
+  id: 'c3-mul-2x2-partes',
+  topicId: 'mul-2-cifras-intro',
+  title: 'Multiplicar por dos cifras, por partes',
+  para: [
+    show('place-value', { n: 23 }, 'En la frutería hay 23 cajas de naranjas.', 'owl'),
+    show('place-value', { n: 14 }, 'Cada caja tiene 14 naranjas. ¿Cuántas son? Calculemos 23 × 14 por partes.', 'owl'),
+  ],
+  ejemplo: [
+    show('split-multiply', { n: 23, m: 4 }, 'Partimos el 14 en 10 y 4, y empezamos por el 4. El 23 son 20 y 3.'),
+    show('split-multiply', { n: 23, m: 4 }, '20 × 4 = 80 y 3 × 4 = 12.'),
+    show('split-multiply', { n: 23, m: 4 }, '80 + 12 = 92. Esta es la primera parte: 23 × 4 = 92.'),
+    show('place-value', { n: 230 }, 'Ahora las decenas: 23 × 10 = 230. Al multiplicar por 10, cada cifra sube una casa.'),
+    show('carry', { a: 230, b: 92 }, 'Juntamos las dos partes: 230 + 92 = 322. ¡23 × 14 = 322!'),
+  ],
+  guiada: [
+    tryIt('split-multiply', { n: 23, m: 4 }, '¡Te toca! Parte el número de abajo en decenas y unidades.', { skills: ['mul:2dx2d'] }),
+    tryIt('split-multiply', { n: 23, m: 4 }, '¡Otra! Multiplica primero por las unidades de abajo.', { skills: ['mul:2dx2d'] }),
+  ],
+  sola: [
+    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Primero por las unidades de abajo.', { skills: ['mul:2dx2d'] }),
+    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Después por las decenas: pon un cero detrás.', { skills: ['mul:2dx2d'] }),
+    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Sin pistas: las dos partes y su suma.', { skills: ['mul:2dx2d'] }),
+  ],
+  cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras, parto el número de abajo en decenas y unidades, multiplico por cada parte y sumo los dos resultados.'),
+})
+
 export const GRADE3_CLASSES: ClassDef[] = [
   sumar2d,
   sumar3d,
@@ -223,4 +349,9 @@ export const GRADE3_CLASSES: ClassDef[] = [
   restarPrestando,
   restarCeros,
   restarCuatroCifras,
+  mul2x1,
+  mul2x1Llevando,
+  mul3x1,
+  mulPor10,
+  mul2x2Partes,
 ]

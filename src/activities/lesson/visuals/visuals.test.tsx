@@ -120,6 +120,18 @@ describe('column subtraction plan', () => {
   })
 })
 
+describe('column multiplication with a three-digit top', () => {
+  it('213 × 3: the units phase shows 3 × 3 = 9, and the end shows 639', () => {
+    const Visual = LESSON_VISUALS['column-mul']
+    const first = render(<Visual params={{ top: 213, bottom: 3 }} phase={0} runLength={4} reduced />)
+    expect(first.container.querySelector('[data-testid="work"]')?.textContent).toBe('3 × 3 = 9')
+    first.unmount()
+    const end = render(<Visual params={{ top: 213, bottom: 3 }} phase={FINAL} runLength={1} reduced />)
+    expect(end.container.querySelector('[data-testid="work"]')?.textContent).toBe('213 × 3 = 639')
+    end.unmount()
+  })
+})
+
 describe('division galera', () => {
   it('84 ÷ 4 = 21 with no remainder, digit by digit', () => {
     const plan = longDivision(84, 4)
