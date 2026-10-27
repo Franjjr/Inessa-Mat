@@ -99,9 +99,7 @@ function ReadingBody({ reading, onDone }: ReadingScreenProps) {
   return (
     <Screen background="var(--c-bg)" className={s.root}>
       <div className={s.card}>
-        <p className={s.progress} aria-label={`Pregunta ${index + 1} de ${total}`}>
-          Pregunta {index + 1} de {total}
-        </p>
+        <p className={s.progress}>Pregunta {index + 1} de {total}</p>
         <details className={s.reread}>
           <summary>Leer el texto otra vez</summary>
           <div className={s.text}>

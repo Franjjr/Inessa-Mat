@@ -3,6 +3,7 @@
    paragraph fits the speech service (400 characters), and only the known template placeholders are used. */
 import { describe, expect, it } from 'vitest'
 import { READINGS, SHORT_READINGS, STORY_READINGS, readingById } from '@/content/lengua/stories'
+import { readingExercise } from '@/engine/lengua/reading'
 import { renderTemplate, templateContext } from '@/content/template'
 import type { ChildProfile } from '@/types'
 
@@ -106,4 +107,56 @@ describe('lectura de Lengua de 3.º: los textos', () => {
       }
     }
   })
+})
+
+describe('lectura: las opciones se mezclan', () => {
+  it('puts the right answer of the choice questions in every position, over the readings', () => {
+    const positions = new Map<number, number>()
+    for (const r of READINGS) r.questions.forEach((_q, i) => {
+      const ex = readingExercise(r, i)
+      if (ex.kind === 'lng-read-choice') positions.set(ex.answer, (positions.get(ex.answer) ?? 0) + 1)
+    })
+    for (const p of [0, 1, 2]) expect(positions.get(p) ?? 0, `position ${p}`).toBeGreaterThan(0)
+  })
+
+  it('makes the same shuffled order every time a question is shown', () => {
+    for (const r of READINGS) r.questions.forEach((_q, i) => {
+      expect(readingExercise(r, i)).toEqual(readingExercise(r, i))
+    })
+  })
+})
+
+/** Words that agree with a person's gender, as [masculine, feminine]. They are looked for after the name of the pet or the child. */
+const AGREEMENT: [string, string][] = [
+  ['seguro', 'segura'], ['preocupado', 'preocupada'], ['orgulloso', 'orgullosa'], ['nervioso', 'nerviosa'],
+  ['asustado', 'asustada'], ['cansado', 'cansada'], ['contento', 'contenta'], ['sorprendido', 'sorprendida'],
+  ['tranquilo', 'tranquila'], ['listo', 'lista'], ['quieto', 'quieta'], ['serio', 'seria'], ['enfadado', 'enfadada'],
+  ['dormido', 'dormida'], ['agotado', 'agotada'], ['despistado', 'despistada'],
+]
+
+describe('lectura: el género de las palabras que van con {pet} y {child}', () => {
+  const PET_NAME = 'Chispa'
+  const CHILD_NAME = 'Inessa'
+  for (const cg of ['f', 'm'] as const) for (const pg of ['f', 'm'] as const) {
+    it(`agrees with a child «${cg}» and a pet «${pg}»`, () => {
+      const child = { id: 'c', nickname: CHILD_NAME, gender: cg, companion: { species: 'dragon', gender: pg, name: PET_NAME } } as unknown as ChildProfile
+      const ctx = templateContext(child)
+      // The form that does not fit a person of this gender: index 1 (feminine) for a male, index 0 (masculine) for a female.
+      const wrongFor = (g: 'f' | 'm') => (g === 'f' ? 0 : 1)
+      const bad: string[] = []
+      for (const r of READINGS) for (const p of r.text) {
+        const text = renderTemplate(p, ctx)
+        for (const [name, g] of [[PET_NAME, pg], [CHILD_NAME, cg]] as const) {
+          for (let at = text.indexOf(name); at >= 0; at = text.indexOf(name, at + name.length)) {
+            const after = text.slice(at + name.length).split(/\s+/).slice(0, 5).map((w) => norm(w.replace(/[^\p{L}]/gu, '')))
+            for (const w of after) {
+              const pair = AGREEMENT.find((pr) => pr[0] === w || pr[1] === w)
+              if (pair && pair[wrongFor(g)] === w) bad.push(`${r.id}: «${name} … ${w}»`)
+            }
+          }
+        }
+      }
+      expect(bad).toEqual([])
+    })
+  }
 })

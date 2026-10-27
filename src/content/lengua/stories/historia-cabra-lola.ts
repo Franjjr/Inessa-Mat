@@ -12,7 +12,7 @@ export const historiaCabraLola: ReadingDef = {
     'Lola se puso nerviosa y empezó a dar pasos hacia atrás. —Bueno, quizá fueron mil.',
     '—¿Y el helado? ¿Dónde está el envoltorio? —preguntó {child}. Lola miró a un lado y a otro, pero no había nada.',
     '—Un refrán dice que las mentiras tienen las patas cortas —dijo {pet}—. Y las tuyas no llegan ni al árbol de al lado.',
-    'Lola bajó la cabeza. —Es verdad. Me lo inventaba para que me admirarais. —Pues admírate tú cuando digas la verdad —dijo {child}, sonriendo.',
+    'Lola bajó la cabeza. —Es verdad. Me lo inventaba para que me admirarais. —Pues cuenta la verdad, Lola, y te querremos igual —dijo {child}, sonriendo.',
     'Desde entonces, Lola cuenta solo historias de verdad. Son menos sorprendentes, pero todo el bosque le cree.',
   ],
   skills: ['lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar'],
@@ -35,7 +35,7 @@ export const historiaCabraLola: ReadingDef = {
       options: [
         'Un helado.',
         'Una manzana.',
-        'Un pastel de nubes.',
+        'Unas galletas.',
       ],
       answer: 0,
     },

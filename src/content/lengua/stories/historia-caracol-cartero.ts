@@ -8,7 +8,7 @@ export const historiaCaracolCartero: ReadingDef = {
     'El caracol Bernardo era el cartero del bosque. Era muy puntual, a su manera: llegaba cuando llegaba.',
     'Un día, Lumi le dio una carta urgente para la abuela del erizo. —Tiene que llegar hoy —le dijo—. ¿Me has entendido? ¡Hoy!',
     '—Hoy, hoy —repitió Bernardo, que tardó casi una hora en dar la vuelta a una piedra.',
-    '{pet} lo miró preocupado. —Si seguimos así, la abuela del erizo cumplirá cien años antes de leer la carta.',
+    '{pet} lo miró, {pg:preocupada|preocupado}. —Si seguimos así, la abuela del erizo cumplirá cien años antes de leer la carta.',
     '{child} se rascó la cabeza y miró el río. Vio una hoja grande, verde y tranquila, que flotaba sin prisa.',
     '—¡Ya lo tengo! —dijo {child}—. La carta irá en barco. El río va mucho más deprisa que Bernardo.',
     'Metieron la carta en un sobre de hoja, lo ataron con una ramita y lo dejaron en el agua. La corriente la llevó hasta la orilla de la abuela, como un tren de hojas.',

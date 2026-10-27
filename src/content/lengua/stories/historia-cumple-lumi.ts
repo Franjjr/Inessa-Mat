@@ -22,9 +22,9 @@ export const historiaCumpleLumi: ReadingDef = {
       skill: 'lng:lect:idea-principal',
       prompt: '¿Cuál es la idea principal del texto?',
       options: [
-        'La fiesta de Lumi se salva gracias a una buena idea.',
+        'Lumi cumple años, y la tarta se hace con miel en lugar de azúcar.',
         'Lumi cumple años y se queda sin invitados.',
-        'Las abejas organizan una fiesta en el bosque.',
+        'La señora Oca gana un concurso de tartas.',
       ],
       answer: 0,
     },

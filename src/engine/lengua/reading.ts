@@ -24,14 +24,20 @@ export function readingKind(q: ReadingQuestion): ExerciseKind {
   }
 }
 
-/** One question of a reading as an exercise. The id is stable (reading id and question number), so an attempt names its question. */
-export function readingExercise(reading: ReadingDef, index: number, rng: Rng = createRng(hashString(reading.id))): ReadingExercise {
+/** One question of a reading as an exercise. The id is stable (reading id and question number), so an attempt names its question.
+    The options of a choice and the events of an order are shuffled from a seed of that id: the same order every time the question
+    is shown, and the right answer never sits in the place the data gives it (the data order does not matter). */
+export function readingExercise(reading: ReadingDef, index: number): ReadingExercise {
   const q = reading.questions[index]
   if (!q) throw new Error(`reading: '${reading.id}' has no question ${index}`)
   const id = `reading:${reading.id}:${index}`
+  const rng = createRng(hashString(id))
   const base = { id, skill: q.skill, difficulty: 2, reading: reading.id, question: q.prompt }
   switch (q.kind) {
-    case 'choice': return { ...base, kind: 'lng-read-choice', options: [...q.options], answer: q.answer }
+    case 'choice': {
+      const order = shuffle(rng, q.options.map((_, i) => i))
+      return { ...base, kind: 'lng-read-choice', options: order.map((i) => q.options[i]), answer: order.indexOf(q.answer) }
+    }
     case 'text': return { ...base, kind: 'lng-read-text', answer: q.answer }
     case 'order': {
       const correct = q.events.map((_, i) => i)
@@ -59,7 +65,7 @@ export function buildReading(kind: ExerciseKind, skill: SkillKey, rng: Rng): Rea
   const candidates = bank(kind, skill)
   if (candidates.length === 0) throw new Error(`reading: no ${kind} question for '${skill}'`)
   const [reading, index] = candidates[Math.floor(rng() * candidates.length)]
-  return readingExercise(reading, index, rng)
+  return readingExercise(reading, index)
 }
 
 export function checkReading(ex: ReadingExercise, answer: Answer): CheckResult {

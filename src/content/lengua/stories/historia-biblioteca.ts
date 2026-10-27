@@ -31,7 +31,7 @@ export const historiaBiblioteca: ReadingDef = {
     {
       kind: 'choice',
       skill: 'lng:lect:preguntas',
-      prompt: '¿Qué le dieron a Gaspar para poder hablar?',
+      prompt: '¿Qué se sacó de la caja de disfraces?',
       options: [
         'Un sombrero rojo.',
         'Una pluma grande.',

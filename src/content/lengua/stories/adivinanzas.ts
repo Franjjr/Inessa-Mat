@@ -31,7 +31,7 @@ export const adivinanzaReloj = riddle('adivinanza-reloj', 'Adivinanza del reloj'
 ], 'reloj')
 
 export const adivinanzaGlobo = riddle('adivinanza-globo', 'Adivinanza del globo', [
-  'Subo sin escalera y vuelo sin alas.\nSi me sueltas, me pierdo en el cielo.\n¿Qué soy?',
+  'Subo sin escalera y vuelo sin alas.\nMe hincho de aire para las fiestas, y si me sueltas, me pierdo en el cielo.\n¿Qué soy?',
 ], 'globo')
 
 export const adivinanzaTijeras = riddle('adivinanza-tijeras', 'Adivinanza de las tijeras', [
@@ -43,7 +43,7 @@ export const adivinanzaHuevo = riddle('adivinanza-huevo', 'Adivinanza del huevo'
 ], 'huevo')
 
 export const adivinanzaCaracol = riddle('adivinanza-caracol', 'Adivinanza del caracol', [
-  'Llevo mi casa a la espalda y voy despacio.\nNunca tengo prisa, ni cuando llueve.\n¿Quién soy?',
+  'Llevo mi casa a la espalda y tengo dos antenas.\nDejo un rastro brillante, y nunca tengo prisa.\n¿Quién soy?',
 ], 'caracol')
 
 export const adivinanzaBicicleta = riddle('adivinanza-bicicleta', 'Adivinanza de la bicicleta', [

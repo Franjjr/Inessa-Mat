@@ -6,7 +6,7 @@ export const historiaTarta: ReadingDef = {
   title: 'La tarta que quería ir a la playa',
   text: [
     'Era la víspera de la fiesta de Lumi. En la cocina reposaba una tarta de fresas, con crema rosa, tres velas y una cereza encima.',
-    '{pet} la miró con ojos de admirador. —Solo quiero probar un poquito —susurró—. Un poquito, nada más.',
+    '{pet} la miró con cara de hambre. —Solo quiero probar un poquito —susurró—. Un poquito, nada más.',
     'Pero, en cuanto {pet} se acercó, la tarta dio un salto. ¡Plof! Bajó de la mesa, rodó por el suelo y salió por la puerta del jardín.',
     '—¡Me voy a la playa! —gritó la tarta, con una vocecita de merengue—. ¡Soy demasiado guapa para quedarme en casa!',
     '{child} y {pet} salieron corriendo detrás de ella. La tarta rodaba más deprisa que una pelota, y cada vez estaba más lejos.',
@@ -22,9 +22,9 @@ export const historiaTarta: ReadingDef = {
       skill: 'lng:lect:idea-principal',
       prompt: '¿De qué trata la historia?',
       options: [
-        'De una tarta que se escapa de la cocina y se para gracias a una buena idea.',
-        'De un viaje a la playa para comer helado.',
-        'De un concurso de cocina con muchos premios.',
+        'Una tarta se escapa de la cocina y acaba repartida entre todos.',
+        'Una fiesta se suspende porque no hay pastel.',
+        'Un concurso de cocina reparte premios de pastel.',
       ],
       answer: 0,
     },

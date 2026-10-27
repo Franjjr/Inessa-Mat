@@ -7,7 +7,7 @@ export const historiaLoroAlReves: ReadingDef = {
   text: [
     'Pipo era un loro muy listo, pero desde que se comió una semilla mágica, todas sus palabras salían al revés.',
     '—¡Nap! ¡Nap! —gritaba cada mañana, mirando la cesta de Lumi—. ¡Nap, nap!',
-    '—¿Nap? —preguntó Lumi, con el cuerno lleno de dudas—. Eso no quiere decir nada.',
+    '—¿Nap? —preguntó Lumi, con la cabeza llena de dudas—. Eso no quiere decir nada.',
     '{child} se rió y dijo: —Espera, Lumi. Nap al revés es pan. Pipo tiene hambre.',
     'Pipo dio saltos de alegría. Luego señaló un árbol y gritó: —¡Ajab, ajab! Al darle la vuelta, {child} entendió: «baja».',
     '{pet} miró hacia arriba. Allí, enganchado en una rama, estaba el globo rojo de la fiesta, que llevaba todo el día perdido.',
@@ -24,7 +24,7 @@ export const historiaLoroAlReves: ReadingDef = {
       options: [
         'De un loro que dice las palabras al revés, y de cómo sus amigos las descifran.',
         'De una semilla que hace crecer árboles muy altos.',
-        'De un globo que vuela hasta la luna.',
+        'De un globo que se pierde y nadie vuelve a buscar.',
       ],
       answer: 0,
     },

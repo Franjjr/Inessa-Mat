@@ -34,8 +34,8 @@ export const poemaLluvia: ReadingDef = {
       prompt: '¿De qué trata el poema?',
       options: [
         'De un día de lluvia que se pasa con alegría.',
-        'De un viaje a la luna en un cohete.',
-        'De un gato que no quiere comer.',
+        'De un paseo por el parque en un día de sol.',
+        'De un perro que busca su pelota en el jardín.',
       ],
       answer: 0,
     },
