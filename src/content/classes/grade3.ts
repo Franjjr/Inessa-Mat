@@ -298,19 +298,21 @@ const mulPor10 = clase({
   ],
   ejemplo: [
     show('place-value', { n: 34 }, 'Vamos a multiplicar 34 × 10. El 34 tiene 3 decenas y 4 unidades.'),
-    show('place-value', { n: 340 }, 'Al multiplicar por 10, cada cifra sube una casa y las unidades se llenan con un 0. ¡34 × 10 = 340!'),
+    show('place-value', { n: 340 }, 'Al multiplicar por 10, cada cifra sube una casa y las unidades se completan con un 0. ¡34 × 10 = 340!'),
     show('place-value', { n: 3400 }, 'Por 100, cada cifra sube dos casas: el 3 pasa a los millares y el 4 a las centenas. ¡34 × 100 = 3 400!'),
+    show('place-value', { n: 5000 }, 'Por 1 000, cada cifra sube tres casas: 5 × 1 000 = 5 000.'),
+    show('place-value', { n: 34 }, 'Al dividir entre 100 se quitan dos ceros: 3 400 : 100 = 34.'),
   ],
   guiada: [
-    tryIt('place-value', { n: 340 }, '¡Te toca! Cada cifra sube una casa hacia la izquierda.', { skills: ['mental:por10'] }),
-    tryIt('place-value', { n: 340 }, '¡Otra! Mira cuántos ceros se añaden al final.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 340 }, '¡Te toca! Fíjate en cuántos ceros tiene el 10, el 100 o el 1 000.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 340 }, '¡Otra! Si multiplicas, añade ceros; si divides, quítalos.', { skills: ['mental:por10'] }),
   ],
   sola: [
-    tryIt('place-value', { n: 3400 }, '¡Tu turno! Cada cifra sube una casa hacia la izquierda.', { skills: ['mental:por10'] }),
-    tryIt('place-value', { n: 3400 }, '¡Tu turno! Si hay más ceros, cada cifra sube más casas.', { skills: ['mental:por10'] }),
-    tryIt('place-value', { n: 3400 }, '¡Tu turno! Ojo: si es una división, los ceros se quitan.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Mira el signo: × añade ceros y : los quita.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Cuenta los ceros del número por el que multiplicas o divides.', { skills: ['mental:por10'] }),
+    tryIt('place-value', { n: 3400 }, '¡Tu turno! Sin pistas: decide si los ceros se añaden o se quitan.', { skills: ['mental:por10'] }),
   ],
-  cierre: show('place-value', { n: 3400 }, 'Multiplicar por 10, 100 o 1 000 es añadir ceros a la derecha: cada cifra sube tantas casas como ceros se añaden.'),
+  cierre: show('place-value', { n: 3400 }, 'Multiplicar por 10, 100 o 1 000 añade ceros a la derecha, y dividir entre ellos los quita.'),
 })
 
 const mul2x2Partes = clase({
@@ -319,10 +321,10 @@ const mul2x2Partes = clase({
   title: 'Multiplicar por dos cifras, por partes',
   para: [
     show('place-value', { n: 23 }, 'En la frutería hay 23 cajas de naranjas.', 'owl'),
-    show('place-value', { n: 14 }, 'Cada caja tiene 14 naranjas. ¿Cuántas son? Calculemos 23 × 14 por partes.', 'owl'),
+    show('place-value', { n: 14 }, 'Cada caja tiene 14 naranjas. ¿Cuántas son? Calculemos 23 × 14: partimos el 14 en 4 y 10, y empezamos por el 4.', 'owl'),
   ],
   ejemplo: [
-    show('split-multiply', { n: 23, m: 4 }, 'Partimos el 14 en 10 y 4, y empezamos por el 4. El 23 son 20 y 3.'),
+    show('split-multiply', { n: 23, m: 4 }, 'El 23 son 20 y 3.'),
     show('split-multiply', { n: 23, m: 4 }, '20 × 4 = 80 y 3 × 4 = 12.'),
     show('split-multiply', { n: 23, m: 4 }, '80 + 12 = 92. Esta es la primera parte: 23 × 4 = 92.'),
     show('place-value', { n: 230 }, 'Ahora las decenas: 23 × 10 = 230. Al multiplicar por 10, cada cifra sube una casa.'),
