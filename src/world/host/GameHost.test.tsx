@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { useActivityHost } from '@/activities'
-import { createChild, getMastery, listAttempts, useActiveChild } from '@/data'
+import { createChild, getMastery, listAttempts, listSessions, useActiveChild } from '@/data'
 import type { ActivityHost, Exercise } from '@/types'
 import { flushTimers, useLocalOnlyAuth } from '../host/testing'
 import { GameHostProvider } from './GameHost'
@@ -94,11 +94,11 @@ describe('GameHostProvider', () => {
       </GameHostProvider>,
     )
     await waitFor(() => expect(host).not.toBeNull())
+    // The host writes for the child once its play session is open: wait for that row, then report once.
+    await waitFor(async () => expect((await listSessions(child.id)).length).toBe(1), { timeout: 3000 })
     const wrong = { correct: false, given: '48', expected: '42' }
-    await waitFor(async () => {
-      host!.reportAttempt({ exercise, check: wrong, ms: 2000, inputMode: 'keypad', hintsUsed: 0 })
-      expect((await listAttempts(child.id)).length).toBeGreaterThan(0)
-    }, { timeout: 3000 })
+    host!.reportAttempt({ exercise, check: wrong, ms: 2000, inputMode: 'keypad', hintsUsed: 0 })
+    await waitFor(async () => expect((await listAttempts(child.id)).length).toBe(1), { timeout: 3000 })
     const before = await getMastery(child.id)
     host!.reportAttempt({ exercise, check: { correct: true, given: '42', expected: '42' }, ms: 1500, inputMode: 'keypad', hintsUsed: 0, retries: 1, solvedOnRetry: true, graded: false })
 
@@ -106,6 +106,7 @@ describe('GameHostProvider', () => {
       const latest = (await listAttempts(child.id))[0]
       expect(latest.retries).toBe(1)
       expect(latest.solvedOnRetry).toBe(true)
+      expect(latest.graded).toBe(false)
     })
     const after = await getMastery(child.id)
     expect(after['mul:6x7'].attempts).toBe(before['mul:6x7'].attempts)

@@ -49,4 +49,13 @@ describe('attempt retries', () => {
     expect(back.retries).toBeUndefined()
     expect(back.context).toEqual({ activity: 'sesion' })
   })
+
+  it('keeps graded: false through the context json; an old row (no flag) reads as graded', () => {
+    const row = attemptToRow({ ...base, retries: 1, solvedOnRetry: true, graded: false })
+    expect(row.context).toEqual({ activity: 'sesion', retries: 1, solvedOnRetry: true, graded: false })
+    const back = attemptFromRow(row)
+    expect(back.graded).toBe(false)
+    expect(back.context).toEqual({ activity: 'sesion' })
+    expect(attemptFromRow(attemptToRow(base)).graded).toBeUndefined()
+  })
 })

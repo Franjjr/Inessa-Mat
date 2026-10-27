@@ -225,6 +225,7 @@ export function errorReport(attempts: readonly AttemptRecord[], now: Date, days 
   for (const a of attempts) {
     const at = Date.parse(a.createdAt)
     if (!(at >= before && at <= t)) continue
+    if (a.graded === false) continue // a retry row is not a first answer: not in the answered/wrong counts
     const recent = at >= from
     if (recent && a.errorType !== 'recognition') answered += 1
     if (a.correct) continue

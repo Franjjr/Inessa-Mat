@@ -150,8 +150,26 @@ describe('topicNeeds: «No lo sabía» and «Necesitó otro intento» per topic'
     expect(needs[other.id]).toEqual({ dontKnow: 1, retried: 0 })
   })
 
+  it('counts a retry row as «Necesitó otro intento» even when it is not graded', () => {
+    const needs = topicNeeds(GRADE3_SYLLABUS, [attempt({ skill, correct: true, retries: 1, graded: false, createdAt: daysAgo(1) })], now)
+    expect(needs[topic.id]).toEqual({ dontKnow: 0, retried: 1 })
+  })
+
   it('leaves out topics with no such answers and skills that are not in the temario', () => {
     const needs = topicNeeds(GRADE3_SYLLABUS, [attempt({ skill: 'not-a-skill', errorType: 'dont-know', correct: false, createdAt: daysAgo(1) })], now)
     expect(needs).toEqual({})
   })
 })
+
+describe('errorReport: ungraded retry rows are not first answers', () => {
+  it('a retry row is left out of the answered and wrong counts', () => {
+    const list = [
+      attempt({ skill: 'mul:6x7', correct: false, errorType: 'fact', createdAt: daysAgo(2) }),
+      attempt({ skill: 'mul:6x7', correct: false, errorType: 'fact', createdAt: daysAgo(2), graded: false, retries: 1 }),
+    ]
+    const r = errorReport(list, now)
+    expect(r.answered).toBe(1)
+    expect(r.wrong).toBe(1)
+  })
+})
+

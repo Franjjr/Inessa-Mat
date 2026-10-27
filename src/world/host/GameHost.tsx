@@ -210,6 +210,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
         recognitionFixes: recognitionFixes ?? 0,
         ...(retries ? { retries } : {}),
         ...(solvedOnRetry ? { solvedOnRetry } : {}),
+        ...(graded ? {} : { graded: false }),
         context: {
           ...(worldId ? { worldId } : {}),
           ...(nodeId ? { nodeId } : {}),
