@@ -72,3 +72,31 @@ test.describe('Prueba inicial', () => {
     await settle(page, 300)
   })
 })
+
+test.describe('a short landscape tablet (Android with its bars)', () => {
+  test.use({ viewport: { width: 1138, height: 640 } })
+
+  test('the page scrolls down to «Siguiente» when the exercise is taller than the screen', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/sesion')
+    await page.getByRole('button', { name: '¡Empezar!' }).click()
+    const example = page.getByRole('button', { name: /Entendido/ })
+    for (let i = 0; i < 40 && (await example.count()) === 0; i++) {
+      await page.keyboard.type('1')
+      await page.keyboard.press('Enter')
+      await settle(page, 150)
+      const next = page.getByRole('button', { name: /Siguiente/ })
+      if (await next.count()) await next.first().click()
+    }
+    await example.click()
+    await page.getByRole('textbox', { name: 'Número de los bloques' }).focus()
+    await page.keyboard.type('1234')
+    await page.keyboard.press('Enter')
+    const next = page.getByRole('button', { name: /Siguiente/ })
+    await expect(next).toBeVisible()
+    await page.evaluate(() => window.scrollTo(0, document.scrollingElement!.scrollHeight))
+    const box = await next.boundingBox()
+    const height = await page.evaluate(() => window.innerHeight)
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height)
+  })
+})

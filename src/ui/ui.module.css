@@ -64,7 +64,10 @@
   flex: 1;
   display: flex; flex-direction: column;
   min-height: 100dvh;
-  overflow: hidden;
+  /* Clip sideways only: a screen taller than the device (a short landscape tablet, a phone) must scroll down to its
+     buttons. «hidden» on old Safari (no «clip») makes the screen itself scroll, which is fine too. */
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .topbar {
