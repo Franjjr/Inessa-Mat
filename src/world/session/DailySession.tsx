@@ -245,6 +245,8 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
               report={!slot.retry}
               onContinue={(o) => onAnswered(o.check.correct, slot.retry)}
               onSkip={onPostponed}
+              allowRetry
+              allowDontKnow={slot.item.item.block !== 'warmup'}
             />
           </div>
         ) : null}

@@ -26,7 +26,7 @@ describe('child gender mapping', () => {
 
 describe('attempt retries', () => {
   const base: AttemptRecord = {
-    id: 'a1', childId: 'k1', sessionId: null, skill: 'add:2+2', kind: 'fact', correct: false, given: '5', expected: '4',
+    id: 'a1', childId: 'k1', sessionId: null, skill: 'add:2+2', kind: 'fact-mul', correct: false, given: '5', expected: '4',
     ms: 1200, inputMode: 'keypad', hintsUsed: 0, errorType: 'fact', context: { activity: 'sesion' }, createdAt: '2026-10-01T10:00:00.000Z',
   }
 
