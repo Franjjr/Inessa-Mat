@@ -428,7 +428,10 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'lng-syllables':
     case 'lng-dictation':
     case 'lng-alphabet':
-    case 'lng-pair-words': return hintsLengua(ex)
+    case 'lng-pair-words':
+    case 'lng-read-choice':
+    case 'lng-read-text':
+    case 'lng-read-order': return hintsLengua(ex)
   }
 }
 

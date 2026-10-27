@@ -48,9 +48,9 @@ describe('temario de Lengua de 3.º', () => {
     }
   })
 
-  it('the grammar, spelling, syllable, dictation and vocabulary skills have exercise kinds; reading, literature, copy and guided writing have none yet', () => {
-    // Lectura, literatura, copia y escritura guiada llegan en sus tareas: sin tipo de ejercicio por ahora.
-    const practised = (k: string) => /^lng:(gram|orto|voc):|^lng:escr:dictado$/.test(k)
+  it('the grammar, spelling, vocabulary, dictation, reading and literature skills have exercise kinds; copy and guided writing have none yet', () => {
+    // Copia y escritura guiada llegan en sus tareas: sin tipo de ejercicio por ahora.
+    const practised = (k: string) => /^lng:(gram|orto|voc|lect|lit):|^lng:escr:dictado$/.test(k)
     const withKinds = skills.filter(practised)
     expect(withKinds.length).toBeGreaterThan(0)
     for (const s of withKinds) expect(kindsForSkill(s).length, s).toBeGreaterThan(0)

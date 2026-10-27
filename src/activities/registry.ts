@@ -105,4 +105,7 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'lng-dictation': lazy(() => import('./views/lengua/DictationView')),
   'lng-alphabet': lazy(() => import('./views/lengua/OrderWordsView')),
   'lng-pair-words': lazy(() => import('./views/lengua/PairWordsView')),
+  'lng-read-choice': lazy(() => import('./views/lengua/ReadingView')),
+  'lng-read-text': lazy(() => import('./views/lengua/ReadingView')),
+  'lng-read-order': lazy(() => import('./views/lengua/ReadingView')),
 }

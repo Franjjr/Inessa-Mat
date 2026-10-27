@@ -1,0 +1,92 @@
+/* Lengua de 3.º, lectura: the text is the star. A card of at most 40 rem, the paragraphs at a comfortable size in the reading
+   font, with the poem's line breaks kept. The page never scrolls sideways (phone 360 px, 16 px gutter). */
+.root {
+  padding-inline: 16px;
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  min-width: 0;
+  padding-block: var(--sp-5);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-ink);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.paragraph {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: clamp(19px, 2.2vmin + 10px, 24px);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: var(--c-ink);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.note {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+.progress {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
+.reread {
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg, 16px);
+  background: var(--c-surface);
+}
+
+.reread summary {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.reread .text {
+  padding-block: var(--sp-3);
+}

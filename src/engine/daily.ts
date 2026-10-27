@@ -56,7 +56,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'long-mul': 90, ordinal: 20, decimal: 40, 'decimal-op': 60,
   'lng-tap-words': 25, 'lng-sentence-parts': 30, 'lng-classify': 15, 'lng-transform': 30,
   'lng-missing-letter': 20, 'lng-punctuation': 40, 'lng-stress': 15, 'lng-syllables': 20, 'lng-dictation': 35,
-  'lng-alphabet': 30, 'lng-pair-words': 20,
+  'lng-alphabet': 30, 'lng-pair-words': 20, 'lng-read-choice': 30, 'lng-read-text': 25, 'lng-read-order': 40,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -155,6 +155,7 @@ export function statementOf(ex: Exercise): string {
     case 'decimal-op': return `${fmtDecimal(ex.left, ex.places)} ${ex.op === 'add' ? '+' : '−'} ${fmtDecimal(ex.right, ex.places)} = ?`
     case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
     case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words':
+    case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order':
       return lenguaStatement(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`

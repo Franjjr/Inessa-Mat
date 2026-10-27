@@ -116,6 +116,9 @@ export type ExerciseKind =
   | 'lng-dictation'   // Lengua 3.º: escribir lo que dice la voz de la app (una palabra o una frase)
   | 'lng-alphabet'    // Lengua 3.º: ordenar palabras por el abecedario (voc:abecedario)
   | 'lng-pair-words'  // Lengua 3.º: sinónimos, antónimos, familias, diminutivos, aumentativos, compuestas (voc:*)
+  | 'lng-read-choice' // Lengua 3.º: elegir la respuesta a una pregunta de un texto (lect:*, lit:rima, lit:fabula, lit:trabalenguas)
+  | 'lng-read-text'   // Lengua 3.º: escribir una palabra del texto o la respuesta de una adivinanza (lect:preguntas, lit:adivinanzas)
+  | 'lng-read-order'  // Lengua 3.º: poner en orden lo que pasa en el texto (lect:ordenar)
 
 interface ExerciseBase {
   id: ID
@@ -622,9 +625,32 @@ export interface LngPairWordsExercise extends ExerciseBase {
   options: string[]
   answer: string
 }
+/** A question of a reading (src/content/lengua/stories): the child taps the right option. `reading` is the reading's id. */
+export interface LngReadChoiceExercise extends ExerciseBase {
+  kind: 'lng-read-choice'
+  reading: string
+  question: string
+  options: string[]
+  answer: number
+}
+/** A question of a reading with a word of the text (or a riddle's answer) as the answer, compared with 'ignore-case'. */
+export interface LngReadTextExercise extends ExerciseBase {
+  kind: 'lng-read-text'
+  reading: string
+  question: string
+  answer: string
+}
+/** Events of a text to put in order. events are shown shuffled; targets are their indexes in the right order. */
+export interface LngReadOrderExercise extends ExerciseBase {
+  kind: 'lng-read-order'
+  reading: string
+  question: string
+  events: string[]
+  targets: number[]
+}
 export type LenguaExercise = LngTapWordsExercise | LngSentencePartsExercise | LngClassifyExercise | LngTransformExercise
   | LngMissingLetterExercise | LngPunctuationExercise | LngStressExercise | LngSyllablesExercise | LngDictationExercise
-  | LngAlphabetExercise | LngPairWordsExercise
+  | LngAlphabetExercise | LngPairWordsExercise | LngReadChoiceExercise | LngReadTextExercise | LngReadOrderExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -819,6 +845,7 @@ export type ErrorType =
   | 'dictation'           // Lengua: what was heard was written wrongly
   | 'alphabet'            // Lengua: the words are out of alphabetical order
   | 'word-pair'           // Lengua: the wrong synonym, antonym, family member or form
+  | 'reading'             // Lengua: a question about a text answered wrongly (idea, detail, order, rhyme, riddle, fable)
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round

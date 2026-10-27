@@ -516,7 +516,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
   return []
 }
 
-/** The Lengua kinds of each skill (src/engine/lengua). Skills with no kind yet (copia, guiada, lectura, literatura) are
+/** The Lengua kinds of each skill (src/engine/lengua). Skills with no kind yet (copia, guiada) are
     listed in the syllabus and practised later. */
 function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[] {
   switch (p.area) {
@@ -541,6 +541,15 @@ function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[
       if (p.item === 'abecedario') return ['lng-alphabet']
       if (['sinonimos', 'antonimos', 'familias', 'diminutivos', 'aumentativos', 'compuestas'].includes(p.item)) return ['lng-pair-words']
       return []
+    case 'lect':
+      if (p.item === 'idea-principal') return ['lng-read-choice']
+      if (p.item === 'preguntas') return ['lng-read-choice', 'lng-read-text']
+      if (p.item === 'ordenar') return ['lng-read-order']
+      return []
+    case 'lit':
+      if (p.item === 'rima' || p.item === 'fabula' || p.item === 'trabalenguas') return ['lng-read-choice']
+      if (p.item === 'adivinanzas') return ['lng-read-text']
+      return []
     case 'escr':
       return p.item === 'dictado' ? ['lng-dictation'] : []
     default: return []
@@ -556,6 +565,8 @@ export const LENGUA_SKILLS: SkillKey[] = [
   'lng:orto:signos:punto', 'lng:orto:signos:coma', 'lng:orto:signos:pregunta', 'lng:orto:signos:exclamacion',
   'lng:voc:abecedario', 'lng:voc:sinonimos', 'lng:voc:antonimos', 'lng:voc:familias', 'lng:voc:diminutivos',
   'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:dictado',
+  'lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar',
+  'lng:lit:rima', 'lng:lit:fabula', 'lng:lit:adivinanzas', 'lng:lit:trabalenguas',
 ]
 
 /** The grammar skills (lng:gram:…) of the grammar kinds, the first kind of each being its default. */

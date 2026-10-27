@@ -608,6 +608,9 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'lng-syllables':
     case 'lng-dictation':
     case 'lng-alphabet':
-    case 'lng-pair-words': return checkLengua(exercise, answer)
+    case 'lng-pair-words':
+    case 'lng-read-choice':
+    case 'lng-read-text':
+    case 'lng-read-order': return checkLengua(exercise, answer)
   }
 }

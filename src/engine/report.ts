@@ -200,6 +200,7 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'dictation': 'lengua',
   'alphabet': 'lengua',
   'word-pair': 'lengua',
+  'reading': 'lengua',
   'incomplete': 'despiste',
   'false-alarm': 'despiste',
   'remainder-too-big': 'despiste',

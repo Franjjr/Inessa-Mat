@@ -117,6 +117,12 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'marks', marked: [...ex.targets] }
     case 'lng-pair-words':
       return ex.mode === 'text' ? { type: 'text', value: ex.answer } : { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-read-choice':
+      return { type: 'choice', index: ex.answer }
+    case 'lng-read-text':
+      return { type: 'text', value: ex.answer }
+    case 'lng-read-order':
+      return { type: 'marks', marked: [...ex.targets] }
     default:
       return { type: 'number', value: ex.answer as number }
   }

@@ -246,6 +246,7 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'dictation': 'Escribe mal lo que oye',
   'alphabet': 'Ordena mal las palabras del abecedario',
   'word-pair': 'Confunde sinónimos, antónimos, familias o la forma de la palabra',
+  'reading': 'No encuentra en el texto la frase que responde a la pregunta, o confunde el orden de lo que pasa',
 }
 
 /** Spanish description of an error type for adult dashboards. */

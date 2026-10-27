@@ -291,6 +291,7 @@ const MISSED: Record<ErrorType, string> = {
   'dictation': 'Escucha otra vez y piensa cómo se escribe cada sonido.',
   'alphabet': 'Mira la primera letra de cada palabra y, si es igual, la segunda.',
   'word-pair': 'Piensa en lo que quiere decir la palabra y vuelve a mirar las opciones.',
+  'reading': 'Vuelve a leer el texto despacio y busca la frase que habla de eso.',
 }
 
 export const HUNT_FEEDBACK = {
@@ -388,6 +389,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'dictation': 'Que repita la palabra en voz baja, sílaba a sílaba, antes de escribirla.',
   'alphabet': 'Que compare la primera letra de cada palabra con el abecedario.',
   'word-pair': 'Que diga cada opción en una frase para ver cuál encaja.',
+  'reading': 'Que vuelva al texto y compruebe cada opción con la frase donde se habla de eso.',
 }
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
