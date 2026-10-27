@@ -42,7 +42,7 @@ const BLOCKS: SyllabusBlock[] = [
         concreto: 'Acciones con mímica: salta, saltó, saltará', dibujo: 'Una línea del tiempo con tres casillas', numeros: 'Cambiar el tiempo de una frase', uso: 'Contar lo que pasó y lo que pasará',
       }, true),
       topic('oracion', 'Oración: sujeto y predicado', [lenguaSkill('gram', 'oracion', 'sujeto'), lenguaSkill('gram', 'oracion', 'predicado')], {
-        concreto: 'Tarjetas de quién y de qué hace', dibujo: 'La frase partida en dos colores', numeros: 'Encontrar quién hace la acción', uso: 'Frases de una historia, partidas en sujeto y predicado',
+        concreto: 'Tarjetas de quién hace la acción y qué hace', dibujo: 'La frase partida en dos colores', numeros: 'Encontrar quién hace la acción', uso: 'Frases de una historia, partidas en sujeto y predicado',
       }, true),
     ],
   },
@@ -57,10 +57,10 @@ const BLOCKS: SyllabusBlock[] = [
         concreto: 'Sonidos «ca» y «que» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: _asa', uso: 'Palabras con c y qu en un texto',
       }),
       topic('g-gu', 'g, gu y gü: ga, gue, gui, güe', [lenguaSkill('orto', 'g-gu')], {
-        concreto: 'Sonidos «ga» y «gue» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: pin_ino', uso: 'Palabras con g, gu y gü en un texto',
+        concreto: 'Sonidos «ga» y «gue» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: gu_tarra, ci_üeña', uso: 'Palabras con g, gu y gü en un texto',
       }),
       topic('r-rr', 'r y rr: entre vocales y al principio', [lenguaSkill('orto', 'r-rr')], {
-        concreto: 'La r suave y la rr fuerte con fichas', dibujo: 'Dibujos de palabras con r y rr', numeros: 'Escribir r o rr: pe_o, ca_o', uso: 'Palabras con r y rr en una historia',
+        concreto: 'La r suave y la rr fuerte con fichas', dibujo: 'Dibujos de palabras con r y rr', numeros: 'Escribir r o rr: ho_a (del reloj), to_e (edificio alto)', uso: 'Palabras con r y rr en una historia',
       }),
       topic('mp-mb', 'mp y mb', [lenguaSkill('orto', 'mp-mb')], {
         concreto: 'Fichas de m con p o con b', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'Escribir mp o mb: ca_ana', uso: 'Palabras con mp y mb en un texto',
@@ -88,8 +88,8 @@ const BLOCKS: SyllabusBlock[] = [
       topic('familias', 'Familias de palabras', [lenguaSkill('voc', 'familias')], {
         concreto: 'Un árbol con la raíz en el tronco', dibujo: 'Palabras de la misma familia en una rama', numeros: 'Palabras que empiezan igual: pan, panadero', uso: 'Encontrar la familia de una palabra de un texto',
       }),
-      topic('aumentativos-diminutivos', 'Aumentativos y diminutivos', [lenguaSkill('voc', 'aumentativos'), lenguaSkill('voc', 'diminutivos')], {
-        concreto: 'Un objeto grande y otro pequeño', dibujo: 'Dibujos de tamaños distintos con su palabra', numeros: 'Casa, casona, casita', uso: 'Diminutivos y aumentativos en una historia',
+      topic('aumentativos-diminutivos', 'Diminutivos y aumentativos', [lenguaSkill('voc', 'diminutivos'), lenguaSkill('voc', 'aumentativos')], {
+        concreto: 'Un objeto grande y otro pequeño', dibujo: 'Dibujos de tamaños distintos con su palabra', numeros: 'Casa, casita, casona', uso: 'Diminutivos y aumentativos en una historia',
       }, true),
       topic('compuestas', 'Palabras compuestas', [lenguaSkill('voc', 'compuestas')], {
         concreto: 'Dos piezas que se unen: sacapuntas', dibujo: 'Dos dibujos que forman una palabra nueva', numeros: 'Unir dos palabras: lava + platos', uso: 'Palabras compuestas en una frase',
@@ -131,13 +131,13 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'Escritura',
     topics: [
       topic('copia', 'Copia de frases', [lenguaSkill('escr', 'copia')], {
-        concreto: 'Una frase en una tarjeta para copiar', dibujo: 'La frase copiada palabra a palabra', numeros: 'Escribir la frase entera sin mirar el modelo a medias', uso: 'Copiar una frase de una historia',
+        concreto: 'Una frase en una tarjeta para copiar', dibujo: 'La frase copiada palabra a palabra', numeros: 'Escribir la frase entera mirando el modelo solo al principio', uso: 'Copiar una frase de una historia',
       }),
       topic('dictado', 'Dictado', [lenguaSkill('escr', 'dictado')], {
         concreto: 'Escuchar una palabra y tocar sus letras', dibujo: 'La palabra con sus huecos', numeros: 'Escribir la palabra que se oye', uso: 'Dictado de una frase de la historia',
       }),
-      topic('escritura-guiada', 'Escritura guiada corta: invitación y nota', [lenguaSkill('escr', 'guiada')], {
-        concreto: 'Una invitación con huecos para completar', dibujo: 'Un modelo de nota con sus partes', numeros: 'Completar la nota con la fecha y el mensaje', uso: 'Escribir una invitación para un amigo',
+      topic('escritura-guiada', 'Escritura guiada corta: invitación, nota, carta y descripción', [lenguaSkill('escr', 'guiada')], {
+        concreto: 'Una invitación con huecos para completar', dibujo: 'Modelos de nota y de carta con sus partes', numeros: 'Completar la nota o la carta con la fecha y el mensaje', uso: 'Escribir una invitación o describir un objeto en pocas frases',
       }),
     ],
   },
