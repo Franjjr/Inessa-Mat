@@ -151,3 +151,38 @@ división (divisor × cociente + resto). El truco se pide (cuenta como pista); n
   índice de temas y en qué tema van ahora. Con eso el plan sigue el ritmo real de clase.
 - Cómo se hace en su colegio la **resta con llevadas** («me llevo una» abajo, o «pedir prestado» arriba) y la
   **división** (con restas escritas o sin ellas).
+
+## 10. Clases
+
+Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinco fases:
+
+1. **Para qué sirve:** una o dos frases con una historia corta.
+2. **Ejemplo resuelto:** un caso completo, paso a paso, con dibujo. Se puede volver atrás.
+3. **Práctica guiada:** 2 ejercicios con pistas.
+4. **Práctica sola:** 3 o 4 ejercicios sin dibujo, cada uno un poco más difícil.
+5. **Cierre:** una frase que resume la idea.
+
+**Dónde se abre:**
+
+- Con el botón grande **«Hoy»**: si el tema que toca tiene clase y el niño no la ha hecho, el botón dice «Hoy
+  aprendemos: <tema>» y abre la clase. Al acabarla, ofrece seguir con la sesión. Si el tema no tiene clase, «Hoy» abre
+  la sesión, como antes.
+- En la **sesión**, en la tarjeta del tema nuevo, el botón **«Ver la clase otra vez»**.
+- El mapa de «Mi aventura» **no** enlaza las clases todavía.
+- Salir a mitad (con «Salir») no marca nada: la próxima vez la clase empieza de nuevo.
+
+**Saltar:**
+
+- **«Ahora no»** (en la sesión): el ejercicio vuelve al final de la sesión. No cuenta ni como acierto ni como fallo.
+- **«Ya lo sé»** (antes de una clase): 3 ejercicios del tema, sin pistas. Si los acierta todos, la clase queda hecha y
+  el niño pasa a la sesión. Si falla alguno, la clase empieza: «¡Vamos a verlo juntos!».
+
+**Temas con clase** (18, todos de operaciones de 3.º):
+
+- Sumar: con dos cifras, con tres cifras, sumar y llevar, con cuatro cifras.
+- Restar: con tres cifras, pidiendo prestado, con ceros, con cuatro cifras.
+- Multiplicar: por una cifra, y llevar, 3 cifras por 1, por 10 y por 100, por dos cifras por partes.
+- Dividir: dividir es repartir, la galera sin sobras, dividir y sobrar, dividir bajando una cifra, tres cifras entre una.
+
+**División:** en el colegio se divide con las restas escritas (la galera). Las clases de dividir enseñan ese método
+desde el principio.
