@@ -216,6 +216,7 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'operation': 'Elige la operación equivocada',
   'incomplete': 'Deja casillas sin completar',
   'recognition': 'La letra se reconoció mal (no es un error de cálculo)',
+  'dont-know': 'Dice que todavía no lo sabe',
   'bar-placement': 'Pone una cantidad en la parte equivocada de la barra',
   'place-value': 'Escribe una cifra en una columna que no le toca (valor posicional)',
   'step': 'Se equivoca en el primer paso de un problema de dos pasos',

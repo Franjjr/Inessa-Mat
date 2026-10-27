@@ -79,6 +79,17 @@ describe('summarizePlacement', () => {
     expect(s.blocks.find((b) => b.id === 'sumas-restas')).toMatchObject({ correct: 1, total: 2 })
   })
 
+  it('counts the «No lo sé» answers apart: they are the topics to work on first', () => {
+    const list = [
+      { ...attempt('mul:6x7', false, 1), errorType: 'dont-know' as const }, attempt('mul:3x4', false, 2),
+      { ...attempt('div:42/6', false, 3), errorType: 'dont-know' as const },
+    ]
+    const s = summarizePlacement(list)
+    expect(s.dontKnow).toBe(2)
+    expect(s.blocks.find((b) => b.id === 'tablas')).toMatchObject({ correct: 0, total: 2, dontKnow: 1 })
+    expect(s.blocks.find((b) => b.id === 'dividir')).toMatchObject({ dontKnow: 1 })
+  })
+
   it('a full run is complete', () => {
     const list = Array.from({ length: PLACEMENT_COUNT }, (_, i) => attempt('mul:6x7', i % 2 === 0, i))
     expect(summarizePlacement(list).complete).toBe(true)

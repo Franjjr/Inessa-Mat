@@ -71,6 +71,16 @@ test.describe('Prueba inicial', () => {
     await expect(page.getByText(/· 1 de 20/)).toBeVisible()
     await settle(page, 300)
   })
+
+  test('«No lo sé» moves on and marks the topic as one to work on', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/prueba')
+    await page.getByRole('button', { name: 'No lo sé' }).click()
+    await expect(page.getByText('¡Gracias!')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'No lo sé' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Siguiente' }).click()
+    await expect(page.getByText(/· 2 de 20/)).toBeVisible()
+  })
 })
 
 test.describe('a short landscape tablet (Android with its bars)', () => {
