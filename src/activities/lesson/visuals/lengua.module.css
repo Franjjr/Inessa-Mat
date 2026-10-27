@@ -7,26 +7,29 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--sp-3);
   padding: var(--sp-3);
   box-sizing: border-box;
   color: var(--c-ink);
   font-family: var(--font-display);
-  container-type: size;
+  /* Width only: the content keeps its natural height, so a short strip scrolls instead of cutting the text. */
+  container-type: inline-size;
+  overflow-y: auto;
 }
 
 .frame {
   position: relative;
   max-width: 640px;
   width: 100%;
+  margin-block: auto;
 }
 
 .card {
   margin: 0;
   width: 100%;
   box-sizing: border-box;
-  padding: clamp(14px, 4cqmin, 28px);
+  padding: clamp(8px, 3cqw, 24px) clamp(12px, 4cqw, 28px);
   background: var(--c-surface);
   border: 3px solid var(--c-line);
   border-radius: var(--r-lg);
@@ -63,14 +66,15 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 1.5cqmin, 12px);
+  gap: clamp(6px, 2cqw, 12px);
   max-width: 100%;
+  margin-block: auto;
 }
 
 .pieceRow {
   display: inline-flex;
   align-items: center;
-  gap: clamp(6px, 1.5cqmin, 12px);
+  gap: clamp(6px, 2cqw, 12px);
 }
 
 .piece {

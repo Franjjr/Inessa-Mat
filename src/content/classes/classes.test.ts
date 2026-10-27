@@ -6,6 +6,7 @@ import { w4Borrow } from '@/content/lessons/w4'
 import { tryIt } from '@/content/lessons/dsl'
 import { LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, allTopics } from '@/content/syllabus'
 import { createRng, generate, kindsForSkill } from '@/engine'
+import { syllabify } from '@/engine/lengua/syllables'
 import { clase, CLASSES, classForTopic, isClassDone, LENGUA_CLASSES, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
@@ -210,14 +211,36 @@ describe('clases de Lengua de 3.º', () => {
     expect(classForTopic('lng-silabas', undefined, 'language')?.topicId).toBe('lng-silabas')
   })
 
-  it('the guiada tries use the topic’s first skill, and each class has its own id', () => {
+  it('the guiada tries use the syllabus topic’s first skill, sola starts where guiada ends (R19)', () => {
+    const topics = allTopics(LENGUA3_SYLLABUS)
     for (const cls of LENGUA_CLASSES) {
+      const topic = topics.find((t) => t.id === cls.topicId)!
       const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
-      const first = tries[0].trySelector!.skills![0]
-      expect(first.startsWith('lng:'), cls.lesson.id).toBe(true)
-      expect(tries.slice(0, 2).every((st) => st.trySelector!.skills![0] === first), cls.lesson.id).toBe(true)
+      expect(tries.slice(0, 2).every((st) => st.trySelector!.skills![0] === topic.skills[0]), cls.lesson.id).toBe(true)
       expect(tries.slice(0, 2).every((st) => st.hints !== false), cls.lesson.id).toBe(true)
       expect(tries.slice(2).every((st) => st.hints === false), cls.lesson.id).toBe(true)
+    }
+  })
+
+  it('each Lengua class has its own lesson id', () => {
+    expect(new Set(LENGUA_CLASSES.map((c) => c.lesson.id)).size).toBe(LENGUA_CLASSES.length)
+  })
+
+  it('the syllables of a word in a lesson are the syllabifier’s syllables; morpheme parts use «+»', () => {
+    for (const cls of LENGUA_CLASSES) {
+      for (const st of cls.lesson.steps) {
+        if (st.visual !== 'lng-word') continue
+        const word = String(st.params!.word)
+        const parts = st.params!.parts === undefined ? undefined : String(st.params!.parts)
+        const mark = st.params!.mark === undefined ? undefined : String(st.params!.mark)
+        if (parts !== undefined) {
+          expect(parts.replace(/[-+]/g, ''), `${cls.lesson.id}: ${word}`).toBe(word)
+          if (parts.includes('-')) expect(parts.split('-'), `${cls.lesson.id}: ${word}`).toEqual(syllabify(word))
+          if (mark !== undefined) expect(parts.split(/[-+]/), `${cls.lesson.id}: ${word} mark ${mark}`).toContain(mark)
+        } else {
+          expect(mark, `${cls.lesson.id}: ${word}`).toBeUndefined()
+        }
+      }
     }
   })
 })

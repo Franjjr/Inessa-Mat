@@ -54,8 +54,8 @@ const sustantivo = clase({
   topicId: 'lng-sustantivo',
   title: 'Sustantivos: nombres, género y número',
   para: [
-    show('lng-sentence', sen('El globo sube al cielo.'), 'Hoy {pet} ha comprado un globo en la feria y lo ha llamado Pepa. El globo no contesta.'),
-    show('lng-sentence', sen('Lucía compra pan para el perro.'), 'Lumi pregunta: ¿Pepa es el nombre de una cosa o de una persona? Para saberlo, hay que mirar.'),
+    show('lng-sentence', sen('Mi globo se llama Pepa.'), 'Hoy {pet} ha comprado un globo en la feria y lo ha llamado Pepa. El globo no contesta.'),
+    show('lng-sentence', sen('¿Pepa es un nombre de cosa o de persona?'), 'Lumi pregunta: ¿Pepa es el nombre de una cosa o de una persona? Para saberlo, hay que mirar.'),
   ],
   ejemplo: [
     show('lng-sentence', sen('El perro come pan en el parque.', 'perro', 'noun'), 'Los sustantivos nombran cosas, animales, personas y lugares. «Perro» sirve para todos los perros.'),
@@ -132,7 +132,7 @@ const verbo = clase({
   topicId: 'lng-verbo',
   title: 'El verbo: presente, pasado y futuro',
   para: [
-    show('lng-sentence', sen('Ayer saltó la valla.'), 'Hoy {pet} quiere saltar la valla, pero una mariposa lo distrae y el salto se queda a medias.'),
+    show('lng-sentence', sen('Quiere saltar la valla.'), 'Hoy {pet} quiere saltar la valla, pero una mariposa lo distrae y el salto se queda a medias.'),
     show('lng-sentence', sen('Hoy salta, ayer saltó, mañana saltará.'), 'Lumi dice que el verbo cambia de forma para contar cuándo pasa la acción: ahora, antes o después.'),
   ],
   ejemplo: [
@@ -211,12 +211,12 @@ const cqu = clase({
   topicId: 'lng-c-qu',
   title: 'c y qu',
   para: [
-    show('lng-word', wd('queso', 'qu-e-so', 'qu'), 'Hoy {pet} escribe la lista de la compra. La c y la qu se pelean por la e, ¡y nadie gana!'),
+    show('lng-word', wd('queso', 'que-so', 'que'), 'Hoy {pet} escribe la lista de la compra. La c y la qu se pelean por la e, ¡y nadie gana!'),
     show('lng-sentence', sen('ca · co · cu  ·  que · qui'), 'Lumi pone paz: la c suena «k» delante de a, o y u; la qu suena igual delante de e e i.'),
   ],
   ejemplo: [
     show('lng-word', wd('casa', 'ca-sa', 'ca'), 'Delante de a, o y u, el sonido «k» se escribe con c: ca-sa.'),
-    show('lng-word', wd('queso', 'qu-e-so', 'qu'), 'Delante de e o de i, el mismo sonido se escribe con qu: qu-e-so.'),
+    show('lng-word', wd('queso', 'que-so', 'que'), 'Delante de e o de i, el mismo sonido se escribe con qu: que-so.'),
     show('lng-word', wd('máquina', 'má-qui-na', 'qui'), 'En máquina, la u de qui no suena: solo sirve para que la q suene como k.'),
   ],
   guiada: [
@@ -228,7 +228,7 @@ const cqu = clase({
     tryIt('lng-sentence', rule('Mira la vocal que viene después de la letra que falta.'), '¡Tu turno! Cuidado con la u de que y qui: es muda.', { skills: [lenguaSkill('orto', 'c-qu')] }),
     tryIt('lng-sentence', rule('Mira la vocal que viene después de la letra que falta.'), '¡Tu turno! Sin pistas: mira la vocal que viene después.', { skills: [lenguaSkill('orto', 'c-qu')] }),
   ],
-  cierre: show('lng-word', wd('queso', 'qu-e-so', 'qu'), 'Delante de a, o y u se escribe c, y delante de e e i se escribe qu.'),
+  cierre: show('lng-word', wd('queso', 'que-so', 'que'), 'Delante de a, o y u se escribe c, y delante de e e i se escribe qu.'),
 })
 
 const gGu = clase({
@@ -241,7 +241,7 @@ const gGu = clase({
   ],
   ejemplo: [
     show('lng-word', wd('gato', 'ga-to', 'ga'), 'Delante de a, o y u, la g suena fuerte: ga-to.'),
-    show('lng-word', wd('guitarra', 'gui-ta-rra', 'gui'), 'Delante de e o de i, para que la g suene fuerte hace falta una u muda: gui-ta-rra.'),
+    show('lng-word', wd('guitarra', 'gui-ta-rra', 'gui'), 'Con e o i, la g suena como una j; para que suene fuerte se escribe una u muda: gui-ta-rra.'),
     show('lng-word', wd('pingüino', 'pin-güi-no', 'güi'), 'Y cuando la u sí suena, lleva dos puntitos: pin-güi-no.'),
   ],
   guiada: [
@@ -261,13 +261,13 @@ const rRr = clase({
   topicId: 'lng-r-rr',
   title: 'r y rr',
   para: [
-    show('lng-word', wd('perro', 'pe-rr-o', 'rr'), 'Hoy {pet} ha pedido «un pero» en lugar de «un perro». ¡Un pero es una pega!'),
+    show('lng-word', wd('perro', 'pe-rro', 'rro'), 'Hoy {pet} ha pedido «un pero» en lugar de «un perro». ¡Un pero es una pega!'),
     show('lng-sentence', sen('pero (una pega) · perro (un animal)'), 'Lumi dice que la diferencia está en la r: en pero suena suave, y en perro suena fuerte.'),
   ],
   ejemplo: [
-    show('lng-word', wd('pero', 'pe-r-o', 'r'), 'Entre vocales, una sola r suena suave: pe-r-o.'),
-    show('lng-word', wd('perro', 'pe-rr-o', 'rr'), 'Entre vocales, rr suena fuerte: pe-rr-o.'),
-    show('lng-word', wd('rosa', 'r-o-sa', 'r'), 'Al principio de la palabra, la r suena fuerte, pero se escribe con una sola r: rosa.'),
+    show('lng-word', wd('pero', 'pe-ro', 'ro'), 'Entre vocales, una sola r suena suave: pe-ro.'),
+    show('lng-word', wd('perro', 'pe-rro', 'rro'), 'Entre vocales, rr suena fuerte: pe-rro.'),
+    show('lng-word', wd('rosa', 'ro-sa', 'ro'), 'Al principio de la palabra, la r suena fuerte, pero se escribe con una sola r: rosa.'),
   ],
   guiada: [
     tryIt('lng-sentence', rule('Mira qué hay antes y después de la letra.'), '¡Te toca! Mira qué hay antes y después.', { skills: [lenguaSkill('orto', 'r-rr')] }),
@@ -278,7 +278,7 @@ const rRr = clase({
     tryIt('lng-sentence', rule('Mira qué hay antes y después de la letra.'), '¡Tu turno! Entre vocales, ¿suena suave o fuerte?', { skills: [lenguaSkill('orto', 'r-rr')] }),
     tryIt('lng-sentence', rule('Mira qué hay antes y después de la letra.'), '¡Tu turno! Sin pistas: ¿qué letra falta?', { skills: [lenguaSkill('orto', 'r-rr')] }),
   ],
-  cierre: show('lng-word', wd('correr', 'co-rr-er', 'rr'), 'Entre vocales, la r suena suave y la rr suena fuerte; al principio de la palabra va una sola r.'),
+  cierre: show('lng-word', wd('correr', 'co-rrer', 'rrer'), 'Entre vocales, la r suena suave y la rr suena fuerte; al principio de la palabra va una sola r.'),
 })
 
 const mpMb = clase({
@@ -286,24 +286,24 @@ const mpMb = clase({
   topicId: 'lng-mp-mb',
   title: 'mp y mb',
   para: [
-    show('lng-word', wd('sombrero', 'so-mb-re-ro', 'mb'), 'Hoy {pet} escribe las invitaciones y pone «sonbrero» y «tanbor». Lumi ve que una n se ha colado.'),
+    show('lng-word', wd('sombrero', 'som-bre-ro', 'som'), 'Hoy {pet} escribe las invitaciones y pone «sonbrero» y «tanbor». Lumi ve que una n se ha colado.'),
     show('lng-sentence', sen('Delante de p y de b, siempre m.'), 'Lumi explica: delante de p y de b, la letra que va antes es m, nunca n. Así se escribe mp y mb.'),
   ],
   ejemplo: [
-    show('lng-word', wd('campana', 'ca-mp-a-na', 'mp'), 'Delante de la p se escribe m, nunca n: ca-mp-a-na.'),
-    show('lng-word', wd('tambor', 'ta-mb-or', 'mb'), 'Delante de la b también se escribe m: ta-mb-or.'),
-    show('lng-word', wd('lámpara', 'lá-mp-a-ra', 'mp'), 'La lámpara también lleva m delante de la p: lá-mp-a-ra.'),
+    show('lng-word', wd('campana', 'cam-pa-na', 'cam'), 'Delante de la p se escribe m, nunca n: cam-pa-na.'),
+    show('lng-word', wd('tambor', 'tam-bor', 'tam'), 'Delante de la b también se escribe m: tam-bor.'),
+    show('lng-word', wd('lámpara', 'lám-pa-ra', 'lám'), 'La lámpara también lleva m delante de la p: lám-pa-ra.'),
   ],
   guiada: [
     tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Te toca! Elige la letra que va antes de la p o de la b.', { skills: [lenguaSkill('orto', 'mp-mb')] }),
-    tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Otra! Antes de la p y de la b, los labios se juntan.', { skills: [lenguaSkill('orto', 'mp-mb')] }),
+    tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Otra! Mira bien la letra que va antes de la p.', { skills: [lenguaSkill('orto', 'mp-mb')] }),
   ],
   sola: [
     tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Tu turno! Mira qué letra viene después.', { skills: [lenguaSkill('orto', 'mp-mb')] }),
     tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Tu turno! Recuerda la regla de la p y de la b.', { skills: [lenguaSkill('orto', 'mp-mb')] }),
     tryIt('lng-sentence', rule('Mira la letra que viene después.'), '¡Tu turno! Sin pistas: ¿qué letra va antes de la p?', { skills: [lenguaSkill('orto', 'mp-mb')] }),
   ],
-  cierre: show('lng-word', wd('lámpara', 'lá-mp-a-ra', 'mp'), 'Delante de p y de b siempre se escribe m: campana, tambor, lámpara y sombrero.'),
+  cierre: show('lng-word', wd('lámpara', 'lám-pa-ra', 'lám'), 'Delante de p y de b siempre se escribe m: campana, tambor, lámpara y sombrero.'),
 })
 
 const tonica = clase({
@@ -317,7 +317,7 @@ const tonica = clase({
   ejemplo: [
     show('lng-word', wd('mañana', 'ma-ña-na', 'ña'), 'En mañana, la sílaba que se dice con más fuerza es ña.'),
     show('lng-word', wd('tomate', 'to-ma-te', 'ma'), 'En tomate, la fuerza va en ma.'),
-    show('lng-word', wd('camión', 'ca-mión', 'mión'), 'En camión, la fuerza va al final. Como acaba en n, lleva tilde.'),
+    show('lng-word', wd('camión', 'ca-mión', 'mión'), 'En camión, la fuerza va en la última sílaba: ca-mión.'),
   ],
   guiada: [
     tryIt('lng-sentence', rule('Di la palabra despacio y fíjate dónde sube la voz.'), '¡Te toca! Toca la sílaba que suena más fuerte.', { skills: [lenguaSkill('orto', 'tonica')] }),
@@ -354,7 +354,7 @@ const signos = clase({
     tryIt('lng-sentence', rule('Lee la frase con voz: ¿para, pregunta o se alegra?'), '¡Tu turno! Recuerda: las preguntas se abren con ¿.', { skills: [lenguaSkill('orto', 'signos', 'pregunta')] }),
     tryIt('lng-sentence', rule('Lee la frase con voz: ¿para, pregunta o se alegra?'), '¡Tu turno! Sin pistas: pon todos los signos.', { skills: [lenguaSkill('orto', 'signos', 'exclamacion')] }),
   ],
-  cierre: show('lng-sentence', sen('¡Qué bien, Lumi! ¿Vienes al parque?'), 'Los signos marcan la voz: el punto para, la coma hace una pausa, y ¿? y ¡! marcan pregunta y grito.'),
+  cierre: show('lng-sentence', sen('¡Qué bien, Lumi! ¿Vienes al parque?'), 'El punto para, la coma pausa, y ¿? y ¡! marcan pregunta y exclamación (sorpresa, alegría, enfado).'),
 })
 
 /* ------------------------------------------------------------------ vocabulario */
@@ -369,8 +369,10 @@ const abecedario = clase({
   ],
   ejemplo: [
     show('lng-sentence', sen('a · b · c · d · e · f · g'), 'El abecedario va en orden fijo: primero la a, luego la b, y así hasta la z.'),
-    show('lng-sentence', sen('casa · cuna · dado'), 'Se ordena por la primera letra: c va antes que d. Casa y cuna empiezan igual, así que miramos la segunda.'),
-    show('lng-sentence', sen('ola · oso · oveja'), 'Ola, oso y oveja empiezan igual. La segunda letra decide: la l va antes que la s, y la s antes que la v.'),
+    show('lng-sentence', sen('casa · cuna · dado'), 'Se ordenan por la primera letra: casa y cuna empiezan por c, y dado por d.'),
+    show('lng-sentence', sen('casa · cuna'), 'Si empiezan igual, miramos la segunda letra: la a va antes que la u.'),
+    show('lng-sentence', sen('nado · ñandú · oso'), 'La ñ va después de la n y antes de la o: nado, ñandú, oso.'),
+    show('lng-sentence', sen('ola · oso · oveja'), 'Ola, oso y oveja empiezan igual: la l va antes que la s, y la s antes que la v.'),
   ],
   guiada: [
     tryIt('lng-sentence', rule('a · b · c · d · e'), '¡Te toca! Ordena las palabras por la primera letra.', { skills: [lenguaSkill('voc', 'abecedario')] }),
@@ -390,7 +392,7 @@ const sinonimosAntonimos = clase({
   title: 'Sinónimos y antónimos',
   para: [
     show('lng-sentence', sen('Mi casa es grande. Tu casa es enorme.'), 'Hoy {pet} y Lumi juegan a decir palabras que significan lo mismo, o lo contrario.'),
-    show('lng-sentence', sen('Mi casa es grande. Tu casa es pequeña.'), 'Pero luego {pet} dice que «triste» y «alegre» significan lo mismo. Lumi suspira: eso no cuadra.'),
+    show('lng-sentence', sen('triste = alegre'), 'Pero luego {pet} dice que «triste» y «alegre» significan lo mismo. Lumi suspira: eso no cuadra.'),
   ],
   ejemplo: [
     show('lng-sentence', sen('gordo = grueso'), 'Los sinónimos son palabras distintas que significan lo mismo.'),
@@ -418,8 +420,8 @@ const familias = clase({
     show('lng-sentence', sen('pan · panadería · panadero'), 'Lumi le explica que una familia de palabras comparte una raíz: la parte que se repite en todas.'),
   ],
   ejemplo: [
-    show('lng-word', wd('panadería', 'pan-a-de-ría', 'pan'), 'La raíz de panadería es pan: la parte que no cambia.'),
-    show('lng-word', wd('panadero', 'pan-a-de-ro', 'pan'), 'Panadero también tiene la raíz pan: es de la misma familia.'),
+    show('lng-word', wd('panadería', 'pan+adería', 'pan'), 'La raíz de panadería es pan: la parte que no cambia.'),
+    show('lng-word', wd('panadero', 'pan+adero', 'pan'), 'Panadero también tiene la raíz pan: es de la misma familia.'),
     show('lng-word', wd('pato', 'pa-to'), 'Pato empieza igual, pero no tiene la raíz pan: no es de la familia.'),
   ],
   guiada: [
@@ -431,7 +433,7 @@ const familias = clase({
     tryIt('lng-sentence', rule('¿Tiene la misma raíz?'), '¡Tu turno! Sin pistas: ¿es de la misma familia?', { skills: [lenguaSkill('voc', 'familias')] }),
     tryIt('lng-sentence', rule('¿Tiene la misma raíz?'), '¡Tu turno! Cuidado con las palabras que solo empiezan igual.', { skills: [lenguaSkill('voc', 'familias')] }),
   ],
-  cierre: show('lng-word', wd('panadería', 'pan-a-de-ría', 'pan'), 'Las palabras de una familia comparten la raíz, la parte que no cambia.'),
+  cierre: show('lng-word', wd('panadería', 'pan+adería', 'pan'), 'Las palabras de una familia comparten la raíz, la parte que no cambia.'),
 })
 
 const aumentativosDiminutivos = clase({
@@ -440,23 +442,24 @@ const aumentativosDiminutivos = clase({
   title: 'Diminutivos y aumentativos',
   para: [
     show('lng-sentence', sen('Quiero un perro… ¿grande o pequeño?'), 'Para el cumpleaños de Lumi, {pet} quiere un perro. No sabe si de tamaño armario o de tamaño calcetín.'),
-    show('lng-sentence', sen('casa · casita · casona'), 'Lumi dice que las palabras cambian de tamaño con su final: unas son pequeñas y otras, grandes.'),
+    show('lng-sentence', sen('casa · casita · casona'), 'Lumi dice que la última vocal cambia el tamaño: unas palabras son pequeñas y otras, grandes.'),
   ],
   ejemplo: [
-    show('lng-word', wd('casita', 'cas-ita', 'ita'), 'Casita es una casa pequeña y cariñosa: la a final cambia por -ita.'),
-    show('lng-word', wd('casona', 'cas-ona', 'ona'), 'Casona es una casa grande: la a final cambia por -ona.'),
-    show('lng-word', wd('gatito', 'gat-ito', 'ito'), 'Con gato se quita la o y se pone -ito: gatito, pequeño y cariñoso.'),
+    show('lng-word', wd('casita', 'cas+ita', 'ita'), 'Casita: la última vocal de casa cambia por -ita. Es una casa pequeña y cariñosa.'),
+    show('lng-word', wd('casona', 'cas+ona', 'ona'), 'Casona: la última vocal de casa cambia por -ona. Es una casa grande.'),
+    show('lng-word', wd('gatito', 'gat+ito', 'ito'), 'Con gato, la última vocal cambia por -ito: gatito, pequeño y cariñoso.'),
+    show('lng-sentence', sen('gato → gatazo · mano → manota · libro → librote'), 'Para lo grande, la última vocal cambia por -azo, -ota u -ote.'),
   ],
   guiada: [
-    tryIt('lng-sentence', rule('-ito, -ita: pequeño · -ón, -ona: grande'), '¡Te toca! ¿Quiere decir grande o pequeña?', { skills: [lenguaSkill('voc', 'aumentativos')] }),
-    tryIt('lng-sentence', rule('-ito, -ita: pequeño · -ón, -ona: grande'), '¡Otra! Piensa en el tamaño que quiere decir la palabra.', { skills: [lenguaSkill('voc', 'aumentativos')] }),
+    tryIt('lng-sentence', rule('Pequeño: -ito, -ita · Grande: -ona, -ote, -ota, -azo'), '¡Te toca! Escribe el diminutivo: la forma pequeña y cariñosa.', { skills: [lenguaSkill('voc', 'diminutivos')] }),
+    tryIt('lng-sentence', rule('Pequeño: -ito, -ita · Grande: -ona, -ote, -ota, -azo'), '¡Otra! Cambia la última vocal por -ito o -ita.', { skills: [lenguaSkill('voc', 'diminutivos')] }),
   ],
   sola: [
-    tryIt('lng-sentence', rule('-ito, -ita: pequeño · -ón, -ona: grande'), '¡Tu turno! Fíjate en el tamaño.', { skills: [lenguaSkill('voc', 'aumentativos')] }),
-    tryIt('lng-sentence', rule('-ito, -ita: pequeño · -ón, -ona: grande'), '¡Tu turno! Escribe el diminutivo: la forma pequeña y cariñosa.', { skills: [lenguaSkill('voc', 'diminutivos')] }),
-    tryIt('lng-sentence', rule('-ito, -ita: pequeño · -ón, -ona: grande'), '¡Tu turno! Sin pistas: ¿pequeño y cariñoso?', { skills: [lenguaSkill('voc', 'diminutivos')] }),
+    tryIt('lng-sentence', rule('Pequeño: -ito, -ita · Grande: -ona, -ote, -ota, -azo'), '¡Tu turno! Escribe el diminutivo sin pistas.', { skills: [lenguaSkill('voc', 'diminutivos')] }),
+    tryIt('lng-sentence', rule('Pequeño: -ito, -ita · Grande: -ona, -ote, -ota, -azo'), '¡Tu turno! Fíjate en si la palabra quiere decir grande o pequeña.', { skills: [lenguaSkill('voc', 'aumentativos')] }),
+    tryIt('lng-sentence', rule('Pequeño: -ito, -ita · Grande: -ona, -ote, -ota, -azo'), '¡Tu turno! Sin pistas: ¿qué terminación da una forma grande?', { skills: [lenguaSkill('voc', 'aumentativos')] }),
   ],
-  cierre: show('lng-sentence', sen('casa · casita · casona'), 'Para hacer una palabra más pequeña se añade -ito o -ita, y para hacerla más grande, -ón o -ona.'),
+  cierre: show('lng-sentence', sen('casa · casita · casona'), 'Cambia la última vocal: -ito o -ita para lo pequeño; -ona, -ote, -ota o -azo para lo grande.'),
 })
 
 const compuestas = clase({
