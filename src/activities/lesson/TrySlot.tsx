@@ -107,6 +107,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
 
   const answered = (outcome: ExerciseOutcome) => {
     const { check } = outcome
+    // Each «Inténtalo otra vez» is a new exercise of the same step: the attempt records how many tries came before it.
     host.reportAttempt({
       exercise,
       check,
@@ -115,6 +116,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       hintsUsed: outcome.hintsUsed,
       recognitionFixes: outcome.recognitionFixes,
       method: method ?? divMethod,
+      ...(attempt > 0 ? { retries: attempt } : {}),
+      ...(attempt > 0 && check.correct ? { solvedOnRetry: true } : {}),
     })
     if (check.correct) {
       host.react('correct')
@@ -150,7 +153,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
         {status === 'missed' && (
           <div className={s.retry}>
             <p className={s.hint}>{host.t('¡Casi! Mira el truco y prueba otra vez.')}</p>
-            <Button variant="secondary" onClick={retry}>Otra vez</Button>
+            <Button variant="secondary" onClick={retry}>Inténtalo otra vez</Button>
           </div>
         )}
         {status === 'gaveUp' && <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>}
