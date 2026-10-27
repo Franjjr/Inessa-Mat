@@ -177,7 +177,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     const reportAttempt: ActivityHost['reportAttempt'] = (attempt) => {
       const c = childRef.current
       if (!c) return
-      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method } = attempt
+      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method, retries, solvedOnRetry } = attempt
       const skill = exercise.skill
       const now = new Date()
       const prev = masteryRef.current[skill]
@@ -206,6 +206,8 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
         hintsUsed,
         errorType: check.errorType ?? null,
         recognitionFixes: recognitionFixes ?? 0,
+        ...(retries ? { retries } : {}),
+        ...(solvedOnRetry ? { solvedOnRetry } : {}),
         context: {
           ...(worldId ? { worldId } : {}),
           ...(nodeId ? { nodeId } : {}),

@@ -38,6 +38,10 @@ export interface AttemptRecord {
   hintsUsed: number
   errorType?: ErrorType | null
   recognitionFixes?: number
+  /** Extra tries after a wrong answer on this exercise («Inténtalo otra vez»): 0 or missing = answered once. */
+  retries?: number
+  /** The child got it right on a retry. */
+  solvedOnRetry?: boolean
   /** Where the attempt happened. */
   /** method: the method used when the operation has several (e.g. 'borrow', 'parts'); see src/engine/methods.ts. */
   context: { worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string }

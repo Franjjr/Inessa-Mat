@@ -778,6 +778,10 @@ export interface AttemptInput {
   hintsUsed: number
   /** Number of times the child corrected a misread digit before submitting. */
   recognitionFixes?: number
+  /** Extra tries after a wrong answer on this exercise (see AttemptRecord.retries). */
+  retries?: number
+  /** The child got it right on a retry. */
+  solvedOnRetry?: boolean
   /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
   method?: string
 }
