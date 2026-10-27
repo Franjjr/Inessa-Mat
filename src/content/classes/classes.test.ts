@@ -52,7 +52,7 @@ describe('isClassDone / markClassDone', () => {
   it('markClassDone sets the flag and marks the unlocked map lesson, never a locked one', () => {
     const progress = initialProgress('child-1', new Date('2026-10-27'))
     // w4 is locked for a child who has not finished w1–w3: only the flag changes.
-    const locked = markClassDone(progress, fixture)
+    const locked = markClassDone(progress, fixture, 'lesson')
     expect(locked.flags['clase:resta-3d-prestando']).toBe(true)
     expect(locked.worlds).toEqual(progress.worlds)
     expect(isClassDone(locked, fixture)).toBe(true)
@@ -60,9 +60,40 @@ describe('isClassDone / markClassDone', () => {
     // Open the world 4 path: the crystal of world 3 is won, so the map lesson is unlocked.
     const opened = { ...progress, worlds: { ...progress.worlds, w3: { unlocked: true, crystal: true, nodes: {} }, w4: { unlocked: true, crystal: false, nodes: { arrival: { done: true, stars: 3 } } } } }
     expect(isNodeUnlocked(opened, 'w4', 'lesson-borrow')).toBe(true)
-    const marked = markClassDone(opened, fixture)
+    const marked = markClassDone(opened, fixture, 'lesson')
     expect(marked.flags['clase:resta-3d-prestando']).toBe(true)
     expect(marked.worlds.w4.nodes['lesson-borrow']).toMatchObject({ done: true, stars: COMPLETION_STARS })
+  })
+})
+
+describe('markClassDone by «Ya lo sé» (skip)', () => {
+  it('sets the flag only: the unlocked map lesson keeps its state, with no stars and no last node', () => {
+    const progress = initialProgress('child-1', new Date('2026-10-27'))
+    const opened = { ...progress, worlds: { ...progress.worlds, w3: { unlocked: true, crystal: true, nodes: {} }, w4: { unlocked: true, crystal: false, nodes: { arrival: { done: true, stars: 3 } } } } }
+    expect(isNodeUnlocked(opened, 'w4', 'lesson-borrow')).toBe(true)
+    const skipped = markClassDone(opened, fixture, 'skip')
+    expect(skipped.flags['clase:resta-3d-prestando']).toBe(true)
+    expect(skipped.worlds).toEqual(opened.worlds)
+    expect(skipped.stars).toBe(opened.stars)
+    expect(skipped.lastNode).toEqual(opened.lastNode)
+    expect(isClassDone(skipped, fixture)).toBe(true)
+  })
+})
+
+describe('one map lesson per class', () => {
+  it('no two classes share a map lesson, so finishing one never makes another done', () => {
+    const lessons = CLASSES.map((c) => c.mapLessonId).filter((id): id is string => !!id)
+    expect(new Set(lessons).size).toBe(lessons.length)
+  })
+
+  it('finishing the exacta class does not make the resto class done', () => {
+    const exacta = classForTopic('div-exacta', 3)!
+    const resto = classForTopic('div-resto', 3)!
+    const progress = initialProgress('child-1', new Date('2026-10-27'))
+    const opened = { ...progress, worlds: { ...progress.worlds, w7: { unlocked: true, crystal: true, nodes: {} }, w8: { unlocked: true, crystal: false, nodes: {} } } }
+    const finished = markClassDone(opened, exacta, 'lesson')
+    expect(isClassDone(finished, exacta)).toBe(true)
+    expect(isClassDone(finished, resto)).toBe(false)
   })
 })
 

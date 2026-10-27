@@ -13,26 +13,29 @@ const TOPIC = 'resta-3d-prestando'
 
 // The real exercise view is replaced by a button that answers right or wrong from a script (one entry per exercise).
 // The lesson is replaced by its first step text and two buttons: finish, and leave.
-const state = vi.hoisted(() => ({ answers: [] as boolean[], calls: 0, grade: 3 }))
+const state = vi.hoisted(() => ({ answers: [] as boolean[], calls: 0, grade: 3, seen: [] as string[] }))
 
 vi.mock('@/activities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/activities')>()
   const React = await import('react')
   return {
     ...actual,
-    ExerciseView: ({ onAnswered }: { onAnswered: (o: unknown) => void }) => React.createElement('button', {
-      type: 'button',
-      onClick: () => {
-        const correct = state.answers[state.calls++] ?? true
-        onAnswered({
-          check: { correct, given: '0', expected: '0', errorType: correct ? undefined : 'fact' },
-          ms: 1000,
-          inputMode: 'keyboard',
-          hintsUsed: 0,
-          recognitionFixes: 0,
-        })
-      },
-    }, 'Responder'),
+    ExerciseView: ({ exercise, onAnswered }: { exercise: { id: string }; onAnswered: (o: unknown) => void }) => {
+      if (!state.seen.includes(exercise.id)) state.seen.push(exercise.id)
+      return React.createElement('button', {
+        type: 'button',
+        onClick: () => {
+          const correct = state.answers[state.calls++] ?? true
+          onAnswered({
+            check: { correct, given: '0', expected: '0', errorType: correct ? undefined : 'fact' },
+            ms: 1000,
+            inputMode: 'keyboard',
+            hintsUsed: 0,
+            recognitionFixes: 0,
+          })
+        },
+      }, 'Responder')
+    },
     LessonPlayer: ({ lesson, onDone, onExit }: { lesson: { steps: { text: string }[] }; onDone: () => void; onExit: () => void }) =>
       React.createElement('div', null,
         React.createElement('p', null, lesson.steps[0].text),
@@ -57,6 +60,7 @@ beforeEach(() => {
   state.answers = []
   state.calls = 0
   state.grade = 3
+  state.seen = []
   vi.mocked(updateProgress).mockClear()
   vi.mocked(recordAttempt).mockClear()
 })
@@ -105,6 +109,41 @@ describe('ClassScreen', () => {
     await waitFor(() => expect(recordAttempt).toHaveBeenCalledTimes(3))
     expect(updateProgress).toHaveBeenCalledTimes(1)
     expect(screen.queryByRole('button', { name: 'Terminar la lección' })).not.toBeInTheDocument()
+    // «Ya lo sé» sets the class flag only: the map (its lesson node, its stars, its last node) is not touched.
+    const [, update] = vi.mocked(updateProgress).mock.calls[0]
+    const before = initialProgress(CHILD_ID)
+    const after = update(before)
+    expect(after.flags[`clase:${TOPIC}`]).toBe(true)
+    expect({ ...after, flags: before.flags }).toEqual(before)
+  })
+
+  it('each visit draws its own «Ya lo sé» exercises, the same ones within a visit', async () => {
+    const nowSpy = vi.spyOn(Date, 'now')
+    const user = userEvent.setup()
+    const visitExercises = async (now: number) => {
+      state.seen = []
+      nowSpy.mockReturnValue(now)
+      const view = render(
+        <MemoryRouter initialEntries={[`/play/clase/${TOPIC}`]}>
+          <Routes>
+            <Route path="/play/clase/:topicId" element={<ClassScreen />} />
+          </Routes>
+        </MemoryRouter>,
+      )
+      await user.click(screen.getByRole('button', { name: 'Ya lo sé' }))
+      await user.click(screen.getByRole('button', { name: 'Responder' }))
+      await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+      await user.click(screen.getByRole('button', { name: 'Responder' }))
+      view.unmount()
+      return [...state.seen]
+    }
+    const first = await visitExercises(1_000)
+    const again = await visitExercises(1_000)
+    const next = await visitExercises(2_000)
+    nowSpy.mockRestore()
+    expect(first).toHaveLength(2)
+    expect(again).toEqual(first)
+    expect(next).not.toEqual(first)
   })
 
   it('«Ya lo sé» with one wrong starts the class from its first step', async () => {

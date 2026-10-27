@@ -40,9 +40,15 @@ export function isClassDone(progress: ProgressState, cls: ClassDef): boolean {
   return !!node && progress.worlds[node.worldId]?.nodes[node.nodeId]?.done === true
 }
 
-/** Marks the class done: its flag, and its map lesson too when that one is unlocked and not yet done. */
-export function markClassDone(progress: ProgressState, cls: ClassDef): ProgressState {
+/** How a class was finished: its lesson played to the end (it also marks its map lesson), or «Ya lo sé» passed (the
+    class flag only: the map is not touched, so no stars and no map node come from skipping). */
+export type ClassFinish = 'lesson' | 'skip'
+
+/** Marks the class done. A lesson also marks its map lesson when that one is unlocked and not yet done; a skip only sets
+    the flag. */
+export function markClassDone(progress: ProgressState, cls: ClassDef, via: ClassFinish): ProgressState {
   const flagged: ProgressState = { ...progress, flags: { ...progress.flags, [flagOf(cls)]: true } }
+  if (via === 'skip') return flagged
   const node = mapNodeOf(flagged, cls)
   if (!node || !isNodeUnlocked(flagged, node.worldId, node.nodeId)) return flagged
   if (flagged.worlds[node.worldId]?.nodes[node.nodeId]?.done) return flagged

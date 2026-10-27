@@ -1,13 +1,13 @@
 /* Clase (route /play/clase/:topicId): the lesson of a syllabus topic, with «Ya lo sé» to skip it. «Ya lo sé» gives
-   KNOW_IT_COUNT exercises of the topic with no hints, reported as normal attempts: all right → the class is marked done;
-   any wrong → the class from its first step. Finishing the lesson marks it done too. Leaving («Salir») marks nothing,
-   so a class left half-way starts again next time. Exercises are drawn from the child and the topic, so they stay the
-   same during one visit. */
+   KNOW_IT_COUNT exercises of the topic with no hints, reported as normal attempts: all right → the class flag is set (the
+   map is not touched); any wrong → the class from its first step. Finishing the lesson marks the class and its map
+   lesson. Leaving («Salir») marks nothing, so a class left half-way starts again next time. Exercises are drawn from
+   the child, the topic and the moment the visit starts, so they stay the same during one visit but differ on the next. */
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { LessonPlayer } from '@/activities'
 import type { ExerciseOutcome } from '@/types'
-import { classForTopic, markClassDone, type ClassDef } from '@/content/classes'
+import { classForTopic, markClassDone, type ClassDef, type ClassFinish } from '@/content/classes'
 import { allTopics, syllabusForGrade, topicTitle, type SyllabusTopic } from '@/content/syllabus'
 import { createRng, generate } from '@/engine'
 import { updateProgress, useActiveChild } from '@/data'
@@ -40,17 +40,19 @@ function ClassRunner({ childId, topic, cls }: { childId: string; topic: Syllabus
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
   const [index, setIndex] = useState(0)
+  // The visit's own nonce: a new visit draws new «Ya lo sé» exercises, so the same ones cannot be learnt by heart.
+  const [visit] = useState(() => Date.now())
   const exercises = useMemo(
-    () => generate({ skills: topic.skills }, KNOW_IT_COUNT, { rng: createRng(seedFrom(`${childId}|${topic.id}`)) }),
-    [childId, topic],
+    () => generate({ skills: topic.skills }, KNOW_IT_COUNT, { rng: createRng(seedFrom(`${childId}|${topic.id}|${visit}`)) }),
+    [childId, topic, visit],
   )
   const knowItAvailable = exercises.length >= KNOW_IT_COUNT
   const title = topicTitle(topic)
   const leave = () => navigate('/play')
 
-  const finish = async () => {
+  const finish = async (via: ClassFinish) => {
     try {
-      await updateProgress(childId, (p) => markClassDone(p, cls))
+      await updateProgress(childId, (p) => markClassDone(p, cls, via))
       setPhase('done')
     } catch {
       toast('No hemos podido guardar la clase. Vuelve a intentarlo en un momento.')
@@ -67,11 +69,11 @@ function ClassRunner({ childId, topic, cls }: { childId: string; topic: Syllabus
       setIndex(index + 1)
       return
     }
-    void finish()
+    void finish('skip')
   }
 
   if (phase === 'lesson') {
-    return <LessonPlayer lesson={cls.lesson} onDone={() => void finish()} onExit={leave} />
+    return <LessonPlayer lesson={cls.lesson} onDone={() => void finish('lesson')} onExit={leave} />
   }
 
   if (phase === 'done') {
