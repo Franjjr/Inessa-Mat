@@ -52,6 +52,21 @@ test.describe('Mi sesión de hoy', () => {
     await settle(page, 300)
   })
 
+  test('«Ahora no» sends the first item to the end: the next one appears and the count does not advance', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/sesion')
+    await page.getByRole('button', { name: '¡Empezar!' }).click()
+    const bar = page.getByRole('progressbar')
+    const count = await bar.getAttribute('aria-label')
+    const stage = bar.locator('xpath=following-sibling::div[1]')
+    const first = await stage.innerText()
+    await page.getByRole('button', { name: 'Ahora no' }).click()
+    await expect.poll(() => stage.innerText()).not.toBe(first)
+    await expect(bar).toHaveAttribute('aria-label', count!)
+    await expect(page.getByRole('button', { name: 'Ahora no' })).toBeVisible()
+    await settle(page, 300)
+  })
+
   test('the session can be paused and left without losing the day', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/sesion')

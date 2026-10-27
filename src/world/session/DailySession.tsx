@@ -9,14 +9,14 @@ import { StarIcon } from '@/art'
 import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
-import { getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
-import { syllabusForGrade } from '@/content/syllabus'
+import { classForTopic, getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
+import { syllabusForGrade, topicTitle } from '@/content/syllabus'
 import { DAILY_BLOCK_LABEL, DAILY_MINUTES, planDailySession, type DailyPlan } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState } from '@/types'
 import type { RunQueue } from '@/activities/shared/requeue'
-import { afterAnswer, SESSION_STARS, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
+import { afterAnswer, postpone, SESSION_STARS, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
 export interface DailySessionProps {
@@ -129,6 +129,16 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
     setPhase('closing')
   }
 
+  // «Ahora no»: nothing is reported. The next item slides into this position; the run closes when none is left.
+  const onPostponed = () => {
+    if (!queue) return
+    const q = postpone(queue, pos)
+    setQueue(q)
+    if (finishing) return close(false)
+    if (pos < q.slots.length) return
+    close(true)
+  }
+
   const onAnswered = (correct: boolean, isRetry: boolean) => {
     if (!queue || !slot) return
     const q = afterAnswer(queue, pos, correct)
@@ -140,6 +150,8 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
   }
 
   const topic = plan.topic
+  const topicName = topic ? topicTitle(topic) : ''
+  const topicClass = topic ? classForTopic(topic.id, child.grade) : undefined
   const summary: RunSummary = summarizeRun(queue ?? { slots: [], retried: [] }, results, !endedByTime)
   const ctx = templateContext(child)
 
@@ -174,7 +186,7 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
           <div className={`${s.card} ${s.intro}`}>
             <p className={s.kicker}>Unos {DAILY_MINUTES} minutos</p>
             <h2 className={s.title}>{childText(child, '¡Vamos, {child}!')}</h2>
-            {topic && <p className={s.topicChip}>Hoy aprendemos: <strong>{topic.name}</strong></p>}
+            {topic && <p className={s.topicChip}>Hoy aprendemos: <strong>{topicName}</strong></p>}
             <ol className={s.blocks}>
               <li><span>Calentamiento</span><small>2 min · de cabeza</small></li>
               <li><span>Lo nuevo</span><small>5 min · con un ejemplo</small></li>
@@ -194,7 +206,7 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
         child={child}
         progress={progress}
         summary={summary}
-        topicName={topic?.name ?? null}
+        topicName={topic ? topicName : null}
         finished={!endedByTime}
         onDone={onDone}
         onGo={(worldId, nodeId) => navigate(`/play/w/${worldId}/${nodeId}`)}
@@ -218,19 +230,21 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
           <ExampleCard
             statement={plan.example.statement}
             steps={plan.example.steps.map((t) => host.t(t))}
-            topicName={topic?.name ?? ''}
+            topicName={topicName}
             onNext={() => { setExampleSeen(true) }}
+            onClass={topicClass ? () => navigate(`/play/clase/${topicClass.topicId}`) : undefined}
           />
         ) : slot ? (
           <div className={s.card}>
             <p className={s.blockChip}>{label}{slot.retry ? ' · vuelve para repasar' : ''}</p>
             <ExerciseStep
-              key={pos}
+              key={`${pos}:${slot.item.uid}`}
               exercise={slot.item.item.exercise}
               allowHints={slot.item.item.block !== 'warmup'}
               okLabel={pos + 1 < slots.length && !finishing ? 'Siguiente' : 'Ver mi resultado'}
               report={!slot.retry}
               onContinue={(o) => onAnswered(o.check.correct, slot.retry)}
+              onSkip={onPostponed}
             />
           </div>
         ) : null}
@@ -251,7 +265,9 @@ function SessionRunner({ onDone, onExit }: DailySessionProps) {
   )
 }
 
-function ExampleCard({ statement, steps, topicName, onNext }: { statement: string; steps: string[]; topicName: string; onNext: () => void }) {
+function ExampleCard({ statement, steps, topicName, onNext, onClass }: {
+  statement: string; steps: string[]; topicName: string; onNext: () => void; onClass?: () => void
+}) {
   return (
     <div className={`${s.card} ${s.example}`}>
       <p className={s.blockChip}>Lo nuevo · ejemplo{topicName ? `: ${topicName}` : ''}</p>
@@ -259,7 +275,10 @@ function ExampleCard({ statement, steps, topicName, onNext }: { statement: strin
       <ol className={s.exampleSteps}>
         {steps.map((t, i) => <li key={i}>{t}</li>)}
       </ol>
-      <Button size="lg" variant="success" onClick={onNext}>¡Entendido, a por ello!</Button>
+      <div className={s.actions}>
+        <Button size="lg" variant="success" onClick={onNext}>¡Entendido, a por ello!</Button>
+        {onClass && <Button size="lg" variant="secondary" onClick={onClass}>Ver la clase otra vez</Button>}
+      </div>
     </div>
   )
 }
