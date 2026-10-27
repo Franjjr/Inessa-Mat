@@ -1,11 +1,15 @@
-/* Adult gate PIN, stored on this device only as a salted hash in the meta table. It keeps children out of adult
-   screens; it is not an account password, and anyone with the device and its site data can clear it.
+/* Adult gate PIN: a salted hash, kept in the meta table of this device. When the adult is signed in, the same record
+   is also kept in the account's user metadata (key `adult_pin`), so every device of that account asks for the same
+   PIN. Without an account the PIN stays on the device. It keeps children out of adult screens; it is not an account
+   password, and anyone with the device and its site data can clear it.
    Formats:
    - v2 (current): PBKDF2-HMAC-SHA256 with 600 000 iterations via WebCrypto, 16-byte random salt.
    - v1 (legacy): salted, iterated SHA-256 written by hand (1 024 rounds). Still verified; rewritten as v2 on success. */
 import { DataError } from './errors'
 import { META, deleteMeta, getMeta, setMeta } from './meta'
 import { fromBase64, sha256, toBase64, toHex } from './sha256'
+import { getSupabase } from './supabase'
+import { getAuth } from './store'
 import { randomBytes } from './util'
 
 interface PinRecordV1 {
@@ -66,9 +70,17 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0
 }
 
-async function writePin(pin: string): Promise<void> {
+/** Key of the PIN record in the signed-in user's auth metadata. */
+const ACCOUNT_KEY = 'adult_pin'
+
+function isPinRecord(x: unknown): x is PinRecord {
+  const r = x as Partial<PinRecord> | null | undefined
+  return Boolean(r && (r.v === 1 || r.v === 2) && typeof r.hash === 'string' && typeof r.salt === 'string' && typeof r.iterations === 'number')
+}
+
+async function buildRecord(pin: string): Promise<PinRecordV2> {
   const salt = randomBytes(16)
-  const rec: PinRecordV2 = {
+  return {
     v: 2,
     kdf: 'pbkdf2-sha256',
     salt: toBase64(salt),
@@ -76,25 +88,99 @@ async function writePin(pin: string): Promise<void> {
     iterations: PBKDF2_ITERATIONS,
     createdAt: new Date().toISOString(),
   }
+}
+
+/** undefined: the account cannot be read now (no account, offline, server error). null: the account has no PIN. */
+async function readAccountRecord(): Promise<PinRecord | null | undefined> {
+  const a = getAuth()
+  if (a.status !== 'signed-in' || !a.user) return undefined
+  try {
+    const sb = await getSupabase()
+    if (!sb) return undefined
+    const { data, error } = await sb.auth.getUser()
+    if (error || !data.user) return undefined
+    const rec: unknown = data.user.user_metadata?.[ACCOUNT_KEY]
+    return isPinRecord(rec) ? rec : null
+  } catch {
+    return undefined
+  }
+}
+
+/** Best effort: false when there is no account or the server did not take the write. The local copy stays either way. */
+async function writeAccountRecord(rec: PinRecord | null): Promise<boolean> {
+  const a = getAuth()
+  if (a.status !== 'signed-in' || !a.user) return false
+  try {
+    const sb = await getSupabase()
+    if (!sb) return false
+    const { error } = await sb.auth.updateUser({ data: { [ACCOUNT_KEY]: rec } })
+    return !error
+  } catch {
+    return false
+  }
+}
+
+async function readLocalRecord(): Promise<PinRecord | undefined> {
+  const rec = await getMeta<unknown>(META.adultPin)
+  return isPinRecord(rec) ? rec : undefined
+}
+
+function sameRecord(a: PinRecord, b: PinRecord): boolean {
+  return a.hash === b.hash && a.salt === b.salt
+}
+
+/** True only when both creation times parse and a is the later one. */
+function isNewer(a: PinRecord, b: PinRecord): boolean {
+  const ta = Date.parse(a.createdAt)
+  const tb = Date.parse(b.createdAt)
+  return Number.isFinite(ta) && Number.isFinite(tb) && ta > tb
+}
+
+/** The record this device should use. With an account: a PIN made on another device is copied here; when both
+    sides hold different PINs, the newer one wins (the account's on a tie) and is written to both. */
+async function resolveAdultPin(): Promise<PinRecord | undefined> {
+  const local = await readLocalRecord()
+  const remote = await readAccountRecord()
+  if (remote === undefined) return local
+  if (remote === null) {
+    if (local) await writeAccountRecord(local)
+    return local
+  }
+  if (local && sameRecord(local, remote)) return local
+  if (local && isNewer(local, remote)) {
+    await writeAccountRecord(local)
+    return local
+  }
+  await setMeta(META.adultPin, remote)
+  return remote
+}
+
+/** Stores a new record here and, when signed in, on the account. */
+async function storeRecord(rec: PinRecordV2): Promise<void> {
   await setMeta(META.adultPin, rec)
+  await writeAccountRecord(rec)
+}
+
+/** Called when the account is loaded (sign-in or start-up): pushes a PIN that could not be saved to the account before. */
+export async function reconcileAdultPin(): Promise<void> {
+  await resolveAdultPin()
 }
 
 export async function hasAdultPin(): Promise<boolean> {
-  const rec = await getMeta<PinRecord>(META.adultPin)
-  return Boolean(rec?.hash)
+  return Boolean(await resolveAdultPin())
 }
 
 /** 4–8 digits. */
 export async function setAdultPin(pin: string): Promise<void> {
   const p = String(pin ?? '').trim()
   if (!/^\d{4,8}$/.test(p)) throw new DataError('invalid', 'El PIN debe tener entre 4 y 8 números.')
-  await writePin(p)
+  await storeRecord(await buildRecord(p))
 }
 
 /** false when no PIN is set (check hasAdultPin first to offer creating one). */
 export async function verifyAdultPin(pin: string): Promise<boolean> {
-  const rec = await getMeta<PinRecord>(META.adultPin)
-  if (!rec?.hash) return false
+  const rec = await resolveAdultPin()
+  if (!rec) return false
   const p = String(pin ?? '').trim()
   if (!/^\d{1,8}$/.test(p)) return false
   const salt = fromBase64(rec.salt)
@@ -104,7 +190,7 @@ export async function verifyAdultPin(pin: string): Promise<boolean> {
   const ok = timingSafeEqual(await deriveLegacy(p, salt, rec.iterations || LEGACY_ITERATIONS), rec.hash)
   if (ok) {
     // Upgrade to v2 on the first correct PIN. Best effort: without WebCrypto the legacy record stays.
-    await writePin(p).catch(() => undefined)
+    await storeRecord(await buildRecord(p)).catch(() => undefined)
   }
   return ok
 }
@@ -112,6 +198,7 @@ export async function verifyAdultPin(pin: string): Promise<boolean> {
 /** Remove the PIN (e.g. after the adult re-authenticated with their account password). */
 export async function clearAdultPin(): Promise<void> {
   await deleteMeta(META.adultPin)
+  await writeAccountRecord(null)
 }
 
 /** The gate's failure counter and lock, as last saved in IndexedDB (null when none). */

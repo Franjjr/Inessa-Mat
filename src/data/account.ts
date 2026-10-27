@@ -8,6 +8,7 @@ import { DataError, isNetworkError, toDataError } from './errors'
 import { membershipFromRow, organizationFromRow, profileFromRow } from './mappers'
 import { META, deleteMeta, getMeta, setMeta } from './meta'
 import { enqueueMany } from './outbox'
+import { reconcileAdultPin } from './pin'
 import { getAuth, setAuth, type AuthSnapshot } from './store'
 import { AUTH_STORAGE_KEY, getSupabase, isBackendAvailable } from './supabase'
 import { runSync, startSyncEngine } from './sync'
@@ -130,6 +131,7 @@ async function loadAccountFor(user: User, gen: number): Promise<void> {
       await setMeta(META.authCache(user.id), { ...acct, activeOrgId: activeOrg?.id ?? null } satisfies CachedAccount)
       if (activeOrg) await setMeta(META.activeOrg(user.id), activeOrg.id)
       loadedFor = user.id
+      await reconcileAdultPin()
     } catch (e) {
       if (gen !== generation) return
       console.warn('[numeria/auth] could not load the account:', e)

@@ -1,8 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { hasAdultPin, setAdultPin, verifyAdultPin, clearAdultPin, readAdultGateLock, writeAdultGateLock, DataError } from '@/data'
+import { signInWithPassword } from '../account'
+import { wipeLocalDatabase } from '../db'
 import { toDataError } from '../errors'
 import { META, getMeta, setMeta } from '../meta'
 import { sha256, sha256Sync, toBase64, toHex } from '../sha256'
+import { resetAuthStore } from '../store'
+import { FakeSupabase } from './fakeSupabase'
 import { resetAll } from './helpers'
 
 beforeEach(async () => {
@@ -108,5 +112,102 @@ describe('error mapping', () => {
     expect(toDataError({ code: 'over_email_send_rate_limit', status: 429, message: 'x' }).code).toBe('rate-limited')
     expect(toDataError({ code: '23514', message: 'check' }).code).toBe('invalid')
     expect(toDataError(new Error('boom')).code).toBe('unknown')
+  })
+})
+
+describe('adult PIN on the account', () => {
+  const EMAIL = 'ines@test.numeria'
+  const PASSWORD = 'clave-larga-123'
+  let fake: FakeSupabase
+
+  /** Another browser/device of the same account: empty local database, signed in again. */
+  async function freshDevice(): Promise<void> {
+    await wipeLocalDatabase()
+    resetAuthStore()
+    await signInWithPassword(EMAIL, PASSWORD)
+  }
+
+  const accountRecord = () => fake.auth.users[0].user_metadata.adult_pin as { createdAt: string; hash: string; salt: string } | undefined
+
+  beforeEach(async () => {
+    fake = new FakeSupabase()
+    fake.auth.addUser(EMAIL, PASSWORD, { display_name: 'Ines' })
+    await resetAll(fake)
+    await signInWithPassword(EMAIL, PASSWORD)
+  })
+
+  it('a PIN created on a signed-in device is found and verifies on a fresh device of the same account', async () => {
+    await setAdultPin('2468')
+    expect(JSON.stringify(accountRecord())).not.toContain('2468')
+    expect(accountRecord()).toMatchObject({ v: 2, kdf: 'pbkdf2-sha256' })
+
+    await freshDevice()
+    expect(await hasAdultPin()).toBe(true)
+    expect(await verifyAdultPin('2468')).toBe(true)
+    expect(await verifyAdultPin('1357')).toBe(false)
+    expect(await getMeta(META.adultPin)).toMatchObject({ v: 2 }) // copied to this device
+  })
+
+  it('without an account the PIN stays on the device', async () => {
+    resetAuthStore({ status: 'local-only' })
+    await setAdultPin('2468')
+    expect(accountRecord()).toBeUndefined()
+
+    await wipeLocalDatabase()
+    expect(await hasAdultPin()).toBe(false)
+  })
+
+  it('keeps the local PIN when the server is unreachable, and pushes it on the next sign-in', async () => {
+    fake.auth.unreachable = true
+    await expect(setAdultPin('2468')).resolves.toBeUndefined()
+    expect(await hasAdultPin()).toBe(true)
+    expect(await verifyAdultPin('2468')).toBe(true)
+    expect(accountRecord()).toBeUndefined()
+
+    fake.auth.unreachable = false
+    await signInWithPassword(EMAIL, PASSWORD)
+    expect(accountRecord()).toMatchObject({ v: 2 })
+    await freshDevice()
+    expect(await verifyAdultPin('2468')).toBe(true)
+  })
+
+  it('changing the PIN updates the account', async () => {
+    await setAdultPin('2468')
+    await setAdultPin('1357')
+    await freshDevice()
+    expect(await verifyAdultPin('2468')).toBe(false)
+    expect(await verifyAdultPin('1357')).toBe(true)
+  })
+
+  it('clearing the PIN clears it on the account too', async () => {
+    await setAdultPin('2468')
+    await clearAdultPin()
+    expect(accountRecord()).toBeFalsy()
+    await freshDevice()
+    expect(await hasAdultPin()).toBe(false)
+  })
+
+  it('when the device and the account disagree, the newer record wins', async () => {
+    await setAdultPin('2468')
+    fake.auth.users[0].user_metadata.adult_pin = { ...accountRecord()!, createdAt: '2026-02-01T00:00:00.000Z' }
+
+    // This device has an older PIN (made while the server was unreachable): the account's record wins.
+    await wipeLocalDatabase()
+    resetAuthStore()
+    fake.auth.unreachable = true
+    await signInWithPassword(EMAIL, PASSWORD)
+    await setAdultPin('1111')
+    await setMeta(META.adultPin, { ...(await getMeta<object>(META.adultPin)), createdAt: '2026-01-01T00:00:00.000Z' })
+    fake.auth.unreachable = false
+    expect(await verifyAdultPin('2468')).toBe(true)
+    expect(await verifyAdultPin('1111')).toBe(false)
+
+    // This device has a newer PIN: it wins and goes to the account.
+    await setAdultPin('3579')
+    fake.auth.users[0].user_metadata.adult_pin = { ...accountRecord()!, createdAt: '2026-01-01T00:00:00.000Z' }
+    expect(await verifyAdultPin('3579')).toBe(true)
+    expect(accountRecord()).toMatchObject({ createdAt: expect.any(String) })
+    await freshDevice()
+    expect(await verifyAdultPin('3579')).toBe(true)
   })
 })
