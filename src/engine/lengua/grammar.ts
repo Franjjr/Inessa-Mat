@@ -8,7 +8,7 @@ import type {
 } from '@/types'
 import { hashString, pick, range, shuffle } from '../rng'
 import { parseSkill, type ParsedSkill } from '../skills'
-import { compareText, normalizeAnswer } from './text'
+import { compareText, missingMark, normalizeAnswer } from './text'
 import { ADJECTIVES, NOUNS, PROPER_NAMES, SENTENCES, VERBS, wordClass, type Noun, type Tense, type Verb } from './words'
 
 /** The grammar kinds of this file (the other Lengua kinds are in spelling.ts, syllables.ts and vocabulary.ts). */
@@ -206,7 +206,7 @@ function checkTransform(ex: LngTransformExercise, answer: Answer): CheckResult {
   // Capitals are forgiven (a name or a sentence start); accents count.
   const r = compareText(value, ex.answer, 'ignore-case')
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
-  const feedback = r.accentOnly ? '¡Casi! Mira la tilde.' : 'Revisa la terminación de la palabra.'
+  const feedback = r.accentOnly ? (missingMark(value, ex.answer) === 'diéresis' ? '¡Casi! Mira la diéresis: las dos puntos de la ü.' : '¡Casi! Mira la tilde.') : 'Revisa la terminación de la palabra.'
   return { correct: false, given: value, expected: ex.answer, errorType: 'word-form', feedback }
 }
 

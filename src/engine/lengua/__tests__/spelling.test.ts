@@ -118,3 +118,25 @@ describe('dictation: what the voice says', () => {
     }
   })
 })
+
+describe('accent feedback names the right sign', () => {
+  it('a missing ü is a diéresis, a missing accent is a tilde', () => {
+    const ex = { id: 'x', kind: 'lng-dictation', skill: 'lng:escr:dictado', difficulty: 2, answer: 'pingüino' } as LngDictationExercise
+    expect(check(ex, { type: 'text', value: 'pinguino' }).feedback).toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
+    expect(check(ex, { type: 'text', value: 'pingüíno' }).feedback).toBe('¡Casi! Mira la tilde.')
+    const pair = { ...ex, id: 'y', kind: 'lng-missing-letter', skill: 'lng:orto:g-gu', mode: 'type', word: 'pingüino', shown: 'pin__ino', options: [], answer: 'pingüino' } as LngMissingLetterExercise
+    expect(check(pair, { type: 'text', value: 'pinguino' }).feedback).toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
+    expect(check(pair, { type: 'text', value: 'pinguíno' }).feedback).toBe('¡Casi! Mira la tilde.')
+  })
+})
+
+describe('hints of a letter item never show the letter on a card', () => {
+  it('no example word starts with the answer letters', () => {
+    for (const skill of ['lng:orto:mayusculas', 'lng:orto:c-qu', 'lng:orto:g-gu', 'lng:orto:r-rr', 'lng:orto:mp-mb']) {
+      for (const ex of sample(skill, 'lng-missing-letter') as LngMissingLetterExercise[]) {
+        const card = hintsFor(ex).find((h) => h.params?.words)?.params?.words as string[] | undefined
+        for (const w of card ?? []) expect(w.toLowerCase().startsWith(ex.answer.toLowerCase()), `${ex.id}: ${w}`).toBe(false)
+      }
+    }
+  })
+})

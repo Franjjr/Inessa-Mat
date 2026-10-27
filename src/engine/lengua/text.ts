@@ -11,6 +11,13 @@ const lower = (s: string) => s.toLocaleLowerCase('es')
 /** Drops the acute, grave and diaeresis marks only (ñ keeps its tilde, so «caña» and «cana» differ). */
 const unaccent = (s: string) => s.normalize('NFD').replace(/[̀́̈]/g, '').normalize('NFC')
 
+/** The mark that is missing when a word is only wrong in accents: «tilde», or «diéresis» when the only difference is the ü
+    of güe/güi. Feedback names it («Mira la diéresis»), so the child looks at the right sign. */
+export function missingMark(given: string, expected: string): 'tilde' | 'diéresis' {
+  const withoutDiaeresis = (s: string) => fold(s).normalize('NFD').replace(/̈/g, '').normalize('NFC')
+  return withoutDiaeresis(given) === withoutDiaeresis(expected) ? 'diéresis' : 'tilde'
+}
+
 export interface TextComparison {
   correct: boolean
   /** Wrong only because of capitals («árbol» for «Árbol»). */

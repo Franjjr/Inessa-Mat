@@ -8,7 +8,7 @@ import type {
 } from '@/types'
 import { hashString, pick, shuffle } from '../rng'
 import { parseSkill } from '../skills'
-import { compareText, normalizeAnswer } from './text'
+import { compareText, missingMark, normalizeAnswer } from './text'
 
 type Group = 'c-qu' | 'g-gu' | 'r-rr' | 'mp-mb' | 'mayusculas'
 
@@ -125,9 +125,10 @@ export function buildPunctuation(skill: SkillKey, rng: Rng): LngPunctuationExerc
 
 // ---------------------------------------------------------------- dictation
 
-/** Words a child hears in 3.º, with the spellings that are doubtful (b/v, h, g/j, c/z, y/ll, r/rr, x). No homophones. */
+/** Words a child hears in 3.º, with the spellings that are doubtful (b/v, h, g/j, c/z, y/ll, r/rr, x). Checked by hand: no
+    word of the list sounds the same as another common word (vaca/baca is why vaca is not here). */
 export const DICTATION_WORDS: string[] = [
-  'vaca', 'burro', 'bonito', 'vestido', 'hielo', 'hormiga', 'gigante', 'jirafa', 'cocina', 'zapato', 'cereza', 'caballo',
+  'lobo', 'burro', 'bonito', 'vestido', 'hielo', 'hormiga', 'gigante', 'jirafa', 'cocina', 'zapato', 'cereza', 'caballo',
   'escoba', 'lluvia', 'árbol', 'lápiz', 'ventana', 'camión', 'abeja', 'murciélago', 'pingüino', 'guitarra', 'cigarra',
   'carretera', 'lámpara', 'sombrero', 'corazón', 'cebolla', 'gallina', 'elefante', 'jabón', 'mariposa', 'ratón',
 ]
@@ -155,6 +156,10 @@ export const dictationRule = (answer: string): 'exact' | 'ignore-case' => (/\s/.
 // ---------------------------------------------------------------- check
 
 const CHILD = '¡Muy bien, {child}!'
+
+/** «¡Casi! Mira la tilde.» or, for the ü of güe/güi, «¡Casi! Mira la diéresis: las dos puntos de la ü.» */
+const accentFeedback = (given: string, expected: string) =>
+  missingMark(given, expected) === 'diéresis' ? '¡Casi! Mira la diéresis: las dos puntos de la ü.' : '¡Casi! Mira la tilde.'
 const isCapital = (ex: LngMissingLetterExercise) => ex.skill.endsWith(':mayusculas')
 
 function checkMissing(ex: LngMissingLetterExercise, answer: Answer): CheckResult {
@@ -174,7 +179,7 @@ function checkMissing(ex: LngMissingLetterExercise, answer: Answer): CheckResult
   const r = compareText(value, ex.answer, capital ? 'exact' : 'ignore-case')
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
   if (r.caseOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'capital', feedback: 'Revisa la mayúscula.' }
-  if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'spelling', feedback: '¡Casi! Mira la tilde.' }
+  if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'spelling', feedback: accentFeedback(value, ex.answer) }
   return { correct: false, given: value, expected: ex.answer, errorType: capital ? 'capital' : 'spelling', feedback: 'Revisa las letras que faltan.' }
 }
 
@@ -200,7 +205,7 @@ function checkDictation(ex: LngDictationExercise, answer: Answer): CheckResult {
   const r = compareText(value, ex.answer, dictationRule(ex.answer))
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
   if (r.caseOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'capital', feedback: 'Revisa la mayúscula.' }
-  if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'dictation', feedback: '¡Casi! Mira la tilde.' }
+  if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'dictation', feedback: accentFeedback(value, ex.answer) }
   return { correct: false, given: value, expected: ex.answer, errorType: 'dictation', feedback: 'Escucha otra vez y piensa en cómo se escribe cada sonido.' }
 }
 
@@ -229,15 +234,15 @@ const GAP_TEXT: Record<Group, [string, string]> = {
   ],
   'r-rr': [
     'Di la palabra en voz alta: ¿la erre suena fuerte, como un motor, o suave, como en pera? Mira dónde está el hueco.',
-    'Piensa si la erre está entre dos vocales o al principio de la palabra. Entre vocales, una erre fuerte se escribe doble. ¿Cuál es?',
+    'Piensa dónde está el hueco: ¿entre dos vocales, o al principio de la palabra? ¿Qué suena allí, fuerte o suave?',
   ],
   'mp-mb': [
     'Di la palabra despacio y escucha la letra que va justo antes de la p o de la b.',
-    'Delante de p y de b, la nasal es siempre la misma letra. ¿Cuál es, y dónde va antes de la p o de la b?',
+    'Antes de la p o de la b, ¿qué letra de la nasal suena? ¿Cuál de las dos opciones escribirías?',
   ],
   mayusculas: [
     'Las palabras que nombran a una persona o a un lugar empiezan con mayúscula. ¿La que falta es una de ellas?',
-    'Escribe la palabra con la primera letra en mayúscula. ¿Es el nombre de alguien o de un sitio?',
+    'Los nombres de personas y de lugares se escriben con mayúscula. ¿Es el nombre de una persona o de un lugar?',
   ],
 }
 
@@ -246,8 +251,10 @@ export function hintsSpelling(ex: LngMissingLetterExercise | LngPunctuationExerc
     case 'lng-missing-letter': {
       const group = groupOf(ex.skill)
       const [a, c] = GAP_TEXT[group]
-      // Other words of the same group, as examples; never the one asked.
-      const others = GAPS[group].filter((g) => g.word !== ex.word).map((g) => g.word)
+      // Other words of the same group, as examples: never the one asked, and never one that starts with the answer's
+      // letters (a capital item would otherwise show its letter on the card).
+      const lead = ex.answer.toLocaleLowerCase('es')
+      const others = GAPS[group].filter((g) => g.word !== ex.word && !g.word.toLocaleLowerCase('es').startsWith(lead)).map((g) => g.word)
       const off = hashString(ex.id) % others.length
       const examples = [0, 1, 2].map((i) => others[(off + i) % others.length])
       return [hint(1, a), hint(2, 'Estas palabras tienen el mismo sonido o la misma duda:', 'words', { words: examples }), hint(3, c)]

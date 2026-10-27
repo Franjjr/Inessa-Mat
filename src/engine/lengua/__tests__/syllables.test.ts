@@ -2,7 +2,8 @@
    by hand: diphthongs, hiatus with a tilde, h between vowels, consonant clusters that go together (bl, br, cl, cr, dr, fl,
    fr, gl, gr, pl, pr, tl, tr), and ch, ll, rr, qu, gu, gü as single sounds. */
 import { describe, expect, it } from 'vitest'
-import { stressedSyllable, syllabify } from '../syllables'
+import { createRng } from '../../rng'
+import { buildSyllables, SYLLABLE_WORDS, stressedSyllable, syllabify, wrongSplits } from '../syllables'
 
 const SPLITS: [string, string][] = [
   ['casa', 'ca-sa'], ['mesa', 'me-sa'], ['perro', 'pe-rro'], ['pelota', 'pe-lo-ta'], ['mariposa', 'ma-ri-po-sa'],
@@ -55,5 +56,31 @@ describe('stressedSyllable: the index of the stressed syllable', () => {
     ['día', 0], // hiato con tilde: dí-a
   ])('%s → sílaba %i', (word, index) => {
     expect(stressedSyllable(word)).toBe(index)
+  })
+})
+
+describe('split exercises: three options, the right cut once, wrong cuts never empty or repeated', () => {
+  it('every word of the bank gets the right cut and two different wrong cuts', () => {
+    for (const word of SYLLABLE_WORDS) {
+      const ex = buildSyllables('lng:gram:silabas', createRng(word.length), 'split')
+      const parts = syllabify(word)
+      const wrong = wrongSplits(parts, createRng(7))
+      if (word.length >= 4) expect(wrong.length, word).toBeGreaterThanOrEqual(2)
+      expect(new Set(wrong).size, word).toBe(wrong.length)
+      for (const w of wrong) {
+        expect(w.split('-').every((p) => p.length > 0), `${word} ${w}`).toBe(true)
+        expect(w.replace(/-/g, ''), word).toBe(parts.join(''))
+        expect(w, word).not.toBe(parts.join('-'))
+      }
+      if (ex.word === word) {
+        expect(ex.options.length, word).toBe(3)
+        expect(new Set(ex.options).size, word).toBe(3)
+        expect(ex.options, word).toContain(parts.join('-'))
+      }
+    }
+  })
+
+  it('a word with two syllables (casa) gets its two near wrong cuts, c-asa and cas-a', () => {
+    expect(wrongSplits(['ca', 'sa'], createRng(3)).sort()).toEqual(['c-asa', 'cas-a'])
   })
 })

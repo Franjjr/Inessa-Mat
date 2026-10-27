@@ -5,7 +5,7 @@
 import type { Answer, CheckResult, Hint, LngAlphabetExercise, LngPairWordsExercise, Rng, SkillKey } from '@/types'
 import { hashString, pick, shuffle } from '../rng'
 import { parseSkill } from '../skills'
-import { compareText, normalizeAnswer } from './text'
+import { compareText, missingMark, normalizeAnswer } from './text'
 
 /** Sets of words for the alphabet exercise (3 to 4 words, initial letters or second letters that differ). */
 export const ALPHABET_SETS: string[][] = [
@@ -13,7 +13,7 @@ export const ALPHABET_SETS: string[][] = [
   ['tigre', 'elefante', 'jirafa'], ['libro', 'lápiz', 'regla'], ['pato', 'pan', 'pizza'], ['cuento', 'cabra', 'codo'],
   ['bola', 'barco', 'bufanda'], ['dedo', 'dado', 'dama'], ['fresa', 'falda', 'fuego'], ['hormiga', 'helado', 'hielo'],
   ['mesa', 'manzana', 'melón'], ['vela', 'vaca', 'viento'], ['zapato', 'zorro', 'zumo'], ['queso', 'pez', 'rana'],
-  ['gallina', 'jamón', 'jugo'], ['uva', 'oso', 'elefante'], ['abeja', 'araña', 'ardilla'], ['nido', 'ñu', 'noche', 'oveja'],
+  ['gallina', 'jamón', 'jersey'], ['uva', 'oso', 'elefante'], ['abeja', 'araña', 'ardilla'], ['nido', 'ñu', 'noche', 'oveja'],
 ]
 
 /** A key that puts the words in the order of the alphabet: no accents, and ñ after n (as in the dictionary). */
@@ -25,7 +25,9 @@ export const inAlphabetOrder = (words: string[]) => [...words].sort((a, b) => (a
 export function buildAlphabet(skill: SkillKey, rng: Rng): LngAlphabetExercise {
   const set = pick(rng, ALPHABET_SETS)
   const sorted = inAlphabetOrder(set)
-  const shown = shuffle(rng, set)
+  // The words never come out already in order: a sorted shuffle is reversed.
+  const shuffled = shuffle(rng, set)
+  const shown = shuffled.join() === inAlphabetOrder(set).join() ? [...shuffled].reverse() : shuffled
   return {
     id: `lng-alphabet:${set.join(',')}`, kind: 'lng-alphabet', skill, difficulty: 2,
     words: shown, targets: sorted.map((w) => shown.indexOf(w)),
@@ -67,7 +69,7 @@ const FAMILIES: PairItem[] = [
   { word: 'pan', answer: 'panadería', options: ['panadería', 'pastel', 'paloma'] },
   { word: 'flor', answer: 'florero', options: ['florero', 'fresa', 'flecha'] },
   { word: 'zapato', answer: 'zapatero', options: ['zapatero', 'zanahoria', 'zumo'] },
-  { word: 'mar', answer: 'marinero', options: ['marinero', 'martillo', 'mano'] },
+  { word: 'mar', answer: 'marinero', options: ['marinero', 'pez', 'mano'] },
   { word: 'libro', answer: 'librería', options: ['librería', 'lápiz', 'leche'] },
   { word: 'sol', answer: 'soleado', options: ['soleado', 'sopa', 'sombrero'] },
   { word: 'casa', answer: 'casero', options: ['casero', 'cesta', 'cama'] },
@@ -151,7 +153,10 @@ export function checkPair(ex: LngPairWordsExercise, answer: Answer): CheckResult
   if (!value) return { correct: false, given: '', expected: ex.answer, errorType: 'incomplete', feedback: 'Escribe la palabra.' }
   const r = compareText(value, ex.answer, 'ignore-case')
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
-  if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'word-pair', feedback: '¡Casi! Mira la tilde.' }
+  if (r.accentOnly) {
+    const feedback = missingMark(value, ex.answer) === 'diéresis' ? '¡Casi! Mira la diéresis: las dos puntos de la ü.' : '¡Casi! Mira la tilde.'
+    return { correct: false, given: value, expected: ex.answer, errorType: 'word-pair', feedback }
+  }
   return { correct: false, given: value, expected: ex.answer, errorType: 'word-pair', feedback: 'Piensa si la palabra se hace más pequeña o más grande, y cómo termina.' }
 }
 

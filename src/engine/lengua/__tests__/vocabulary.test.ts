@@ -82,3 +82,18 @@ describe('pairs: synonyms, antonyms, families, diminutives, augmentatives, compo
     }
   })
 })
+
+describe('distractors: no family option starts like the word it is a family of, and the sets never come out sorted', () => {
+  it('no option of a family question starts with the base word', () => {
+    for (const ex of sample('lng:voc:familias', 'lng-pair-words') as LngPairWordsExercise[]) {
+      const base = /«(.+?)»/.exec(ex.question)![1]
+      for (const o of ex.options.filter((x) => x !== ex.answer)) expect(o.startsWith(base), `${ex.id} ${o}`).toBe(false)
+    }
+  })
+
+  it('the shown words are never already in alphabetical order', () => {
+    for (const ex of sample('lng:voc:abecedario', 'lng-alphabet') as LngAlphabetExercise[]) {
+      expect(ex.words, ex.id).not.toEqual(inAlphabetOrder(ex.words))
+    }
+  })
+})

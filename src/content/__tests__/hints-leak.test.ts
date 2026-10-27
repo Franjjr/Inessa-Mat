@@ -129,6 +129,20 @@ function optionsOf(ex: Exercise): { method?: SubMethod; tableMethod?: TableMetho
   return [{}]
 }
 
+/** A letter item (c/qu, mayúscula…): no example word on a card may start with the answer's letters, or the card shows the
+    letter (Mario on a card when the answer is M). */
+function exampleLeaks(ex: Exercise, hints: Hint[]): { level: number; text: string; answer: string }[] {
+  if (ex.kind !== 'lng-missing-letter') return []
+  const lead = ex.answer.toLocaleLowerCase('es')
+  const found: { level: number; text: string; answer: string }[] = []
+  for (const h of hints) {
+    const words = h.params?.words
+    if (!Array.isArray(words)) continue
+    for (const w of words.map(String)) if (w.toLocaleLowerCase('es').startsWith(lead)) found.push({ level: h.level, text: `${w}`, answer: `letra «${ex.answer}»` })
+  }
+  return found
+}
+
 function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
   if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
   const found: { level: number; text: string; answer: string }[] = []
@@ -136,7 +150,7 @@ function leaks(ex: Exercise): { level: number; text: string; answer: string }[] 
     const hints = o.tableMethod !== undefined
       ? hintsFor(ex, undefined, { tableMethod: o.tableMethod })
       : hintsFor(ex, o.method)
-    found.push(...leaksIn(ex, hints))
+    found.push(...leaksIn(ex, hints), ...exampleLeaks(ex, hints))
   }
   return found
 }

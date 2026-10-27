@@ -12,7 +12,7 @@ import PairWordsView from './PairWordsView'
 import PunctuationView from './PunctuationView'
 import SyllableView from './SyllableView'
 
-const voice = vi.hoisted(() => ({ on: false }))
+const voice = vi.hoisted(() => ({ on: false, sound: true }))
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn(async () => {}) }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
@@ -20,7 +20,7 @@ vi.mock('@/data', () => ({
   addInkSample: vi.fn(async () => {}),
   listInkSamples: vi.fn(async () => []),
   updateChild: vi.fn(async () => ({})),
-  useActiveChild: () => ({ child: voice.on ? { settings: { voice: true } } : null, loading: false, setActiveChild() {} }),
+  useActiveChild: () => ({ child: { settings: { voice: voice.on, sound: voice.sound } }, loading: false, setActiveChild() {} }),
 }))
 vi.mock('@/ink', () => ({
   useInkLearning: () => ({ requestConfirm: () => false, recognitionFixes: () => 0, confirm() {}, discard() {} }),
@@ -30,6 +30,7 @@ vi.mock('@/ink', () => ({
 afterEach(() => {
   cleanup()
   voice.on = false
+  voice.sound = true
   vi.mocked(speech.say).mockClear()
 })
 
@@ -81,22 +82,34 @@ describe('PunctuationView', () => {
 })
 
 describe('DictationView', () => {
-  it('with the voice off: only «🔊 Escuchar», and the text is never on the screen', () => {
+  it('with the voice off: «🔊 Escuchar» speaks when pressed (an explicit press), and the text is never on the screen', () => {
     const ex = first('lng-dictation', 'lng:escr:dictado', 2)
     render(<DictationView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
-    expect(screen.getByRole('button', { name: 'Escuchar' })).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Repetir' })).toBeNull()
-    expect(document.body.textContent ?? '').not.toContain(ex.answer)
     expect(speech.say).not.toHaveBeenCalled()
+    expect(document.body.textContent ?? '').not.toContain(ex.answer)
+    fireEvent.click(screen.getByRole('button', { name: '🔊 Escuchar' }))
+    expect(speech.say).toHaveBeenCalledWith(ex.answer, expect.objectContaining({ force: true }))
+    expect(document.body.textContent ?? '').not.toContain(ex.answer)
   })
 
-  it('with the voice on: the text is read when the exercise opens and «Repetir» reads it again, and it is still not shown', () => {
+  it('with the voice on: the sentence is read when the exercise opens, and the button reads it again', () => {
     voice.on = true
     const ex = first('lng-dictation', 'lng:escr:dictado', 0)
     render(<DictationView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
     expect(speech.say).toHaveBeenCalledWith(ex.answer, expect.objectContaining({ interrupt: true }))
-    fireEvent.click(screen.getByRole('button', { name: 'Repetir' }))
+    fireEvent.click(screen.getByRole('button', { name: '🔊 Escuchar' }))
     expect(vi.mocked(speech.say).mock.calls.length).toBe(2)
+    expect(document.body.textContent ?? '').not.toContain(ex.answer)
+  })
+
+  it('with the sound off: the button is replaced by the activation message, and nothing is spoken', () => {
+    voice.sound = false
+    voice.on = true
+    const ex = first('lng-dictation', 'lng:escr:dictado', 0)
+    render(<DictationView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    expect(screen.queryByRole('button', { name: '🔊 Escuchar' })).toBeNull()
+    expect(screen.getByText('Activa el sonido para hacer el dictado')).toBeTruthy()
+    expect(speech.say).not.toHaveBeenCalled()
     expect(document.body.textContent ?? '').not.toContain(ex.answer)
   })
 

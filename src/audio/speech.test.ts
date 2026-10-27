@@ -171,6 +171,16 @@ describe('say()', () => {
     expect(synth.spoken).toHaveLength(0)
   })
 
+  it('an explicit press (force) speaks even when the automatic voice is off; an automatic say does not', async () => {
+    setup()
+    speech.setEnabled(false)
+    void speech.say('Hola')
+    expect(synth.spoken).toHaveLength(0)
+    void speech.say('Vaca', { force: true, interrupt: true })
+    vi.advanceTimersByTime(3000)
+    expect(synth.spoken.map((u) => u.text)).toContain('Vaca')
+  })
+
   it('stop() resolves everything', async () => {
     setup()
     const ps = [speech.say('Uno'), speech.say('Dos'), speech.say('Tres')]

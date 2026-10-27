@@ -4,7 +4,7 @@
    entonces hay hiato. La h entre vocales no separa. Dos consonantes que van juntas (bl, br, cl, cr, dr, fl, fr, gl, gr,
    kl, kr, pl, pr, tl, tr) empiezan la sílaba siguiente. ch, ll, rr, qu y gu (ante e, i) son un solo sonido. */
 import type { Answer, CheckResult, Hint, LngStressExercise, LngSyllablesExercise, Rng, SkillKey } from '@/types'
-import { hashString, pick, shuffle } from '../rng'
+import { hashString, pick, range, shuffle } from '../rng'
 
 /** t is the letters written; v is the vowel it sounds like (a final y sounds like i). */
 interface Unit { t: string; kind: 'V' | 'C' | 'H'; v?: string }
@@ -118,27 +118,57 @@ export const SYLLABLE_WORDS: string[] = [
   'hierba', 'hueso', 'escuela', 'estudio', 'nube', 'viaje', 'jaula', 'oído', 'leído', 'Paraguay', 'prohibir', 'cigüeña',
 ]
 
-/** Wrong cuts of a word (for «split»): two other ways to cut the same letters, moving one cut. */
-function wrongSplits(parts: string[]): string[] {
-  const out: string[] = []
-  if (parts.length >= 3) out.push([parts[0] + parts[1], ...parts.slice(2)].join('-'))
-  const longest = parts.reduce((best, p, i) => (p.length > parts[best].length ? i : best), 0)
-  const p = parts[longest]
-  if (p.length >= 3) {
-    out.push([...parts.slice(0, longest), p.slice(0, 1), p.slice(1), ...parts.slice(longest + 1)].join('-'))
-    out.push([...parts.slice(0, longest), p.slice(0, -1), p.slice(-1), ...parts.slice(longest + 1)].join('-'))
+/** The word cut at the given letter positions, joined with hyphens. */
+function cutAt(letters: string, cuts: number[]): string {
+  const bounds = [...cuts, letters.length]
+  let prev = 0
+  return bounds.map((b) => { const part = letters.slice(prev, b); prev = b; return part }).join('-')
+}
+
+/** Wrong cuts of a word (for «split»). Near ones first: each cut moved one letter, either way. If there are fewer than
+    two of those, every other cut of the same letters. Never the right cut, never empty syllables, no duplicates. */
+export function wrongSplits(parts: string[], rng: Rng): string[] {
+  const letters = parts.join('')
+  const right = parts.join('-')
+  const cuts: number[] = []
+  let acc = 0
+  for (const p of parts.slice(0, -1)) { acc += p.length; cuts.push(acc) }
+  const valid = (c: number[]) => c.every((x, i) => x > 0 && x < letters.length && (i === 0 || x > c[i - 1]))
+  const near = new Set<string>()
+  cuts.forEach((c, i) => {
+    for (const d of [-1, 1]) {
+      const moved = cuts.map((x, j) => (j === i ? c + d : x))
+      if (valid(moved)) near.add(cutAt(letters, moved))
+    }
+  })
+  near.delete(right)
+  let pool = [...near]
+  if (pool.length < 2) {
+    const all = new Set<string>(pool)
+    const positions = range(1, letters.length - 1)
+    const combine = (from: number, chosen: number[]): void => {
+      if (chosen.length === cuts.length) {
+        const text = cutAt(letters, chosen)
+        if (text !== right) all.add(text)
+        return
+      }
+      for (let k = from; k < positions.length; k++) combine(k + 1, [...chosen, positions[k]])
+    }
+    combine(0, [])
+    pool = [...all]
   }
-  return [...new Set(out)].filter((s) => s !== parts.join('-'))
+  return shuffle(rng, pool)
 }
 
 /** count: how many syllables the word has, with the numbers next to it. split: the right cut, and two wrong ones. */
 export function buildSyllables(skill: SkillKey, rng: Rng, mode: 'count' | 'split'): LngSyllablesExercise {
-  const word = pick(rng, SYLLABLE_WORDS)
+  // A split needs room for two wrong cuts: a word of three letters (día) has room for one, so it is for counting only.
+  const word = pick(rng, mode === 'count' ? SYLLABLE_WORDS : SYLLABLE_WORDS.filter((w) => w.length >= 4))
   const parts = syllabify(word)
   const answer = mode === 'count' ? String(parts.length) : parts.join('-')
   const others = mode === 'count'
     ? [String(parts.length - 1), String(parts.length + 1)]
-    : wrongSplits(parts).slice(0, 2)
+    : wrongSplits(parts, rng).slice(0, 2)
   return {
     id: `lng-syllables:${mode}:${word}`, kind: 'lng-syllables', skill, difficulty: mode === 'count' ? 1 : 3,
     word, mode, options: shuffle(rng, [answer, ...others]), answer,

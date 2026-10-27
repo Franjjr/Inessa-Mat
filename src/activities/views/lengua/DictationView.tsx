@@ -1,7 +1,9 @@
 /* Lengua de 3.º, dictado (lng-dictation): the app says a word or a short sentence (the speech service, TTS) and the child
-   writes it. The text is never shown on the screen before the answer: with the voice on the sentence is read when the
-   exercise opens and «Repetir» reads it again; with the voice off only «🔊 Escuchar» is shown. A sentence is compared with
-   'exact' (capitals and marks count); a single word ignores its capital (see dictationRule). */
+   writes it. The text is never shown on the screen before the answer. «🔊 Escuchar» always speaks when the child presses
+   it (R16: an explicit press uses speech.say with force, so the automatic voice setting does not block it). With the voice
+   setting on, the sentence is also read once when the exercise opens. With the sound setting off, the button is replaced
+   by «Activa el sonido para hacer el dictado». A sentence is compared with 'exact' (capitals and marks count); a single
+   word ignores its capital (see dictationRule). */
 import { useEffect, useState } from 'react'
 import { speech } from '@/audio'
 import { celebrate } from '@/fx'
@@ -27,15 +29,16 @@ function DictationRound({ ex, onAnswered, showFeedback, allowHints }: {
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
   const { child } = useActiveChild()
   const voiceOn = child?.settings.voice ?? false
+  const soundOn = child?.settings.sound ?? true
   const [value, setValue] = useState('')
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const locked = flow.result?.correct === true
 
-  // The voice reads it once when the exercise opens (only with the voice on); «Repetir» or «Escuchar» reads it again.
+  // The automatic reading (voice setting on) happens once when the exercise opens. A press always speaks (R16).
   useEffect(() => {
-    if (voiceOn) void speech.say(ex.answer, { interrupt: true }).catch(() => undefined)
-  }, [ex.id, ex.answer, voiceOn])
-  const say = () => { void speech.say(ex.answer, { interrupt: true }).catch(() => undefined) }
+    if (voiceOn && soundOn) void speech.say(ex.answer, { interrupt: true }).catch(() => undefined)
+  }, [ex.id, ex.answer, voiceOn, soundOn])
+  const say = () => { void speech.say(ex.answer, { interrupt: true, force: true }).catch(() => undefined) }
 
   const submit = () => {
     if (!value.trim()) return
@@ -47,9 +50,11 @@ function DictationRound({ ex, onAnswered, showFeedback, allowHints }: {
     <section className={s.view} aria-label="Dictado" data-kind={ex.kind} data-status={status}>
       <p className={s.prompt}>Escucha y escribe lo que oigas</p>
       <div className={s.listen}>
-        <Button variant="secondary" size="lg" onClick={say} aria-label={voiceOn ? 'Repetir' : 'Escuchar'}>
-          {voiceOn ? '🔊 Repetir' : '🔊 Escuchar'}
-        </Button>
+        {soundOn ? (
+          <Button variant="secondary" size="lg" onClick={say}>🔊 Escuchar</Button>
+        ) : (
+          <p className={s.prompt}>Activa el sonido para hacer el dictado</p>
+        )}
       </div>
       <div className={s.typedFrame}>
         <TextInput
