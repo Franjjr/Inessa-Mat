@@ -101,6 +101,9 @@ export const LINE_STEPS = [10, 100, 1000, 10000] as const
 /** The range suffix of the number skills: absent = up to 9 999, 999 = up to 999 (2.º), 19999 / 99999 = 5 digits. */
 export type NumberMax = 999 | 19999 | 99999
 
+/** The areas of Lengua: grammar, spelling, vocabulary, reading, literature and writing (`lng:<area>:<item>[:<level>]`). */
+export type LenguaArea = 'gram' | 'orto' | 'voc' | 'lect' | 'lit' | 'escr'
+
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
   | { type: 'div'; p: number; d: number; q: number }
@@ -145,6 +148,7 @@ export type ParsedSkill =
   | { type: 'chance'; variant: 'chance' | 'likely' }
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
   | { type: 'position'; variant: 'relative' | 'next' | 'route' }
+  | { type: 'lengua'; area: LenguaArea; item: string; level?: string }
 
 // ---------------------------------------------------------------- builders
 
@@ -259,6 +263,11 @@ export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimensi
   return `measure:${mode}:${dimension}${all ? ':all' : ''}`
 }
 
+/** A Lengua skill key: `lng:<area>:<item>` or `lng:<area>:<item>:<level>` (lowercase, hyphens allowed). */
+export function lenguaSkill(area: LenguaArea, item: string, level?: string): SkillKey {
+  return `lng:${area}:${item}${level ? `:${level}` : ''}`
+}
+
 // ---------------------------------------------------------------- parser
 
 const MAX_CARRIES: Record<2 | 3 | 4, number> = { 2: 2, 3: 3, 4: 4 }
@@ -364,6 +373,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^prob:(chance|likely)$/))) return { type: 'chance', variant: m[1] as 'chance' | 'likely' }
   if ((m = key.match(/^pattern:(shapes|numbers|predict)$/))) return { type: 'pattern', variant: m[1] as 'shapes' | 'numbers' | 'predict' }
   if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
+  if ((m = key.match(/^lng:(gram|orto|voc|lect|lit|escr):([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?$/))) {
+    return { type: 'lengua', area: m[1] as LenguaArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
+  }
   return null
 }
 
@@ -498,6 +510,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'line': return ['number-line']
     case 'mental': return ['mental']
     case 'equation': return ['equation']
+    case 'lengua': return [] // the Lengua exercise kinds come with their tasks (Tasks 4 to 6)
   }
   /* c8 ignore next */
   return []

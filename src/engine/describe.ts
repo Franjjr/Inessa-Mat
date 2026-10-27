@@ -1,6 +1,6 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
 import type { ErrorType, MeasureDimension, MeasureMode, MoneyMode, SkillKey } from '@/types'
-import { GEO_OPS, parseSkill } from './skills'
+import { GEO_OPS, parseSkill, type LenguaArea } from './skills'
 import { DIMENSION_NAME } from './measure'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
@@ -49,6 +49,10 @@ const WORD_TEXT: Record<string, string> = {
   sub: 'Problemas de restar',
   mul: 'Problemas de multiplicar',
   div: 'Problemas de dividir',
+}
+
+const LENGUA_AREA_TEXT: Record<LenguaArea, string> = {
+  gram: 'gramática', orto: 'ortografía', voc: 'vocabulario', lect: 'lectura', lit: 'literatura', escr: 'escritura',
 }
 
 /** Human description of a skill for adults (Spanish): 'mul:6x7' → '6 × 7', 'sub:4d:z' → 'Restas de 4 cifras con ceros'. */
@@ -107,6 +111,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'chance': return p.variant === 'likely' ? 'Qué color es más (o menos) probable sacar' : 'Seguro, posible o imposible'
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
+    case 'lengua': return `Lengua, ${LENGUA_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
   }
 }
 

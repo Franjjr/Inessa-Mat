@@ -1,10 +1,11 @@
 /* Syllabus public API: the temarios of 2.º, 3.º and 4.º de Primaria as data plus pure queries over them. Another course is
    another Syllabus object (same model) and one line in syllabusForGrade. */
-import type { MasteryMap, SkillKey } from '@/types'
+import type { MasteryMap, SkillKey, SubjectId } from '@/types'
 import type { Syllabus, SyllabusStage, SyllabusTopic } from './model'
 import { GRADE2_SYLLABUS } from './grade2'
 import { GRADE3_SYLLABUS } from './grade3'
 import { GRADE4_SYLLABUS } from './grade4'
+import { LENGUA3_SYLLABUS } from './lengua3'
 
 export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './model'
 export { topicTitle } from './helpers'
@@ -12,6 +13,7 @@ export { SYLLABUS_RUNGS } from './model'
 export { GRADE3_STAGES, GRADE3_SYLLABUS, divisionFactSkills, tableSkills } from './grade3'
 export { GRADE2_STAGES, GRADE2_SYLLABUS } from './grade2'
 export { GRADE4_STAGES, GRADE4_SYLLABUS } from './grade4'
+export { LENGUA3_STAGES, LENGUA3_SYLLABUS } from './lengua3'
 
 /** The temario a child follows. 1.º takes 2.º and 5.º–6.º take 4.º (the closest ones there are) until theirs exist;
     a child without a course follows 3.º. */
@@ -19,6 +21,15 @@ export function syllabusForGrade(grade?: number): Syllabus {
   if (grade === undefined) return GRADE3_SYLLABUS
   if (grade <= 2) return GRADE2_SYLLABUS
   return grade >= 4 ? GRADE4_SYLLABUS : GRADE3_SYLLABUS
+}
+
+/** The temario of a subject for a course. Maths is syllabusForGrade. Lengua has 3.º (a child without a course follows it);
+    2.º and 4.º are empty until their temarios exist, so they have no topics. */
+export function syllabusFor(subject: SubjectId, grade?: number): Syllabus {
+  if (subject === 'math') return syllabusForGrade(grade)
+  if (subject === 'language' && (grade === undefined || grade === 3)) return LENGUA3_SYLLABUS
+  const course = grade ?? 3
+  return { id: `${subject}-${course}-vacio`, course, blocks: [] }
 }
 
 /** A skill counts as mastered at this Leitner box (two fluent answers). */
