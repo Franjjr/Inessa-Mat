@@ -4,9 +4,9 @@ import type { SyllabusTopic } from '@/content'
 import { topicTitle } from '@/content/syllabus/helpers'
 import { w4Borrow } from '@/content/lessons/w4'
 import { tryIt } from '@/content/lessons/dsl'
-import { syllabusForGrade } from '@/content/syllabus'
-import { createRng, generate } from '@/engine'
-import { clase, CLASSES, classForTopic, isClassDone, markClassDone } from './index'
+import { LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, allTopics } from '@/content/syllabus'
+import { createRng, generate, kindsForSkill } from '@/engine'
+import { clase, CLASSES, classForTopic, isClassDone, LENGUA_CLASSES, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
 
@@ -116,7 +116,6 @@ describe('classForTopic', () => {
 })
 
 describe('clases de sumar y restar (3.º)', () => {
-  const syllabus = syllabusForGrade(3)
   const topicIds = ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d']
 
   it('sumar y restar have their classes', () => {
@@ -132,8 +131,12 @@ describe('clases de sumar y restar (3.º)', () => {
   })
 
   it('every class keeps the five-phase shape and its tries generate exercises of its own topic', () => {
-    expect(new Set(CLASSES.map((c) => c.lesson.id)).size).toBe(CLASSES.length)
-    for (const cls of CLASSES) {
+    const everyClass = [
+      ...CLASSES.map((cls) => ({ cls, syllabus: syllabusForGrade(3) })),
+      ...LENGUA_CLASSES.map((cls) => ({ cls, syllabus: syllabusFor('language', 3) })),
+    ]
+    expect(new Set(everyClass.map((e) => e.cls.lesson.id)).size).toBe(everyClass.length)
+    for (const { cls, syllabus } of everyClass) {
       const { phases, lesson } = cls
       expect(phases.para, cls.lesson.id).toBeGreaterThanOrEqual(1)
       expect(phases.para, cls.lesson.id).toBeLessThanOrEqual(2)
@@ -157,6 +160,9 @@ describe('clases de sumar y restar (3.º)', () => {
         for (let seed = 1; seed <= 20; seed++) {
           const [exercise] = generate(step.trySelector!, 1, { rng: createRng(seed) })
           expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill} (seed ${seed})`).toBe(true)
+          if (cls.topicId.startsWith('lng-')) {
+            expect(kindsForSkill(exercise.skill), `${cls.lesson.id}: ${exercise.skill}`).toContain(exercise.kind)
+          }
         }
       }
     }
@@ -169,5 +175,49 @@ describe('topicTitle', () => {
   })
   it('keeps plain names unchanged', () => {
     expect(topicTitle({ name: 'Resta de 3 cifras pidiendo prestado' } as SyllabusTopic)).toBe('Resta de 3 cifras pidiendo prestado')
+  })
+})
+
+describe('clases de Lengua de 3.º', () => {
+  const lengua = allTopics(LENGUA3_SYLLABUS)
+  const withClass = lengua.filter((t) => t.id.startsWith('lng-') && LENGUA_CLASSES.some((c) => c.topicId === t.id))
+  const blockOf = (topicId: string) => LENGUA3_SYLLABUS.blocks.find((b) => b.topics.some((t) => t.id === topicId))!.id
+
+  it('every grammar, spelling and vocabulary topic has its class', () => {
+    const expected = LENGUA3_SYLLABUS.blocks
+      .filter((b) => ['gramatica', 'ortografia', 'vocabulario'].includes(b.id))
+      .flatMap((b) => b.topics.map((t) => t.id))
+    expect(expected.length).toBe(18)
+    for (const id of expected) expect(classForTopic(id, 3, 'language'), id).toBeDefined()
+    expect(withClass.map((t) => t.id).sort()).toEqual(expected.slice().sort())
+  })
+
+  it('reading, literature and writing have no class', () => {
+    for (const t of lengua.filter((x) => ['lectura', 'literatura', 'escritura'].includes(blockOf(x.id)))) {
+      expect(classForTopic(t.id, 3, 'language'), t.id).toBeUndefined()
+    }
+  })
+
+  it('a Lengua topic id gives no maths class, and a maths topic id gives no Lengua class', () => {
+    expect(classForTopic('lng-silabas', 3)).toBeUndefined()
+    expect(classForTopic('suma-2d', 3, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', 3, 'math')).toBeUndefined()
+  })
+
+  it('a child of another grade gets no Lengua class', () => {
+    expect(classForTopic('lng-silabas', 4, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', 2, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', undefined, 'language')?.topicId).toBe('lng-silabas')
+  })
+
+  it('the guiada tries use the topic’s first skill, and each class has its own id', () => {
+    for (const cls of LENGUA_CLASSES) {
+      const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
+      const first = tries[0].trySelector!.skills![0]
+      expect(first.startsWith('lng:'), cls.lesson.id).toBe(true)
+      expect(tries.slice(0, 2).every((st) => st.trySelector!.skills![0] === first), cls.lesson.id).toBe(true)
+      expect(tries.slice(0, 2).every((st) => st.hints !== false), cls.lesson.id).toBe(true)
+      expect(tries.slice(2).every((st) => st.hints === false), cls.lesson.id).toBe(true)
+    }
   })
 })

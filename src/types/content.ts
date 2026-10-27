@@ -90,6 +90,8 @@ export type LessonVisualId =
   | 'bar-model'         // params: { a, b, total } — part-part-whole bar (a and b are the parts, total the whole)
   | 'div-parts'         // params: { dividend, divisor } — repartir por partes: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4
   | 'div-climb'         // params: { divisor, quotient } — multiplicar hacia arriba: the multiples of the divisor
+  | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
+  | 'lng-word'          // Lengua: params { word, parts?, mark? } — a word cut into parts (ma-ri-po-sa, abre+latas); mark is a class or a part
 
 export interface LessonStep {
   visual: LessonVisualId

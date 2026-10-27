@@ -2,21 +2,27 @@
    finishing it counts on the map (its flag, and its map lesson when that one is open). Pure: never mutates. */
 import { applyNodeResult, COMPLETION_STARS, isNodeUnlocked } from '../progression'
 import { getSeason } from '../season'
-import type { ProgressState } from '@/types'
+import type { ProgressState, SubjectId } from '@/types'
 import type { ClassDef } from './dsl'
 import { GRADE3_CLASSES } from './grade3'
+import { LENGUA_CLASSES } from './lengua3'
 
 export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
 
+/** The maths classes (3.º). */
 export const CLASSES: ClassDef[] = GRADE3_CLASSES
+/** The Lengua classes (3.º): one per grammar, spelling and vocabulary topic. */
+export { LENGUA_CLASSES }
 
 /** The class that teaches a syllabus topic of a grade, if there is one yet. Topic ids repeat across grades (e.g.
     `mul-3x1` is in 3.º and 4.º), and every class so far is for 3.º, so a child of any other grade gets none. A child
-    without a grade follows the 3.º syllabus (syllabusForGrade), so for them it is 3.º too. */
-export function classForTopic(topicId: string, grade?: number): ClassDef | undefined {
+    without a grade follows the 3.º syllabus (syllabusForGrade), so for them it is 3.º too. The subject is maths unless
+    said otherwise; a subject with no classes has none. */
+export function classForTopic(topicId: string, grade?: number, subject: SubjectId = 'math'): ClassDef | undefined {
   if ((grade ?? 3) !== 3) return undefined
-  return CLASSES.find((c) => c.topicId === topicId)
+  const classes = subject === 'math' ? CLASSES : subject === 'language' ? LENGUA_CLASSES : []
+  return classes.find((c) => c.topicId === topicId)
 }
 
 /** The world and node of a season whose lesson is the given LessonDef, if the map has it. */

@@ -46,6 +46,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'bar-model': ['a', 'b', 'total'],
   'div-parts': ['dividend', 'divisor'],
   'div-climb': ['divisor', 'quotient'],
+  'lng-sentence': ['text'],
+  'lng-word': ['word'],
 }
 
 function checkSelector(where: string, sel: SkillSelector) {

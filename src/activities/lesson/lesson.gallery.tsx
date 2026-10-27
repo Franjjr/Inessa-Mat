@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { lessons } from '@/content'
+import { LENGUA_CLASSES } from '@/content/classes'
 import type { LessonVisualId } from '@/types'
 import LessonPlayer from './LessonPlayer'
 import { LESSON_VISUALS, LESSON_VISUAL_IDS } from './visuals'
@@ -37,6 +38,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'bar-model': { a: 5, b: 3, total: 8 },
   'div-parts': { dividend: 84, divisor: 4 },
   'div-climb': { divisor: 4, quotient: 7 },
+  'lng-sentence': { text: 'El perro come pan en el parque.', highlight: 'perro', mark: 'noun' },
+  'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
 }
 
 const STATES = 5
@@ -79,6 +82,13 @@ const entries: GalleryEntry[] = [
     height: 480,
     background: '#fff',
     render: () => <VisualDemo id={id} />,
+  })),
+  ...LENGUA_CLASSES.map((cls) => ({
+    title: `clase lengua · ${cls.lesson.id}`,
+    width: Math.min(window.innerWidth - 48, 1280),
+    height: window.innerHeight - 96,
+    background: 'var(--c-bg)',
+    render: () => <LessonPlayer lesson={cls.lesson} onDone={() => undefined} onExit={() => undefined} />,
   })),
   ...SEASON1_LESSON_IDS.map((id) => ({
     title: `lección · ${id}`,

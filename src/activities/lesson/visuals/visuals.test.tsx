@@ -37,6 +37,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'bar-model': { a: 5, b: 3, total: 8 },
   'div-parts': { dividend: 84, divisor: 4 },
   'div-climb': { divisor: 4, quotient: 7 },
+  'lng-sentence': { text: 'El perro come pan en el parque.', highlight: 'perro', mark: 'noun' },
+  'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
 }
 
 /** Reads the LessonVisualId union straight from the shared types, so the test cannot drift from them. */
