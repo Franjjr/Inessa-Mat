@@ -54,7 +54,11 @@ test.describe('wide screens use the full width', () => {
         await seedDemo(page)
         await page.goto(route)
         await settle(page, 400)
-        expect(await contentSpan(page)).toBeGreaterThanOrEqual(1920 - 2 * GUTTER - 2)
+        // Mis premios: the prize grid is the full-width container (its tiles are capped and centred), so measure the grid.
+        const width = route === '/play/premios'
+          ? await page.locator('main > div').first().evaluate((el) => el.getBoundingClientRect().width)
+          : await contentSpan(page)
+        expect(width).toBeGreaterThanOrEqual(1920 - 2 * GUTTER - 2)
       })
     }
 
