@@ -49,7 +49,7 @@ export default function FreePlayScreen() {
 
   return (
     <Screen className={s.root} background="var(--c-bg)">
-      <TopBar back="/play" title="Juega libre" />
+      <TopBar back="/play" title="Jugar" />
       <div className={s.content}>
         {summary && (
           <section className={s.summary} role="status" aria-live="polite">

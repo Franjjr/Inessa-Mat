@@ -50,6 +50,19 @@ test.describe('Hoy and the menu', () => {
     await expect(page.getByRole('button', { name: /Repaso del día|Juego libre/ })).toHaveCount(0)
   })
 
+  test('«Jugar» has a «Clases» section with the class of the topic Lía has reached, and it opens the class', async ({ page }) => {
+    await seedDemo(page)
+    await devMasterUntilTopic(page, CLASS_TOPIC)
+    await page.goto('/play/free')
+    await expect(page.getByText('Jugar', { exact: true }).first()).toBeVisible()
+    const section = page.getByRole('region', { name: 'Clases' })
+    await expect(section).toBeVisible()
+    const card = section.getByRole('button', { name: /Dividir con las tablas/ })
+    await expect(card).toBeVisible()
+    await card.click()
+    await expect(page).toHaveURL(new RegExp(`/play/clase/${CLASS_TOPIC}$`))
+  })
+
   test('«Mis premios» opens the prizes with the album, the shop and no chest before the crystals', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play')

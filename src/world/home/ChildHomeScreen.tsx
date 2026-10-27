@@ -60,7 +60,8 @@ export default function ChildHomeScreen() {
 
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
-  if (!progress) return <Spinner />
+  // «Hoy» needs the mastery too: without it a mid-course child would see the first topic's card for a moment.
+  if (!progress || !mastery) return <Spinner />
 
   const ctx = templateContext(child)
   const season = seasonOf(progress)
@@ -69,11 +70,11 @@ export default function ChildHomeScreen() {
   const next = nextNode(progress)
   const nextWorld = next ? getWorld(next.worldId, season.id) : undefined
   const nextDef = next ? getNode(next.worldId, next.nodeId, season.id) : undefined
-  const due = mastery ? dueSkills(mastery, new Date(), 50).length : 0
+  const due = dueSkills(mastery, new Date(), 50).length
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
-  const today = todayEntry({ grade: child.grade, mastery: mastery ?? {}, progress })
+  const today = todayEntry({ grade: child.grade, mastery, progress })
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
