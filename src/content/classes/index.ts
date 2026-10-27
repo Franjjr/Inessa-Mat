@@ -11,8 +11,10 @@ export type { ClassDef, ClassInput } from './dsl'
 
 export const CLASSES: ClassDef[] = GRADE3_CLASSES
 
-/** The class that teaches a syllabus topic, if there is one yet. */
-export function classForTopic(topicId: string): ClassDef | undefined {
+/** The class that teaches a syllabus topic of a grade, if there is one yet. Topic ids repeat across grades (e.g.
+    `mul-3x1` is in 3.º and 4.º), and every class so far is for 3.º, so a child of any other grade gets none. */
+export function classForTopic(topicId: string, grade?: number): ClassDef | undefined {
+  if (grade !== 3) return undefined
   return CLASSES.find((c) => c.topicId === topicId)
 }
 

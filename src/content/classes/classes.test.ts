@@ -68,8 +68,15 @@ describe('isClassDone / markClassDone', () => {
 
 describe('classForTopic', () => {
   it('finds a class by its syllabus topic, and none for a topic without one', () => {
-    expect(classForTopic('resta-3d-prestando')?.topicId).toBe('resta-3d-prestando')
-    expect(classForTopic('igualdad')).toBeUndefined()
+    expect(classForTopic('resta-3d-prestando', 3)?.topicId).toBe('resta-3d-prestando')
+    expect(classForTopic('igualdad', 3)).toBeUndefined()
+  })
+
+  it('gives no class to a child of another grade, even for a topic id that repeats (mul-3x1 is in 4.º too)', () => {
+    expect(classForTopic('mul-3x1', 3)?.topicId).toBe('mul-3x1')
+    expect(classForTopic('mul-3x1', 4)).toBeUndefined()
+    expect(classForTopic('mul-3x1', 2)).toBeUndefined()
+    expect(classForTopic('resta-3d-prestando')).toBeUndefined()
   })
 })
 
@@ -78,15 +85,15 @@ describe('clases de sumar y restar (3.º)', () => {
   const topicIds = ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d']
 
   it('sumar y restar have their classes', () => {
-    for (const id of topicIds) expect(classForTopic(id), id).toBeDefined()
+    for (const id of topicIds) expect(classForTopic(id, 3), id).toBeDefined()
   })
 
   it('dividir has its classes', () => {
-    for (const id of ['div-con-tablas', 'div-exacta', 'div-resto', 'div-larga', 'div-3x1']) expect(classForTopic(id), id).toBeDefined()
+    for (const id of ['div-con-tablas', 'div-exacta', 'div-resto', 'div-larga', 'div-3x1']) expect(classForTopic(id, 3), id).toBeDefined()
   })
 
   it('multiplicar has its classes', () => {
-    for (const id of ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-3x1', 'mul-10-100', 'mul-2-cifras-intro']) expect(classForTopic(id), id).toBeDefined()
+    for (const id of ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-3x1', 'mul-10-100', 'mul-2-cifras-intro']) expect(classForTopic(id, 3), id).toBeDefined()
   })
 
   it('every class keeps the five-phase shape and its tries generate exercises of its own topic', () => {

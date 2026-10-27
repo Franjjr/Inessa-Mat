@@ -131,6 +131,35 @@ export async function devEditProgress(page: Page, edit: DevProgressEdit): Promis
   }, edit)
 }
 
+/** Dev-only shortcut: masters the active child's topics in teaching order until `topicId` is the current topic (the
+ *  one «Hoy» and «Lo nuevo» teach), so a topic with a class can be reached. Same rule as the app's currentTopic. */
+export async function devMasterUntilTopic(page: Page, topicId: string): Promise<void> {
+  await page.evaluate(async (target) => {
+    const data = await import('/src/data/index.ts')
+    const syllabus = await import('/src/content/syllabus/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    const course = syllabus.syllabusForGrade(child.grade)
+    const map = { ...(await data.getMastery(child.id)) }
+    const rows: Parameters<typeof data.saveMastery>[1] = []
+    for (let i = 0; i < 300; i++) {
+      const topic = syllabus.currentTopic(course, map)
+      if (!topic || topic.id === target) break
+      for (const skill of topic.skills) {
+        const row = {
+          skill, box: 5 as const, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null,
+          updatedAt: new Date().toISOString(),
+        }
+        map[skill] = row
+        rows.push(row)
+      }
+    }
+    await data.saveMastery(child.id, rows)
+  }, topicId)
+}
+
 /** The active child's id (first profile on this device). */
 export async function activeChildId(page: Page): Promise<string> {
   return page.evaluate(async () => {

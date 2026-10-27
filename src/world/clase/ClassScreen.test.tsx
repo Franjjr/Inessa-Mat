@@ -13,7 +13,7 @@ const TOPIC = 'resta-3d-prestando'
 
 // The real exercise view is replaced by a button that answers right or wrong from a script (one entry per exercise).
 // The lesson is replaced by its first step text and two buttons: finish, and leave.
-const state = vi.hoisted(() => ({ answers: [] as boolean[], calls: 0 }))
+const state = vi.hoisted(() => ({ answers: [] as boolean[], calls: 0, grade: 3 }))
 
 vi.mock('@/activities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/activities')>()
@@ -46,7 +46,7 @@ vi.mock('@/data', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/data')>()
   return {
     ...actual,
-    useActiveChild: () => ({ child: makeChild({ grade: 3 }), loading: false, setActiveChild: () => {} }),
+    useActiveChild: () => ({ child: makeChild({ grade: state.grade }), loading: false, setActiveChild: () => {} }),
     updateProgress: vi.fn(async (_id: string, update: (p: ProgressState) => ProgressState) =>
       update(initialProgress(CHILD_ID))),
     recordAttempt: vi.fn(async () => undefined),
@@ -56,6 +56,7 @@ vi.mock('@/data', async (importOriginal) => {
 beforeEach(() => {
   state.answers = []
   state.calls = 0
+  state.grade = 3
   vi.mocked(updateProgress).mockClear()
   vi.mocked(recordAttempt).mockClear()
 })
@@ -118,7 +119,7 @@ describe('ClassScreen', () => {
 
     expect(await screen.findByText('¡Vamos a verlo juntos!')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '¡Empezar la clase!' }))
-    expect(screen.getByText(classForTopic(TOPIC)!.lesson.steps[0].text)).toBeInTheDocument()
+    expect(screen.getByText(classForTopic(TOPIC, 3)!.lesson.steps[0].text)).toBeInTheDocument()
     expect(recordAttempt).toHaveBeenCalledTimes(2)
     expect(updateProgress).not.toHaveBeenCalled()
   })
@@ -134,6 +135,12 @@ describe('ClassScreen', () => {
 
   it('a topic without class goes back home', async () => {
     renderAt('tema-que-no-existe')
+    expect(await screen.findByText('HOME')).toBeInTheDocument()
+  })
+
+  it('a 4.º child with a 3.º class topic id (mul-3x1) goes back home', async () => {
+    state.grade = 4
+    renderAt('mul-3x1')
     expect(await screen.findByText('HOME')).toBeInTheDocument()
   })
 })

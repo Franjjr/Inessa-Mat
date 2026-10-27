@@ -27,7 +27,7 @@ export default function ClassScreen() {
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
   const topic = allTopics(syllabusForGrade(child.grade)).find((t) => t.id === topicId)
-  const cls = classForTopic(topicId)
+  const cls = classForTopic(topicId, child.grade)
   if (!topic || !cls) return <Navigate to="/play" replace />
   return (
     <GameHostProvider activity="clase">

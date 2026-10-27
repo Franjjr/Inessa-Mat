@@ -1,20 +1,23 @@
 /* ChildHomeScreen (/play): the child's start in the direction C layout. A greeting, the subjects the adult enabled,
-   the companion and Lumi with the horn of crystals, the next step of the adventure, the daily tiles and the world bar.
-   Shows the sync state quietly and lets a family switch child. */
-import { useEffect, type ReactNode } from 'react'
+   the companion and Lumi with the horn of crystals, then the right column in this order: the placement banner (while
+   it is pending), «Hoy» (the class of today's topic, or the daily session), «Mi aventura», and the tiles Repasar (only
+   with something due), Jugar and Mis premios. The world bar is at the bottom. Shows the sync state quietly and lets a
+   family switch child. */
+import { useEffect } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
-import { ChestArt, Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
+import { Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
 import {
   crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
 import { DAILY_MINUTES, dueSkills } from '@/engine'
-import { currentTopic, syllabusForGrade } from '@/content/syllabus'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
 import type { ProgressState, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
+import { Tile } from './Tile'
+import { todayEntry } from './todayEntry'
 import s from './ChildHomeScreen.module.css'
 
 const SYNC_LABEL: Record<SyncStatus['state'], string> = {
@@ -63,7 +66,6 @@ export default function ChildHomeScreen() {
   const season = seasonOf(progress)
   const crystals = crystalsOf(progress)
   const crystalCount = crystals.filter(Boolean).length
-  const allCrystals = crystalCount === season.worlds.length
   const next = nextNode(progress)
   const nextWorld = next ? getWorld(next.worldId, season.id) : undefined
   const nextDef = next ? getNode(next.worldId, next.nodeId, season.id) : undefined
@@ -71,7 +73,7 @@ export default function ChildHomeScreen() {
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season.worlds.filter((w) => isWorldUnlocked(progress, w.id))
   const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id))
-  const sessionTopic = currentTopic(syllabusForGrade(child?.grade), mastery ?? {})?.name ?? null
+  const today = todayEntry({ grade: child.grade, mastery: mastery ?? {}, progress })
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -144,49 +146,38 @@ export default function ChildHomeScreen() {
         </div>
 
         <div className={s.right}>
-          {/* The placement test comes first: the daily session starts where it says. */}
+          {/* The placement test is a thin bar on top while it is pending; «Hoy» comes first after it. */}
           {(!progress.flags?.placement || progress.flags?.placementRequested) && (
-            <button type="button" className={`${s.next} ${s.placement}`} onClick={() => navigate('/play/prueba')}>
-              <span className={s.nextKicker}>Antes de empezar · unos 10 min</span>
-              <span className={s.nextTitle}>Prueba inicial</span>
-              <span className={s.nextText}>Sin pistas: así sabemos por dónde empezar.</span>
-              <span className={s.nextCta}>¡Hacer la prueba!</span>
+            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
+              Antes de empezar: haz la prueba inicial ›
             </button>
           )}
-          <button type="button" className={`${s.next} ${s.session}`} onClick={() => navigate('/play/sesion')}>
-            <span className={s.nextKicker}>Mi sesión de hoy · {DAILY_MINUTES} min</span>
-            <span className={s.nextTitle}>{sessionTopic ?? 'Matemáticas de hoy'}</span>
-            <span className={s.nextText}>Calentamiento, lo nuevo, mezcla y un problema.</span>
-            <span className={s.nextCta}>¡Empezar!</span>
-          </button>
+          {today.kind === 'clase' ? (
+            <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
+              <span className={s.nextKicker}>Hoy aprendemos</span>
+              <span className={s.nextTitle}>{today.title}</span>
+              <span className={s.nextCta}>¡Empezar la clase!</span>
+            </button>
+          ) : (
+            <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
+              <span className={s.nextKicker}>Mi sesión de hoy · {DAILY_MINUTES} min</span>
+              <span className={s.nextTitle}>{today.title}</span>
+              <span className={s.nextText}>Calentamiento, lo nuevo, mezcla y un problema.</span>
+              <span className={s.nextCta}>¡Empezar!</span>
+            </button>
+          )}
 
           <button type="button" className={`${s.next} ${s.adventure}`} onClick={() => navigate(continueTo)}>
-            <span className={s.nextKicker}>
-              {nextWorld ? `${renderTemplate(nextWorld.name, ctx)} · Paso siguiente` : 'Tu aventura'}
-            </span>
+            <span className={s.nextKicker}>Mi aventura</span>
             <span className={s.nextTitle}>{continueTitle}</span>
             {continueHook && <span className={s.nextText}>{continueHook}</span>}
             <span className={s.nextCta}>{next ? '¡Seguir la aventura!' : 'Ver'}</span>
           </button>
 
           <div className={s.tiles}>
-            <Tile
-              label="Repaso del día"
-              hint={due ? `${due} ${due === 1 ? 'cosa' : 'cosas'} para repasar` : 'Todo repasado'}
-              tone="violet"
-              onClick={() => navigate('/play/review')}
-            />
-            <Tile label="Juego libre" hint="Practica lo que quieras" tone="blue" onClick={() => navigate('/play/free')} />
-            <Tile label="Álbum" hint="Tus pegatinas" tone="yellow" onClick={() => navigate('/play/album')} />
-            <Tile label="Tienda" hint="Ropa para tu compañero" tone="green" onClick={() => navigate('/play/shop')} />
-            {allCrystals && (
-              <Tile label="Gran Cofre" hint="¡Ábrelo!" tone="yellow" onClick={() => navigate('/play/chest')}>
-                <ChestArt open={!!progress.chestOpened} size={56} />
-              </Tile>
-            )}
-            {progress.diplomaEarnedAt && (
-              <Tile label="Diploma" hint="Tu gran premio" tone="violet" onClick={() => navigate('/play/diploma')} />
-            )}
+            {due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
+            <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />
+            <Tile label="Mis premios" tone="yellow" onClick={() => navigate('/play/premios')} />
           </div>
         </div>
       </main>
@@ -217,18 +208,6 @@ function SubjectPicker({ subjects }: { subjects: { id: string; name: string; ava
         </button>
       ))}
     </nav>
-  )
-}
-
-function Tile({ label, hint, tone, onClick, children }: {
-  label: string; hint: string; tone: 'violet' | 'blue' | 'yellow' | 'green'; onClick: () => void; children?: ReactNode
-}) {
-  return (
-    <button type="button" className={`${s.tile} ${s[tone]}`} onClick={onClick}>
-      <span className={s.tileLabel}>{label}</span>
-      <span className={s.tileHint}>{hint}</span>
-      {children && <span className={s.tileArt}>{children}</span>}
-    </button>
   )
 }
 

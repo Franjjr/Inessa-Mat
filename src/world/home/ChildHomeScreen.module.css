@@ -202,8 +202,8 @@
   color: var(--c-ink);
 }
 
-/* Daily tiles: one solid sticker colour each. */
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-3); }
+/* Daily tiles: one solid sticker colour each, three in a row. */
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-3); }
 .tile {
   position: relative;
   display: flex;
@@ -286,9 +286,10 @@
   .world { flex: 0 0 auto; min-width: 104px; }
 }
 
+/* Phones: one column, and the menu («Hoy» first) comes before the companion stage, so «Hoy» shows without scrolling. */
 @media (max-width: 760px) {
   .main { grid-template-columns: minmax(0, 1fr); }
-  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .right { order: -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -302,7 +303,28 @@
 /* The family door sits over the string lights: give it a solid surface so it reads on any background. */
 .family.family { color: var(--c-primary-strong); padding: 0 var(--sp-4); }
 
-/* «Mi sesión de hoy» is the main entry: mint sticker, above the adventure (which keeps its pink). */
-.session { background: var(--c-green-soft, #dcfce7); }
-.placement { background: var(--c-yellow-soft, #fef9c3); }
-.adventure { background: var(--c-pink-soft, #fce7f3); }
+/* «Hoy» is the main entry: mint sticker (the class or the session). «Mi aventura» is the medium card below it, pink. */
+.today { background: var(--c-green-soft, #dcfce7); }
+.adventure { background: var(--c-pink-soft, #fce7f3); padding: var(--sp-4) var(--sp-5); }
+.adventure .nextTitle { font-size: clamp(24px, 2.6vw, 30px); }
+
+/* The placement banner: a thin bar on top of the right column while the prueba inicial is pending. */
+.banner {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0 var(--sp-4);
+  border: var(--sticker-border);
+  border-radius: var(--r-pill);
+  background: var(--c-yellow-soft, #fef9c3);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.banner:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
