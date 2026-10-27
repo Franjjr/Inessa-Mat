@@ -31,8 +31,8 @@ export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
 export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 /** Adult report: temario progress, mistakes by kind, tests (placement runs and recall). */
-export { ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport } from './report'
-export type { BlockReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicReport, TopicState } from './report'
+export { ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
+export type { BlockReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicNeeds, TopicReport, TopicState } from './report'
 
 // ---------------------------------------------------------------- extra helpers (engine extensions)
 

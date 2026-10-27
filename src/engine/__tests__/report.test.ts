@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ErrorType, MasteryMap, SkillMastery } from '@/types'
 import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
-import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
+import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
@@ -127,5 +127,31 @@ describe('unclassified mistakes', () => {
       attempt({ createdAt: daysAgo(2), correct: false, errorType: 'fact' }),
     ])
     expect(errorReport(list, now).groups.map((g) => [g.id, g.count])).toEqual([['tablas', 1], ['otros', 5]])
+  })
+})
+
+describe('topicNeeds: «No lo sabía» and «Necesitó otro intento» per topic', () => {
+  // The first topic of the temario with skills, and one of its skills.
+  const topic = GRADE3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.status === 'disponible' && t.skills.length > 0)!
+  const skill = topic.skills[0]
+  const other = GRADE3_SYLLABUS.blocks.flatMap((b) => b.topics).filter((t) => t.id !== topic.id && t.skills.length > 0)[0]
+
+  it('counts dont-know answers and answers that needed another try, per topic, in the last 30 days', () => {
+    const list = [
+      attempt({ skill, correct: false, errorType: 'dont-know', createdAt: daysAgo(2) }),
+      attempt({ skill, correct: false, errorType: 'dont-know', createdAt: daysAgo(40) }), // too old
+      attempt({ skill, correct: false, errorType: 'fact', createdAt: daysAgo(3), retries: 1 }),
+      attempt({ skill, correct: true, createdAt: daysAgo(4), retries: 1, solvedOnRetry: true }),
+      attempt({ skill, correct: true, createdAt: daysAgo(5) }),
+      attempt({ skill: other.skills[0], correct: false, errorType: 'dont-know', createdAt: daysAgo(1) }),
+    ]
+    const needs = topicNeeds(GRADE3_SYLLABUS, list, now)
+    expect(needs[topic.id]).toEqual({ dontKnow: 1, retried: 2 })
+    expect(needs[other.id]).toEqual({ dontKnow: 1, retried: 0 })
+  })
+
+  it('leaves out topics with no such answers and skills that are not in the temario', () => {
+    const needs = topicNeeds(GRADE3_SYLLABUS, [attempt({ skill: 'not-a-skill', errorType: 'dont-know', correct: false, createdAt: daysAgo(1) })], now)
+    expect(needs).toEqual({})
   })
 })

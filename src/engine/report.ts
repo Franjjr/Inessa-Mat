@@ -76,6 +76,33 @@ export function syllabusReport(syllabus: Syllabus, mastery: MasteryMap, term?: n
   }
 }
 
+/** What the child needed in one topic over the last days: «No lo sabía» and «Necesitó otro intento». */
+export interface TopicNeeds {
+  /** Answers with «No lo sé» (errorType dont-know). */
+  dontKnow: number
+  /** Answers that took another try («Inténtalo otra vez»). */
+  retried: number
+}
+
+/** Per topic of the temario, the «No lo sé» and the retried answers of the last `days` days. Topics with none are left out. */
+export function topicNeeds(syllabus: Syllabus, attempts: readonly AttemptRecord[], now: Date, days = 30): Record<string, TopicNeeds> {
+  const topicOf = new Map<string, string>()
+  for (const b of syllabus.blocks) for (const t of b.topics) for (const sk of t.skills) topicOf.set(sk, t.id)
+  const t = now.getTime()
+  const from = t - days * DAY_MS
+  const out: Record<string, TopicNeeds> = {}
+  for (const a of attempts) {
+    const at = Date.parse(a.createdAt)
+    if (!(at >= from && at <= t)) continue
+    const id = topicOf.get(a.skill)
+    if (!id) continue
+    const need = out[id] ?? (out[id] = { dontKnow: 0, retried: 0 })
+    if (a.errorType === 'dont-know') need.dontKnow += 1
+    if ((a.retries ?? 0) > 0) need.retried += 1
+  }
+  return out
+}
+
 // ------------------------------------------------------------------------------------------------ errors
 
 export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'despiste' | 'otros'

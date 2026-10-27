@@ -7,8 +7,8 @@ import { getMastery, listAttempts, updateProgress } from '@/data'
 import { syllabusForGrade } from '@/content/syllabus'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
-  describeError, errorReport, placementRuns, recallReport, syllabusReport, PLACEMENT_COUNT,
-  type ErrorReport, type PlacementRun, type RecallReport, type SyllabusReport, type TopicState,
+  describeError, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_COUNT,
+  type ErrorReport, type PlacementRun, type RecallReport, type SyllabusReport, type TopicNeeds, type TopicState,
 } from '@/engine'
 import type { AttemptRecord, MasteryMap, ProgressState } from '@/types'
 import { Button, toast } from '@/ui'
@@ -40,6 +40,7 @@ export function LearningSection({ childId, childName, grade, progress }: { child
     const now = new Date()
     return {
       syllabus: syllabusReport(syllabusForGrade(grade), data.mastery),
+      needs: topicNeeds(syllabusForGrade(grade), data.attempts, now),
       errors: errorReport(data.attempts, now),
       runs: placementRuns(data.attempts),
       recall: recallReport(data.attempts, now),
@@ -66,7 +67,7 @@ export function LearningSection({ childId, childName, grade, progress }: { child
 
   return (
     <>
-      <TemarioCard report={reports.syllabus} childName={childName} />
+      <TemarioCard report={reports.syllabus} needs={reports.needs} childName={childName} />
       <MistakesCard report={reports.errors} childName={childName} />
       <TestsCard
         runs={reports.runs}
@@ -90,7 +91,7 @@ const STATE_TEXT: Record<TopicState, string> = {
   'pendiente': 'Próximamente',
 }
 
-export function TemarioCard({ report, childName }: { report: SyllabusReport; childName: string }) {
+export function TemarioCard({ report, needs, childName }: { report: SyllabusReport; needs: Record<string, TopicNeeds>; childName: string }) {
   // The stage's world in the adventure of the course (2.º plays its own season on the same maps).
   const stageId = report.current?.stage?.worldId
   const stageWorld = stageId ? getWorld(stageId, seasonIdForGrade(report.course)) : undefined
@@ -132,6 +133,12 @@ export function TemarioCard({ report, childName }: { report: SyllabusReport; chi
                       {STATE_TEXT[t.state]}
                       {t.state === 'trabajando' ? ` · ${formatPercent(t.progress)}` : ''}
                     </span>
+                    {needs[t.id] && (needs[t.id].dontKnow > 0 || needs[t.id].retried > 0) && (
+                      <span className={s.topicNeeds}>
+                        <span>No lo sabía: {needs[t.id].dontKnow}</span>
+                        <span>Necesitó otro intento: {needs[t.id].retried}</span>
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>

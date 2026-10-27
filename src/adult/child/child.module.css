@@ -42,6 +42,7 @@
 .topicItem { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px var(--sp-3); padding: var(--sp-2) 0; border-top: 2px solid var(--c-surface-2); }
 .topicName { flex: 1 1 14em; min-width: 0; font-size: var(--fs-sm); color: var(--c-ink); }
 .topicState { flex: none; font-size: var(--fs-sm); font-weight: 700; }
+.topicNeeds { flex: 1 1 100%; display: flex; flex-wrap: wrap; gap: 2px var(--sp-3); font-size: var(--fs-sm); color: var(--c-ink-soft); }
 .state-dominado { color: #14532d; }
 .state-trabajando { color: #7c2d12; }
 .state-sin-empezar { color: var(--c-ink-mute); font-weight: 400; }

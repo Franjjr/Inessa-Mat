@@ -58,12 +58,12 @@ const entries: GalleryEntry[] = [
   {
     title: 'TemarioCard',
     width: 720,
-    render: () => <TemarioCard report={syllabusReport(GRADE3_SYLLABUS, sampleMastery())} childName="Lía" />,
+    render: () => <TemarioCard report={syllabusReport(GRADE3_SYLLABUS, sampleMastery())} needs={{}} childName="Lía" />,
   },
   {
     title: 'TemarioCard de 2.º',
     width: 720,
-    render: () => <TemarioCard report={syllabusReport(GRADE2_SYLLABUS, sampleMastery(GRADE2_SYLLABUS))} childName="Hugo" />,
+    render: () => <TemarioCard report={syllabusReport(GRADE2_SYLLABUS, sampleMastery(GRADE2_SYLLABUS))} needs={{}} childName="Hugo" />,
   },
   {
     title: 'MistakesCard',
