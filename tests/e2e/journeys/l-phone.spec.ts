@@ -10,7 +10,7 @@ test.use(pixel)
 test('on a phone the column sum is answered with the on-screen keypad', async ({ page }, info) => {
   test.skip(info.project.name !== 'android', 'one phone run is enough')
   await createChildThroughOnboarding(page, 'Lía', 3)
-  await tapButton(page, '¡Hacer la prueba!')
+  await tapButton(page, /Antes de empezar: haz la prueba inicial/)
   const pad = page.getByRole('group', { name: 'Teclado de números' })
   await expect(pad).toBeVisible()
   await expect(page.getByRole('button', { name: 'Usar el teclado de números' })).toHaveCount(0)
@@ -23,4 +23,20 @@ test('on a phone the column sum is answered with the on-screen keypad', async ({
   await expect(page.getByRole('textbox', { name: 'decenas del resultado' })).toHaveText(/7/)
   await expect(page.getByRole('textbox', { name: 'centenas del resultado' })).toHaveText(/8/)
   await expect(page.getByRole('textbox', { name: 'llevada de decenas (opcional)' })).not.toHaveText(/\d/)
+})
+
+test.describe('a small phone with its browser bars (375 × 548)', () => {
+  test.use({ viewport: { width: 375, height: 548 } })
+
+  test('the keypad comes into view by itself under a tall column sum', async ({ page }, info) => {
+    test.skip(info.project.name !== 'android', 'one phone run is enough')
+    await createChildThroughOnboarding(page, 'Lía', 3)
+    await tapButton(page, /Antes de empezar: haz la prueba inicial/)
+    const pad = page.getByRole('group', { name: 'Teclado de números' })
+    await expect(pad).toBeVisible()
+    await expect.poll(async () => {
+      const box = await pad.boundingBox()
+      return box ? box.y + box.height : Infinity
+    }).toBeLessThanOrEqual(549) // sub-pixel rounding
+  })
 })

@@ -120,25 +120,29 @@ export interface PlacementSummary {
   /** Items answered in the latest placement run (at most PLACEMENT_COUNT). */
   answered: number
   correct: number
+  /** Items the child answered with «No lo sé». */
+  dontKnow: number
   /** True when the latest run has all its items. */
   complete: boolean
-  blocks: { id: PlacementBlockId; label: string; correct: number; total: number }[]
+  blocks: { id: PlacementBlockId; label: string; correct: number; total: number; dontKnow: number }[]
 }
 
 /** Summary of the latest placement run from the child's attempts (newest first). */
 export function summarizePlacement(attempts: readonly AttemptRecord[]): PlacementSummary {
   const run = attempts.filter((a) => a.context.activity === PLACEMENT_ACTIVITY).slice(0, PLACEMENT_COUNT)
-  const blocks = PLACEMENT_BLOCKS.map((b) => ({ ...b, correct: 0, total: 0 }))
+  const blocks = PLACEMENT_BLOCKS.map((b) => ({ ...b, correct: 0, total: 0, dontKnow: 0 }))
   for (const a of run) {
     const id = placementBlockOf(a.skill)
     const block = blocks.find((b) => b.id === id)
     if (!block) continue
     block.total += 1
     if (a.correct) block.correct += 1
+    if (a.errorType === 'dont-know') block.dontKnow += 1
   }
   return {
     answered: run.length,
     correct: run.filter((a) => a.correct).length,
+    dontKnow: run.filter((a) => a.errorType === 'dont-know').length,
     complete: run.length === PLACEMENT_COUNT,
     blocks,
   }

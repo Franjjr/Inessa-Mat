@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createRng, generate, hintsFor, makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeFactDiv,
-  makeFactMul, makeSkipCount, strategyDetail, strategyForFact,
+  makeDivision3, makeFactMul, makeSkipCount, strategyDetail, strategyForFact,
 } from '@/engine'
 import type { ExerciseKind, FactStrategy, HintVisual } from '@/types'
 
@@ -122,9 +122,9 @@ describe('hintsFor', () => {
     // The worked step names the table to count in, not the product (5 × 3 = 15 would give the quotient away).
     expect(hintsFor(makeDivision(17, 5))[2].text).toContain('Cuenta de 5 en 5')
     expect(hintsFor(makeDivision(17, 5))[2].text).not.toContain('15')
-    expect(hintsFor(makeDivision(84, 4))[2].text).toContain('8 ÷ 4 = 2')
-    expect(hintsFor(makeDivision(72, 3))[2].text).toContain('sobra 1')
-    expect(hintsFor(makeDivision(72, 3))[2].text).toContain('12 ÷ 3 = ?')
+    // Level 3 names the next step (the tens and the question), never the partial quotient or the remainder.
+    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 8? Escríbelo arriba y resta. Después baja la cifra siguiente.')
+    expect(hintsFor(makeDivision(72, 3))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 3 en el 7? Escríbelo arriba y resta. Lo que sobre, júntalo con el 2.')
     // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
     expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
     expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
@@ -132,6 +132,11 @@ describe('hintsFor', () => {
     expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 1, perGroup: 6 })
     // The skip count of a ten-fact stops one jump before the product, the last chip is blank.
     expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
+  })
+
+  it('an exact division of three digits starts with the tens and does not state a partial quotient', () => {
+    // 584 ÷ 4: the first question is how many 4 fit in 58; the answer (14) is the child's to find.
+    expect(hintsFor(makeDivision3(584, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 58? Escríbelo arriba y resta. Después baja la cifra siguiente.')
   })
 
   it('the worked division of the level-3 hint never shows the child\'s own dividend, divisor or answer', () => {

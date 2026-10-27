@@ -1,7 +1,8 @@
 /* Prueba inicial (route /play/prueba): about ten minutes, fourteen items in five blocks, no hints and no feedback
-   of right or wrong («¡Gracias!» only). Each answer goes through the normal mastery update, so the plan starts where
+   of right or wrong («¡Gracias!» only). «No lo sé» skips an item the child cannot do yet: it counts as not known, so
+   the plan starts there. Each answer goes through the normal mastery update, so the plan starts where
    the child is. Leaving before the end does not mark it done; the adult can launch it again from the report. */
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { StarIcon } from '@/art'
@@ -9,6 +10,7 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { buildPlacement, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, type PlacementItem } from '@/engine'
 import { updateProgress, useActiveChild, useProgress } from '@/data'
+import { useInputMode } from '@/ink'
 import { BackButton, Button, Screen, Spinner } from '@/ui'
 import type { ProgressState } from '@/types'
 import type { ExerciseOutcome } from '@/types'
@@ -32,6 +34,9 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
   const [index, setIndex] = useState(0)
   const [thanks, setThanks] = useState(false)
   const [finished, setFinished] = useState(false)
+  const { mode } = useInputMode()
+  const shownAt = useRef(performance.now())
+  useEffect(() => { shownAt.current = performance.now() }, [index])
 
   useEffect(() => {
     if (items || !child) return
@@ -44,6 +49,7 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
   const current = items[index]
 
   const onAnswered = (o: ExerciseOutcome) => {
+    if (thanks) return // already answered with «No lo sé»
     host.reportAttempt({
       exercise: current.exercise,
       check: o.check,
@@ -51,6 +57,18 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
       inputMode: o.inputMode,
       hintsUsed: 0,
       recognitionFixes: o.recognitionFixes,
+    })
+    setThanks(true)
+  }
+
+  const dontKnow = () => {
+    if (thanks) return
+    host.reportAttempt({
+      exercise: current.exercise,
+      check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
+      ms: Math.round(performance.now() - shownAt.current),
+      inputMode: mode,
+      hintsUsed: 0,
     })
     setThanks(true)
   }
@@ -109,6 +127,9 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
             onAnswered={onAnswered}
           />
         </div>
+        {!thanks && (
+          <Button variant="secondary" onClick={dontKnow}>No lo sé</Button>
+        )}
         {thanks && (
           <div className={s.calm} role="status">
             <p className={s.title}>¡Gracias!</p>

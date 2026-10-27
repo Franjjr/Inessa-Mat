@@ -80,6 +80,8 @@
   --shadow-press: 0 1px 0 rgba(46, 26, 71, .12);
 
   /* Spacing */
+  /* Side gutter of the child screens: 16 px on phones, grows with the screen up to 48 px (wide screens use the width). */
+  --page-gutter: clamp(16px, 3vw, 48px);
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px; --sp-8: 64px;
 
   /* Touch: children's fingers + pencil. Never make a tappable thing smaller than this. */

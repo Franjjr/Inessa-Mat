@@ -8,9 +8,8 @@
   flex-direction: column;
   gap: var(--sp-6);
   width: 100%;
-  max-width: 1040px;
   margin: 0 auto;
-  padding: 0 var(--sp-4);
+  padding: 0 var(--page-gutter);
 }
 
 .section {
@@ -58,7 +57,7 @@
 
 .tables {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: var(--sp-3);
 }
 
@@ -150,6 +149,21 @@
   color: var(--c-ink-soft);
 }
 
+/* Wide screens: bigger cards and type (the tokens are redefined on the screen root). */
+@media (min-width: 1000px) {
+  .root {
+    --fs-xs: clamp(15px, 1.5vmin, 19px);
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-lg: clamp(24px, 2.8vmin, 34px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .tables { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .table { min-height: clamp(150px, 20vh, 220px); }
+  .games { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .game { min-height: clamp(110px, 15vh, 150px); padding: clamp(16px, 2vmin, 28px); }
+}
+
 .gameTitle {
   font-family: var(--font-display);
   font-weight: 600;
@@ -167,4 +181,48 @@
 @media (prefers-reduced-motion: reduce) {
   .table, .game { transition: none; }
   .table:active, .game:active { transform: none; }
+}
+
+.classes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.classCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  min-height: 92px;
+  padding: var(--sp-4);
+  border: 0;
+  border-radius: var(--r-lg);
+  background: var(--c-surface);
+  box-shadow: var(--shadow-1);
+  font: inherit;
+  text-align: left;
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.classCard:active {
+  transform: scale(0.99);
+}
+
+.classTitle {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+
+.classAction {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-soft);
 }

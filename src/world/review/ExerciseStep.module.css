@@ -6,6 +6,11 @@
   width: 100%;
 }
 
+.skip {
+  display: flex;
+  justify-content: center;
+}
+
 .feedback {
   display: flex;
   flex-direction: column;

@@ -1,6 +1,7 @@
 /* Division visuals: fair sharing into containers, fact families (multiplication run backwards), the Spanish
    "galera" layout and the division check (quotient × divisor + remainder = dividend). */
 import { motion } from 'motion/react'
+import { galeraSteps, quotientOf } from '@/activities/division/galera'
 import type { VisualProps } from './types'
 import { FINAL, GLIDE, POP, motionT, numParam, stateOf, strParam } from './types'
 import s from './visuals.module.css'
@@ -127,8 +128,14 @@ export function longDivision(dividend: number, divisor: number) {
 
 const GALERA_BAR = 'var(--c-ink)'
 
-/** The "casita" of the division: dividend and divisor on top, quotient under the divisor, remainder under the dividend. */
-export function GaleraVisual({ params, phase, runLength, reduced }: VisualProps) {
+const galeraCell: React.CSSProperties = { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(36px, 7cqi, 60px)', lineHeight: 1.1, padding: '0 var(--sp-3)', minWidth: 72, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }
+
+/** The "casita" of the division: dividend and divisor on top, quotient under the divisor, remainder under the dividend.
+    With `written: 1` the school's way: every step under the casita (partial dividend, its product, the remainder), one
+    step per phase (step k shows when phase = k; a single step shows them all). Without it, the picture as before. */
+export function GaleraVisual(props: VisualProps) {
+  if (numParam(props.params, 'written', 0) === 1) return <GaleraWrittenVisual {...props} />
+  const { params, phase, runLength, reduced } = props
   const dividend = Math.max(0, Math.floor(numParam(params, 'dividend', 84)))
   const divisor = Math.max(1, Math.floor(numParam(params, 'divisor', 4)))
   const st = stateOf({ phase, runLength })
@@ -137,24 +144,23 @@ export function GaleraVisual({ params, phase, runLength, reduced }: VisualProps)
   const quotientShown = multiDigit ? st >= 2 : st >= 1
   const remainderShown = quotientShown
   const checkShown = !multiDigit && st >= 2
-  const cell: React.CSSProperties = { fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(36px, 7cqi, 60px)', lineHeight: 1.1, padding: '0 var(--sp-3)', minWidth: 72, textAlign: 'center', fontVariantNumeric: 'tabular-nums' }
   return (
     <div className={s.stage}>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 4px auto', gridTemplateRows: 'auto auto', alignItems: 'start' }} data-testid="galera">
-        <div style={{ ...cell, gridColumn: 1, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
+        <div style={{ ...galeraCell, gridColumn: 1, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
         <div style={{ gridColumn: 2, gridRow: '1 / span 2', background: GALERA_BAR, width: 4, alignSelf: 'stretch' }} />
         <motion.div
-          style={{ ...cell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch', position: 'relative', color: multiDigit && st === 1 ? 'var(--c-magic)' : 'var(--c-ink)' }}
+          style={{ ...galeraCell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch', position: 'relative', color: multiDigit && st === 1 ? 'var(--c-magic)' : 'var(--c-ink)' }}
           animate={multiDigit && st === 1 && !reduced ? { scale: [1, 1.08, 1] } : { scale: 1 }}
           transition={motionT(reduced, { duration: 0.8, repeat: multiDigit && st === 1 ? Infinity : 0, repeatDelay: 0.4 })}
           data-testid="divisor"
         >
           {divisor}
         </motion.div>
-        <div style={{ ...cell, gridColumn: 1, gridRow: 2, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
+        <div style={{ ...galeraCell, gridColumn: 1, gridRow: 2, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
           {remainderShown ? plan.remainder : ''}
         </div>
-        <motion.div style={{ ...cell, gridColumn: 3, gridRow: 2, minHeight: 60, color: 'var(--c-primary)' }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: quotientShown ? 1 : 0 }} transition={motionT(reduced, GLIDE)} data-testid="quotient">
+        <motion.div style={{ ...galeraCell, gridColumn: 3, gridRow: 2, minHeight: 60, color: 'var(--c-primary)' }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: quotientShown ? 1 : 0 }} transition={motionT(reduced, GLIDE)} data-testid="quotient">
           {quotientShown ? plan.quotient : ''}
         </motion.div>
       </div>
@@ -177,6 +183,52 @@ export function GaleraVisual({ params, phase, runLength, reduced }: VisualProps)
       )}
       {multiDigit && st === 1 && <p className={s.muted}>Mira cuántas veces cabe el {divisor} en cada cifra.</p>}
       {st === FINAL && multiDigit && <p className={s.eq}>Cociente: {plan.quotient}</p>}
+    </div>
+  )
+}
+
+/** The galera with its subtractions written (see GaleraVisual). Step k of galeraSteps is drawn once the phase reaches k. */
+function GaleraWrittenVisual({ params, phase, runLength, reduced }: VisualProps) {
+  const dividend = Math.max(0, Math.floor(numParam(params, 'dividend', 84)))
+  const divisor = Math.max(1, Math.floor(numParam(params, 'divisor', 4)))
+  const st = stateOf({ phase, runLength })
+  const digits = String(dividend)
+  const steps = galeraSteps(dividend, divisor)
+  const shown = steps.slice(0, Math.min(steps.length, st + 1))
+  const quotient = shown.length ? quotientOf(shown) : null
+  const rest = shown.length ? shown[shown.length - 1].remainder : null
+  return (
+    <div className={s.stage}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 4px auto', gridTemplateRows: 'auto auto', alignItems: 'start' }} data-testid="galera">
+        <div style={{ ...galeraCell, gridColumn: 1, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
+        <div style={{ gridColumn: 2, gridRow: '1 / span 2', background: GALERA_BAR, width: 4, alignSelf: 'stretch' }} />
+        <div style={{ ...galeraCell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="divisor">{divisor}</div>
+        <div style={{ ...galeraCell, gridColumn: 1, gridRow: 2, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
+          {rest ?? ''}
+        </div>
+        <div style={{ ...galeraCell, gridColumn: 3, gridRow: 2, minHeight: 60, color: 'var(--c-primary)' }} data-testid="quotient">
+          {quotient ?? ''}
+        </div>
+      </div>
+      {shown.length > 0 && (
+        <div className={s.row} style={{ alignItems: 'flex-end' }} data-testid="galera-work">
+          {shown.map((step, k) => (
+            <motion.div
+              key={k}
+              initial={reduced ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={motionT(reduced, GLIDE)}
+              style={{ display: 'grid', justifyItems: 'end', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-lg)', fontVariantNumeric: 'tabular-nums' }}
+              data-testid="galera-step"
+            >
+              <span className={s.muted} style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, minHeight: '1.3em' }}>{k > 0 ? `bajo el ${digits[step.endIndex]}` : ''}</span>
+              <span>{step.partial}</span>
+              <span style={{ borderBottom: `3px solid ${GALERA_BAR}`, paddingBottom: 2 }}>− {step.product}</span>
+              <span style={{ color: 'var(--c-magic)' }}>{step.remainder}</span>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

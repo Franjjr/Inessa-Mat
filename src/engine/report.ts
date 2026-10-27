@@ -158,6 +158,7 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'remainder-too-big': 'despiste',
   'other': 'otros',
   'recognition': null, // the handwriting was misread: not a maths mistake
+  'dont-know': null, // «No lo sé» in the placement test: a topic to learn, not a pattern of mistakes
 }
 
 /** The group of an error type; null when it is not a maths mistake (recognition). */

@@ -28,8 +28,7 @@
   display: grid;
   grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
   gap: var(--sp-5);
-  padding: 0 var(--sp-4);
-  max-width: 1180px;
+  padding: 0 var(--page-gutter);
   width: 100%;
   margin: 0 auto;
   align-items: start;
@@ -215,4 +214,17 @@
 @media (prefers-reduced-motion: reduce) {
   .card { transition: none; }
   .card:active { transform: none; }
+}
+
+/* Wide screens: bigger cards and type. */
+@media (min-width: 1000px) {
+  .root {
+    --fs-xs: clamp(15px, 1.5vmin, 19px);
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-lg: clamp(24px, 2.8vmin, 34px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .card { min-height: clamp(116px, 14vh, 160px); }
 }

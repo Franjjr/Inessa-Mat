@@ -61,8 +61,8 @@ function BorrowColumns({ params, phase, runLength, reduced, borrowFrom }: Borrow
   const snapIndex = st >= borrowFrom && plan.snapshots.length > 0 ? Math.min(st - borrowFrom, plan.snapshots.length - 1) : -1
   const tops = snapIndex >= 0 ? plan.snapshots[snapIndex] : plan.orig
   const width = plan.width
-  const restAt = Math.min(4, last)
-  const resultVisible = (k: number) => (k === 0 ? st >= 3 : st >= restAt) || st === FINAL
+  // One column's result per phase: units at phase 3, tens at 4, hundreds at 5 (capped at the run's last phase).
+  const resultVisible = (k: number) => (k === 0 ? st >= 3 : st >= Math.min(3 + k, last)) || st === FINAL
   const cellVars = { '--col-w': 'clamp(54px, 9vmin, 80px)', '--col-h': 'clamp(56px, 9vmin, 84px)' } as React.CSSProperties
   const colOf = (p: number) => width - 1 - p
   const hintOn = st < borrowFrom && plan.orig[0] < plan.bottom[0]

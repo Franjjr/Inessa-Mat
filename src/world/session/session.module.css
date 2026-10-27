@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  padding: var(--sp-3) var(--sp-4) var(--sp-6);
+  padding: var(--sp-3) var(--page-gutter) var(--sp-6);
   gap: var(--sp-3);
   background: var(--c-bg);
   box-sizing: border-box;
@@ -12,7 +12,7 @@
 
 .header {
   display: grid;
-  grid-template-columns: 72px 1fr 120px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--sp-3);
   min-height: 72px;
@@ -58,7 +58,6 @@
   justify-content: center;
   gap: var(--sp-5);
   width: 100%;
-  max-width: 880px;
   margin: 0 auto;
 }
 
@@ -78,9 +77,11 @@
   flex-direction: column;
   align-items: center;
   gap: var(--sp-4);
-  max-width: 600px;
   text-align: center;
 }
+
+.intro { max-width: 600px; }
+.calm { max-width: 820px; }
 
 .kicker {
   margin: 0;
@@ -247,6 +248,28 @@
   border-radius: var(--r-xl);
   box-shadow: var(--sticker-shadow);
   box-sizing: border-box;
+}
+
+/* Wide screens: the exercise and the intro use the width, and the type inside them scales up with it
+   (the views read the --fs-* tokens, so redefining them on the stage scales every exercise). */
+@media (min-width: 1000px) {
+  .intro { max-width: none; }
+  .blocks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .blocks li { flex-direction: column; align-items: center; text-align: center; }
+}
+/* Large desktops and tablets in landscape with room to grow: the type and the keypad (--ink-scale) scale up too.
+   Shorter screens (the 1138 × 640 tablet, the 1280 × 800 Android) keep the sizes of the tokens. */
+@media (min-width: 1280px) and (min-height: 900px) {
+  .stage {
+    --ink-scale: 1.35;
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(21px, 2.4vmin, 30px);
+    --fs-lg: clamp(26px, 3vmin, 36px);
+    --fs-xl: clamp(34px, 4.4vmin, 52px);
+    --fs-num: clamp(52px, 6vmin, 84px);
+    --cell-size: clamp(96px, 12vmin, 136px);
+    --cell-size-sm: clamp(64px, 8.4vmin, 92px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -7,6 +7,8 @@ import { startQueue, requeueWrong, type RunQueue } from '@/activities/shared/req
 export interface RunItem {
   uid: string
   item: DailyItem
+  /** Set when the child said «Ahora no»: the item went to the end, and comes back at the end each time it is said again. */
+  postponed?: true
 }
 
 export const SESSION_LIMIT_SECONDS = DAILY_MINUTES * 60
@@ -25,6 +27,19 @@ export function startRun(plan: DailyPlan): RunQueue<RunItem> {
 export function afterAnswer(q: RunQueue<RunItem>, pos: number, correct: boolean): RunQueue<RunItem> {
   if (correct) return q
   return requeueWrong(q, pos, (r) => r.uid) ?? q
+}
+
+/**
+ * «Ahora no»: the slot at `pos` goes to the end of the run, marked postponed, and comes back later as often as the child
+ * says it (no limit). Only when it is the last slot left is it dropped, so the run ends. Nothing is reported: a
+ * postponed item is not an attempt and is not counted as wrong.
+ */
+export function postpone(q: RunQueue<RunItem>, pos: number): RunQueue<RunItem> {
+  const slot = q.slots[pos]
+  if (!slot) return q
+  const rest = q.slots.filter((_, i) => i !== pos)
+  if (rest.length === 0) return { ...q, slots: rest }
+  return { ...q, slots: [...rest, { item: { ...slot.item, postponed: true }, retry: slot.retry }] }
 }
 
 /** The day key for the once-per-day reward. */

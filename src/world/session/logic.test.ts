@@ -3,7 +3,7 @@ import { planDailySession } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 import type { ChildProfile } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { afterAnswer, flattenPlan, isTimeUp, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
+import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const child: ChildProfile = {
@@ -42,6 +42,47 @@ describe('session run', () => {
     expect(s.total).toBe(plan.blocks.flatMap((b) => b.items).length)
     expect(s.correct).toBe(1)
     expect(s.answered).toBe(2)
+  })
+
+  it('postpone moves the item to the end without counting it', () => {
+    const q = startRun(plan)
+    const n = q.slots.length
+    const first = q.slots[0]
+    const after = postpone(q, 0)
+    expect(after.slots.length).toBe(n)
+    expect(after.slots[0].item.uid).toBe(q.slots[1].item.uid)
+    expect(after.slots[n - 1].item.uid).toBe(first.item.uid)
+    expect(after.slots[n - 1].item.postponed).toBe(true)
+    expect(after.slots[n - 1].retry).toBe(false)
+    expect(summarizeRun(after, [], true).total).toBe(summarizeRun(q, [], true).total)
+  })
+
+  it('postponing again moves the same item to the end again, with no limit', () => {
+    const q = startRun(plan)
+    const n = q.slots.length
+    const uid = q.slots[0].item.uid
+    let run = postpone(q, 0)
+    for (let round = 0; round < 3; round++) {
+      expect(run.slots[n - 1].item.uid).toBe(uid)
+      run = postpone(run, n - 1)
+      expect(run.slots.length).toBe(n)
+      expect(run.slots[n - 1].item.uid).toBe(uid)
+      expect(run.slots[n - 1].item.postponed).toBe(true)
+      expect(run.slots[n - 1].retry).toBe(false)
+    }
+    expect(summarizeRun(run, [], true).total).toBe(summarizeRun(q, [], true).total)
+  })
+
+  it('the last item left is dropped, so the run ends; with others left it just comes back later', () => {
+    const q = startRun(plan)
+    const n = q.slots.length
+    const uid = q.slots[n - 1].item.uid
+    const later = postpone(q, n - 1)
+    expect(later.slots.length).toBe(n)
+    expect(later.slots[n - 1].item.uid).toBe(uid)
+
+    const alone = { ...q, slots: [q.slots[0]] }
+    expect(postpone(alone, 0).slots).toEqual([])
   })
 
   it('time-box at fifteen minutes and a once-per-day reward key', () => {

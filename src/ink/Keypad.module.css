@@ -1,5 +1,5 @@
 .pad {
-  --key: 72px;
+  --key: calc(72px * var(--ink-scale, 1));
   display: grid;
   gap: 10px;
   padding: 12px;
@@ -9,8 +9,8 @@
   width: max-content;
   touch-action: manipulation;
 }
-.lg { --key: 84px; gap: 12px; }
-.sm { --key: 64px; gap: 8px; padding: 10px; }
+.lg { --key: calc(84px * var(--ink-scale, 1)); gap: 12px; }
+.sm { --key: calc(64px * var(--ink-scale, 1)); gap: 8px; padding: 10px; }
 .grid { grid-template-columns: repeat(3, var(--key)); }
 .wide { grid-template-columns: repeat(6, var(--key)); }
 

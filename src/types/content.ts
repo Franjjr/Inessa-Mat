@@ -82,7 +82,7 @@ export type LessonVisualId =
   | 'column-mul'        // params: { top, bottom }
   | 'share'             // params: { total, groups, emoji }
   | 'fact-family'       // params: { a, b }
-  | 'galera'            // params: { dividend, divisor }
+  | 'galera'            // params: { dividend, divisor, written? (1: the steps with their products and remainders written) }
   | 'division-check'    // params: { dividend, divisor }
   | 'sub-carry'         // params: { a, b } — subtraction "me llevo una abajo": the subtrahend's next digit gets +1
   | 'sub-parts'         // params: { a, b } — subtraction by parts: a − hundreds − tens − units
@@ -109,6 +109,8 @@ export interface LessonStep {
   choices?: { label: TemplateString; value: string }[]
   /** 'choose' steps: which favourite the pick is saved as (default subMethod). */
   preference?: 'subMethod' | 'divMethod' | 'tableMethod'
+  /** 'try' steps: `false` shows the exercise without the hint button (the child solves it alone). */
+  hints?: false
 }
 
 export interface LessonDef {

@@ -20,9 +20,11 @@ export interface ExerciseStepProps {
   /** false for a re-ask inside a run: the answer is shown but not logged again (default true). */
   report?: boolean
   onContinue: (outcome: ExerciseOutcome) => void
+  /** «Ahora no»: shown only before the child answers; nothing is reported. */
+  onSkip?: () => void
 }
 
-export function ExerciseStep({ exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue }: ExerciseStepProps) {
+export function ExerciseStep({ exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue, onSkip }: ExerciseStepProps) {
   const host = useActivityHost()
   const [outcome, setOutcome] = useState<ExerciseOutcome | null>(null)
   const [message, setMessage] = useState('')
@@ -63,6 +65,11 @@ export function ExerciseStep({ exercise, allowHints, okLabel, wrongLabel, feedba
         divMethod={host.prefs.divMethod}
         tableMethod={host.prefs.tableMethod}
       />
+      {onSkip && !outcome && (
+        <div className={s.skip}>
+          <Button variant="secondary" onClick={onSkip}>Ahora no</Button>
+        </div>
+      )}
       {outcome && (
         <div className={s.feedback} data-tone={ok ? 'good' : 'clue'} role="status">
           <p className={s.message}>{message}</p>

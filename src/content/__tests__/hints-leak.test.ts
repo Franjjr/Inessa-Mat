@@ -2,8 +2,8 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { TABLE_METHODS, generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
-import type { Exercise, Hint, SubMethod, TableMethod } from '@/types'
+import { TABLE_METHODS, createRng, generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
+import type { DivMethod, Exercise, Hint, SubMethod, TableMethod } from '@/types'
 import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -150,6 +150,27 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
     for (const skill of skills) {
       for (const ex of generate({ skills: [skill] }, PER_SKILL, { now })) {
         for (const l of leaks(ex)) found.push(`${skill} [${ex.kind}] level ${l.level} (${l.answer}): ${l.text}`)
+      }
+    }
+    expect([...new Set(found)]).toEqual([])
+  })
+  it('no division hint states a quotient digit (level 3 names the next step, it does not write the partial quotient)', () => {
+    const divSkills = ['div:2x1:exact', 'div:2x1:rem', 'div:2x1:long', 'div:3x1:exact', 'div:3x1:rem']
+    const methods: { divMethod?: DivMethod }[] = [{}, { divMethod: 'galera-short' }]
+    const found: string[] = []
+    for (const skill of divSkills) {
+      for (let seed = 1; seed <= 40; seed++) {
+        for (const ex of generate({ skills: [skill] }, 10, { rng: createRng(seed) })) {
+          if (ex.kind !== 'division') continue
+          for (const options of methods) {
+            for (const h of hintsFor(ex, undefined, options)) {
+              for (const digit of String(ex.quotient)) {
+                const stated = new RegExp(`(?<![\\d])= ${digit}(?!\\d)|(?<!\\d)${digit} y sobra`, 'u')
+                if (stated.test(h.text)) found.push(`${skill} seed ${seed} level ${h.level} (q ${ex.quotient}): ${h.text}`)
+              }
+            }
+          }
+        }
       }
     }
     expect([...new Set(found)]).toEqual([])
