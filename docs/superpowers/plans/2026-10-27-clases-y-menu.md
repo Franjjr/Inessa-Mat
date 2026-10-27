@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Real lessons («clases») for the 3.º operations (sumar con llevadas, restar, multiplicar, dividir), opened from a big «Hoy» button when a new topic starts, plus a home menu with order and «Ahora no» / «Ya lo sé» skips.
+**Goal:** Real lessons («clases») for the four 3.º operations (sumar, restar, multiplicar, dividir), each from easy to hard,, opened from a big «Hoy» button when a new topic starts, plus a home menu with order and «Ahora no» / «Ya lo sé» skips.
 
 **Architecture:** A class is a `LessonDef` played by the existing `LessonPlayer`, built from five phases by a `clase()` builder and linked to one syllabus topic in a new registry (`src/content/classes/`). «Clase hecha» is derived: a progress flag `clase:<topicId>` or the class's map lesson node already done. A new route `/play/clase/:topicId` plays it; the home picks «Hoy» = the class of `currentTopic` when not done, else the session.
 
@@ -19,7 +19,7 @@
 - Division is taught first with the written subtractions (`DEFAULT_METHOD.div = 'galera'`); subtraction first with «pido prestado arriba» (`'borrow'`).
 - Do not change map unlock rules, node stars, or progress of lessons already played.
 - Commits end with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`. Work on branch `dev`.
-- Verification per task: `npx tsc --noEmit -p .`, the task's vitest files, and the named Playwright specs. Timing tests in `src/ink/ml/*` are flaky under load; rerun alone before treating them as failures.
+- Verification per task: `npx tsc -b` (the root tsconfig has `files: []`, so `tsc -p .` checks nothing; Vercel runs `tsc -b && vite build`), the task's vitest files, and the named Playwright specs. Timing tests in `src/ink/ml/*` are flaky under load; rerun alone before treating them as failures.
 
 ## Review Focus
 
@@ -69,20 +69,23 @@ it('topicTitle drops the example in brackets', ...)
 
 - [ ] **Step 2: Run them, expect FAIL** — `npx vitest run src/content/classes src/activities/lesson`
 - [ ] **Step 3: Implement** the interfaces above; `TrySlot` gets `allowHints?: boolean` (default true) passed to `ExerciseView`; `LessonPlayer` passes `step.hints !== false`.
-- [ ] **Step 4: Run, expect PASS**, plus `npx tsc --noEmit -p .`
+- [ ] **Step 4: Run, expect PASS**, plus `npx tsc -b`
 - [ ] **Step 5: Commit** — "Classes: a lesson in five phases linked to a syllabus topic, done by its flag or its map lesson"
 
-### Task 2: Clases de sumar y restar
+### Task 2: Clases de sumar y de restar
 
 **Files:** Modify `src/content/classes/grade3.ts`; Test: `src/content/classes/classes.test.ts`
 
 **Interfaces:** Consumes `clase`, `show`, `tryIt` (Task 1, `src/content/lessons/dsl.ts`).
 
-Classes (topic id → class id, map lesson, worked example):
+Classes (topic id → class id, map lesson, worked example). The owner asked for sums «cada vez más complejas» so the child moves through the four operations, each one from easy to hard:
 
 | Topic | Class id | mapLessonId | Ejemplo resuelto |
 |---|---|---|---|
+| `suma-2d` | `c3-suma-2d` | — | 34 + 25 = 59, then 38 + 25 = 63 (the first carry, with tens and units blocks) |
+| `suma-3d-sin-llevar` | `c3-suma-3d` | — | 342 + 215 = 557 (column, units first) |
 | `suma-3d-llevando` | `c3-suma-llevando` | `w2-carry` | reuse `w2-carry` example |
+| `suma-4d` | `c3-suma-4d` | — | 2 475 + 1 368 = 3 843 (carries in several columns) |
 | `resta-3d-sin-llevar` | `c3-resta-sin-llevar` | — | 586 − 243 = 343 (`visual: 'borrow'`, params a, b) |
 | `resta-3d-prestando` | `c3-resta-prestando` | `w4-borrow` | 352 − 127 = 225 |
 | `resta-con-ceros` | `c3-resta-ceros` | `w4-zero` | 503 − 128 = 375 |
@@ -94,11 +97,11 @@ Rules for every class (all tasks 2–4):
 - `sola`: 3 or 4 `tryIt` steps, each selector a bit harder than the one before, using only the topic's skills or easier ones of the same block.
 - `cierre`: 1 `show` step that states the rule in one sentence.
 
-- [ ] **Step 1: Failing test** `it('every class keeps the five-phase shape and its tries generate exercises of its own topic')` over `CLASSES`: phases para 1–2, ejemplo 3–6, guiada 2, sola 3–4, cierre 1; `generate(step.trySelector!, 1)` returns one exercise whose `skill` is in the topic's `skills` or in an earlier topic of the same syllabus block; `topicId` exists in `syllabusForGrade(3)`; `mapLessonId` (when set) is found by `getLesson`; class ids unique. And `it('restar y sumar have their classes')`: `classForTopic` is defined for the four topics above.
+- [ ] **Step 1: Failing test** `it('every class keeps the five-phase shape and its tries generate exercises of its own topic')` over `CLASSES`: phases para 1–2, ejemplo 3–6, guiada 2, sola 3–4, cierre 1; `generate(step.trySelector!, 1)` returns one exercise whose `skill` is in the topic's `skills` or in an earlier topic of the same syllabus block; `topicId` exists in `syllabusForGrade(3)`; `mapLessonId` (when set) is found by `getLesson`; class ids unique. And `it('sumar y restar have their classes')`: `classForTopic` is defined for the eight topics above.
 - [ ] **Step 2: Run, expect FAIL** — `npx vitest run src/content/classes`
-- [ ] **Step 3: Write the four classes.**
+- [ ] **Step 3: Write the eight classes.**
 - [ ] **Step 4: Run, expect PASS**; open `/dev/gallery` lesson gallery or a quick Playwright screenshot of one class at 1180 × 820 and 390 × 844 to see nothing overflows.
-- [ ] **Step 5: Commit** — "Clases de sumar con llevadas y de restar, de menos a más"
+- [ ] **Step 5: Commit** — "Clases de sumar y de restar, de menos a más"
 
 ### Task 3: Clases de multiplicar
 
@@ -160,7 +163,7 @@ it('a topic without class goes back home')
 ```
 - [ ] **Step 2: Run, expect FAIL** — `npx vitest run src/world/clase`
 - [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run, expect PASS**, and `npx tsc --noEmit -p .`
+- [ ] **Step 4: Run, expect PASS**, and `npx tsc -b`
 - [ ] **Step 5: Commit** — "La clase tiene su pantalla: empezar o «Ya lo sé», y al acabar, seguir con la sesión"
 
 ### Task 6: Menú nuevo con «Hoy» y «Mis premios»
@@ -214,7 +217,7 @@ it('ExerciseStep offers «Ahora no» before answering, not after')
 
 ### Task 8: Verificación final
 
-- [ ] `npx tsc --noEmit -p .`; `npx vitest run` (rerun `src/ink/ml` alone if only its timing tests fail); `npx playwright test` on the four projects.
+- [ ] `npm run build` (the same as Vercel); `npx vitest run` (rerun `src/ink/ml` alone if only its timing tests fail); `npx playwright test` on the four projects.
 - [ ] Screenshots of home, a class (each phase) and the session at 1138 × 640 (Android tablet with bars), 1180 × 820 and 390 × 844: nothing cut off, «Hoy» visible.
 - [ ] Update `docs/curriculum/PLAN_DOCENTE.md` with a short section «Clases» (format, where they open, skips).
 - [ ] Commit — "Plan docente: las clases"
