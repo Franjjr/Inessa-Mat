@@ -194,9 +194,9 @@ describe('robustness and hint consistency', () => {
     expect(check(makeColumnSub(734, 459), dig([15, 7, 2])).given).toBe('27[15]')
     expect(check(makeColumnAdd([245, 137]), dig([12, 8, 3])).given).toBe('38[12]')
   })
-  it('long division hint when nothing is left over in the tens (fixed spells like 85 ÷ 4)', () => {
+  it('long division hint starts with the tens and never states the partial quotient (fixed spells like 85 ÷ 4)', () => {
     const t = hintsFor(makeDivision(85, 4))[2].text
-    expect(t).toBe('Decenas: 8 ÷ 4 = 2 y no sobra nada. Ahora baja el 5: 5 ÷ 4 = ?')
+    expect(t).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 8? Escríbelo arriba y resta. Lo que sobre, júntalo con el 5.')
   })
 })
 

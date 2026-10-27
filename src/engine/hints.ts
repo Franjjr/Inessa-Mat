@@ -229,19 +229,18 @@ function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
   const params = { total: n, groups: d, dividend: n, divisor: d }
   let l1: string
   let worked: string
+  // Level 3 names the next step only: the tens of the dividend and the question, never a partial quotient.
+  const tail = ex.variant === 'exact' ? 'Después baja la cifra siguiente.' : `Lo que sobre, júntalo con el ${u}.`
+  const firstStep = `Empieza por las decenas: ¿cuántas veces cabe el ${d} en el ${t}? Escríbelo arriba y resta. ${tail}`
   if (q < 10) {
     l1 = `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`
     worked = `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}. ¿En qué fila vas?`
   } else if (ex.variant === 'exact' && n < 100) {
     l1 = 'Primero reparte las decenas y después las unidades.'
-    worked = `Decenas: ${t} ÷ ${d} = ${Math.floor(t / d)}. Ahora las unidades: ${u} ÷ ${d} = ?`
+    worked = firstStep
   } else {
-    const qt = Math.floor(t / d)
-    const left = t - qt * d
     l1 = 'Reparte primero las decenas. Lo que sobre, júntalo con las unidades y sigue repartiendo.'
-    worked = left > 0
-      ? `Decenas: ${t} ÷ ${d} = ${qt} y sobra ${left}. Júntalo con el ${u}: ${left * 10 + u} ÷ ${d} = ?`
-      : `Decenas: ${t} ÷ ${d} = ${qt} y no sobra nada. Ahora baja el ${u}: ${u} ÷ ${d} = ?`
+    worked = firstStep
   }
   return [
     hint(1, short ? SHORT_GALERA_HINT : l1, 'none'),

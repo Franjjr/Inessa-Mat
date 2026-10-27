@@ -122,9 +122,9 @@ describe('hintsFor', () => {
     // The worked step names the table to count in, not the product (5 × 3 = 15 would give the quotient away).
     expect(hintsFor(makeDivision(17, 5))[2].text).toContain('Cuenta de 5 en 5')
     expect(hintsFor(makeDivision(17, 5))[2].text).not.toContain('15')
-    expect(hintsFor(makeDivision(84, 4))[2].text).toContain('8 ÷ 4 = 2')
-    expect(hintsFor(makeDivision(72, 3))[2].text).toContain('sobra 1')
-    expect(hintsFor(makeDivision(72, 3))[2].text).toContain('12 ÷ 3 = ?')
+    // Level 3 names the next step (the tens and the question), never the partial quotient or the remainder.
+    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 8? Escríbelo arriba y resta. Después baja la cifra siguiente.')
+    expect(hintsFor(makeDivision(72, 3))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 3 en el 7? Escríbelo arriba y resta. Lo que sobre, júntalo con el 2.')
     // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
     expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
     expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
@@ -134,9 +134,9 @@ describe('hintsFor', () => {
     expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
   })
 
-  it('an exact division of three digits brings the third digit down, it does not divide the units alone', () => {
-    // 584 ÷ 4: the tens give 14 with nothing left over (58 − 56 = 2), so the next partial is 24, not the units 4.
-    expect(hintsFor(makeDivision3(584, 4))[2].text).toBe('Decenas: 58 ÷ 4 = 14 y sobra 2. Júntalo con el 4: 24 ÷ 4 = ?')
+  it('an exact division of three digits starts with the tens and does not state a partial quotient', () => {
+    // 584 ÷ 4: the first question is how many 4 fit in 58; the answer (14) is the child's to find.
+    expect(hintsFor(makeDivision3(584, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 58? Escríbelo arriba y resta. Después baja la cifra siguiente.')
   })
 
   it('the worked division of the level-3 hint never shows the child\'s own dividend, divisor or answer', () => {
