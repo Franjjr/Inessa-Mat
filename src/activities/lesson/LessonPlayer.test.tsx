@@ -172,7 +172,8 @@ describe('LessonPlayer: try steps', () => {
     await user.click(screen.getByRole('button', { name: 'Responder bien' }))
     expect(reportAttempt).toHaveBeenCalledTimes(2)
     expect(reportAttempt.mock.calls[0][0].retries).toBeUndefined()
-    expect(reportAttempt.mock.calls[1][0]).toMatchObject({ retries: 1, solvedOnRetry: true })
+    expect(reportAttempt.mock.calls[1][0]).toMatchObject({ retries: 1, solvedOnRetry: true, graded: false })
+    expect(reportAttempt.mock.calls[0][0].graded).toBeUndefined() // the first answer grades
   })
 
   it('offers a retry after a miss and lets the lesson go on after two misses', async () => {

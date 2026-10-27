@@ -116,7 +116,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       hintsUsed: outcome.hintsUsed,
       recognitionFixes: outcome.recognitionFixes,
       method: method ?? divMethod,
-      ...(attempt > 0 ? { retries: attempt } : {}),
+      // Only the first try of the step grades mastery; a retry is saved with its count and does not grade again.
+      ...(attempt > 0 ? { retries: attempt, graded: false } : {}),
       ...(attempt > 0 && check.correct ? { solvedOnRetry: true } : {}),
     })
     if (check.correct) {

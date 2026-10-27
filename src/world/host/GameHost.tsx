@@ -177,20 +177,22 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     const reportAttempt: ActivityHost['reportAttempt'] = (attempt) => {
       const c = childRef.current
       if (!c) return
-      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method, retries, solvedOnRetry } = attempt
+      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method, retries, solvedOnRetry, graded = true } = attempt
       const skill = exercise.skill
       const now = new Date()
-      const prev = masteryRef.current[skill]
-      const next = updateMastery(
-        prev,
+      // A retry (graded: false) is saved with its retries, but only the first answer grades mastery and the session.
+      const next = graded ? updateMastery(
+        masteryRef.current[skill],
         { skill, correct: check.correct, ms, inputMode, hintsUsed, errorType: check.errorType ?? null },
         now,
-      )
-      masteryRef.current = { ...masteryRef.current, [skill]: next }
+      ) : null
+      if (next) masteryRef.current = { ...masteryRef.current, [skill]: next }
 
       const session = sessionRef.current
-      session.attempts += 1
-      if (check.correct) session.correct += 1
+      if (graded) {
+        session.attempts += 1
+        if (check.correct) session.correct += 1
+      }
 
       const record: AttemptRecord = {
         id: crypto.randomUUID(),
@@ -218,7 +220,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
         createdAt: now.toISOString(),
       }
       recordAttempt(record).catch((e) => reportError('recordAttempt', e))
-      saveMastery(c.id, [next]).catch((e) => reportError('saveMastery', e))
+      if (next) saveMastery(c.id, [next]).catch((e) => reportError('saveMastery', e))
     }
 
     const react: ActivityHost['react'] = (kind, detail) => {

@@ -782,6 +782,8 @@ export interface AttemptInput {
   retries?: number
   /** The child got it right on a retry. */
   solvedOnRetry?: boolean
+  /** false for a retry: the attempt is saved (with its retries) but does not grade mastery or the session. Default true. */
+  graded?: boolean
   /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
   method?: string
 }

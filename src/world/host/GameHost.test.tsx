@@ -81,6 +81,37 @@ describe('GameHostProvider', () => {
     expect(mastery['mul:6x7'].attempts).toBeGreaterThan(0)
   })
 
+  it('a non-graded retry is saved with its retries but does not change mastery', async () => {
+    const child = await createChild({
+      nickname: 'Retry Test', gender: 'f', companion: { species: 'cat', name: 'Nube', gender: 'f', colorway: 'default', equipped: [] },
+    })
+    await activate(child.id)
+
+    let host: ActivityHost | null = null
+    render(
+      <GameHostProvider worldId="w3" nodeId="lesson-x" activity="lesson">
+        <Capture onHost={(h) => { host = h }} />
+      </GameHostProvider>,
+    )
+    await waitFor(() => expect(host).not.toBeNull())
+    const wrong = { correct: false, given: '48', expected: '42' }
+    await waitFor(async () => {
+      host!.reportAttempt({ exercise, check: wrong, ms: 2000, inputMode: 'keypad', hintsUsed: 0 })
+      expect((await listAttempts(child.id)).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+    const before = await getMastery(child.id)
+    host!.reportAttempt({ exercise, check: { correct: true, given: '42', expected: '42' }, ms: 1500, inputMode: 'keypad', hintsUsed: 0, retries: 1, solvedOnRetry: true, graded: false })
+
+    await waitFor(async () => {
+      const latest = (await listAttempts(child.id))[0]
+      expect(latest.retries).toBe(1)
+      expect(latest.solvedOnRetry).toBe(true)
+    })
+    const after = await getMastery(child.id)
+    expect(after['mul:6x7'].attempts).toBe(before['mul:6x7'].attempts)
+    expect(after['mul:6x7'].correct).toBe(before['mul:6x7'].correct)
+  })
+
   it('shows the companion reaction in the buddy when the activity reacts', async () => {
     const child = await createChild({
       nickname: 'Buddy Test', gender: 'm', companion: { species: 'dog', name: 'Toby', gender: 'm', colorway: 'mint', equipped: [] },
