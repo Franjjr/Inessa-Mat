@@ -89,8 +89,33 @@ export function ExerciseStep({
     hostRef.current.reportAttempt(attempt)
   }
 
-  // A step left in the middle (pause, exit) still keeps its first answer.
-  useEffect(() => () => send(), []) // eslint-disable-line react-hooks/exhaustive-deps
+  // A step left in the middle (pause, exit, the app closed or hidden) still keeps its first answer.
+  useEffect(() => {
+    const onHide = () => send()
+    const onVisibility = () => { if (document.visibilityState === 'hidden') send() }
+    window.addEventListener('pagehide', onHide)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', onHide)
+      document.removeEventListener('visibilitychange', onVisibility)
+      send()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After «Inténtalo otra vez» the focus goes to the new exercise (its first input), not to the page body.
+  const viewRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (view === 0) return
+    const root = viewRef.current
+    if (!root) return
+    const target = root.querySelector<HTMLElement>('input:not([disabled]), textarea, [role="textbox"]')
+    if (target) {
+      target.focus()
+    } else {
+      root.tabIndex = -1
+      root.focus()
+    }
+  }, [view])
 
   const show = (o: ExerciseOutcome) => {
     const custom = feedbackFor?.(o)
@@ -170,7 +195,7 @@ export function ExerciseStep({
 
   return (
     <div className={s.step}>
-      <div className={s.view} inert={inputLocked ? true : undefined}>
+      <div ref={viewRef} className={s.view} inert={inputLocked ? true : undefined}>
         <ExerciseView
           key={view}
           exercise={exercise}

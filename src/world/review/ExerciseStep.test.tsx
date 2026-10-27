@@ -14,10 +14,12 @@ vi.mock('@/activities', async (importOriginal) => {
   const React = await import('react')
   function ExerciseView({ onAnswered }: { onAnswered: (o: unknown) => void }) {
     React.useEffect(() => { script.mounts += 1 }, [])
-    return React.createElement('button', {
-      type: 'button',
-      onClick: () => onAnswered(script.outcomes.shift() ?? { check: { correct: true, given: '42', expected: '42' }, ms: 900, inputMode: 'keypad', hintsUsed: 0, recognitionFixes: 0 }),
-    }, 'Responder')
+    return React.createElement('div', null,
+      React.createElement('input', { 'aria-label': 'Respuesta' }),
+      React.createElement('button', {
+        type: 'button',
+        onClick: () => onAnswered(script.outcomes.shift() ?? { check: { correct: true, given: '42', expected: '42' }, ms: 900, inputMode: 'keypad', hintsUsed: 0, recognitionFixes: 0 }),
+      }, 'Responder'))
   }
   return { ...actual, ExerciseView }
 })
@@ -183,3 +185,43 @@ describe('ExerciseStep «Inténtalo otra vez»', () => {
     expect(reportAttempt.mock.calls[0][0].retries).toBeUndefined() // no retry was taken
   })
 })
+
+describe('ExerciseStep: nothing is lost when the app is left', () => {
+  it('reports the pending first answer when the page is hidden or closed', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong()]
+    const { reportAttempt } = renderStep({ allowRetry: true })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Inténtalo otra vez' })
+    expect(reportAttempt).not.toHaveBeenCalled()
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ check: { correct: false } })
+    window.dispatchEvent(new Event('pagehide'))
+    expect(reportAttempt).toHaveBeenCalledTimes(1) // reported once, never twice
+  })
+
+  it('a pagehide during the offer reports the first answer', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong()]
+    const { reportAttempt } = renderStep({ allowRetry: true })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Inténtalo otra vez' })
+    window.dispatchEvent(new Event('pagehide'))
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('ExerciseStep: focus after «Inténtalo otra vez»', () => {
+  it('moves the focus to the new exercise input, not to the page body', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong()]
+    renderStep({ allowRetry: true })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: 'Inténtalo otra vez' }))
+    expect(screen.getByRole('textbox', { name: 'Respuesta' })).toHaveFocus()
+  })
+})
+
