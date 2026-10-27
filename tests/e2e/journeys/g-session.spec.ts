@@ -91,6 +91,67 @@ test.describe('Mi sesión de hoy', () => {
     await settle(page, 300)
   })
 
+  test('«No lo sé» shows how it is done, and the child goes on with the next item', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/sesion')
+    await page.getByRole('button', { name: '¡Empezar!' }).click()
+    // The warm-up has no «No lo sé» (facts already learnt, no hints): the first item that offers it comes after the
+    // warm-up, and each new skill opens with its example card.
+    const noSe = page.getByRole('button', { name: 'No lo sé' })
+    for (let i = 0; i < 60 && (await noSe.count()) === 0; i++) {
+      const entendido = page.getByRole('button', { name: /Entendido/ })
+      if (await entendido.count()) {
+        await entendido.click()
+        continue
+      }
+      await page.keyboard.type('1')
+      await page.keyboard.press('Enter')
+      await settle(page, 150)
+      const next = page.getByRole('button', { name: /Siguiente/ })
+      if (await next.count()) await next.first().click()
+    }
+    await expect(noSe).toBeVisible()
+    const bar = page.getByRole('progressbar')
+    const planned = (await bar.getAttribute('aria-label'))!.replace(/^Ejercicio \d+ de /, '')
+    await noSe.click()
+    await expect(page.getByRole('heading', { name: 'Así se hace' })).toBeVisible()
+    await expect(page.getByText(/^Pista 1 de \d$/)).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Ahora no' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'No lo sé' })).toHaveCount(0)
+    await page.getByRole('button', { name: 'Siguiente' }).click()
+    await expect(bar).toHaveAttribute('aria-label', new RegExp(`de ${planned}$`))
+    await settle(page, 300)
+  })
+
+  test('a wrong answer can be tried again once, on the same exercise, and then the child goes on', async ({ page }) => {
+    await seedDemo(page)
+    await page.goto('/play/sesion')
+    await page.getByRole('button', { name: '¡Empezar!' }).click()
+    const retry = page.getByRole('button', { name: 'Inténtalo otra vez' })
+    for (let i = 0; i < 60 && (await retry.count()) === 0; i++) {
+      const entendido = page.getByRole('button', { name: /Entendido/ })
+      if (await entendido.count()) {
+        await entendido.click()
+        continue
+      }
+      await page.keyboard.type('1')
+      await page.keyboard.press('Enter')
+      await settle(page, 150)
+      if (await retry.count()) break
+      const next = page.getByRole('button', { name: /Siguiente/ })
+      if (await next.count()) await next.first().click()
+    }
+    await expect(retry).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Siguiente' })).toBeVisible()
+    await retry.click()
+    // The same exercise again, with the input cleared: one more answer, then only «Siguiente» is offered.
+    await page.keyboard.type('1')
+    await page.keyboard.press('Enter')
+    await expect(page.getByRole('button', { name: 'Inténtalo otra vez' })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /Siguiente|Ver mi resultado/ })).toBeVisible()
+    await settle(page, 300)
+  })
+
   test('the session can be paused and left without losing the day', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/sesion')

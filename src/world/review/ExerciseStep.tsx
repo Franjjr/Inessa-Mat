@@ -152,7 +152,7 @@ export function ExerciseStep({
     pending.current = { outcome: o, retries: 0, solvedOnRetry: false }
     send()
     setLatest(o)
-    setMessage(host.t('Así se hace. Mira cada pista y, cuando lo entiendas, sigue.'))
+    setMessage(host.t('No pasa nada. Mira cada pista y, cuando lo entiendas, sigue.'))
     enter('dontknow')
   }
 

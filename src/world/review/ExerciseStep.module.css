@@ -102,3 +102,8 @@
   color: var(--c-ink);
   text-wrap: pretty;
 }
+
+/* Answered or «No lo sé»: the exercise stays on screen, dimmed, and takes no more input. */
+.view[inert] {
+  opacity: 0.55;
+}

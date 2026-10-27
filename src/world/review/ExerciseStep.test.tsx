@@ -89,7 +89,7 @@ describe('ExerciseStep «No lo sé»', () => {
       exercise: expect.objectContaining({ id: 'fact-mul:6x7' }),
       check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
     })
-    expect(screen.getByText('Así se hace')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Así se hace' })).toBeInTheDocument()
     expect(screen.getByText('Pista 1 de 3')).toBeInTheDocument()
     expect(screen.getByText('Pista 3 de 3')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
