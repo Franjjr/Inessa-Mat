@@ -22,6 +22,7 @@ const answerOf = (ex: Exercise): number => {
     case 'compare': case 'order': return NaN
     case 'place-value': return typeof ex.answer === 'number' ? ex.answer : NaN
     case 'fraction-shade': case 'fraction-read': case 'fraction-equal': case 'shape-choice': case 'angle-tap': return NaN
+    case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': return NaN
     default: return ex.answer as number
   }
 }

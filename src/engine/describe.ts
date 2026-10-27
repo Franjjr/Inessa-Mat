@@ -235,6 +235,9 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'clock-hour': 'Lee mal la hora del reloj (la aguja corta)',
   'clock-minute': 'Lee mal los minutos del reloj (la aguja larga, de cinco en cinco)',
   'clock-period': 'Confunde el momento del día (mañana, tarde o noche)',
+  'word-class': 'Confunde la clase de palabra (sustantivo, adjetivo, verbo o artículo, o común y propio)',
+  'word-form': 'Escribe mal la palabra cambiada: el género, el número o el tiempo, o la tilde',
+  'sentence-part': 'Confunde el sujeto con el predicado',
 }
 
 /** Spanish description of an error type for adult dashboards. */

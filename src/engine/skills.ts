@@ -510,11 +510,34 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'line': return ['number-line']
     case 'mental': return ['mental']
     case 'equation': return ['equation']
-    case 'lengua': return [] // the Lengua exercise kinds come with their tasks (Tasks 4 to 6)
+    case 'lengua': return lenguaKinds(p)
   }
   /* c8 ignore next */
   return []
 }
+
+/** The Lengua grammar skills (lng:gram:…) and the kinds that practise each one, the first being the default
+    (src/engine/lengua/grammar.ts). Other Lengua areas have no exercise kinds yet. */
+function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[] {
+  if (p.area !== 'gram') return []
+  switch (p.item) {
+    case 'sustantivo':
+      if (p.level === 'clase') return ['lng-classify', 'lng-tap-words']
+      return ['lng-classify', 'lng-transform', 'lng-tap-words']
+    case 'articulo': return ['lng-tap-words']
+    case 'adjetivo': return ['lng-tap-words', 'lng-transform']
+    case 'verbo': return ['lng-tap-words', 'lng-classify', 'lng-transform']
+    case 'oracion': return ['lng-sentence-parts']
+    default: return []
+  }
+}
+
+/** Every grammar skill of Lengua (lng:gram:…), for the skill universe of a kind. */
+export const GRAMMAR_SKILLS: SkillKey[] = [
+  'lng:gram:sustantivo:clase', 'lng:gram:sustantivo:genero', 'lng:gram:sustantivo:numero', 'lng:gram:articulo',
+  'lng:gram:adjetivo', 'lng:gram:verbo:presente', 'lng:gram:verbo:pasado', 'lng:gram:verbo:futuro',
+  'lng:gram:oracion:sujeto', 'lng:gram:oracion:predicado',
+]
 
 /** A multiplication fact can be practised as a doubling chain when one factor is 4 (2 doublings) or 8 (3). */
 export function canDoubleChain(a: number, b: number): boolean {

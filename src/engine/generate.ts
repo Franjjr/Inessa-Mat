@@ -26,9 +26,10 @@ import { genLongMul } from './longmul'
 import { galeraShowsAnswer } from './divParts'
 import { genOrdinal } from './ordinals'
 import { genDecimal, genDecimalOp } from './decimals'
+import { buildGrammar } from './lengua/grammar'
 import { PATTERN_SKILLS, buildPattern } from './patterns'
 import { POSITION_SKILLS, buildPosition } from './position'
-import { moneySkill, measureSkill } from './skills'
+import { GRAMMAR_SKILLS, moneySkill, measureSkill } from './skills'
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
@@ -48,6 +49,8 @@ export const ALL_KINDS: ExerciseKind[] = [
   'place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'money', 'measure',
   'chart', 'chance', 'pattern', 'position', 'mul-parts', 'area', 'fraction-add', 'long-mul', 'ordinal',
   'decimal', 'decimal-op',
+  // Lengua de 3.º, gramática (src/engine/lengua/grammar.ts)
+  'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
 ]
 
 export const EMOJIS = ['🍄', '🌸', '⭐', '🍎', '🐞', '🦋', '🐟', '💎', '🧁', '🍓', '🐚', '🌈']
@@ -264,6 +267,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'decimal': case 'decimal-op':
       for (const skill of blockSkillsOf(kind)) addItem(map, skill, kind, 1)
+      break
+    case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform':
+      for (const skill of GRAMMAR_SKILLS) if (kindsForSkill(skill).includes(kind)) addItem(map, skill, kind, 1)
       break
     case 'area':
       addItem(map, 'geo:area', kind, 1)
@@ -716,6 +722,8 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  // Lengua (gramática): the words and sentences of the banks (src/engine/lengua).
+  if (p.type === 'lengua') return retry(() => buildGrammar(kind, skill, rng), used, rng)!
   // Tiempo (block D): the clock and calendar generators (src/engine/clock.ts). Read items show the phrase while the child learns.
   if (p.type === 'clock-read' || p.type === 'clock-set' || p.type === 'clock-convert' || p.type === 'time-duration' || p.type === 'calendar') {
     const writeMode = p.type === 'clock-read' && (ctx.mastery?.[skill]?.box ?? 0) >= 2

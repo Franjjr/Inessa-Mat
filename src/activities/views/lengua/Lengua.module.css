@@ -1,0 +1,112 @@
+/* Lengua de 3.º views (grammar exercises). Every tap target is at least 56px; the sentence wraps and never widens the
+   page (phone 390 px); on big screens the words and the card grow with the viewport. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.sentence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.word {
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.wordOn {
+  background: var(--c-magic-soft);
+}
+
+.stop {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.card {
+  align-self: center;
+  min-width: min(240px, 100%);
+  max-width: 100%;
+  padding: var(--sp-4) var(--sp-5);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 800;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl, 24px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  overflow-wrap: anywhere;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.option {
+  min-height: 72px;
+  min-width: 120px;
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.optionOn {
+  background: var(--c-magic-soft);
+}
+
+.word:focus-visible,
+.option:focus-visible {
+  outline: 4px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.typed {
+  width: 100%;
+  min-width: 0;
+}

@@ -97,6 +97,13 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'numbers', values: cellsOf(ex.value, ex.places) }
     case 'decimal-op':
       return { type: 'numbers', values: cellsOf(ex.answer, ex.places) }
+    case 'lng-tap-words':
+    case 'lng-sentence-parts':
+      return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-classify':
+      return { type: 'choice', index: ex.answer }
+    case 'lng-transform':
+      return { type: 'text', value: ex.answer }
     default:
       return { type: 'number', value: ex.answer as number }
   }

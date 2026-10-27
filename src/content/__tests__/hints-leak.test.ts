@@ -2,9 +2,9 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { TABLE_METHODS, createRng, generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
+import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf, strategyForFact } from '@/engine'
 import type { DivMethod, Exercise, Hint, SubMethod, TableMethod } from '@/types'
-import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, availableSkills } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const PER_SKILL = 30
@@ -66,6 +66,10 @@ function answersOf(ex: Exercise): Answer[] {
   }
   if (ex.kind === 'mul-parts') numbers.push({ n: ex.partials[0], isAnswer: false }, { n: ex.partials[1], isAnswer: false })
   if (ex.kind === 'long-mul') for (const n of ex.partials) numbers.push({ n, isAnswer: false })
+  // Lengua: the tapped words are the answer (their text, whole words, any capitals). Articles too.
+  if (ex.kind === 'lng-tap-words' || ex.kind === 'lng-sentence-parts') {
+    for (const i of ex.targets) out.push({ label: `palabra «${ex.words[i]}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(ex.words[i])}(?![\\p{L}\\d])`, 'iu') })
+  }
   for (const { n, isAnswer } of numbers) {
     const answer = isAnswer ? n : undefined
     const plain = numberPattern(n)
@@ -116,7 +120,9 @@ function leaks(ex: Exercise): { level: number; text: string; answer: string }[] 
 }
 
 describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
-  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS)])].sort()
+  // Lengua: only the skills that have exercise kinds (the others, such as spelling, have none yet).
+  const lengua = availableSkills(LENGUA3_SYLLABUS).filter((s) => kindsForSkill(s).length > 0)
+  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS), ...lengua])].sort()
 
   it('the checker catches the answer in each written form and not inside a longer number', () => {
     const hit = (n: number, text: string) => numberPattern(n)!.test(text)

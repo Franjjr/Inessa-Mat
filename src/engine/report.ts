@@ -108,7 +108,7 @@ export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptReco
 
 // ------------------------------------------------------------------------------------------------ errors
 
-export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'despiste' | 'otros'
+export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'lengua' | 'despiste' | 'otros'
 
 /** The kinds of mistake of the plan (§6), each with what it means and what helps at home. */
 export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; advice: string }[] = [
@@ -149,6 +149,12 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
     advice: 'Partir una pizza o una hoja en partes iguales, y buscar figuras y ángulos rectos por casa.',
   },
   {
+    id: 'lengua',
+    label: 'Gramática de Lengua',
+    meaning: 'Confunde la clase de una palabra (sustantivo, adjetivo, verbo, artículo), el género, el número, el tiempo del verbo o el sujeto con el predicado.',
+    advice: 'Leer la frase en voz alta y preguntar: ¿quién hace la acción? ¿cuándo pasa? Cambiar una palabra de género o de número y decir cómo queda.',
+  },
+  {
     id: 'despiste',
     label: 'Despistes',
     meaning: 'Deja casillas sin completar, se pasa con el resto de la división o ve un error donde no lo hay.',
@@ -183,6 +189,9 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'geo-name': 'fracciones-geometria',
   'geo-perimeter': 'fracciones-geometria',
   'left-right': 'fracciones-geometria',
+  'word-class': 'lengua',
+  'word-form': 'lengua',
+  'sentence-part': 'lengua',
   'incomplete': 'despiste',
   'false-alarm': 'despiste',
   'remainder-too-big': 'despiste',

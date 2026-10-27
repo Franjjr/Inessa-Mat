@@ -93,4 +93,9 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'decimal-op': lazy(() => import('./views/DecimalOpView')),
   // ---- 3.º: ordinales hasta el 30
   ordinal: lazy(() => import('./views/OrdinalView')),
+  // ---- Lengua de 3.º: gramática (src/activities/views/lengua)
+  'lng-tap-words': lazy(() => import('./views/lengua/TapWordsView')),
+  'lng-sentence-parts': lazy(() => import('./views/lengua/TapWordsView')),
+  'lng-classify': lazy(() => import('./views/lengua/ClassifyView')),
+  'lng-transform': lazy(() => import('./views/lengua/TransformWordView')),
 }

@@ -9,6 +9,7 @@ import { refBorrowed, refCarries, refCarryCount, refZeroBorrow } from './helpers
 const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
 ]
 
 const len = (n: number) => String(n).length

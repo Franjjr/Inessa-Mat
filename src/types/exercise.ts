@@ -105,6 +105,10 @@ export type ExerciseKind =
   | 'ordinal'         // ordinales (3.º): the n-.º of a row, or the word and the number of an ordinal (num:ordinal:*)
   | 'decimal'         // décimas y centésimas: shade, read, compare, money (dec:shade|read:D, dec:compare, dec:money)
   | 'decimal-op'      // sumar y restar decimales en columna (dec:add|sub:D)
+  | 'lng-tap-words'   // Lengua 3.º: tocar las palabras de una clase en una frase (sustantivos, adjetivos, verbos, artículos)
+  | 'lng-sentence-parts' // Lengua 3.º: tocar el sujeto o el predicado de una frase (oracion:sujeto|predicado)
+  | 'lng-classify'    // Lengua 3.º: elegir la clase de una palabra (común/propio, género, número, tiempo del verbo)
+  | 'lng-transform'   // Lengua 3.º: escribir la palabra cambiada (en femenino, en plural, en pasado…)
 
 interface ExerciseBase {
   id: ID
@@ -523,7 +527,41 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise
+
+// ---- Lengua de 3.º: gramática (src/engine/lengua/grammar.ts; los bancos de palabras están en words.ts)
+
+/** Tap the words of one class in a sentence. The answer is every target, no more, no less. */
+export interface LngTapWordsExercise extends ExerciseBase {
+  kind: 'lng-tap-words'
+  wanted: 'sustantivo' | 'adjetivo' | 'verbo' | 'articulo'
+  words: string[]
+  /** Indexes of the words to tap, in order. */
+  targets: number[]
+}
+/** Tap the subject or the predicate of a sentence (oracion:sujeto, oracion:predicado). */
+export interface LngSentencePartsExercise extends ExerciseBase {
+  kind: 'lng-sentence-parts'
+  part: 'sujeto' | 'predicado'
+  words: string[]
+  targets: number[]
+}
+/** One word and the question about it; the child picks one of the options (options are shuffled; answer = index). */
+export interface LngClassifyExercise extends ExerciseBase {
+  kind: 'lng-classify'
+  word: string
+  question: string
+  options: string[]
+  answer: number
+}
+/** The word, changed as asked; the child types the changed word (answer, compared with 'exact'). */
+export interface LngTransformExercise extends ExerciseBase {
+  kind: 'lng-transform'
+  word: string
+  change: 'femenino' | 'singular' | 'plural' | 'pasado' | 'presente' | 'futuro'
+  answer: string
+}
+export type LenguaExercise = LngTapWordsExercise | LngSentencePartsExercise | LngClassifyExercise | LngTransformExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -707,6 +745,9 @@ export type ErrorType =
   | 'clock-hour'           // reloj: the hour is wrong (the hand that says the hour)
   | 'clock-minute'         // reloj: the minutes are wrong (the long hand, counted in fives)
   | 'clock-period'         // reloj de 24 h: the period of the day (mañana, tarde, noche) is wrong
+  | 'word-class'           // Lengua: the word is taken for another class (sustantivo, adjetivo, verbo, artículo, común/propio…)
+  | 'word-form'            // Lengua: the changed word is misspelt or in the wrong gender, number or tense
+  | 'sentence-part'        // Lengua: a word of the subject is taken for the predicate, or the other way round
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round
@@ -731,14 +772,14 @@ export interface CheckResult {
 export type HintVisual =
   | 'groups' | 'array' | 'dots-five-plus-one' | 'double-chain' | 'mirror' | 'nine-trick' | 'skip-count'
   | 'place-value' | 'carry' | 'borrow' | 'times-ten-minus' | 'share' | 'family' | 'none'
-  | 'clock' | 'time-line' | 'week' | 'units'
+  | 'clock' | 'time-line' | 'week' | 'units' | 'words'
 
 export interface Hint {
   level: 1 | 2 | 3            // 1 = strategy reminder, 2 = visual scaffold, 3 = worked step
   text: string                // template string
   visual: HintVisual
   /** Parameters for the visual (e.g. { a: 6, b: 7 }). */
-  params?: Record<string, number | string | number[]>
+  params?: Record<string, number | string | number[] | string[]>
 }
 
 /** Mental strategy (the "tricks" of the workbook) for a multiplication fact. */
