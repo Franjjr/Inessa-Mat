@@ -82,7 +82,7 @@ describe('ExerciseStep «No lo sé»', () => {
 
   it('records one wrong attempt with errorType dont-know, shows every hint («Así se hace») and then «Siguiente»', async () => {
     const user = userEvent.setup()
-    const { reportAttempt, onContinue } = renderStep({ allowDontKnow: true }) as ReturnType<typeof renderStep> & { onContinue: Mock }
+    const { reportAttempt, onContinue } = renderStep({ allowDontKnow: true })
     await user.click(screen.getByRole('button', { name: 'No lo sé' }))
     expect(reportAttempt).toHaveBeenCalledTimes(1)
     expect(reportAttempt.mock.calls[0][0]).toMatchObject({
@@ -113,7 +113,7 @@ describe('ExerciseStep «Inténtalo otra vez»', () => {
   it('a retry shows the same exercise again with the input cleared, and records the first answer with retries', async () => {
     const user = userEvent.setup()
     script.outcomes = [wrong(), right]
-    const { reportAttempt, onContinue } = renderStep({ allowRetry: true }) as ReturnType<typeof renderStep> & { onContinue: Mock }
+    const { reportAttempt, onContinue } = renderStep({ allowRetry: true })
     await user.click(screen.getByRole('button', { name: 'Responder' }))
     const mountsBefore = script.mounts
     await user.click(await screen.findByRole('button', { name: 'Inténtalo otra vez' }))
