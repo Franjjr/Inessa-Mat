@@ -316,7 +316,8 @@ export function recallReport(attempts: readonly AttemptRecord[], now: Date, minD
   const from = now.getTime() - windowDays * DAY_MS
   const bySkill = new Map<string, AttemptRecord[]>()
   for (const a of attempts) {
-    if (a.errorType === 'recognition') continue
+    // A retry row (graded: false) is practice, not a first answer: it is neither checked nor a memory of the past.
+    if (a.errorType === 'recognition' || a.graded === false) continue
     const list = bySkill.get(a.skill) ?? []
     list.push(a)
     bySkill.set(a.skill, list)

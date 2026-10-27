@@ -118,6 +118,15 @@ describe('recallReport', () => {
     ])
     expect(recallReport(list, now)).toEqual({ minDays: 14, checked: 3, remembered: 1 })
   })
+
+  it('an ungraded retry row neither counts as remembered nor acts as the earlier answer', () => {
+    const list = newestFirst([
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(30), correct: false, errorType: 'fact' }), // the graded past: wrong
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(20), correct: true, graded: false, retries: 1 }), // a retry row
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(3) }), // graded and right: would be «remembered» only via the retry row
+    ])
+    expect(recallReport(list, now)).toEqual({ minDays: 14, checked: 0, remembered: 0 })
+  })
 })
 
 describe('unclassified mistakes', () => {
