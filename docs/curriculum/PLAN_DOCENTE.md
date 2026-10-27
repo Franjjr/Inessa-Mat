@@ -164,11 +164,14 @@ Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinc
 
 **Dónde se abre:**
 
-- Con el botón grande **«Hoy»**: si el tema que toca tiene clase y el niño no la ha hecho, el botón dice «Hoy
-  aprendemos: <tema>» y abre la clase. Al acabarla, ofrece seguir con la sesión. Si el tema no tiene clase, «Hoy» abre
-  la sesión, como antes.
+- Con la tarjeta grande de «Hoy»: si el tema que toca tiene clase y el niño no la ha hecho, la tarjeta dice «Hoy
+  aprendemos» con el nombre del tema, y el botón **«¡Empezar la clase!»** abre la clase. Al acabarla, ofrece seguir con
+  la sesión. Si el tema no tiene clase o ya está hecha, la tarjeta dice «Mi sesión de hoy · 15 min» y abre la sesión.
 - En la **sesión**, en la tarjeta del tema nuevo, el botón **«Ver la clase otra vez»**.
-- El mapa de «Mi aventura» **no** enlaza las clases todavía.
+- En **«Jugar»**, la sección «Clases» lista las clases de los temas que el niño ya ha trabajado (dominados, el tema de
+  hoy o con la clase hecha), para repetirlas.
+- Las **8 clases que tienen lección en el mapa** también se repiten desde el mapa, en su nodo de lección (es la misma
+  lección). Las otras 10 solo salen desde «Jugar» y desde «Hoy» o la sesión.
 - Salir a mitad (con «Salir») no marca nada: la próxima vez la clase empieza de nuevo.
 
 **Saltar:**
