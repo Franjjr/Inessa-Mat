@@ -172,7 +172,7 @@ const restarCeros = clase({
   mapLessonId: 'w4-zero',
   para: [
     show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
-    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. Cuando no alcanza, pedimos prestado arriba. ¡Ojo con el cero!', 'ladybug'),
+    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. Cuando no alcanza, hay que pedir prestado arriba. ¡Ojo con el cero!', 'ladybug'),
   ],
   ejemplo: w4Zero.steps.slice(0, 4),
   guiada: [
@@ -363,10 +363,10 @@ const dividirRepartir = clase({
   ejemplo: [
     show('share', GEMAS, 'Vamos a repartir 12 gemas en 3 cofres. Las pongo de una en una, sin saltarme ningún cofre.'),
     show('share', GEMAS, 'Ya están repartidas: a cada cofre le ha tocado lo mismo.'),
-    show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres, cuatro»: cada cofre tiene 4 gemas.'),
+    show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres es cuatro»: cada cofre tiene 4 gemas.'),
   ],
   guiada: [
-    tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
+    tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos les toca lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
     tryIt('share', GEMAS, '¡Otra! ¿Qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
   ],
   sola: [
@@ -407,7 +407,6 @@ const dividirResto = clase({
   id: 'c3-div-resto',
   topicId: 'div-resto',
   title: 'Dividir y sobrar',
-  mapLessonId: 'w8-galera',
   para: [
     show('place-value', { n: 17 }, 'En el campamento hay 17 sándwiches para la excursión.', 'ladybug'),
     show('place-value', { n: 17 }, 'Las bandejas caben 5 sándwiches. ¿Cuántas bandejas llenas salen y cuántos sobran? Dividimos 17 ÷ 5.', 'ladybug'),
