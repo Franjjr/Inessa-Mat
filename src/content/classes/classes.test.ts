@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { COMPLETION_STARS, initialProgress, isNodeUnlocked } from '@/content'
+import { COMPLETION_STARS, getLesson, initialProgress, isNodeUnlocked } from '@/content'
 import type { SyllabusTopic } from '@/content'
 import { topicTitle } from '@/content/syllabus/helpers'
 import { w4Borrow } from '@/content/lessons/w4'
 import { tryIt } from '@/content/lessons/dsl'
-import { clase, classForTopic, isClassDone, markClassDone } from './index'
+import { syllabusForGrade } from '@/content/syllabus'
+import { generate } from '@/engine'
+import { clase, CLASSES, classForTopic, isClassDone, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
 
@@ -65,8 +67,47 @@ describe('isClassDone / markClassDone', () => {
 })
 
 describe('classForTopic', () => {
-  it('finds a class by its syllabus topic (none in the empty registry)', () => {
-    expect(classForTopic('resta-3d-prestando')).toBeUndefined()
+  it('finds a class by its syllabus topic, and none for a topic without one', () => {
+    expect(classForTopic('resta-3d-prestando')?.topicId).toBe('resta-3d-prestando')
+    expect(classForTopic('igualdad')).toBeUndefined()
+  })
+})
+
+describe('clases de sumar y restar (3.º)', () => {
+  const syllabus = syllabusForGrade(3)
+  const topicIds = ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d']
+
+  it('sumar y restar have their classes', () => {
+    for (const id of topicIds) expect(classForTopic(id), id).toBeDefined()
+  })
+
+  it('every class keeps the five-phase shape and its tries generate exercises of its own topic', () => {
+    expect(new Set(CLASSES.map((c) => c.lesson.id)).size).toBe(CLASSES.length)
+    for (const cls of CLASSES) {
+      const { phases, lesson } = cls
+      expect(phases.para, cls.lesson.id).toBeGreaterThanOrEqual(1)
+      expect(phases.para, cls.lesson.id).toBeLessThanOrEqual(2)
+      expect(phases.ejemplo, cls.lesson.id).toBeGreaterThanOrEqual(3)
+      expect(phases.ejemplo, cls.lesson.id).toBeLessThanOrEqual(6)
+      expect(phases.guiada, cls.lesson.id).toBe(2)
+      expect(phases.sola, cls.lesson.id).toBeGreaterThanOrEqual(3)
+      expect(phases.sola, cls.lesson.id).toBeLessThanOrEqual(4)
+      expect(phases.cierre).toBe(1)
+
+      const block = syllabus.blocks.find((b) => b.topics.some((t) => t.id === cls.topicId))
+      expect(block, cls.topicId).toBeDefined()
+      const earlier = block!.topics.slice(0, block!.topics.findIndex((t) => t.id === cls.topicId))
+      const allowed = new Set([...earlier.flatMap((t) => t.skills), ...block!.topics.find((t) => t.id === cls.topicId)!.skills])
+
+      if (cls.mapLessonId) expect(getLesson(cls.mapLessonId), cls.lesson.id).toBeDefined()
+
+      const tries = lesson.steps.filter((s) => s.interaction === 'try')
+      expect(tries.length, cls.lesson.id).toBe(phases.guiada + phases.sola)
+      for (const step of tries) {
+        const [exercise] = generate(step.trySelector!, 1)
+        expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill}`).toBe(true)
+      }
+    }
   })
 })
 
