@@ -337,11 +337,12 @@ async function upgradeLegacy(pin: string, ownerId: string | undefined): Promise<
     kept as a tombstone so no other device brings the old PIN back. */
 export async function clearAdultPin(): Promise<void> {
   const owner = signedInId()
-  const local = await readLocal()
-  if (!owner || (local && local.ownerId !== owner)) {
+  if (!owner) {
     await deleteMeta(META.adultPin)
     return
   }
+  // Always a tombstone for the signed-in user, whatever the owner of the local record: an unowned record must not
+  // leave the account's PIN (set on another device) to come back on the next sign-in.
   const at = new Date().toISOString()
   const marker: LocalClear = { cleared: true, at, ownerId: owner }
   await setMeta(META.adultPin, marker)

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { hasAdultPin, setAdultPin, verifyAdultPin, clearAdultPin, readAdultGateLock, writeAdultGateLock, DataError } from '@/data'
 import { signInWithPassword } from '../account'
-import { wipeLocalDatabase } from '../db'
+import { db, wipeLocalDatabase } from '../db'
 import { toDataError } from '../errors'
 import { META, getMeta, setMeta } from '../meta'
 import { sha256, sha256Sync, toBase64, toHex } from '../sha256'
@@ -242,20 +242,58 @@ describe('adult PIN on the account', () => {
     expect(accountHash(0)).toBe((await localPin())!.hash)
   })
 
-  it('a PIN set while signed out is never sent to an account; signing in adopts that account PIN if it has one', async () => {
+  it('a PIN set while signed out is never sent to an account; signing in adopts the account PIN when it has one', async () => {
     fake.auth.addUser(OTHER, PASSWORD, { display_name: 'Jose' })
+    await setAdultPin('2468') // Inés's account now holds a PIN
+    expect(accountHash(0)).toBeDefined()
+
     resetAuthStore({ status: 'local-only' })
     await setAdultPin('9999') // made while signed out: no owner
-    expect(await getMeta(META.adultPin)).not.toHaveProperty('ownerId')
+    expect(await localPin()).not.toHaveProperty('ownerId')
 
-    await signInWithPassword(OTHER, PASSWORD) // empty account: nothing is pushed
+    await signInWithPassword(OTHER, PASSWORD) // Jose's account is empty: nothing is pushed
     expect(accountValue(1)).toBeUndefined()
     expect(await verifyAdultPin('9999')).toBe(true)
 
-    await setAdultPin('2468') // Jose's own PIN, owned by Jose
-    await signInWithPassword(EMAIL, PASSWORD) // Inés's account has a PIN: adopted
+    await signInWithPassword(EMAIL, PASSWORD) // Inés's account has a PIN: adopted, the unowned one is replaced
+    expect((await localPin())!.hash).toBe(accountHash(0))
     expect(await verifyAdultPin('2468')).toBe(true)
     expect(await verifyAdultPin('9999')).toBe(false)
+    expect(await localPin()).toMatchObject({ ownerId: ownerId() })
+  })
+
+  it('clearing with an unowned local record leaves a tombstone, so an account PIN is not adopted back', async () => {
+    await setAdultPin('2468')
+    const otherDevicePin = { ...accountValue() }
+    delete fake.auth.users[0].user_metadata.adult_pin // the account starts with no PIN
+
+    resetAuthStore({ status: 'local-only' })
+    await setAdultPin('9999') // unowned local record, kept device-only
+    await signInWithPassword(EMAIL, PASSWORD) // account empty: nothing is pushed
+    expect(await verifyAdultPin('9999')).toBe(true)
+    expect(accountValue()).toBeUndefined()
+
+    fake.auth.users[0].user_metadata.adult_pin = otherDevicePin // another device sets a PIN meanwhile
+    await clearAdultPin() // this device clears its own (unowned) PIN
+    expect(accountValue()).toMatchObject({ cleared: true, at: expect.any(String) })
+    expect(await hasAdultPin()).toBe(false)
+
+    await signInWithPassword(EMAIL, PASSWORD) // a later sign-in must not adopt the old account PIN
+    expect(await hasAdultPin()).toBe(false)
+  })
+
+  it('a failing reconcile does not blank the signed-in account', async () => {
+    const spy = vi.spyOn(db.meta, 'get').mockImplementation((async (key: unknown) => {
+      if (key === META.adultPin) throw new Error('boom')
+      return undefined
+    }) as never)
+    try {
+      await signInWithPassword(EMAIL, PASSWORD)
+    } finally {
+      spy.mockRestore()
+    }
+    expect(getAuth()).toMatchObject({ status: 'signed-in', offline: false })
+    expect(getAuth().profile).not.toBeNull()
   })
 
   it('an offline clear is sent on the next sign-in, and a stale device cannot bring the old PIN back', async () => {
@@ -304,8 +342,8 @@ describe('adult PIN on the account', () => {
     __setAccountTimeoutForTests(30)
     fake.auth.getUserDelayMs = 400
     const started = Date.now()
-    expect(await hasAdultPin()).toBe(true)
-    expect(await verifyAdultPin('2468')).toBe(true)
+    expect(await hasAdultPin()).toBe(true) // only the account read is timed: verify also runs PBKDF2
     expect(Date.now() - started).toBeLessThan(300)
+    expect(await verifyAdultPin('2468')).toBe(true)
   })
 })
