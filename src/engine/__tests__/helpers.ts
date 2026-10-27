@@ -104,6 +104,19 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'choice', index: ex.answer }
     case 'lng-transform':
       return { type: 'text', value: ex.answer }
+    case 'lng-missing-letter':
+      return ex.mode === 'type' ? { type: 'text', value: ex.answer } : { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-punctuation':
+    case 'lng-dictation':
+      return { type: 'text', value: ex.answer }
+    case 'lng-stress':
+      return { type: 'marks', marked: [ex.stressed] }
+    case 'lng-syllables':
+      return { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-alphabet':
+      return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-pair-words':
+      return ex.mode === 'text' ? { type: 'text', value: ex.answer } : { type: 'choice', index: ex.options.indexOf(ex.answer) }
     default:
       return { type: 'number', value: ex.answer as number }
   }

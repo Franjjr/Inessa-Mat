@@ -1,7 +1,7 @@
 /* Lengua de 3.º grammar exercises: every skill × kind pair generates, its right answer is accepted, its wrong answers are
    caught with an error type, the hints come in three levels, and the verb tense of the sentences follows the skill. */
 import { describe, expect, it } from 'vitest'
-import { check, createRng, generate, GRAMMAR_SKILLS, grammarStatement, hintsFor, kindsForSkill } from '@/engine'
+import { check, createRng, generate, GRAMMAR_SKILLS, hintsFor, kindsForSkill, lenguaStatement } from '@/engine'
 import type { Answer, ExerciseKind, LenguaExercise, LngSentencePartsExercise, LngTapWordsExercise, LngTransformExercise } from '@/types'
 import { correctAnswer } from '../../__tests__/helpers'
 import { generoOf } from '../grammar'
@@ -32,7 +32,7 @@ describe('Lengua grammar exercises: every skill and kind', () => {
       expect(ex.skill).toBe(skill)
       expect(check(ex, correctAnswer(ex)).correct, `${ex.id}`).toBe(true)
       expect(hintsFor(ex).map((h) => h.level), ex.id).toEqual([1, 2, 3])
-      expect(grammarStatement(ex).length, ex.id).toBeGreaterThan(5)
+      expect(lenguaStatement(ex).length, ex.id).toBeGreaterThan(5)
     }
   })
 

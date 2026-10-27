@@ -60,7 +60,8 @@ export type { WordTemplate } from './wordProblems'
 export { columnName } from './feedback'
 /** Lengua de 3.º, gramática: the exercises, their prompts, check and hints (src/engine/lengua). */
 export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
-export { GRAMMAR_SKILLS } from './skills'
+export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'
+export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {
   DEFAULT_METHOD, DIV_METHODS, isDivMethod, isSubMethod, isTableMethod, methodLabel, methodsOf, METHODS, normaliseDivMethod,

@@ -15,6 +15,7 @@ const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
   'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
+  'lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words',
 ]
 
 describe('check — correct answers are always accepted', () => {

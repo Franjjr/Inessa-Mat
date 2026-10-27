@@ -33,7 +33,7 @@ import { checkArea } from './geometry'
 import { checkPosition } from './position'
 import { WORD_SENSE_SKILL } from './skills'
 import { checkSense } from './wordProblems'
-import { checkGrammar } from './lengua/grammar'
+import { checkLengua } from './lengua/exercises'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -601,6 +601,13 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'lng-tap-words':
     case 'lng-sentence-parts':
     case 'lng-classify':
-    case 'lng-transform': return checkGrammar(exercise, answer)
+    case 'lng-transform':
+    case 'lng-missing-letter':
+    case 'lng-punctuation':
+    case 'lng-stress':
+    case 'lng-syllables':
+    case 'lng-dictation':
+    case 'lng-alphabet':
+    case 'lng-pair-words': return checkLengua(exercise, answer)
   }
 }

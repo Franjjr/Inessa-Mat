@@ -26,7 +26,7 @@ import { divisionParts } from './divParts'
 import { TABLE_METHODS } from './methods'
 import { fractionHints } from './fractions'
 import { geometryHints } from './geometry'
-import { hintsGrammar } from './lengua/grammar'
+import { hintsLengua } from './lengua/exercises'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
@@ -421,7 +421,14 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'lng-tap-words':
     case 'lng-sentence-parts':
     case 'lng-classify':
-    case 'lng-transform': return hintsGrammar(ex)
+    case 'lng-transform':
+    case 'lng-missing-letter':
+    case 'lng-punctuation':
+    case 'lng-stress':
+    case 'lng-syllables':
+    case 'lng-dictation':
+    case 'lng-alphabet':
+    case 'lng-pair-words': return hintsLengua(ex)
   }
 }
 

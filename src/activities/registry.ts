@@ -98,4 +98,11 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'lng-sentence-parts': lazy(() => import('./views/lengua/TapWordsView')),
   'lng-classify': lazy(() => import('./views/lengua/ClassifyView')),
   'lng-transform': lazy(() => import('./views/lengua/TransformWordView')),
+  'lng-missing-letter': lazy(() => import('./views/lengua/MissingLetterView')),
+  'lng-punctuation': lazy(() => import('./views/lengua/PunctuationView')),
+  'lng-stress': lazy(() => import('./views/lengua/SyllableView')),
+  'lng-syllables': lazy(() => import('./views/lengua/SyllableView')),
+  'lng-dictation': lazy(() => import('./views/lengua/DictationView')),
+  'lng-alphabet': lazy(() => import('./views/lengua/OrderWordsView')),
+  'lng-pair-words': lazy(() => import('./views/lengua/PairWordsView')),
 }

@@ -3,7 +3,7 @@
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
 import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf, strategyForFact } from '@/engine'
-import type { DivMethod, Exercise, Hint, SubMethod, TableMethod } from '@/types'
+import type { DivMethod, Exercise, Hint, LenguaExercise, SubMethod, TableMethod } from '@/types'
 import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -40,9 +40,26 @@ function wholeToken(alternatives: string[]): RegExp {
 /** An answer the child must write: its pattern, its label, and the number it is when it is the exercise's answer. */
 interface Answer { label: string; pattern: RegExp; answer?: number }
 
+/** Lengua (3.º), the kinds added with spelling, syllables, dictation and vocabulary: the text the child writes or taps. */
+const LENGUA_TEXT_KINDS = ['lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words']
+function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
+  const text = (t: string): Answer => ({ label: `«${t}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(t)}(?![\\p{L}\\d])`, 'iu') })
+  switch (ex.kind) {
+    case 'lng-missing-letter': return [text(ex.answer)]
+    case 'lng-punctuation':
+    case 'lng-dictation':
+    case 'lng-pair-words': return [text(ex.answer)]
+    case 'lng-stress': return [text(ex.syllables[ex.stressed])]
+    case 'lng-syllables': return [text(ex.answer)]
+    case 'lng-alphabet': return ex.targets.map((i) => text(ex.words[i]))
+    default: return []
+  }
+}
+
 /** The numbers and texts the child must write for this exercise. */
 function answersOf(ex: Exercise): Answer[] {
   const out: Answer[] = []
+  if (LENGUA_TEXT_KINDS.includes(ex.kind)) return lenguaAnswersOf(ex as LenguaExercise)
   const numbers: { n: number; isAnswer: boolean }[] = []
   const add = (v: unknown, isAnswer = false) => {
     if (typeof v === 'number') numbers.push({ n: v, isAnswer })

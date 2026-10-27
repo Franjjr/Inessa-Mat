@@ -48,12 +48,13 @@ describe('temario de Lengua de 3.º', () => {
     }
   })
 
-  it('the grammar skills have exercise kinds; the other areas have none yet (their tasks add them)', () => {
-    // Letras, sílabas y palabras (gram:silabas) has no grammar kind yet: the brief gives Task 4 four kinds, none for syllables.
-    const grammar = skills.filter((s) => s.startsWith('lng:gram:') && s !== 'lng:gram:silabas')
-    expect(grammar.length).toBeGreaterThan(0)
-    for (const s of grammar) expect(kindsForSkill(s).length, s).toBeGreaterThan(0)
-    for (const s of skills.filter((k) => !grammar.includes(k))) expect(kindsForSkill(s), s).toEqual([])
+  it('the grammar, spelling, syllable, dictation and vocabulary skills have exercise kinds; reading, literature, copy and guided writing have none yet', () => {
+    // Lectura, literatura, copia y escritura guiada llegan en sus tareas: sin tipo de ejercicio por ahora.
+    const practised = (k: string) => /^lng:(gram|orto|voc):|^lng:escr:dictado$/.test(k)
+    const withKinds = skills.filter(practised)
+    expect(withKinds.length).toBeGreaterThan(0)
+    for (const s of withKinds) expect(kindsForSkill(s).length, s).toBeGreaterThan(0)
+    for (const s of skills.filter((k) => !practised(k))) expect(kindsForSkill(s), s).toEqual([])
   })
 
   it('teaches every topic in exactly one stage, eight stages over three trimesters, with no world', () => {

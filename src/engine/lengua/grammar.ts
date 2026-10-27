@@ -11,6 +11,9 @@ import { parseSkill, type ParsedSkill } from '../skills'
 import { compareText, normalizeAnswer } from './text'
 import { ADJECTIVES, NOUNS, PROPER_NAMES, SENTENCES, VERBS, wordClass, type Noun, type Tense, type Verb } from './words'
 
+/** The grammar kinds of this file (the other Lengua kinds are in spelling.ts, syllables.ts and vocabulary.ts). */
+export type GrammarExercise = Extract<LenguaExercise, { kind: 'lng-tap-words' | 'lng-sentence-parts' | 'lng-classify' | 'lng-transform' }>
+
 type Wanted = LngTapWordsExercise['wanted']
 type Change = LngTransformExercise['change']
 
@@ -114,7 +117,7 @@ function genTransform(item: Item, skill: SkillKey, rng: Rng): LngTransformExerci
 }
 
 /** The exercise a Lengua skill makes for one of its kinds. Throws when the kind does not practise the skill. */
-export function buildGrammar(kind: ExerciseKind, skill: SkillKey, rng: Rng): LenguaExercise {
+export function buildGrammar(kind: ExerciseKind, skill: SkillKey, rng: Rng): GrammarExercise {
   const p = parseSkill(skill)
   if (!p || p.type !== 'lengua') throw new Error(`grammar: '${skill}' is not a Lengua skill`)
   switch (kind) {
@@ -144,7 +147,7 @@ const PART_PROMPT = {
 }
 
 /** What the child is asked, as the view says it (the classify word and the transform word are shown apart). */
-export function grammarPrompt(ex: LenguaExercise): string {
+export function grammarPrompt(ex: GrammarExercise): string {
   switch (ex.kind) {
     case 'lng-tap-words': return TAP_PROMPT[ex.wanted]
     case 'lng-sentence-parts': return PART_PROMPT[ex.part]
@@ -154,7 +157,7 @@ export function grammarPrompt(ex: LenguaExercise): string {
 }
 
 /** One line for the daily plan and for the adults' reports. */
-export function grammarStatement(ex: LenguaExercise): string {
+export function grammarStatement(ex: GrammarExercise): string {
   switch (ex.kind) {
     case 'lng-tap-words':
     case 'lng-sentence-parts': return `${grammarPrompt(ex)}: ${ex.words.join(' ')}`
@@ -208,7 +211,7 @@ function checkTransform(ex: LngTransformExercise, answer: Answer): CheckResult {
 }
 
 /** Checks a typed or tapped answer of a Lengua exercise. */
-export function checkGrammar(ex: LenguaExercise, answer: Answer): CheckResult {
+export function checkGrammar(ex: GrammarExercise, answer: Answer): CheckResult {
   switch (ex.kind) {
     case 'lng-tap-words':
     case 'lng-sentence-parts': return checkTap(ex, answer)
@@ -373,7 +376,7 @@ function transformChips(ex: LngTransformExercise): string[] {
 }
 
 /** Three hints, from the idea to the step before the answer. None names the word or the answer. */
-export function hintsGrammar(ex: LenguaExercise): Hint[] {
+export function hintsGrammar(ex: GrammarExercise): Hint[] {
   switch (ex.kind) {
     case 'lng-tap-words': {
       const [a, b, c] = TAP_TEXT[ex.wanted]

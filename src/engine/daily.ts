@@ -12,7 +12,7 @@ import { availableSkills, behindTopics, currentTopic, type Syllabus, type Syllab
 import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
-import { grammarStatement } from './lengua/grammar'
+import { lenguaStatement } from './lengua/exercises'
 import { hintsFor } from './hints'
 import { fmt, numberWords, roundWords } from './numeric'
 import { moneyStatement } from './money'
@@ -55,6 +55,8 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
   'long-mul': 90, ordinal: 20, decimal: 40, 'decimal-op': 60,
   'lng-tap-words': 25, 'lng-sentence-parts': 30, 'lng-classify': 15, 'lng-transform': 30,
+  'lng-missing-letter': 20, 'lng-punctuation': 40, 'lng-stress': 15, 'lng-syllables': 20, 'lng-dictation': 35,
+  'lng-alphabet': 30, 'lng-pair-words': 20,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -151,7 +153,9 @@ export function statementOf(ex: Exercise): string {
     case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
     case 'decimal': return decimalStatement(ex)
     case 'decimal-op': return `${fmtDecimal(ex.left, ex.places)} ${ex.op === 'add' ? '+' : '−'} ${fmtDecimal(ex.right, ex.places)} = ?`
-    case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': return grammarStatement(ex)
+    case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
+    case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words':
+      return lenguaStatement(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`

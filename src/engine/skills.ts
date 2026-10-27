@@ -516,28 +516,50 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
   return []
 }
 
-/** The Lengua grammar skills (lng:gram:…) and the kinds that practise each one, the first being the default
-    (src/engine/lengua/grammar.ts). Other Lengua areas have no exercise kinds yet. */
+/** The Lengua kinds of each skill (src/engine/lengua). Skills with no kind yet (copia, guiada, lectura, literatura) are
+    listed in the syllabus and practised later. */
 function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[] {
-  if (p.area !== 'gram') return []
-  switch (p.item) {
-    case 'sustantivo':
-      if (p.level === 'clase') return ['lng-classify', 'lng-tap-words']
-      return ['lng-classify', 'lng-transform', 'lng-tap-words']
-    case 'articulo': return ['lng-tap-words']
-    case 'adjetivo': return ['lng-tap-words', 'lng-transform']
-    case 'verbo': return ['lng-tap-words', 'lng-classify', 'lng-transform']
-    case 'oracion': return ['lng-sentence-parts']
+  switch (p.area) {
+    case 'gram':
+      switch (p.item) {
+        case 'sustantivo':
+          if (p.level === 'clase') return ['lng-classify', 'lng-tap-words']
+          return ['lng-classify', 'lng-transform', 'lng-tap-words']
+        case 'articulo': return ['lng-tap-words']
+        case 'adjetivo': return ['lng-tap-words', 'lng-transform']
+        case 'verbo': return ['lng-tap-words', 'lng-classify', 'lng-transform']
+        case 'oracion': return ['lng-sentence-parts']
+        case 'silabas': return ['lng-syllables']
+        default: return []
+      }
+    case 'orto':
+      if (p.item === 'tonica') return ['lng-stress']
+      if (p.item === 'signos') return ['lng-punctuation']
+      if (['c-qu', 'g-gu', 'r-rr', 'mp-mb', 'mayusculas'].includes(p.item)) return ['lng-missing-letter']
+      return []
+    case 'voc':
+      if (p.item === 'abecedario') return ['lng-alphabet']
+      if (['sinonimos', 'antonimos', 'familias', 'diminutivos', 'aumentativos', 'compuestas'].includes(p.item)) return ['lng-pair-words']
+      return []
+    case 'escr':
+      return p.item === 'dictado' ? ['lng-dictation'] : []
     default: return []
   }
 }
 
-/** Every grammar skill of Lengua (lng:gram:…), for the skill universe of a kind. */
-export const GRAMMAR_SKILLS: SkillKey[] = [
+/** Every Lengua skill of the syllabus that has an exercise kind, for the skill universe of a kind. */
+export const LENGUA_SKILLS: SkillKey[] = [
   'lng:gram:sustantivo:clase', 'lng:gram:sustantivo:genero', 'lng:gram:sustantivo:numero', 'lng:gram:articulo',
   'lng:gram:adjetivo', 'lng:gram:verbo:presente', 'lng:gram:verbo:pasado', 'lng:gram:verbo:futuro',
-  'lng:gram:oracion:sujeto', 'lng:gram:oracion:predicado',
+  'lng:gram:oracion:sujeto', 'lng:gram:oracion:predicado', 'lng:gram:silabas',
+  'lng:orto:mayusculas', 'lng:orto:c-qu', 'lng:orto:g-gu', 'lng:orto:r-rr', 'lng:orto:mp-mb', 'lng:orto:tonica',
+  'lng:orto:signos:punto', 'lng:orto:signos:coma', 'lng:orto:signos:pregunta', 'lng:orto:signos:exclamacion',
+  'lng:voc:abecedario', 'lng:voc:sinonimos', 'lng:voc:antonimos', 'lng:voc:familias', 'lng:voc:diminutivos',
+  'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:dictado',
 ]
+
+/** The grammar skills (lng:gram:…) of the grammar kinds, the first kind of each being its default. */
+export const GRAMMAR_SKILLS: SkillKey[] = LENGUA_SKILLS.filter((k) => k.startsWith('lng:gram:'))
 
 /** A multiplication fact can be practised as a doubling chain when one factor is 4 (2 doublings) or 8 (3). */
 export function canDoubleChain(a: number, b: number): boolean {

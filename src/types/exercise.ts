@@ -109,6 +109,13 @@ export type ExerciseKind =
   | 'lng-sentence-parts' // Lengua 3.º: tocar el sujeto o el predicado de una frase (oracion:sujeto|predicado)
   | 'lng-classify'    // Lengua 3.º: elegir la clase de una palabra (común/propio, género, número, tiempo del verbo)
   | 'lng-transform'   // Lengua 3.º: escribir la palabra cambiada (en femenino, en plural, en pasado…)
+  | 'lng-missing-letter' // Lengua 3.º: la letra que falta (c/qu, g/gu/gü, r/rr, mp/mb, mayúscula inicial): elegir o escribir la palabra
+  | 'lng-punctuation' // Lengua 3.º: escribir la frase con sus signos (. , ¿? ¡!)
+  | 'lng-stress'      // Lengua 3.º: tocar la sílaba fuerte de una palabra (orto:tonica)
+  | 'lng-syllables'   // Lengua 3.º: contar las sílabas de una palabra, o elegir su separación en sílabas (gram:silabas)
+  | 'lng-dictation'   // Lengua 3.º: escribir lo que dice la voz de la app (una palabra o una frase)
+  | 'lng-alphabet'    // Lengua 3.º: ordenar palabras por el abecedario (voc:abecedario)
+  | 'lng-pair-words'  // Lengua 3.º: sinónimos, antónimos, familias, diminutivos, aumentativos, compuestas (voc:*)
 
 interface ExerciseBase {
   id: ID
@@ -561,7 +568,63 @@ export interface LngTransformExercise extends ExerciseBase {
   change: 'femenino' | 'singular' | 'plural' | 'pasado' | 'presente' | 'futuro'
   answer: string
 }
+
+/** The letters missing from a word (c/qu, g/gu/gü, r/rr, mp/mb, mayúscula inicial). `shown` has one «_» per missing letter.
+    mode 'choose': the child taps the letters (options; answer is the right group). mode 'type': the child writes the whole
+    word (answer is the word, compared with 'exact'). */
+export interface LngMissingLetterExercise extends ExerciseBase {
+  kind: 'lng-missing-letter'
+  /** The word, written right (the hints use it; it is never shown in the exercise before the answer). */
+  word: string
+  shown: string
+  mode: 'choose' | 'type'
+  options: string[]
+  answer: string
+}
+/** A sentence without its marks (the capitals stay). The child writes it again with . , ¿? ¡! (compared with 'exact'). */
+export interface LngPunctuationExercise extends ExerciseBase {
+  kind: 'lng-punctuation'
+  bare: string
+  answer: string
+}
+/** A word cut into syllables; the child taps the stressed one (answer = syllables[stressed]). */
+export interface LngStressExercise extends ExerciseBase {
+  kind: 'lng-stress'
+  word: string
+  syllables: string[]
+  stressed: number
+}
+/** count: how many syllables the word has; split: which of the splits is right. options shuffled, answer = the right one. */
+export interface LngSyllablesExercise extends ExerciseBase {
+  kind: 'lng-syllables'
+  word: string
+  mode: 'count' | 'split'
+  options: string[]
+  answer: string
+}
+/** The app says `answer` (TTS); the child writes it. A sentence is compared with 'exact', one word with 'ignore-case'. */
+export interface LngDictationExercise extends ExerciseBase {
+  kind: 'lng-dictation'
+  answer: string
+}
+/** Words to put in alphabetical order. words are shown shuffled; targets are their indexes in alphabetical order. */
+export interface LngAlphabetExercise extends ExerciseBase {
+  kind: 'lng-alphabet'
+  words: string[]
+  targets: number[]
+}
+/** A question about a word (synonym, antonym, family, diminutive, augmentative, compound). mode 'choice': the child taps
+    options (answer is the right one); mode 'text': the child writes the word (answer, compared with 'ignore-case'). */
+export interface LngPairWordsExercise extends ExerciseBase {
+  kind: 'lng-pair-words'
+  question: string
+  mode: 'choice' | 'text'
+  options: string[]
+  answer: string
+}
 export type LenguaExercise = LngTapWordsExercise | LngSentencePartsExercise | LngClassifyExercise | LngTransformExercise
+  | LngMissingLetterExercise | LngPunctuationExercise | LngStressExercise | LngSyllablesExercise | LngDictationExercise
+  | LngAlphabetExercise | LngPairWordsExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -748,6 +811,14 @@ export type ErrorType =
   | 'word-class'           // Lengua: the word is taken for another class (sustantivo, adjetivo, verbo, artículo, común/propio…)
   | 'word-form'            // Lengua: the changed word is misspelt or in the wrong gender, number or tense
   | 'sentence-part'        // Lengua: a word of the subject is taken for the predicate, or the other way round
+  | 'spelling'            // Lengua: a letter missing or wrong (c/qu, g/gu/gü, r/rr, mp/mb)
+  | 'capital'             // Lengua: a capital letter missing or in the wrong place
+  | 'punctuation'         // Lengua: a mark missing or in the wrong place (. , ¿? ¡!)
+  | 'stress'              // Lengua: the wrong syllable tapped as the stressed one
+  | 'syllable'            // Lengua: the wrong number of syllables or a wrong split
+  | 'dictation'           // Lengua: what was heard was written wrongly
+  | 'alphabet'            // Lengua: the words are out of alphabetical order
+  | 'word-pair'           // Lengua: the wrong synonym, antonym, family member or form
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round

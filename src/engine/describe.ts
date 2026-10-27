@@ -238,6 +238,14 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'word-class': 'Confunde la clase de palabra (sustantivo, adjetivo, verbo o artículo, o común y propio)',
   'word-form': 'Escribe mal la palabra cambiada: el género, el número o el tiempo, o la tilde',
   'sentence-part': 'Confunde el sujeto con el predicado',
+  'spelling': 'Escribe mal una letra: c/qu, g/gu/gü, r/rr o mp/mb',
+  'capital': 'Olvida una mayúscula o la pone donde no va',
+  'punctuation': 'Pone mal los signos o no los pone',
+  'stress': 'Toca otra sílaba como la fuerte',
+  'syllable': 'Cuenta mal las sílabas o las corta mal',
+  'dictation': 'Escribe mal lo que oye',
+  'alphabet': 'Ordena mal las palabras del abecedario',
+  'word-pair': 'Confunde sinónimos, antónimos, familias o la forma de la palabra',
 }
 
 /** Spanish description of an error type for adult dashboards. */
