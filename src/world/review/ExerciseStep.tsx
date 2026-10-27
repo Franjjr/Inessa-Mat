@@ -15,6 +15,14 @@ import { Button } from '@/ui'
 import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
+/** An attempt waiting to be reported: the outcome and the retry facts. graded: false for a retry row (see handleAnswered). */
+interface PendingAttempt {
+  outcome: ExerciseOutcome
+  retries: number
+  solvedOnRetry: boolean
+  graded: boolean
+}
+
 export interface ExerciseStepProps {
   exercise: Exercise
   allowHints: boolean
@@ -54,7 +62,9 @@ export function ExerciseStep({
   const stageRef = useRef<Stage>('asking')
   const first = useRef<ExerciseOutcome | null>(null)
   /** The attempt waiting to be reported: sent once, when the step is finished (or left). */
-  const pending = useRef<{ outcome: ExerciseOutcome; retries: number; solvedOnRetry: boolean } | null>(null)
+  const pending = useRef<PendingAttempt | null>(null)
+  /** The first answer has been reported as graded: a later retry can only add its own ungraded row. */
+  const firstSent = useRef(false)
   const startedAt = useRef(now())
   const hostRef = useRef(host)
   hostRef.current = host
@@ -72,8 +82,10 @@ export function ExerciseStep({
   const send = () => {
     const p = pending.current
     pending.current = null
-    if (!p || !reportRef.current) return
-    const { outcome: o, retries, solvedOnRetry } = p
+    if (!p) return
+    if (p.graded) firstSent.current = true
+    if (!reportRef.current) return
+    const { outcome: o, retries, solvedOnRetry, graded } = p
     const attempt: AttemptInput = {
       exercise: exRef.current,
       check: o.check,
@@ -83,6 +95,7 @@ export function ExerciseStep({
       recognitionFixes: o.recognitionFixes,
       ...(retries ? { retries } : {}),
       ...(solvedOnRetry ? { solvedOnRetry } : {}),
+      ...(graded ? {} : { graded: false }),
       // The method the child used (subtraction, division or the tables trick): the adult report counts it.
       ...(o.method ? { method: o.method } : {}),
     }
@@ -90,6 +103,7 @@ export function ExerciseStep({
   }
 
   // A step left in the middle (pause, exit, the app closed or hidden) still keeps its first answer.
+  // The [] deps are intentional: the listeners are installed once, and send() reads only refs, so nothing goes stale.
   useEffect(() => {
     const onHide = () => send()
     const onVisibility = () => { if (document.visibilityState === 'hidden') send() }
@@ -108,10 +122,9 @@ export function ExerciseStep({
     if (view === 0) return
     const root = viewRef.current
     if (!root) return
-    const target = root.querySelector<HTMLElement>('input:not([disabled]), textarea, [role="textbox"]')
-    if (target) {
-      target.focus()
-    } else {
+    // Only focusable controls: a display-only cell (no tabindex) would not take the focus.
+    root.querySelector<HTMLElement>('input:not([disabled]), textarea, [role="textbox"]:not([aria-disabled="true"]), [tabindex]:not([tabindex="-1"])')?.focus()
+    if (!root.contains(document.activeElement)) {
       root.tabIndex = -1
       root.focus()
     }
@@ -133,7 +146,7 @@ export function ExerciseStep({
       first.current = o
       // A view that already gave its own second try (facts) settles the exercise: no further retry here.
       const offer = allowRetry && !o.check.correct && !o.retries
-      pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false }
+      pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false, graded: true }
       show(o)
       if (offer) {
         enter('offered')
@@ -144,12 +157,13 @@ export function ExerciseStep({
       return
     }
     if (st === 'retrying' && first.current) {
-      // The retry: its result is recorded on the first answer's attempt (the graded one).
-      pending.current = {
-        outcome: first.current,
-        retries: 1 + (o.retries ?? 0),
-        solvedOnRetry: o.check.correct,
-      }
+      const retries = 1 + (o.retries ?? 0)
+      const solvedOnRetry = o.check.correct
+      // Normally the retry is folded into the first answer's attempt (the graded one). If that was already reported
+      // (the page was hidden during the offer), the retry is its own attempt, not graded again.
+      pending.current = firstSent.current
+        ? { outcome: o, retries, solvedOnRetry, graded: false }
+        : { outcome: first.current, retries, solvedOnRetry, graded: true }
       show(o)
       send()
       enter('final')
@@ -174,7 +188,7 @@ export function ExerciseStep({
       recognitionFixes: 0,
     }
     first.current = o
-    pending.current = { outcome: o, retries: 0, solvedOnRetry: false }
+    pending.current = { outcome: o, retries: 0, solvedOnRetry: false, graded: true }
     send()
     setLatest(o)
     setMessage(host.t('No pasa nada. Mira cada pista y, cuando lo entiendas, sigue.'))

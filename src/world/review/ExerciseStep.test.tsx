@@ -214,6 +214,31 @@ describe('ExerciseStep: nothing is lost when the app is left', () => {
   })
 })
 
+describe('ExerciseStep: a hide during the offer does not grade the first answer twice', () => {
+  it('after a hide, the retry adds only its own ungraded row: one graded attempt in all', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong(), wrong({ check: { correct: false, given: '47', expected: '42' } })]
+    const { reportAttempt } = renderStep({ allowRetry: true })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Inténtalo otra vez' })
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' })
+    document.dispatchEvent(new Event('visibilitychange'))
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' })
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    await user.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    expect(reportAttempt).toHaveBeenCalledTimes(2)
+    const graded = reportAttempt.mock.calls.filter((c) => c[0].graded !== false)
+    const ungraded = reportAttempt.mock.calls.filter((c) => c[0].graded === false)
+    expect(graded).toHaveLength(1)
+    expect(graded[0][0]).toMatchObject({ check: { given: '48' } })
+    expect(graded[0][0].retries).toBeUndefined()
+    expect(ungraded).toHaveLength(1)
+    expect(ungraded[0][0]).toMatchObject({ check: { given: '47' }, retries: 1 })
+  })
+})
+
 describe('ExerciseStep: focus after «Inténtalo otra vez»', () => {
   it('moves the focus to the new exercise input, not to the page body', async () => {
     const user = userEvent.setup()
