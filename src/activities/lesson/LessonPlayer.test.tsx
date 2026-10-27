@@ -246,3 +246,27 @@ describe('LessonPlayer: choose step', () => {
     expect(onDone).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('LessonPlayer: hints on try steps', () => {
+  const withHints: LessonDef = {
+    id: 'test-hints',
+    title: 'Pistas',
+    steps: [{ visual: 'borrow', params: { a: 52, b: 21 }, text: 'Con pista.', interaction: 'try', trySelector: { kinds: ['column-sub'], digits: 2, regroup: 'one', zeros: false } }],
+  }
+  const noHints: LessonDef = {
+    id: 'test-no-hints',
+    title: 'Sin pistas',
+    steps: [{ visual: 'borrow', params: { a: 52, b: 21 }, text: 'Sin pista.', interaction: 'try', trySelector: { kinds: ['column-sub'], digits: 2, regroup: 'one', zeros: false }, hints: false }],
+  }
+
+  it('a try step with hints: false shows no «Pista» button', () => {
+    render(<LessonPlayer lesson={noHints} onDone={() => undefined} />)
+    expect(screen.getByTestId('fake-exercise')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pista' })).toBeNull()
+  })
+
+  it('a try step without the flag keeps its «Pista» button', () => {
+    render(<LessonPlayer lesson={withHints} onDone={() => undefined} />)
+    expect(screen.getByRole('button', { name: 'Pista' })).toBeInTheDocument()
+  })
+})

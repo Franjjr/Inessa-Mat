@@ -4,6 +4,11 @@ import { mulSkill } from '@/engine/skills'
 import type { SkillKey } from '@/types'
 import type { Syllabus, SyllabusTopic } from './model'
 
+/** The topic's name as a title: the example in brackets goes («Descomponer (4 325 = …)» → «Descomponer»). */
+export function topicTitle(topic: SyllabusTopic): string {
+  return topic.name.replace(/\s*\(.*\)\s*$/, '')
+}
+
 /** Multiplication facts of one table (1..10), normalised keys (mul:AxB, A <= B). */
 export function tableSkills(t: number): SkillKey[] {
   const out = new Set<SkillKey>()

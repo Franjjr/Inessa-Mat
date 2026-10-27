@@ -7,6 +7,7 @@ import { GRADE3_SYLLABUS } from './grade3'
 import { GRADE4_SYLLABUS } from './grade4'
 
 export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './model'
+export { topicTitle } from './helpers'
 export { SYLLABUS_RUNGS } from './model'
 export { GRADE3_STAGES, GRADE3_SYLLABUS, divisionFactSkills, tableSkills } from './grade3'
 export { GRADE2_STAGES, GRADE2_SYLLABUS } from './grade2'

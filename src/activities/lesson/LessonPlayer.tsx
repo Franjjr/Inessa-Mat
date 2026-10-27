@@ -173,7 +173,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>

@@ -109,6 +109,8 @@ export interface LessonStep {
   choices?: { label: TemplateString; value: string }[]
   /** 'choose' steps: which favourite the pick is saved as (default subMethod). */
   preference?: 'subMethod' | 'divMethod' | 'tableMethod'
+  /** 'try' steps: `false` shows the exercise without the hint button (the child solves it alone). */
+  hints?: false
 }
 
 export interface LessonDef {

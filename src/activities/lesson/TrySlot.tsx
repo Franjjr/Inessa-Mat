@@ -28,6 +28,8 @@ interface Props {
   method?: SubMethod
   /** Division method the exercise is solved with (the division methods lesson). */
   divMethod?: DivMethod
+  /** Offer the hint button (default true; a lesson step with `hints: false` turns it off). */
+  allowHints?: boolean
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -46,7 +48,7 @@ export function fitScale(available: number, natural: number): number {
   return Math.max(MIN_FIT_SCALE, available / natural)
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod }: Props) {
+export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -140,7 +142,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     <div ref={wrapRef} className={s.wrap} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
-          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints showFeedback={false} method={method} divMethod={divMethod} />
+          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} method={method} divMethod={divMethod} />
         </div>
       </div>
       <div ref={footerRef} className={s.footer} role="status" aria-live="polite">
