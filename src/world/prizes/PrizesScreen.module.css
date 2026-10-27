@@ -11,6 +11,6 @@
 }
 /* Wide screens: more prize tiles per row as the screen grows, and taller, larger tiles. */
 @media (min-width: 760px) {
-  .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 420px)); justify-content: space-between; }
   .grid > * { min-height: clamp(120px, 16vh, 170px); }
 }

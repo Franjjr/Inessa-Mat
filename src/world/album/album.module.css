@@ -186,3 +186,16 @@
   .slots { grid-template-columns: 1fr; }
   .sticker { min-height: 0; flex-direction: row; text-align: left; justify-content: flex-start; }
 }
+
+/* Wide screens: bigger tabs, stickers and type. */
+@media (min-width: 1000px) {
+  .root {
+    --fs-xs: clamp(15px, 1.5vmin, 19px);
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-lg: clamp(24px, 2.8vmin, 34px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .tab { min-height: clamp(60px, 8vh, 80px); }
+  .sticker { min-height: clamp(240px, 32vh, 360px); }
+}

@@ -215,3 +215,16 @@
   .card { transition: none; }
   .card:active { transform: none; }
 }
+
+/* Wide screens: bigger cards and type. */
+@media (min-width: 1000px) {
+  .root {
+    --fs-xs: clamp(15px, 1.5vmin, 19px);
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-lg: clamp(24px, 2.8vmin, 34px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+  .card { min-height: clamp(116px, 14vh, 160px); }
+}

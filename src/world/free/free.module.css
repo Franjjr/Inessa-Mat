@@ -149,6 +149,21 @@
   color: var(--c-ink-soft);
 }
 
+/* Wide screens: bigger cards and type (the tokens are redefined on the screen root). */
+@media (min-width: 1000px) {
+  .root {
+    --fs-xs: clamp(15px, 1.5vmin, 19px);
+    --fs-sm: clamp(18px, 2vmin, 24px);
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-lg: clamp(24px, 2.8vmin, 34px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .tables { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+  .table { min-height: clamp(150px, 20vh, 220px); }
+  .games { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .game { min-height: clamp(110px, 15vh, 150px); padding: clamp(16px, 2vmin, 28px); }
+}
+
 .gameTitle {
   font-family: var(--font-display);
   font-weight: 600;

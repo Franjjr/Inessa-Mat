@@ -118,3 +118,14 @@
 
 /* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
+
+/* Wide screens: bigger type and cards. */
+@media (min-width: 1000px) {
+  .screen {
+    --fs-md: clamp(20px, 2.4vmin, 28px);
+    --fs-xl: clamp(30px, 4vmin, 48px);
+    --fs-2xl: clamp(44px, 6vmin, 72px);
+  }
+  .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .card, .add { min-height: clamp(300px, 42vh, 420px); }
+}
