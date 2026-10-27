@@ -279,6 +279,7 @@ const MISSED: Record<ErrorType, string> = {
   'zero-borrow': 'Cuidado con el cero: no tiene nada que prestar. Pide a la casa siguiente.',
   incomplete: 'Te falta algo por escribir.',
   recognition: 'Revisa la cuenta con calma.',
+  'dont-know': 'Revisa la cuenta con calma.',
 }
 
 export const HUNT_FEEDBACK = {
@@ -364,6 +365,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'zero-borrow': 'Cuidado con el cero al pedir prestado.',
   incomplete: 'Repasa la cuenta columna a columna.',
   recognition: 'Repasa la cuenta columna a columna.',
+  'dont-know': 'Repasa la cuenta columna a columna.',
 }
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
