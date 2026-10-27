@@ -131,12 +131,19 @@ async function loadAccountFor(user: User, gen: number): Promise<void> {
       await setMeta(META.authCache(user.id), { ...acct, activeOrgId: activeOrg?.id ?? null } satisfies CachedAccount)
       if (activeOrg) await setMeta(META.activeOrg(user.id), activeOrg.id)
       loadedFor = user.id
-      await reconcileAdultPin()
     } catch (e) {
       if (gen !== generation) return
       console.warn('[numeria/auth] could not load the account:', e)
       if (!cached) setAuth({ status: 'signed-in', user: basic, profile: null, memberships: [], organizations: [], activeOrg: null })
       setAuth({ offline: isNetworkError(e) })
+    }
+    // Outside the load above: a PIN problem must never blank the account.
+    if (gen === generation) {
+      try {
+        await reconcileAdultPin()
+      } catch (e) {
+        console.warn('[numeria/auth] the PIN check after sign-in failed:', e)
+      }
     }
   })().finally(() => inflight.delete(key))
   inflight.set(key, p)
