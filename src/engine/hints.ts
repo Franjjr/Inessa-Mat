@@ -232,7 +232,7 @@ function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
   if (q < 10) {
     l1 = `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`
     worked = `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}. ¿En qué fila vas?`
-  } else if (ex.variant === 'exact') {
+  } else if (ex.variant === 'exact' && n < 100) {
     l1 = 'Primero reparte las decenas y después las unidades.'
     worked = `Decenas: ${t} ÷ ${d} = ${Math.floor(t / d)}. Ahora las unidades: ${u} ÷ ${d} = ?`
   } else {

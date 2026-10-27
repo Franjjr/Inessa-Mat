@@ -342,6 +342,146 @@ const mul2x2Partes = clase({
   cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras, parto el número de abajo en decenas y unidades, multiplico por cada parte y sumo los dos resultados.'),
 })
 
+/* Dividir, de menos a más. Mismo esquema. La galera se enseña como en el cole: cada paso lleva su cociente, su producto
+   y su resta escritos debajo (params written: 1). */
+const GAL84 = { dividend: 84, divisor: 4, written: 1 }
+const GAL17 = { dividend: 17, divisor: 5, written: 1 }
+const GAL72 = { dividend: 72, divisor: 3, written: 1 }
+const GAL384 = { dividend: 384, divisor: 4, written: 1 }
+const GAL387 = { dividend: 387, divisor: 4, written: 1 }
+const GEMAS = { total: 12, groups: 3, emoji: '💎' }
+
+const dividirRepartir = clase({
+  id: 'c3-div-repartir',
+  topicId: 'div-con-tablas',
+  title: 'Dividir es repartir',
+  mapLessonId: 'w8-share',
+  para: [
+    show('place-value', { n: 12 }, 'En el barco de la capitana Sol hay 12 gemas brillantes.', 'octopus'),
+    show('place-value', { n: 12 }, 'Quiere guardarlas en 3 cofres, con lo mismo en cada uno. ¿Cuántas van en cada cofre? Repartimos: 12 ÷ 3.', 'octopus'),
+  ],
+  ejemplo: [
+    show('share', GEMAS, 'Vamos a repartir 12 gemas en 3 cofres. Las pongo de una en una, sin saltarme ningún cofre.'),
+    show('share', GEMAS, 'Ya están repartidas: a cada cofre le ha tocado lo mismo.'),
+    show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres, cuatro»: cada cofre tiene 4 gemas.'),
+  ],
+  guiada: [
+    tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
+    tryIt('share', GEMAS, '¡Otra! ¿Qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
+  ],
+  sola: [
+    tryIt('share', GEMAS, '¡Tu turno! Piensa en la multiplicación al revés.', { kinds: ['fact-div'], tables: [6, 7, 8], factorRange: [2, 9] }),
+    tryIt('share', GEMAS, '¡Tu turno! Ahora con cofres de más gemas.', { kinds: ['fact-div'], tables: [7, 8, 9], factorRange: [6, 9] }),
+    tryIt('share', GEMAS, '¡Tu turno! Sin pistas: ¿qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [8, 9, 10], factorRange: [6, 10] }),
+  ],
+  cierre: show('share', GEMAS, 'Dividir es repartir en partes iguales: el total se reparte entre los grupos y lo que sale es lo que toca a cada uno.'),
+})
+
+const dividirExacta = clase({
+  id: 'c3-div-exacta',
+  topicId: 'div-exacta',
+  title: 'La galera sin sobras',
+  mapLessonId: 'w8-galera',
+  para: [
+    show('place-value', { n: 84 }, 'En el zoo, cuatro monos comparten 84 plátanos del día.', 'owl'),
+    show('place-value', { n: 84 }, 'Quieren que cada mono tenga lo mismo. ¿Cuántos plátanos le tocan a cada uno? Dividimos 84 ÷ 4 con la galera.', 'owl'),
+  ],
+  ejemplo: [
+    show('galera', GAL84, 'Esta es la casita: 84 entre 4. Con el 8: ¿cuántas veces cabe el 4? Dos. Escribo el 2, 2 × 4 = 8 y 8 − 8 = 0.'),
+    show('galera', GAL84, 'Bajo el 4: ¿cuántas veces cabe el 4 en el 4? Una. Escribo el 1 junto al 2, 1 × 4 = 4 y 4 − 4 = 0.'),
+    show('galera', GAL84, 'Los cocientes, 2 y 1, forman el 21: ¡84 ÷ 4 = 21!'),
+  ],
+  guiada: [
+    tryIt('galera', GAL84, '¡Te toca! Empieza por la primera cifra de la izquierda.', { kinds: ['division'], divisionVariants: ['exact'], tables: [2, 3, 4] }),
+    tryIt('galera', GAL84, '¡Otra! Escribe cada resta debajo del paso.', { kinds: ['division'], divisionVariants: ['exact'], tables: [2, 3, 4] }),
+  ],
+  sola: [
+    tryIt('galera', GAL84, '¡Tu turno! Escribe cada resta debajo del paso.', { kinds: ['division'], divisionVariants: ['exact'], tables: [2, 3, 4, 5] }),
+    tryIt('galera', GAL84, '¡Tu turno! Ahora con divisores más grandes.', { kinds: ['division'], divisionVariants: ['exact'], tables: [4, 5, 6, 7] }),
+    tryIt('galera', GAL84, '¡Tu turno! Sin pistas: baja cada cifra cuando toque.', { kinds: ['division'], divisionVariants: ['exact'], tables: [6, 7, 8, 9] }),
+  ],
+  cierre: show('galera', GAL84, 'La regla: en cada paso divido, multiplico, resto y bajo la cifra siguiente; si la última resta da 0, la división es exacta.'),
+})
+
+const dividirResto = clase({
+  id: 'c3-div-resto',
+  topicId: 'div-resto',
+  title: 'Dividir y sobrar',
+  mapLessonId: 'w8-galera',
+  para: [
+    show('place-value', { n: 17 }, 'En el campamento hay 17 sándwiches para la excursión.', 'ladybug'),
+    show('place-value', { n: 17 }, 'Las bandejas caben 5 sándwiches. ¿Cuántas bandejas llenas salen y cuántos sobran? Dividimos 17 ÷ 5.', 'ladybug'),
+  ],
+  ejemplo: [
+    show('galera', GAL17, 'Esta es la casita: 17 entre 5. ¿Cuántas veces cabe el 5 en el 17? Tres. Escribo el 3, 3 × 5 = 15 y 17 − 15 = 2.'),
+    show('division-check', GAL17, 'La prueba: 3 × 5 + 2 = ?'),
+    show('division-check', GAL17, 'Sí: 3 × 5 + 2 = 17. Sobran 2, y la prueba lo confirma.'),
+  ],
+  guiada: [
+    tryIt('galera', GAL17, '¡Te toca! ¿Cuánto sobra al final?', { kinds: ['division'], divisionVariants: ['rem'], tables: [2, 3] }),
+    tryIt('galera', GAL17, '¡Otra! Comprueba con la prueba: el cociente por el divisor, más lo que sobra.', { kinds: ['division'], divisionVariants: ['rem'], tables: [2, 3] }),
+  ],
+  sola: [
+    tryIt('galera', GAL17, '¡Tu turno! Reparte y mira lo que sobra.', { kinds: ['division'], divisionVariants: ['rem'], tables: [4, 5] }),
+    tryIt('galera', GAL17, '¡Tu turno! Sin ayuda: la galera y la prueba.', { kinds: ['division'], divisionVariants: ['rem'], tables: [6, 7] }),
+    tryIt('galera', GAL17, '¡Tu turno! Ahora con divisores más grandes.', { kinds: ['division'], divisionVariants: ['rem'], tables: [8, 9] }),
+  ],
+  cierre: show('galera', GAL17, 'La regla: el resto es lo que sobra al final y siempre es más pequeño que el divisor; si no, cabe una vez más.'),
+})
+
+const dividirBajar = clase({
+  id: 'c3-div-bajar',
+  topicId: 'div-larga',
+  title: 'Dividir bajando una cifra',
+  para: [
+    show('place-value', { n: 72 }, 'La abuela Rosa tiene 72 botones guardados en su costurero.', 'polarbear'),
+    show('place-value', { n: 72 }, 'Quiere guardarlos en 3 cajas iguales para la feria. ¿Cuántos botones van en cada caja? Dividimos 72 ÷ 3.', 'polarbear'),
+  ],
+  ejemplo: [
+    show('galera', GAL72, 'Esta es la casita: 72 entre 3. Con el 7: ¿cuántas veces cabe el 3? Dos. Escribo el 2, 2 × 3 = 6 y 7 − 6 = 1.'),
+    show('galera', GAL72, 'Bajo el 2: queda 12. ¿Cuántas veces cabe el 3 en el 12? Cuatro. Escribo el 4, 4 × 3 = 12 y 12 − 12 = 0.'),
+    show('galera', GAL72, 'Los cocientes, 2 y 4, forman el 24: ¡72 ÷ 3 = 24!'),
+  ],
+  guiada: [
+    tryIt('galera', GAL72, '¡Te toca! Reparte primero las decenas.', { kinds: ['division'], divisionVariants: ['long'], tables: [2, 3] }),
+    tryIt('galera', GAL72, '¡Otra! Lo que sobra, júntalo con la cifra de abajo.', { kinds: ['division'], divisionVariants: ['long'], tables: [2, 3] }),
+  ],
+  sola: [
+    tryIt('galera', GAL72, '¡Tu turno! Baja una cifra cuando haga falta.', { kinds: ['division'], divisionVariants: ['long'], tables: [4, 5] }),
+    tryIt('galera', GAL72, '¡Tu turno! Lo que sobra se junta con la cifra siguiente.', { kinds: ['division'], divisionVariants: ['long'], tables: [6, 7] }),
+    tryIt('galera', GAL72, '¡Tu turno! Sin pistas: reparte, resta y baja.', { kinds: ['division'], divisionVariants: ['long'], tables: [7, 8, 9] }),
+  ],
+  cierre: show('galera', GAL72, 'La regla: reparto las decenas, lo que sobra se junta con la cifra siguiente y vuelvo a repartir.'),
+})
+
+const dividir3x1 = clase({
+  id: 'c3-div-3x1',
+  topicId: 'div-3x1',
+  title: 'Dividir tres cifras entre una',
+  para: [
+    show('place-value', { n: 384 }, 'En la fábrica de chocolate hay 384 bombones recién hechos.', 'ladybug'),
+    show('place-value', { n: 384 }, 'Hay que meterlos en 4 cajas iguales. ¿Cuántos caben en cada caja? Dividimos 384 ÷ 4, con tres cifras.', 'ladybug'),
+  ],
+  ejemplo: [
+    show('galera', GAL384, 'Esta es la casita: 384 entre 4. Con las dos primeras cifras, el 38: ¿cuántas veces cabe el 4? Nueve. Escribo el 9, 9 × 4 = 36 y 38 − 36 = 2.'),
+    show('galera', GAL384, 'Bajo el 4: queda 24. ¿Cuántas veces cabe el 4 en el 24? Seis. Escribo el 6, 6 × 4 = 24 y 24 − 24 = 0. ¡384 ÷ 4 = 96!'),
+    show('galera', GAL387, 'Ahora 387, y sobra algo. Empieza igual: con el 38, el 4 cabe nueve veces. Escribo el 9, 9 × 4 = 36 y 38 − 36 = 2.'),
+    show('galera', GAL387, 'Bajo el 7: queda 27. ¿Cuántas veces cabe el 4 en el 27? Seis. Escribo el 6, 6 × 4 = 24 y 27 − 24 = 3: sobran 3.'),
+    show('division-check', GAL387, 'La prueba: 96 × 4 + 3 = ?'),
+    show('division-check', GAL387, '96 × 4 + 3 = 387. ¡La prueba está bien!'),
+  ],
+  guiada: [
+    tryIt('galera', GAL384, '¡Te toca! Empieza por las dos primeras cifras.', { skills: ['div:3x1:exact'] }),
+    tryIt('galera', GAL384, '¡Otra! Después de cada resta, baja la cifra siguiente.', { skills: ['div:3x1:exact'] }),
+  ],
+  sola: [
+    tryIt('galera', GAL384, '¡Tu turno! Cada resta debajo del paso.', { skills: ['div:3x1:exact'] }),
+    tryIt('galera', GAL387, '¡Tu turno! Ahora puede sobrar algo al final.', { skills: ['div:3x1:rem'] }),
+    tryIt('galera', GAL387, '¡Tu turno! Sin pistas: al final, comprueba con la prueba.', { skills: ['div:3x1:rem'] }),
+  ],
+  cierre: show('division-check', GAL387, 'La regla: se reparte cifra a cifra, y la prueba es cociente × divisor + resto = dividendo.'),
+})
+
 export const GRADE3_CLASSES: ClassDef[] = [
   sumar2d,
   sumar3d,
@@ -356,4 +496,9 @@ export const GRADE3_CLASSES: ClassDef[] = [
   mul3x1,
   mulPor10,
   mul2x2Partes,
+  dividirRepartir,
+  dividirExacta,
+  dividirResto,
+  dividirBajar,
+  dividir3x1,
 ]

@@ -82,7 +82,7 @@ export type LessonVisualId =
   | 'column-mul'        // params: { top, bottom }
   | 'share'             // params: { total, groups, emoji }
   | 'fact-family'       // params: { a, b }
-  | 'galera'            // params: { dividend, divisor }
+  | 'galera'            // params: { dividend, divisor, written? (1: the steps with their products and remainders written) }
   | 'division-check'    // params: { dividend, divisor }
   | 'sub-carry'         // params: { a, b } — subtraction "me llevo una abajo": the subtrahend's next digit gets +1
   | 'sub-parts'         // params: { a, b } — subtraction by parts: a − hundreds − tens − units

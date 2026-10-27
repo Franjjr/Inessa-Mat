@@ -152,4 +152,31 @@ describe('division galera', () => {
   it('72 ÷ 3 = 24', () => {
     expect(longDivision(72, 3).quotient).toBe(24)
   })
+
+  it('written: each step shows its partial, product and remainder, one step per phase', () => {
+    const Galera = LESSON_VISUALS.galera
+    const written = { dividend: 384, divisor: 4, written: 1 }
+    const at = (phase: number, runLength: number) => render(<Galera params={written} phase={phase} runLength={runLength} reduced />)
+    const first = at(0, 3)
+    expect(first.getAllByTestId('galera-step').map((n) => n.textContent)).toEqual(['38− 362'])
+    expect(first.getByTestId('quotient').textContent).toBe('9')
+    expect(first.getByTestId('remainder').textContent).toBe('2')
+    first.unmount()
+    const second = at(1, 3)
+    expect(second.getAllByTestId('galera-step').map((n) => n.textContent)).toEqual(['38− 362', 'bajo el 424− 240'])
+    expect(second.getByTestId('quotient').textContent).toBe('96')
+    expect(second.getByTestId('remainder').textContent).toBe('0')
+    second.unmount()
+    const end = at(FINAL, 1)
+    expect(end.getAllByTestId('galera-step')).toHaveLength(2)
+    end.unmount()
+  })
+
+  it('without written, the galera keeps its picture (no step list with products)', () => {
+    const Galera = LESSON_VISUALS.galera
+    const plain = render(<Galera params={{ dividend: 17, divisor: 5 }} phase={FINAL} runLength={1} reduced />)
+    expect(plain.queryByTestId('galera-step')).toBeNull()
+    expect(plain.getByTestId('galera-product').textContent).toBe('3 × 5 = 15 · 17 − 15 = 2')
+    plain.unmount()
+  })
 })

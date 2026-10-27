@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   createRng, generate, hintsFor, makeArray, makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeFactDiv,
-  makeFactMul, makeSkipCount, strategyDetail, strategyForFact,
+  makeDivision3, makeFactMul, makeSkipCount, strategyDetail, strategyForFact,
 } from '@/engine'
 import type { ExerciseKind, FactStrategy, HintVisual } from '@/types'
 
@@ -132,6 +132,11 @@ describe('hintsFor', () => {
     expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 1, perGroup: 6 })
     // The skip count of a ten-fact stops one jump before the product, the last chip is blank.
     expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
+  })
+
+  it('an exact division of three digits brings the third digit down, it does not divide the units alone', () => {
+    // 584 ÷ 4: the tens give 14 with nothing left over (58 − 56 = 2), so the next partial is 24, not the units 4.
+    expect(hintsFor(makeDivision3(584, 4))[2].text).toBe('Decenas: 58 ÷ 4 = 14 y sobra 2. Júntalo con el 4: 24 ÷ 4 = ?')
   })
 
   it('the worked division of the level-3 hint never shows the child\'s own dividend, divisor or answer', () => {

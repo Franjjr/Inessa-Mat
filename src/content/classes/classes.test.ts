@@ -81,6 +81,10 @@ describe('clases de sumar y restar (3.º)', () => {
     for (const id of topicIds) expect(classForTopic(id), id).toBeDefined()
   })
 
+  it('dividir has its classes', () => {
+    for (const id of ['div-con-tablas', 'div-exacta', 'div-resto', 'div-larga', 'div-3x1']) expect(classForTopic(id), id).toBeDefined()
+  })
+
   it('multiplicar has its classes', () => {
     for (const id of ['mul-2x1-sin-llevar', 'mul-2x1-llevando', 'mul-3x1', 'mul-10-100', 'mul-2-cifras-intro']) expect(classForTopic(id), id).toBeDefined()
   })
