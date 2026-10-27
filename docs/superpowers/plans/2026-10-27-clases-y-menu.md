@@ -193,6 +193,24 @@ it('the title is the topic name without the example in brackets')
 - [ ] **Step 4: Run, expect PASS**: vitest home, `n-hoy`, `g-session`, `l-phone`, `a-onboarding`, `b-world-one`, `d-shop` on all projects.
 - [ ] **Step 5: Commit** — "Menú con orden: «Hoy» abre la clase o la sesión; Mi aventura, Repasar, Jugar y Mis premios"
 
+### Task 6b: Todo el ancho en las pantallas del niño (petición del dueño)
+
+The owner: «aprovecha todo el ancho disponible para la web». At 1920 × 1080 the map, the lessons and the landing already fill the screen; these do not: home menu (~1 070 px centred), session / placement / class intro and exercise card (`.stage` max 880 px, `.calm/.intro` max 600 px), «Jugar» (`free.module.css` 1 040), album (1 040), shop (1 180), review (880), guardian (880), child picker (560).
+
+**Files:** `src/world/home/ChildHomeScreen.module.css`, `src/world/session/session.module.css`, `src/world/free/free.module.css`, `src/world/album/album.module.css`, `src/world/shop/shop.module.css`, `src/world/review/DailyReview.module.css`, `src/world/guardian/GuardianChallenge.module.css`, `src/world/picker/ChildPickerScreen.module.css`, the new prize and class screens; shared token in `src/styles/tokens.css`. Test: new e2e `tests/e2e/journeys/o-wide.spec.ts`.
+
+Rules:
+- A shared page gutter token (`--page-gutter: clamp(16px, 3vw, 48px)`); list/menu screens (home, Jugar, Mis premios, album, shop, picker) use the full width minus the gutter, with grids that add columns as the screen grows (`repeat(auto-fill, minmax(…, 1fr))`), and bigger cards/type on wide screens (`clamp()`).
+- Exercise screens (session, placement, class, review, guardian): the card may grow to the full width minus the gutter; the exercise inside scales up on wide screens (font sizes and cells with `clamp()`), never stretched text lines longer than ~70 characters; the intro card of the session lays its four blocks in a row on wide screens.
+- Forms stay narrow on purpose (PIN, login, onboarding questions): readable forms are not stretched.
+- Phones and tablets look as before or better: no horizontal scroll at 390 px; nothing cut off at 1138 × 640.
+
+- [ ] **Step 1: Failing e2e** `o-wide.spec.ts` at 1920 × 1080 (desktop project only): on /play, /play/sesion (intro and first exercise), /play/free, /play/premios, /play/album, /play/shop and /kids, the main content's width is ≥ 1920 − 2 × 48 − 2 px; at 390 × 844 `document.scrollingElement.scrollWidth` equals the viewport width on the same routes.
+- [ ] **Step 2: Run, expect FAIL.**
+- [ ] **Step 3: Implement**; screenshots at 1920 × 1080, 1180 × 820, 1138 × 640 and 390 × 844 to check nothing looks stretched or cut.
+- [ ] **Step 4: Run, expect PASS**, plus `g-session`, `l-phone`, `d-shop`, `n-hoy` on all projects.
+- [ ] **Step 5: Commit** — "Las pantallas del niño aprovechan todo el ancho en pantallas grandes"
+
 ### Task 7: «Ahora no» y «Ver la clase otra vez» en la sesión
 
 **Files:**
