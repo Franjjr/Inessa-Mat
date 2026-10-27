@@ -27,8 +27,10 @@ vi.mock('motion/react', async () => {
 })
 
 // The handwriting calibration loads a model; the onboarding only needs its completion callback here.
+const input = vi.hoisted(() => ({ mode: 'touch' }))
 vi.mock('@/ink', () => ({
   CalibrationFlow: ({ onDone }: { onDone: () => void }) => createElement('button', { onClick: onDone }, 'Calibración simulada'),
+  useInputMode: () => ({ mode: input.mode }),
 }))
 
 beforeAll(() => {
@@ -94,6 +96,32 @@ describe('OnboardingScreen', () => {
     const created = (await listChildren()).filter((c) => c.nickname === 'Lia').at(-1)
     expect(created?.companion.colorway).toBe('sunny')
     expect(created?.grade).toBeUndefined()
+  })
+
+  it('goes straight to the story where the child answers with the keypad (a computer without a touch screen)', async () => {
+    input.mode = 'keypad'
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/kids/new']}>
+        <Routes>
+          <Route path="/kids/new" element={<OnboardingScreen />} />
+          <Route path="/play" element={<div>HOME</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.type(await screen.findByLabelText('Tu nombre'), 'Teo')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
+    await user.click(await screen.findByRole('button', { name: 'No lo sé' }))
+    await user.click(await screen.findByRole('button', { name: /Zorrito/ }))
+    await user.click(await screen.findByRole('button', { name: /Dorado/ }))
+    await user.type(await screen.findByLabelText('Nombre del compañero'), 'Canela')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Es un niño' }))
+    await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
+    expect(await screen.findByRole('button', { name: 'Saltar' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Ahora no' })).toBeNull()
+    input.mode = 'touch'
   })
 
   it('reads the review question without a gendered adjective (girl and female companion)', async () => {

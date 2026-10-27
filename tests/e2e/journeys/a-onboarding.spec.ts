@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 import { CHILD_NAME, createChildThroughOnboarding, tapStoryUntil } from '../helpers'
 
 test.describe('A · alta del primer perfil', () => {
-  test('nuevo dispositivo → /kids → onboarding → prólogo → inicio', async ({ page }) => {
+  test('nuevo dispositivo → /kids → onboarding → prólogo → inicio', async ({ page }, info) => {
     await page.goto('/kids')
     await expect(page.getByRole('heading', { name: '¿Quién juega hoy?' })).toBeVisible()
     await expect(page.getByRole('button', { name: /^Jugar como/ })).toHaveCount(0)
@@ -25,9 +25,15 @@ test.describe('A · alta del primer perfil', () => {
     await expect(page.getByRole('button', { name: '¡Vamos!' })).toBeVisible()
     await page.getByRole('button', { name: '¡Vamos!' }).click()
 
-    // Handwriting calibration is offered and can be skipped.
-    await expect(page.getByRole('button', { name: 'Ahora no' })).toBeVisible()
-    await page.getByRole('button', { name: 'Ahora no' }).click()
+    if (info.project.name === 'desktop') {
+      // A computer without a touch screen answers with the keypad: no handwriting calibration, straight to the story.
+      await expect(page.getByRole('button', { name: 'Seguir la historia' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Ahora no' })).toHaveCount(0)
+    } else {
+      // Handwriting calibration is offered where the child writes, and can be skipped.
+      await expect(page.getByRole('button', { name: 'Ahora no' })).toBeVisible()
+      await page.getByRole('button', { name: 'Ahora no' }).click()
+    }
 
     // Prologue: tap through the story until the home screen.
     await tapStoryUntil(page, /\/play$/)

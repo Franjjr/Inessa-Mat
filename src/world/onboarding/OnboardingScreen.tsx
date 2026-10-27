@@ -11,7 +11,7 @@ import {
   startingWorldForGrade, unlockThroughWorld, type TemplateContext,
 } from '@/content'
 import { createChild, DataError, updateProgress, useActiveChild } from '@/data'
-import { CalibrationFlow } from '@/ink'
+import { CalibrationFlow, useInputMode } from '@/ink'
 import { Button, Screen, toast } from '@/ui'
 import type { CompanionSpecies, GrammaticalGender } from '@/types'
 import { COMPANION_SPECIES } from '@/types'
@@ -67,6 +67,9 @@ function capitalize(text: string): string {
 export default function OnboardingScreen() {
   const navigate = useNavigate()
   const { setActiveChild } = useActiveChild()
+  // Handwriting calibration only where the child writes (finger or pen): with a keypad or a keyboard it is useless.
+  const { mode } = useInputMode()
+  const writes = mode === 'pen' || mode === 'touch'
   const [stepIndex, setStepIndex] = useState(0)
   const [draft, setDraft] = useState<Draft>(EMPTY_DRAFT)
   const [childId, setChildId] = useState<string | null>(null)
@@ -111,7 +114,8 @@ export default function OnboardingScreen() {
       }
       setActiveChild(id)
       setChildId(id)
-      next()
+      if (writes) next()
+      else setStepIndex(STEPS.indexOf('prologue'))
     } catch (e) {
       toast(e instanceof DataError ? e.message : 'No hemos podido crear el perfil. Inténtalo otra vez.')
     } finally {

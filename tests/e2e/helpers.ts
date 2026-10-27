@@ -34,7 +34,10 @@ export async function createChildThroughOnboarding(page: Page, name = CHILD_NAME
   await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: 'Es una niña' }).click()
   await page.getByRole('button', { name: '¡Vamos!' }).click()
-  await page.getByRole('button', { name: 'Ahora no' }).click()
+  // Handwriting calibration is only offered where the child writes (touch or pen), not with the keypad.
+  const skip = page.getByRole('button', { name: 'Ahora no' })
+  await skip.or(page.getByRole('button', { name: 'Seguir la historia' })).first().waitFor()
+  if (await skip.isVisible()) await skip.click()
   await tapStoryUntil(page, /\/play$/)
 }
 
