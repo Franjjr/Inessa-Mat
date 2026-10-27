@@ -41,6 +41,19 @@ describe('LetterKeyboard', () => {
     expect(onKey.mock.calls.map((c) => c[0])).toEqual(['A', 'b'])
   })
 
+  it('a symbol or the space disarms ⇧', () => {
+    const onKey = vi.fn()
+    render(<LetterKeyboard onKey={onKey} onDelete={() => {}} />)
+    fireEvent.click(key('Mayúsculas'))
+    fireEvent.click(key('Símbolos'))
+    fireEvent.click(key('.'))
+    fireEvent.click(key('a'))
+    fireEvent.click(key('Mayúsculas'))
+    fireEvent.click(key('Espacio'))
+    fireEvent.click(key('b'))
+    expect(onKey.mock.calls.map((c) => c[0])).toEqual(['.', 'a', ' ', 'b'])
+  })
+
   it('⇧ and the accent combine: Á', () => {
     const onKey = vi.fn()
     render(<LetterKeyboard onKey={onKey} onDelete={() => {}} />)

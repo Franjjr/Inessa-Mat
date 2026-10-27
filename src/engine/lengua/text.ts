@@ -8,7 +8,7 @@ export function normalizeAnswer(s: string): string {
 
 const fold = (s: string) => normalizeAnswer(s).normalize('NFC')
 const lower = (s: string) => s.toLocaleLowerCase('es')
-/** Drops the acute and diaeresis marks only (ñ keeps its tilde, so «caña» and «cana» differ). */
+/** Drops the acute, grave and diaeresis marks only (ñ keeps its tilde, so «caña» and «cana» differ). */
 const unaccent = (s: string) => s.normalize('NFD').replace(/[̀́̈]/g, '').normalize('NFC')
 
 export interface TextComparison {
@@ -24,16 +24,15 @@ export interface TextComparison {
 export function compareText(given: string, expected: string, rule: 'exact' | 'ignore-case'): TextComparison {
   const g = fold(given)
   const e = fold(expected)
-  const sameLetters = lower(g) === lower(e)
-  const sameWithoutAccents = unaccent(lower(g)) === unaccent(lower(e))
   if (rule === 'ignore-case') {
-    const correct = sameLetters
-    return { correct, caseOnly: false, accentOnly: !correct && sameWithoutAccents }
+    const correct = lower(g) === lower(e)
+    return { correct, caseOnly: false, accentOnly: !correct && unaccent(lower(g)) === unaccent(lower(e)) }
   }
+  // A flag is set only when that one difference is the whole mistake: «Arbol» for «Árbol» is neither.
   const correct = g === e
   return {
     correct,
-    caseOnly: !correct && sameLetters,
-    accentOnly: !correct && !sameLetters && sameWithoutAccents,
+    caseOnly: !correct && lower(g) === lower(e),
+    accentOnly: !correct && unaccent(g) === unaccent(e),
   }
 }

@@ -59,3 +59,19 @@
 @media (prefers-reduced-motion: reduce) {
   .caret { animation: none; }
 }
+
+/* The toggle that brings the letter keyboard back when the child types on a physical keyboard. */
+.tools { display: flex; justify-content: flex-end; }
+.toggle {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 16px;
+  background: var(--c-primary-soft);
+  color: var(--c-primary);
+  -webkit-tap-highlight-color: transparent;
+}
+.toggleOn { background: var(--c-primary); color: var(--c-surface); }

@@ -14,6 +14,9 @@ describe('compareText exact', () => {
   it('a missing accent is wrong, and says so', () => {
     expect(compareText('arbol', 'árbol', 'exact')).toEqual({ correct: false, caseOnly: false, accentOnly: true })
   })
+  it('a wrong capital and a missing accent together set neither flag', () => {
+    expect(compareText('arbol', 'Árbol', 'exact')).toEqual({ correct: false, caseOnly: false, accentOnly: false })
+  })
   it('spaces at the ends do not count', () => {
     expect(compareText(' Árbol ', 'Árbol', 'exact')).toEqual({ correct: true, caseOnly: false, accentOnly: false })
   })

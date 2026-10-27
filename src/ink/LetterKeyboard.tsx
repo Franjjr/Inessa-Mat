@@ -61,9 +61,10 @@ export function LetterKeyboard({ onKey, onDelete, onSubmit, disabled, submitDisa
     setAccent(null)
     onKey(out)
   }
-  /** Any key that is not a letter or an accent mark disarms the accent. */
+  /** A symbol or the space disarms the accent and the one-capital ⇧ (only a letter uses them). */
   const other = (ch: string) => {
     setAccent(null)
+    setShift(false)
     onKey(ch)
   }
 
@@ -115,8 +116,8 @@ export function LetterKeyboard({ onKey, onDelete, onSubmit, disabled, submitDisa
         {symbols
           ? btn('abc', 'Letras', () => setSymbols(false), s.fn)
           : btn('¿!', 'Símbolos', () => setSymbols(true), s.fn)}
-        {btn('´', 'Acento', () => setAccent((a) => (a === 'acute' ? null : 'acute')), s.fn, accent === 'acute')}
-        {btn('¨', 'Diéresis', () => setAccent((a) => (a === 'diaeresis' ? null : 'diaeresis')), s.fn, accent === 'diaeresis')}
+        {btn('´', 'Acento', () => setAccent((a) => (a === 'acute' ? null : 'acute')), clsx(s.fn, s.mark), accent === 'acute')}
+        {btn('¨', 'Diéresis', () => setAccent((a) => (a === 'diaeresis' ? null : 'diaeresis')), clsx(s.fn, s.mark), accent === 'diaeresis')}
         {btn('espacio', 'Espacio', () => other(' '), s.space)}
         {ok}
       </div>
