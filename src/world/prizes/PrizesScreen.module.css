@@ -4,8 +4,13 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--sp-3);
-  width: min(900px, 100%);
+  width: 100%;
   margin: 0 auto;
-  padding: var(--sp-3) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  padding: var(--sp-3) max(var(--page-gutter), env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(var(--page-gutter), env(safe-area-inset-left));
   box-sizing: border-box;
+}
+/* Wide screens: more prize tiles per row as the screen grows, and taller, larger tiles. */
+@media (min-width: 760px) {
+  .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .grid > * { min-height: clamp(120px, 16vh, 170px); }
 }

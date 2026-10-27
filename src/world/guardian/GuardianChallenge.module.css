@@ -12,9 +12,8 @@
   justify-content: center;
   gap: var(--sp-5);
   width: 100%;
-  max-width: 880px;
   margin: 0 auto;
-  padding: var(--sp-3) var(--sp-4) var(--sp-6);
+  padding: var(--sp-3) var(--page-gutter) var(--sp-6);
 }
 
 .intro {

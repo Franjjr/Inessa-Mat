@@ -28,8 +28,7 @@
   display: grid;
   grid-template-columns: minmax(300px, 0.9fr) minmax(0, 1.1fr);
   gap: var(--sp-5);
-  padding: 0 var(--sp-4);
-  max-width: 1180px;
+  padding: 0 var(--page-gutter);
   width: 100%;
   margin: 0 auto;
   align-items: start;
