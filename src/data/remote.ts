@@ -70,13 +70,28 @@ export async function fetchErasedChildIds(sb: SupabaseClient, orgIds: string[]):
   if (!orgIds.length) return []
   const out: string[] = []
   for (let from = 0; ; from += PAGE_SIZE) {
-    const rows = await run<Row[]>(
-      sb.from('erased_children').select('child_id').in('org_id', orgIds).order('child_id', { ascending: true }).range(from, from + PAGE_SIZE - 1),
-    )
+    let rows: Row[]
+    try {
+      rows = await run<Row[]>(
+        sb.from('erased_children').select('child_id').in('org_id', orgIds).order('child_id', { ascending: true }).range(from, from + PAGE_SIZE - 1),
+      )
+    } catch (e) {
+      // A server without migration 0002 has no tombstones table, so nothing can have been erased there: the rest of the
+      // sync must go on (otherwise no child ever reaches the cloud). Say it loudly for whoever runs the server.
+      if (!isMissingTable(e)) throw e
+      console.warn('[numeria/sync] the server has no erased_children table: apply supabase/migrations/0002_erasure_tombstones_rewards.sql')
+      return out
+    }
     for (const r of rows ?? []) out.push(String(r.child_id))
     if (!rows || rows.length < PAGE_SIZE) break
   }
   return out
+}
+
+/** PostgREST «table not found» (schema cache) or Postgres «undefined table». */
+function isMissingTable(e: unknown): boolean {
+  const err = (e ?? {}) as { code?: unknown; status?: unknown }
+  return err.code === 'PGRST205' || err.code === '42P01'
 }
 
 /** Every row of a table whose `column` is one of `values`, read page by page (ordered by a unique column). */

@@ -49,10 +49,14 @@ function isOffline(): boolean {
   return typeof navigator !== 'undefined' && navigator.onLine === false
 }
 
+const NO_FAMILY_TEXT = 'Tu cuenta todavía no tiene una familia: los niños se guardan solo aquí. Créala en «Familia» para guardarlos en la nube.'
+
 function computeStatus(): SyncStatus {
   const auth = getAuth()
   const base = { pending, lastSyncedAt }
   if (!isBackendAvailable() || auth.status !== 'signed-in') return { state: 'local-only', ...base }
+  // Signed in but without a family or school: children stay on this device, so «all saved» would be untrue.
+  if (!auth.activeOrg) return { state: 'error', ...base, error: NO_FAMILY_TEXT }
   if (isOffline() || errorKind === 'network') return { state: 'offline', ...base }
   if (phase === 'syncing') return { state: 'syncing', ...base }
   if (errorKind === 'server') return { state: 'error', ...base, error: errorText ?? 'No se han podido guardar algunos cambios en la nube. Lo volveremos a intentar.' }

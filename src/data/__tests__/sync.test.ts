@@ -152,6 +152,26 @@ describe('push (outbox flush)', () => {
     expect(getSyncStatus().state).toBe('idle')
   })
 
+  it('a server without the erasure table (migration 0002 not applied) still syncs everything else', async () => {
+    const c = await playABit()
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    fake.fail = (call) => (call.table === 'erased_children'
+      ? { message: "Could not find the table 'public.erased_children' in the schema cache", code: 'PGRST205', status: 404 }
+      : null)
+    await runSync({ pull: true })
+    expect(fake.rows('children').map((r) => r.id)).toEqual([c.id])
+    expect(await db.outbox.count()).toBe(0)
+    expect(getSyncStatus().state).toBe('idle')
+  })
+
+  it('a signed-in adult with no family says so instead of «all saved»', async () => {
+    signIn('u2', [])
+    await runSync({ pull: true })
+    const status = getSyncStatus()
+    expect(status.state).toBe('error')
+    expect(status.error).toMatch(/familia/)
+  })
+
   it('does not even try when the browser says it is offline', async () => {
     await playABit()
     vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)

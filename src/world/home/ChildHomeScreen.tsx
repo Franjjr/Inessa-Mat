@@ -25,7 +25,7 @@ const SYNC_LABEL: Record<SyncStatus['state'], string> = {
   offline: 'Sin conexión: se guarda aquí',
   idle: 'Todo guardado',
   syncing: 'Guardando…',
-  error: 'Guardaremos esto más tarde',
+  error: 'No se ha guardado en la nube',
 }
 
 function SyncPill() {
