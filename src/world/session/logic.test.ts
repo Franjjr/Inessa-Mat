@@ -57,18 +57,32 @@ describe('session run', () => {
     expect(summarizeRun(after, [], true).total).toBe(summarizeRun(q, [], true).total)
   })
 
-  it('postponing the last item, or an item twice, drops it', () => {
+  it('postponing again moves the same item to the end again, with no limit', () => {
     const q = startRun(plan)
     const n = q.slots.length
-    const last = postpone(q, n - 1)
-    expect(last.slots.length).toBe(n - 1)
-    expect(summarizeRun(last, [], true).total).toBe(n - 1)
+    const uid = q.slots[0].item.uid
+    let run = postpone(q, 0)
+    for (let round = 0; round < 3; round++) {
+      expect(run.slots[n - 1].item.uid).toBe(uid)
+      run = postpone(run, n - 1)
+      expect(run.slots.length).toBe(n)
+      expect(run.slots[n - 1].item.uid).toBe(uid)
+      expect(run.slots[n - 1].item.postponed).toBe(true)
+      expect(run.slots[n - 1].retry).toBe(false)
+    }
+    expect(summarizeRun(run, [], true).total).toBe(summarizeRun(q, [], true).total)
+  })
 
-    const once = postpone(q, 0)
-    const twice = postpone(once, n - 1)
-    expect(twice.slots.length).toBe(n - 1)
-    expect(twice.slots.some((s) => s.item.uid === q.slots[0].item.uid)).toBe(false)
-    expect(summarizeRun(twice, [], true).total).toBe(n - 1)
+  it('the last item left is dropped, so the run ends; with others left it just comes back later', () => {
+    const q = startRun(plan)
+    const n = q.slots.length
+    const uid = q.slots[n - 1].item.uid
+    const later = postpone(q, n - 1)
+    expect(later.slots.length).toBe(n)
+    expect(later.slots[n - 1].item.uid).toBe(uid)
+
+    const alone = { ...q, slots: [q.slots[0]] }
+    expect(postpone(alone, 0).slots).toEqual([])
   })
 
   it('time-box at fifteen minutes and a once-per-day reward key', () => {

@@ -52,18 +52,42 @@ test.describe('Mi sesión de hoy', () => {
     await settle(page, 300)
   })
 
-  test('«Ahora no» sends the first item to the end: the next one appears and the count does not advance', async ({ page }) => {
+  test('«Ahora no» sends the first item to the end, and it comes back later; the count does not advance', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/sesion')
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const bar = page.getByRole('progressbar')
     const count = await bar.getAttribute('aria-label')
     const stage = bar.locator('xpath=following-sibling::div[1]')
-    const first = await stage.innerText()
+    // The text of the shown item, once it has loaded («Cargando…» is shown while the exercise is prepared).
+    const shown = async () => {
+      await expect(stage).not.toContainText('Cargando…')
+      return stage.innerText()
+    }
+    const first = await shown()
     await page.getByRole('button', { name: 'Ahora no' }).click()
-    await expect.poll(() => stage.innerText()).not.toBe(first)
+    await expect.poll(shown).not.toBe(first)
     await expect(bar).toHaveAttribute('aria-label', count!)
     await expect(page.getByRole('button', { name: 'Ahora no' })).toBeVisible()
+    // The postponed item is still in the run: each «Ahora no» sends the current one to the end, so the first item comes
+    // back to the front after the others (no limit, so the loop only stops when it is back). A new skill opens with an
+    // example card («¡Entendido, a por ello!») that has no «Ahora no»: the loop takes it and goes on.
+    const ahoraNo = page.getByRole('button', { name: 'Ahora no' })
+    const entendido = page.getByRole('button', { name: '¡Entendido, a por ello!' })
+    let back = false
+    for (let i = 0; i < 80 && !back; i++) {
+      await expect(ahoraNo.or(entendido)).toBeVisible()
+      if (await entendido.isVisible()) {
+        await entendido.click()
+        continue
+      }
+      const before = await shown()
+      await ahoraNo.click()
+      await expect.poll(shown).not.toBe(before)
+      await expect(bar).toHaveAttribute('aria-label', count!)
+      back = (await shown()) === first
+    }
+    expect(back, 'the postponed item comes back to the front').toBe(true)
     await settle(page, 300)
   })
 
