@@ -281,13 +281,13 @@ const CLASSIFY_TEXT: Record<ClassifyTopic, [string, string, string]> = {
   ],
   numero: [
     'Mira si hay uno o si hay varios.',
-    'Pregúntate: ¿cuántos son? Si hay más de uno, mira cómo termina la palabra.',
-    'Las palabras que acaban en -s suelen ser varios. ¿Esta acaba en -s?',
+    'Pregúntate: ¿cuántos son? Imagina que hay uno, y luego que hay dos.',
+    '¿Habla de uno o de varios? Prueba a poner «un» o «dos» delante.',
   ],
   verbo: [
     'El verbo cambia según cuándo pasa la acción: ahora, antes o después.',
     'Mira cómo termina la palabra: cada momento tiene su terminación.',
-    'Si acaba en -ó o en -ió, pasó ya; si acaba en -á, pasará. ¿Cómo acaba?',
+    '¿Pasa ahora, ya pasó o pasará? Prueba a poner «ayer», «hoy» o «mañana» delante.',
   ],
 }
 
@@ -313,9 +313,9 @@ function classifyChips(ex: LngClassifyExercise): string[] {
 
 const TRANSFORM_TEXT: Record<Change, [string, string, string]> = {
   femenino: [
-    'En los nombres de persona o de animal, el femenino cambia la última letra.',
+    'Según sea una chica o un chico, una cosa o un animal, la palabra puede cambiar su final.',
     'Mira estos ejemplos y fíjate en cómo termina cada palabra.',
-    'Piensa: si esa persona es una chica, ¿cómo termina su nombre?',
+    'Piensa: si hablas de una niña o de una cosa así, ¿cómo termina la palabra?',
   ],
   plural: [
     'Para hablar de varios, la palabra cambia su final.',
@@ -335,7 +335,7 @@ const TRANSFORM_TEXT: Record<Change, [string, string, string]> = {
   futuro: [
     'Futuro es lo que todavía no pasa: el verbo cambia su final.',
     'Mira estos ejemplos y fíjate en cómo termina cada verbo.',
-    'Piensa en el infinitivo, el verbo completo: ¿cómo acabará cuando todavía no ha pasado?',
+    'Imagina que es mañana: ¿qué palabra usarías? Piensa en el infinitivo.',
   ],
   presente: [
     'Presente es lo que pasa ahora: el verbo cambia su final.',
