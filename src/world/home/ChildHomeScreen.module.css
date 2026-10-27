@@ -286,10 +286,13 @@
   .world { flex: 0 0 auto; min-width: 104px; }
 }
 
-/* Phones: one column, and the menu («Hoy» first) comes before the companion stage, so «Hoy» shows without scrolling. */
+/* Phones: one column, and the menu («Hoy» first) comes before the companion stage, so «Hoy» shows without scrolling.
+   The tiles go back to two columns; an odd last tile takes the whole row. */
 @media (max-width: 760px) {
   .main { grid-template-columns: minmax(0, 1fr); }
   .right { order: -1; }
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tiles > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -328,3 +331,5 @@
   cursor: pointer;
 }
 .banner:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
+/* Narrow phones: a smaller bar text so the whole sentence and its arrow stay on one line. */
+@media (max-width: 420px) { .banner { font-size: var(--fs-sm); } }

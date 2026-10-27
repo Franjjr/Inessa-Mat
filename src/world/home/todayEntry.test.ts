@@ -50,6 +50,13 @@ describe('todayEntry', () => {
     expect(todayEntry({ grade: 3, mastery: mastery3, progress: progress() }).kind).toBe('clase')
   })
 
+  it('a child without a grade follows the 3.º course: the class of the current topic', () => {
+    const mastery = masteryUntilCurrent(3, 'resta-3d-prestando')
+    expect(todayEntry({ grade: undefined, mastery, progress: progress() })).toEqual({
+      kind: 'clase', topicId: 'resta-3d-prestando', title: 'Resta de 3 cifras pidiendo prestado', to: '/play/clase/resta-3d-prestando',
+    })
+  })
+
   it('a 2.º child gives the session', () => {
     expect(todayEntry({ grade: 2, mastery: {}, progress: progress() }).kind).toBe('sesion')
   })

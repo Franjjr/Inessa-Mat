@@ -76,7 +76,11 @@ describe('classForTopic', () => {
     expect(classForTopic('mul-3x1', 3)?.topicId).toBe('mul-3x1')
     expect(classForTopic('mul-3x1', 4)).toBeUndefined()
     expect(classForTopic('mul-3x1', 2)).toBeUndefined()
-    expect(classForTopic('resta-3d-prestando')).toBeUndefined()
+  })
+
+  it('a child without a grade follows the 3.º syllabus, so gets the 3.º class', () => {
+    expect(classForTopic('resta-3d-prestando')?.topicId).toBe('resta-3d-prestando')
+    expect(classForTopic('mul-3x1', undefined)?.topicId).toBe('mul-3x1')
   })
 })
 
