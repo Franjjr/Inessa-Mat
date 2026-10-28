@@ -17,7 +17,7 @@ const monedasBilletes = clase({
   ejemplo: [
     show('money', { items: '1,2,5' }, 'Estas monedas son de cobre y valen céntimos: 1 céntimo, 2 céntimos y 5 céntimos.'),
     show('money', { items: '10,20,50' }, 'Estas monedas son doradas: 10 céntimos, 20 céntimos y 50 céntimos.'),
-    show('money', { items: '100,200' }, 'La moneda de 1 € tiene el borde plateado y el centro dorado. La de 2 € es al revés: borde dorado y centro plateado.'),
+    show('money', { items: '100,200' }, 'La moneda de 1 € tiene el borde dorado y el centro plateado. La de 2 € es al revés: borde plateado y centro dorado.'),
     show('money', { items: '500,1000,2000,5000' }, 'Los billetes de 5 €, 10 €, 20 € y 50 € son de papel y de colores distintos.'),
   ],
   guiada: [
@@ -27,7 +27,7 @@ const monedasBilletes = clase({
   sola: [
     tryIt('money', { items: '20' }, '¡Tu turno! Lee el número que tiene impreso la moneda o el billete.', { skills: ['money:recognise'] }),
     tryIt('money', { items: '1000' }, '¡Tu turno! Fíjate en el valor impreso, aunque la pieza sea pequeña.', { skills: ['money:recognise'] }),
-    tryIt('money', { items: '100' }, '¡Tu turno! Las monedas de céntimos también tienen su valor escrito: léelo con calma.', { skills: ['money:recognise'] }),
+    tryIt('money', { items: '100' }, '¡Tu turno! Las monedas y los billetes también tienen su valor escrito: léelo con calma.', { skills: ['money:recognise'] }),
   ],
   cierre: show('money', { items: '200,500' }, 'La regla: cada moneda y cada billete tiene impreso su valor. Mira el número.'),
 })

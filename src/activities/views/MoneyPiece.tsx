@@ -22,6 +22,9 @@ const COIN_COLOUR = {
   bimetal: { outer: '#b9c1cc', inner: '#e5b84a', ink: '#2c3440' },
 } as const
 
+/** The silver of the bimetal coins: the 1 € centre and the 2 € rim. */
+const SILVER = COIN_COLOUR.bimetal.outer
+
 const coinFamily = (cents: number): keyof typeof COIN_COLOUR => {
   if (cents === 200 || cents === 100) return 'bimetal'
   if (cents >= 10 && cents <= 50) return 'gold'
@@ -63,10 +66,9 @@ export function MoneyPiece({ value, size = 'md', label = false }: MoneyPieceProp
   const fontSize = text.length > 4 ? 15 : 19
   return (
     <svg viewBox="0 0 100 100" width={d} height={d} className="money-piece money-coin" {...aria} data-value={value}>
-      {/* The 1 € has a silver rim and a gold centre; the 2 € the other way round: gold rim, silver centre. */}
-      <circle cx="50" cy="50" r="49" fill={value === 200 ? COIN_COLOUR.gold.outer : colour.outer} />
-      <circle cx="50" cy="50" r="41" fill={value === 200 ? COIN_COLOUR.bimetal.outer : colour.inner} />
-      {value === 100 ? <circle cx="50" cy="50" r="19" fill={COIN_COLOUR.gold.inner} stroke={COIN_COLOUR.gold.outer} strokeWidth="2" /> : null}
+      {/* Real euro coins: the 1 € has a gold rim and a silver centre; the 2 € the other way round, silver rim and gold centre. */}
+      <circle cx="50" cy="50" r="49" fill={value === 100 ? COIN_COLOUR.gold.outer : colour.outer} />
+      <circle cx="50" cy="50" r="41" fill={value === 100 ? SILVER : colour.inner} />
       <text x="50" y="58" textAnchor="middle" fontSize={fontSize} fontWeight="800" fill={colour.ink} fontFamily="system-ui, sans-serif" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {text}
       </text>
