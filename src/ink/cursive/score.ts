@@ -42,14 +42,17 @@ const LINE_BELOW = 12
 /** Points averaged at each end of the ink when measuring its height or width (one stray point cannot move it). */
 const EXTREME_COUNT = 10
 
-/** Maps the pauta (the whole two-line writing area, ascender room to descender room) into a width × height area. */
+/** Room (model units) kept free all round the model in the pauta, so an ascender, a descender or an accent is never cut. */
+export const FIT_PAD = 8
+
+/** Maps the pauta (the two-line writing area, ascender room to descender room, plus FIT_PAD all round) into a width × height area. */
 export function fitPauta(width: number, height: number, modelWidth: number): PautaFit {
-  const span = DESCENDER - ASCENDER
-  const scale = Math.min(width / Math.max(modelWidth, 1), height / span)
+  const span = DESCENDER - ASCENDER + 2 * FIT_PAD
+  const scale = Math.min(width / Math.max(modelWidth + 2 * FIT_PAD, 1), height / span)
   return {
     scale,
     ox: (width - modelWidth * scale) / 2,
-    oy: (height - span * scale) / 2 - ASCENDER * scale,
+    oy: (height - span * scale) / 2 - (ASCENDER - FIT_PAD) * scale,
   }
 }
 
