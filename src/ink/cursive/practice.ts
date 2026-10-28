@@ -60,40 +60,64 @@ export interface LiveTracker {
   push(p: ModelPoint): LiveStatus
 }
 
+/** Look-ahead and look-behind (model units) around the progress of the stroke, and the tolerance of "same place". */
+const AHEAD = 40
+const BEHIND = 40
+const SAME_PLACE = 2
+/** The pen has gone back this far (model units) for this many points in a row: against the direction. */
+const REVERSE_UNITS = 12
+const REVERSE_POINTS = 3
+
 /**
- * The live mark of one stroke against the model: off when a point is more than liveOffPath units from the model, reverse
- * when the last few points move against the model's direction at the nearest point. Only the last points are kept, so
- * each point costs one pass over the model guide.
+ * The live mark of one stroke against the model. Off: a point is more than liveOffPath units from every model point.
+ * Reverse: the progress along the model (the guide index matched to the pen, moved forward only) falls back by more than
+ * REVERSE_UNITS for REVERSE_POINTS points in a row. The match is searched near the progress first, forward before
+ * backward, so a stroke that retraces part of the model (an «a» stem over its bowl) follows its own pass.
  */
 export function createLiveTracker(model: ModelStroke[]): LiveTracker {
   const guide = guideOf(model)
-  const LAST = 4
+  const limit = CURSIVE_THRESHOLDS.liveOffPath
   let status: LiveStatus = 'ok'
-  let trail: ModelPoint[] = []
+  let progress = -1
+  let back = 0
+  const nearestAll = (p: ModelPoint) => {
+    let k = 0
+    let d = Infinity
+    for (let i = 0; i < guide.length; i++) {
+      const di = Math.hypot(guide[i].x - p.x, guide[i].y - p.y)
+      if (di < d) { d = di; k = i }
+    }
+    return { k, d }
+  }
   return {
     get status() { return status },
-    reset() { status = 'ok'; trail = [] },
+    reset() { status = 'ok'; progress = -1; back = 0 },
     push(p) {
       if (status !== 'ok' || guide.length === 0) return status
-      trail.push(p)
-      if (trail.length > LAST) trail.shift()
-      let j = 0
-      let best = Infinity
-      for (let i = 0; i < guide.length; i++) {
-        const d = Math.hypot(guide[i].x - p.x, guide[i].y - p.y)
-        if (d < best) { best = d; j = i }
+      const global = nearestAll(p)
+      if (global.d > limit) { status = 'off'; return status }
+      if (progress < 0) {
+        progress = global.k
+        return status
       }
-      if (best > CURSIVE_THRESHOLDS.liveOffPath) { status = 'off'; return status }
-      if (trail.length === LAST) {
-        const a = trail[0]
-        const mx = p.x - a.x
-        const my = p.y - a.y
-        const len = Math.hypot(mx, my)
-        if (len >= 2) {
-          const g = guide[j]
-          if ((mx * g.tx + my * g.ty) / len < -0.5) status = 'reverse'
+      // The first model point at or ahead of the progress within reach (progress moves to the next place, not to a
+      // crossing further on); otherwise the nearest one just behind it (a backward pass).
+      const from = Math.max(0, progress - SAME_PLACE)
+      let j = -1
+      for (let i = from; i < Math.min(guide.length, progress + AHEAD + 1); i++) {
+        if (Math.hypot(guide[i].x - p.x, guide[i].y - p.y) <= limit) { j = i; break }
+      }
+      if (j < 0) {
+        let bd = Infinity
+        for (let i = progress - SAME_PLACE - 1; i >= Math.max(0, progress - BEHIND); i--) {
+          const d = Math.hypot(guide[i].x - p.x, guide[i].y - p.y)
+          if (d <= limit && d < bd) { bd = d; j = i }
         }
       }
+      if (j < 0) j = global.k
+      if (j > progress) progress = j
+      back = progress - j > REVERSE_UNITS ? back + 1 : 0
+      if (back >= REVERSE_POINTS) status = 'reverse'
       return status
     },
   }

@@ -78,8 +78,8 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
       now,
     )
     masteryNow.current = { ...masteryNow.current, [item.skill]: next }
-    recordAttempt(attempt).catch((e) => reportError('recordAttempt', e))
-    saveMastery(child.id, [next]).catch((e) => reportError('saveMastery', e))
+    recordAttempt(attempt).catch((e) => { reportError('recordAttempt', e); toast('Tu intento se guardará en cuanto haya conexión.') })
+    saveMastery(child.id, [next]).catch((e) => { reportError('saveMastery', e); toast('Tu progreso se guardará en cuanto haya conexión.') })
   }
 
   const finish = () => {

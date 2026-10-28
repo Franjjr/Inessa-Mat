@@ -32,7 +32,13 @@ const BASELINE_BAND = 1.5
 /** Strokes shorter than this (model units tall) are dots or crossbars, not the joined pen path. */
 const MARK_HEIGHT = 6
 const START_SAMPLES = 24
-const LINE_SAMPLES = 40
+/** A baseline point is compared only with ink within this many model units sideways. */
+const LINE_REACH = 12
+/** Width of the column (beyond the nearest one) whose lowest point is the child's baseline there. */
+const LINE_COLUMN = 1.5
+/** The baseline band searched for the child's ink: above it and below it (descenders start below BASELINE + LINE_BELOW). */
+const LINE_ABOVE = 15
+const LINE_BELOW = 12
 /** Points averaged at each end of the ink when measuring its height or width (one stray point cannot move it). */
 const EXTREME_COUNT = 10
 
@@ -73,8 +79,25 @@ const centre = (pts: readonly Pt[]) => {
   return { x: (e.lo + e.hi) / 2, y: (f.lo + f.hi) / 2 }
 }
 
-function spread(pts: readonly Pt[], c: Pt): number {
-  return Math.sqrt(pts.reduce((s, p) => s + (p.x - c.x) ** 2 + (p.y - c.y) ** 2, 0) / pts.length)
+/** The model point nearest to p (null when there are none). */
+function nearestPoint(p: Pt, pts: readonly Pt[]): Pt | null {
+  let best: Pt | null = null
+  let bd = Infinity
+  for (const q of pts) {
+    const d = hypot(p, q)
+    if (d < bd) { bd = d; best = q }
+  }
+  return best
+}
+
+/** Vertical gap (child − model) at one model baseline point: the child's lowest point in the nearest column that has ink. */
+function baselineGap(m: Pt, band: readonly Pt[]): number | null {
+  let minDx = Infinity
+  for (const c of band) minDx = Math.min(minDx, Math.abs(c.x - m.x))
+  if (!Number.isFinite(minDx) || minDx > LINE_REACH) return null
+  let low = -Infinity
+  for (const c of band) if (Math.abs(c.x - m.x) <= minDx + LINE_COLUMN) low = Math.max(low, c.y)
+  return low - m.y
 }
 
 function nearest(p: Pt, pts: readonly Pt[]): number {
@@ -101,6 +124,27 @@ function setOff(pts: readonly Pt[]): Pt {
   return { x: (to.x - pts[0].x) / len, y: (to.y - pts[0].y) / len }
 }
 
+/** The scale (0.6 … 1.6) about the child's centre that puts the child's points nearest to the model's (every third point). */
+function bestScale(child: readonly Pt[], model: readonly Pt[], cc: Pt, cm: Pt): number {
+  let best = 1
+  let bestErr = Infinity
+  for (let i = 0; i <= 40; i++) {
+    const k = 0.6 + i * 0.025
+    let err = 0
+    let n = 0
+    for (let j = 0; j < child.length; j += 3) {
+      const c = child[j]
+      const p = { x: (c.x - cc.x) * k + cm.x, y: (c.y - cc.y) * k + cm.y }
+      const d = nearest(p, model)
+      err += d * d
+      n++
+    }
+    const e = n ? err / n : Infinity
+    if (e < bestErr) { bestErr = e; best = k }
+  }
+  return best
+}
+
 export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, ink: readonly InkStroke[], fit: PautaFit, text: string): CursiveScore {
   const child = ink
     .filter((s) => s.points.length > 0)
@@ -120,13 +164,14 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   // Size: body height (top to bottom of the ink, end points averaged) against the model's.
   const size = childBody / modelBody
 
-  // Shape: the child's centre moved onto the model's and the child scaled to the model's spread, so the form is judged
-  // apart from size and position. Scaled by the RMS spread (it hardly moves with jitter, so noise does not shift the
-  // far ends of a wide word). Three checks: the mean distance, the share of points far off the line, and the width
+  // Shape: the child's centre moved onto the model's and the child scaled to the best fit, so the form is judged apart
+  // from size and position. Three checks: the mean distance, the share of points far off the line, and the width
   // against the height.
   const cm = centre(modelAll)
   const cc = centre(childDense)
-  const k = spread(childDense, cc) > 1e-6 ? spread(modelAll, cm) / spread(childDense, cc) : 1
+  // The scale is the one that fits the child best to the model (least squares of the nearest distances over a grid). It
+  // is unbiased by jitter, where the RMS spread grows with noise and shrinks the ends of a long word by several units.
+  const k = bestScale(childDense, modelAll, cc, cm)
   const place = (p: Pt): Pt => ({ x: (p.x - cc.x) * k + cm.x, y: (p.y - cc.y) * k + cm.y })
   const aligned = childDense.map(place)
   // Child → model uses the child's own samples: a sparse stroke interpolated onto a grid would cut its chords across
@@ -143,14 +188,22 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   // Line: the child's pen path and the model's are sampled evenly by arc length and paired point by point; the
   // model points on the baseline give the mean vertical offset. Scaling about the baseline keeps them on it, a
   // descender is never used, and a sideways shift changes nothing.
+  // Line: each model point on the baseline is compared with the child's lowest point in the same column. Only child ink
+  // that sits on the model's baseline band counts (a descender or a higher part of the letter is left out: its nearest
+  // model point is not on the baseline). The child is moved sideways to the model's centre first, so a sideways shift
+  // changes nothing. No pairing along the stroke, so a long word or a different sampling does not drift.
   const modelMain = target.strokes.filter((st) => !isMark(dense(st, 1)))
+  const modelDense = modelMain.flatMap((st) => dense(st, 1))
   const childMain = child.filter((st) => !isMark(st))
-  const lineOffsets: number[] = []
-  for (let st = 0; st < Math.min(modelMain.length, childMain.length); st++) {
-    const cs = sampleEvenly(childMain[st], LINE_SAMPLES)
-    const ms = sampleEvenly(modelMain[st], LINE_SAMPLES)
-    ms.forEach((m, i) => { if (Math.abs(m.y - BASELINE) <= BASELINE_BAND) lineOffsets.push(cs[i].y - m.y) })
-  }
+  const dx = centre(modelDense).x - centre(childDense).x
+  const modelBand = modelDense.filter((m) => Math.abs(m.y - BASELINE) <= BASELINE_BAND)
+  const childBase = childMain.flatMap((st) => dense(st, 1))
+    .map((c) => ({ x: c.x + dx, y: c.y }))
+    .filter((c) => c.y >= BASELINE - LINE_ABOVE && c.y <= BASELINE + LINE_BELOW)
+    .filter((c) => { const n = nearestPoint(c, modelDense); return n !== null && Math.abs(n.y - BASELINE) <= BASELINE_BAND })
+  const lineOffsets = modelBand
+    .map((m) => baselineGap(m, childBase))
+    .filter((g): g is number => g !== null)
   const line = lineOffsets.length ? Math.abs(mean(lineOffsets)) / XHEIGHT : 1
 
   // Start: the first pen path (marks skipped), in the aligned frame: its start point and the way it sets off

@@ -211,7 +211,7 @@ function TraceCursiveInner({ item, onDone, className }: TraceCursiveProps) {
               </div>
               <ul className={s.criteria}>
                 {CRITERIA.map((c) => (
-                  <li key={c.key} className={clsx(s.crit, last.passed[c.key] ? s.ok : s.no)} aria-label={`${c.label}: ${last.passed[c.key] ? 'bien' : 'revisar'}`}>
+                  <li key={c.key} className={clsx(s.crit, last.passed[c.key] ? s.ok : s.no)}>
                     {last.passed[c.key] ? <CheckIcon size={18} /> : <CloseIcon size={18} />}
                     <span>{c.label}</span>
                   </li>

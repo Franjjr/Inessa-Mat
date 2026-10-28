@@ -265,7 +265,7 @@ export const ERROR_TEXT: Record<ErrorType, string> = {
   'recognition': 'La letra se reconoció mal (no es un error de cálculo)',
   'calig-shape': 'La forma de la letra ligada no es la del modelo',
   'calig-line': 'La letra ligada no se apoya en la línea de abajo',
-  'calig-size': 'El tamaño de la letra ligada no es el del pauta',
+  'calig-size': 'El tamaño de la letra ligada no es el de la pauta',
   'calig-start': 'Empieza la letra ligada en otro sitio o con otra dirección',
   'dont-know': 'Dice que todavía no lo sabe',
   'bar-placement': 'Pone una cantidad en la parte equivocada de la barra',

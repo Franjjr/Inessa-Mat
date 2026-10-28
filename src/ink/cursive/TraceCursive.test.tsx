@@ -5,6 +5,7 @@ import { scriptedRecognizer } from '../dev/scripted'
 import { replayStrokes } from '../dev/autoplay'
 import { fixedElementSize, mockCanvas } from '../dev/testing'
 import type { CalItem } from '@/content/caligrafia/curriculum'
+import { CAL_CURRICULUM } from '@/content/caligrafia/curriculum'
 import { TraceCursive } from './TraceCursive'
 import { exactStrokes, scaledStrokes, shiftedStrokes, toInk } from './fixtures'
 import { joinWord } from './join'
@@ -86,6 +87,33 @@ describe('TraceCursive', () => {
     expect(screen.getAllByTestId('star-on')).toHaveLength(3)
   })
 
+  it('a finger touching down in the middle of a pen stroke does not break it (palm)', () => {
+    const { toScreen, writeArea, toWrite } = setup()
+    toWrite()
+    const area = writeArea()
+    const pts = toScreen(exactStrokes('a'))[0].points
+    const half = Math.floor(pts.length / 2)
+    const at = (el: Element, type: string, p: { x: number; y: number }, pointerType: string, pointerId: number, buttons: number) => {
+      const r = el.getBoundingClientRect()
+      el.dispatchEvent(new PointerEvent(type, {
+        bubbles: true, cancelable: true, composed: true, pointerId, pointerType, isPrimary: true,
+        pressure: buttons ? 0.5 : 0, buttons, button: type === 'pointermove' ? -1 : 0,
+        clientX: r.left + p.x, clientY: r.top + p.y,
+      }))
+    }
+    act(() => {
+      pts.slice(0, half).forEach((p, i) => at(area, i === 0 ? 'pointerdown' : 'pointermove', p, 'pen', 41, 1))
+      at(area, 'pointerdown', { x: 5, y: 5 }, 'touch', 42, 1)
+      at(area, 'pointermove', { x: 60, y: 5 }, 'touch', 42, 1)
+      at(area, 'pointerup', { x: 60, y: 5 }, 'touch', 42, 0)
+      pts.slice(half).forEach((p) => at(area, 'pointermove', p, 'pen', 41, 1))
+      const last = pts[pts.length - 1]
+      at(area, 'pointerup', last, 'pen', 41, 0)
+    })
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.getAllByTestId('star-on')).toHaveLength(3)
+  })
+
   it('a reversed stroke in Repasar shows «Al revés: sigue la flecha»', () => {
     const { toScreen, traceArea } = setup()
     fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
@@ -99,6 +127,22 @@ describe('TraceCursive', () => {
     fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
     act(() => replayStrokes(traceArea(), toScreen(shiftedStrokes(exactStrokes('a'), 30))))
     expect(screen.getByRole('status')).toHaveTextContent('Te has salido: vuelve a la línea gris')
+  })
+
+  it('the exact model of every curriculum item, traced in Repasar, raises no notice', () => {
+    for (const item of CAL_CURRICULUM) {
+      const onDone = vi.fn()
+      const { unmount } = render(
+        <InkProvider recognizer={scriptedRecognizer([])}>
+          <TraceCursive item={item} onDone={onDone} />
+        </InkProvider>,
+      )
+      fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+      const fit = fitPauta(W, H, joinWord(item.text).width)
+      act(() => replayStrokes(screen.getByRole('img', { name: /repasar/i }), toInk(exactStrokes(item.text), fit)))
+      expect(screen.getByRole('status'), item.text).toHaveTextContent('Repasa la línea gris con el lápiz')
+      unmount()
+    }
   })
 
   it('a letter has two tries: the best one is reported with the tries used', () => {
