@@ -23,6 +23,7 @@ const ChestScreen = lazy(() => import('@/world/chest/ChestScreen'))
 const DiplomaScreen = lazy(() => import('@/world/diploma/DiplomaScreen'))
 const PrizesScreen = lazy(() => import('@/world/prizes/PrizesScreen'))
 const CaligrafiaScreen = lazy(() => import('@/world/caligrafia/CaligrafiaScreen'))
+const CaligrafiaTrialScreen = lazy(() => import('@/world/caligrafia/TrialScreen'))
 // adult
 const WelcomeScreen = lazy(() => import('@/adult/welcome/WelcomeScreen'))
 const LoginScreen = lazy(() => import('@/adult/auth/LoginScreen'))
@@ -88,6 +89,7 @@ export function AppRoutes() {
         <Route path="/adult/class/:classId" element={<Adult><ClassScreen /></Adult>} />
         <Route path="/adult/join" element={<Adult><JoinClassScreen /></Adult>} />
         <Route path="/adult/settings" element={<Adult><SettingsScreen /></Adult>} />
+        <Route path="/adult/caligrafia-ensayo" element={<Adult><CaligrafiaTrialScreen /></Adult>} />
 
         {Gallery && <Route path="/dev/gallery" element={<Gallery />} />}
         <Route path="*" element={<Navigate to="/" replace />} />

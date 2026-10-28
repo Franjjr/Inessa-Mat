@@ -26,6 +26,8 @@ import s from './TraceCursive.module.css'
 export interface TraceCursiveProps {
   item: CalItem
   onDone: (result: { score: CursiveScore; tries: number }) => void
+  /** Every try, as it is scored (the trial page shows the raw values of each one). */
+  onTry?: (score: CursiveScore) => void
   className?: string
 }
 
@@ -47,7 +49,7 @@ export function TraceCursive(props: TraceCursiveProps) {
   return <TraceCursiveInner key={props.item.skill} {...props} />
 }
 
-function TraceCursiveInner({ item, onDone, className }: TraceCursiveProps) {
+function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps) {
   const ink = useInk()
   const text = item.text
   const target = useMemo(() => joinWord(text), [text])
@@ -119,6 +121,7 @@ function TraceCursiveInner({ item, onDone, className }: TraceCursiveProps) {
     setTries(tries + 1)
     setLast(score)
     setBest((b) => (b && !betterScore(score, b) ? b : score))
+    onTry?.(score)
     sfx.play(score.stars === 3 ? 'fanfare' : 'star', { volume: 0.6 })
     if (score.stars === 3) {
       const rect = areaRef.current?.getBoundingClientRect()
@@ -202,7 +205,7 @@ function TraceCursiveInner({ item, onDone, className }: TraceCursiveProps) {
         <div className={s.tools}>
           {last && (
             <div className={s.result}>
-              <div className={s.stars}>
+              <div className={s.stars} role="img" aria-label={`${last.stars} de 3 estrellas`}>
                 {[1, 2, 3].map((n) => (
                   <span key={n} className={clsx(s.star, n <= last.stars && s.on)} style={{ animationDelay: `${n * 140}ms` }}>
                     <StarIcon filled={n <= last.stars} size={40} />
