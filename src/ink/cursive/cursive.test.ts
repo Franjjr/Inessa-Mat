@@ -59,7 +59,8 @@ describe('letra ligada models', () => {
       const top = Math.min(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(top, ch).toBeLessThan(XHEIGHT - 15)
     }
-    for (const ch of 'fgjpqyz') {
+    // z is drawn on the baseline (as in Playwrite ES), so it has no descender
+    for (const ch of 'fgjpqy') {
       const bottom = Math.max(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(bottom, ch).toBeGreaterThan(BASELINE + 15)
     }

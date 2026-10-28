@@ -173,15 +173,17 @@ export const CURSIVE_LOWER: Record<string, CursiveGlyph> = {
   // m: lead-in plus two arches (three downstrokes)
   m: glyph([arches(0, 3, 15)]),
   n,
-  // r: lead-in up to the x-height, a small shoulder to the right, short downstroke, exit
-  r: glyph([spline([0, 70, 1, 60, 3, 46, 6, 41, 9, 40, 13, 40, 16, 40.5, 17, 43, 15.5, 46, 12, 47, 10.5, 52, 10, 62, 12, 70])]),
-  // x: a curved entry stroke crossing a straight diagonal from the top right
+  // r (Playwrite ES, school «r»): a lead-in rising from the baseline to a rounded top at the x-height,
+  // an arch to the right, the stem down to the baseline and a small flick out to the right
+  r: glyph([spline([0, 70, 3, 64, 7, 54, 10, 45, 12, 39, 16, 39.5, 21, 40.5, 25, 42, 28, 46, 29.5, 53, 29.5, 61, 30, 67, 32, 70, 35, 68, 37, 66])]),
+  // x (school «x»): two curved diagonals crossing at the middle, each with a bowl at its top and bottom end.
+  // The main stroke runs from the top left to the bottom right; the second one, from the top right to the bottom left, follows it.
   x: glyph(
-    [spline([0, 70, 3, 46, 8, 40.5, 13, 47, 17, 58, 21, 69])],
-    [spline([22, 41, 14, 52, 7, 63, 2, 69])],
+    [spline([1.5, 50, 5, 43.5, 8.5, 41, 12, 44, 15, 50, 17, 57, 19, 64, 23, 69, 27, 70, 31, 67, 34, 65])],
+    [spline([32.5, 49.5, 29, 44, 25.7, 41, 22, 43, 19, 49, 16.5, 56, 14, 62, 11, 68, 9.5, 70, 5, 68, 2, 65])],
   ),
-  // z: top bar, diagonal down to the left, loop below the baseline, exit to the right
-  z: glyph([spline([0, 41, 6, 40, 12, 40, 17, 40.5, 18, 42, 11, 52, 2, 66, -2, 76, -2, 86, 4, 94, 11, 95, 17, 90, 19, 80, 19, 73, 22, 69])]),
+  // z (school «z»): top bar left to right, diagonal down to the bottom left, bottom bar along the baseline to the exit
+  z: glyph([spline([0, 40, 7, 40, 14, 40, 20.5, 40.5, 18, 44, 14.5, 49, 11, 54, 7.5, 59, 4, 64, 1, 68, 0, 70, 6, 70, 12, 70, 17, 70, 22, 70])]),
   ñ: marked(n, [wave(5, 29, 26, 3.5)]),
   á: marked(a, [acute(a.width * 0.5)]),
   é: marked(e, [acute(e.width * 0.5)]),
