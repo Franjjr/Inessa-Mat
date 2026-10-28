@@ -46,7 +46,7 @@ describe('CaligrafiaSection: the handwriting practice for the grown-ups', () => 
     render(<CaligrafiaSection data={{ mastery, attempts, sessions: [] }} childName="Lía" />)
     expect(screen.getByRole('heading', { name: 'Caligrafía' })).toBeInTheDocument()
     expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Letras y enlaces dominados: a.')).toBeInTheDocument()
-    expect(screen.getByText('Lo que más falla: el tamaño')).toBeInTheDocument()
+    expect(screen.getByText('Lo que más falla: el tamaño.')).toBeInTheDocument()
   })
 
   it('is absent with no calig: attempt', () => {
