@@ -211,14 +211,18 @@ describe('clases de Lengua de 3.º', () => {
     expect(classForTopic('lng-silabas', undefined, 'language')?.topicId).toBe('lng-silabas')
   })
 
-  it('the guiada tries use the syllabus topic’s first skill, sola starts where guiada ends (R19)', () => {
+  it('the two guiada tries use the syllabus topic’s first skill and keep their hints; the sola tries after them have none (R19)', () => {
     const topics = allTopics(LENGUA3_SYLLABUS)
     for (const cls of LENGUA_CLASSES) {
       const topic = topics.find((t) => t.id === cls.topicId)!
       const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
-      expect(tries.slice(0, 2).every((st) => st.trySelector!.skills![0] === topic.skills[0]), cls.lesson.id).toBe(true)
-      expect(tries.slice(0, 2).every((st) => st.hints !== false), cls.lesson.id).toBe(true)
-      expect(tries.slice(2).every((st) => st.hints === false), cls.lesson.id).toBe(true)
+      const guiada = tries.slice(0, 2)
+      const sola = tries.slice(2)
+      expect(guiada.every((st) => st.trySelector!.skills![0] === topic.skills[0]), cls.lesson.id).toBe(true)
+      expect(guiada.every((st) => st.hints !== false), cls.lesson.id).toBe(true)
+      // sola starts where guiada ends: its own tries, three or four of them, all without hints.
+      expect(sola.length, cls.lesson.id).toBeGreaterThanOrEqual(3)
+      expect(sola.every((st) => st.hints === false), cls.lesson.id).toBe(true)
     }
   })
 

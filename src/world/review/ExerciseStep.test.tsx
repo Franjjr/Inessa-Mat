@@ -250,3 +250,26 @@ describe('ExerciseStep: focus after «Inténtalo otra vez»', () => {
   })
 })
 
+describe('ExerciseStep: the escritura guiada is never graded (lng-guided, graded: false)', () => {
+  const guided = { id: 'lng-guided:Completa la nota', kind: 'lng-guided', skill: 'lng:escr:guiada', difficulty: 3, task: 'Completa la nota para tu familia', parts: ['a', 'b'], prompts: ['¿Qué?'] } as unknown as Exercise
+
+  it('its finished text is reported once, with graded: false (outside accuracy and the session)', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    renderStep({ exercise: guided, allowDontKnow: false }, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0].graded).toBe(false)
+  })
+
+  it('a copy is graded as usual (no graded flag on the attempt)', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    const copy = { ...guided, id: 'lng-copy:El sol brilla.', kind: 'lng-copy', skill: 'lng:escr:copia' } as unknown as Exercise
+    renderStep({ exercise: copy }, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt.mock.calls[0][0].graded).toBeUndefined()
+  })
+})
