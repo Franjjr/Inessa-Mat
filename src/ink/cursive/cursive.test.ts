@@ -28,7 +28,7 @@ describe('letra ligada models', () => {
     for (const ch of lower) expect(CURSIVE_LOWER[ch], ch).toBeDefined()
     for (const ch of upper) expect(CURSIVE_UPPER[ch], ch).toBeDefined()
     expect(Object.keys(CURSIVE_LOWER)).toHaveLength(33)
-    expect(Object.keys(CURSIVE_UPPER)).toHaveLength(27)
+    expect(Object.keys(CURSIVE_UPPER)).toHaveLength(32) // A–Z, Ñ, and Á É Í Ó Ú
   })
 
   it('every stroke has at least 2 points, consecutive points at most 4 units apart, and positive width', () => {
@@ -115,5 +115,58 @@ describe('joinWord', () => {
         expect(Math.hypot(st[i].x - st[i - 1].x, st[i].y - st[i - 1].y)).toBeLessThanOrEqual(4.01)
       }
     }
+  })
+})
+
+describe('joinWord body and marks', () => {
+  const firstEntry = (text: string) => {
+    const ch = text[0]
+    return (CURSIVE_LOWER[ch] ?? CURSIVE_UPPER[ch]).entry
+  }
+
+  it.each(['is', 'tu', 'ñu', 'Fé', 'Árbol'])('"%s" starts its pen path on the body, not on a mark', (text) => {
+    const w = joinWord(text)
+    expect(w.strokes[0][0]).toEqual(firstEntry(text))
+    expect(isMark(w.strokes[0])).toBe(false)
+    expect(w.body).toBeGreaterThan(0)
+  })
+
+  it('"is" lists the body first and the i dot after it', () => {
+    const w = joinWord('is')
+    expect(w.body).toBe(1)
+    expect(isMark(w.strokes[0])).toBe(false)
+    expect(isMark(w.strokes[1])).toBe(true)
+  })
+
+  it('í carries only its accent: no dot left from the base letter', () => {
+    const g = CURSIVE_LOWER.í
+    expect(g.strokes.length).toBe(g.main + 1)
+    expect(isMark(g.strokes[g.main])).toBe(true)
+  })
+
+  it('Ñ has its tilde inside the model box (y ≥ 0)', () => {
+    const wave = CURSIVE_UPPER.Ñ.strokes.slice(CURSIVE_UPPER.Ñ.main)
+    expect(wave.length).toBeGreaterThan(0)
+    for (const st of wave) for (const p of st) expect(p.y).toBeGreaterThanOrEqual(0)
+  })
+
+  it('capital accents Á É Í Ó Ú exist with a mark above the body', () => {
+    for (const ch of 'ÁÉÍÓÚ') {
+      const g = CURSIVE_UPPER[ch]
+      expect(g, ch).toBeDefined()
+      expect(g.strokes.length, ch).toBeGreaterThan(g.main)
+    }
+  })
+
+  it('the curriculum punctuation is present and joins without being dropped', () => {
+    expect(joinWord('Mi gato come.').missing).toEqual([])
+    expect(joinWord('¿Qué?').missing).toEqual([])
+    expect(joinWord('¡Hola!').missing).toEqual([])
+    expect(joinWord('a,b').missing).toEqual([])
+  })
+
+  it('characters with no glyph are reported in missing, not silently dropped', () => {
+    expect(joinWord('a€b').missing).toEqual(['€'])
+    expect(joinWord('Árbol').missing).toEqual([])
   })
 })

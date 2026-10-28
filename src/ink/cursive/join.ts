@@ -3,10 +3,10 @@
    tangents of both ends are kept, so there is no kink). A space starts a new word offset; a letter that
    is not in the alphabet is skipped. Extra strokes (dots, tildes, crossbars) are drawn as separate strokes. */
 
-import { CURSIVE_LOWER, CURSIVE_UPPER, LINK_GAP, WORD_SPACE, type CursiveGlyph, type ModelPoint, type ModelStroke } from './models'
+import { CURSIVE_LOWER, CURSIVE_PUNCT, CURSIVE_UPPER, LINK_GAP, WORD_SPACE, type CursiveGlyph, type ModelPoint, type ModelStroke } from './models'
 
 export function glyphFor(ch: string): CursiveGlyph | undefined {
-  return CURSIVE_LOWER[ch] ?? CURSIVE_UPPER[ch]
+  return CURSIVE_LOWER[ch] ?? CURSIVE_UPPER[ch] ?? CURSIVE_PUNCT[ch]
 }
 
 const dist = (a: ModelPoint, b: ModelPoint) => Math.hypot(b.x - a.x, b.y - a.y)
@@ -37,15 +37,22 @@ function connector(p0: ModelPoint, d0: ModelPoint, p1: ModelPoint, d1: ModelPoin
   return out
 }
 
-/** Builds the strokes of a word. `width` is the advance of the whole word (no trailing space). */
-export function joinWord(text: string): { strokes: ModelStroke[]; width: number } {
-  const out: ModelStroke[] = []
+/**
+ * Builds the strokes of a word. The body (the joined pen path, in writing order) comes first, so the first point is
+ * where the pen starts; the marks (dots, bars, tildes, accents) follow. `width` is the advance of the whole word (no
+ * trailing space), `body` counts the leading body strokes, and `missing` lists characters with no glyph (they are
+ * skipped and reported, never drawn silently).
+ */
+export function joinWord(text: string): { strokes: ModelStroke[]; width: number; body: number; missing: string[] } {
+  const body: ModelStroke[] = []
+  const marks: ModelStroke[] = []
+  const missing: string[] = []
   const pen: { open: ModelStroke | null; exit: ModelPoint | null } = { open: null, exit: null }
   let x = 0 // origin of the letter being placed
   let end = 0 // x where the last letter ends
 
   const finish = () => {
-    if (pen.open && pen.open.length >= 2) out.push(pen.open)
+    if (pen.open && pen.open.length >= 2) body.push(pen.open)
     pen.open = null
   }
 
@@ -57,7 +64,10 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number 
       continue
     }
     const g = glyphFor(ch)
-    if (!g) continue
+    if (!g) {
+      missing.push(ch)
+      continue
+    }
     // Inside a word the connector travels a visible gap before the next letter's body.
     if (pen.exit) x = end + LINK_GAP
 
@@ -83,14 +93,14 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number 
       finish()
       pen.open = [...st]
     }
-    out.push(...extras)
+    marks.push(...extras)
 
     pen.exit = joined[joined.length - 1][joined[joined.length - 1].length - 1]
     x += g.width
     end = x
   }
   finish()
-  return { strokes: out, width: round(end) }
+  return { strokes: [...body, ...marks], width: round(end), body: body.length, missing }
 }
 
 const round = (n: number) => Math.round(n * 10) / 10

@@ -149,12 +149,14 @@ function wave(x0: number, x1: number, yc: number, amp: number): ModelStroke {
 
 /** A letter with marks added in its own frame. `dropDots` removes the base's own dot (í takes the accent instead). */
 function marked(base: CursiveGlyph, marks: ModelStroke[], dropDots = false): CursiveGlyph {
-  const kept = base.strokes.filter((st, i) => i < base.main || !(dropDots && isDot(st)))
+  const kept = dropDots ? base.strokes.slice(0, base.main) : base.strokes
   return { ...base, strokes: [...kept, ...marks] }
 }
 
 /** Acute accent above the x-height, rising to the right, centred on cx. */
 const acute = (cx: number): ModelStroke => spline([cx - 3, 32, cx + 4, 21])
+/** Acute accent over a capital: above the cap height, inside the model box. */
+const capAcute = (cx: number): ModelStroke => spline([cx - 3, 6, cx + 4, -4])
 /** Diaeresis: two small dots above the x-height, centred on cx. */
 const diaeresis = (cx: number): ModelStroke[] => [spline([cx - 4, 28, cx - 4, 28.5]), spline([cx + 4, 28, cx + 4, 28.5])]
 
@@ -191,5 +193,35 @@ export const CURSIVE_LOWER: Record<string, CursiveGlyph> = {
 
 export const CURSIVE_UPPER: Record<string, CursiveGlyph> = {
   ...CURSIVE_UPPER_BASE,
-  Ñ: marked(NCAP, [wave(NCAP.width * 0.2, NCAP.width * 0.8, 0, 3.5)]),
+  Ñ: marked(NCAP, [wave(NCAP.width * 0.2, NCAP.width * 0.8, 2.5, 2)]),
+  Á: marked(CURSIVE_UPPER_BASE.A, [capAcute(CURSIVE_UPPER_BASE.A.width * 0.5)]),
+  É: marked(CURSIVE_UPPER_BASE.E, [capAcute(CURSIVE_UPPER_BASE.E.width * 0.5)]),
+  Í: marked(CURSIVE_UPPER_BASE.I, [capAcute(CURSIVE_UPPER_BASE.I.width * 0.5)], true),
+  Ó: marked(CURSIVE_UPPER_BASE.O, [capAcute(CURSIVE_UPPER_BASE.O.width * 0.5)]),
+  Ú: marked(CURSIVE_UPPER_BASE.U, [capAcute(CURSIVE_UPPER_BASE.U.width * 0.5)]),
+}
+
+/** Punctuation the curriculum uses: simple strokes on the x-height band. */
+const punct = (main: ModelStroke[], extras: ModelStroke[], width: number): CursiveGlyph => {
+  const last = main[main.length - 1]
+  return { strokes: [...main, ...extras], main: main.length, width, entry: main[0][0], exit: last[last.length - 1] }
+}
+/** Rotates a glyph by 180 degrees about the middle of its box (turns ? into ¿ and ! into ¡). */
+const rotated = (g: CursiveGlyph): CursiveGlyph => {
+  const flip = (st: ModelStroke) => st.map((p) => ({ x: round1(g.width - p.x), y: round1(110 - p.y) }))
+  const strokes = g.strokes.map(flip)
+  const last = strokes[g.main - 1]
+  return { ...g, strokes, entry: strokes[0][0], exit: last[last.length - 1] }
+}
+const dotAt = (x: number, y: number): ModelStroke => spline([x, y, x + 0.5, y + 0.5])
+const QUESTION = punct([spline([0, 47, 3, 42, 8, 41, 12, 44, 11, 50, 6, 56, 5, 62])], [dotAt(5, 68)], 13)
+const EXCLAIM = punct([spline([5, 40, 5, 58])], [dotAt(5, 68)], 7)
+
+export const CURSIVE_PUNCT: Record<string, CursiveGlyph> = {
+  '.': punct([dotAt(3, 67)], [], 6),
+  ',': punct([spline([4, 66, 3, 69, 1.5, 72])], [], 6),
+  '?': QUESTION,
+  '¿': rotated(QUESTION),
+  '!': EXCLAIM,
+  '¡': rotated(EXCLAIM),
 }

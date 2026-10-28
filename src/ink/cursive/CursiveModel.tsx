@@ -24,25 +24,27 @@ export interface CursiveModelProps {
 const PAD_Y = 6
 
 /** Strokes of the whole text, with the start of every word (where the pen starts writing it). */
-function layout(text: string): { strokes: ModelStroke[]; starts: { x: number; y: number }[]; width: number } {
+function layout(text: string): { strokes: ModelStroke[]; bodies: boolean[]; starts: { x: number; y: number }[]; width: number } {
   const strokes: ModelStroke[] = []
+  const bodies: boolean[] = []
   const starts: { x: number; y: number }[] = []
   let offset = 0
   for (const word of text.split(' ')) {
     if (!word) continue
     const w = joinWord(word)
     if (!w.strokes.length) continue
-    for (const st of w.strokes) {
+    w.strokes.forEach((st, k) => {
       strokes.push(st.map((p) => ({ x: p.x + offset, y: p.y })))
-    }
+      bodies.push(k < w.body)
+    })
     starts.push({ x: w.strokes[0][0].x + offset, y: w.strokes[0][0].y })
     offset += w.width + WORD_SPACE
   }
-  return { strokes, starts, width: Math.max(0, offset - WORD_SPACE) }
+  return { strokes, bodies, starts, width: Math.max(0, offset - WORD_SPACE) }
 }
 
 export function CursiveModel({ text, look = 'dotted', showStart = true, showArrows = true, pauta = true, play = 0, className, height = 120 }: CursiveModelProps) {
-  const { strokes, starts, width } = layout(text)
+  const { strokes, bodies, starts, width } = layout(text)
   const W = Math.max(width, 10)
   const vbX = -TRACE_PAD.x
   const vbY = ASCENDER - PAD_Y - 8
@@ -87,6 +89,8 @@ export function CursiveModel({ text, look = 'dotted', showStart = true, showArro
       })}
 
       {showArrows && strokes.flatMap((st, i) => {
+        // Arrows only on body strokes long enough to show a direction (not on dots, bars, tildes or accents).
+        if (!bodies[i] || lengths[i] < 20) return []
         const count = Math.min(4, Math.max(1, Math.round(lengths[i] / 50)))
         return Array.from({ length: count }, (_, k) => {
           const f = (k + 0.5) / count
