@@ -11,7 +11,7 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import {
   buildLenguaPlacement, buildPlacement, LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS,
-  placementFlags, type LessonSubject,
+  placementFlags, type LenguaPlacementBlockId, type LessonSubject, type PlacementBlockId,
 } from '@/engine'
 import { updateProgress, useActiveChild, useProgress } from '@/data'
 import { useInputMode } from '@/ink'
@@ -20,8 +20,9 @@ import type { Exercise, ProgressState } from '@/types'
 import type { ExerciseOutcome } from '@/types'
 import s from '../session/session.module.css'
 
+/** One item of either test: the block is a maths or a Lengua one (the runner shows its label). */
 interface PlacementItemOf {
-  block: string
+  block: PlacementBlockId | LenguaPlacementBlockId
   exercise: Exercise
 }
 

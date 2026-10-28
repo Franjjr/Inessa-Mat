@@ -19,7 +19,7 @@ import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress }
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
 import type { RunQueue } from '@/activities/shared/requeue'
-import { afterAnswer, postpone, SESSION_STARS, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
+import { afterAnswer, postpone, SESSION_STARS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
 export interface DailySessionProps {
@@ -369,6 +369,17 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
   const alreadyToday = !!progress.flags?.[key]
   const [awarded, setAwarded] = useState(false)
   const started = useRef(false)
+  const marked = useRef(false)
+
+  // Any run with answers marks the day for its subject (the home switches on it), finished or cut by the time.
+  useEffect(() => {
+    if (marked.current || summary.answered === 0) return
+    marked.current = true
+    const doneKey = sessionDoneKey(new Date(), subject)
+    void updateProgress(child.id, (p) => (p.flags?.[doneKey] ? p : {
+      ...p, flags: { ...p.flags, [doneKey]: true }, updatedAt: new Date().toISOString(),
+    })).catch(() => undefined)
+  }, [summary.answered, subject, child.id])
 
   useEffect(() => {
     if (started.current || alreadyToday || !finished || summary.answered === 0) return

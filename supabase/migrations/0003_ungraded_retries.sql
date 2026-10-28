@@ -6,8 +6,9 @@
 -- and the top mistakes. Now the function leaves ungraded rows out of attempts, correct and top_errors. Rows without the
 -- flag (every row written before this change) count as before, because the filter is `is distinct from 'false'`.
 --
--- The aggregates are the maths ones (accuracy and top maths mistakes): Lengua attempts (skill 'lng:…') are left out
--- too, so a child with both subjects keeps a maths-only accuracy here.
+-- The aggregates are the maths ones (accuracy, top maths mistakes and minutes): Lengua attempts (skill 'lng:…') are left
+-- out too, so a child with both subjects keeps a maths-only accuracy here. Lengua sessions carry summary.subject =
+-- 'language' and are left out of the minutes (a session with no mark is maths).
 --
 -- Same signature, SECURITY INVOKER, search_path, and grants as 0001_init.sql. Only the function body changes.
 -- HOW TO APPLY: paste this whole file into the Supabase SQL editor and press "Run". Idempotent (create or replace,
@@ -64,6 +65,7 @@ as $$
     select t.child_id, sum(t.minutes) as minutes
     from public.sessions t
     where t.child_id = any (p_child_ids) and t.started_at >= p_since
+      and coalesce(t.summary->>'subject', 'math') <> 'language'
     group by t.child_id
   )
   select c.id,

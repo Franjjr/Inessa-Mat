@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
 import { currentTopic, syllabusForGrade } from '@/content/syllabus'
 import type { MasteryMap, ProgressState, SkillMastery } from '@/types'
-import { homeSubject, todayEntry } from './todayEntry'
+import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
 
@@ -88,8 +88,38 @@ describe('Lengua on the home', () => {
   })
 
   it('with both on, the home moves to Lengua once today\'s maths session is done', () => {
-    const mathDone = { ...progress(), flags: { 'sesion:2026-10-27': true } }
+    const mathDone = { ...progress(), flags: { 'sesion-hecha:2026-10-27': true } }
     expect(homeSubject(['math', 'language'], mathDone, new Date(NOW))).toBe('language')
     expect(homeSubject(['language'], progress(), new Date(NOW))).toBe('language')
+  })
+})
+
+describe('the home for each child (R22, R23)', () => {
+  it('a maths-only 3.º child sees maths and no picker', () => {
+    expect(homeSubjects(['math'], 3)).toEqual({ subjects: ['math'], chips: ['math'] })
+  })
+
+  it('a Lengua-only 3.º child is on Lengua alone, and the home opens on Lengua', () => {
+    const r = homeSubjects(['language'], 3)
+    expect(r).toEqual({ subjects: ['language'], chips: ['language'] })
+    expect(homeSubject(r.subjects, { ...progress() })).toBe('language')
+  })
+
+  it('a 2.º child with Lengua only falls back to maths, and sees Lengua as a disabled chip', () => {
+    const r = homeSubjects(['language'], 2)
+    expect(r.subjects).toEqual(['math'])
+    expect(r.chips).toEqual(['math', 'language'])
+    expect(homeSubject(r.subjects, progress())).toBe('math')
+  })
+
+  it('a 4.º child with maths shows Lengua as a disabled chip too', () => {
+    expect(homeSubjects(['math'], 4).chips).toEqual(['math', 'language'])
+  })
+
+  it('the home moves to Lengua on the maths day marker, not on the stars key (a run cut by the time counts)', () => {
+    const withStars = { ...progress(), flags: { 'sesion:2026-10-27': true } }
+    expect(homeSubject(['math', 'language'], withStars, new Date(NOW))).toBe('math')
+    const cut = { ...progress(), flags: { 'sesion-hecha:2026-10-27': true } }
+    expect(homeSubject(['math', 'language'], cut, new Date(NOW))).toBe('language')
   })
 })

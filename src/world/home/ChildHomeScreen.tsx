@@ -10,14 +10,14 @@ import {
   crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
-import { DAILY_MINUTES, dueSkills, masteryOf, subjectOffered } from '@/engine'
+import { DAILY_MINUTES, dueSkills, masteryOf } from '@/engine'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
 import type { ProgressState, SubjectId, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
-import { homeSubject, todayEntry } from './todayEntry'
+import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
 import s from './ChildHomeScreen.module.css'
 
 const SYNC_LABEL: Record<SyncStatus['state'], string> = {
@@ -75,11 +75,14 @@ export default function ChildHomeScreen() {
   const due = dueSkills(masteryOf(mastery, 'math'), new Date(), 50).length
   const available = progress.stars - progress.starsSpent
   const unlockedWorlds = season.worlds.filter((w) => isWorldUnlocked(progress, w.id))
-  const subjects = SUBJECTS.filter((sub) => child.settings.subjects.includes(sub.id) && subjectOffered(sub.id, child.grade))
-  const view = picked ?? homeSubject(subjects.map((sub) => sub.id), progress)
+  const { subjects: subjectIds, chips: chipIds } = homeSubjects(child.settings.subjects, child.grade)
+  const subjects = SUBJECTS.filter((sub) => subjectIds.includes(sub.id))
+  const chips = SUBJECTS.filter((sub) => chipIds.includes(sub.id))
+  const view = picked ?? homeSubject(subjectIds, progress)
   const today = todayEntry({ grade: child.grade, mastery, progress, subject: view })
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
+  const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -118,7 +121,7 @@ export default function ChildHomeScreen() {
         </div>
       </header>
 
-      {subjects.length > 1 && <SubjectPicker subjects={subjects} view={view} onPick={setPicked} />}
+      {chips.length > 1 && <SubjectPicker chips={chips} enabled={subjects} view={view} onPick={setPicked} />}
 
       <main className={s.main}>
         <div className={s.left}>
@@ -153,11 +156,11 @@ export default function ChildHomeScreen() {
 
         <div className={s.right}>
           {/* The placement test is a thin bar on top while it is pending; «Hoy» comes first after it. */}
-          {mathPlacementPending ? (
+          {view === 'math' && mathPlacementPending ? (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
               Antes de empezar: haz la prueba inicial ›
             </button>
-          ) : lenguaPlacementPending && subjects.some((sub) => sub.id === 'language') && (
+          ) : lenguaBanner && (view === 'language' || !mathPlacementPending) && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
               Antes de empezar Lengua: haz la prueba de Lengua ›
             </button>
@@ -197,42 +200,48 @@ export default function ChildHomeScreen() {
           )}
 
           <div className={s.tiles}>
-            {due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
+            {view === 'math' && due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
             <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />
             <Tile label="Mis premios" tone="yellow" onClick={() => navigate('/play/premios')} />
           </div>
         </div>
       </main>
 
-      <footer className={s.worlds} aria-label="Mundos">
+{view === 'math' && (
+              <footer className={s.worlds} aria-label="Mundos">
         {season.worlds.map((w) => (
           <WorldChip key={w.id} world={w} progress={progress} open={unlockedWorlds.includes(w)} currentWorldId={next?.worldId} onOpen={() => openWorld(w, true)} onLocked={() => openWorld(w, false)} />
         ))}
       </footer>
+      )}
     </Screen>
   )
 }
 
-/** The subjects the adult enabled. Each one opens its own view («Hoy» and the rest of the home); the ones with no content
-    yet say «Pronto». */
-function SubjectPicker({ subjects, view, onPick }: {
-  subjects: { id: SubjectId; name: string; available: boolean }[]; view: SubjectId; onPick: (id: SubjectId) => void
+/** The subjects of the picker. Each enabled one opens its own view («Ahora» marks the one on view, «Ir» the other); a
+    subject not enabled or not offered to this course says «Pronto» and is disabled. */
+function SubjectPicker({ chips, enabled, view, onPick }: {
+  chips: { id: SubjectId; name: string; available: boolean }[]; enabled: { id: SubjectId }[]; view: SubjectId
+  onPick: (id: SubjectId) => void
 }) {
   return (
     <nav className={s.subjects} aria-label="Asignaturas">
-      {subjects.map((sub) => (
-        <button
-          key={sub.id}
-          type="button"
-          className={`${s.subj} ${sub.available ? s.subjOn : s.subjOff}`}
-          disabled={!sub.available}
-          aria-current={sub.id === view ? 'page' : undefined}
-          onClick={() => onPick(sub.id)}
-        >
-          {sub.name}
-          <small>{sub.available ? (sub.id === view ? 'Aquí' : 'Ver') : 'Pronto'}</small>
-        </button>
-      ))}
+      {chips.map((sub) => {
+        const on = sub.available && enabled.some((e) => e.id === sub.id)
+        return (
+          <button
+            key={sub.id}
+            type="button"
+            className={`${s.subj} ${on ? s.subjOn : s.subjOff}`}
+            disabled={!on}
+            aria-current={on && sub.id === view ? 'page' : undefined}
+            onClick={() => onPick(sub.id)}
+          >
+            {sub.name}
+            <small>{!on ? 'Pronto' : sub.id === view ? 'Ahora' : 'Ir'}</small>
+          </button>
+        )
+      })}
     </nav>
   )
 }

@@ -2,8 +2,8 @@
    «Ahora, Lengua»: the class of the topic, a typed word with the letter keyboard, a story with its questions, and the stars.
    The answers are not checked here (the planner and the views have their own tests): the driver answers whatever is on
    screen, so that the flow goes on. Typed answers are checked at 390 × 844 and at 1180 × 820. No audio is played: the
-   lesson narration and the stories read aloud are off in these tests, the dictation is never planned here, and the
-   «Escuchar» buttons are not pressed. */
+   lesson narration is off in these tests (voice: false), the dictation is never planned here, and the «Escuchar» button of
+   a passage speaks only on an explicit press, which these tests never make (R16). */
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { devFlag, devMasterUntilTopic, devSettings, seedDemo, settle } from '../helpers'
 
@@ -11,13 +11,13 @@ const READING_TITLE = 'El camaleón que quería parecer otro'
 const CLASS_TITLE = 'Letras, sílabas y palabras'
 const CONTINUE = /^(Siguiente|Ver mi resultado|Terminar|Inténtalo otra vez|¡Ahora las preguntas!|¡Entendido, a por ello!|¡Lo he entendido!)/
 
-/** The letters of a typed word: the on-screen letter keyboard when the device shows it, the physical keyboard otherwise. */
 /** On a touch screen the word starts with the pen: «Usar el teclado de letras» brings the letter keyboard up. */
 async function openLetterKeyboard(page: Page): Promise<void> {
   const toggle = page.getByRole('button', { name: 'Usar el teclado de letras' })
   if (await toggle.isVisible().catch(() => false)) await toggle.click()
 }
 
+/** The letters of a typed word: the on-screen letter keyboard when the device shows it, the physical keyboard otherwise. */
 async function typeLetters(page: Page, box: Locator, letters: string): Promise<void> {
   await openLetterKeyboard(page)
   await box.click()
@@ -138,6 +138,9 @@ test.describe('Lengua de 3.º', () => {
     // Then Lengua: the big button is now «Ahora, Lengua» with the class of its first topic.
     const hoy = page.getByRole('button', { name: /Hoy aprendemos/ })
     await expect(hoy).toContainText(CLASS_TITLE)
+    // The Lengua view has no maths pieces: no adventure card and no world bar.
+    await expect(page.getByRole('button', { name: /Mi aventura/ })).toHaveCount(0)
+    await expect(page.getByLabel('Mundos')).toHaveCount(0)
     await page.screenshot({ path: `${process.env.E2E_SHOTS ?? 'test-results'}/lengua-hoy-${info.project.name}.png` })
     await hoy.click()
     await expect(page).toHaveURL(/\/play\/clase\/lng-silabas$/)

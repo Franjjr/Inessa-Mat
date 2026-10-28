@@ -48,6 +48,13 @@ export function sessionRewardKey(now: Date, subject: LessonSubject = 'math'): st
   return subject === 'language' ? `sesion-lengua:${day}` : `sesion:${day}`
 }
 
+/** The day marker of a session that had answers, finished or cut by the time: the home moves on to Lengua after the maths
+    one (it is not the stars key, which only a finished run earns). */
+export function sessionDoneKey(now: Date, subject: LessonSubject = 'math'): string {
+  const day = now.toISOString().slice(0, 10)
+  return subject === 'language' ? `sesion-hecha-lengua:${day}` : `sesion-hecha:${day}`
+}
+
 export function isTimeUp(activeSeconds: number): boolean {
   return activeSeconds >= SESSION_LIMIT_SECONDS
 }

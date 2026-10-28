@@ -2,7 +2,7 @@
    left out without sound (R16), and that only Lengua skills reach the plan. */
 import { describe, expect, it } from 'vitest'
 import { STORY_READINGS } from '@/content/lengua/stories'
-import { LENGUA3_SYLLABUS } from '@/content/syllabus'
+import { LENGUA3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import { initialProgress } from '@/content'
 import { DEFAULT_CHILD_SETTINGS, type ChildProfile, type MasteryMap, type ProgressState, type SkillMastery } from '@/types'
 import { LENGUA_PRACTICE_TARGET_SECONDS, planLenguaSession, storyFlag } from '../daily'
@@ -72,11 +72,15 @@ describe('planLenguaSession', () => {
     expect(next.blocks[2].items[0].passage?.id).toBe(STORY_READINGS[1].id)
   })
 
-  it('re-reads a story when every story is read', () => {
+  it('re-reads a story when every story is read: one whole story with its own questions, in order', () => {
     const flags = Object.fromEntries(STORY_READINGS.map((r) => [storyFlag(r.id), true]))
     const p = plan({ progress: progress(flags) })
-    const id = p.blocks[2].items[0].passage?.id
-    expect(STORY_READINGS.map((r) => r.id)).toContain(id)
+    const story = p.blocks[2].items
+    const reading = STORY_READINGS.find((r) => r.id === story[0].passage?.id)
+    expect(reading, 'the story is one of the readings').toBeDefined()
+    expect(story.length).toBe(reading!.questions.length)
+    expect(story.map((i) => i.exercise.id)).toEqual(reading!.questions.map((_, i) => `reading:${reading!.id}:${i}`))
+    expect(story[story.length - 1].finishesReading).toBe(reading!.id)
   })
 
   it('the mix is spelling and vocabulary only', () => {
@@ -84,6 +88,19 @@ describe('planLenguaSession', () => {
     const mix = p.blocks[3].items
     expect(mix.length).toBeGreaterThanOrEqual(3)
     expect(mix.every((i) => /^lng:(orto|voc):/.test(i.exercise.skill))).toBe(true)
+  })
+
+  it('with sound the planner plans the dictation of its topic (the positive control of R16)', () => {
+    // Every topic before the dictation is learnt, so «Lo nuevo» teaches the dictation.
+    const mastery: MasteryMap = {}
+    for (const t of teachingOrder(LENGUA3_SYLLABUS)) {
+      if (t.id === 'lng-dictado') break
+      for (const s of t.skills) mastery[s] = learnt([s])[s]
+    }
+    const p = plan({ mastery, c: child({ sound: true }) })
+    expect(p.topic?.id).toBe('lng-dictado')
+    const kinds = p.blocks.flatMap((b) => b.items.map((i) => i.exercise.kind))
+    expect(kinds).toContain('lng-dictation')
   })
 
   it('without sound the planner leaves dictation out of every block (R16)', () => {

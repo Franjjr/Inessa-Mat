@@ -23,13 +23,13 @@ export function syllabusForGrade(grade?: number): Syllabus {
   return grade >= 4 ? GRADE4_SYLLABUS : GRADE3_SYLLABUS
 }
 
-/** The temario of a subject for a course. Maths is syllabusForGrade. Lengua has 3.º (a child without a course follows it);
-    2.º and 4.º are empty until their temarios exist, so they have no topics. */
 /** The subject of a syllabus topic from its id: the Lengua topics start with `lng-`, every other one is maths. */
 export function subjectOfTopic(topicId: string): SubjectId {
   return topicId.startsWith('lng-') ? 'language' : 'math'
 }
 
+/** The temario of a subject for a course. Maths is syllabusForGrade. Lengua has 3.º (a child without a course follows it);
+    2.º and 4.º are empty until their temarios exist, so they have no topics. */
 export function syllabusFor(subject: SubjectId, grade?: number): Syllabus {
   if (subject === 'math') return syllabusForGrade(grade)
   if (subject === 'language' && (grade === undefined || grade === 3)) return LENGUA3_SYLLABUS
