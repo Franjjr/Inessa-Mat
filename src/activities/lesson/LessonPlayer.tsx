@@ -9,6 +9,7 @@ import type { LessonDef, LessonStep, SubMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
 import { LESSON_VISUALS } from './visuals'
+import { noBreakGroups } from './visuals/format'
 import { SafeVisual } from './SafeVisual'
 import TrySlot from './TrySlot'
 import ChoiceSlot from './ChoiceSlot'
@@ -193,7 +194,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             <Character id={stageId} pose={pose} size={avatarSize} animated={!reduced} />
           </div>
           <div className={styles.bubble} aria-live="polite">
-            <p className={styles.text} key={current} data-testid="lesson-text">{text}</p>
+            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(text)}</p>
           </div>
         </aside>
       </div>

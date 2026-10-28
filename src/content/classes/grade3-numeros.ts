@@ -26,7 +26,7 @@ const descomponer = clase({
   ],
   sola: [
     tryIt('place-value', { n: 4325 }, '¡Tu turno! Cada cifra vale según su casa.', { skills: ['num:place:expanded'] }),
-    tryIt('place-value', { n: 4325 }, '¡Tu turno! Cuidado con las casas que tienen 0.', { skills: ['num:place:expanded'] }),
+    tryIt('place-value', { n: 4325 }, '¡Tu turno! Si una casa tiene 0, no la olvides.', { skills: ['num:place:expanded'] }),
     tryIt('place-value', { n: 4325 }, '¡Tu turno! Sin pistas: cuenta los bloques de cada casa.', { skills: ['num:place:blocks'] }),
   ],
   cierre: show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'La regla: cada cifra vale según su casa. Si una casa tiene 0, no hace falta escribirla.'),
@@ -66,7 +66,7 @@ const compararOrdenar = clase({
   title: 'Comparar y ordenar',
   para: [
     show('place-value', { n: 4052 }, 'En el concurso de dibujo, Dani tiene 4 052 puntos y Pepa tiene 3 998. ¿Quién gana?', 'ladybug'),
-    show('big-text', { text: '4 052 > 3 998', sub: '¿Cuál es mayor?' }, 'Para saber cuál es mayor, miramos primero los millares.', 'frog'),
+    show('big-text', { text: '4 052 · 3 998', sub: 'los dos puntajes' }, 'Para saber quién tiene más, comparamos los dos números: miramos primero los millares.', 'frog'),
   ],
   ejemplo: [
     show('big-text', { text: '4 052 > 3 998', sub: 'mayor que' }, 'El signo > significa «mayor que». La boca del signo mira al número más grande.'),
@@ -119,8 +119,8 @@ const ordinales = clase({
   topicId: 'ordinales',
   title: 'Ordinales',
   para: [
-    show('big-text', { text: 'Tercero', sub: '3.º' }, 'En la carrera de la feria, Dani llega el tercero. ¿Qué quiere decir?', 'ladybug'),
-    show('big-text', { text: '1.º · 2.º · 3.º · 4.º · 5.º' }, 'Los números que dicen el orden son los ordinales. Se escriben con el número y una o pequeña.', 'frog'),
+    show('big-text', { text: 'Tercero', sub: '3.º' }, 'En la carrera de la feria, Dani llega tercero. ¿Qué quiere decir?', 'ladybug'),
+    show('big-text', { text: '1.º · 2.º · 3.º · 4.º · 5.º' }, 'Los números que dicen el orden son los ordinales. Se escriben con el número y la letra o pequeña.', 'frog'),
   ],
   ejemplo: [
     show('big-text', { text: '1.º · 2.º · 3.º · 4.º · 5.º', sub: 'primero, segundo, tercero, cuarto, quinto' }, 'Cuenta desde la punta de la fila: el primero es el que está delante.'),
@@ -137,7 +137,7 @@ const ordinales = clase({
     tryIt('big-text', { text: '21.º', sub: 'vigésimo primero' }, '¡Tu turno! Del once al veinte, cuenta con cuidado.', { skills: ['num:ordinal:20'] }),
     tryIt('big-text', { text: '21.º', sub: 'vigésimo primero' }, '¡Tu turno! Del veinte en adelante, primero el vigésimo.', { skills: ['num:ordinal:30'] }),
   ],
-  cierre: show('big-text', { text: '21.º', sub: 'vigésimo primero' }, 'La regla: el ordinal se escribe con el número y una o pequeña, y se lee con su palabra: 3.º, tercero.'),
+  cierre: show('big-text', { text: '21.º', sub: 'vigésimo primero' }, 'La regla: el ordinal se escribe con el número y la letra o pequeña, y se lee con su palabra: 3.º, tercero.'),
 })
 
 /* Números de cinco cifras (introducción): la casa nueva es la decena de millar. */
@@ -147,7 +147,7 @@ const cincoCifras = clase({
   title: 'Números de cinco cifras',
   para: [
     show('big-text', { text: '12 345', sub: 'doce mil trescientos cuarenta y cinco' }, 'Ya tenemos más de 9 999: hay números con cinco cifras.', 'owl'),
-    show('big-text', { text: '10 000', sub: 'diez mil' }, 'Diez millares hacen diez mil. Son las decenas de millar.', 'owl'),
+    show('big-text', { text: '10 000', sub: 'diez mil' }, 'Diez millares hacen diez mil: 10 000 es una decena de millar.', 'owl'),
   ],
   ejemplo: [
     show('big-text', { text: '12 345 = 10 000 + 2 000 + 300 + 40 + 5' }, 'El 1 de 12 345 está en las decenas de millar: vale 10 000.'),

@@ -32,9 +32,11 @@ describe('clases de números (3.º)', () => {
       const topic = topics.find((t) => t.id === cls.topicId)!
       const tries = cls.lesson.steps.filter((s) => s.interaction === 'try')
       for (const step of tries) {
-        const [exercise] = generate(step.trySelector!, 1, { rng: createRng(1) })
-        expect(exercise, cls.lesson.id).toBeDefined()
-        expect(topic.skills, `${cls.lesson.id}: ${exercise.skill}`).toContain(exercise.skill)
+        for (const seed of [1, 2, 3]) {
+          const [exercise] = generate(step.trySelector!, 1, { rng: createRng(seed) })
+          expect(exercise, cls.lesson.id).toBeDefined()
+          expect(topic.skills, `${cls.lesson.id}: ${exercise.skill} (seed ${seed})`).toContain(exercise.skill)
+        }
       }
     }
   })
