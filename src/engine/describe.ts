@@ -83,7 +83,7 @@ export const LENGUA_SKILL_TEXT: Record<string, string> = {
   'lng:voc:antonimos': 'Antónimos: palabras que significan lo contrario',
   'lng:voc:familias': 'Familias de palabras',
   'lng:voc:diminutivos': 'Diminutivos (-ito, -ita)',
-  'lng:voc:aumentativos': 'Aumentativos (-ona, -ote, -azo)',
+  'lng:voc:aumentativos': 'Aumentativos (-ona, -ota, -ote, -azo)',
   'lng:voc:compuestas': 'Palabras compuestas (formadas por dos palabras)',
   'lng:escr:dictado': 'Dictado: escribir lo que se oye',
   'lng:escr:copia': 'Copiar frases sin errores',

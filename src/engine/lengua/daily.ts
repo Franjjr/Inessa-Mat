@@ -99,6 +99,8 @@ export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
       : open.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
     for (let i = 0; candidates.length && newItems.length < LENGUA_NEW_MAX && i < LENGUA_NEW_MAX * 3; i++) {
       const skill = candidates[i % candidates.length]
+      // A guided text takes minutes: one a session, however many slots «Lo nuevo» has.
+      if (GUIDED_SKILL.includes(skill) && newItems.some((it) => GUIDED_SKILL.includes(it.exercise.skill))) continue
       const ex = make(skill, rng)
       if (ex) newItems.push({ exercise: ex, block: 'new', scaffold: false, isNew: !mastery[skill] })
     }

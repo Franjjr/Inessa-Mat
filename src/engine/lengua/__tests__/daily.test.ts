@@ -131,6 +131,18 @@ describe('planLenguaSession', () => {
     expect(p.topic?.id).not.toBe('lng-dictado')
   })
 
+  it('when «Lo nuevo» is the guided writing it holds one guided text, not one per slot', () => {
+    const mastery: MasteryMap = {}
+    for (const t of teachingOrder(LENGUA3_SYLLABUS)) {
+      if (t.id === 'lng-escritura-guiada') break
+      for (const s of t.skills) mastery[s] = learnt([s])[s]
+    }
+    const p = plan({ mastery, c: child({ sound: true }) })
+    expect(p.topic?.id).toBe('lng-escritura-guiada')
+    const guided = p.blocks.flatMap((b) => b.items).filter((i) => i.exercise.skill === 'lng:escr:guiada')
+    expect(guided).toHaveLength(1)
+  })
+
   it('the same child and day give the same plan, and the plan never holds a maths skill', () => {
     const a = plan({ mastery: learnt(['lng:gram:articulo']) })
     const b = plan({ mastery: learnt(['lng:gram:articulo']) })

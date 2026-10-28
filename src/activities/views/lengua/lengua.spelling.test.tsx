@@ -177,6 +177,18 @@ describe('OrderWordsView', () => {
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.errorType).toBe('alphabet')
   })
+
+  it('the mini diccionario: a second tap swaps the choice, and «Comprobar» stays available', () => {
+    const ex = first('lng-alphabet', 'lng:voc:abecedario', 0)
+    const onAnswered = vi.fn()
+    render(<OrderWordsView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    const other = ex.words.find((_, i) => i !== ex.targets[0]) ?? ''
+    fireEvent.click(screen.getByRole('button', { name: other }))
+    fireEvent.click(screen.getByRole('button', { name: ex.words[ex.targets[0]] }))
+    expect(screen.getByRole('button', { name: other }).getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
 })
 
 describe('PairWordsView', () => {

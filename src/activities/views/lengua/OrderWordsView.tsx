@@ -25,15 +25,16 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: {
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const locked = flow.result?.correct === true
 
+  // «Sale antes» is one choice: a second tap swaps it.
+  const first = ex.mode === 'first'
   const tap = (i: number) => {
     if (locked) return
-    setOrder((o) => (o.includes(i) ? o.filter((x) => x !== i) : [...o, i]))
+    setOrder((o) => (o.includes(i) ? o.filter((x) => x !== i) : first ? [i] : [...o, i]))
   }
   const submit = () => {
     const c = flow.submit({ type: 'marks', marked: order })
     if (c.correct) celebrate('small')
   }
-  const first = ex.mode === 'first'
 
   return (
     <section className={s.view} aria-label="Ordenar por el abecedario" data-kind={ex.kind} data-status={status}>
