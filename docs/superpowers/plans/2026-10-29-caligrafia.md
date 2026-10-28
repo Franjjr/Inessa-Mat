@@ -4,7 +4,7 @@
 
 **Goal:** An optional 5-minute cursive-handwriting practice with the pen, offered at the end of the Lengua session, that models each letter, lets the child trace and then write it on a two-line pauta, and grades shape, line, size and start strictly.
 
-**Architecture:** Cursive letter models are centerline strokes (like `src/ink/digitModels.ts`) in a new `src/ink/cursive/` module, with a joiner that builds words. A pure scorer compares the child's strokes with the fitted model and returns four criteria, stars and one tip; its thresholds live in one config file. Handwriting skills use the `cal:` prefix, kept out of maths and Lengua readers. A planner picks 2–3 items; a new screen at `/play/caligrafia` runs mirar → repasar → escribir sola, reusing the ink capture, palm guard and stroke tools of `TraceDigit`.
+**Architecture:** Cursive letter models are centerline strokes (like `src/ink/digitModels.ts`) in a new `src/ink/cursive/` module, with a joiner that builds words. A pure scorer compares the child's strokes with the fitted model and returns four criteria, stars and one tip; its thresholds live in one config file. Handwriting skills use the `calig:` prefix, kept out of maths and Lengua readers. A planner picks 2–3 items; a new screen at `/play/caligrafia` runs mirar → repasar → escribir sola, reusing the ink capture, palm guard and stroke tools of `TraceDigit`.
 
 **Tech Stack:** React 18 + TS + Vite, Dexie, Supabase sync, inline SVG, Pointer Events, Vitest + Testing Library, Playwright.
 
@@ -16,7 +16,7 @@
 - Letra ligada; two-line pauta (baseline and x-height line, with ascender/descender room).
 - Strict grading: three stars only when all four criteria pass; a near miss (any one criterion just failed) gets at most two stars. Every result shows exactly one concrete Spanish tip about the worst criterion.
 - The 5 minutes are after the 15-minute Lengua session: `src/engine/lengua/daily.ts` does not change.
-- Skill keys start with `cal:`; maths and Lengua readers (`masteryOf`, `attemptsOf`, `subjectOfSession`, server `child_stats`) never count them.
+- Skill keys start with `calig:`; maths and Lengua readers (`masteryOf`, `attemptsOf`, `subjectOfSession`, server `child_stats`) never count them.
 - Strokes are scored on the device and never stored or sent; only the attempt (skill, correct, errorType, context with the four criteria) and mastery are saved.
 - Caligrafía stars go to the shared wallet, once a day (own reward key), and do not affect the Lengua session stars.
 - Spanish copy: correct, short, masculino genérico (no inclusive language). Never play audio in tests.
@@ -33,7 +33,7 @@
 
 ---
 
-### Task 1: The `cal:` skills, the setting and the cloud stats
+### Task 1: The `calig:` skills, the setting and the cloud stats
 
 **Files:**
 - Modify: `src/engine/subjects.ts`, `src/engine/skills.ts` (isValidSkill), `src/types/child.ts` (ChildSettings.handwriting, DEFAULT_CHILD_SETTINGS), `src/data/merge.ts` if settings merge needs the new key
@@ -41,12 +41,12 @@
 - Test: `src/engine/__tests__/subjects.test.ts` (extend), `src/engine/__tests__/skills.test.ts` (extend)
 
 **Interfaces:**
-- Produces: `export function isHandwritingSkill(skill: SkillKey): boolean` (prefix `cal:`); `masteryOf(m, 'math' | 'language')` and `attemptsOf(list, 'math' | 'language')` exclude `cal:` keys; `export function handwritingMastery(m: MasteryMap): MasteryMap` and `handwritingAttempts<T>(list: T[]): T[]`.
+- Produces: `export function isHandwritingSkill(skill: SkillKey): boolean` (prefix `calig:`); `masteryOf(m, 'math' | 'language')` and `attemptsOf(list, 'math' | 'language')` exclude `calig:` keys; `export function handwritingMastery(m: MasteryMap): MasteryMap` and `handwritingAttempts<T>(list: T[]): T[]`.
 - Produces: `ChildSettings.handwriting: boolean` (default `true`).
-- Produces: skill key grammar `cal:letra:<l>`, `cal:mayus:<L>`, `cal:enlace:<ab>`, `cal:palabra:<word>`, `cal:frase:<id>`; `isValidSkill` true for keys of the curriculum of Task 4 (until Task 4 exists, for any key matching that grammar).
-- Migration 0004: `public.child_stats` as in 0003 plus `and t.skill not like 'cal:%'` in the `a` and `e` CTEs (same signature, security invoker, grants, header «HOW TO APPLY» like 0003; idempotent `create or replace`).
+- Produces: skill key grammar `calig:letra:<l>`, `calig:mayus:<L>`, `calig:enlace:<ab>`, `calig:palabra:<word>`, `calig:frase:<id>`; `isValidSkill` true for keys of the curriculum of Task 4 (until Task 4 exists, for any key matching that grammar).
+- Migration 0004: `public.child_stats` as in 0003 plus `and t.skill not like 'calig:%'` in the `a` and `e` CTEs (same signature, security invoker, grants, header «HOW TO APPLY» like 0003; idempotent `create or replace`).
 
-- [ ] **Step 1: Failing tests:** `masteryOf({ 'cal:letra:a': row, 'add:2d:c0': row, 'lng:gram:articulo': row }, 'math')` has only the `add` key; same for `'language'` → only `lng`; `handwritingMastery` → only `cal`; `attemptsOf` likewise; `isValidSkill('cal:letra:a') === true`, `isValidSkill('cal:') === false`; `DEFAULT_CHILD_SETTINGS.handwriting === true`; a text test that `0004_caligrafia_stats.sql` contains `not like 'cal:%'` twice and `not like 'lng:%'` twice.
+- [ ] **Step 1: Failing tests:** `masteryOf({ 'calig:letra:a': row, 'add:2d:c0': row, 'lng:gram:articulo': row }, 'math')` has only the `add` key; same for `'language'` → only `lng`; `handwritingMastery` → only `cal`; `attemptsOf` likewise; `isValidSkill('calig:letra:a') === true`, `isValidSkill('cal:') === false`; `DEFAULT_CHILD_SETTINGS.handwriting === true`; a text test that `0004_caligrafia_stats.sql` contains `not like 'calig:%'` twice and `not like 'lng:%'` twice.
 - [ ] **Step 2:** Run → FAIL. **Step 3:** Implement. **Step 4:** Run the two test files + `npx tsc -b` → PASS. **Step 5:** Commit «Caligrafía: skills cal:, ajuste del niño y estadísticas de la nube sin caligrafía».
 
 ### Task 2: The cursive models and the word joiner
@@ -87,7 +87,7 @@
 - Produces: `planCaligrafia(input: { mastery: MasteryMap; now: Date; rng?: Rng }): CalItem[]` — 2 or 3 items: the weakest learnt item due for review (lowest box, oldest) and the next unlearnt items in order, a new item only if every earlier item has box ≥ 1; never more than one frase. Estimated ≈ 5 min (letra 90 s, enlace 100 s, palabra 120 s, frase 150 s; stop adding when ≥ 240 s).
 - `isValidSkill` (Task 1) now checks membership in `CAL_CURRICULUM`.
 
-- [ ] **Step 1: Failing tests:** empty mastery → first items `cal:letra:a`, `cal:letra:o`; with `a` at box 0 and `o` unseen → `a` (review) plus `o`; with every letter learnt → the first enlace appears; never two frases; total estimate between 240 and 360 s; deterministic with the same day; every item's text is drawable by `joinWord` (no missing glyph).
+- [ ] **Step 1: Failing tests:** empty mastery → first items `calig:letra:a`, `calig:letra:o`; with `a` at box 0 and `o` unseen → `a` (review) plus `o`; with every letter learnt → the first enlace appears; never two frases; total estimate between 240 and 360 s; deterministic with the same day; every item's text is drawable by `joinWord` (no missing glyph).
 - [ ] **Steps 2–5:** FAIL, implement, PASS + `npx tsc -b`, commit «Caligrafía: temario de letras, enlaces, palabras y frases; plan del día».
 
 ### Task 5: The practice screen
@@ -101,7 +101,7 @@
 - Produces: `<TraceCursive item={CalItem} onDone={(r: { score: CursiveScore; tries: number }) => void} />` running three steps: **Mirar** (`CursiveModel` with `play`), **Repasar** (dotted model under the ink; live mark: if the pen goes > `CURSIVE_THRESHOLDS.liveOffPath` units off the model or against its direction, the stroke turns orange and a short line says «Te has salido: vuelve a la línea gris» / «Al revés: sigue la flecha»), **Escribir sola** (no model, 2 tries for letters and enlaces, 1 for palabras and frases; the best try counts). After each try: the stars, the four criteria as four small icons (forma, línea, tamaño, inicio) and the tip; buttons «Otra vez» and «Siguiente».
 - `CaligrafiaScreen`: plans with `planCaligrafia`, runs the items, records one attempt per item (`skill`, `correct = stars === 3`, `errorType = 'cal-' + worst` when not 3 stars, `context: { shape, line, size, start, stars }`), updates mastery, grants the daily caligrafía stars on the first finish of the day, then «¡Terminado!» and back home. «Salir» at any time.
 
-- [ ] **Step 1: Failing tests** (`replayStrokes` from `src/ink/dev/autoplay` and fixtures from Task 3): TraceCursive shows Mirar → Repasar → Escribir sola; replaying the exact fixture in Escribir sola shows 3 stars; replaying the scaled fixture shows ≤ 2 stars and the size tip; a `touch` stroke during a pen stroke is ignored (palm); a reversed stroke in Repasar shows «Al revés: sigue la flecha»; CaligrafiaScreen records one attempt per item with `cal:` skill and `context.stars`, and grants the stars once per day (second finish the same day grants none).
+- [ ] **Step 1: Failing tests** (`replayStrokes` from `src/ink/dev/autoplay` and fixtures from Task 3): TraceCursive shows Mirar → Repasar → Escribir sola; replaying the exact fixture in Escribir sola shows 3 stars; replaying the scaled fixture shows ≤ 2 stars and the size tip; a `touch` stroke during a pen stroke is ignored (palm); a reversed stroke in Repasar shows «Al revés: sigue la flecha»; CaligrafiaScreen records one attempt per item with `calig:` skill and `context.stars`, and grants the stars once per day (second finish the same day grants none).
 - [ ] **Steps 2–5:** FAIL, implement, PASS + `npx tsc -b`, commit «Caligrafía: pantalla de práctica con mirar, repasar y escribir sola».
 
 ### Task 6: The offer after Lengua, the adult switch and the report
@@ -115,9 +115,9 @@
 - Produces: `export function caligrafiaOffered(child: ChildProfile, ink: { penSeen: boolean; mode: InputMode }): boolean` (true when Lengua is enabled for the child, `settings.handwriting !== false`, and `penSeen || mode === 'pen'`).
 - Lengua end card (only when offered): «¿Practicamos la letra con el lápiz? Son 5 minutos.» with «Caligrafía (con lápiz)» → `/play/caligrafia` and «Ahora no» → home as today.
 - Adult toggle in the child card: «Caligrafía con lápiz» on/off (writes `settings.handwriting`).
-- Report section «Caligrafía» (hidden when there is no `cal:` attempt): letters/enlaces dominados, the ones that cost (box 0–1 with attempts), and the most frequent failing criterion in words («Lo que más falla: el tamaño»).
+- Report section «Caligrafía» (hidden when there is no `calig:` attempt): letters/enlaces dominados, the ones that cost (box 0–1 with attempts), and the most frequent failing criterion in words («Lo que más falla: el tamaño»).
 
-- [ ] **Step 1: Failing tests:** `caligrafiaOffered` false when `penSeen=false` and mode `touch`; false with `handwriting:false`; true with pen seen; the Lengua end shows the card only when offered and «Caligrafía (con lápiz)» navigates to `/play/caligrafia`; the adult toggle writes the setting; the report section lists a learnt `cal:letra:a` and shows «el tamaño» when most attempts have `errorType 'cal-size'`, and is absent with no `cal:` attempts; the maths report numbers do not change when `cal:` attempts are added.
+- [ ] **Step 1: Failing tests:** `caligrafiaOffered` false when `penSeen=false` and mode `touch`; false with `handwriting:false`; true with pen seen; the Lengua end shows the card only when offered and «Caligrafía (con lápiz)» navigates to `/play/caligrafia`; the adult toggle writes the setting; the report section lists a learnt `calig:letra:a` and shows «el tamaño» when most attempts have `errorType 'cal-size'`, and is absent with no `calig:` attempts; the maths report numbers do not change when `calig:` attempts are added.
 - [ ] **Steps 2–5:** FAIL, implement, PASS + `npx tsc -b`, commit «Caligrafía: oferta al terminar Lengua, interruptor del adulto y ficha».
 
 ### Task 7: The trial page, e2e and docs

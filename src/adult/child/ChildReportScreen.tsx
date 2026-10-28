@@ -22,7 +22,7 @@ import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
 import { OtherMethodsCard } from './OtherMethodsCard'
-import { LearningSection, LenguaSection, useLearningData } from './LearningCards'
+import { CaligrafiaSection, LearningSection, LenguaSection, useLearningData } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -216,6 +216,7 @@ export default function ChildReportScreen() {
         data={learning.data}
         loadError={learning.error}
       />
+      <CaligrafiaSection data={learning.data} childName={name} />
 
       <div className={s.twoCol}>
         <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">

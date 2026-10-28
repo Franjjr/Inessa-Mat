@@ -2,7 +2,8 @@ import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { syllabusReport } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
-import { TemarioCard } from './LearningCards'
+import type { AttemptRecord, MasteryMap } from '@/types'
+import { CaligrafiaSection, TemarioCard } from './LearningCards'
 
 /** The list row of a topic: its text starts with the topic name (the name can also appear in the lead text). */
 const rowOf = (name: string) => screen.getAllByRole('listitem').find((li) => li.querySelector('span')?.textContent?.startsWith(name)) as HTMLElement
@@ -29,5 +30,33 @@ describe('TemarioCard: what the child needed per topic', () => {
     const other = all.find((t) => t.id !== topic.id && unique(t.name))!
     const otherRow = rowOf(other.name)
     expect(within(otherRow).queryByText(/No lo sabía/)).toBeNull()
+  })
+})
+
+describe('CaligrafiaSection: the handwriting practice for the grown-ups', () => {
+  const at = new Date().toISOString()
+  const calig = (skill: string, correct: boolean, errorType: string | null) => ({
+    id: `${skill}-${errorType}-${Math.random()}`, childId: 'c1', sessionId: null, skill, kind: 'cursive', correct,
+    given: '1', expected: '3', ms: 900, inputMode: 'pen', hintsUsed: 0, errorType, context: {}, createdAt: at,
+  }) as unknown as AttemptRecord
+  const mastery = { 'calig:letra:a': { skill: 'calig:letra:a', box: 5, attempts: 6, correct: 6, streak: 3, avgMs: null, lastSeenAt: at, dueAt: null, updatedAt: at } } as unknown as MasteryMap
+
+  it('lists the learnt letter and says which criterion fails most, in words', () => {
+    const attempts = [calig('calig:letra:a', false, 'calig-size'), calig('calig:letra:a', false, 'calig-size'), calig('calig:letra:o', false, 'calig-shape')]
+    render(<CaligrafiaSection data={{ mastery, attempts, sessions: [] }} childName="Lía" />)
+    expect(screen.getByRole('heading', { name: 'Caligrafía' })).toBeInTheDocument()
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === 'Letras y enlaces dominados: a.')).toBeInTheDocument()
+    expect(screen.getByText('Lo que más falla: el tamaño')).toBeInTheDocument()
+  })
+
+  it('is absent with no calig: attempt', () => {
+    const maths = [{ ...calig('mul:2x3', true, null), kind: 'multiplication' }] as unknown as AttemptRecord[]
+    const { container } = render(<CaligrafiaSection data={{ mastery: {}, attempts: maths, sessions: [] }} childName="Lía" />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  it('is absent while the data is not read', () => {
+    const { container } = render(<CaligrafiaSection data={null} childName="Lía" />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

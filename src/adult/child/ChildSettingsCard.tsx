@@ -45,6 +45,12 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
         checked={settings.bigCells}
         onChange={(v) => void change({ bigCells: v })}
       />
+      <SwitchRow
+        label="Caligrafía con lápiz"
+        hint="Al terminar Lengua, se le propone practicar la letra ligada con el lápiz, 5 minutos. Solo aparece en un dispositivo donde se usa el lápiz."
+        checked={settings.handwriting !== false}
+        onChange={(v) => void change({ handwriting: v })}
+      />
 
       <div className={adult.stack}>
         <span className={adult.label} id="handedness-label">Mano para escribir</span>

@@ -9,7 +9,9 @@ import {
   PLACEMENT_ACTIVITY, dueSkills, errorReport, factGrid, newMastery, placementRuns, planDailySession, planSession, recallReport, syllabusReport,
   topicNeeds,
 } from '@/engine'
-import { attemptsOf, masteryOf, placementFlags, subjectOfSession, subjectOfSkill, subjectOffered } from '../subjects'
+import {
+  attemptsOf, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, placementFlags, subjectOfSession, subjectOfSkill, subjectOffered,
+} from '../subjects'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
@@ -215,5 +217,57 @@ describe('the home and the summary read maths mastery only (lng: rows left out)'
     expect(maths.flat().filter((v) => v >= 0).length).toBe(4)
     const withoutLengua = Object.fromEntries(Object.entries(all).filter(([k]) => !k.startsWith('lng:')))
     expect(maths).toEqual(factGrid(withoutLengua))
+  })
+})
+
+describe('handwriting (calig:) keys', () => {
+  const calRow = (skill: string): SkillMastery => mastery(skill, 2)
+  const mixed = (): MasteryMap => ({
+    ...mathMastery(), ...withLanguage({}), 'calig:letra:a': calRow('calig:letra:a'), 'calig:palabra:casa': calRow('calig:palabra:casa'),
+  })
+
+  it('the calendar skills cal:weekday and cal:month stay maths', () => {
+    const all: MasteryMap = { ...mathMastery(), 'cal:weekday': mastery('cal:weekday', 2) }
+    expect(masteryOf(all, 'math')).toHaveProperty('cal:weekday')
+    expect(handwritingMastery(all)).not.toHaveProperty('cal:weekday')
+  })
+
+  it('maths and Lengua readers never count calig: keys', () => {
+    const all = mixed()
+    expect(Object.keys(masteryOf(all, 'math')).some((k) => k.startsWith('calig:'))).toBe(false)
+    expect(Object.keys(masteryOf(all, 'math'))).toEqual(Object.keys(mathMastery()))
+    expect(Object.keys(masteryOf(all, 'language')).sort()).toEqual([...LNG_SKILLS].sort())
+  })
+
+  it('attemptsOf leaves calig: attempts out of both subjects', () => {
+    const calAttempt = attempt({ skill: 'calig:letra:a', kind: 'fact-mul', createdAt: daysAgo(1) })
+    const base = mixedAttempts()
+    const all = [calAttempt, ...base]
+    expect(attemptsOf(all, 'math')).not.toContain(calAttempt)
+    expect(attemptsOf(all, 'language')).not.toContain(calAttempt)
+    expect(attemptsOf(all, 'math')).toEqual(attemptsOf(base, 'math'))
+    expect(attemptsOf(all, 'language')).toEqual(attemptsOf(base, 'language'))
+  })
+
+  it('handwritingMastery and handwritingAttempts keep only calig: rows', () => {
+    const all = mixed()
+    expect(Object.keys(handwritingMastery(all)).sort()).toEqual(['calig:letra:a', 'calig:palabra:casa'])
+    const calAttempt = attempt({ skill: 'calig:letra:a', createdAt: daysAgo(1) })
+    const base = mixedAttempts()
+    const list = [calAttempt, ...base]
+    expect(handwritingAttempts(list)).toEqual([calAttempt])
+  })
+
+  it('isHandwritingSkill recognises the calig: prefix only', () => {
+    expect(isHandwritingSkill('calig:letra:a')).toBe(true)
+    expect(isHandwritingSkill('mul:6x7')).toBe(false)
+    expect(isHandwritingSkill('lng:gram:articulo')).toBe(false)
+    expect(isHandwritingSkill('cal:weekday')).toBe(false)
+    expect(isHandwritingSkill('cal:month')).toBe(false)
+  })
+
+  it('the handwriting setting is on by default', () => {
+    expect(DEFAULT_CHILD_SETTINGS.handwriting).toBe(true)
+    expect(child.settings.handwriting).toBe(true)
   })
 })

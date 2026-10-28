@@ -1,0 +1,159 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+}
+
+.head { text-align: center; }
+.title { font-size: var(--fs-xl); color: var(--c-ink); }
+.hint {
+  margin: 6px auto 0;
+  max-width: 44ch;
+  min-height: 2.6em;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+.penHint { color: var(--c-primary-strong); font-weight: 700; }
+.warn { color: var(--c-warn); font-weight: 700; }
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+}
+
+/* The pauta: tall enough for letters of 2 to 3 cm on a tablet, never wider than the page. */
+.area {
+  position: relative;
+  width: min(100%, 1080px);
+  height: clamp(220px, 34vh, 280px);
+  border-radius: var(--r-xl);
+  border: 3px solid var(--c-line);
+  background: var(--c-surface);
+  box-shadow: inset 0 4px 0 rgba(46, 26, 71, .035), var(--shadow-1);
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  cursor: crosshair;
+}
+.scored { border-color: color-mix(in srgb, var(--c-gold) 55%, var(--c-line)); }
+
+.model {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+}
+
+.guides,
+.flags {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.flags { z-index: 2; }
+
+.base { stroke: var(--c-primary-soft); stroke-width: 2; }
+.xline { stroke: var(--c-primary-soft); stroke-width: 2; stroke-dasharray: 10 8; }
+.aux { stroke: var(--c-line); stroke-width: 1; stroke-dasharray: 4 6; }
+
+.guide {
+  fill: none;
+  stroke: var(--c-ink-mute);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 2 9;
+  opacity: .8;
+}
+.arrow { fill: var(--c-ink-mute); }
+.start { fill: var(--c-success); }
+
+.canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  pointer-events: none;
+  color: var(--c-ink);
+}
+
+.flagged {
+  fill: none;
+  stroke: var(--c-warn);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: .9;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.result {
+  width: 100%;
+  max-width: 420px;
+  padding: 10px 12px 12px;
+  border-radius: var(--r-lg);
+  background: var(--c-gold-soft);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c-gold) 45%, var(--c-surface));
+  text-align: center;
+}
+.stars { display: flex; justify-content: center; gap: 4px; }
+.star { display: inline-flex; filter: grayscale(1) opacity(.35); }
+.star.on { filter: none; }
+
+.criteria {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.crit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+}
+.crit.ok { color: var(--c-success); }
+.crit.no { color: var(--c-error); }
+
+.tool {
+  min-width: 150px;
+  min-height: 64px;
+  padding: 0 18px;
+  border-radius: var(--r-pill);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.tool:disabled { opacity: .45; cursor: default; }
+.done {
+  background: var(--c-primary);
+  border-color: var(--c-primary-strong);
+  color: var(--c-surface);
+}

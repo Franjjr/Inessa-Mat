@@ -1,0 +1,56 @@
+/* Letra ligada model: same look as ModelDigit (dotted guide, solid model, green start dots, arrows, play animation)
+   with a two-line pauta behind it. */
+.svg { display: block; overflow: visible; pointer-events: none; }
+
+.pauta line { stroke: var(--c-line, #c9d3e6); stroke-width: 1.2; }
+.pauta .base { stroke: var(--c-primary-soft, #8aa4d6); stroke-width: 1.8; }
+.pauta .xline { stroke-dasharray: 5 4; }
+.pauta .aux { stroke-dasharray: 2 4; opacity: 0.6; }
+
+.guide {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.dotted .guide {
+  stroke: color-mix(in srgb, var(--c-primary) 34%, var(--c-surface));
+  stroke-width: 4.5;
+  stroke-dasharray: 0.01 8;
+}
+.solid .guide {
+  stroke: var(--c-primary);
+  stroke-width: 6;
+}
+.ghost .guide {
+  stroke: var(--c-primary-soft);
+  stroke-width: 8;
+}
+
+.play {
+  fill: none;
+  stroke: var(--c-magic);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation-name: draw;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+.arrow {
+  fill: var(--c-primary);
+  stroke: var(--c-primary);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.solid .arrow { fill: var(--c-surface); stroke: var(--c-surface); }
+
+.start circle { fill: var(--c-success); stroke: var(--c-surface); stroke-width: 2; }
+
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .play { animation: none; stroke-dashoffset: 0; opacity: .5; }
+}

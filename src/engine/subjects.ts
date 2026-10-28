@@ -7,23 +7,44 @@ import type { MasteryMap, SessionRecord, SkillKey, SubjectId } from '@/types'
 export type LessonSubject = Extract<SubjectId, 'math' | 'language'>
 
 const LANGUAGE_PREFIX = 'lng:'
+/* Handwriting keys start with `calig:`. Maths keeps `cal:weekday` and `cal:month` (the calendar), so the prefix is not `cal:`. */
+const HANDWRITING_PREFIX = 'calig:'
 
 export function subjectOfSkill(skill: SkillKey): SubjectId {
   return skill.startsWith(LANGUAGE_PREFIX) ? 'language' : 'math'
+}
+
+/** Caligrafía con lápiz (`calig:…`): not a subject. Its rows are kept apart from maths and Lengua readers. */
+export function isHandwritingSkill(skill: SkillKey): boolean {
+  return skill.startsWith(HANDWRITING_PREFIX)
 }
 
 /** The mastery rows of one subject (a copy: the input is not changed). */
 export function masteryOf(mastery: MasteryMap, subject: SubjectId): MasteryMap {
   const out: MasteryMap = {}
   for (const [skill, m] of Object.entries(mastery)) {
-    if (m && subjectOfSkill(skill) === subject) out[skill] = m
+    if (m && !isHandwritingSkill(skill) && subjectOfSkill(skill) === subject) out[skill] = m
   }
   return out
 }
 
 /** The attempts of one subject, in their order. */
 export function attemptsOf<T extends { skill: SkillKey }>(list: readonly T[], subject: SubjectId): T[] {
-  return list.filter((a) => subjectOfSkill(a.skill) === subject)
+  return list.filter((a) => !isHandwritingSkill(a.skill) && subjectOfSkill(a.skill) === subject)
+}
+
+/** The handwriting (calig:) rows of a mastery map (a copy). */
+export function handwritingMastery(mastery: MasteryMap): MasteryMap {
+  const out: MasteryMap = {}
+  for (const [skill, m] of Object.entries(mastery)) {
+    if (m && isHandwritingSkill(skill)) out[skill] = m
+  }
+  return out
+}
+
+/** The handwriting (calig:) attempts, in their order. */
+export function handwritingAttempts<T extends { skill: SkillKey }>(list: readonly T[]): T[] {
+  return list.filter((a) => isHandwritingSkill(a.skill))
 }
 
 /** Progress flags of the placement test of each subject (the maths names are the original ones). */

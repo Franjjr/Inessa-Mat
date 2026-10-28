@@ -19,6 +19,8 @@ import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress }
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
 import type { RunQueue } from '@/activities/shared/requeue'
+import { CaligrafiaOffer, useCaligrafiaOffered } from './CaligrafiaOffer'
+import { showCaligrafiaAtEnd } from '@/engine/caligrafia/offer'
 import { afterAnswer, postpone, SESSION_STARS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
@@ -408,6 +410,9 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
       .catch(() => toast('Tus estrellas se guardarán en cuanto haya conexión.'))
   }, [alreadyToday, finished, summary.answered, child.id, key])
 
+  // The Lengua end offers the handwriting practice (pen only, after an answered Lengua run); otherwise the end is as before.
+  const offered = useCaligrafiaOffered(child)
+  const caligrafiaAtEnd = showCaligrafiaAtEnd({ offered, subject, answered: summary.answered })
   // The adventure is maths: a Lengua session does not point at the map.
   const next = subject === 'language' ? null : safeNext(progress)
   const nextWorld = next ? getWorld(next.worldId, progress.seasonId) : undefined
@@ -437,10 +442,14 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
           {awarded && <p className={s.reward}>+{SESSION_STARS} estrellas para tu cuerno</p>}
           {alreadyToday && <p className={s.text}>Ya tienes las estrellas de hoy.</p>}
           {hook && <p className={s.story}>Tu aventura: {hook}</p>}
-          <div className={s.actions}>
-            {next && <Button size="lg" variant="secondary" onClick={() => onGo(next.worldId, next.nodeId)}>Seguir la aventura</Button>}
-            <Button size="lg" variant="success" onClick={onDone}>Volver al inicio</Button>
-          </div>
+          {caligrafiaAtEnd ? (
+            <CaligrafiaOffer onLater={onDone} />
+          ) : (
+            <div className={s.actions}>
+              {next && <Button size="lg" variant="secondary" onClick={() => onGo(next.worldId, next.nodeId)}>Seguir la aventura</Button>}
+              <Button size="lg" variant="success" onClick={onDone}>Volver al inicio</Button>
+            </div>
+          )}
         </div>
       </div>
     </Screen>

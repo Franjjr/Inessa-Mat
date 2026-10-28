@@ -1,0 +1,48 @@
+/* The trial page of the adult area: the writing area and the table of tries. */
+.writing { width: 100%; min-width: 0; }
+
+.scroll { width: 100%; overflow-x: auto; }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+}
+.table th,
+.table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--c-line);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.table thead th { font-family: var(--font-display); font-weight: 600; color: var(--c-ink-soft); }
+.table tbody th { font-family: var(--font-display); font-weight: 600; }
+.limit { color: var(--c-ink-mute); }
+
+.num { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.pass { background: var(--c-success-soft); color: #14532d; }
+.fail { background: var(--c-warn-soft); color: #7c2d12; }
+
+.tips {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  color: var(--c-ink);
+}
