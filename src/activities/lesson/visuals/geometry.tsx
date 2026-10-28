@@ -62,8 +62,8 @@ export function PolygonVisual({ params }: VisualProps) {
   )
 }
 
-/* The two rays of an angle from the vertex (100, 150), the first one flat; its arc, and the square of a right angle. */
-const VERTEX: Pt = [100, 150]
+/* The two rays of an angle, the first one flat; its arc, and the square of a right angle. The vertex is placed so that the
+   drawing's box is centred in the figure (the second ray may lean left of the vertex when the angle is obtuse). */
 const RAY = 88
 const ARC = 30
 const SQUARE = 16
@@ -71,7 +71,10 @@ const SQUARE = 16
 export function AngleVisual({ params }: VisualProps) {
   const deg = clampInt(numParam(params, 'deg', 90), 1, 179)
   const rad = (deg * Math.PI) / 180
-  const [vx, vy] = VERTEX
+  const leftReach = Math.min(0, RAY * Math.cos(rad))
+  const height = RAY * Math.sin(rad)
+  const vx = VB / 2 - (leftReach + RAY) / 2
+  const vy = VB / 2 + height / 2
   const end1: Pt = [vx + RAY, vy]
   const end2: Pt = [vx + RAY * Math.cos(rad), vy - RAY * Math.sin(rad)]
   const arc0: Pt = [vx + ARC, vy]

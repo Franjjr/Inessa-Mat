@@ -87,7 +87,7 @@ export function BarChartVisual({ params }: VisualProps) {
   const rows = parseRows(strParam(params, 'rows', ''))
   return (
     <div className={s.stage}>
-      <div className={`${dataCss.card} ${s.fitCard}`}>
+      <div className={`${dataCss.card} ${s.fitCard} ${s.boardCard}`}>
         <BarChart categories={rows} per={1} labels />
       </div>
     </div>
@@ -99,7 +99,7 @@ export function TableVisual({ params }: VisualProps) {
   const table = parseTable(strParam(params, 'rows', ''), strParam(params, 'cols', ''), strParam(params, 'cells', ''))
   return (
     <div className={s.stage}>
-      <div className={dataCss.card}>
+      <div className={`${dataCss.card} ${s.boardCard}`}>
         <TwoWayTable table={table} marked={parseAt(strParam(params, 'at', ''))} />
       </div>
     </div>

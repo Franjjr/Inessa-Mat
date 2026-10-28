@@ -490,6 +490,11 @@
   justify-content: center;
 }
 
+/* A data card drawn inside the lesson board, which already has its own border: the card drops its border so the edge is single. */
+.stage .boardCard {
+  border: 0;
+}
+
 .fitCard > svg {
   height: 100%;
   width: auto;

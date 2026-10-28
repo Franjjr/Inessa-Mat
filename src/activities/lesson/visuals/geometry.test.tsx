@@ -50,6 +50,22 @@ describe('angle visual', () => {
     expect(obtuse.container.querySelectorAll('[data-mark="right"]')).toHaveLength(0)
     obtuse.unmount()
   })
+
+  it('centres the drawing in the figure for acute, right and obtuse angles', () => {
+    for (const deg of [30, 45, 90, 120, 150]) {
+      const { container, unmount } = draw('angle', { deg })
+      const pts = [...container.querySelectorAll('line')].flatMap((l) => [
+        [Number(l.getAttribute('x1')), Number(l.getAttribute('y1'))],
+        [Number(l.getAttribute('x2')), Number(l.getAttribute('y2'))],
+      ])
+      const xs = pts.map((p) => p[0])
+      const ys = pts.map((p) => p[1])
+      // The box of the two rays is centred on the 200 × 200 figure, within a unit of rounding.
+      expect((Math.min(...xs) + Math.max(...xs)) / 2, `deg ${deg} x`).toBeCloseTo(100, 0)
+      expect((Math.min(...ys) + Math.max(...ys)) / 2, `deg ${deg} y`).toBeCloseTo(100, 0)
+      unmount()
+    }
+  })
 })
 
 describe('lines visual', () => {
