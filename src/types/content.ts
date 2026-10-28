@@ -107,6 +107,9 @@ export type LessonVisualId =
   | 'solid'             // params: { name } — a solid: cubo, prisma, piramide, cilindro, cono or esfera
   | 'perimeter'         // params: { sides } — comma list of side lengths in cm (3 to 8): each length on its side, the sum below (3,4,3,4 → 3 + 4 + 3 + 4 = 14 cm)
   | 'grid-route'        // params: { route } — a walk on a 5 × 5 grid from a start star: letters R, L, U, D, one square each (R,R,U)
+  | 'pictogram'         // params: { rows, unit? } — rows «Gatos:3,Perros:5» (a third field names the icon: «Gatos:3:🐱»); each icon is worth unit (1 by default)
+  | 'bar-chart'         // params: { rows } — the same rows as vertical bars on a numbered scale, each bar named under it
+  | 'chance-bag'        // params: { balls } — a bag of coloured balls, «red:3,blue:0» (red, blue, green or yellow; 0 = none of that colour)
 
 export interface LessonStep {
   visual: LessonVisualId

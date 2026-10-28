@@ -55,6 +55,9 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   solid: { name: 'cilindro' },
   perimeter: { sides: '3,4,3,4' },
   'grid-route': { route: 'R,R,U,U,L' },
+  pictogram: { rows: 'Gatos:3,Perros:5' },
+  'bar-chart': { rows: 'Gatos:3,Perros:5' },
+  'chance-bag': { balls: 'red:3,blue:0' },
 }
 
 const STATES = 5
