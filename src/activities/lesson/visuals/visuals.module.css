@@ -478,3 +478,21 @@
   background: var(--c-blue-soft);
   border-radius: var(--r-md);
 }
+
+/* Bar chart (bar-chart): the card and its drawing take the height the board gives, so a tall chart is not cut at its top
+   and bottom on a phone (the SVG keeps its proportions). */
+.fitCard {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fitCard > svg {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+}

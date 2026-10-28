@@ -87,7 +87,7 @@ export function BarChartVisual({ params }: VisualProps) {
   const rows = parseRows(strParam(params, 'rows', ''))
   return (
     <div className={s.stage}>
-      <div className={dataCss.card}>
+      <div className={`${dataCss.card} ${s.fitCard}`}>
         <BarChart categories={rows} per={1} labels />
       </div>
     </div>

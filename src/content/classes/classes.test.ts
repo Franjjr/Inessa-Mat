@@ -179,6 +179,14 @@ describe('topicTitle', () => {
   })
 })
 
+describe('todos los temas de 3.º tienen clase', () => {
+  it('every 3.º maths topic has a class', () => {
+    const topics = allTopics(syllabusFor('math', 3))
+    expect(topics.length).toBeGreaterThan(0)
+    for (const t of topics) expect(classForTopic(t.id, 3, 'math'), t.id).toBeDefined()
+  })
+})
+
 describe('clases de Lengua de 3.º', () => {
   const lengua = allTopics(LENGUA3_SYLLABUS)
   const withClass = lengua.filter((t) => t.id.startsWith('lng-') && LENGUA_CLASSES.some((c) => c.topicId === t.id))

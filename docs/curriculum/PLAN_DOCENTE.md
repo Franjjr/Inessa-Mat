@@ -170,8 +170,8 @@ Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinc
 - En la **sesión**, en la tarjeta del tema nuevo, el botón **«Ver la clase otra vez»**.
 - En **«Jugar»**, la sección «Clases» lista las clases de los temas que el niño ya ha trabajado (dominados, el tema de
   hoy o con la clase hecha), para repetirlas.
-- En el mapa, las **8 clases que tienen lección en el mapa**: su lección (la del ejemplo) se puede repetir en su nodo;
-  la clase completa se repite desde «Jugar». Las otras 10 clases solo salen desde «Jugar», «Hoy» o la sesión.
+- En el mapa, las **11 clases que tienen lección en el mapa**: su lección (la del ejemplo) se puede repetir en su nodo;
+  la clase completa se repite desde «Jugar». Las otras 63 clases solo salen desde «Jugar», «Hoy» o la sesión.
 - Salir a mitad (con «Salir») no marca nada: la próxima vez la clase empieza de nuevo.
 
 **Saltar:**
@@ -180,12 +180,37 @@ Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinc
 - **«Ya lo sé»** (antes de una clase): 3 ejercicios del tema, sin pistas. Si los acierta todos, la clase queda hecha y
   el niño pasa a la sesión. Si falla alguno, la clase empieza: «¡Vamos a verlo juntos!».
 
-**Temas con clase** (18, todos de operaciones de 3.º):
+**Temas con clase** (74: todos los temas de Matemáticas de 3.º, por bloque del temario):
 
-- Sumar: con dos cifras, con tres cifras, sumar y llevar, con cuatro cifras.
-- Restar: con tres cifras, pidiendo prestado, con ceros, con cuatro cifras.
-- Multiplicar: por una cifra, y llevar, 3 cifras por 1, por 10 y por 100, por dos cifras por partes.
-- Dividir: dividir es repartir, la galera sin sobras, dividir y sobrar, dividir bajando una cifra, tres cifras entre una.
+- **Números hasta 9 999** (6): descomponer, leer y escribir, comparar y ordenar, redondear a decenas y centenas,
+  ordinales hasta el 30, números de 5 cifras.
+- **Sumas y restas** (9): sumar con 2, 3 y 4 cifras (sin llevar y llevando); restar con 3 y 4 cifras (sin llevar,
+  pidiendo prestado, con ceros en medio); el signo igual.
+- **Tablas de multiplicar** (9): las tablas del 2 al 10.
+- **Multiplicar** (5): por una cifra (sin llevar y llevando), 3 cifras por 1, por 10, 100 y 1 000, por dos cifras por partes.
+- **Dividir** (5): con las tablas, exacta, con resto, dividir bajando una cifra, 3 cifras entre 1.
+- **Problemas** (5): de juntar, de quitar y comparar, de grupos, de repartir, de dos pasos.
+- **Comprobar y encontrar errores** (2): encuentra el error; comprobar el resultado.
+- **Cálculo mental** (5): dobles y mitades, doble y triple, completar a 10, 100 y 1 000, sumar y restar decenas y
+  centenas, compensar (+9 = +10 − 1).
+- **Fracciones** (4): mitades, tercios y cuartos; fracción de una cantidad; comparar fracciones con dibujos; fracciones
+  de 5, 6, 8, 10 y 12 partes.
+- **Dinero** (4): monedas y billetes; pagar y dar el cambio; sumar precios y comparar; euros y céntimos.
+- **Tiempo** (5): reloj en punto, y media, y cuarto; reloj de cinco en cinco minutos; reloj digital; duraciones;
+  calendario.
+- **Medida** (4): longitud (cm, m, km); medir con la regla; masa y capacidad (g, kg, ml, l); sumar medidas y estimar.
+- **Geometría** (8): polígonos; rectas, curvas, paralelas y perpendiculares; rectas, semirrectas y segmentos; ángulos
+  rectos; ángulos agudos y obtusos; círculo y cuerpos; perímetro; recorridos en una cuadrícula.
+- **Gráficos y probabilidad** (3): pictogramas y gráficas de barras; tablas de datos; seguro, posible o imposible.
+
+**Clases con lección en el mapa** (11, una por clase; el tema de la clase y su lección del mapa):
+
+- Sumar: sumar y llevar (`suma-3d-llevando`, `w2-carry`).
+- Restar: pidiendo prestado (`resta-3d-prestando`, `w4-borrow`); con ceros en medio (`resta-con-ceros`, `w4-zero`).
+- Multiplicar: por una cifra sin llevar (`mul-2x1-sin-llevar`, `w7-split`); con llevada (`mul-2x1-llevando`, `w7-carry`).
+- Dividir: con las tablas (`div-con-tablas`, `w8-share`); exacta (`div-exacta`, `w8-galera`).
+- Tablas: del 6 (`tabla-6`, `w3-five`), del 7 (`tabla-7`, `w6-seven`), del 8 (`tabla-8`, `w5-pattern`), del 9 (`tabla-9`,
+  `w6-nine`).
 
 **División:** en el colegio se divide con las restas escritas (la galera). Las clases de dividir enseñan ese método
 desde el principio.
