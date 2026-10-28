@@ -52,13 +52,15 @@ export function CursiveModel({ text, look = 'dotted', showStart = true, showArro
   const vbH = DESCENDER - vbY + PAD_Y
   const lengths = strokes.map(modelPathLength)
   const total = lengths.reduce((a, b) => a + b, 0) || 1
-  let acc = 0
-  const viewW = vbW
+  // Start time of each stroke's draw-on, as a share of the whole word (the strokes are drawn one after another).
+  const offsets: number[] = []
+  let run = 0
+  for (const len of lengths) { offsets.push(run); run += len }
   return (
     <svg
       viewBox={`${vbX} ${vbY} ${vbW} ${vbH}`}
       className={clsx(s.svg, s[look], className)}
-      style={{ height, width: (height * viewW) / vbH }}
+      style={{ height, width: (height * vbW) / vbH }}
       aria-hidden
       preserveAspectRatio="xMidYMid meet"
     >
@@ -74,9 +76,8 @@ export function CursiveModel({ text, look = 'dotted', showStart = true, showArro
       {strokes.map((st, i) => <path key={`g${i}`} d={svgPath(st)} className={s.guide} />)}
 
       {play > 0 && strokes.map((st, i) => {
-        const delay = (acc / total) * 2.4 + i * 0.1
+        const delay = (offsets[i] / total) * 2.4 + i * 0.1
         const dur = Math.max(0.35, (lengths[i] / total) * 2.4)
-        acc += lengths[i]
         return (
           <path
             key={`p${play}-${i}`}

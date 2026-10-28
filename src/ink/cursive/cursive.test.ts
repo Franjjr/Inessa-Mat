@@ -6,8 +6,9 @@ const bbox = (st: ModelStroke) => {
   const ys = st.map((p) => p.y)
   return { minY: Math.min(...ys), maxY: Math.max(...ys), h: Math.max(...ys) - Math.min(...ys) }
 }
-/** Marks (dots, tildes, crossbars, accents) are extras: small, or lying entirely above the x-height. */
-const isMark = (st: ModelStroke) => bbox(st).h < 6 || bbox(st).maxY < XHEIGHT
+/** The joined pen path of a glyph (its first `main` strokes); the rest are marks: dots, tildes, crossbars, accents. */
+const bodyOf = (g: { strokes: ModelStroke[]; main: number }) => g.strokes.slice(0, g.main)
+const marksOf = (g: { strokes: ModelStroke[]; main: number }) => g.strokes.slice(g.main)
 /** Number of separate runs where the stroke rises above the mid-line between x-height and baseline (one per arch). */
 const archRuns = (st: ModelStroke) => {
   const mid = (XHEIGHT + BASELINE) / 2
@@ -45,7 +46,7 @@ describe('letra ligada models', () => {
 
   it('x-height letters stay on the x-height band (marks excepted)', () => {
     for (const ch of 'acemnñorsuvwxi') {
-      for (const st of CURSIVE_LOWER[ch].strokes.filter((s) => !isMark(s))) {
+      for (const st of bodyOf(CURSIVE_LOWER[ch])) {
         const { minY, maxY } = bbox(st)
         expect(minY, ch).toBeGreaterThanOrEqual(XHEIGHT - 2)
         expect(maxY, ch).toBeLessThanOrEqual(BASELINE + 2)
@@ -84,7 +85,7 @@ describe('letra ligada models', () => {
       expect(CURSIVE_LOWER[ch], ch).toBeDefined()
       const base = CURSIVE_LOWER[{ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u', ü: 'u' }[ch] as string]
       expect(CURSIVE_LOWER[ch].strokes.length, ch).toBeGreaterThanOrEqual(base.strokes.length)
-      expect(CURSIVE_LOWER[ch].strokes.filter(isMark).length, ch).toBeGreaterThan(0)
+      expect(marksOf(CURSIVE_LOWER[ch]).length, ch).toBeGreaterThan(0)
     }
   })
 
@@ -127,21 +128,19 @@ describe('joinWord body and marks', () => {
   it.each(['is', 'tu', 'ñu', 'Fé', 'Árbol'])('"%s" starts its pen path on the body, not on a mark', (text) => {
     const w = joinWord(text)
     expect(w.strokes[0][0]).toEqual(firstEntry(text))
-    expect(isMark(w.strokes[0])).toBe(false)
     expect(w.body).toBeGreaterThan(0)
   })
 
   it('"is" lists the body first and the i dot after it', () => {
     const w = joinWord('is')
     expect(w.body).toBe(1)
-    expect(isMark(w.strokes[0])).toBe(false)
-    expect(isMark(w.strokes[1])).toBe(true)
+    expect(w.strokes.length).toBeGreaterThan(w.body)
   })
 
   it('í carries only its accent: no dot left from the base letter', () => {
     const g = CURSIVE_LOWER.í
     expect(g.strokes.length).toBe(g.main + 1)
-    expect(isMark(g.strokes[g.main])).toBe(true)
+    expect(marksOf(g)).toHaveLength(1)
   })
 
   it('Ñ has its tilde inside the model box (y ≥ 0)', () => {
