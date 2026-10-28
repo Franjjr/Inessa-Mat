@@ -344,3 +344,53 @@
   font-weight: 800;
   fill: var(--c-magic);
 }
+
+/* Medida (units): one row per unit, with the unit as a chip and a real object of that size beside it. */
+.unitList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: 420px;
+}
+
+.unitRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  border-radius: var(--r-md);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.unitEmoji {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex: none;
+}
+
+.unitChip {
+  flex: none;
+  min-width: 64px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--c-magic-soft);
+  color: var(--c-magic);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  white-space: nowrap;
+}
+
+.unitObject {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  line-height: 1.3;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

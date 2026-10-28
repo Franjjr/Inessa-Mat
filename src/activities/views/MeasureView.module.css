@@ -103,3 +103,8 @@
   stroke-width: 3;
   stroke-dasharray: 6 4;
 }
+
+/* The emoji of the object drawn on its bar (the ruler of the lesson visual). */
+.thingEmoji {
+  font-size: 24px;
+}

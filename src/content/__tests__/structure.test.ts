@@ -54,6 +54,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   money: ['items'],
   clock: ['h', 'm'],
   timeline: ['start', 'end'],
+  ruler: ['cm'],
+  units: ['kind'],
   'lng-word': ['word'],
 }
 

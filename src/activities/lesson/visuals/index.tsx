@@ -15,6 +15,7 @@ import { BigTextVisual, NumberLineVisual } from './numbers'
 import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
 import { MoneyVisual } from './money'
 import { ClockVisual, TimelineVisual } from './time'
+import { RulerVisual, UnitsVisual } from './measure'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -58,6 +59,8 @@ export const LESSON_VISUALS: VisualRegistry = {
   money: MoneyVisual,
   clock: ClockVisual,
   timeline: TimelineVisual,
+  ruler: RulerVisual,
+  units: UnitsVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

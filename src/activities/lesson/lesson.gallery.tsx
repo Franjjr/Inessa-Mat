@@ -47,6 +47,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   money: { items: '500,200,20', price: 320 },
   clock: { h: 7, m: 5, digital: 1 },
   timeline: { start: 600, end: 645 },
+  ruler: { cm: 8, object: '✏️' },
+  units: { kind: 'length' },
 }
 
 const STATES = 5

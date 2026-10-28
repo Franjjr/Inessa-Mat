@@ -9,6 +9,7 @@ import { MENTAL_CLASSES } from './grade3-mental'
 import { FRACCIONES_CLASSES } from './grade3-fracciones'
 import { DINERO_CLASSES } from './grade3-dinero'
 import { TIEMPO_CLASSES } from './grade3-tiempo'
+import { MEDIDA_CLASSES } from './grade3-medida'
 import { NUMEROS_CLASSES } from './grade3-numeros'
 import { PROBLEMAS_CLASSES } from './grade3-problemas'
 import { TABLAS_CLASSES } from './grade3-tablas'
@@ -18,7 +19,7 @@ export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
 
 /** The maths classes (3.º): one array per block of topics, concatenated. */
-export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TABLAS_CLASSES, ...PROBLEMAS_CLASSES, ...MENTAL_CLASSES, ...FRACCIONES_CLASSES, ...DINERO_CLASSES, ...TIEMPO_CLASSES]
+export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TABLAS_CLASSES, ...PROBLEMAS_CLASSES, ...MENTAL_CLASSES, ...FRACCIONES_CLASSES, ...DINERO_CLASSES, ...TIEMPO_CLASSES, ...MEDIDA_CLASSES]
 /** The Lengua classes (3.º): one per grammar, spelling and vocabulary topic. */
 export { LENGUA_CLASSES }
 
