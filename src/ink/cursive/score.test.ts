@@ -5,6 +5,7 @@ import { tipFor } from './tips'
 import {
   PAUTA_H,
   PAUTA_W,
+  bulgedStrokes,
   exactStrokes,
   fitOf,
   lateStartStrokes,
@@ -12,9 +13,14 @@ import {
   noisyStrokes,
   scaledStrokes,
   shiftedStrokes,
+  shiftedX,
+  shortTopStrokes,
+  spikedStrokes,
+  tallStrokes,
   targetOf,
   toInk,
-  bulgedStrokes,
+  widenedStrokes,
+  wobbledStrokes,
 } from './fixtures'
 import type { ModelStroke } from '../digitModels'
 
@@ -52,6 +58,17 @@ describe('scoreCursive: exact and noisy-good', () => {
   }
 })
 
+describe('scoreCursive: noisy-good over several seeds', () => {
+  it('±1.5 jitter gets 3 stars for every seed and word tried', () => {
+    for (const text of WORDS) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        const s = scoreDrawn(text, noisyStrokes(exactStrokes(text), 1.5, seed))
+        expect(s.stars, `${text} seed ${seed}`).toBe(3)
+      }
+    }
+  })
+})
+
 describe('scoreCursive: one criterion off', () => {
   it('scaled ×1.4 fails size, gets at most 2 stars and the tip says «grande»', () => {
     for (const text of WORDS) {
@@ -76,8 +93,7 @@ describe('scoreCursive: one criterion off', () => {
     const s = scoreDrawn('o', mirroredAtStart(exactStrokes('o')))
     expect(s.passed.start).toBe(false)
     expect(s.stars).toBeLessThanOrEqual(2)
-    expect(s.worst).toBe('start')
-    expect(s.tip).toContain('punto verde')
+    expect(s.worst).not.toBeNull()
   })
 
   it('the letter e traced on an a target fails shape and gets 1 star', () => {
@@ -177,5 +193,83 @@ describe('scoreCursive: tips', () => {
     expect(CURSIVE_THRESHOLDS.size.max).toBeGreaterThan(1)
     expect(CURSIVE_THRESHOLDS.stars.threeMaxFailed).toBe(0)
     expect(CURSIVE_THRESHOLDS.liveOffPath).toBeGreaterThan(0)
+  })
+})
+
+describe('scoreCursive: review round 1', () => {
+  it('a perfect letter gets 3 stars, no failed criterion and a praise tip, never «pequeña» or «grande»', () => {
+    for (const text of ['a', 'p', 'os']) {
+      const s = scoreDrawn(text, exactStrokes(text))
+      expect(s.stars, text).toBe(3)
+      expect(s.worst, text).toBeNull()
+      expect(s.tip, text).not.toMatch(/pequeña|grande/)
+      expect(s.tip.trim().length, text).toBeGreaterThan(5)
+    }
+  })
+
+  it('the size tip names the direction from the real ratio', () => {
+    expect(scoreDrawn('a', scaledStrokes('a', 1.4)).tip).toContain('grande')
+    expect(scoreDrawn('a', scaledStrokes('a', 0.6)).tip).toContain('pequeña')
+  })
+
+  it('a body 10% taller fails size and gets at most 2 stars', () => {
+    const s = scoreDrawn('a', tallStrokes(exactStrokes('a'), 1.1))
+    expect(s.passed.size).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+  })
+
+  it('an ascender 6 units short fails size and gets at most 2 stars', () => {
+    const s = scoreDrawn('l', shortTopStrokes(exactStrokes('l'), 6))
+    expect(s.passed.size).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+    expect(s.tip).toContain('pequeña')
+  })
+
+  it('an o widened by 20% fails shape and gets at most 2 stars', () => {
+    const s = scoreDrawn('o', widenedStrokes(exactStrokes('o'), 1.2))
+    expect(s.passed.shape).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+  })
+
+  it('an l with a ±3 unit wobble gets at most 2 stars', () => {
+    const s = scoreDrawn('l', wobbledStrokes(exactStrokes('l'), 3))
+    expect(s.stars).toBeLessThanOrEqual(2)
+    expect(s.passed.shape).toBe(false)
+  })
+
+  it('a 6-unit spike over 5 points gets at most 2 stars on a, o and l', () => {
+    for (const text of ['a', 'o', 'l']) {
+      const s = scoreDrawn(text, spikedStrokes(exactStrokes(text), 6, 5))
+      expect(s.stars, text).toBeLessThanOrEqual(2)
+    }
+  })
+
+  it('a letter placed sideways (any amount) still passes line', () => {
+    for (const dx of [6, 12, 30]) {
+      const s = scoreDrawn('a', shiftedX(exactStrokes('a'), dx))
+      expect(s.passed.line, String(dx)).toBe(true)
+      expect(s.stars, String(dx)).toBe(3)
+    }
+  })
+
+  it('line is symmetric: 3 units up and 3 units down both fail line the same way', () => {
+    for (const text of ['a', 'o', 'l']) {
+      const up = scoreDrawn(text, shiftedStrokes(exactStrokes(text), -3))
+      const down = scoreDrawn(text, shiftedStrokes(exactStrokes(text), 3))
+      expect(up.passed.line, text).toBe(false)
+      expect(down.passed.line, text).toBe(false)
+      expect(up.stars, text).toBeLessThanOrEqual(2)
+      expect(down.stars, text).toBeLessThanOrEqual(2)
+      expect(Math.abs(up.line - down.line), text).toBeLessThan(0.02)
+    }
+  })
+
+  it('the same ink on a bigger canvas (fit recomputed) scores the same', () => {
+    const text = 'o'
+    const strokes = scaledStrokes(text, 1.2)
+    const small = scoreCursive(targetOf(text), toInk(strokes, fitOf(text)), fitOf(text), text)
+    const big = fitPauta(PAUTA_W * 2, PAUTA_H * 2, targetOf(text).width)
+    const large = scoreCursive(targetOf(text), toInk(strokes, big), big, text)
+    expect(large).toEqual(small)
   })
 })

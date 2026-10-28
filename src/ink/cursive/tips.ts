@@ -11,6 +11,11 @@ export function nombreDe(text: string): string {
   return t.length === 1 ? `letra ${t}` : `palabra ${t}`
 }
 
+/** The one line shown when every criterion passes. */
+export function praiseFor(text: string): string {
+  return `¡Muy bien! La ${nombreDe(text)} te ha salido bien.`
+}
+
 export interface TipHint {
   /** For size: true when the child's letter is bigger than the model. */
   tooBig?: boolean

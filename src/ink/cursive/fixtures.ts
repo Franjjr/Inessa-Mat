@@ -85,3 +85,43 @@ export function bulgedStrokes(strokes: ModelStroke[], amp: number): ModelStroke[
     return { x: cx + (p.x - cx) * (1 + swell / halfW), y: p.y }
   })
 }
+
+/** Widened by k about the centre of the letter, sideways only (height unchanged): a fatter o or l. */
+export function widenedStrokes(strokes: ModelStroke[], k: number): ModelStroke[] {
+  const xs = strokes.flat().map((p) => p.x)
+  const cx = (Math.min(...xs) + Math.max(...xs)) / 2
+  return mapStrokes(strokes, (p) => ({ x: cx + (p.x - cx) * k, y: p.y }))
+}
+
+/** Stretched vertically by k about the baseline (the body and the ascender grow together). */
+export function tallStrokes(strokes: ModelStroke[], k: number): ModelStroke[] {
+  return mapStrokes(strokes, (p) => ({ x: p.x, y: BASELINE - (BASELINE - p.y) * k }))
+}
+
+/** The top moved down by `units` with the baseline kept: an ascender that stops short. */
+export function shortTopStrokes(strokes: ModelStroke[], units: number): ModelStroke[] {
+  const top = Math.min(...strokes.flat().map((p) => p.y))
+  const h = BASELINE - top
+  return mapStrokes(strokes, (p) => ({ x: p.x, y: BASELINE - (BASELINE - p.y) * ((h - units) / h) }))
+}
+
+/** A spike: `count` consecutive points near the middle of the first stroke pushed sideways by up to amp units. */
+export function spikedStrokes(strokes: ModelStroke[], amp = 6, count = 5): ModelStroke[] {
+  const first = strokes[0]
+  const mid = Math.floor(first.length / 2)
+  const half = (count - 1) / 2
+  const spiked = first.map((p, j) => {
+    const d = Math.abs(j - mid)
+    return d <= half ? { x: p.x + amp * (1 - d / (half + 1)), y: p.y } : p
+  })
+  return [spiked, ...strokes.slice(1)]
+}
+
+export const shiftedX = (strokes: ModelStroke[], dx: number): ModelStroke[] =>
+  mapStrokes(strokes, (p) => ({ x: p.x + dx, y: p.y }))
+
+/** A wobbly hand: each point pushed sideways by a fixed, index-based offset of up to amp units (height unchanged). */
+export function wobbledStrokes(strokes: ModelStroke[], amp: number): ModelStroke[] {
+  let i = 0
+  return mapStrokes(strokes, (p) => ({ x: p.x + amp * Math.sin((i++) * 1.3), y: p.y }))
+}
