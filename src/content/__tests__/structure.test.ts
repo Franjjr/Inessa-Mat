@@ -52,6 +52,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'fraction-shape': ['parts', 'shaded', 'shape'],
   'fraction-groups': ['total', 'parts', 'take'],
   money: ['items'],
+  clock: ['h', 'm'],
+  timeline: ['start', 'end'],
   'lng-word': ['word'],
 }
 

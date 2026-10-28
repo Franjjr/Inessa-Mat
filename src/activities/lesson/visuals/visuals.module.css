@@ -268,3 +268,79 @@
   color: var(--c-magic);
   text-align: center;
 }
+
+/* Time (clock, timeline): the face and the digital time side by side, wrapping on a phone; the line's labels stay
+   at 16 units or more, so they read at about 16 px on a 360 px screen. */
+.clockRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 100%;
+}
+
+.clockFace {
+  width: min(200px, 62vw);
+  height: auto;
+  display: block;
+  overflow: visible;
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+}
+
+.digitalTime {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.timeAxis {
+  stroke: var(--c-line);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.timeTick {
+  stroke: var(--c-ink-mute);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.timeBar {
+  fill: var(--c-magic-soft);
+  stroke: var(--c-ink);
+  stroke-width: 2;
+}
+
+.timeMark {
+  fill: var(--c-surface);
+  stroke: var(--c-ink);
+  stroke-width: 3;
+}
+
+.timeLabel {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--c-ink);
+}
+
+.timeDuration {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  fill: var(--c-magic);
+}
