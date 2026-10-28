@@ -50,6 +50,40 @@ describe('clases de geometría (3.º)', () => {
     expect(said).toContain('cuadrilátero')
   })
 
+  it('a cuadrado has 4 equal sides AND 4 right corners: every sentence that names it says both (a rombo is not one)', () => {
+    const sentences = GEOMETRIA_CLASSES.flatMap((c) => c.lesson.steps.map((st) => st.text)).flatMap((t) => t.split('.'))
+    const named = sentences.filter((t) => /cuadrado/.test(t))
+    expect(named.length).toBeGreaterThan(0)
+    for (const t of named) expect(t, t).toMatch(/esquinas rectas/)
+    for (const t of named) expect(t, t).toMatch(/lados iguales/)
+    expect(JSON.stringify(GEOMETRIA_CLASSES)).not.toMatch(/lados son iguales, es un cuadrado/)
+  })
+
+  it('recorridos: the start is the gold cell, every arrow is explained before the tries, and the routes fit the 4 by 5 grid', () => {
+    const cls = GEOMETRIA_CLASSES.find((c) => c.topicId === 'recorridos')!
+    const [first, second] = cls.lesson.steps
+    expect(first.text).toMatch(/casilla dorada/)
+    expect(second.text).toMatch(/→/)
+    expect(second.text).toMatch(/←/)
+    expect(second.text).toMatch(/↑/)
+    expect(second.text).toMatch(/↓/)
+    expect(JSON.stringify(cls.lesson.steps)).not.toMatch(/estrella/)
+    for (const st of cls.lesson.steps.filter((x) => x.visual === 'grid-route')) {
+      let r = 0
+      let c = 0
+      const cells = [[0, 0]]
+      for (const letter of String(st.params!.route).split(',')) {
+        r += { U: -1, D: 1, L: 0, R: 0 }[letter]!
+        c += { L: -1, R: 1, U: 0, D: 0 }[letter]!
+        cells.push([r, c])
+      }
+      const rows = Math.max(...cells.map((x) => x[0])) - Math.min(...cells.map((x) => x[0])) + 1
+      const cols = Math.max(...cells.map((x) => x[1])) - Math.min(...cells.map((x) => x[1])) + 1
+      expect(rows, String(st.params!.route)).toBeLessThanOrEqual(4)
+      expect(cols, String(st.params!.route)).toBeLessThanOrEqual(5)
+    }
+  })
+
   it('angulos-clase: agudo is smaller and obtuso bigger than a right angle', () => {
     const cls = GEOMETRIA_CLASSES.find((c) => c.topicId === 'angulos-clase')!
     const said = JSON.stringify(cls.lesson.steps)

@@ -19,7 +19,7 @@ const poligonos = clase({
   ],
   ejemplo: [
     show('polygon', { sides: 3, mark: 'sides' }, 'Este polígono tiene 3 lados y 3 esquinas: es un triángulo.'),
-    show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero. Si los 4 lados son iguales, es un cuadrado; si dos son más largos que los otros dos, es un rectángulo.'),
+    show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero. Si tiene 4 esquinas rectas y los 4 lados iguales, es un cuadrado. Si tiene 4 esquinas rectas y dos lados más largos, es un rectángulo. Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas.'),
     show('polygon', { sides: 5, mark: 'sides' }, 'Este tiene 5 lados y 5 esquinas: es un pentágono.'),
     show('polygon', { sides: 6, mark: 'corners' }, 'Este tiene 6 lados y 6 esquinas: es un hexágono.'),
     show('polygon', { sides: 7, mark: 'sides' }, 'Con 7 lados es un heptágono.'),
@@ -100,7 +100,7 @@ const angulosRectos = clase({
   topicId: 'angulos-rectos',
   title: 'Ángulos rectos',
   para: [
-    show('angle', { deg: 90 }, 'Un ángulo recto es como la esquina de una hoja de papel. Tiene un cuadradito en la esquina.', 'frog'),
+    show('angle', { deg: 90 }, 'Un ángulo recto es como la esquina de una hoja de papel: mide 90 grados.', 'frog'),
     show('angle', { deg: 45 }, 'Este ángulo se abre menos que la esquina del papel: no es recto.', 'ladybug'),
   ],
   ejemplo: [
@@ -111,11 +111,11 @@ const angulosRectos = clase({
   ],
   guiada: [
     tryIt('big-text', { text: 'recto · menor · mayor' }, '¡Te toca! Pon la esquina del papel sobre el ángulo: ¿encaja justo, se abre más o se abre menos?', { skills: ['geo:angle:type'] }),
-    tryIt('big-text', { text: 'toca las esquinas rectas' }, '¡Otra! Toca solo las esquinas que encajan justo en la esquina de un papel.', { skills: ['geo:angle:tap'] }),
+    tryIt('big-text', { text: 'toca las esquinas rectas' }, '¡Otra! Toca solo las esquinas que encajan justo en la esquina de un papel. Si ninguna encaja, no toques nada.', { skills: ['geo:angle:tap'] }),
   ],
   sola: [
     tryIt('big-text', { text: 'recto · menor · mayor' }, '¡Tu turno! Compara el ángulo con la esquina del papel, y di si se abre igual, más o menos.', { skills: ['geo:angle:type'] }),
-    tryIt('big-text', { text: 'toca las esquinas rectas' }, '¡Tu turno! Mira cada esquina por separado: ¿encaja justo, sin que sobre ni falte?', { skills: ['geo:angle:tap'] }),
+    tryIt('big-text', { text: 'toca las esquinas rectas' }, '¡Tu turno! Mira cada esquina por separado: ¿encaja justo, sin que sobre ni falte? Si ninguna encaja, no toques nada.', { skills: ['geo:angle:tap'] }),
     tryIt('big-text', { text: 'recto · menor · mayor' }, '¡Tu turno! No te fíes de cómo se ve: compara con la esquina del papel, que es siempre igual.', { skills: ['geo:angle:type'] }),
     tryIt('big-text', { text: 'la figura o el ángulo' }, '¡Tu turno! Mira la figura o el ángulo que te enseñan, y compáralo con la esquina del papel.', { skills: ['geo:angle:type', 'geo:angle:tap'] }),
   ],
@@ -207,31 +207,32 @@ const perimetro = clase({
   cierre: show('perimeter', { sides: '3,4,3,4' }, 'La regla: el perímetro es la suma de todos los lados. Aquí: 3 + 4 + 3 + 4 = 14 cm.'),
 })
 
-/* Recorridos: se sigue cada paso en su orden, contando las casillas. Izquierda y derecha, como se ve la cuadrícula. */
+/* Recorridos: la casilla dorada es la salida; cada flecha (← → ↑ ↓) es una casilla en esa dirección. Izquierda y derecha,
+   como se ve la cuadrícula. Un grupo de flechas iguales es un movimiento: →→ son dos casillas a la derecha. */
 const recorridos = clase({
   id: 'c3-geo-recorridos',
   topicId: 'recorridos',
   title: 'Recorridos en una cuadrícula',
   para: [
-    show('grid-route', { route: 'R,R,U' }, 'Esta cuadrícula es un tablero de casillas. La estrella es la salida, y cada trozo de línea es un paso de una casilla.', 'frog'),
-    show('grid-route', { route: 'D,D,L' }, 'Para llegar a un sitio, sigue los pasos en orden: a la derecha, a la izquierda, hacia arriba o hacia abajo.', 'ladybug'),
+    show('grid-route', { route: 'R,R,U' }, 'Esta cuadrícula es un tablero de casillas. La casilla dorada es la salida: desde ella empiezas a caminar.', 'frog'),
+    show('grid-route', { route: 'D,D,L' }, 'Las flechas son los pasos: → a la derecha, ← a la izquierda, ↑ hacia arriba y ↓ hacia abajo. Cada flecha mueve una casilla.', 'ladybug'),
   ],
   ejemplo: [
-    show('grid-route', { route: 'R,R,D,D' }, 'Camina 2 casillas a la derecha y luego 2 hacia abajo. Cada paso cuenta una casilla: son cuatro pasos.'),
-    show('grid-route', { route: 'L,U,U' }, 'Ahora 1 casilla a la izquierda y 2 hacia arriba: tres pasos en total.'),
-    show('grid-route', { route: 'U,R,R,R' }, 'Un recorrido puede subir y luego ir a la derecha: 1 casilla hacia arriba y 3 a la derecha.'),
+    show('grid-route', { route: 'R,R,D,D' }, 'Las flechas →→ son 2 casillas a la derecha, y ↓↓ son 2 casillas hacia abajo. En total, cuatro casillas.'),
+    show('grid-route', { route: 'L,U,U' }, 'Ahora ← es 1 casilla a la izquierda, y ↑↑ son 2 casillas hacia arriba. Tres flechas en total.'),
+    show('grid-route', { route: 'U,R,R,R' }, 'Un recorrido puede subir y luego ir a la derecha: ↑ es 1 casilla, y →→→ son 3 casillas a la derecha.'),
   ],
   guiada: [
-    tryIt('big-text', { text: 'salida · pasos' }, '¡Te toca! Pon el dedo en la estrella, la salida, y camina paso a paso, en el orden de las flechas.', { skills: ['pos:route'] }),
-    tryIt('big-text', { text: 'casillas de cada paso' }, '¡Otra! Cuenta las casillas de cada paso: 2 casillas son dos pasos seguidos en la misma dirección.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'casilla dorada · flechas' }, '¡Te toca! Lee la pregunta: en qué cosa empiezas, y pon el dedo en su casilla dorada.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'casillas de cada flecha' }, '¡Otra! Cada flecha es una casilla: cuenta las flechas de cada grupo antes de moverte.', { skills: ['pos:route'] }),
   ],
   sola: [
-    tryIt('big-text', { text: 'salida · pasos' }, '¡Tu turno! Empieza en la salida y haz cada paso con calma, casilla a casilla.', { skills: ['pos:route'] }),
-    tryIt('big-text', { text: 'primer paso · segundo paso' }, '¡Tu turno! Mira el primer paso: ¿hacia qué lado va? Después, el segundo.', { skills: ['pos:route'] }),
-    tryIt('big-text', { text: 'la casilla de llegada' }, '¡Tu turno! Cuando acabes el último paso, mira qué hay en la casilla donde está tu dedo.', { skills: ['pos:route'] }),
-    tryIt('big-text', { text: 'casillas de cada paso' }, '¡Tu turno! Cuenta bien las casillas de cada paso antes de moverte al siguiente.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'casilla dorada · flechas' }, '¡Tu turno! Empieza en la casilla dorada y mueve el dedo casilla a casilla, siguiendo las flechas.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'primera flecha · segunda flecha' }, '¡Tu turno! Mira la primera flecha: ¿hacia qué lado va? Después, la segunda.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'la casilla de llegada' }, '¡Tu turno! Cuando acabes la última flecha, mira qué hay en la casilla donde está tu dedo.', { skills: ['pos:route'] }),
+    tryIt('big-text', { text: 'casillas de cada flecha' }, '¡Tu turno! Cuenta bien cuántas casillas indica cada grupo de flechas antes de moverte.', { skills: ['pos:route'] }),
   ],
-  cierre: show('grid-route', { route: 'R,R,U,U,L' }, 'La regla: sigue los pasos en su orden, casilla a casilla. A la derecha y a la izquierda, como tú ves la cuadrícula.'),
+  cierre: show('grid-route', { route: 'R,R,U,U,L' }, 'La regla: sigue las flechas en su orden, una casilla por flecha. → es a la derecha y ← a la izquierda, como tú ves la cuadrícula.'),
 })
 
 /** The geometry classes (3.º): one per geometry topic of the temario. */

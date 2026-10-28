@@ -100,16 +100,23 @@ describe('perimeter visual', () => {
 })
 
 describe('grid-route visual', () => {
-  it('draws one path step per letter: R,R,U gives 3 steps and a start star', () => {
+  it('draws one path step per letter: R,R,U gives 3 steps from the gold start cell', () => {
     const { container, unmount } = draw('grid-route', { route: 'R,R,U' })
     expect(container.querySelectorAll('[data-step]')).toHaveLength(3)
     expect(container.querySelectorAll('[data-start]')).toHaveLength(1)
     unmount()
   })
 
-  it('draws a 5 by 5 grid of squares', () => {
+  it('draws the 4 by 5 grid of the exercise, with the start cell in gold', () => {
     const { container, unmount } = draw('grid-route', { route: 'D,L' })
-    expect(container.querySelectorAll('rect')).toHaveLength(25)
+    expect(container.querySelectorAll('rect')).toHaveLength(20)
+    expect(container.querySelectorAll('[data-start]')).toHaveLength(1)
+    unmount()
+  })
+
+  it('lists the steps as arrows, one chip per move: R,R,U is →→ then ↑', () => {
+    const { container, unmount } = draw('grid-route', { route: 'R,R,U' })
+    expect([...container.querySelectorAll('li')].map((li) => li.textContent)).toEqual(['→→', '↑'])
     unmount()
   })
 })

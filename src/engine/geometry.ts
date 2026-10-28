@@ -379,9 +379,9 @@ export function genLineKind(rng: Rng): ShapeChoiceExercise {
   const right = { straight: 'recta', ray: 'semirrecta', segment: 'segmento' }[kind]
   const { options, answer } = optionsWith(rng, right, ['recta', 'semirrecta', 'segmento'])
   const example = {
-    straight: 'Ejemplo: un punto en un extremo y una flecha en el otro: la línea empieza en el punto y sigue sin fin por ese lado.',
-    ray: 'Ejemplo: dos puntos, uno en cada extremo: la línea se acaba en los dos lados.',
-    segment: 'Ejemplo: dos flechas, una en cada extremo: la línea sigue sin fin por los dos lados.',
+    straight: 'Ejemplo: una flecha en cada extremo: la línea sigue sin fin por los dos lados.',
+    ray: 'Ejemplo: un punto en un extremo y una flecha en el otro: la línea empieza en el punto y sigue sin fin por ese lado.',
+    segment: 'Ejemplo: dos puntos, uno en cada extremo: la línea se acaba en los dos lados.',
   }[kind]
   return {
     id: `shape-choice:line-kind:${kind}:${points.map((p) => p.join(',')).join(';')}`,
@@ -402,9 +402,9 @@ export function genAngleClass(rng: Rng): ShapeChoiceExercise {
   const figure: AngleFigure = { type: 'angle', deg, rotation: randInt(rng, 0, 359) }
   const { options, answer } = optionsWith(rng, cls, ['agudo', 'recto', 'obtuso'])
   const example = {
-    agudo: 'Ejemplo: si encaja justo en la esquina del papel, sin que sobre ni falte, no se abre ni se cierra.',
-    recto: 'Ejemplo: si se abre mucho más que la esquina del papel, se queda muy abierto.',
-    obtuso: 'Ejemplo: si se cierra más que la esquina del papel, parece la punta de un lápiz.',
+    agudo: 'Ejemplo: si se cierra más que la esquina del papel, se queda más cerrado que ella.',
+    recto: 'Ejemplo: si encaja justo en la esquina del papel, sin que sobre ni falte, no se abre ni se cierra.',
+    obtuso: 'Ejemplo: si se abre más que la esquina del papel, se queda muy abierto.',
   }[cls]
   return {
     id: `shape-choice:angle-class:${deg}:${figure.rotation}`,

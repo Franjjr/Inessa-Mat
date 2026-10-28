@@ -91,7 +91,7 @@ export function AngleVisual({ params }: VisualProps) {
             className={s.geoMark}
           />
         ) : (
-          <path d={`M ${arc0[0]} ${arc0[1]} A ${ARC} ${ARC} 0 0 0 ${r1(arc1[0])} ${r1(arc1[1])}`} className={s.geoArc} />
+          <path d={`M ${arc0[0]} ${arc0[1]} A ${ARC} ${ARC} 0 0 0 ${r1(arc1[0])} ${r1(arc1[1])}`} className={s.geoMark} />
         )}
       </svg>
     </div>
@@ -131,7 +131,8 @@ export function SolidVisual({ params }: VisualProps) {
 }
 
 /** The figure of a list of side lengths: a rectangle when the opposite sides are equal, a triangle with those three sides
-    when it can be drawn, and otherwise a regular polygon with the same number of sides. The labels always say the lengths. */
+    when it can be drawn, and otherwise a regular polygon with the same number of sides. The labels always say the lengths;
+    the drawing is to scale only for the rectangle and the triangle. */
 function perimeterShape(sides: number[]): Pt[] {
   const n = sides.length
   if (n === 4 && sides[0] === sides[2] && sides[1] === sides[3]) {
@@ -160,21 +161,17 @@ export function PerimeterVisual({ params }: VisualProps) {
   )
 }
 
-/* The grid of the walk: 5 by 5 squares, the start star at the middle of the walk, one segment per step. */
-const GRID = 5
+/* The grid of the walk, as the recorridos exercise draws it: 4 rows by 5 columns, the start cell in gold, one line per step,
+   and the steps under the grid as arrow chips (a chip per move, the arrows repeated: →→ is two squares to the right). */
+const ROWS = 4
+const COLS = 5
 const CELL = 34
-const ORIGIN = (VB - GRID * CELL) / 2
+const W = 200
+const H = 160
+const ORIGIN_X = (W - COLS * CELL) / 2
+const ORIGIN_Y = (H - ROWS * CELL) / 2
 const STEP: Record<string, [number, number]> = { R: [0, 1], L: [0, -1], U: [-1, 0], D: [1, 0] }
-
-/** A five-point star centred on (x, y). */
-function starPath(x: number, y: number): string {
-  const pts = Array.from({ length: 10 }, (_, i) => {
-    const t = ((-90 + i * 36) * Math.PI) / 180
-    const r = i % 2 === 0 ? 12 : 5
-    return `${r1(x + r * Math.cos(t))} ${r1(y + r * Math.sin(t))}`
-  })
-  return `M ${pts.join(' L ')} Z`
-}
+const ARROW: Record<string, string> = { R: '→', L: '←', U: '↑', D: '↓' }
 
 export function GridRouteVisual({ params }: VisualProps) {
   const letters = strParam(params, 'route', 'R,R,U').split(',').map((x) => x.trim().toUpperCase()).filter((x) => x in STEP)
@@ -187,31 +184,49 @@ export function GridRouteVisual({ params }: VisualProps) {
   // The walk sits in the middle of the grid, whatever its direction.
   const rows = walk.map((p) => p[0])
   const cols = walk.map((p) => p[1])
-  const r0 = Math.floor((GRID - (Math.max(...rows) - Math.min(...rows) + 1)) / 2) - Math.min(...rows)
-  const c0 = Math.floor((GRID - (Math.max(...cols) - Math.min(...cols) + 1)) / 2) - Math.min(...cols)
-  const at = ([r, c]: Pt): Pt => [ORIGIN + (c + c0 + 0.5) * CELL, ORIGIN + (r + r0 + 0.5) * CELL]
-  const centres = walk.map(at)
-  const [sx, sy] = centres[0]
-  const [ex, ey] = centres[centres.length - 1]
+  const r0 = Math.floor((ROWS - (Math.max(...rows) - Math.min(...rows) + 1)) / 2) - Math.min(...rows)
+  const c0 = Math.floor((COLS - (Math.max(...cols) - Math.min(...cols) + 1)) / 2) - Math.min(...cols)
+  const cellOf = ([r, c]: Pt): Pt => [r + r0, c + c0]
+  const centre = ([r, c]: Pt): Pt => [ORIGIN_X + (c + 0.5) * CELL, ORIGIN_Y + (r + 0.5) * CELL]
+  const cells = walk.map(cellOf)
+  const start = cells[0]
+  const centres = cells.map(centre)
+  // Runs of the same letter: one chip per move, as the exercise lists them.
+  const moves: { letter: string; n: number }[] = []
+  for (const letter of letters) {
+    const last = moves[moves.length - 1]
+    if (last && last.letter === letter) last.n += 1
+    else moves.push({ letter, n: 1 })
+  }
   return (
     <div className={s.stage}>
-      <svg viewBox={`0 0 ${VB} ${VB}`} className={s.geoFigure} role="img" aria-label="Recorrido en una cuadrícula de 5 por 5">
-        {Array.from({ length: GRID * GRID }, (_, k) => (
-          <rect
-            key={k}
-            x={ORIGIN + (k % GRID) * CELL}
-            y={ORIGIN + Math.floor(k / GRID) * CELL}
-            width={CELL}
-            height={CELL}
-            className={s.geoCell}
-          />
-        ))}
+      <svg viewBox={`0 0 ${W} ${H}`} className={s.geoFigure} role="img" aria-label="Recorrido en una cuadrícula de 4 filas por 5 columnas">
+        {Array.from({ length: ROWS * COLS }, (_, k) => {
+          const cell: Pt = [Math.floor(k / COLS), k % COLS]
+          const isStart = cell[0] === start[0] && cell[1] === start[1]
+          return (
+            <rect
+              key={k}
+              x={ORIGIN_X + cell[1] * CELL}
+              y={ORIGIN_Y + cell[0] * CELL}
+              width={CELL}
+              height={CELL}
+              className={isStart ? s.geoStartCell : s.geoCell}
+              data-start={isStart ? 'yes' : undefined}
+            />
+          )
+        })}
         {centres.slice(1).map((p, k) => (
           <line key={k} data-step={k} x1={r1(centres[k][0])} y1={r1(centres[k][1])} x2={r1(p[0])} y2={r1(p[1])} className={s.geoPath} />
         ))}
-        {letters.length > 0 && <circle cx={r1(ex)} cy={r1(ey)} r={6} className={s.geoEnd} data-end="yes" />}
-        <path d={starPath(sx, sy)} data-start="yes" className={s.geoStar} />
       </svg>
+      {moves.length > 0 && (
+        <ul className={s.geoMoves} aria-label="Pasos">
+          {moves.map((m, k) => (
+            <li key={k} className={s.geoMove}>{ARROW[m.letter].repeat(m.n)}</li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

@@ -431,12 +431,6 @@
   stroke-width: 3;
 }
 
-.geoArc {
-  fill: none;
-  stroke: var(--c-magic);
-  stroke-width: 3;
-}
-
 .geoSum {
   margin: 0;
   color: var(--c-magic);
@@ -459,13 +453,28 @@
   stroke-linecap: round;
 }
 
-.geoEnd {
-  fill: var(--c-magic);
+.geoStartCell {
+  fill: var(--c-gold-soft);
+  stroke: var(--c-gold);
+  stroke-width: 3;
 }
 
-.geoStar {
-  fill: var(--c-error);
-  stroke: var(--c-ink);
-  stroke-width: 1.5;
-  stroke-linejoin: round;
+.geoMoves {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.geoMove {
+  padding: var(--sp-1) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-blue-soft);
+  border-radius: var(--r-md);
 }

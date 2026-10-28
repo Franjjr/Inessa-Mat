@@ -487,3 +487,41 @@ describe('the quadrilateral level-3 hint is a contrast: it never describes or na
     expect(new Set(seen.values()).size).toBe(5)
   })
 })
+
+describe('level-3 example hints name their own kind (the worked example is of that kind)', () => {
+  // Seeds 1–200 reach every kind and class; the third hint is the worked example.
+  it('line kinds: recta shows arrows at both ends, semirrecta a point and an arrow, segmento two points', () => {
+    const examples: Record<string, RegExp> = {
+      straight: /una flecha en cada extremo: la línea sigue sin fin por los dos lados/,
+      ray: /un punto en un extremo y una flecha en el otro/,
+      segment: /dos puntos, uno en cada extremo: la línea se acaba en los dos lados/,
+    }
+    const seen = new Set<string>()
+    for (let seed = 1; seed <= 200; seed++) {
+      const ex = genLineKind(createRng(seed))
+      const kind = (ex.figures[0] as { kind: string }).kind
+      seen.add(kind)
+      expect(ex.hints[2], `${kind} seed ${seed}`).toMatch(examples[kind])
+      for (const other of Object.keys(examples).filter((k) => k !== kind)) {
+        expect(ex.hints[2], `${kind} seed ${seed}`).not.toMatch(examples[other])
+      }
+    }
+    expect([...seen].sort()).toEqual(['ray', 'segment', 'straight'])
+  })
+
+  it('angle classes: agudo closes more than the corner, recto fits it, obtuso opens more', () => {
+    const examples: Record<string, RegExp> = {
+      agudo: /se cierra más que la esquina del papel, se queda más cerrado que ella\./,
+      recto: /encaja justo en la esquina del papel, sin que sobre ni falte, no se abre ni se cierra/,
+      obtuso: /se abre más que la esquina del papel, se queda muy abierto\./,
+    }
+    const seen = new Set<string>()
+    for (let seed = 1; seed <= 200; seed++) {
+      const ex = genAngleClass(createRng(seed))
+      const cls = ex.options[ex.answer]
+      seen.add(cls)
+      expect(ex.hints[2], `${cls} seed ${seed}`).toMatch(examples[cls])
+    }
+    expect([...seen].sort()).toEqual(['agudo', 'obtuso', 'recto'])
+  })
+})
