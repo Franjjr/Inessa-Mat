@@ -12,6 +12,7 @@ import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from
 import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import { LngSentenceVisual, LngWordVisual } from './lengua'
 import { BigTextVisual, NumberLineVisual } from './numbers'
+import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -50,6 +51,8 @@ export const LESSON_VISUALS: VisualRegistry = {
   'lng-word': LngWordVisual,
   'big-text': BigTextVisual,
   'number-line': NumberLineVisual,
+  'fraction-shape': FractionShapeVisual,
+  'fraction-groups': FractionGroupsVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

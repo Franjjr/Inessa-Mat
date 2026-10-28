@@ -41,6 +41,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
   'big-text': { text: '4 325 = 4 000 + 300 + 20 + 5' },
   'number-line': { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 },
+  'fraction-shape': { parts: 4, shaded: 1, shape: 'circle' },
+  'fraction-groups': { total: 20, parts: 4, take: 1 },
 }
 
 /** Reads the LessonVisualId union straight from the shared types, so the test cannot drift from them. */
@@ -182,5 +184,25 @@ describe('division galera', () => {
     expect(plain.queryByTestId('galera-step')).toBeNull()
     expect(plain.getByTestId('galera-product').textContent).toBe('3 × 5 = 15 · 17 − 15 = 2')
     plain.unmount()
+  })
+})
+
+describe('fraction visuals', () => {
+  it('fraction-shape draws parts slices and shades shaded of them', () => {
+    const Shape = LESSON_VISUALS['fraction-shape']
+    const { container, unmount } = render(<Shape params={{ parts: 3, shaded: 2, shape: 'bar' }} phase={FINAL} runLength={1} reduced />)
+    expect(container.querySelectorAll('[data-part]')).toHaveLength(3)
+    expect(container.querySelectorAll('[data-shaded="true"]')).toHaveLength(2)
+    unmount()
+  })
+
+  it('fraction-groups deals total dots into parts groups', () => {
+    const Groups = LESSON_VISUALS['fraction-groups']
+    const { container, unmount } = render(<Groups params={{ total: 12, parts: 3, take: 1 }} phase={FINAL} runLength={1} reduced />)
+    const groups = container.querySelectorAll('[data-group]')
+    expect(groups).toHaveLength(3)
+    for (const group of groups) expect(group.querySelectorAll('[data-dot]')).toHaveLength(4)
+    expect(container.querySelectorAll('[data-group][data-taken="true"]')).toHaveLength(1)
+    unmount()
   })
 })
