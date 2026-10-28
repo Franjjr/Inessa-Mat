@@ -409,8 +409,8 @@ export function isMentalSkill(key: SkillKey): boolean {
 /** Skills whose exercises are judged as one short answer (not in columns): the kinds added for 3.º numbers and mental. */
 export const NUMERIC_KINDS: ExerciseKind[] = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation']
 
-/** The handwriting (Caligrafía) key grammar: cal:letra:<l>, cal:mayus:<L>, cal:enlace:<ab>, cal:palabra:<word>, cal:frase:<id>. */
-const HANDWRITING_KEY = /^cal:(?:letra:[a-zñ]|mayus:[A-ZÑ]|enlace:[a-zñ]{2}|palabra:\p{Ll}+|frase:[a-z0-9-]+)$/u
+/** The handwriting (Caligrafía) key grammar: calig:letra:<l>, calig:mayus:<L>, calig:enlace:<ab>, calig:palabra:<word>, calig:frase:<id>. */
+const HANDWRITING_KEY = /^calig:(?:letra:[a-zñ]|mayus:[A-ZÑ]|enlace:[a-zñ]{2}|palabra:\p{Ll}+|frase:[a-z0-9-]+)$/u
 
 export function isValidSkill(key: SkillKey): boolean {
   return parseSkill(key) !== null || HANDWRITING_KEY.test(key)

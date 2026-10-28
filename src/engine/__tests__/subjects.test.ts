@@ -220,10 +220,10 @@ describe('the home and the summary read maths mastery only (lng: rows left out)'
   })
 })
 
-describe('handwriting (cal:) keys', () => {
+describe('handwriting (calig:) keys', () => {
   const calRow = (skill: string): SkillMastery => mastery(skill, 2)
   const mixed = (): MasteryMap => ({
-    ...mathMastery(), ...withLanguage({}), 'cal:letra:a': calRow('cal:letra:a'), 'cal:palabra:casa': calRow('cal:palabra:casa'),
+    ...mathMastery(), ...withLanguage({}), 'calig:letra:a': calRow('calig:letra:a'), 'calig:palabra:casa': calRow('calig:palabra:casa'),
   })
 
   it('the calendar skills cal:weekday and cal:month stay maths', () => {
@@ -232,15 +232,15 @@ describe('handwriting (cal:) keys', () => {
     expect(handwritingMastery(all)).not.toHaveProperty('cal:weekday')
   })
 
-  it('maths and Lengua readers never count handwriting keys', () => {
+  it('maths and Lengua readers never count calig: keys', () => {
     const all = mixed()
-    expect(Object.keys(masteryOf(all, 'math')).some((k) => k.startsWith('cal:'))).toBe(false)
+    expect(Object.keys(masteryOf(all, 'math')).some((k) => k.startsWith('calig:'))).toBe(false)
     expect(Object.keys(masteryOf(all, 'math'))).toEqual(Object.keys(mathMastery()))
     expect(Object.keys(masteryOf(all, 'language')).sort()).toEqual([...LNG_SKILLS].sort())
   })
 
-  it('attemptsOf leaves cal: attempts out of both subjects', () => {
-    const calAttempt = attempt({ skill: 'cal:letra:a', kind: 'fact-mul', createdAt: daysAgo(1) })
+  it('attemptsOf leaves calig: attempts out of both subjects', () => {
+    const calAttempt = attempt({ skill: 'calig:letra:a', kind: 'fact-mul', createdAt: daysAgo(1) })
     const base = mixedAttempts()
     const all = [calAttempt, ...base]
     expect(attemptsOf(all, 'math')).not.toContain(calAttempt)
@@ -249,17 +249,17 @@ describe('handwriting (cal:) keys', () => {
     expect(attemptsOf(all, 'language')).toEqual(attemptsOf(base, 'language'))
   })
 
-  it('handwritingMastery and handwritingAttempts keep only cal: rows', () => {
+  it('handwritingMastery and handwritingAttempts keep only calig: rows', () => {
     const all = mixed()
-    expect(Object.keys(handwritingMastery(all)).sort()).toEqual(['cal:letra:a', 'cal:palabra:casa'])
-    const calAttempt = attempt({ skill: 'cal:letra:a', createdAt: daysAgo(1) })
+    expect(Object.keys(handwritingMastery(all)).sort()).toEqual(['calig:letra:a', 'calig:palabra:casa'])
+    const calAttempt = attempt({ skill: 'calig:letra:a', createdAt: daysAgo(1) })
     const base = mixedAttempts()
     const list = [calAttempt, ...base]
     expect(handwritingAttempts(list)).toEqual([calAttempt])
   })
 
-  it('isHandwritingSkill recognises the prefix only', () => {
-    expect(isHandwritingSkill('cal:letra:a')).toBe(true)
+  it('isHandwritingSkill recognises the calig: prefix only', () => {
+    expect(isHandwritingSkill('calig:letra:a')).toBe(true)
     expect(isHandwritingSkill('mul:6x7')).toBe(false)
     expect(isHandwritingSkill('lng:gram:articulo')).toBe(false)
     expect(isHandwritingSkill('cal:weekday')).toBe(false)

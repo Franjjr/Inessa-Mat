@@ -7,18 +7,16 @@ import type { MasteryMap, SessionRecord, SkillKey, SubjectId } from '@/types'
 export type LessonSubject = Extract<SubjectId, 'math' | 'language'>
 
 const LANGUAGE_PREFIX = 'lng:'
-/* Handwriting keys. Maths already uses `cal:weekday` and `cal:month` (the calendar), so the handwriting family is matched
-   by its own sub-prefixes, not by `cal:` alone. */
-const HANDWRITING_KEY = /^cal:(?:letra|mayus|enlace|palabra|frase):/
+/* Handwriting keys start with `calig:`. Maths keeps `cal:weekday` and `cal:month` (the calendar), so the prefix is not `cal:`. */
+const HANDWRITING_PREFIX = 'calig:'
 
 export function subjectOfSkill(skill: SkillKey): SubjectId {
   return skill.startsWith(LANGUAGE_PREFIX) ? 'language' : 'math'
 }
 
-/** Caligrafía con lápiz (`cal:letra:…`, `cal:mayus:…`, `cal:enlace:…`, `cal:palabra:…`, `cal:frase:…`): not a subject.
-    Its rows are kept apart from maths and Lengua readers. `cal:weekday` and `cal:month` stay maths. */
+/** Caligrafía con lápiz (`calig:…`): not a subject. Its rows are kept apart from maths and Lengua readers. */
 export function isHandwritingSkill(skill: SkillKey): boolean {
-  return HANDWRITING_KEY.test(skill)
+  return skill.startsWith(HANDWRITING_PREFIX)
 }
 
 /** The mastery rows of one subject (a copy: the input is not changed). */
@@ -35,7 +33,7 @@ export function attemptsOf<T extends { skill: SkillKey }>(list: readonly T[], su
   return list.filter((a) => !isHandwritingSkill(a.skill) && subjectOfSkill(a.skill) === subject)
 }
 
-/** The handwriting (cal:) rows of a mastery map (a copy). */
+/** The handwriting (calig:) rows of a mastery map (a copy). */
 export function handwritingMastery(mastery: MasteryMap): MasteryMap {
   const out: MasteryMap = {}
   for (const [skill, m] of Object.entries(mastery)) {
@@ -44,7 +42,7 @@ export function handwritingMastery(mastery: MasteryMap): MasteryMap {
   return out
 }
 
-/** The handwriting (cal:) attempts, in their order. */
+/** The handwriting (calig:) attempts, in their order. */
 export function handwritingAttempts<T extends { skill: SkillKey }>(list: readonly T[]): T[] {
   return list.filter((a) => isHandwritingSkill(a.skill))
 }
