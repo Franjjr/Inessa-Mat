@@ -88,7 +88,7 @@ const probDividir = clase({
   topicId: 'prob-dividir',
   title: 'Problemas de repartir',
   para: [
-    show('share', { total: 12, groups: 3, emoji: '🍬' }, 'Hay 12 caramelos para 3 amigos, y los reparten a partes iguales. ¿Cuántos le tocan a cada uno?', 'octopus'),
+    show('share', { total: 12, groups: 3, emoji: '🍬' }, 'Hay 12 caramelos para 3 amigos, y los reparten en partes iguales. ¿Cuántos le tocan a cada uno?', 'octopus'),
     show('big-text', { text: '¿Qué sé? ¿Qué me preguntan? ¿Qué operación?' }, 'Otra vez las tres preguntas: qué sé, qué me preguntan y qué operación.', 'ladybug'),
   ],
   ejemplo: [
@@ -118,7 +118,7 @@ const probDosPasos = clase({
     show('big-text', { text: '¿Qué sé? ¿Qué me preguntan? ¿Qué operación?' }, 'Hay dos cuentas seguidas: primero una, y después otra con su resultado.', 'frog'),
   ],
   ejemplo: [
-    show('big-text', { text: '12 · 8 · 5', sub: 'tiene, recibe y regala' }, '¿Qué sé? Tres números: tiene 12, le dan 8 y regala 5. ¿Qué me preguntan? Cuántas le quedan.'),
+    show('big-text', { text: '12, 8 y 5', sub: 'tiene, recibe y regala' }, '¿Qué sé? Tres números: tiene 12, le dan 8 y regala 5. ¿Qué me preguntan? Cuántas le quedan.'),
     show('bar-model', { a: 12, b: 8, total: 20 }, 'Paso 1: primero juntamos lo que tiene con lo que le dan. 12 + 8 = 20. Ahora tiene 20.'),
     show('bar-model', { a: 15, b: 5, total: 20 }, 'Paso 2: luego quitamos lo que regala. 20 − 5 = 15. Le quedan 15 pegatinas.'),
   ],
