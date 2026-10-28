@@ -43,10 +43,10 @@ describe('clases de dinero (3.º)', () => {
     }
   })
 
-  it('pagar-cambio: the ejemplo gives change with a note, and the money drawing shows the same change', () => {
+  it('pagar-cambio: the ejemplo gives change with a note, and the money drawing shows the same change (3,80 €)', () => {
     const cls = DINERO_CLASSES.find((c) => c.topicId === 'pagar-cambio')!
     const ejemplo = cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
-    expect(ejemplo.map((st) => st.text).join(' ')).toContain('1,80 €')
-    expect(ejemplo.some((st) => st.visual === 'money' && st.params?.price === 320 && st.params?.items === '500')).toBe(true)
+    expect(ejemplo.map((st) => st.text).join(' ')).toContain('3,80 €')
+    expect(ejemplo.some((st) => st.visual === 'money' && st.params?.price === 120 && st.params?.items === '500')).toBe(true)
   })
 })

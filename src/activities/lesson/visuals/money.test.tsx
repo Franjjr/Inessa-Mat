@@ -13,6 +13,21 @@ describe('money visual', () => {
     unmount()
   })
 
+  it('four notes are drawn smaller than one note, so the row fits a phone', () => {
+    const Money = LESSON_VISUALS.money
+    const widthOf = (items: string) => {
+      const { container, unmount } = render(<Money params={{ items }} phase={FINAL} runLength={1} reduced />)
+      const widths = [...container.querySelectorAll('[data-piece] svg')].map((svg) => Number(svg.getAttribute('width')))
+      unmount()
+      return widths
+    }
+    const one = widthOf('500')
+    const four = widthOf('500,1000,2000,5000')
+    expect(four).toHaveLength(4)
+    expect(Math.max(...four)).toBeLessThan(Math.max(...one))
+    expect(Math.max(...four)).toBeLessThanOrEqual(120)
+  })
+
   it('moneyLabel writes euros with a comma', () => {
     expect(moneyLabel(125)).toBe('1,25 €')
     expect(moneyLabel(50)).toBe('50 cént.')

@@ -9,7 +9,7 @@ import s from './visuals.module.css'
 
 const REAL = new Set<number>(PIECES)
 
-/** A amount in céntimos as the lesson writes it: «2 €», «1,25 €», «50 cént.». */
+/** Una cantidad en céntimos, como la escribe la lección: «2 €», «1,25 €», «50 cént.». */
 export function moneyLabel(cents: number): string {
   return cents >= 100 ? euros(cents) : `${cents} cént.`
 }
@@ -24,13 +24,15 @@ export function MoneyVisual({ params }: VisualProps) {
   const price = numParam(params, 'price', -1)
   const total = pieces.reduce((sum, v) => sum + v, 0)
   const change = price >= 0 && total > price ? total - price : 0
+  // Two pieces fit side by side at the big size; more are drawn smaller, so the row wraps inside a 360 px phone.
+  const size = pieces.length > 2 ? 'md' : 'lg'
 
   return (
     <div className={s.stage}>
       <div className={s.moneyRow} role="img" aria-label={pieces.map(moneyLabel).join(', ') || 'Sin monedas'}>
         {pieces.map((v, i) => (
           <span key={i} className={s.moneyPiece} data-piece={v}>
-            <MoneyPiece value={v} size="lg" />
+            <MoneyPiece value={v} size={size} />
           </span>
         ))}
       </div>

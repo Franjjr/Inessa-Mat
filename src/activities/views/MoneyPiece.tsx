@@ -63,9 +63,10 @@ export function MoneyPiece({ value, size = 'md', label = false }: MoneyPieceProp
   const fontSize = text.length > 4 ? 15 : 19
   return (
     <svg viewBox="0 0 100 100" width={d} height={d} className="money-piece money-coin" {...aria} data-value={value}>
-      <circle cx="50" cy="50" r="49" fill={colour.outer} />
-      <circle cx="50" cy="50" r="41" fill={colour.inner} />
-      {value === 100 || value === 200 ? <circle cx="50" cy="50" r="19" fill={COIN_COLOUR.gold.inner} stroke={COIN_COLOUR.gold.outer} strokeWidth="2" /> : null}
+      {/* The 1 € has a silver rim and a gold centre; the 2 € the other way round: gold rim, silver centre. */}
+      <circle cx="50" cy="50" r="49" fill={value === 200 ? COIN_COLOUR.gold.outer : colour.outer} />
+      <circle cx="50" cy="50" r="41" fill={value === 200 ? COIN_COLOUR.bimetal.outer : colour.inner} />
+      {value === 100 ? <circle cx="50" cy="50" r="19" fill={COIN_COLOUR.gold.inner} stroke={COIN_COLOUR.gold.outer} strokeWidth="2" /> : null}
       <text x="50" y="58" textAnchor="middle" fontSize={fontSize} fontWeight="800" fill={colour.ink} fontFamily="system-ui, sans-serif" style={{ fontVariantNumeric: 'tabular-nums' }}>
         {text}
       </text>

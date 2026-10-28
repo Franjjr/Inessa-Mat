@@ -17,7 +17,7 @@ const monedasBilletes = clase({
   ejemplo: [
     show('money', { items: '1,2,5' }, 'Estas monedas son de cobre y valen céntimos: 1 céntimo, 2 céntimos y 5 céntimos.'),
     show('money', { items: '10,20,50' }, 'Estas monedas son doradas: 10 céntimos, 20 céntimos y 50 céntimos.'),
-    show('money', { items: '100,200' }, 'Las monedas de 1 € y de 2 € tienen el borde plateado y el centro dorado.'),
+    show('money', { items: '100,200' }, 'La moneda de 1 € tiene el borde plateado y el centro dorado. La de 2 € es al revés: borde dorado y centro plateado.'),
     show('money', { items: '500,1000,2000,5000' }, 'Los billetes de 5 €, 10 €, 20 € y 50 € son de papel y de colores distintos.'),
   ],
   guiada: [
@@ -38,18 +38,18 @@ const pagarCambio = clase({
   topicId: 'pagar-cambio',
   title: 'Pagar y dar el cambio',
   para: [
-    show('money', { items: '200,50,20', price: 270 }, 'Un zumo cuesta 2,70 €. Podemos pagarlo justo con 2 €, 50 céntimos y 20 céntimos: no sobra nada.', 'frog'),
-    show('money', { items: '500', price: 320 }, 'Un bocadillo cuesta 3,20 €. Si pagamos con un billete de 5 €, nos dan el cambio.', 'ladybug'),
+    show('money', { items: '100,20,10,5', price: 135 }, 'Un zumo cuesta 1,35 €. Podemos pagarlo justo con 1 €, 20 céntimos, 10 céntimos y 5 céntimos: no sobra nada.', 'frog'),
+    show('money', { items: '500', price: 120 }, 'Un helado cuesta 1,20 €. Si pagamos con un billete de 5 €, nos dan el cambio.', 'ladybug'),
   ],
   ejemplo: [
-    show('money', { items: '200,50,20', price: 270 }, 'Pagar justo es poner monedas que sumen el precio: 2 € + 50 céntimos + 20 céntimos = 2,70 €.'),
-    show('money', { items: '500', price: 320 }, 'Con un billete de 5 € y un bocadillo de 3,20 €, el cambio es lo que sobra de los 5 €.'),
-    show('money', { items: '500', price: 320 }, 'Para contar el cambio, empezamos en 3,20 € y subimos: 30 céntimos hasta 3,50 €, y 1,50 € más hasta 5 €. En total, 1,80 €.'),
+    show('money', { items: '100,20,10,5', price: 135 }, 'Pagar justo es poner monedas que sumen el precio: 1 € + 20 céntimos + 10 céntimos + 5 céntimos = 1,35 €.'),
+    show('money', { items: '500', price: 120 }, 'Con un billete de 5 € y un helado de 1,20 €, el cambio es lo que sobra de los 5 €.'),
+    show('money', { items: '500', price: 120 }, 'Para contar el cambio, empezamos en 1,20 € y subimos: 80 céntimos hasta 2 €, y 3 € más hasta 5 €. En total, 3,80 €.'),
     show('money', { items: '1000', price: 650 }, 'Con un billete de 10 € y un cómic de 6,50 €, el cambio es 3,50 €: 6,50 € + 3,50 € = 10 €.'),
   ],
   guiada: [
     tryIt('money', { items: '200,50' }, '¡Te toca! Pon en la bandeja monedas y billetes que sumen justo el precio.', { skills: ['money:pay'] }),
-    tryIt('money', { items: '500', price: 320 }, '¡Otra! Lee el precio y con qué billete paga. Después cuenta cuánto le devuelven.', { skills: ['money:change'] }),
+    tryIt('money', { items: '500', price: 120 }, '¡Otra! Lee el precio y con qué billete paga. Después cuenta cuánto le devuelven.', { skills: ['money:change'] }),
   ],
   sola: [
     tryIt('money', { items: '200' }, '¡Tu turno! Paga justo: ni te pases ni te quedes corto.', { skills: ['money:pay'] }),
@@ -57,7 +57,7 @@ const pagarCambio = clase({
     tryIt('money', { items: '500' }, '¡Tu turno! Mira primero si te piden pagar justo o cuánto te devuelven.', { skills: ['money:pay', 'money:change'] }),
     tryIt('money', { items: '200,100' }, '¡Tu turno! Cuando pagues, compruébalo cuenta a cuenta antes de seguir.', { skills: ['money:pay'] }),
   ],
-  cierre: show('money', { items: '500', price: 320 }, 'La regla: si el dinero que das es igual al precio, pagas justo; si das más, el cambio es lo que sobra.'),
+  cierre: show('money', { items: '500', price: 120 }, 'La regla: si el dinero que das es igual al precio, pagas justo; si das más, el cambio es lo que sobra.'),
 })
 
 /* Sumar precios y comparar: los euros se suman con los euros y los céntimos con los céntimos; para comparar, primero los euros. */
@@ -73,7 +73,7 @@ const sumarPrecios = clase({
     show('money', { items: '200,50,100,50,20,10' }, 'Un bocadillo de 2,50 € y un cuaderno de 1,80 €: juntos son 4,30 €.'),
     show('money', { items: '200,50,100,50,20,10' }, 'Primero sumamos los céntimos: 50 + 80 = 130 céntimos. Como pasan de 100, 100 céntimos son 1 €, y quedan 30 céntimos.'),
     show('money', { items: '200,100,100,20,10' }, 'Después sumamos los euros: 2 € + 1 € + 1 € (el euro que salió de los céntimos) = 4 €. El total es 4,30 €.'),
-    show('money', { items: '200,50', price: 250 }, 'Para comparar precios, mira primero los euros: 2,50 € tiene 2 €, y 1,80 € tiene 1 €. Como 2 € es más que 1 €, 2,50 € es el precio más alto.'),
+    show('money', { items: '200,50,100,50,20,10' }, 'Un bocadillo de 2,50 € y un cuaderno de 1,80 €. Para comparar precios, mira primero los euros: 2,50 € tiene 2 € y 1,80 € tiene 1 €. Como 2 € es más que 1 €, el bocadillo es el más caro.'),
   ],
   guiada: [
     tryIt('money', { items: '200,50' }, '¡Te toca! Suma los euros con los euros y los céntimos con los céntimos.', { skills: ['money:add'] }),
