@@ -73,6 +73,13 @@ const extent = (pts: readonly Pt[], axis: 'x' | 'y') => {
   const e = ends(pts, axis)
   return e.hi - e.lo
 }
+/** Span of the ink on an axis between its 10th and 90th percentiles. Unlike the extremes, one jittered point cannot
+    move it much, so a ±1.5-unit hand reads as little change (a real change in the body still does). */
+const bodySpan = (pts: readonly Pt[], axis: 'x' | 'y') => {
+  const v = pts.map((p) => p[axis]).sort((a, b) => a - b)
+  const at = (q: number) => v[Math.round(q * (v.length - 1))]
+  return at(0.9) - at(0.1)
+}
 const centre = (pts: readonly Pt[]) => {
   const e = ends(pts, 'x')
   const f = ends(pts, 'y')
@@ -158,11 +165,6 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const T = CURSIVE_THRESHOLDS
   const modelAll = target.strokes.flatMap((st) => dense(st, 1))
   const childDense = child.flatMap((st) => dense(st, 1))
-  const modelBody = extent(modelAll, 'y')
-  const childBody = extent(childDense, 'y')
-
-  // Size: body height (top to bottom of the ink, end points averaged) against the model's.
-  const size = childBody / modelBody
 
   // Shape: the child's centre moved onto the model's and the child scaled to the best fit, so the form is judged apart
   // from size and position. Three checks: the mean distance, the share of points far off the line, and the width
@@ -174,6 +176,10 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const k = bestScale(childDense, modelAll, cc, cm)
   const place = (p: Pt): Pt => ({ x: (p.x - cc.x) * k + cm.x, y: (p.y - cc.y) * k + cm.y })
   const aligned = childDense.map(place)
+  // Size: body height (the 10th to 90th percentile of the ink, so one jittered point cannot move it) against the model's.
+  const size = bodySpan(childDense, 'y') / bodySpan(modelAll, 'y')
+  // Width (same percentiles) against the height ratio: the aspect the shape check compares.
+  const widthRatio = bodySpan(childDense, 'x') / bodySpan(modelAll, 'x')
   // Child → model uses the child's own samples: a sparse stroke interpolated onto a grid would cut its chords across
   // curves and read as error. Model → child (coverage) uses the interpolated child.
   const dAB = childAll.map((p) => nearest(place(p), modelAll))
@@ -181,8 +187,7 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const shape = (mean(dAB) + mean(dBA)) / 2 / XHEIGHT
   const all = [...dAB, ...dBA]
   const shapeOff = all.filter((d) => d > T.shapeTolerance).length / all.length
-  // Width against height, from the raw ink (not the aligned one, which the scale above would have partly absorbed).
-  const shapeAspect = Math.abs((extent(childDense, 'x') / childBody) / (extent(modelAll, 'x') / modelBody) - 1)
+  const shapeAspect = Math.abs(widthRatio / size - 1)
   const shapeRatio = Math.max(shape / T.shape, shapeOff / T.shapeOff, shapeAspect / T.shapeAspect)
 
   // Line: the child's pen path and the model's are sampled evenly by arc length and paired point by point; the
