@@ -124,6 +124,14 @@
   line-height: 1.3;
 }
 
+/* A short screen (a landscape phone, 1138 × 640): the prompt, the card and the answer box get a little less room, so the
+   letter keyboard and «Comprobar» stay on screen without a scroll (F1). */
+@media (max-height: 699px) {
+  .view { gap: var(--sp-2); }
+  .prompt { font-size: var(--fs-lg); }
+  .card, .sentenceCard { padding-block: 8px; }
+}
+
 /* The syllables of a word, tapped one by one: the same look as the words of a sentence, a little smaller. */
 .syllable {
   composes: word;

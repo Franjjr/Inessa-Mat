@@ -327,6 +327,18 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
 }) {
   const [speaking, setSpeaking] = useState(false)
   const run = useRef(0)
+  // The text scrolls inside its own box; the buttons stay below it, outside the scroll, and a fade shows there is more.
+  const scroller = useRef<HTMLDivElement>(null)
+  const [more, setMore] = useState(false)
+  const measure = () => {
+    const el = scroller.current
+    if (el) setMore(el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+  }
+  useEffect(() => {
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [paragraphs])
   useEffect(() => () => {
     run.current += 1
     speech.stop()
@@ -343,11 +355,16 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
     })().catch(() => setSpeaking(false))
   }
   return (
-    <div className={`${s.card} ${s.passage}`}>
-      <p className={s.blockChip}>Lectura</p>
-      <h2 className={s.title}>{reading.title}</h2>
-      <div className={s.passageBody}>
-        {paragraphs.map((p, i) => <p key={i} className={s.passageText}>{p}</p>)}
+    <div className={s.passageFrame}>
+      <div className={s.passageViewport}>
+        <div ref={scroller} className={`${s.card} ${s.passage}`} onScroll={measure}>
+          <p className={s.blockChip}>Lectura</p>
+          <h2 className={s.title}>{reading.title}</h2>
+          <div className={s.passageBody}>
+            {paragraphs.map((p, i) => <p key={i} className={s.passageText}>{p}</p>)}
+          </div>
+        </div>
+        {more && <div className={s.passageMore} aria-hidden="true" />}
       </div>
       <div className={s.actions}>
         {soundOn ? (

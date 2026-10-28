@@ -1,6 +1,7 @@
 /* Lengua visuals: lng-sentence (a sentence on a card, with one part marked) and lng-word (a word, cut into its parts).
    The mark is one of noun, adj, verb, art (a class: the colour and its name in a legend) or, for lng-word, the text of a
    part (that part is highlighted). Without a mark a highlight is drawn in the neutral colour. Sizes scale with the stage. */
+import clsx from 'clsx'
 import { motion } from 'motion/react'
 import type { VisualProps } from './types'
 import { motionT, strParam } from './types'
@@ -71,7 +72,8 @@ export function LngWordVisual({ params, reduced }: VisualProps) {
         className={s.wordBox}
       >
         {pieces.length === 1 ? (
-          <span className={s.piece} style={wholeBg ? { background: wholeBg } : undefined}>{pieces[0]}</span>
+          // A whole word fills the board: it is written large, as on the blackboard, not as a small label in an empty space.
+          <span className={clsx(s.piece, !partsText && s.whole)} style={wholeBg ? { background: wholeBg } : undefined}>{pieces[0]}</span>
         ) : (
           pieces.map((p, i) => {
             const hit = !cls && mark !== '' && p === mark

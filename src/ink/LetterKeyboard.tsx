@@ -1,6 +1,6 @@
 /* <LetterKeyboard> — the on-screen Spanish (QWERTY) letter keyboard for typed answers: letters, ñ, ⇧ for one capital,
-   ´ (the next vowel gets an accent), ¨ (ü), a symbol row (¿ ? ¡ ! , .), space, ⌫ and ✓.
-   Stateless about the answer: it only remembers which modifier is armed (⇧, ´, ¨, symbols) and emits finished characters.
+   á (the next vowel gets an accent), ü (the diéresis), a symbol row (¿ ? ¡ ! , .), space, ⌫ and ✓.
+   Stateless about the answer: it only remembers which modifier is armed (⇧, á, ü, symbols) and emits finished characters.
    Buttons never steal focus from the box they type into (mousedown is prevented). */
 import clsx from 'clsx'
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
@@ -116,8 +116,8 @@ export function LetterKeyboard({ onKey, onDelete, onSubmit, disabled, submitDisa
         {symbols
           ? btn('abc', 'Letras', () => setSymbols(false), s.fn)
           : btn('¿!', 'Símbolos', () => setSymbols(true), s.fn)}
-        {btn('´', 'Acento', () => setAccent((a) => (a === 'acute' ? null : 'acute')), clsx(s.fn, s.mark), accent === 'acute')}
-        {btn('¨', 'Diéresis', () => setAccent((a) => (a === 'diaeresis' ? null : 'diaeresis')), clsx(s.fn, s.mark), accent === 'diaeresis')}
+        {btn('á', 'Acento', () => setAccent((a) => (a === 'acute' ? null : 'acute')), clsx(s.fn, s.mark), accent === 'acute')}
+        {btn('ü', 'Diéresis', () => setAccent((a) => (a === 'diaeresis' ? null : 'diaeresis')), clsx(s.fn, s.mark), accent === 'diaeresis')}
         {btn('espacio', 'Espacio', () => other(' '), s.space)}
         {ok}
       </div>

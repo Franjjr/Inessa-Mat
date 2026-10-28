@@ -190,14 +190,43 @@
   gap: var(--sp-2);
 }
 
+.passageFrame {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  max-height: 72vh;
+}
+
+/* The box of the text: it takes the room the buttons leave, and the text scrolls inside it. */
+.passageViewport {
+  position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
 .passage {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: var(--sp-4);
-  max-height: 72vh;
   overflow-y: auto;
   text-align: left;
+}
+
+/* A fade at the bottom of the text box while more of the story is below (the scroll cue). */
+.passageMore {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  border-radius: 0 0 var(--r-lg, 16px) var(--r-lg, 16px);
+  background: linear-gradient(to bottom, transparent, var(--c-surface));
+  pointer-events: none;
 }
 
 .passageBody {

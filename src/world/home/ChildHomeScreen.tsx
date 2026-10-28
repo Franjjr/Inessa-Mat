@@ -118,7 +118,7 @@ export default function ChildHomeScreen() {
         <div className={s.topRight}>
           <SyncPill />
           <Button variant="secondary" size="sm" className={`${s.touch} ${s.chipBtn}`} onClick={switchChild}>Cambiar</Button>
-          <Button variant="ghost" size="sm" className={`${s.touch} ${s.chipBtn} ${s.family}`} onClick={() => navigate('/adult')}>Familia</Button>
+          <Button variant="secondary" size="sm" className={`${s.touch} ${s.chipBtn} ${s.family}`} onClick={() => navigate('/adult')}>Familia</Button>
         </div>
       </header>
 

@@ -15,6 +15,11 @@
 @media (max-width: 480px) {
   .pad { margin-inline: -8px; width: calc(100% + 16px); max-width: none; }
 }
+/* A short screen (a landscape phone, 1138 × 640): smaller keys, so the answer box, «Comprobar» and the footer stay on screen
+   without a scroll. Portrait phones (taller than 700 px) keep the 44 px keys. */
+@media (max-height: 699px) {
+  .pad { --lk-h: 36px; gap: 4px; }
+}
 
 .row {
   display: grid;
@@ -63,10 +68,9 @@
   box-shadow: 0 3px 0 color-mix(in srgb, var(--c-primary) 62%, var(--c-ink));
 }
 .mark {
-  font-size: calc(var(--lk-h) * 0.7);
+  font-size: calc(var(--lk-h) * 0.5);
   font-weight: 700;
-  line-height: 0.8;
-  padding-top: calc(var(--lk-h) * 0.12);
+  line-height: 1;
 }
 .space {
   font-size: calc(var(--lk-h) * 0.36);
