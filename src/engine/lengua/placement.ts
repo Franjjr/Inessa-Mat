@@ -51,3 +51,8 @@ export function buildLenguaPlacement(seed: string, now: Date = new Date()): Leng
   }
   return out
 }
+
+/** The block of a Lengua placement skill, or null when the placement does not test it. */
+export function lenguaPlacementBlockOf(skill: SkillKey): LenguaPlacementBlockId | null {
+  return PLAN.find((p) => p.skills.includes(skill))?.block ?? null
+}

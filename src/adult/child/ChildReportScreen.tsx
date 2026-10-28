@@ -1,12 +1,14 @@
 /* One child's report for the grown-ups. Order: the conclusion first (which tables to praise and which to review),
-   the four figures for the last 7 days, what the child is learning (temario, mistakes by kind, tests), then the
-   times-table grid with its legend and the worlds. Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export,
-   deletion). A picture of the story so far can be shared. */
+   the four figures for the last 7 days, what the child is learning (temario, mistakes by kind, tests), then Lengua
+   (the same cards, shown when Lengua is on for the child), then the times-table grid with its legend and the worlds.
+   Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export, deletion).
+   A picture of the story so far can be shared. */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
 import { clearInkSamples, eraseChild, exportChildData, getChildSummary, getProgress, useChildren } from '@/data'
 import { season1, seasonOf } from '@/content'
+import { subjectOffered } from '@/engine'
 import type { ChildSummary, CompanionSpecies, ProgressState } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
@@ -20,7 +22,7 @@ import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
 import { OtherMethodsCard } from './OtherMethodsCard'
-import { LearningSection } from './LearningCards'
+import { LearningSection, LenguaSection } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -203,6 +205,13 @@ export default function ChildReportScreen() {
       </section>
 
       <LearningSection childId={childId} childName={name} grade={child?.grade} progress={progress} />
+      <LenguaSection
+        childId={childId}
+        childName={name}
+        grade={child?.grade}
+        enabled={!!child && (child.settings.subjects ?? ['math']).includes('language') && subjectOffered('language', child.grade)}
+        progress={progress}
+      />
 
       <div className={s.twoCol}>
         <section className={`${adult.card} ${adult.cardGreen}`} aria-labelledby="heatmap-title">

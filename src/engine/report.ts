@@ -1,9 +1,10 @@
 /* Informe del adulto (docs/curriculum/PLAN_DOCENTE.md §6): where the child is in the temario, what the mistakes say
    (grouped by kind, with what to do at home) and how the tests went (each prueba inicial and the recall of what was
    learnt weeks ago). Pure: reads the mastery map and the attempts (newest first), no React, no I/O. */
-import type { AttemptRecord, ErrorType, MasteryMap } from '@/types'
+import type { AttemptRecord, ErrorType, MasteryMap, SkillKey, SubjectId } from '@/types'
 import { currentTopic, isTopicMastered, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
-import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf, type PlacementBlockId } from './placement'
+import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf } from './placement'
+import { LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT, lenguaPlacementBlockOf } from './lengua/placement'
 import { attemptsOf, masteryOf } from './subjects'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -41,8 +42,8 @@ export interface SyllabusReport {
 }
 
 /** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. */
-export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, term?: number): SyllabusReport {
-  const mastery = masteryOf(allMastery, 'math') // maths only
+export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number): SyllabusReport {
+  const mastery = masteryOf(allMastery, subject)
   const now = currentTopic(syllabus, mastery, term)
   let current: SyllabusReport['current'] = null
   const blocks = syllabus.blocks.map((b): BlockReport => {
@@ -87,8 +88,8 @@ export interface TopicNeeds {
 }
 
 /** Per topic of the temario, the «No lo sé» and the retried answers of the last `days` days. Topics with none are left out. */
-export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptRecord[], now: Date, days = 30): Record<string, TopicNeeds> {
-  const attempts = attemptsOf(allAttempts, 'math') // maths only
+export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptRecord[], now: Date, days = 30, subject: SubjectId = 'math'): Record<string, TopicNeeds> {
+  const attempts = attemptsOf(allAttempts, subject)
   const topicOf = new Map<string, string>()
   for (const b of syllabus.blocks) for (const t of b.topics) for (const sk of t.skills) topicOf.set(sk, t.id)
   const t = now.getTime()
@@ -108,7 +109,8 @@ export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptReco
 
 // ------------------------------------------------------------------------------------------------ errors
 
-export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'lengua' | 'despiste' | 'otros'
+export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'despiste' | 'otros'
+  | 'lengua-gramatica' | 'lengua-ortografia' | 'lengua-vocabulario' | 'lengua-lectura' | 'lengua-otros'
 
 /** The kinds of mistake of the plan (§6), each with what it means and what helps at home. */
 export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; advice: string }[] = [
@@ -149,10 +151,34 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
     advice: 'Partir una pizza o una hoja en partes iguales, y buscar figuras y ángulos rectos por casa.',
   },
   {
-    id: 'lengua',
+    id: 'lengua-gramatica',
     label: 'Gramática de Lengua',
     meaning: 'Confunde la clase de una palabra (sustantivo, adjetivo, verbo, artículo), el género, el número, el tiempo del verbo o el sujeto con el predicado.',
     advice: 'Leer la frase en voz alta y preguntar: ¿quién hace la acción? ¿cuándo pasa? Cambiar una palabra de género o de número y decir cómo queda.',
+  },
+  {
+    id: 'lengua-ortografia',
+    label: 'Ortografía y sílabas',
+    meaning: 'Escribe mal una letra (c/qu, g/gu, r/rr, mp/mb), olvida una mayúscula o un signo, corta mal las sílabas o no marca la sílaba fuerte.',
+    advice: 'Dictarle palabras en voz alta y pedirle que deletree la letra difícil. Leer en voz alta lo que escribe y buscar los signos al final de cada frase.',
+  },
+  {
+    id: 'lengua-vocabulario',
+    label: 'Vocabulario y abecedario',
+    meaning: 'Confunde sinónimos, antónimos o familias de palabras, o no ordena bien las palabras del abecedario.',
+    advice: 'Jugar a decir palabras que signifiquen lo mismo o lo contrario, y ordenar una lista (la compra, los nombres de la clase) por la primera letra.',
+  },
+  {
+    id: 'lengua-lectura',
+    label: 'Comprensión de textos',
+    meaning: 'Responde mal a una pregunta de un texto: toma una frase que no responde, confunde el orden de lo que pasa o la idea principal.',
+    advice: 'Leer el texto dos veces, la primera en voz alta. Después preguntarle: ¿qué pasó primero? ¿de qué trata el texto?',
+  },
+  {
+    id: 'lengua-otros',
+    label: 'Otros fallos de Lengua',
+    meaning: 'Casillas sin escribir o fallos sin un tipo concreto.',
+    advice: 'Pedirle que diga en voz alta cómo lo ha pensado: así se ve dónde se lía.',
   },
   {
     id: 'despiste',
@@ -189,18 +215,18 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'geo-name': 'fracciones-geometria',
   'geo-perimeter': 'fracciones-geometria',
   'left-right': 'fracciones-geometria',
-  'word-class': 'lengua',
-  'word-form': 'lengua',
-  'sentence-part': 'lengua',
-  'spelling': 'lengua',
-  'capital': 'lengua',
-  'punctuation': 'lengua',
-  'stress': 'lengua',
-  'syllable': 'lengua',
-  'dictation': 'lengua',
-  'alphabet': 'lengua',
-  'word-pair': 'lengua',
-  'reading': 'lengua',
+  'word-class': 'lengua-gramatica',
+  'word-form': 'lengua-gramatica',
+  'sentence-part': 'lengua-gramatica',
+  'spelling': 'lengua-ortografia',
+  'capital': 'lengua-ortografia',
+  'punctuation': 'lengua-ortografia',
+  'stress': 'lengua-ortografia',
+  'syllable': 'lengua-ortografia',
+  'dictation': 'lengua-ortografia',
+  'alphabet': 'lengua-vocabulario',
+  'word-pair': 'lengua-vocabulario',
+  'reading': 'lengua-lectura',
   'incomplete': 'despiste',
   'false-alarm': 'despiste',
   'remainder-too-big': 'despiste',
@@ -209,8 +235,12 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
   'dont-know': null, // «No lo sé» in the placement test: a topic to learn, not a pattern of mistakes
 }
 
-/** The group of an error type; null when it is not a maths mistake (recognition). */
-export function errorGroupOf(errorType: ErrorType): ErrorGroupId | null {
+/** In Lengua a blank answer and any other slip are not maths-like «despiste» or «otros». */
+const LENGUA_OWN: Partial<Record<ErrorType, ErrorGroupId>> = { incomplete: 'lengua-otros', other: 'lengua-otros' }
+
+/** The group of an error type of a subject; null when it is not a mistake to report (recognition, «No lo sé»). */
+export function errorGroupOf(errorType: ErrorType, subject: SubjectId = 'math'): ErrorGroupId | null {
+  if (subject === 'language' && errorType in LENGUA_OWN) return LENGUA_OWN[errorType] ?? null
   return errorType in GROUP_OF ? GROUP_OF[errorType] : 'otros'
 }
 
@@ -235,9 +265,10 @@ export interface ErrorReport {
   groups: ErrorGroupReport[]
 }
 
-/** Wrong answers of the last `days` days grouped by kind, most frequent first and «otros» last. Groups with no mistake now or before are left out. */
-export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, days = 30): ErrorReport {
-  const attempts = attemptsOf(allAttempts, 'math') // maths only
+/** Wrong answers of the last `days` days grouped by kind, most frequent first and «otros» last. Groups with no mistake now or before are left out.
+ *  Each subject has its own groups (the Lengua ones start with `lengua-`). */
+export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, days = 30, subject: SubjectId = 'math'): ErrorReport {
+  const attempts = attemptsOf(allAttempts, subject)
   const t = now.getTime()
   const from = t - days * DAY_MS
   const before = from - days * DAY_MS
@@ -251,7 +282,7 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
     const recent = at >= from
     if (recent && a.errorType !== 'recognition') answered += 1
     if (a.correct) continue
-    const group = errorGroupOf(a.errorType ?? 'other')
+    const group = errorGroupOf(a.errorType ?? 'other', subject)
     if (!group) continue
     const g = groups.get(group) ?? { count: 0, previous: 0, types: new Map() }
     if (recent) {
@@ -268,7 +299,7 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
     days,
     answered,
     wrong,
-    groups: ERROR_GROUPS.filter((d) => groups.has(d.id))
+    groups: ERROR_GROUPS.filter((d) => groups.has(d.id) && d.id.startsWith('lengua-') === (subject === 'language'))
       .map((d) => {
         const g = groups.get(d.id)!
         const types = [...g.types].map(([errorType, count]) => ({ errorType, count })).sort((x, y) => y.count - x.count || x.errorType.localeCompare(y.errorType))
@@ -286,28 +317,33 @@ export interface PlacementRun {
   answered: number
   correct: number
   complete: boolean
-  blocks: { id: PlacementBlockId; label: string; correct: number; total: number }[]
+  blocks: { id: string; label: string; correct: number; total: number }[]
 }
 
 /** A new run starts when the session changes or after this pause. */
 const RUN_GAP_MS = 2 * 60 * 60 * 1000
 
-/** Every prueba inicial the child has done, oldest first. Attempts come newest first. */
-export function placementRuns(allAttempts: readonly AttemptRecord[]): PlacementRun[] {
-  const items = attemptsOf(allAttempts, 'math').filter((a) => a.context.activity === PLACEMENT_ACTIVITY).slice().reverse()
+/** Every prueba inicial of a subject the child has done, oldest first. Attempts come newest first. */
+export function placementRuns(allAttempts: readonly AttemptRecord[], subject: SubjectId = 'math'): PlacementRun[] {
+  const lengua = subject === 'language'
+  const activity = lengua ? LENGUA_PLACEMENT_ACTIVITY : PLACEMENT_ACTIVITY
+  const count = lengua ? LENGUA_PLACEMENT_COUNT : PLACEMENT_COUNT
+  const defs: { id: string; label: string }[] = lengua ? LENGUA_PLACEMENT_BLOCKS : PLACEMENT_BLOCKS
+  const blockOf = (skill: SkillKey): string | null => (lengua ? lenguaPlacementBlockOf(skill) : placementBlockOf(skill))
+  const items = attemptsOf(allAttempts, subject).filter((a) => a.context.activity === activity).slice().reverse()
   const runs: AttemptRecord[][] = []
   for (const a of items) {
     const run = runs[runs.length - 1]
     const last = run?.[run.length - 1]
     const sameRun = last && last.sessionId === a.sessionId && Date.parse(a.createdAt) - Date.parse(last.createdAt) < RUN_GAP_MS
-      && run.length < PLACEMENT_COUNT
+      && run.length < count
     if (sameRun) run.push(a)
     else runs.push([a])
   }
   return runs.map((run) => {
-    const blocks = PLACEMENT_BLOCKS.map((b) => ({ ...b, correct: 0, total: 0 }))
+    const blocks = defs.map((b) => ({ ...b, correct: 0, total: 0 }))
     for (const a of run) {
-      const block = blocks.find((b) => b.id === placementBlockOf(a.skill))
+      const block = blocks.find((b) => b.id === blockOf(a.skill))
       if (!block) continue
       block.total += 1
       if (a.correct) block.correct += 1
@@ -316,7 +352,7 @@ export function placementRuns(allAttempts: readonly AttemptRecord[]): PlacementR
       startedAt: run[0].createdAt,
       answered: run.length,
       correct: run.filter((a) => a.correct).length,
-      complete: run.length >= PLACEMENT_COUNT,
+      complete: run.length >= count,
       blocks,
     }
   })

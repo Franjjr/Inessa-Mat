@@ -76,6 +76,7 @@ const entries: GalleryEntry[] = [
     render: () => (
       <TestsCard
         runs={placementRuns(sampleAttempts())}
+        count={PLACEMENT_COUNT}
         recall={{ minDays: 14, checked: 38, remembered: 31 }}
         childName="Lía"
         offer={{ requested: false, busy: false, onOffer: () => {} }}

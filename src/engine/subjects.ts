@@ -42,3 +42,8 @@ export function subjectOfSession(session: Pick<SessionRecord, 'summary'>): Subje
 export function subjectOffered(subject: SubjectId, grade?: number): boolean {
   return subject === 'language' ? grade === undefined || grade === 3 : true
 }
+
+/** Minutes of play of one subject in the sessions given (a session with no minutes counts as zero). */
+export function minutesOfSubject(sessions: readonly Pick<SessionRecord, 'summary' | 'minutes'>[], subject: SubjectId): number {
+  return sessions.filter((s) => subjectOfSession(s) === subject).reduce((sum, s) => sum + (Number(s.minutes) || 0), 0)
+}

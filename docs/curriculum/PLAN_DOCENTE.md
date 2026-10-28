@@ -189,3 +189,34 @@ Una clase enseña un tema antes de practicarlo. Dura unos 5 minutos y tiene cinc
 
 **División:** en el colegio se divide con las restas escritas (la galera). Las clases de dividir enseñan ese método
 desde el principio.
+
+## 11. Lengua de 3.º
+
+Segunda asignatura, con su temario, sus clases, su sesión y su prueba inicial. Detalle de decisiones: `docs/superpowers/specs/2026-10-27-lengua-3-design.md`.
+
+**Qué se enseña** (seis bloques; ocho etapas en tres trimestres, de lo fácil a lo difícil):
+
+- **Gramática:** sílabas, sustantivo (común o propio, género, número), artículo, adjetivo, verbo (presente, pasado y futuro), sujeto y predicado.
+- **Ortografía:** mayúsculas, c/qu, g/gu/gü, r/rr, mp/mb, sílaba tónica y átona, punto, coma, ¿? y ¡!
+- **Vocabulario:** abecedario, sinónimos y antónimos, familias de palabras, aumentativos y diminutivos, palabras compuestas.
+- **Lectura y literatura:** idea principal, preguntas sobre un texto, ordenar lo que pasa, rima, fábula, adivinanzas y trabalenguas.
+- **Escritura:** copia de frases, dictado corto y escritura guiada corta (una invitación, una nota, una carta, una descripción).
+
+**Cómo se practica:**
+
+- **Clases:** 18 temas tienen una clase de unos 5 minutos antes de practicarlos, con el mismo formato que en Matemáticas (§10).
+- **Historias:** 10 historias y poemas propios (de 120 a 250 palabras, con 3 a 5 preguntas) y 10 textos cortos (adivinanzas y trabalenguas). Se lee el texto entero antes de sus preguntas, y cada lectura terminada queda marcada.
+- **Teclado:** todo se contesta tocando palabras o escribiendo en el teclado de letras de la pantalla (QWERTY español, con ñ, tildes y mayúsculas).
+- **Dictado:** lo dice la voz de la app. Sin sonido, el dictado no sale en la sesión.
+- **Sesión:** 15 minutos, separada de la de Matemáticas (primero una, luego la otra): calentamiento, tema nuevo, una lectura con sus preguntas y repaso de ortografía y vocabulario.
+- **Prueba inicial:** 12 preguntas de gramática, ortografía y vocabulario, sin pistas. No incluye lectura ni dictado.
+
+**Qué queda fuera, por ahora:**
+
+- **Comunicación oral** (conversar, exponer, debatir): no se practica sola delante de una pantalla.
+- **Redacciones libres largas** (un cuento, una carta): la app propone solo escritura guiada y corta.
+- **Caligrafía con lápiz:** opcional y en un proyecto aparte, después de este.
+- **Lengua de 4.º** y una aventura propia de Lengua.
+
+**Qué ve el adulto en el informe:** el temario con lo dominado, «No lo sabía» y «Necesitó otro intento» por tema, en qué falla
+(en palabras sencillas), las lecturas terminadas, los minutos de la semana y los resultados de la prueba inicial.
