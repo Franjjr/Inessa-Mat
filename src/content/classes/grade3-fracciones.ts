@@ -45,16 +45,16 @@ const fraccionCantidad = clase({
     show('fraction-groups', { total: 20, parts: 4, take: 0 }, 'Repartimos: 20 caramelos en 4 grupos iguales. En cada grupo hay 5, porque 20 ÷ 4 = 5.'),
     show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'Un cuarto de 20 son los caramelos de un grupo: 20 ÷ 4 = 5.'),
     show('fraction-groups', { total: 20, parts: 4, take: 3 }, 'Tres cuartos son tres grupos: 3 × 5 = 15. Tres cuartos de 20 son 15.'),
-    show('fraction-groups', { total: 12, parts: 3, take: 2 }, 'Con 12 caramelos en 3 grupos, cada grupo tiene 4. Dos tercios son 2 grupos: 2 × 4 = 8.'),
+    show('fraction-groups', { total: 12, parts: 4, take: 3 }, 'Con 12 caramelos en 4 grupos, cada grupo tiene 3. Tres cuartos son 3 grupos: 3 × 3 = 9. Tres cuartos de 12 son 9.'),
   ],
   guiada: [
-    tryIt('fraction-groups', { total: 12, parts: 3, take: 1 }, '¡Te toca! Reparte el total en partes iguales y calcula cuántos hay en un grupo.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
-    tryIt('fraction-groups', { total: 20, parts: 4, take: 3 }, '¡Otra! Después mira cuántos grupos te piden: el número de arriba.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
+    tryIt('fraction-groups', { total: 12, parts: 3, take: 1 }, '¡Te toca! Mira en cuántas partes iguales está repartido el total: ese número va abajo.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
+    tryIt('fraction-groups', { total: 20, parts: 4, take: 3 }, '¡Otra! Mira cuántas partes te piden (el número de arriba) y piensa cuántos son esas partes.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
   ],
   sola: [
-    tryIt('fraction-groups', { total: 12, parts: 2, take: 1 }, '¡Tu turno! Reparte en grupos iguales y cuenta lo que hay en uno.', { skills: ['frac:of:2', 'frac:of:3'] }),
-    tryIt('fraction-groups', { total: 12, parts: 4, take: 3 }, '¡Tu turno! Con más grupos, cada grupo tiene menos: reparte antes de contar.', { skills: ['frac:of:3', 'frac:of:4'] }),
-    tryIt('fraction-groups', { total: 20, parts: 4, take: 3 }, '¡Tu turno! Primero reparte en partes iguales; después toma las partes que te piden.', { skills: ['frac:of:4'] }),
+    tryIt('fraction-groups', { total: 12, parts: 2, take: 1 }, '¡Tu turno! Antes de contar, mira en cuántas partes iguales está repartido el total.', { skills: ['frac:of:2', 'frac:of:3'] }),
+    tryIt('fraction-groups', { total: 12, parts: 4, take: 3 }, '¡Tu turno! Con más partes, las partes son más pequeñas: cuenta cuántas te piden.', { skills: ['frac:of:3', 'frac:of:4'] }),
+    tryIt('fraction-groups', { total: 20, parts: 4, take: 3 }, '¡Tu turno! Primero mira en cuántas partes iguales está repartido el total; después, cuántas te piden.', { skills: ['frac:of:4'] }),
     tryIt('fraction-groups', { total: 12, parts: 3, take: 2 }, '¡Tu turno! Lee bien el número de abajo y el de arriba.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
   ],
   cierre: show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'La regla: para hallar una fracción de una cantidad, primero se reparte entre el número de abajo y después se cuentan las partes que dice el número de arriba.'),
@@ -73,7 +73,7 @@ const compararFracciones = clase({
   ejemplo: [
     show('fraction-shape', { parts: 2, shaded: 1, shape: 'bar' }, 'Un medio: la barra partida en 2 partes, con 1 parte de color.'),
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'bar' }, 'Un cuarto: la barra partida en 4 partes, con 1 parte de color. Cada parte es más pequeña que la de la mitad.'),
-    show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'Dos cuartos de la misma barra ocupan lo mismo que un medio: 2/4 es igual a 1/2.'),
+    show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'Dos cuartos de la misma barra ocupan lo mismo que un medio: 2/4 es igual a 1/2, así que las dos fracciones son iguales.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'bar' }, 'Si el número de abajo es el mismo, gana la que tiene más partes de color: tres cuartos es más que un cuarto.'),
   ],
   guiada: [
@@ -81,11 +81,11 @@ const compararFracciones = clase({
     tryIt('fraction-shape', { parts: 4, shaded: 3, shape: 'bar' }, '¡Otra! Mira primero si el número de abajo es el mismo en las dos.', { skills: ['frac:compare'] }),
   ],
   sola: [
-    tryIt('fraction-shape', { parts: 2, shaded: 1, shape: 'bar' }, '¡Tu turno! Compara las dos fracciones: ¿cuál ocupa más?', { skills: ['frac:compare'] }),
+    tryIt('fraction-shape', { parts: 2, shaded: 1, shape: 'bar' }, '¡Tu turno! Compara las dos fracciones: ¿cuál ocupa más, o si ocupan lo mismo?', { skills: ['frac:compare'] }),
     tryIt('fraction-shape', { parts: 6, shaded: 4, shape: 'bar' }, '¡Tu turno! Si las barras están partidas en partes distintas, compara cuánto ocupa una parte.', { skills: ['frac:compare'] }),
     tryIt('fraction-shape', { parts: 8, shaded: 4, shape: 'bar' }, '¡Tu turno! Mira con calma las dos barras y compara lo que ocupa cada una.', { skills: ['frac:compare'] }),
   ],
-  cierre: show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'La regla: si los números de abajo son iguales, gana la que tiene más partes de color; si no, mira cuánto ocupa una parte.'),
+  cierre: show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'La regla: si los números de abajo son iguales, gana la que tiene más partes de color; si no, mira cuánto ocupa una parte, y si ocupan lo mismo, son iguales.'),
 })
 
 /* Fracciones de 5, 6, 8, 10 y 12 partes: la misma regla de siempre, con más partes y otros nombres. */
@@ -111,7 +111,7 @@ const masPartes = clase({
   sola: [
     tryIt('fraction-shape', { parts: 5, shaded: 3, shape: 'bar' }, '¡Tu turno! Colorea la fracción que te pidan: fíjate en cuántas partes iguales hay.', { skills: ['frac:shade:5', 'frac:shade:6', 'frac:shade:8'] }),
     tryIt('fraction-shape', { parts: 10, shaded: 7, shape: 'circle' }, '¡Tu turno! Escribe arriba las partes de color y abajo todas las partes.', { skills: ['frac:read:10', 'frac:read:12'] }),
-    tryIt('fraction-shape', { parts: 12, shaded: 9, shape: 'circle' }, '¡Tu turno! Fíjate en el número de partes: cada número tiene su nombre.', { skills: ['frac:name:8', 'frac:name:10', 'frac:name:12'] }),
+    tryIt('fraction-shape', { parts: 12, shaded: 9, shape: 'circle' }, '¡Tu turno! ¿Cómo se llama cada parte de color?', { skills: ['frac:name:8', 'frac:name:10', 'frac:name:12'] }),
     tryIt('fraction-shape', { parts: 10, shaded: 4, shape: 'bar' }, '¡Tu turno! Con más partes, cada una es más pequeña: colorea con cuidado.', { skills: ['frac:shade:10', 'frac:shade:12'] }),
   ],
   cierre: show('fraction-shape', { parts: 8, shaded: 5, shape: 'bar' }, 'La regla no cambia: arriba van las partes de color y abajo todas las partes iguales, aunque sean 5, 6, 8, 10 o 12.'),

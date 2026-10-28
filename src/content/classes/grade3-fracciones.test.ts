@@ -42,4 +42,21 @@ describe('clases de fracciones (3.º)', () => {
       }
     }
   })
+
+  it('fraccion-cantidad: the ejemplo teaches a numerator of 2 or more (3/4 of 12 is 9), and no try asks for one group', () => {
+    const cls = FRACCIONES_CLASSES.find((c) => c.topicId === 'fraccion-cantidad')!
+    const ejemplo = cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
+    expect(ejemplo.some((st) => st.visual === 'fraction-groups' && Number(st.params?.take) >= 2)).toBe(true)
+    expect(ejemplo.map((st) => st.text).join(' ')).toContain('Tres cuartos de 12 son 9')
+    const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
+    for (const st of tries) expect(st.text, st.text).not.toMatch(/un grupo|en uno|reparte/i)
+  })
+
+  it('fracciones-comparar: the ejemplo teaches equal fractions and the solo try allows «igual»', () => {
+    const cls = FRACCIONES_CLASSES.find((c) => c.topicId === 'fracciones-comparar')!
+    const ejemplo = cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
+    expect(ejemplo.map((st) => st.text).join(' ')).toMatch(/2\/4 es igual a 1\/2/)
+    const firstSola = cls.lesson.steps.filter((st) => st.interaction === 'try')[cls.phases.guiada]
+    expect(firstSola.text).toContain('o si ocupan lo mismo')
+  })
 })
