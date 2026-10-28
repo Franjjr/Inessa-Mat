@@ -6,8 +6,15 @@ const bbox = (st: ModelStroke) => {
   const ys = st.map((p) => p.y)
   return { minY: Math.min(...ys), maxY: Math.max(...ys), h: Math.max(...ys) - Math.min(...ys) }
 }
-/** Marks (dots, tildes, crossbars) are small extras; they may sit above or below the pauta. */
-const isMark = (st: ModelStroke) => bbox(st).h < 6
+/** Marks (dots, tildes, crossbars, accents) are extras: small, or lying entirely above the x-height. */
+const isMark = (st: ModelStroke) => bbox(st).h < 6 || bbox(st).maxY < XHEIGHT
+/** Number of separate runs where the stroke rises above the mid-line between x-height and baseline (one per arch). */
+const archRuns = (st: ModelStroke) => {
+  const mid = (XHEIGHT + BASELINE) / 2
+  let runs = 0
+  for (let i = 0; i < st.length; i++) if (st[i].y < mid && (i === 0 || st[i - 1].y >= mid)) runs++
+  return runs
+}
 const signedArea = (st: ModelStroke) => {
   let a = 0
   for (let i = 0; i < st.length - 1; i++) a += st[i].x * st[i + 1].y - st[i + 1].x * st[i].y
@@ -20,7 +27,7 @@ describe('letra ligada models', () => {
     const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÑ'.split('')
     for (const ch of lower) expect(CURSIVE_LOWER[ch], ch).toBeDefined()
     for (const ch of upper) expect(CURSIVE_UPPER[ch], ch).toBeDefined()
-    expect(Object.keys(CURSIVE_LOWER)).toHaveLength(27)
+    expect(Object.keys(CURSIVE_LOWER)).toHaveLength(33)
     expect(Object.keys(CURSIVE_UPPER)).toHaveLength(27)
   })
 
@@ -54,6 +61,30 @@ describe('letra ligada models', () => {
     for (const ch of 'fgjpqyz') {
       const bottom = Math.max(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(bottom, ch).toBeGreaterThan(BASELINE + 15)
+    }
+  })
+
+  it('n has two arches (lead-in plus one), m has three', () => {
+    expect(archRuns(CURSIVE_LOWER.n.strokes[0])).toBe(2)
+    expect(archRuns(CURSIVE_LOWER.m.strokes[0])).toBe(3)
+    expect(archRuns(CURSIVE_LOWER.ñ.strokes[0])).toBe(2)
+    expect(archRuns(CURSIVE_LOWER.r.strokes[0])).toBe(1)
+  })
+
+  it('ñ has a visible wave above the x-height (a mark, not a dot)', () => {
+    const wave = CURSIVE_LOWER.ñ.strokes.slice(CURSIVE_LOWER.ñ.main)
+    expect(wave.length).toBeGreaterThan(0)
+    const { h, maxY } = bbox(wave[0])
+    expect(h).toBeGreaterThanOrEqual(4)
+    expect(maxY).toBeLessThan(XHEIGHT)
+  })
+
+  it('accented vowels á é í ó ú ü exist, with a mark beyond the base glyph', () => {
+    for (const ch of 'áéíóúü') {
+      expect(CURSIVE_LOWER[ch], ch).toBeDefined()
+      const base = CURSIVE_LOWER[{ á: 'a', é: 'e', í: 'i', ó: 'o', ú: 'u', ü: 'u' }[ch] as string]
+      expect(CURSIVE_LOWER[ch].strokes.length, ch).toBeGreaterThanOrEqual(base.strokes.length)
+      expect(CURSIVE_LOWER[ch].strokes.filter(isMark).length, ch).toBeGreaterThan(0)
     }
   })
 
