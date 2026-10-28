@@ -16,6 +16,7 @@ import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
 import { MoneyVisual } from './money'
 import { ClockVisual, TimelineVisual } from './time'
 import { RulerVisual, UnitsVisual } from './measure'
+import { AngleVisual, GridRouteVisual, LinesVisual, PerimeterVisual, PolygonVisual, SolidVisual } from './geometry'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -61,6 +62,12 @@ export const LESSON_VISUALS: VisualRegistry = {
   timeline: TimelineVisual,
   ruler: RulerVisual,
   units: UnitsVisual,
+  polygon: PolygonVisual,
+  lines: LinesVisual,
+  angle: AngleVisual,
+  solid: SolidVisual,
+  perimeter: PerimeterVisual,
+  'grid-route': GridRouteVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

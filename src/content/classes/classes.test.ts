@@ -101,7 +101,7 @@ describe('one map lesson per class', () => {
 describe('classForTopic', () => {
   it('finds a class by its syllabus topic, and none for a topic without one', () => {
     expect(classForTopic('resta-3d-prestando', 3)?.topicId).toBe('resta-3d-prestando')
-    expect(classForTopic('recorridos', 3)).toBeUndefined()
+    expect(classForTopic('graficos-tablas', 3)).toBeUndefined()
   })
 
   it('gives no class to a child of another grade, even for a topic id that repeats (mul-3x1 is in 4.º too)', () => {

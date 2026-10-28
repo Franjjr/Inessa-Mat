@@ -101,6 +101,12 @@ export type LessonVisualId =
   | 'ruler'             // params: { cm, from?, object? } — a centimetre ruler (1 to 9 cm) with an object (emoji) lying from `from` (default 0) to cm
   | 'units'             // params: { kind } — kind is length, mass or capacity: the units of that kind, each with a real object of that size
   | 'timeline'          // params: { start, end } — minutes from midnight: a bar from start to end on an hour line, both times and the duration written
+  | 'polygon'           // params: { sides, mark? } — a regular polygon of 3 to 8 sides; mark sides numbers the sides 1..n, mark corners numbers the corners
+  | 'lines'             // params: { kind } — kind is recta, curva, poligonal, paralelas, perpendiculares, segmento or semirrecta
+  | 'angle'             // params: { deg } — an angle of deg degrees (1 to 179) between two rays; at 90 a square marks the right angle
+  | 'solid'             // params: { name } — a solid: cubo, prisma, piramide, cilindro, cono or esfera
+  | 'perimeter'         // params: { sides } — comma list of side lengths in cm (3 to 8): each length on its side, the sum below (3,4,3,4 → 3 + 4 + 3 + 4 = 14 cm)
+  | 'grid-route'        // params: { route } — a walk on a 5 × 5 grid from a start star: letters R, L, U, D, one square each (R,R,U)
 
 export interface LessonStep {
   visual: LessonVisualId

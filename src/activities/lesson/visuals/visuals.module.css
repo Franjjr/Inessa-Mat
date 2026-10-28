@@ -394,3 +394,78 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Geometry (polygon, lines, angle, solid, perimeter, grid-route): one square drawing that fits the lesson board, with
+   its numbers at 15 units or more so they read at 14 px on a 360 px screen. Colours come from the tokens. */
+.geoFigure {
+  display: block;
+  width: min(60vw, 230px);
+  height: auto;
+  max-height: 34vh;
+  overflow: visible;
+}
+
+.geoShape {
+  fill: var(--c-surface);
+  stroke: var(--c-ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.geoLabel {
+  fill: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.geoLine {
+  stroke: var(--c-ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.geoMark {
+  fill: none;
+  stroke: var(--c-magic);
+  stroke-width: 3;
+}
+
+.geoArc {
+  fill: none;
+  stroke: var(--c-magic);
+  stroke-width: 3;
+}
+
+.geoSum {
+  margin: 0;
+  color: var(--c-magic);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.geoCell {
+  fill: var(--c-surface);
+  stroke: var(--c-line);
+  stroke-width: 1.5;
+}
+
+.geoPath {
+  stroke: var(--c-magic);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.geoEnd {
+  fill: var(--c-magic);
+}
+
+.geoStar {
+  fill: var(--c-error);
+  stroke: var(--c-ink);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}

@@ -38,8 +38,8 @@ describe('todayEntry', () => {
   })
 
   it('a topic without class gives the session', () => {
-    const mastery = masteryUntilCurrent(3, 'recorridos')
-    expect(currentTopic(syllabusForGrade(3), mastery)?.id).toBe('recorridos')
+    const mastery = masteryUntilCurrent(3, 'graficos-tablas')
+    expect(currentTopic(syllabusForGrade(3), mastery)?.id).toBe('graficos-tablas')
     const entry = todayEntry({ grade: 3, mastery, progress: progress() })
     expect(entry).toEqual({ kind: 'sesion', title: expect.any(String), to: '/play/sesion' })
   })

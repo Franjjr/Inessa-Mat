@@ -56,6 +56,12 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   timeline: ['start', 'end'],
   ruler: ['cm'],
   units: ['kind'],
+  polygon: ['sides'],
+  lines: ['kind'],
+  angle: ['deg'],
+  solid: ['name'],
+  perimeter: ['sides'],
+  'grid-route': ['route'],
   'lng-word': ['word'],
 }
 

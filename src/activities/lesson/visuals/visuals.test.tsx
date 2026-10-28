@@ -48,6 +48,12 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   timeline: { start: 600, end: 645 },
   ruler: { cm: 8, object: '✏️' },
   units: { kind: 'length' },
+  polygon: { sides: 5, mark: 'sides' },
+  lines: { kind: 'paralelas' },
+  angle: { deg: 90 },
+  solid: { name: 'cilindro' },
+  perimeter: { sides: '3,4,3,4' },
+  'grid-route': { route: 'R,R,U,U,L' },
 }
 
 /** Reads the LessonVisualId union straight from the shared types, so the test cannot drift from them. */
