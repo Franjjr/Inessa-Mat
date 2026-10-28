@@ -6,13 +6,14 @@ import type { ProgressState, SubjectId } from '@/types'
 import type { ClassDef } from './dsl'
 import { GRADE3_CLASSES } from './grade3'
 import { NUMEROS_CLASSES } from './grade3-numeros'
+import { TABLAS_CLASSES } from './grade3-tablas'
 import { LENGUA_CLASSES } from './lengua3'
 
 export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
 
 /** The maths classes (3.º): one array per block of topics, concatenated. */
-export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES]
+export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TABLAS_CLASSES]
 /** The Lengua classes (3.º): one per grammar, spelling and vocabulary topic. */
 export { LENGUA_CLASSES }
 
