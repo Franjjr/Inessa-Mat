@@ -27,8 +27,8 @@ const unidadesLongitud = clase({
   sola: [
     tryIt('big-text', { text: 'cm · m · km' }, '¡Tu turno! Elige la unidad que usarías: piensa en el tamaño real de lo que mides, no en el número.', { skills: ['measure:unit:length'] }),
     tryIt('big-text', { text: 'a la unidad grande · a la unidad pequeña' }, '¡Tu turno! Mira si la unidad que te piden es más grande o más pequeña que la que te dan, y pasa la cantidad.', { skills: ['measure:convert:length'] }),
-    tryIt('big-text', { text: 'medio · un cuarto' }, '¡Tu turno! Si te dan medio metro o un cuarto de kilómetro, cuenta primero cuántas partes tiene la unidad grande.', { skills: ['measure:convert:length'] }),
-    tryIt('big-text', { text: 'elegir · pasar' }, '¡Tu turno! Primero elige la unidad que sirve; después, si hace falta, pasa la cantidad a la unidad que te piden.', { skills: ['measure:unit:length', 'measure:convert:length'] }),
+    tryIt('big-text', { text: 'medio · un cuarto' }, '¡Tu turno! Si te dan medio metro o un cuarto de kilómetro, mira en cuántas partes iguales se divide la unidad grande.', { skills: ['measure:convert:length'] }),
+    tryIt('big-text', { text: 'la unidad que te piden' }, '¡Tu turno! Lee bien qué unidad te piden y pasa la cantidad a esa unidad.', { skills: ['measure:convert:length'] }),
   ],
   cierre: show('big-text', { text: '1 m = 100 cm', sub: '1 km = 1 000 m' }, 'La regla: un metro tiene 100 centímetros y un kilómetro, 1 000 metros. Para pasar a la unidad pequeña se multiplica; para la grande, se divide.'),
 })
@@ -45,19 +45,19 @@ const regla = clase({
   ejemplo: [
     show('ruler', { cm: 3, object: '📎' }, 'Un clip mide unos 3 centímetros. Como empieza en el 0, basta con mirar dónde acaba.'),
     show('ruler', { cm: 9, object: '🖍️' }, 'Este lápiz de colores acaba en el 9: mide 9 centímetros.'),
-    show('big-text', { text: '7 − 2 = 5' }, 'Si el objeto empieza en el 2 y acaba en el 7, no empieza en el 0. Para saber cuánto mide, resta: 7 − 2 = 5 centímetros.'),
+    show('ruler', { cm: 7, from: 2, object: '🖍️' }, 'Este lápiz empieza en el 2 y acaba en el 7. No empieza en el 0: para saber cuánto mide, resta 7 − 2 = 5. Mide 5 centímetros.'),
   ],
   guiada: [
-    tryIt('big-text', { text: 'dónde empieza · dónde acaba' }, '¡Te toca! Mira dónde empieza el objeto y dónde acaba. Si empieza en el 0, basta con leer el número donde acaba.', { skills: ['measure:ruler'] }),
-    tryIt('big-text', { text: 'acaba − empieza' }, '¡Otra! Si el objeto no empieza en el 0, al número donde acaba le quitas el número donde empieza.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'dónde empieza · dónde acaba' }, '¡Te toca! Mira dónde empieza y dónde acaba el objeto. Si empieza en el 0, basta con leer el número donde acaba.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'acaba − empieza' }, '¡Otra! Mira dónde empieza y dónde acaba: si el objeto no empieza en el 0, al número donde acaba le quitas el número donde empieza.', { skills: ['measure:ruler'] }),
   ],
   sola: [
-    tryIt('big-text', { text: 'dónde acaba' }, '¡Tu turno! Mira dónde acaba el objeto y cuántos centímetros mide.', { skills: ['measure:ruler'] }),
-    tryIt('big-text', { text: 'dónde empieza · dónde acaba' }, '¡Tu turno! Mira primero dónde empieza el objeto: no siempre empieza en el 0.', { skills: ['measure:ruler'] }),
-    tryIt('big-text', { text: 'acaba − empieza' }, '¡Tu turno! Quita el número donde empieza al número donde acaba: eso son los centímetros.', { skills: ['measure:ruler'] }),
-    tryIt('big-text', { text: 'mide con la regla' }, '¡Tu turno! Mide con calma: lee la marca donde acaba y, si hace falta, quita donde empieza.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'empieza · acaba' }, '¡Tu turno! Mira dónde empieza y dónde acaba el objeto, y cuenta cuántos centímetros mide.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'dónde empieza · dónde acaba' }, '¡Tu turno! Mira dónde empieza y dónde acaba el objeto: no siempre empieza en el 0.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'acaba − empieza' }, '¡Tu turno! Mira dónde empieza y dónde acaba: quita el número donde empieza al número donde acaba, y eso son los centímetros.', { skills: ['measure:ruler'] }),
+    tryIt('big-text', { text: 'mide con la regla' }, '¡Tu turno! Mira dónde empieza y dónde acaba el objeto, y mide con calma.', { skills: ['measure:ruler'] }),
   ],
-  cierre: show('ruler', { cm: 6, object: '✏️' }, 'La regla: mira dónde acaba el objeto. Si empieza en el 0, ese número es la medida; si no, resta el número donde empieza.'),
+  cierre: show('ruler', { cm: 6, object: '✏️' }, 'La regla: mira dónde empieza y dónde acaba el objeto. Si empieza en el 0, ese número es la medida; si no, resta el número donde empieza.'),
 })
 
 /* Masa y capacidad: el kilo tiene 1 000 gramos y el litro, 1 000 mililitros. Se usan las mismas dos reglas que en la longitud. */
@@ -80,7 +80,7 @@ const unidadesMasaCapacidad = clase({
   ],
   sola: [
     tryIt('big-text', { text: 'ml · l' }, '¡Tu turno! Piensa en cuánto líquido cabe en el recipiente real, no en el número que ves.', { skills: ['measure:unit:capacity'] }),
-    tryIt('big-text', { text: 'medio · un cuarto' }, '¡Tu turno! Si te dan medio litro o un cuarto de kilo, cuenta primero cuántas partes tiene la unidad grande.', { skills: ['measure:convert:mass', 'measure:convert:capacity'] }),
+    tryIt('big-text', { text: 'medio · un cuarto' }, '¡Tu turno! Si te dan medio litro o un cuarto de kilo, mira en cuántas partes iguales se divide la unidad grande.', { skills: ['measure:convert:mass', 'measure:convert:capacity'] }),
     tryIt('big-text', { text: 'g · kg · ml · l' }, '¡Tu turno! Mira si la cantidad que te dan es de la unidad grande o de la pequeña, y pásala.', { skills: ['measure:convert:mass', 'measure:convert:capacity'] }),
     tryIt('big-text', { text: 'se pesa o se llena' }, '¡Tu turno! Mira si lo que te preguntan se pesa o se llena: el peso va en g o kg; la capacidad, en ml o l.', { skills: ['measure:unit:mass', 'measure:unit:capacity'] }),
   ],
@@ -99,7 +99,7 @@ const medirProblemas = clase({
   ejemplo: [
     show('big-text', { text: '2 kg = 2 000 g' }, 'Una caja pesa 2 kilos y un libro pesa 300 gramos. Pasa los kilos a gramos: 2 kg = 2 000 g.'),
     show('big-text', { text: '2 000 g + 300 g = 2 300 g' }, 'Ahora suma: 2 000 + 300 = 2 300. Los dos juntos pesan 2 300 gramos.'),
-    show('big-text', { text: 'Un lápiz mide 15 cm: sí es razonable' }, 'Un lápiz mide unos 15 centímetros. Decir que mide 15 metros no es razonable: sería más alto que un edificio de cuatro pisos.'),
+    show('big-text', { text: 'Un lápiz mide 15 cm: sí es razonable' }, 'Un lápiz mide unos 15 centímetros. Decir que mide 15 metros no es razonable: sería más alto que un edificio de cinco pisos.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'la misma unidad · sumar' }, '¡Te toca! Antes de sumar, pon las dos medidas en la misma unidad: la unidad pequeña.', { skills: ['measure:add'] }),

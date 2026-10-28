@@ -98,7 +98,7 @@ export type LessonVisualId =
   | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted
   | 'money'             // params: { items, price? } — items: comma list of céntimos (200,50,20), each drawn as a real coin or note; price (céntimos) adds the price tag and the change line «Te devuelven X» when the items pay more
   | 'clock'             // params: { h, m, digital? } — analogue clock at h:m (h 0..23, a 24 h hour sits on the face); digital 1 adds the digital time «hh:mm» next to it
-  | 'ruler'             // params: { cm, object? } — a centimetre ruler (1 to 9 cm) with an object (emoji) lying from 0 to cm
+  | 'ruler'             // params: { cm, from?, object? } — a centimetre ruler (1 to 9 cm) with an object (emoji) lying from `from` (default 0) to cm
   | 'units'             // params: { kind } — kind is length, mass or capacity: the units of that kind, each with a real object of that size
   | 'timeline'          // params: { start, end } — minutes from midnight: a bar from start to end on an hour line, both times and the duration written
 

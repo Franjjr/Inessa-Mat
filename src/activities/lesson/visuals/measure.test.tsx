@@ -21,6 +21,18 @@ describe('ruler visual', () => {
   })
 })
 
+describe('ruler visual: where the object starts', () => {
+  it('an object from 2 to 7 lies from the 2 to the 7, five centimetres long', () => {
+    const Ruler = LESSON_VISUALS.ruler
+    const { container, unmount } = render(<Ruler params={{ cm: 7, from: 2, object: '🖍️' }} phase={FINAL} runLength={1} reduced />)
+    const thing = container.querySelectorAll('rect')[1]
+    expect(Number(thing.getAttribute('x'))).toBeCloseTo(14 + 2 * 24, 3)
+    expect(Number(thing.getAttribute('width'))).toBeCloseTo(5 * 24, 3)
+    expect(container.querySelector('svg')!.getAttribute('aria-label')).toContain('empieza en 2 y acaba en 7')
+    unmount()
+  })
+})
+
 describe('units visual', () => {
   it('units lists g and kg for mass', () => {
     const Units = LESSON_VISUALS.units

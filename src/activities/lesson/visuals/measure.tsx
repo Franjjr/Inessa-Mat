@@ -8,22 +8,24 @@ import s from './visuals.module.css'
 
 const clampInt = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.floor(v)))
 
-/* A lesson ruler is short (1 to 9 cm) so its numbers, one per centimetre, never touch on a phone. */
+/* A lesson ruler is short (1 to 9 cm) so its numbers, one per centimetre, never touch on a phone. The object lies from
+   `from` (0 when missing) to `cm`; the ruler always starts at 0. */
 export function RulerVisual({ params }: VisualProps) {
   const cm = clampInt(numParam(params, 'cm', 8), 1, 9)
+  const start = clampInt(numParam(params, 'from', 0), 0, cm - 1)
   const emoji = strParam(params, 'object', '')
   const width = cm * RULER_CM_PX + RULER_PAD_PX * 2
   return (
     <div className={s.stage}>
       <div style={{ width: `min(100%, ${width}px)` }}>
         <MeasureRuler
-          start={0}
+          start={start}
           end={cm}
           from={0}
           to={cm}
           every={1}
           emoji={emoji || undefined}
-          label={`Regla de ${cm} centímetros. El objeto empieza en 0 y acaba en ${cm}`}
+          label={`Regla de ${cm} centímetros. El objeto empieza en ${start} y acaba en ${cm}`}
         />
       </div>
     </div>

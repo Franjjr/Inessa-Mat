@@ -54,4 +54,26 @@ describe('clases de medida (3.º)', () => {
       expect(right[`${big} ${small}`], `1 ${big} = ${value} ${small}`).toBe(value)
     }
   })
+
+  it('regla: teaches the object that does not start at 0 (from 2 to 7 → 5 cm) and every try says where it starts and ends', () => {
+    const cls = MEDIDA_CLASSES.find((c) => c.topicId === 'regla')!
+    const ejemplo = cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
+    const offZero = ejemplo.find((st) => st.visual === 'ruler' && Number(st.params!.from) === 2)
+    expect(offZero, 'an example that starts at 2').toBeDefined()
+    expect(Number(offZero!.params!.cm)).toBe(7)
+    expect(offZero!.text).toContain('5 centímetros')
+    const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
+    expect(tries.length).toBe(cls.phases.guiada + cls.phases.sola)
+    for (const t of tries) expect(t.text, t.text).toMatch(/mira dónde empieza y dónde acaba/i)
+  })
+
+  it('no conversion try says «cuántas partes tiene la unidad grande» (unclear for medio and un cuarto)', () => {
+    for (const cls of MEDIDA_CLASSES) {
+      for (const st of cls.lesson.steps) expect(st.text, `${cls.lesson.id}: ${st.text}`).not.toMatch(/cuántas partes tiene la unidad grande/)
+    }
+  })
+
+  it('no lesson line says «cuatro pisos» for 15 m', () => {
+    expect(JSON.stringify(MEDIDA_CLASSES)).not.toMatch(/cuatro pisos/)
+  })
 })
