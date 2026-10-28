@@ -1,0 +1,11 @@
+/* When the Caligrafía practice (letra ligada, pen only) is offered after the Lengua session. Pure: no React, no I/O.
+   Offered only where the pen is in use (the device has seen a pen, or the child is writing with one now), when the
+   child's handwriting setting is not switched off (a profile without the setting counts as on), and when Lengua is on. */
+import type { ChildProfile, InputMode } from '@/types'
+import { subjectOffered } from '@/engine/subjects'
+
+export function caligrafiaOffered(child: ChildProfile, ink: { penSeen: boolean; mode: InputMode }): boolean {
+  const lengua = (child.settings?.subjects ?? ['math']).includes('language') && subjectOffered('language', child.grade)
+  const handwriting = child.settings?.handwriting !== false
+  return lengua && handwriting && (ink.penSeen || ink.mode === 'pen')
+}

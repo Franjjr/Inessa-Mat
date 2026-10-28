@@ -64,7 +64,7 @@ export interface ChildSettings {
   divMethod: DivMethod
   /** Favourite trick for the tables (null = none chosen yet). Chosen in «Los trucos de Lumi», editable by the adult. */
   tableMethod: TableMethod | null
-  /** Caligrafía con lápiz (cal: skills). Only offered on a device where the pen was used; false hides it. */
+  /** Caligrafía con lápiz (calig: skills). Only offered on a device where the pen was used; false hides it. */
   handwriting: boolean
 }
 

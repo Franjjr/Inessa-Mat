@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getMastery, listAttempts, listSessions, updateProgress } from '@/data'
 import { syllabusFor, syllabusForGrade } from '@/content/syllabus'
 import { STORY_READINGS } from '@/content/lengua/stories'
+import { handwritingReport } from '@/engine/caligrafia/report'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
   attemptsOf, describeError, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag, syllabusReport, topicNeeds,
@@ -158,6 +159,28 @@ export function LenguaSection({ childId, childName, grade, enabled, progress, da
       />
       <ReadingCard read={reports.read} total={STORY_READINGS.length} minutes={reports.minutes} />
     </>
+  )
+}
+
+/** Caligrafía con lápiz for the grown-ups: the letters and links learnt, the ones that cost, and the criterion that fails
+    most. Hidden while the data is not read and when the child has no handwriting try (the section is not for everyone). */
+export function CaligrafiaSection({ data, childName }: { data: LearningData | null; childName: string }) {
+  const report = useMemo(() => (data ? handwritingReport(data.attempts, data.mastery) : null), [data])
+  if (!report) return null
+  return (
+    <section className={adult.card} aria-labelledby="caligrafia-title">
+      <div className={adult.cardHead}>
+        <h2 id="caligrafia-title" className={adult.subheading}>Caligrafía</h2>
+        <span className={adult.muted}>{plural(report.tries, 'intento', 'intentos')} con el lápiz</span>
+      </div>
+      <p className={adult.lead}>
+        {report.learnt.length > 0
+          ? <>Letras y enlaces dominados: <strong className={adult.strong}>{report.learnt.join(', ')}</strong>.</>
+          : `${childName} todavía no domina ninguna letra ni enlace.`}
+      </p>
+      {report.costly.length > 0 && <p className={adult.muted}>Le cuestan: {report.costly.join(', ')}.</p>}
+      {report.worst && <p className={adult.muted}>Lo que más falla: {report.worst.word}</p>}
+    </section>
   )
 }
 
