@@ -7,23 +7,46 @@ import type { MasteryMap, SessionRecord, SkillKey, SubjectId } from '@/types'
 export type LessonSubject = Extract<SubjectId, 'math' | 'language'>
 
 const LANGUAGE_PREFIX = 'lng:'
+/* Handwriting keys. Maths already uses `cal:weekday` and `cal:month` (the calendar), so the handwriting family is matched
+   by its own sub-prefixes, not by `cal:` alone. */
+const HANDWRITING_KEY = /^cal:(?:letra|mayus|enlace|palabra|frase):/
 
 export function subjectOfSkill(skill: SkillKey): SubjectId {
   return skill.startsWith(LANGUAGE_PREFIX) ? 'language' : 'math'
+}
+
+/** Caligrafía con lápiz (`cal:letra:…`, `cal:mayus:…`, `cal:enlace:…`, `cal:palabra:…`, `cal:frase:…`): not a subject.
+    Its rows are kept apart from maths and Lengua readers. `cal:weekday` and `cal:month` stay maths. */
+export function isHandwritingSkill(skill: SkillKey): boolean {
+  return HANDWRITING_KEY.test(skill)
 }
 
 /** The mastery rows of one subject (a copy: the input is not changed). */
 export function masteryOf(mastery: MasteryMap, subject: SubjectId): MasteryMap {
   const out: MasteryMap = {}
   for (const [skill, m] of Object.entries(mastery)) {
-    if (m && subjectOfSkill(skill) === subject) out[skill] = m
+    if (m && !isHandwritingSkill(skill) && subjectOfSkill(skill) === subject) out[skill] = m
   }
   return out
 }
 
 /** The attempts of one subject, in their order. */
 export function attemptsOf<T extends { skill: SkillKey }>(list: readonly T[], subject: SubjectId): T[] {
-  return list.filter((a) => subjectOfSkill(a.skill) === subject)
+  return list.filter((a) => !isHandwritingSkill(a.skill) && subjectOfSkill(a.skill) === subject)
+}
+
+/** The handwriting (cal:) rows of a mastery map (a copy). */
+export function handwritingMastery(mastery: MasteryMap): MasteryMap {
+  const out: MasteryMap = {}
+  for (const [skill, m] of Object.entries(mastery)) {
+    if (m && isHandwritingSkill(skill)) out[skill] = m
+  }
+  return out
+}
+
+/** The handwriting (cal:) attempts, in their order. */
+export function handwritingAttempts<T extends { skill: SkillKey }>(list: readonly T[]): T[] {
+  return list.filter((a) => isHandwritingSkill(a.skill))
 }
 
 /** Progress flags of the placement test of each subject (the maths names are the original ones). */

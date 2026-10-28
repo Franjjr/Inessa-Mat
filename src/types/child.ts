@@ -64,6 +64,8 @@ export interface ChildSettings {
   divMethod: DivMethod
   /** Favourite trick for the tables (null = none chosen yet). Chosen in «Los trucos de Lumi», editable by the adult. */
   tableMethod: TableMethod | null
+  /** Caligrafía con lápiz (cal: skills). Only offered on a device where the pen was used; false hides it. */
+  handwriting: boolean
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
@@ -80,6 +82,7 @@ export const DEFAULT_CHILD_SETTINGS: ChildSettings = {
   subMethod: 'borrow',
   divMethod: 'galera',
   tableMethod: null,
+  handwriting: true,
 }
 
 export interface ChildProfile {

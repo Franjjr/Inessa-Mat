@@ -123,5 +123,8 @@ export {
 export { calendarSkill, clockConvertSkill, clockReadSkill, clockSetSkill, timeDurationSkill } from './skills'
 
 /** Subjects: Lengua skills (lng:) apart from maths; maths readers filter with masteryOf / attemptsOf first. */
-export { attemptsOf, masteryOf, minutesOfSubject, placementFlags, subjectOffered, subjectOfSession, subjectOfSkill } from './subjects'
+export {
+  attemptsOf, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, minutesOfSubject, placementFlags,
+  subjectOffered, subjectOfSession, subjectOfSkill,
+} from './subjects'
 export type { LessonSubject } from './subjects'
