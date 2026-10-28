@@ -61,6 +61,7 @@ import type {
   BarOp, DecimalMode, DecimalPlaces, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode,
   SkillKey,
 } from '@/types'
+import { CAL_SKILLS } from '@/content/caligrafia/curriculum'
 
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
 export const FRACTION_DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12] as const
@@ -409,11 +410,9 @@ export function isMentalSkill(key: SkillKey): boolean {
 /** Skills whose exercises are judged as one short answer (not in columns): the kinds added for 3.º numbers and mental. */
 export const NUMERIC_KINDS: ExerciseKind[] = ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation']
 
-/** The handwriting (Caligrafía) key grammar: calig:letra:<l>, calig:mayus:<L>, calig:enlace:<ab>, calig:palabra:<word>, calig:frase:<id>. */
-const HANDWRITING_KEY = /^calig:(?:letra:[a-zñ]|mayus:[A-ZÑ]|enlace:[a-zñ]{2}|palabra:\p{Ll}+|frase:[a-z0-9-]+)$/u
-
+/** A valid key: a maths or Lengua key, or a Caligrafía key of the curriculum (calig:letra:<l>, calig:mayus:<L>, calig:enlace:<ab>, calig:palabra:<word>, calig:frase:<id>). */
 export function isValidSkill(key: SkillKey): boolean {
-  return parseSkill(key) !== null || HANDWRITING_KEY.test(key)
+  return parseSkill(key) !== null || CAL_SKILLS.has(key)
 }
 
 /** Times-table facts (mul:AxB and div:P/D) — the skills that are judged on speed and shown in the fact grid. */
