@@ -1,7 +1,7 @@
 /* Route /play/caligrafia: «Caligrafía con lápiz», the day's plan of letra ligada (2 or 3 items, about five minutes). Each
    item runs TraceCursive; every item is recorded as one attempt (skill calig:…, correct = 3 stars) and moves its mastery.
    The day's stars come once, on the first finish, on their own key. «Salir» leaves at any time. */
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { TraceCursive } from '@/ink/cursive/TraceCursive'
 import { nombreDe } from '@/ink/cursive/tips'
@@ -41,11 +41,8 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
   const [finished, setFinished] = useState(false)
   const [reward, setReward] = useState<'new' | 'already' | null>(null)
   const masteryNow = useRef(mastery)
-  const startedAt = useRef(0)
-  // Each item's clock starts when it is shown (the attempt's ms).
-  useEffect(() => { startedAt.current = Date.now() }, [pos])
 
-  const record = (item: CalItem, score: CursiveScore, tries: number) => {
+  const record = (item: CalItem, score: CursiveScore, tries: number, ms: number) => {
     const now = new Date()
     const correct = score.stars === 3
     const errorType = score.worst ? ERROR_OF[score.worst] : null
@@ -58,7 +55,7 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
       correct,
       given: String(score.stars),
       expected: '3',
-      ms: Math.max(0, Date.now() - startedAt.current),
+      ms,
       inputMode: 'pen',
       hintsUsed: 0,
       errorType,
@@ -95,8 +92,8 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
     setFinished(true)
   }
 
-  const onItemDone = (item: CalItem, r: { score: CursiveScore; tries: number }) => {
-    record(item, r.score, r.tries)
+  const onItemDone = (item: CalItem, r: { score: CursiveScore; tries: number; ms: number }) => {
+    record(item, r.score, r.tries, r.ms)
     if (pos + 1 < plan.length) {
       setPos(pos + 1)
     } else {
@@ -139,7 +136,7 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
         <p className={s.progress}>{pos + 1} de {plan.length}</p>
         <p className={s.name}>{nombreDe(item.text)}</p>
       </header>
-      <TraceCursive key={pos} item={item} onDone={(r) => onItemDone(item, r)} />
+      <TraceCursive key={pos} item={item} gender={child.gender} onDone={(r) => onItemDone(item, r)} />
     </Screen>
   )
 }

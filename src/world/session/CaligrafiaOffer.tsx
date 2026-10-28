@@ -17,10 +17,12 @@ export function useCaligrafiaOffered(child: ChildProfile): boolean {
 export function CaligrafiaOffer({ onLater }: { onLater: () => void }) {
   const navigate = useNavigate()
   return (
-    <div className={s.actions} role="group" aria-label="Caligrafía con lápiz">
+    <div className={s.offer} role="group" aria-label="Caligrafía con lápiz">
       <p className={s.text}>¿Practicamos la letra con el lápiz? Son 5 minutos.</p>
-      <Button size="lg" variant="success" onClick={() => navigate('/play/caligrafia')}>Caligrafía (con lápiz)</Button>
-      <Button size="lg" variant="secondary" onClick={onLater}>Ahora no</Button>
+      <div className={s.offerButtons}>
+        <Button size="lg" variant="success" onClick={() => navigate('/play/caligrafia')}>Caligrafía (con lápiz)</Button>
+        <Button size="lg" variant="secondary" onClick={onLater}>Ahora no</Button>
+      </div>
     </div>
   )
 }

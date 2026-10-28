@@ -6,9 +6,9 @@ import clsx from 'clsx'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { StarIcon } from '@/art/worlds/StarIcon'
 import { sfx } from '@/audio'
-import { celebrate } from '@/fx'
+import { celebrate, stopCelebrations } from '@/fx'
 import type { CalItem } from '@/content/caligrafia/curriculum'
-import type { InkStroke } from '@/types'
+import type { GrammaticalGender, InkStroke } from '@/types'
 import { svgPath } from '../digitModels'
 import { isScribble, type Size } from '../geometry'
 import { useInk } from '../context'
@@ -25,7 +25,10 @@ import s from './TraceCursive.module.css'
 
 export interface TraceCursiveProps {
   item: CalItem
-  onDone: (result: { score: CursiveScore; tries: number }) => void
+  /** The child's gender, for the writing step's title («Escribe sola» or «Escribe solo»); masculine when unknown. */
+  gender?: GrammaticalGender
+  /** `ms` is the time from the start of the writing step to «Siguiente» (the model's viewing time is not counted). */
+  onDone: (result: { score: CursiveScore; tries: number; ms: number }) => void
   /** Every try, as it is scored (the trial page shows the raw values of each one). */
   onTry?: (score: CursiveScore) => void
   className?: string
@@ -33,7 +36,7 @@ export interface TraceCursiveProps {
 
 type Step = 'mirar' | 'repasar' | 'escribir'
 
-const TITLES: Record<Step, string> = { mirar: 'Mira', repasar: 'Repasa', escribir: 'Escribe sola' }
+const TITLES: Record<'mirar' | 'repasar', string> = { mirar: 'Mira', repasar: 'Repasa' }
 const CRITERIA: { key: Criterion; label: string }[] = [
   { key: 'shape', label: 'forma' },
   { key: 'line', label: 'línea' },
@@ -49,7 +52,7 @@ export function TraceCursive(props: TraceCursiveProps) {
   return <TraceCursiveInner key={props.item.skill} {...props} />
 }
 
-function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps) {
+function TraceCursiveInner({ item, gender, onDone, onTry, className }: TraceCursiveProps) {
   const ink = useInk()
   const text = item.text
   const target = useMemo(() => joinWord(text), [text])
@@ -72,6 +75,7 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
   const [last, setLast] = useState<CursiveScore | null>(null)
   const [best, setBest] = useState<CursiveScore | null>(null)
   const flagged = useRef(new Set<InkStroke>())
+  const writingSince = useRef(0)
   const cursor = useRef<{ stroke: InkStroke | null; n: number }>({ stroke: null, n: 0 })
 
   const fit: PautaFit | null = size.width && size.height ? fitPauta(size.width, size.height, target.width) : null
@@ -106,17 +110,20 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
       cursor.current.n += 1
       if (before === 'ok' && st !== 'ok') {
         flagged.current.add(cur)
-        setNotice(LIVE_TEXT[st])
         flaggedNow = true
       }
+      // «Te has salido» only while the pen is off the line; a stroke that is back on it stays orange but says nothing.
+      if (st !== 'ok') setNotice(st === 'off' && tracker.near ? null : LIVE_TEXT[st])
     }
     if (flaggedNow || flagged.current.has(cur)) setFlaggedView([...flagged.current])
   }
 
   const evaluate = () => {
     const f = latest.current.fit
+    if (!f) return
     const pen = (surface.capture.current?.strokes ?? []).filter((st) => st.pointerType === 'pen')
-    if (!f || !pen.length) return
+    // A mouse or finger stroke is not the pen: say so instead of doing nothing.
+    if (!pen.length) { setPenHint(true); return }
     const score = scoreCursive(target, pen, f, text)
     setTries(tries + 1)
     setLast(score)
@@ -130,8 +137,10 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
   }
 
   const goTo = (next: Step) => {
+    stopCelebrations()
     clearInk()
     setLast(null)
+    if (next === 'escribir') writingSince.current = Date.now()
     setStep(next)
   }
 
@@ -157,6 +166,7 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
     },
   })
 
+  const title = step === 'escribir' ? (gender === 'f' ? 'Escribe sola' : 'Escribe solo') : TITLES[step]
   const hint = penHint ? '¡Escribe con el lápiz!'
     : step === 'mirar' ? MIRAR_HINT
       : step === 'repasar' ? (notice ?? REPASAR_HINT)
@@ -167,7 +177,7 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
   return (
     <div className={clsx(s.root, className)}>
       <header className={s.head}>
-        <h3 className={s.title}>{TITLES[step]}</h3>
+        <h3 className={s.title}>{title}</h3>
         <p className={clsx(s.hint, penHint && s.penHint, notice && step === 'repasar' && s.warn)} role="status" aria-live="polite">{hint}</p>
       </header>
 
@@ -270,7 +280,7 @@ function TraceCursiveInner({ item, onDone, onTry, className }: TraceCursiveProps
                   <span>Otra vez</span>
                 </button>
               )}
-              <button type="button" className={clsx(s.tool, s.done)} onPointerDown={palm.onPointerDown} onClick={palm.guard(() => { if (best) onDone({ score: best, tries }) })} disabled={!best}>
+              <button type="button" className={clsx(s.tool, s.done)} onPointerDown={palm.onPointerDown} onClick={palm.guard(() => { if (best) { stopCelebrations(); onDone({ score: best, tries, ms: Math.max(0, Date.now() - writingSince.current) }) } })} disabled={!best}>
                 <CheckIcon size={30} strokeWidth={3.2} />
                 <span>Siguiente</span>
               </button>

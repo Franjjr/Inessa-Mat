@@ -275,6 +275,26 @@
   justify-content: center;
 }
 
+/* The Caligrafía offer: the question on its own line, the two answers side by side (also in landscape). */
+.offer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  text-align: center;
+}
+
+.offerButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.offerButtons > * {
+  flex: 0 0 auto;
+}
+
 .pause {
   position: fixed;
   inset: 0;

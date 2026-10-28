@@ -23,11 +23,14 @@ export async function recordAttempt(attempt: AttemptRecord): Promise<void> {
 }
 
 /** Newest first. `since` is inclusive (ISO date). */
-export async function listAttempts(childId: string, opts: { since?: string; limit?: number } = {}): Promise<AttemptRecord[]> {
+/** `skipHandwriting` leaves the Caligrafía tries (skills calig:…) out, before the limit is applied, so they do not use up
+    the window of maths and Lengua attempts. */
+export async function listAttempts(childId: string, opts: { since?: string; limit?: number; skipHandwriting?: boolean } = {}): Promise<AttemptRecord[]> {
   let coll = db.attempts
     .where('[childId+createdAt]')
     .between([childId, opts.since ?? Dexie.minKey], [childId, Dexie.maxKey], true, true)
     .reverse()
+  if (opts.skipHandwriting) coll = coll.filter((a) => !a.skill.startsWith('calig:'))
   if (opts.limit && opts.limit > 0) coll = coll.limit(opts.limit)
   return coll.toArray()
 }

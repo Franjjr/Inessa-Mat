@@ -9,6 +9,9 @@ export function glyphFor(ch: string): CursiveGlyph | undefined {
   return CURSIVE_LOWER[ch] ?? CURSIVE_UPPER[ch] ?? CURSIVE_PUNCT[ch]
 }
 
+/** Print capitals (A–Z, Á É Í Ó Ú, Ñ) do not join the next letter. */
+const isCapital = (ch: string) => /^[A-ZÁÉÍÓÚÑ]$/.test(ch)
+
 const dist = (a: ModelPoint, b: ModelPoint) => Math.hypot(b.x - a.x, b.y - a.y)
 
 function unit(from: ModelPoint, to: ModelPoint): ModelPoint {
@@ -50,6 +53,7 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
   const pen: { open: ModelStroke | null; exit: ModelPoint | null } = { open: null, exit: null }
   let x = 0 // origin of the letter being placed
   let end = 0 // x where the last letter ends
+  let afterCapital = false
 
   const finish = () => {
     if (pen.open && pen.open.length >= 2) body.push(pen.open)
@@ -60,6 +64,7 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
     if (ch === ' ') {
       finish()
       pen.exit = null
+      afterCapital = false
       x = end + WORD_SPACE
       continue
     }
@@ -68,8 +73,15 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
       missing.push(ch)
       continue
     }
-    // Inside a word the connector travels a visible gap before the next letter's body.
-    if (pen.exit) x = end + LINK_GAP
+    // Punctuation is never joined: the pen lifts before it, as after a print capital.
+    if (ch in CURSIVE_PUNCT) {
+      finish()
+      if (pen.exit) afterCapital = true
+      pen.exit = null
+    }
+    // Inside a word the connector travels a visible gap before the next letter's body. Print capitals do not join:
+    // after one the pen lifts and the next letter starts a new stroke after the same gap.
+    if (pen.exit || afterCapital) x = end + LINK_GAP
 
     const shift = (p: ModelPoint): ModelPoint => ({ x: p.x + x, y: p.y })
     const joined = g.strokes.slice(0, g.main).map((st) => st.map(shift))
@@ -95,7 +107,9 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
     }
     marks.push(...extras)
 
-    pen.exit = joined[joined.length - 1][joined[joined.length - 1].length - 1]
+    const lifts = isCapital(ch) || ch in CURSIVE_PUNCT
+    pen.exit = lifts ? null : joined[joined.length - 1][joined[joined.length - 1].length - 1]
+    afterCapital = lifts
     x += g.width
     end = x
   }

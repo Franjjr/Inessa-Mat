@@ -179,7 +179,7 @@ export function CaligrafiaSection({ data, childName }: { data: LearningData | nu
           : `${childName} todavía no domina ninguna letra ni enlace.`}
       </p>
       {report.costly.length > 0 && <p className={adult.muted}>Le cuestan: {report.costly.join(', ')}.</p>}
-      {report.worst && <p className={adult.muted}>Lo que más falla: {report.worst.word}</p>}
+      {report.worst && <p className={adult.muted}>Lo que más falla: {report.worst.word}.</p>}
     </section>
   )
 }

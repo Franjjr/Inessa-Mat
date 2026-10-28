@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { scoreCursive, fitPauta } from './score'
+import { scoreCursive, fitPauta, FIT_PAD } from './score'
+import { ASCENDER, DESCENDER } from './models'
 import { CURSIVE_THRESHOLDS } from './thresholds'
 import { tipFor } from './tips'
 import {
@@ -33,13 +34,29 @@ const scoreDrawn = (text: string, drawn: ModelStroke[], target = text) =>
 describe('fitPauta', () => {
   it('fits the whole pauta inside the area and keeps the aspect ratio', () => {
     const fit = fitPauta(PAUTA_W, PAUTA_H, 100)
-    expect(fit.scale).toBeCloseTo(Math.min(PAUTA_W / 100, PAUTA_H / 95), 6)
-    const top = 5 * fit.scale + fit.oy
-    const bottom = 100 * fit.scale + fit.oy
+    expect(fit.scale).toBeCloseTo(Math.min(PAUTA_W / (100 + 2 * FIT_PAD), PAUTA_H / (DESCENDER - ASCENDER + 2 * FIT_PAD)), 6)
+    const top = (ASCENDER - FIT_PAD) * fit.scale + fit.oy
+    const bottom = (DESCENDER + FIT_PAD) * fit.scale + fit.oy
     expect(top).toBeGreaterThanOrEqual(0)
     expect(bottom).toBeLessThanOrEqual(PAUTA_H)
     expect(fit.ox).toBeGreaterThanOrEqual(0)
     expect(100 * fit.scale + fit.ox).toBeLessThanOrEqual(PAUTA_W)
+  })
+
+  it('leaves room for ascenders, descenders and accents: d, l, g, f and «Mi gato come.» stay inside the pauta box', () => {
+    for (const text of ['d', 'l', 'g', 'f', 'Mi gato come.', 'Árbol']) {
+      const target = targetOf(text)
+      const fit = fitOf(text)
+      const pts = target.strokes.flat()
+      for (const p of pts) {
+        const x = p.x * fit.scale + fit.ox
+        const y = p.y * fit.scale + fit.oy
+        expect(y, `${text} top/bottom`).toBeGreaterThanOrEqual(0)
+        expect(y, `${text} top/bottom`).toBeLessThanOrEqual(PAUTA_H)
+        expect(x, `${text} left/right`).toBeGreaterThanOrEqual(0)
+        expect(x, `${text} left/right`).toBeLessThanOrEqual(PAUTA_W)
+      }
+    }
   })
 })
 
@@ -222,7 +239,7 @@ describe('scoreCursive: review round 1', () => {
     const s = scoreDrawn('l', shortTopStrokes(exactStrokes('l'), 6))
     expect(s.passed.size).toBe(false)
     expect(s.stars).toBeLessThanOrEqual(2)
-    expect(s.tip).toContain('pequeña')
+    expect(s.tip).toContain('letra l')
   })
 
   it('an o widened by 20% fails shape and gets at most 2 stars', () => {
@@ -237,9 +254,9 @@ describe('scoreCursive: review round 1', () => {
     expect(s.passed.shape).toBe(false)
   })
 
-  it('a 6-unit spike over 5 points gets at most 2 stars on a, o and l', () => {
+  it('a 7-unit spike over 5 points gets at most 2 stars on a, o and l (6 units is within noise-like reach on o and l)', () => {
     for (const text of ['a', 'o', 'l']) {
-      const s = scoreDrawn(text, spikedStrokes(exactStrokes(text), 6, 5))
+      const s = scoreDrawn(text, spikedStrokes(exactStrokes(text), 7, 5))
       expect(s.stars, text).toBeLessThanOrEqual(2)
     }
   })
@@ -271,5 +288,31 @@ describe('scoreCursive: review round 1', () => {
     const big = fitPauta(PAUTA_W * 2, PAUTA_H * 2, targetOf(text).width)
     const large = scoreCursive(targetOf(text), toInk(strokes, big), big, text)
     expect(large).toEqual(small)
+  })
+})
+
+describe('scoreCursive: tight tolerances (final fix wave)', () => {
+  it('an o 15% wider than the model gets at most 2 stars and fails shape', () => {
+    const s = scoreDrawn('o', widenedStrokes(exactStrokes('o'), 1.15))
+    expect(s.passed.shape).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+  })
+
+  it('an l whose ascender is 5 units short gets at most 2 stars and fails size', () => {
+    const s = scoreDrawn('l', shortTopStrokes(exactStrokes('l'), 5))
+    expect(s.passed.size).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+  })
+
+  it('an o that starts 8 units late on the path gets at most 2 stars and fails start', () => {
+    const s = scoreDrawn('o', lateStartStrokes(exactStrokes('o'), 8))
+    expect(s.passed.start).toBe(false)
+    expect(s.stars).toBeLessThanOrEqual(2)
+  })
+
+  it('the pass limits are the tight ones (width 0.04 x-height, height −7%/+7%, start 6 units)', () => {
+    expect(CURSIVE_THRESHOLDS.shapeWidth).toBeLessThanOrEqual(0.04)
+    expect(CURSIVE_THRESHOLDS.size).toEqual({ min: 0.93, max: 1.07 })
+    expect(CURSIVE_THRESHOLDS.start).toBeLessThanOrEqual(0.15)
   })
 })

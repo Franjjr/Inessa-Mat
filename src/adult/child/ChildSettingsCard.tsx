@@ -1,5 +1,6 @@
 /* Per-child learning settings. Sound, music and voice live in Settings (they are device-level habits). */
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { DIV_METHODS, SUB_METHODS, TABLE_METHODS, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
 import { updateChild } from '@/data'
 import type { ChildProfile, ChildSettings } from '@/types'
@@ -51,6 +52,7 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
         checked={settings.handwriting !== false}
         onChange={(v) => void change({ handwriting: v })}
       />
+      <Link to="/adult/caligrafia-ensayo" className={s.trialLink}>Probar la nota de caligrafía</Link>
 
       <div className={adult.stack}>
         <span className={adult.label} id="handedness-label">Mano para escribir</span>

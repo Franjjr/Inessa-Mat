@@ -33,7 +33,7 @@ vi.mock('@/data', () => ({
   updateProgress: (id: string, fn: (p: typeof progress) => typeof progress) => updateProgress(id, fn),
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
-vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
+vi.mock('@/fx', () => ({ celebrate: vi.fn(), stopCelebrations: vi.fn() }))
 vi.mock('@/art/worlds/StarIcon', () => ({ StarIcon: ({ filled }: { filled?: boolean }) => <i data-testid={filled ? 'star-on' : 'star-off'} /> }))
 
 const W = 640

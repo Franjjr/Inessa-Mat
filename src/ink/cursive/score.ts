@@ -42,14 +42,17 @@ const LINE_BELOW = 12
 /** Points averaged at each end of the ink when measuring its height or width (one stray point cannot move it). */
 const EXTREME_COUNT = 10
 
-/** Maps the pauta (the whole two-line writing area, ascender room to descender room) into a width × height area. */
+/** Room (model units) kept free all round the model in the pauta, so an ascender, a descender or an accent is never cut. */
+export const FIT_PAD = 8
+
+/** Maps the pauta (the two-line writing area, ascender room to descender room, plus FIT_PAD all round) into a width × height area. */
 export function fitPauta(width: number, height: number, modelWidth: number): PautaFit {
-  const span = DESCENDER - ASCENDER
-  const scale = Math.min(width / Math.max(modelWidth, 1), height / span)
+  const span = DESCENDER - ASCENDER + 2 * FIT_PAD
+  const scale = Math.min(width / Math.max(modelWidth + 2 * FIT_PAD, 1), height / span)
   return {
     scale,
     ox: (width - modelWidth * scale) / 2,
-    oy: (height - span * scale) / 2 - ASCENDER * scale,
+    oy: (height - span * scale) / 2 - (ASCENDER - FIT_PAD) * scale,
   }
 }
 
@@ -72,6 +75,19 @@ function ends(pts: readonly Pt[], axis: 'x' | 'y'): { lo: number; hi: number } {
 const extent = (pts: readonly Pt[], axis: 'x' | 'y') => {
   const e = ends(pts, axis)
   return e.hi - e.lo
+}
+/** Span of the ink on an axis between its 10th and 90th percentiles. Unlike the extremes, one jittered point cannot
+    move it much, so a ±1.5-unit hand reads as little change (a real change in the body still does). */
+/** Width of the ink as twice the mean absolute deviation from its centre: zero-mean jitter cancels out, a widening does not. */
+const outerSpan = (pts: readonly Pt[], axis: 'x' | 'y') => {
+  const v = pts.map((p) => p[axis])
+  const m = mean(v)
+  return 2 * mean(v.map((x) => Math.abs(x - m)))
+}
+const bodySpan = (pts: readonly Pt[], axis: 'x' | 'y') => {
+  const v = pts.map((p) => p[axis]).sort((a, b) => a - b)
+  const at = (q: number) => v[Math.round(q * (v.length - 1))]
+  return at(0.9) - at(0.1)
 }
 const centre = (pts: readonly Pt[]) => {
   const e = ends(pts, 'x')
@@ -130,16 +146,17 @@ function bestScale(child: readonly Pt[], model: readonly Pt[], cc: Pt, cm: Pt): 
   let bestErr = Infinity
   for (let i = 0; i <= 40; i++) {
     const k = 0.6 + i * 0.025
-    let err = 0
-    let n = 0
+    const errs: number[] = []
     for (let j = 0; j < child.length; j += 3) {
       const c = child[j]
       const p = { x: (c.x - cc.x) * k + cm.x, y: (c.y - cc.y) * k + cm.y }
       const d = nearest(p, model)
-      err += d * d
-      n++
+      errs.push(d * d)
     }
-    const e = n ? err / n : Infinity
+    // Trimmed mean: the worst 10% of points are left out, so a few spiked points cannot shrink the fitted scale.
+    errs.sort((a, b) => a - b)
+    const keep = errs.slice(0, Math.max(1, Math.floor(errs.length * 0.9)))
+    const e = keep.length ? mean(keep) : Infinity
     if (e < bestErr) { bestErr = e; best = k }
   }
   return best
@@ -158,11 +175,6 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const T = CURSIVE_THRESHOLDS
   const modelAll = target.strokes.flatMap((st) => dense(st, 1))
   const childDense = child.flatMap((st) => dense(st, 1))
-  const modelBody = extent(modelAll, 'y')
-  const childBody = extent(childDense, 'y')
-
-  // Size: body height (top to bottom of the ink, end points averaged) against the model's.
-  const size = childBody / modelBody
 
   // Shape: the child's centre moved onto the model's and the child scaled to the best fit, so the form is judged apart
   // from size and position. Three checks: the mean distance, the share of points far off the line, and the width
@@ -174,16 +186,34 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const k = bestScale(childDense, modelAll, cc, cm)
   const place = (p: Pt): Pt => ({ x: (p.x - cc.x) * k + cm.x, y: (p.y - cc.y) * k + cm.y })
   const aligned = childDense.map(place)
-  // Child → model uses the child's own samples: a sparse stroke interpolated onto a grid would cut its chords across
-  // curves and read as error. Model → child (coverage) uses the interpolated child.
+  // Size: body height (the 10th to 90th percentile of the ink, so one jittered point cannot move it) against the model's.
+  const size = bodySpan(childDense, 'y') / bodySpan(modelAll, 'y')
+  // Width (same percentiles) against the height ratio: the aspect the shape check compares.
+  // Child → model uses the child's own path resampled at 1 unit (a sparse sampling could step over a spike). Model → child
+  // (coverage) uses the interpolated child.
   const dAB = childAll.map((p) => nearest(place(p), modelAll))
   const dBA = modelAll.map((p) => nearest(p, aligned))
   const shape = (mean(dAB) + mean(dBA)) / 2 / XHEIGHT
   const all = [...dAB, ...dBA]
   const shapeOff = all.filter((d) => d > T.shapeTolerance).length / all.length
-  // Width against height, from the raw ink (not the aligned one, which the scale above would have partly absorbed).
-  const shapeAspect = Math.abs((extent(childDense, 'x') / childBody) / (extent(modelAll, 'x') / modelBody) - 1)
-  const shapeRatio = Math.max(shape / T.shape, shapeOff / T.shapeOff, shapeAspect / T.shapeAspect)
+  // Width: the absolute difference of the body widths, in x-heights, after dividing out the size (so a uniform scale is
+  // only a size fault). A 10% wider o differs by ~2 units; the jitter of a narrow letter by ~1, so narrow letters are not
+  // judged on a ratio of their own tiny width.
+  // The width is the letter body only: a mark (tilde, accent, dot) is left out, it is not part of the letter's width.
+  const bodyModel = target.strokes.filter((st) => !isMark(dense(st, 1))).flatMap((st) => dense(st, 1))
+  const bodyChild = child.filter((st) => !isMark(dense(st, 1))).flatMap((st) => dense(st, 1))
+  const bodySmooth = bodyChild.map((p, i) => {
+    let sum = 0, n = 0
+    for (let j = Math.max(0, i - 2); j <= Math.min(bodyChild.length - 1, i + 2); j++) { sum += bodyChild[j].x; n++ }
+    return { x: sum / n, y: p.y }
+  })
+  const shapeWidth = Math.abs(outerSpan(bodySmooth, 'x') / size - outerSpan(bodyModel, 'x')) / XHEIGHT
+  // Spike: the single worst point of the child is more than shapeMax from the model (a sharp spike is not jitter)
+  const worstDev = Math.max(...all)
+  // Width applies to a single letter only: in a word or a phrase the letter widths and spacing vary naturally.
+  const singleGlyph = [...text.replace(/\s/g, '')].length === 1
+  const widthRatio = singleGlyph ? shapeWidth / T.shapeWidth : 0
+  const shapeRatio = Math.max(shape / T.shape, shapeOff / T.shapeOff, widthRatio, worstDev / T.shapeMax)
 
   // Line: the child's pen path and the model's are sampled evenly by arc length and paired point by point; the
   // model points on the baseline give the mean vertical offset. Scaling about the baseline keeps them on it, a

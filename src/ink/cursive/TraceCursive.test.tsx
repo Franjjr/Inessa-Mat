@@ -6,6 +6,7 @@ import { replayStrokes } from '../dev/autoplay'
 import { fixedElementSize, mockCanvas } from '../dev/testing'
 import type { CalItem } from '@/content/caligrafia/curriculum'
 import { CAL_CURRICULUM } from '@/content/caligrafia/curriculum'
+import { stopCelebrations } from '@/fx'
 import { TraceCursive } from './TraceCursive'
 import { exactStrokes, scaledStrokes, shiftedStrokes, toInk } from './fixtures'
 import { joinWord } from './join'
@@ -18,7 +19,7 @@ vi.mock('@/data', () => ({
   useActiveChild: () => ({ child: null, loading: false, setActiveChild() {} }),
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
-vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
+vi.mock('@/fx', () => ({ celebrate: vi.fn(), stopCelebrations: vi.fn() }))
 vi.mock('@/art/worlds/StarIcon', () => ({ StarIcon: ({ filled }: { filled?: boolean }) => <i data-testid={filled ? 'star-on' : 'star-off'} /> }))
 
 const W = 640
@@ -31,11 +32,11 @@ beforeAll(() => { mockCanvas(); restore = fixedElementSize(W, H) })
 afterAll(() => restore())
 beforeEach(() => { localStorage.clear(); localStorage.setItem(PEN_SEEN_KEY, '2026-10-01') })
 
-function setup(item: CalItem = LETRA_A) {
+function setup(item: CalItem = LETRA_A, gender?: 'f' | 'm') {
   const onDone = vi.fn()
   render(
     <InkProvider recognizer={scriptedRecognizer([])}>
-      <TraceCursive item={item} onDone={onDone} />
+      <TraceCursive item={item} onDone={onDone} gender={gender} />
     </InkProvider>,
   )
   const fit = fitPauta(W, H, joinWord(item.text).width)
@@ -52,13 +53,58 @@ function setup(item: CalItem = LETRA_A) {
 }
 
 describe('TraceCursive', () => {
-  it('goes Mirar → Repasar → Escribir sola', () => {
+  it('goes Mirar → Repasar → Escribir solo (masculine when the gender is unknown)', () => {
     setup()
     expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
     expect(screen.getByRole('heading', { name: 'Repasa' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
+    expect(screen.getByRole('heading', { name: 'Escribe solo' })).toBeInTheDocument()
+  })
+
+  it('the writing step says «Escribe sola» for a girl and «Escribe solo» for a boy or when the gender is unknown', () => {
+    setup(LETRA_A, 'f')
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
     expect(screen.getByRole('heading', { name: 'Escribe sola' })).toBeInTheDocument()
+  })
+
+  it('the writing step says «Escribe solo» for a boy', () => {
+    setup(LETRA_A, 'm')
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
+    expect(screen.getByRole('heading', { name: 'Escribe solo' })).toBeInTheDocument()
+  })
+
+  it('a try made with a mouse (no pen stroke) asks for the pen and is not scored', () => {
+    const { toScreen, writeArea, toWrite } = setup()
+    toWrite()
+    act(() => replayStrokes(writeArea(), toScreen(exactStrokes('a'), 'touch').map((st) => ({ ...st, pointerType: 'mouse' as const }))))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.getByRole('status')).toHaveTextContent('¡Escribe con el lápiz!')
+    expect(screen.queryAllByTestId('star-on')).toHaveLength(0)
+  })
+
+  it('the time of an attempt counts from the writing step, not from the model', () => {
+    const now = vi.spyOn(Date, 'now')
+    const { onDone, writeOnce } = setup()
+    now.mockReturnValue(1_000)
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    now.mockReturnValue(9_000)
+    fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
+    now.mockReturnValue(11_500)
+    writeOnce(exactStrokes('a'))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ ms: 2_500 }))
+    now.mockRestore()
+  })
+
+  it('a celebration stops when the item moves on to the next step', () => {
+    vi.mocked(stopCelebrations).mockClear()
+    setup()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    expect(stopCelebrations).toHaveBeenCalled()
   })
 
   it('the exact fixture written alone earns 3 stars', () => {
@@ -129,6 +175,17 @@ describe('TraceCursive', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Te has salido: vuelve a la línea gris')
   })
 
+  it('a stroke that wandered off and came back shows «Te has salido» only while it is off', () => {
+    const { toScreen, traceArea } = setup()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    // The model's stroke, with a middle part pushed 30 units below the baseline (where no part of «a» lies: pushed up it
+    // would land on the bowl's own top, which is on the line, not off it); the stroke ends back on the line.
+    const [first, ...rest] = exactStrokes('a')
+    const wander = first.map((p, i) => (i >= 8 && i <= 14 ? { x: p.x, y: p.y + 30 } : p))
+    act(() => replayStrokes(traceArea(), toScreen([wander, ...rest])))
+    expect(screen.getByRole('status')).toHaveTextContent('Repasa la línea gris con el lápiz')
+  })
+
   it('the exact model of every curriculum item, traced in Repasar, raises no notice', () => {
     for (const item of CAL_CURRICULUM) {
       const onDone = vi.fn()
@@ -155,7 +212,7 @@ describe('TraceCursive', () => {
     fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
     expect(screen.queryByRole('button', { name: 'Otra vez' })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
-    expect(onDone).toHaveBeenCalledWith({ score: expect.objectContaining({ stars: 3 }), tries: 2 })
+    expect(onDone).toHaveBeenCalledWith({ score: expect.objectContaining({ stars: 3 }), tries: 2, ms: expect.any(Number) })
   })
 
   it('a word has one try only', () => {
