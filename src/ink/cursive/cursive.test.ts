@@ -172,6 +172,15 @@ describe('joinWord body and marks', () => {
     expect(joinWord('a,b').missing).toEqual([])
   })
 
+  it('punctuation is its own pen stroke: the last letter does not run into the period', () => {
+    const word = joinWord('come')
+    const sentence = joinWord('come.')
+    expect(sentence.body).toBe(word.body + 1)
+    const dot = sentence.strokes[sentence.body - 1]
+    const span = Math.max(...dot.map((p) => p.x)) - Math.min(...dot.map((p) => p.x))
+    expect(span).toBeGreaterThanOrEqual(2)
+  })
+
   it('characters with no glyph are reported in missing, not silently dropped', () => {
     expect(joinWord('a€b').missing).toEqual(['€'])
     expect(joinWord('Árbol').missing).toEqual([])

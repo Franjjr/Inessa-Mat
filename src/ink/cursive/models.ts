@@ -179,7 +179,7 @@ const rotated = (g: CursiveGlyph): CursiveGlyph => {
   const last = strokes[g.main - 1]
   return { ...g, strokes, entry: strokes[0][0], exit: last[last.length - 1] }
 }
-const dotAt = (x: number, y: number): ModelStroke => spline([x, y, x + 0.5, y + 0.5])
+const dotAt = (x: number, y: number): ModelStroke => spline([x - 1, y - 1, x + 1.2, y + 1])
 const QUESTION = punct([spline([0, 47, 3, 42, 8, 41, 12, 44, 11, 50, 6, 56, 5, 62])], [dotAt(5, 68)], 13)
 const EXCLAIM = punct([spline([5, 40, 5, 58])], [dotAt(5, 68)], 7)
 

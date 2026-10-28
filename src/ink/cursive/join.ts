@@ -73,6 +73,12 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
       missing.push(ch)
       continue
     }
+    // Punctuation is never joined: the pen lifts before it, as after a print capital.
+    if (ch in CURSIVE_PUNCT) {
+      finish()
+      if (pen.exit) afterCapital = true
+      pen.exit = null
+    }
     // Inside a word the connector travels a visible gap before the next letter's body. Print capitals do not join:
     // after one the pen lifts and the next letter starts a new stroke after the same gap.
     if (pen.exit || afterCapital) x = end + LINK_GAP
@@ -101,8 +107,9 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number;
     }
     marks.push(...extras)
 
-    pen.exit = isCapital(ch) ? null : joined[joined.length - 1][joined[joined.length - 1].length - 1]
-    afterCapital = isCapital(ch)
+    const lifts = isCapital(ch) || ch in CURSIVE_PUNCT
+    pen.exit = lifts ? null : joined[joined.length - 1][joined[joined.length - 1].length - 1]
+    afterCapital = lifts
     x += g.width
     end = x
   }
