@@ -70,7 +70,9 @@ export function AppRoutes() {
         <Route path="/play/free" element={<RequireChild><FreePlayScreen /></RequireChild>} />
         <Route path="/play/review" element={<RequireChild><DailyReviewScreen /></RequireChild>} />
         <Route path="/play/sesion" element={<RequireChild><DailySessionScreen /></RequireChild>} />
+        <Route path="/play/lengua" element={<RequireChild><DailySessionScreen subject="language" /></RequireChild>} />
         <Route path="/play/prueba" element={<RequireChild><PlacementScreen /></RequireChild>} />
+        <Route path="/play/prueba-lengua" element={<RequireChild><PlacementScreen subject="language" /></RequireChild>} />
         <Route path="/play/clase/:topicId" element={<RequireChild><ClassLessonScreen /></RequireChild>} />
         <Route path="/play/album" element={<RequireChild><AlbumScreen /></RequireChild>} />
         <Route path="/play/shop" element={<RequireChild><ShopScreen /></RequireChild>} />

@@ -12,6 +12,7 @@ import type {
   ExerciseViewProps, MeasureAddExercise, MeasureConvertExercise, MeasureEstimateExercise, MeasureRulerExercise, MeasureUnitExercise,
 } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
+import { MeasureRuler } from './MeasureRuler'
 import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
 import m from './MoneyViews.module.css'
@@ -123,31 +124,7 @@ function Ruler({ max, start, end }: { max: number; start: number; end: number })
     if (to - from < 10) to = Math.min(max, from + 10)
     if (to - from < 10) from = Math.max(0, to - 10)
   }
-  const cm = 24
-  const pad = 14
-  const width = (to - from) * cm + pad * 2
-  const top = 14
-  const bodyH = 58
-  const x = (v: number) => pad + (v - from) * cm
-  return (
-    <svg className={r.ruler} viewBox={`0 0 ${width} ${top + bodyH + 46}`} role="img" aria-label={`Regla de ${max} centímetros. El objeto empieza en ${start} y acaba en ${end}`}>
-      <rect x={0} y={top} width={width} height={bodyH} rx={10} className={r.rulerBody} />
-      {Array.from({ length: to - from + 1 }, (_, k) => {
-        const i = from + k
-        const len = i % 10 === 0 ? 26 : i % 5 === 0 ? 20 : 12
-        return (
-          <g key={i}>
-            <line x1={x(i)} x2={x(i)} y1={top + bodyH} y2={top + bodyH - len} className={r.tick} />
-            {i % 5 === 0 && (
-              <text x={x(i)} y={top + bodyH + 34} textAnchor="middle" className={r.label}>{i}</text>
-            )}
-          </g>
-        )
-      })}
-      <rect x={x(start)} y={top + 14} width={Math.max(4, (end - start) * cm)} height={bodyH - 28} rx={8} className={r.thing} />
-      <line x1={x(start)} x2={x(start)} y1={top - 4} y2={top + bodyH + 2} className={r.startMark} />
-    </svg>
-  )
+  return <MeasureRuler start={start} end={end} from={from} to={to} label={`Regla de ${max} centímetros. El objeto empieza en ${start} y acaba en ${end}`} />
 }
 
 function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }) {

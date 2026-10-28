@@ -90,6 +90,27 @@ export type LessonVisualId =
   | 'bar-model'         // params: { a, b, total } — part-part-whole bar (a and b are the parts, total the whole)
   | 'div-parts'         // params: { dividend, divisor } — repartir por partes: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4
   | 'div-climb'         // params: { divisor, quotient } — multiplicar hacia arriba: the multiples of the divisor
+  | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
+  | 'lng-word'          // Lengua: params { word, parts?, mark? } — a word cut into parts (ma-ri-po-sa, abre+latas); mark is a class or a part
+  | 'big-text'          // params: { text, sub? } — one or two lines of large text (a rule, an equality), sub under it
+  | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
+  | 'fraction-shape'    // params: { parts, shaded, shape } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar
+  | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted
+  | 'money'             // params: { items, price? } — items: comma list of céntimos (200,50,20), each drawn as a real coin or note; price (céntimos) adds the price tag and the change line «Te devuelven X» when the items pay more
+  | 'clock'             // params: { h, m, digital? } — analogue clock at h:m (h 0..23, a 24 h hour sits on the face); digital 1 adds the digital time «hh:mm» next to it
+  | 'ruler'             // params: { cm, from?, object? } — a centimetre ruler (1 to 9 cm) with an object (emoji) lying from `from` (default 0) to cm
+  | 'units'             // params: { kind } — kind is length, mass or capacity: the units of that kind, each with a real object of that size
+  | 'timeline'          // params: { start, end } — minutes from midnight: a bar from start to end on an hour line, both times and the duration written
+  | 'polygon'           // params: { sides, mark? } — a regular polygon of 3 to 8 sides; mark sides numbers the sides 1..n, mark corners numbers the corners
+  | 'lines'             // params: { kind } — kind is recta, curva, poligonal, paralelas, perpendiculares, segmento or semirrecta
+  | 'angle'             // params: { deg } — an angle of deg degrees (1 to 179) between two rays; at 90 a square marks the right angle
+  | 'solid'             // params: { name } — a solid: cubo, prisma, piramide, cilindro, cono or esfera
+  | 'perimeter'         // params: { sides } — comma list of side lengths in cm (3 to 8): each length on its side, the sum below (3,4,3,4 → 3 + 4 + 3 + 4 = 14 cm)
+  | 'grid-route'        // params: { route } — a walk on a 4 × 5 grid (4 rows, 5 columns) from a gold start cell: letters R, L, U, D, one square each (R,R,U)
+  | 'pictogram'         // params: { rows, unit? } — rows «Gatos:3,Perros:5» (a third field names the icon: «Gatos:3:🐱»); each icon is worth unit (1 by default)
+  | 'bar-chart'         // params: { rows } — the same rows as vertical bars on a numbered scale, each bar named under it
+  | 'table'            // params: { rows, cols, cells, at? } — a double-entry table: rows «3.º A,3.º B», cols «la manzana:🍎,la pera:🍐», cells «5-2/3-6» (rows split by /, counts by -); at «0:1» marks that cell
+  | 'chance-bag'        // params: { balls } — a bag of coloured balls, «red:3,blue:0» (red, blue, green or yellow; 0 = none of that colour)
 
 export interface LessonStep {
   visual: LessonVisualId

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ErrorType, MasteryMap, SkillMastery } from '@/types'
 import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
-import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
+import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
@@ -118,6 +118,15 @@ describe('recallReport', () => {
     ])
     expect(recallReport(list, now)).toEqual({ minDays: 14, checked: 3, remembered: 1 })
   })
+
+  it('an ungraded retry row neither counts as remembered nor acts as the earlier answer', () => {
+    const list = newestFirst([
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(30), correct: false, errorType: 'fact' }), // the graded past: wrong
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(20), correct: true, graded: false, retries: 1 }), // a retry row
+      attempt({ skill: 'mul:5x5', createdAt: daysAgo(3) }), // graded and right: would be «remembered» only via the retry row
+    ])
+    expect(recallReport(list, now)).toEqual({ minDays: 14, checked: 0, remembered: 0 })
+  })
 })
 
 describe('unclassified mistakes', () => {
@@ -129,3 +138,47 @@ describe('unclassified mistakes', () => {
     expect(errorReport(list, now).groups.map((g) => [g.id, g.count])).toEqual([['tablas', 1], ['otros', 5]])
   })
 })
+
+describe('topicNeeds: «No lo sabía» and «Necesitó otro intento» per topic', () => {
+  // The first topic of the temario with skills, and one of its skills.
+  const topic = GRADE3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.status === 'disponible' && t.skills.length > 0)!
+  const skill = topic.skills[0]
+  const other = GRADE3_SYLLABUS.blocks.flatMap((b) => b.topics).filter((t) => t.id !== topic.id && t.skills.length > 0)[0]
+
+  it('counts dont-know answers and answers that needed another try, per topic, in the last 30 days', () => {
+    const list = [
+      attempt({ skill, correct: false, errorType: 'dont-know', createdAt: daysAgo(2) }),
+      attempt({ skill, correct: false, errorType: 'dont-know', createdAt: daysAgo(40) }), // too old
+      attempt({ skill, correct: false, errorType: 'fact', createdAt: daysAgo(3), retries: 1 }),
+      attempt({ skill, correct: true, createdAt: daysAgo(4), retries: 1, solvedOnRetry: true }),
+      attempt({ skill, correct: true, createdAt: daysAgo(5) }),
+      attempt({ skill: other.skills[0], correct: false, errorType: 'dont-know', createdAt: daysAgo(1) }),
+    ]
+    const needs = topicNeeds(GRADE3_SYLLABUS, list, now)
+    expect(needs[topic.id]).toEqual({ dontKnow: 1, retried: 2 })
+    expect(needs[other.id]).toEqual({ dontKnow: 1, retried: 0 })
+  })
+
+  it('counts a retry row as «Necesitó otro intento» even when it is not graded', () => {
+    const needs = topicNeeds(GRADE3_SYLLABUS, [attempt({ skill, correct: true, retries: 1, graded: false, createdAt: daysAgo(1) })], now)
+    expect(needs[topic.id]).toEqual({ dontKnow: 0, retried: 1 })
+  })
+
+  it('leaves out topics with no such answers and skills that are not in the temario', () => {
+    const needs = topicNeeds(GRADE3_SYLLABUS, [attempt({ skill: 'not-a-skill', errorType: 'dont-know', correct: false, createdAt: daysAgo(1) })], now)
+    expect(needs).toEqual({})
+  })
+})
+
+describe('errorReport: ungraded retry rows are not first answers', () => {
+  it('a retry row is left out of the answered and wrong counts', () => {
+    const list = [
+      attempt({ skill: 'mul:6x7', correct: false, errorType: 'fact', createdAt: daysAgo(2) }),
+      attempt({ skill: 'mul:6x7', correct: false, errorType: 'fact', createdAt: daysAgo(2), graded: false, retries: 1 }),
+    ]
+    const r = errorReport(list, now)
+    expect(r.answered).toBe(1)
+    expect(r.wrong).toBe(1)
+  })
+})
+

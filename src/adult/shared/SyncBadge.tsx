@@ -8,7 +8,7 @@ const COPY: Record<SyncStatus['state'], { label: string; detail: string; tone: s
   offline: { label: 'Sin conexión', detail: 'Los cambios se guardan aquí y se subirán cuando vuelva internet.', tone: s.noticeWarn, mark: '…' },
   idle: { label: 'Todo sincronizado', detail: 'Los datos están guardados en la nube.', tone: s.noticeOk, mark: '✓' },
   syncing: { label: 'Sincronizando…', detail: 'Estamos subiendo los últimos cambios.', tone: s.noticeInfo, mark: '↻' },
-  error: { label: 'Hay cambios pendientes', detail: 'Algunos cambios no se han podido guardar todavía.', tone: s.noticeWarn, mark: '!' },
+  error: { label: 'No se ha podido guardar en la nube', detail: 'Algunos cambios siguen solo en este dispositivo. Lo volveremos a intentar.', tone: s.noticeWarn, mark: '!' },
 }
 
 export function SyncBadge({ showAction = true }: { showAction?: boolean }) {

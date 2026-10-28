@@ -132,7 +132,13 @@ export function attemptToRow(a: AttemptRecord): Row {
     hints_used: int(a.hintsUsed, 0, 50),
     error_type: a.errorType ? str(a.errorType, 32) : null,
     recognition_fixes: int(a.recognitionFixes ?? 0, 0, 500),
-    context: obj(a.context),
+    // Retries live inside the context json (no column for them): see attemptFromRow.
+    context: obj({
+      ...a.context,
+      ...(a.retries ? { retries: int(a.retries, 0, 50) } : {}),
+      ...(a.solvedOnRetry ? { solvedOnRetry: true } : {}),
+      ...(a.graded === false ? { graded: false } : {}),
+    }),
     created_at: iso(a.createdAt),
   }
 }
@@ -152,9 +158,24 @@ export function attemptFromRow(r: Row): AttemptRecord {
     hintsUsed: Number(r.hints_used ?? 0),
     errorType: (r.error_type as AttemptRecord['errorType']) ?? null,
     recognitionFixes: Number(r.recognition_fixes ?? 0),
-    context: obj(r.context) as AttemptRecord['context'],
+    ...attemptRetriesFromContext(obj(r.context)),
+    ...(obj(r.context).graded === false ? { graded: false } : {}),
+    context: contextWithoutRetries(obj(r.context)) as AttemptRecord['context'],
     createdAt: iso(r.created_at),
   }
+}
+
+/** The retry fields stored in the context json of an attempt row (only when present). */
+function attemptRetriesFromContext(ctx: Record<string, unknown>): Pick<AttemptRecord, 'retries' | 'solvedOnRetry'> {
+  return {
+    ...(typeof ctx.retries === 'number' && ctx.retries > 0 ? { retries: ctx.retries } : {}),
+    ...(ctx.solvedOnRetry === true ? { solvedOnRetry: true } : {}),
+  }
+}
+
+function contextWithoutRetries(ctx: Record<string, unknown>): Record<string, unknown> {
+  const { retries: _retries, solvedOnRetry: _solved, graded: _graded, ...rest } = ctx
+  return rest
 }
 
 // ------------------------------------------------------------------------------------------------ sessions

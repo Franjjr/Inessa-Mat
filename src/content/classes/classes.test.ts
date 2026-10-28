@@ -4,9 +4,10 @@ import type { SyllabusTopic } from '@/content'
 import { topicTitle } from '@/content/syllabus/helpers'
 import { w4Borrow } from '@/content/lessons/w4'
 import { tryIt } from '@/content/lessons/dsl'
-import { syllabusForGrade } from '@/content/syllabus'
-import { createRng, generate } from '@/engine'
-import { clase, CLASSES, classForTopic, isClassDone, markClassDone } from './index'
+import { LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, allTopics } from '@/content/syllabus'
+import { createRng, generate, kindsForSkill } from '@/engine'
+import { syllabify } from '@/engine/lengua/syllables'
+import { clase, CLASSES, classForTopic, isClassDone, LENGUA_CLASSES, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
 
@@ -100,7 +101,7 @@ describe('one map lesson per class', () => {
 describe('classForTopic', () => {
   it('finds a class by its syllabus topic, and none for a topic without one', () => {
     expect(classForTopic('resta-3d-prestando', 3)?.topicId).toBe('resta-3d-prestando')
-    expect(classForTopic('igualdad', 3)).toBeUndefined()
+    expect(classForTopic('tema-sin-clase', 3)).toBeUndefined()
   })
 
   it('gives no class to a child of another grade, even for a topic id that repeats (mul-3x1 is in 4.º too)', () => {
@@ -116,7 +117,6 @@ describe('classForTopic', () => {
 })
 
 describe('clases de sumar y restar (3.º)', () => {
-  const syllabus = syllabusForGrade(3)
   const topicIds = ['suma-2d', 'suma-3d-sin-llevar', 'suma-3d-llevando', 'suma-4d', 'resta-3d-sin-llevar', 'resta-3d-prestando', 'resta-con-ceros', 'resta-4d']
 
   it('sumar y restar have their classes', () => {
@@ -132,8 +132,12 @@ describe('clases de sumar y restar (3.º)', () => {
   })
 
   it('every class keeps the five-phase shape and its tries generate exercises of its own topic', () => {
-    expect(new Set(CLASSES.map((c) => c.lesson.id)).size).toBe(CLASSES.length)
-    for (const cls of CLASSES) {
+    const everyClass = [
+      ...CLASSES.map((cls) => ({ cls, syllabus: syllabusForGrade(3) })),
+      ...LENGUA_CLASSES.map((cls) => ({ cls, syllabus: syllabusFor('language', 3) })),
+    ]
+    expect(new Set(everyClass.map((e) => e.cls.lesson.id)).size).toBe(everyClass.length)
+    for (const { cls, syllabus } of everyClass) {
       const { phases, lesson } = cls
       expect(phases.para, cls.lesson.id).toBeGreaterThanOrEqual(1)
       expect(phases.para, cls.lesson.id).toBeLessThanOrEqual(2)
@@ -157,6 +161,9 @@ describe('clases de sumar y restar (3.º)', () => {
         for (let seed = 1; seed <= 20; seed++) {
           const [exercise] = generate(step.trySelector!, 1, { rng: createRng(seed) })
           expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill} (seed ${seed})`).toBe(true)
+          if (cls.topicId.startsWith('lng-')) {
+            expect(kindsForSkill(exercise.skill), `${cls.lesson.id}: ${exercise.skill}`).toContain(exercise.kind)
+          }
         }
       }
     }
@@ -169,5 +176,83 @@ describe('topicTitle', () => {
   })
   it('keeps plain names unchanged', () => {
     expect(topicTitle({ name: 'Resta de 3 cifras pidiendo prestado' } as SyllabusTopic)).toBe('Resta de 3 cifras pidiendo prestado')
+  })
+})
+
+describe('todos los temas de 3.º tienen clase', () => {
+  it('every 3.º maths topic has a class', () => {
+    const topics = allTopics(syllabusFor('math', 3))
+    expect(topics.length).toBeGreaterThan(0)
+    for (const t of topics) expect(classForTopic(t.id, 3, 'math'), t.id).toBeDefined()
+  })
+})
+
+describe('clases de Lengua de 3.º', () => {
+  const lengua = allTopics(LENGUA3_SYLLABUS)
+  const withClass = lengua.filter((t) => t.id.startsWith('lng-') && LENGUA_CLASSES.some((c) => c.topicId === t.id))
+  const blockOf = (topicId: string) => LENGUA3_SYLLABUS.blocks.find((b) => b.topics.some((t) => t.id === topicId))!.id
+
+  it('every grammar, spelling and vocabulary topic has its class', () => {
+    const expected = LENGUA3_SYLLABUS.blocks
+      .filter((b) => ['gramatica', 'ortografia', 'vocabulario'].includes(b.id))
+      .flatMap((b) => b.topics.map((t) => t.id))
+    expect(expected.length).toBe(18)
+    for (const id of expected) expect(classForTopic(id, 3, 'language'), id).toBeDefined()
+    expect(withClass.map((t) => t.id).sort()).toEqual(expected.slice().sort())
+  })
+
+  it('reading, literature and writing have no class', () => {
+    for (const t of lengua.filter((x) => ['lectura', 'literatura', 'escritura'].includes(blockOf(x.id)))) {
+      expect(classForTopic(t.id, 3, 'language'), t.id).toBeUndefined()
+    }
+  })
+
+  it('a Lengua topic id gives no maths class, and a maths topic id gives no Lengua class', () => {
+    expect(classForTopic('lng-silabas', 3)).toBeUndefined()
+    expect(classForTopic('suma-2d', 3, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', 3, 'math')).toBeUndefined()
+  })
+
+  it('a child of another grade gets no Lengua class', () => {
+    expect(classForTopic('lng-silabas', 4, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', 2, 'language')).toBeUndefined()
+    expect(classForTopic('lng-silabas', undefined, 'language')?.topicId).toBe('lng-silabas')
+  })
+
+  it('the two guiada tries use the syllabus topic’s first skill and keep their hints; the sola tries after them have none (R19)', () => {
+    const topics = allTopics(LENGUA3_SYLLABUS)
+    for (const cls of LENGUA_CLASSES) {
+      const topic = topics.find((t) => t.id === cls.topicId)!
+      const tries = cls.lesson.steps.filter((st) => st.interaction === 'try')
+      const guiada = tries.slice(0, 2)
+      const sola = tries.slice(2)
+      expect(guiada.every((st) => st.trySelector!.skills![0] === topic.skills[0]), cls.lesson.id).toBe(true)
+      expect(guiada.every((st) => st.hints !== false), cls.lesson.id).toBe(true)
+      // sola starts where guiada ends: its own tries, three or four of them, all without hints.
+      expect(sola.length, cls.lesson.id).toBeGreaterThanOrEqual(3)
+      expect(sola.every((st) => st.hints === false), cls.lesson.id).toBe(true)
+    }
+  })
+
+  it('each Lengua class has its own lesson id', () => {
+    expect(new Set(LENGUA_CLASSES.map((c) => c.lesson.id)).size).toBe(LENGUA_CLASSES.length)
+  })
+
+  it('the syllables of a word in a lesson are the syllabifier’s syllables; morpheme parts use «+»', () => {
+    for (const cls of LENGUA_CLASSES) {
+      for (const st of cls.lesson.steps) {
+        if (st.visual !== 'lng-word') continue
+        const word = String(st.params!.word)
+        const parts = st.params!.parts === undefined ? undefined : String(st.params!.parts)
+        const mark = st.params!.mark === undefined ? undefined : String(st.params!.mark)
+        if (parts !== undefined) {
+          expect(parts.replace(/[-+]/g, ''), `${cls.lesson.id}: ${word}`).toBe(word)
+          if (parts.includes('-')) expect(parts.split('-'), `${cls.lesson.id}: ${word}`).toEqual(syllabify(word))
+          if (mark !== undefined) expect(parts.split(/[-+]/), `${cls.lesson.id}: ${word} mark ${mark}`).toContain(mark)
+        } else {
+          expect(mark, `${cls.lesson.id}: ${word}`).toBeUndefined()
+        }
+      }
+    }
   })
 })

@@ -1,4 +1,5 @@
 import type { ID, ISODate, InputMode } from './common'
+import type { SubjectId } from './child'
 import type { ErrorType, ExerciseKind, SkillKey } from './exercise'
 
 /**
@@ -38,6 +39,12 @@ export interface AttemptRecord {
   hintsUsed: number
   errorType?: ErrorType | null
   recognitionFixes?: number
+  /** Extra tries after a wrong answer on this exercise («Inténtalo otra vez»): 0 or missing = answered once. */
+  retries?: number
+  /** The child got it right on a retry. */
+  solvedOnRetry?: boolean
+  /** false for a retry row that does not grade (not counted in accuracy); missing = graded. */
+  graded?: boolean
   /** Where the attempt happened. */
   /** method: the method used when the operation has several (e.g. 'borrow', 'parts'); see src/engine/methods.ts. */
   context: { worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string }
@@ -51,7 +58,8 @@ export interface SessionRecord {
   endedAt: ISODate | null
   /** Active minutes (idle time excluded). */
   minutes: number
-  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[] } | null
+  /** `subject` marks a Lengua session (missing = maths): it lives in the summary so it syncs without a new column. */
+  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[]; subject?: SubjectId } | null
 }
 
 export interface NodeProgress {

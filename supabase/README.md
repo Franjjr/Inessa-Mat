@@ -1,7 +1,8 @@
 # Numeria · Supabase backend
 
 Migrations run in order: `migrations/0001_init.sql` (the schema), then `migrations/0002_erasure_tombstones_rewards.sql`
-(GDPR erasure tombstones and monotonic reward claims). Each one is idempotent and must be applied on top of the previous.
+(GDPR erasure tombstones and monotonic reward claims), then `migrations/0003_ungraded_retries.sql` (`child_stats` leaves out
+retry rows that do not grade: `context.graded = false`). Each one is idempotent and must be applied on top of the previous.
 
 ## Apply it to a project
 

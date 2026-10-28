@@ -43,6 +43,8 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
   const [hintsShown, setHintsShown] = useState(guided ? 1 : 0)
   const hintsUsed = useRef(0)
   const fixes = useRef(0)
+  /** Wrong tries that were followed by another try (the outcome's retries). */
+  const retried = useRef(0)
   const startedAt = useRef(now())
   const done = useRef(false)
   const modeRef = useRef<InputMode>(mode)
@@ -60,6 +62,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
 
   /** A wrong try that still leaves a second one: forget the pending recognitions, keep the count. */
   const retry = useCallback(() => {
+    retried.current += 1
     fixes.current += learning.recognitionFixes()
     learning.discard()
     sfx.play('wrong')
@@ -89,6 +92,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
       inputMode: m,
       hintsUsed: hintsUsed.current,
       recognitionFixes: total,
+      ...(retried.current ? { retries: retried.current } : {}),
       ...(trick ? { method: trick } : {}),
     })
   }, [learning, exercise, tableMethod])

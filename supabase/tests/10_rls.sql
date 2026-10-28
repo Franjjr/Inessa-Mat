@@ -216,6 +216,13 @@ select tests.eq((select minutes from public.sessions where id = tests.id('sess1'
 update public.sessions set ended_at = now(), summary = '{"attempts": 3}' where id = tests.id('sess1');
 update public.sessions set ended_at = null, summary = null where id = tests.id('sess1');
 select tests.ok((select ended_at is not null and summary is not null from public.sessions where id = tests.id('sess1')), 'an ended session stays ended and keeps its summary');
+-- 0003: an ungraded retry row (context graded = false) adds no accuracy and no top error to child_stats
+select tests.set('stats_before', (select attempts || '/' || correct from public.child_stats(array[tests.id('a1')], now() - interval '1 day')));
+insert into public.attempts (id, child_id, skill, kind, correct, given, expected, ms, input_mode, error_type, context, created_at)
+  values (gen_random_uuid(), tests.id('a1'), 'mul:6x7', 'fact-mul', true, '42', '42', 2000, 'pen', null, '{"retries": 1, "graded": false}', now()),
+         (gen_random_uuid(), tests.id('a1'), 'mul:6x7', 'fact-mul', false, '40', '42', 2000, 'pen', 'carry-forgot', '{"retries": 1, "graded": false}', now());
+select tests.eq((select attempts || '/' || correct from public.child_stats(array[tests.id('a1')], now() - interval '1 day')), tests.get('stats_before'), 'ungraded retry rows do not change attempts or correct in child_stats');
+select tests.eq((select count(*) from public.child_stats(array[tests.id('a1')], now() - interval '1 day') s, jsonb_array_elements(s.top_errors) e where e ->> 'errorType' = 'carry-forgot'), 0::bigint, 'an ungraded wrong retry is not a top error');
 commit;
 
 begin;

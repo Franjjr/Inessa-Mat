@@ -1,6 +1,7 @@
-/* Subjects of one child. Maths is switched on and off here; the other subjects are announced as «Próximamente»
-   and cannot be switched on yet. At least one subject is always active. */
+/* Subjects of one child. Maths and Lengua are switched on and off here; the other subjects are announced as «Próximamente».
+   Lengua is the 3.º course: a child of another course cannot switch it on. At least one subject is always active. */
 import { useState } from 'react'
+import { subjectOffered } from '@/engine'
 import { updateChild } from '@/data'
 import { SUBJECTS, type ChildProfile, type SubjectId } from '@/types'
 import { toast } from '@/ui'
@@ -44,13 +45,18 @@ export function SubjectsCard({ child }: { child: ChildProfile }) {
             </div>
           )
         }
+        const offered = subjectOffered(subject.id, child.grade)
+        const hint = !offered
+          ? 'Lengua de 3.º: disponible para los niños de 3.º.'
+          : on && active.length === 1 ? 'Es la única activa: no se puede desactivar.'
+            : subject.id === 'language' ? 'Gramática, ortografía, vocabulario y lectura.' : 'Tablas de multiplicar y cálculo.'
         return (
           <SwitchRow
             key={subject.id}
             label={subject.name}
-            hint={on && active.length === 1 ? 'Es la única activa: no se puede desactivar.' : 'Tablas de multiplicar y cálculo.'}
+            hint={hint}
             checked={on}
-            disabled={on && active.length === 1}
+            disabled={(on && active.length === 1) || (!on && !offered)}
             onChange={(v) => void change(subject.id, v)}
           />
         )

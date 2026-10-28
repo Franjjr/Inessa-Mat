@@ -2,9 +2,9 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { TABLE_METHODS, createRng, generate, hintsFor, makeFactDiv, statementOf, strategyForFact } from '@/engine'
-import type { DivMethod, Exercise, Hint, SubMethod, TableMethod } from '@/types'
-import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, availableSkills } from '@/content/syllabus'
+import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf, strategyForFact } from '@/engine'
+import type { DivMethod, Exercise, Hint, LenguaExercise, SubMethod, TableMethod } from '@/types'
+import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const PER_SKILL = 30
@@ -40,9 +40,27 @@ function wholeToken(alternatives: string[]): RegExp {
 /** An answer the child must write: its pattern, its label, and the number it is when it is the exercise's answer. */
 interface Answer { label: string; pattern: RegExp; answer?: number }
 
+/** Lengua (3.º), the kinds added with spelling, syllables, dictation and vocabulary: the text the child writes or taps. */
+const LENGUA_TEXT_KINDS = ['lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words', 'lng-copy']
+function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
+  const text = (t: string): Answer => ({ label: `«${t}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(t)}(?![\\p{L}\\d])`, 'iu') })
+  switch (ex.kind) {
+    case 'lng-missing-letter': return [text(ex.answer)]
+    case 'lng-punctuation':
+    case 'lng-dictation':
+    case 'lng-pair-words': return [text(ex.answer)]
+    case 'lng-stress': return [text(ex.syllables[ex.stressed])]
+    case 'lng-syllables': return [text(ex.answer)]
+    case 'lng-alphabet': return ex.targets.map((i) => text(ex.words[i]))
+    case 'lng-copy': return [text(ex.answer)]
+    default: return []
+  }
+}
+
 /** The numbers and texts the child must write for this exercise. */
 function answersOf(ex: Exercise): Answer[] {
   const out: Answer[] = []
+  if (LENGUA_TEXT_KINDS.includes(ex.kind)) return lenguaAnswersOf(ex as LenguaExercise)
   const numbers: { n: number; isAnswer: boolean }[] = []
   const add = (v: unknown, isAnswer = false) => {
     if (typeof v === 'number') numbers.push({ n: v, isAnswer })
@@ -66,6 +84,10 @@ function answersOf(ex: Exercise): Answer[] {
   }
   if (ex.kind === 'mul-parts') numbers.push({ n: ex.partials[0], isAnswer: false }, { n: ex.partials[1], isAnswer: false })
   if (ex.kind === 'long-mul') for (const n of ex.partials) numbers.push({ n, isAnswer: false })
+  // Lengua: the tapped words are the answer (their text, whole words, any capitals). Articles too.
+  if (ex.kind === 'lng-tap-words' || ex.kind === 'lng-sentence-parts') {
+    for (const i of ex.targets) out.push({ label: `palabra «${ex.words[i]}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(ex.words[i])}(?![\\p{L}\\d])`, 'iu') })
+  }
   for (const { n, isAnswer } of numbers) {
     const answer = isAnswer ? n : undefined
     const plain = numberPattern(n)
@@ -91,7 +113,12 @@ function leaksIn(ex: Exercise, hints: Hint[]): { level: number; text: string; an
   const shown = shownNumbers(ex)
   const answers = answersOf(ex).filter((a) => a.answer === undefined || !shown.has(a.answer))
   const found: { level: number; text: string; answer: string }[] = []
-  for (const h of hints) for (const a of answers) if (a.pattern.test(h.text)) found.push({ level: h.level, text: h.text, answer: a.label })
+  for (const h of hints) {
+    // A card of examples (Lengua) is read as well as the text: the answer must not be on it either.
+    const words = h.params?.words
+    const texts: string[] = [h.text, ...(Array.isArray(words) ? words.map(String) : [])]
+    for (const a of answers) if (texts.some((t) => a.pattern.test(t))) found.push({ level: h.level, text: h.text, answer: a.label })
+  }
   return found
 }
 
@@ -103,6 +130,20 @@ function optionsOf(ex: Exercise): { method?: SubMethod; tableMethod?: TableMetho
   return [{}]
 }
 
+/** A letter item (c/qu, mayúscula…): no example word on a card may start with the answer's letters, or the card shows the
+    letter (Mario on a card when the answer is M). */
+function exampleLeaks(ex: Exercise, hints: Hint[]): { level: number; text: string; answer: string }[] {
+  if (ex.kind !== 'lng-missing-letter') return []
+  const lead = ex.answer.toLocaleLowerCase('es')
+  const found: { level: number; text: string; answer: string }[] = []
+  for (const h of hints) {
+    const words = h.params?.words
+    if (!Array.isArray(words)) continue
+    for (const w of words.map(String)) if (w.toLocaleLowerCase('es').startsWith(lead)) found.push({ level: h.level, text: `${w}`, answer: `letra «${ex.answer}»` })
+  }
+  return found
+}
+
 function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
   if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
   const found: { level: number; text: string; answer: string }[] = []
@@ -110,13 +151,15 @@ function leaks(ex: Exercise): { level: number; text: string; answer: string }[] 
     const hints = o.tableMethod !== undefined
       ? hintsFor(ex, undefined, { tableMethod: o.tableMethod })
       : hintsFor(ex, o.method)
-    found.push(...leaksIn(ex, hints))
+    found.push(...leaksIn(ex, hints), ...exampleLeaks(ex, hints))
   }
   return found
 }
 
 describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
-  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS)])].sort()
+  // Lengua: only the skills that have exercise kinds (the others, such as spelling, have none yet).
+  const lengua = availableSkills(LENGUA3_SYLLABUS).filter((s) => kindsForSkill(s).length > 0)
+  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS), ...lengua])].sort()
 
   it('the checker catches the answer in each written form and not inside a longer number', () => {
     const hit = (n: number, text: string) => numberPattern(n)!.test(text)

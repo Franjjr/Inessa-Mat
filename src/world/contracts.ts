@@ -1,7 +1,7 @@
 /* Cross-agent component contracts inside src/world (integrator-owned).
    world-core agent: picker/, onboarding/, home/, map/, node/, story/, host/
    world-meta agent: guardian/, rewards/, album/, shop/, chest/, diploma/, free/, review/ */
-import type { GuardianDef, StoryDef, WorldDef } from '@/types'
+import type { GuardianDef, StoryDef, SubjectId, WorldDef } from '@/types'
 
 /** world-meta → src/world/guardian/GuardianChallenge.tsx (default export). Rendered by NodeScreen (world-core). */
 export interface GuardianChallengeProps {
@@ -43,6 +43,8 @@ export interface GameHostProviderProps {
   worldId?: string
   nodeId?: string
   activity?: string
+  /** The subject the play session is marked with (maths when missing). */
+  subject?: SubjectId
   children: React.ReactNode
 }
 

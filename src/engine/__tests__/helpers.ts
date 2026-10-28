@@ -97,6 +97,36 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'numbers', values: cellsOf(ex.value, ex.places) }
     case 'decimal-op':
       return { type: 'numbers', values: cellsOf(ex.answer, ex.places) }
+    case 'lng-tap-words':
+    case 'lng-sentence-parts':
+      return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-classify':
+      return { type: 'choice', index: ex.answer }
+    case 'lng-transform':
+      return { type: 'text', value: ex.answer }
+    case 'lng-missing-letter':
+      return ex.mode === 'type' ? { type: 'text', value: ex.answer } : { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-punctuation':
+    case 'lng-dictation':
+      return { type: 'text', value: ex.answer }
+    case 'lng-stress':
+      return { type: 'marks', marked: [ex.stressed] }
+    case 'lng-syllables':
+      return { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-alphabet':
+      return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-pair-words':
+      return ex.mode === 'text' ? { type: 'text', value: ex.answer } : { type: 'choice', index: ex.options.indexOf(ex.answer) }
+    case 'lng-read-choice':
+      return { type: 'choice', index: ex.answer }
+    case 'lng-read-text':
+      return { type: 'text', value: ex.answer }
+    case 'lng-read-order':
+      return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-copy':
+      return { type: 'text', value: ex.answer }
+    case 'lng-guided':
+      return { type: 'text', value: ex.parts.join(' ') }
     default:
       return { type: 'number', value: ex.answer as number }
   }

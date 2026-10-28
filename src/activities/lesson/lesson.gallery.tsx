@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { lessons } from '@/content'
+import { LENGUA_CLASSES } from '@/content/classes'
 import type { LessonVisualId } from '@/types'
 import LessonPlayer from './LessonPlayer'
 import { LESSON_VISUALS, LESSON_VISUAL_IDS } from './visuals'
@@ -37,6 +38,27 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'bar-model': { a: 5, b: 3, total: 8 },
   'div-parts': { dividend: 84, divisor: 4 },
   'div-climb': { divisor: 4, quotient: 7 },
+  'lng-sentence': { text: 'El perro come pan en el parque.', highlight: 'perro', mark: 'noun' },
+  'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
+  'big-text': { text: '4 325 = 4 000 + 300 + 20 + 5' },
+  'number-line': { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 },
+  'fraction-shape': { parts: 4, shaded: 3, shape: 'circle' },
+  'fraction-groups': { total: 20, parts: 4, take: 1 },
+  money: { items: '500,200,20', price: 320 },
+  clock: { h: 7, m: 5, digital: 1 },
+  timeline: { start: 600, end: 645 },
+  ruler: { cm: 8, object: '✏️' },
+  units: { kind: 'length' },
+  polygon: { sides: 5, mark: 'sides' },
+  lines: { kind: 'paralelas' },
+  angle: { deg: 90 },
+  solid: { name: 'cilindro' },
+  perimeter: { sides: '3,4,3,4' },
+  'grid-route': { route: 'R,R,U,U,L' },
+  pictogram: { rows: 'Gatos:3,Perros:5' },
+  'bar-chart': { rows: 'Gatos:3,Perros:5' },
+  'chance-bag': { balls: 'red:3,blue:0' },
+  table: { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐', cells: '5-2/3-6', at: '0:0' },
 }
 
 const STATES = 5
@@ -79,6 +101,13 @@ const entries: GalleryEntry[] = [
     height: 480,
     background: '#fff',
     render: () => <VisualDemo id={id} />,
+  })),
+  ...LENGUA_CLASSES.map((cls) => ({
+    title: `clase lengua · ${cls.lesson.id}`,
+    width: Math.min(window.innerWidth - 48, 1280),
+    height: window.innerHeight - 96,
+    background: 'var(--c-bg)',
+    render: () => <LessonPlayer lesson={cls.lesson} onDone={() => undefined} onExit={() => undefined} />,
   })),
   ...SEASON1_LESSON_IDS.map((id) => ({
     title: `lección · ${id}`,

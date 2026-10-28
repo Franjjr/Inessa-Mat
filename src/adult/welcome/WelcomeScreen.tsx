@@ -45,6 +45,14 @@ const STEPS: { title: string; text: string; caption: string; shot: Shot; tone: s
 
 const SUBJECT_TEXT: Record<string, string> = {
   math: 'Números, cálculo, problemas, medidas, geometría y fracciones, con el temario de cada curso.',
+  language: 'Gramática, ortografía, vocabulario y lectura. De momento, para 3.º de Primaria.',
+}
+
+/** Lengua is offered to 3.º only: its name and its pill say so. */
+const subjectName = (subject: { id: string; name: string }) => (subject.id === 'language' ? 'Lengua de 3.º' : subject.name)
+const subjectPill = (subject: { id: string; available: boolean }) => {
+  if (!subject.available) return 'Próximamente'
+  return subject.id === 'language' ? 'Lengua de 3.º · ¡ya disponible!' : '¡Ya disponible!'
 }
 
 function Capture({ shot: sh, eager = false }: { shot: Shot; eager?: boolean }) {
@@ -79,7 +87,7 @@ export default function WelcomeScreen() {
     <Button variant="gold" size="lg" onClick={() => navigate('/signup')}>Crear cuenta</Button>
   )
   const comingSoon = SUBJECTS.filter((subject) => !subject.available).map((subject) => subject.name)
-  const available = SUBJECTS.filter((subject) => subject.available).map((subject) => subject.name)
+  const available = SUBJECTS.filter((subject) => subject.available).map(subjectName)
 
   return (
     <div className={`${s.root} scrollable`}>
@@ -211,8 +219,8 @@ export default function WelcomeScreen() {
                   key={subject.id}
                   className={subject.available ? `${s.sticker} ${s.subj} ${s.subjOn}` : `${s.subj} ${s.subjOff}`}
                 >
-                  <span className={s.pill}>{subject.available ? '¡Ya disponible!' : 'Próximamente'}</span>
-                  <h3>{subject.name}</h3>
+                  <span className={s.pill}>{subjectPill(subject)}</span>
+                  <h3>{subjectName(subject)}</h3>
                   {SUBJECT_TEXT[subject.id] && <p>{SUBJECT_TEXT[subject.id]}</p>}
                 </article>
               ))}

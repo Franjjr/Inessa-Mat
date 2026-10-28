@@ -280,6 +280,18 @@ const MISSED: Record<ErrorType, string> = {
   incomplete: 'Te falta algo por escribir.',
   recognition: 'Revisa la cuenta con calma.',
   'dont-know': 'Revisa la cuenta con calma.',
+  'word-class': 'Esa palabra no es de la clase que se pide. Mira otra vez qué hace o cómo es.',
+  'word-form': 'La palabra cambiada no es esa. Revisa el género, el número o la terminación.',
+  'sentence-part': 'Esa palabra no está en la parte de la frase que se pide. Piensa quién hace la acción.',
+  'spelling': 'Revisa la letra que falta: di la palabra despacio y piensa qué letra suena.',
+  'capital': 'Revisa la mayúscula: los nombres de personas y de lugares empiezan con mayúscula.',
+  'punctuation': 'Revisa los signos: ¿falta alguno, o sobra?',
+  'stress': 'Esa sílaba no es la fuerte. Dila despacio y busca la que suena más.',
+  'syllable': 'Cuenta los golpes de voz: cada golpe es una sílaba.',
+  'dictation': 'Escucha otra vez y piensa cómo se escribe cada sonido.',
+  'alphabet': 'Mira la primera letra de cada palabra y, si es igual, la segunda.',
+  'word-pair': 'Piensa en lo que quiere decir la palabra y vuelve a mirar las opciones.',
+  'reading': 'Vuelve a leer el texto despacio y busca la frase que habla de eso.',
 }
 
 export const HUNT_FEEDBACK = {
@@ -366,6 +378,18 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   incomplete: 'Repasa la cuenta columna a columna.',
   recognition: 'Repasa la cuenta columna a columna.',
   'dont-know': 'Repasa la cuenta columna a columna.',
+  'word-class': 'Mira qué hace la palabra o cómo es: ¿responde a qué pregunta?',
+  'word-form': 'Cambia solo lo que se pide (género, número o tiempo) y revisa la terminación.',
+  'sentence-part': 'Pregúntate quién hace la acción: esa parte es el sujeto.',
+  'spelling': 'Que diga la palabra despacio y piense qué letra suena.',
+  'capital': 'Que mire la primera letra de los nombres propios y del principio de cada frase.',
+  'punctuation': 'Que lea la frase en voz alta y se fije en cómo suena al final.',
+  'stress': 'Que diga la palabra con palmadas y note la sílaba que suena más fuerte.',
+  'syllable': 'Que cuente las sílabas con palmadas antes de responder.',
+  'dictation': 'Que repita la palabra en voz baja, sílaba a sílaba, antes de escribirla.',
+  'alphabet': 'Que compare la primera letra de cada palabra con el abecedario.',
+  'word-pair': 'Que diga cada opción en una frase para ver cuál encaja.',
+  'reading': 'Que vuelva al texto y compruebe cada opción con la frase donde se habla de eso.',
 }
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */

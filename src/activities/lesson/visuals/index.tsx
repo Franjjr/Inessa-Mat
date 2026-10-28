@@ -10,6 +10,14 @@ import {
 } from './tables'
 import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from './division'
 import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
+import { LngSentenceVisual, LngWordVisual } from './lengua'
+import { BigTextVisual, NumberLineVisual } from './numbers'
+import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
+import { MoneyVisual } from './money'
+import { ClockVisual, TimelineVisual } from './time'
+import { RulerVisual, UnitsVisual } from './measure'
+import { AngleVisual, GridRouteVisual, LinesVisual, PerimeterVisual, PolygonVisual, SolidVisual } from './geometry'
+import { BarChartVisual, ChanceBagVisual, PictogramVisual, TableVisual } from './data'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -44,6 +52,27 @@ export const LESSON_VISUALS: VisualRegistry = {
   'bar-model': BarModelVisual,
   'div-parts': DivPartsVisual,
   'div-climb': DivClimbVisual,
+  'lng-sentence': LngSentenceVisual,
+  'lng-word': LngWordVisual,
+  'big-text': BigTextVisual,
+  'number-line': NumberLineVisual,
+  'fraction-shape': FractionShapeVisual,
+  'fraction-groups': FractionGroupsVisual,
+  money: MoneyVisual,
+  clock: ClockVisual,
+  timeline: TimelineVisual,
+  ruler: RulerVisual,
+  units: UnitsVisual,
+  polygon: PolygonVisual,
+  lines: LinesVisual,
+  angle: AngleVisual,
+  solid: SolidVisual,
+  perimeter: PerimeterVisual,
+  'grid-route': GridRouteVisual,
+  pictogram: PictogramVisual,
+  'bar-chart': BarChartVisual,
+  'chance-bag': ChanceBagVisual,
+  table: TableVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

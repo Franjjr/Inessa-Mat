@@ -1,0 +1,229 @@
+/* Lengua de 3.º views (grammar exercises). Every tap target is at least 56px; the sentence wraps and never widens the
+   page (phone 390 px); on big screens the words and the card grow with the viewport. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.sentence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.word {
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.wordOn {
+  background: var(--c-magic-soft);
+}
+
+.stop {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.card {
+  align-self: center;
+  min-width: min(240px, 100%);
+  max-width: 100%;
+  padding: var(--sp-4) var(--sp-5);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 800;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl, 24px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  overflow-wrap: anywhere;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.option {
+  min-height: 72px;
+  min-width: 120px;
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.optionOn {
+  background: var(--c-magic-soft);
+}
+
+.word:focus-visible,
+.option:focus-visible {
+  outline: 4px solid var(--c-primary);
+  outline-offset: 3px;
+}
+
+.typed {
+  width: 100%;
+  min-width: 0;
+}
+
+/* The frame of the typed answer: 8 px either side, so the phone keyboard (which bleeds 8 px) ends at the frame's edge. */
+.typedFrame {
+  min-width: 0;
+  padding-inline: 8px;
+}
+
+/* A sentence shown big (punctuation): smaller than the word card, so a whole sentence fits a 360 px phone. */
+.sentenceCard {
+  font-size: clamp(1.25rem, 5.5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* A short screen (a landscape phone, 1138 × 640): the prompt, the card and the answer box get a little less room, so the
+   letter keyboard and «Comprobar» stay on screen without a scroll (F1). */
+@media (max-height: 699px) {
+  .view { gap: var(--sp-2); }
+  .prompt { font-size: var(--fs-lg); }
+  .card, .sentenceCard { padding-block: 8px; }
+}
+
+/* The syllables of a word, tapped one by one: the same look as the words of a sentence, a little smaller. */
+.syllable {
+  composes: word;
+}
+
+/* The order badge of a tapped word (alphabet): its place in the order the child chose. */
+.badge {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-inline-end: var(--sp-2);
+  padding: 0 0.3em;
+  border-radius: 999px;
+  background: var(--c-primary);
+  color: var(--c-surface);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  text-align: center;
+}
+
+/* The guided writing: the text with its blanks. A filled blank is bold; the blank being written is underlined; the others wait. */
+.guidedText {
+  text-align: start;
+  line-height: 1.6;
+}
+
+.blank {
+  display: inline-block;
+  min-width: 2.5em;
+  padding: 0 0.2em;
+  border-bottom: 3px solid var(--c-line);
+  overflow-wrap: anywhere;
+}
+
+.blankFilled {
+  font-weight: 800;
+  color: var(--c-primary);
+}
+
+.blankOpen {
+  background: var(--c-magic-soft);
+  border-bottom-color: var(--c-primary);
+}
+
+.blankEmpty {
+  color: var(--c-ink-soft);
+}
+
+.guidedQuestion {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+/* The «Escuchar» or «Repetir» button of the dictation: centred, above the answer box. */
+.listen {
+  display: flex;
+  justify-content: center;
+}
+
+/* Lectura: the options are whole sentences, one under the other, each as wide as the card (wraps; never widens the page). */
+.readOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.readOption {
+  min-height: 56px;
+  padding: var(--sp-3) var(--sp-4);
+  font-family: var(--font-read, inherit);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: start;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.readOptionOn {
+  background: var(--c-magic-soft);
+}
+
+.readOption:focus-visible {
+  outline: 4px solid var(--c-primary);
+  outline-offset: 3px;
+}

@@ -7,11 +7,12 @@
    Failed items come back later in the same run (src/activities/shared/requeue.ts) and on later days (mastery).
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
-import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillMastery } from '@/types'
+import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { availableSkills, behindTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
+import { lenguaStatement } from './lengua/exercises'
 import { hintsFor } from './hints'
 import { fmt, numberWords, roundWords } from './numeric'
 import { moneyStatement } from './money'
@@ -24,6 +25,7 @@ import { ordinalPrompt } from './ordinals'
 import { decimalWords, fmtDecimal } from './decimals'
 import { createRng, hashString } from './rng'
 import { barSkill, huntSkill, isEasyFact, isFactSkill, isMentalSkill, parseSkill, type BarSkillOp, type HuntOp, type WordOp } from './skills'
+import { attemptsOf, masteryOf } from './subjects'
 
 export const DAILY_MINUTES = 15
 /** Most brand-new hard facts (not in the easy 1/2/5/10 set) introduced in one session (PEDAGOGY 4, E6). */
@@ -52,6 +54,10 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'angle-tap': 35, perimeter: 45, 'shape-count': 20,
   money: 40, measure: 35, chart: 35, chance: 25, pattern: 30, position: 35, 'mul-parts': 90, area: 30, 'fraction-add': 35,
   'long-mul': 90, ordinal: 20, decimal: 40, 'decimal-op': 60,
+  'lng-tap-words': 25, 'lng-sentence-parts': 30, 'lng-classify': 15, 'lng-transform': 30,
+  'lng-missing-letter': 20, 'lng-punctuation': 40, 'lng-stress': 15, 'lng-syllables': 20, 'lng-dictation': 35,
+  'lng-alphabet': 30, 'lng-pair-words': 20, 'lng-read-choice': 30, 'lng-read-text': 25, 'lng-read-order': 40,
+  'lng-copy': 40, 'lng-guided': 90,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -59,11 +65,12 @@ const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const ITEM_OVERHEAD_SECONDS = 5
 export const EXAMPLE_SECONDS = 60
 
-export type DailyBlockId = 'warmup' | 'new' | 'mix' | 'problem'
+export type DailyBlockId = 'warmup' | 'new' | 'story' | 'mix' | 'problem'
 
 export const DAILY_BLOCK_LABEL: Record<DailyBlockId, string> = {
   warmup: 'Calentamiento',
   new: 'Lo nuevo',
+  story: 'Lectura',
   mix: 'Mezcla',
   problem: 'Problema',
 }
@@ -77,6 +84,10 @@ export interface DailyItem {
   isNew: boolean
   /** Extra mix item added so that the practice fills the session (short items, known facts). */
   filler?: boolean
+  /** Lengua: the text of the story is shown before this (its first) question. */
+  passage?: ReadingDef
+  /** Lengua: the last question of this story; answering it marks the story read. */
+  finishesReading?: string
 }
 
 export interface DailyPlan {
@@ -89,6 +100,8 @@ export interface DailyPlan {
   practiceSeconds: number
   /** Brand-new hard facts introduced in this session (never above NEW_FACT_BUDGET). */
   newFactCount: number
+  /** Lengua: the topic whose class comes before «Lo nuevo», when it has one and the child has not done it. */
+  classTopicId?: string | null
 }
 
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
@@ -148,6 +161,10 @@ export function statementOf(ex: Exercise): string {
     case 'fraction-add': return `${ex.a}/${ex.denominator} ${ex.op === 'add' ? '+' : '−'} ${ex.b}/${ex.denominator} = ?`
     case 'decimal': return decimalStatement(ex)
     case 'decimal-op': return `${fmtDecimal(ex.left, ex.places)} ${ex.op === 'add' ? '+' : '−'} ${fmtDecimal(ex.right, ex.places)} = ?`
+    case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
+    case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words':
+    case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order': case 'lng-copy': case 'lng-guided':
+      return lenguaStatement(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
       : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
@@ -190,7 +207,7 @@ function familyOf(skill: SkillKey): string {
 }
 
 /** Mastery entries in urgency order: due and weak first, then due, then weak, then the rest. */
-function urgencyOrder(mastery: MasteryMap, now: Date): SkillMastery[] {
+export function urgencyOrder(mastery: MasteryMap, now: Date): SkillMastery[] {
   const t = now.getTime()
   const rank = (m: SkillMastery) => {
     const due = m.dueAt === null || Date.parse(m.dueAt) <= t
@@ -270,9 +287,11 @@ export interface PlanInput {
 
 /** Builds today's session. Same child and day give the same plan (seeded), so a reload does not reshuffle it. */
 export function planDailySession(input: PlanInput): DailyPlan {
-  const { child, mastery, syllabus, now } = input
+  const { child, syllabus, now } = input
+  // Maths only: the Lengua rows of the child never change a maths plan.
+  const mastery = masteryOf(input.mastery, 'math')
   const rng = input.rng ?? createRng(hashString(`daily:${child.id}:${dayKey(now)}`))
-  const scaffold = scaffoldedSkills(input.attempts ?? [], now)
+  const scaffold = scaffoldedSkills(attemptsOf(input.attempts ?? [], 'math'), now)
   const today = dayKey(now)
   const newFacts = new Set<SkillKey>()
   const isNewHard = (s: SkillKey) => isFactSkill(s) && !isEasyFact(s) && !mastery[s]

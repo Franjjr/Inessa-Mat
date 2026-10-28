@@ -163,11 +163,18 @@
   justify-content: center;
 }
 
-/* Portrait: stack the board above Lumi */
+/* Portrait: stack the board above Lumi. The board keeps a minimum height (a 360 x 740 phone gave it 250 px, with Lumi's bubble
+   at 45% of the screen): when the bubble and the footer need more room, the page scrolls instead of squeezing the board. */
 @media (orientation: portrait) {
+  .player {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
   .stage {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: minmax(min(300px, 46dvh), 1fr) auto;
   }
 
   .speaker {

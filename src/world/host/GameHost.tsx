@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
 import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
+import { createRng, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
@@ -92,7 +92,7 @@ function reportError(where: string, e: unknown) {
   if (import.meta.env.DEV) console.warn(`[game-host] ${where}`, e)
 }
 
-export function GameHostProvider({ worldId, nodeId, activity, children }: GameHostProviderProps) {
+export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', children }: GameHostProviderProps) {
   const { child } = useActiveChild()
   const childId = child?.id ?? null
 
@@ -134,7 +134,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     session.id = null
     let open = true
     let timer: ReturnType<typeof setInterval> | undefined
-    startSession(childId)
+    startSession(childId, subject)
       .then((s: SessionRecord) => {
         if (!open) {
           // Unmounted before the session was created: close it right away.
@@ -161,11 +161,12 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
           correct: session.correct,
           starsEarned: 0,
           nodesCompleted: [],
+          ...(subject === 'language' ? { subject } : {}),
         }).catch((e) => reportError('endSession', e))
         void touchSession(id, { minutes }).catch(() => undefined)
       }
     }
-  }, [childId])
+  }, [childId, subject])
 
   const host = useMemo<ActivityHost>(() => {
     const ctx = contextOf(child)
@@ -177,20 +178,23 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     const reportAttempt: ActivityHost['reportAttempt'] = (attempt) => {
       const c = childRef.current
       if (!c) return
-      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method } = attempt
+      const { exercise, check, ms, inputMode, hintsUsed, recognitionFixes, method, retries, solvedOnRetry, graded = true } = attempt
       const skill = exercise.skill
       const now = new Date()
-      const prev = masteryRef.current[skill]
-      const next = updateMastery(
-        prev,
+      // A retry (graded: false) is saved with its retries, but only the first answer grades mastery and the session.
+      // A completion-only text (escritura guiada) is not graded, but finishing it counts as done: its mastery moves.
+      const next = graded || isCompletionOnly(exercise.kind) ? updateMastery(
+        masteryRef.current[skill],
         { skill, correct: check.correct, ms, inputMode, hintsUsed, errorType: check.errorType ?? null },
         now,
-      )
-      masteryRef.current = { ...masteryRef.current, [skill]: next }
+      ) : null
+      if (next) masteryRef.current = { ...masteryRef.current, [skill]: next }
 
       const session = sessionRef.current
-      session.attempts += 1
-      if (check.correct) session.correct += 1
+      if (graded) {
+        session.attempts += 1
+        if (check.correct) session.correct += 1
+      }
 
       const record: AttemptRecord = {
         id: crypto.randomUUID(),
@@ -206,6 +210,9 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
         hintsUsed,
         errorType: check.errorType ?? null,
         recognitionFixes: recognitionFixes ?? 0,
+        ...(retries ? { retries } : {}),
+        ...(solvedOnRetry ? { solvedOnRetry } : {}),
+        ...(graded ? {} : { graded: false }),
         context: {
           ...(worldId ? { worldId } : {}),
           ...(nodeId ? { nodeId } : {}),
@@ -216,7 +223,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
         createdAt: now.toISOString(),
       }
       recordAttempt(record).catch((e) => reportError('recordAttempt', e))
-      saveMastery(c.id, [next]).catch((e) => reportError('saveMastery', e))
+      if (next) saveMastery(c.id, [next]).catch((e) => reportError('saveMastery', e))
     }
 
     const react: ActivityHost['react'] = (kind, detail) => {

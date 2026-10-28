@@ -2,21 +2,37 @@
    finishing it counts on the map (its flag, and its map lesson when that one is open). Pure: never mutates. */
 import { applyNodeResult, COMPLETION_STARS, isNodeUnlocked } from '../progression'
 import { getSeason } from '../season'
-import type { ProgressState } from '@/types'
+import type { ProgressState, SubjectId } from '@/types'
 import type { ClassDef } from './dsl'
 import { GRADE3_CLASSES } from './grade3'
+import { MENTAL_CLASSES } from './grade3-mental'
+import { FRACCIONES_CLASSES } from './grade3-fracciones'
+import { DINERO_CLASSES } from './grade3-dinero'
+import { TIEMPO_CLASSES } from './grade3-tiempo'
+import { MEDIDA_CLASSES } from './grade3-medida'
+import { GEOMETRIA_CLASSES } from './grade3-geometria'
+import { DATOS_CLASSES } from './grade3-datos'
+import { NUMEROS_CLASSES } from './grade3-numeros'
+import { PROBLEMAS_CLASSES } from './grade3-problemas'
+import { TABLAS_CLASSES } from './grade3-tablas'
+import { LENGUA_CLASSES } from './lengua3'
 
 export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
 
-export const CLASSES: ClassDef[] = GRADE3_CLASSES
+/** The maths classes (3.º): one array per block of topics, concatenated. */
+export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TABLAS_CLASSES, ...PROBLEMAS_CLASSES, ...MENTAL_CLASSES, ...FRACCIONES_CLASSES, ...DINERO_CLASSES, ...TIEMPO_CLASSES, ...MEDIDA_CLASSES, ...GEOMETRIA_CLASSES, ...DATOS_CLASSES]
+/** The Lengua classes (3.º): one per grammar, spelling and vocabulary topic. */
+export { LENGUA_CLASSES }
 
 /** The class that teaches a syllabus topic of a grade, if there is one yet. Topic ids repeat across grades (e.g.
     `mul-3x1` is in 3.º and 4.º), and every class so far is for 3.º, so a child of any other grade gets none. A child
-    without a grade follows the 3.º syllabus (syllabusForGrade), so for them it is 3.º too. */
-export function classForTopic(topicId: string, grade?: number): ClassDef | undefined {
+    without a grade follows the 3.º syllabus (syllabusForGrade), so for them it is 3.º too. The subject is maths unless
+    said otherwise; a subject with no classes has none. */
+export function classForTopic(topicId: string, grade?: number, subject: SubjectId = 'math'): ClassDef | undefined {
   if ((grade ?? 3) !== 3) return undefined
-  return CLASSES.find((c) => c.topicId === topicId)
+  const classes = subject === 'math' ? CLASSES : subject === 'language' ? LENGUA_CLASSES : []
+  return classes.find((c) => c.topicId === topicId)
 }
 
 /** The world and node of a season whose lesson is the given LessonDef, if the map has it. */

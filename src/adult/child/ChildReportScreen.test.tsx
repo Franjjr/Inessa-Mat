@@ -3,6 +3,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ChildProfile, ChildSummary, ProgressState } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
+import { GRADE3_SYLLABUS, LENGUA3_SYLLABUS } from '@/content/syllabus'
+import { LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_COUNT, newMastery, syllabusReport } from '@/engine'
 
 const data = vi.hoisted(() => ({
   getChildSummary: vi.fn(),
@@ -17,6 +19,7 @@ const data = vi.hoisted(() => ({
   markRewardClaimed: vi.fn(),
   getMastery: vi.fn(),
   listAttempts: vi.fn(),
+  listSessions: vi.fn(),
   updateProgress: vi.fn(),
 }))
 
@@ -87,6 +90,7 @@ describe('ChildReportScreen', () => {
     data.getProgress.mockResolvedValue(PROGRESS)
     data.getRewards.mockResolvedValue([])
     data.getMastery.mockResolvedValue({})
+    data.listSessions.mockResolvedValue([])
     // Four wrong times-table answers in the last days.
     data.listAttempts.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({
       id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',
@@ -122,5 +126,82 @@ describe('ChildReportScreen', () => {
   it('shows the real prize setup when there is no reward yet', async () => {
     renderReport()
     expect(await screen.findByText('¿Qué premio será?')).toBeInTheDocument()
+  })
+
+  describe('Lengua', () => {
+    const LENGUA_CHILD: ChildProfile = { ...CHILD, grade: 3, settings: { ...DEFAULT_CHILD_SETTINGS, subjects: ['math', 'language'] } }
+    const LENGUA_PROGRESS = { ...PROGRESS, flags: { 'lectura:historia-tarta': true, 'lectura:fabula-camaleon': true } } as unknown as ProgressState
+    const GRAM = ['lng:gram:sustantivo:genero', 'lng:gram:articulo', 'lng:gram:adjetivo', 'lng:gram:verbo:presente']
+    const ORTO = ['lng:orto:mayusculas', 'lng:orto:c-qu', 'lng:orto:signos:punto', 'lng:orto:tonica']
+    const VOC = ['lng:voc:abecedario', 'lng:voc:sinonimos', 'lng:voc:familias', 'lng:voc:compuestas']
+    const DAY = 86_400_000
+    const ago = (d: number) => new Date(Date.now() - d * DAY).toISOString()
+
+    /** Four wrong times-table answers, as in the maths tests above. */
+    function mathRows() {
+      return Array.from({ length: 4 }, (_, i) => ({
+        id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',
+        ms: 3000, inputMode: 'keypad', hintsUsed: 0, errorType: 'fact', context: {}, createdAt: ago(i + 1),
+      }))
+    }
+
+    /** Lengua rows: two wrong spellings, a «No lo sé» and a placement run. */
+    function lenguaRows() {
+      const wrong = [
+        { id: 'l1', skill: 'lng:orto:c-qu', correct: false, errorType: 'spelling', createdAt: ago(1) },
+        { id: 'l2', skill: 'lng:orto:c-qu', correct: false, errorType: 'spelling', createdAt: ago(2) },
+        { id: 'l3', skill: 'lng:gram:silabas', correct: false, errorType: 'dont-know', createdAt: ago(3) },
+      ]
+      const placement = [...GRAM, ...ORTO, ...VOC].slice(0, LENGUA_PLACEMENT_COUNT).map((skill, i) => ({
+        id: `p${i}`, skill, sessionId: 'lp1', correct: i < 6, errorType: i < 6 ? null : 'other', createdAt: new Date(Date.now() - 5 * DAY + i * 30_000).toISOString(),
+        context: { activity: LENGUA_PLACEMENT_ACTIVITY },
+      }))
+      return [...wrong, ...placement].map((a) => ({
+        childId: 'c1', kind: 'lengua', given: '', expected: '', ms: 1000, inputMode: 'keypad', hintsUsed: 0, context: {}, sessionId: 'l', ...a,
+      }))
+    }
+
+    it('shows the Lengua cards next to the maths ones, with the maths figures unchanged', async () => {
+      const mixed = { 'lng:gram:silabas': newMastery('lng:gram:silabas', new Date()), 'mul:6x7': newMastery('mul:6x7', new Date()) }
+      data.useChildren.mockReturnValue([LENGUA_CHILD])
+      data.getProgress.mockResolvedValue(LENGUA_PROGRESS)
+      data.getMastery.mockResolvedValue({ ...mixed, 'lng:gram:silabas': { ...mixed['lng:gram:silabas'], box: 2 } })
+      data.listAttempts.mockResolvedValue([...mathRows(), ...lenguaRows()])
+      data.listSessions.mockResolvedValue([{ id: 'sl', minutes: 12, summary: { subject: 'language' }, startedAt: ago(1) }])
+      renderReport()
+
+      expect(await screen.findByRole('heading', { name: 'Temario de Lengua de 3.º' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'En qué falla en Lengua' })).toBeInTheDocument()
+      expect(screen.getByText(/Ha leído 2 de 10 lecturas/)).toBeInTheDocument()
+      expect(screen.getByText('12 min en los últimos 7 días')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Prueba inicial de Lengua' })).toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: 'Ortografía y sílabas' })).toBeInTheDocument()
+      expect(screen.getByText('No lo sabía: 1')).toBeInTheDocument()
+
+      // The maths temario reads only maths rows: the Lengua mastery is not in it.
+      const maths = syllabusReport(GRADE3_SYLLABUS, { 'mul:6x7': mixed['mul:6x7'] })
+      expect(screen.getByText(`${maths.mastered} de ${maths.available} temas dominados`)).toBeInTheDocument()
+      const lengua = syllabusReport(LENGUA3_SYLLABUS, { 'lng:gram:silabas': { ...mixed['lng:gram:silabas'], box: 2 } }, 'language')
+      expect(lengua.mastered).toBe(1)
+      expect(screen.getByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
+
+      // Element ids stay unique on the page (the two subjects render the same cards).
+      const ids = Array.from(document.querySelectorAll('[id]'), (e) => e.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('leaves the Lengua cards out for a child who is not on Lengua and has no Lengua rows', async () => {
+      data.useChildren.mockReturnValue([{ ...LENGUA_CHILD, settings: { ...DEFAULT_CHILD_SETTINGS, subjects: ['math'] } }])
+      renderReport()
+      expect(await screen.findByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Lengua/ })).toBeNull()
+    })
+
+    it('leaves the Lengua cards out for a 2.º child even when Lengua is switched on', async () => {
+      data.useChildren.mockReturnValue([{ ...CHILD, settings: { ...DEFAULT_CHILD_SETTINGS, subjects: ['math', 'language'] } }])
+      renderReport()
+      expect(await screen.findByRole('heading', { name: 'Temario de 2.º' })).toBeInTheDocument()
+      expect(screen.queryByRole('heading', { name: /Lengua/ })).toBeNull()
+    })
   })
 })

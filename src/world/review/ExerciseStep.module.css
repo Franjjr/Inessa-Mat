@@ -44,3 +44,66 @@
 @media (prefers-reduced-motion: reduce) {
   .feedback { animation: none; }
 }
+
+.view {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.hints {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+}
+
+.hintsTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.hintList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hintItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
+}
+
+.hintLevel {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.hintText {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  text-wrap: pretty;
+}
+
+/* Answered or «No lo sé»: the exercise stays on screen, dimmed, and takes no more input. */
+.view[inert] {
+  opacity: 0.55;
+}

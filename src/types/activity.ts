@@ -48,6 +48,8 @@ export interface ExerciseOutcome {
   inputMode: InputMode
   hintsUsed: number
   recognitionFixes: number
+  /** Extra tries the view itself gave after a wrong try (the facts views allow one more try before they settle). */
+  retries?: number
   /** Method used (see AttemptInput.method). */
   method?: string
 }

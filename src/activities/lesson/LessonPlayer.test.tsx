@@ -157,13 +157,32 @@ describe('LessonPlayer: try steps', () => {
     expect(screen.getByTestId('lesson-text').textContent).toBe('Fin.')
   })
 
+  it('records the retry: the second try of a step carries retries: 1', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    const host: ActivityHost = { ...defaultActivityHost, reportAttempt }
+    render(
+      <ActivityHostProvider value={host}>
+        <LessonPlayer lesson={tryLesson} onDone={() => undefined} />
+      </ActivityHostProvider>,
+    )
+    await user.click(nextButton())
+    await user.click(screen.getByRole('button', { name: 'Responder mal' }))
+    await user.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'Responder bien' }))
+    expect(reportAttempt).toHaveBeenCalledTimes(2)
+    expect(reportAttempt.mock.calls[0][0].retries).toBeUndefined()
+    expect(reportAttempt.mock.calls[1][0]).toMatchObject({ retries: 1, solvedOnRetry: true, graded: false })
+    expect(reportAttempt.mock.calls[0][0].graded).toBeUndefined() // the first answer grades
+  })
+
   it('offers a retry after a miss and lets the lesson go on after two misses', async () => {
     const user = userEvent.setup()
     render(<LessonPlayer lesson={tryLesson} onDone={() => undefined} />)
     await user.click(nextButton())
     await user.click(screen.getByRole('button', { name: 'Responder mal' }))
     expect(nextButton()).toBeDisabled()
-    await user.click(screen.getByRole('button', { name: 'Otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
     await user.click(screen.getByRole('button', { name: 'Responder mal' }))
     expect(nextButton()).toBeEnabled()
     await user.click(nextButton())
@@ -192,7 +211,7 @@ describe('LessonPlayer: going back to a settled try step', () => {
     render(<LessonPlayer lesson={tryLesson} onDone={() => undefined} />)
     await user.click(nextButton())
     await user.click(screen.getByRole('button', { name: 'Responder mal' }))
-    await user.click(screen.getByRole('button', { name: 'Otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
     await user.click(screen.getByRole('button', { name: 'Responder mal' }))
     await user.click(nextButton())
     await user.click(screen.getByRole('button', { name: '‹ Atrás' }))

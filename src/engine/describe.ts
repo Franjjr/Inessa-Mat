@@ -1,6 +1,6 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
 import type { ErrorType, MeasureDimension, MeasureMode, MoneyMode, SkillKey } from '@/types'
-import { GEO_OPS, parseSkill } from './skills'
+import { GEO_OPS, parseSkill, type LenguaArea } from './skills'
 import { DIMENSION_NAME } from './measure'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
@@ -49,6 +49,52 @@ const WORD_TEXT: Record<string, string> = {
   sub: 'Problemas de restar',
   mul: 'Problemas de multiplicar',
   div: 'Problemas de dividir',
+}
+
+const LENGUA_AREA_TEXT: Record<LenguaArea, string> = {
+  gram: 'gramática', orto: 'ortografía', voc: 'vocabulario', lect: 'lectura', lit: 'literatura', escr: 'escritura',
+}
+
+/** Plain adult label of every Lengua skill of the temario (the child's word for it is in the exercise itself). */
+export const LENGUA_SKILL_TEXT: Record<string, string> = {
+  'lng:gram:silabas': 'Separar las palabras en sílabas',
+  'lng:gram:sustantivo:clase': 'Sustantivo: común o propio',
+  'lng:gram:sustantivo:genero': 'Sustantivo: masculino o femenino',
+  'lng:gram:sustantivo:numero': 'Sustantivo: singular o plural',
+  'lng:gram:articulo': 'Artículo: el, la, los, las, un, una',
+  'lng:gram:adjetivo': 'Adjetivo: dice cómo es algo',
+  'lng:gram:verbo:presente': 'Verbo en presente',
+  'lng:gram:verbo:pasado': 'Verbo en pasado',
+  'lng:gram:verbo:futuro': 'Verbo en futuro',
+  'lng:gram:oracion:sujeto': 'Oración: encontrar el sujeto (quién hace la acción)',
+  'lng:gram:oracion:predicado': 'Oración: encontrar el predicado (qué dice del sujeto)',
+  'lng:orto:mayusculas': 'Mayúsculas: al empezar y en los nombres propios',
+  'lng:orto:c-qu': 'Escribir c o qu (ca, co, cu, que, qui)',
+  'lng:orto:g-gu': 'Escribir g, gu o güe (ga, gue, gui, güe)',
+  'lng:orto:r-rr': 'Escribir r o rr',
+  'lng:orto:mp-mb': 'Escribir mp o mb',
+  'lng:orto:tonica': 'Sílaba tónica: la que suena más fuerte',
+  'lng:orto:signos:punto': 'Usar el punto',
+  'lng:orto:signos:coma': 'Usar la coma',
+  'lng:orto:signos:pregunta': 'Usar los signos de pregunta (¿?)',
+  'lng:orto:signos:exclamacion': 'Usar los signos de exclamación (¡!)',
+  'lng:voc:abecedario': 'Ordenar palabras con el abecedario',
+  'lng:voc:sinonimos': 'Sinónimos: palabras que significan lo mismo',
+  'lng:voc:antonimos': 'Antónimos: palabras que significan lo contrario',
+  'lng:voc:familias': 'Familias de palabras',
+  'lng:voc:diminutivos': 'Diminutivos (-ito, -ita)',
+  'lng:voc:aumentativos': 'Aumentativos (-ona, -ota, -ote, -azo)',
+  'lng:voc:compuestas': 'Palabras compuestas (formadas por dos palabras)',
+  'lng:escr:dictado': 'Dictado: escribir lo que se oye',
+  'lng:escr:copia': 'Copiar frases sin errores',
+  'lng:escr:guiada': 'Escribir un texto corto guiado: invitación, nota, carta o descripción',
+  'lng:lect:idea-principal': 'Idea principal de un texto',
+  'lng:lect:preguntas': 'Responder preguntas sobre un texto',
+  'lng:lect:ordenar': 'Ordenar lo que pasa en una historia',
+  'lng:lit:rima': 'Rima: palabras que suenan igual al final',
+  'lng:lit:fabula': 'Fábula: la historia y su moraleja',
+  'lng:lit:adivinanzas': 'Adivinanzas',
+  'lng:lit:trabalenguas': 'Trabalenguas',
 }
 
 /** Human description of a skill for adults (Spanish): 'mul:6x7' → '6 × 7', 'sub:4d:z' → 'Restas de 4 cifras con ceros'. */
@@ -107,6 +153,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'chance': return p.variant === 'likely' ? 'Qué color es más (o menos) probable sacar' : 'Seguro, posible o imposible'
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
+    case 'lengua': return LENGUA_SKILL_TEXT[skill] ?? `Lengua, ${LENGUA_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
   }
 }
 
@@ -203,7 +250,7 @@ const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
   'solid:count': 'Contar caras, vértices y aristas de cubo, prisma y pirámide',
 }
 
-const ERROR_TEXT: Record<ErrorType, string> = {
+export const ERROR_TEXT: Record<ErrorType, string> = {
   'fact': 'Resultado de la tabla o cálculo básico incorrecto',
   'carry-forgot': 'Olvida sumar la llevada',
   'carry-wrong': 'Escribe mal la llevada (o la coloca en otra columna)',
@@ -230,6 +277,18 @@ const ERROR_TEXT: Record<ErrorType, string> = {
   'clock-hour': 'Lee mal la hora del reloj (la aguja corta)',
   'clock-minute': 'Lee mal los minutos del reloj (la aguja larga, de cinco en cinco)',
   'clock-period': 'Confunde el momento del día (mañana, tarde o noche)',
+  'word-class': 'Confunde la clase de palabra (sustantivo, adjetivo, verbo o artículo, o común y propio)',
+  'word-form': 'Escribe mal la palabra cambiada: el género, el número o el tiempo, o la tilde',
+  'sentence-part': 'Confunde el sujeto con el predicado',
+  'spelling': 'Escribe mal una letra: c/qu, g/gu/gü, r/rr o mp/mb',
+  'capital': 'Olvida una mayúscula o la pone donde no va',
+  'punctuation': 'Pone mal los signos o no los pone',
+  'stress': 'Toca otra sílaba como la fuerte',
+  'syllable': 'Cuenta mal las sílabas o las corta mal',
+  'dictation': 'Escribe mal lo que oye',
+  'alphabet': 'Ordena mal las palabras del abecedario',
+  'word-pair': 'Confunde sinónimos, antónimos, familias o la forma de la palabra',
+  'reading': 'No encuentra en el texto la frase que responde a la pregunta, o confunde el orden de lo que pasa',
 }
 
 /** Spanish description of an error type for adult dashboards. */

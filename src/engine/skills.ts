@@ -101,6 +101,9 @@ export const LINE_STEPS = [10, 100, 1000, 10000] as const
 /** The range suffix of the number skills: absent = up to 9 999, 999 = up to 999 (2.º), 19999 / 99999 = 5 digits. */
 export type NumberMax = 999 | 19999 | 99999
 
+/** The areas of Lengua: grammar, spelling, vocabulary, reading, literature and writing (`lng:<area>:<item>[:<level>]`). */
+export type LenguaArea = 'gram' | 'orto' | 'voc' | 'lect' | 'lit' | 'escr'
+
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
   | { type: 'div'; p: number; d: number; q: number }
@@ -145,6 +148,7 @@ export type ParsedSkill =
   | { type: 'chance'; variant: 'chance' | 'likely' }
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
   | { type: 'position'; variant: 'relative' | 'next' | 'route' }
+  | { type: 'lengua'; area: LenguaArea; item: string; level?: string }
 
 // ---------------------------------------------------------------- builders
 
@@ -259,6 +263,11 @@ export function measureSkill(mode: 'unit' | 'convert', dimension: MeasureDimensi
   return `measure:${mode}:${dimension}${all ? ':all' : ''}`
 }
 
+/** A Lengua skill key: `lng:<area>:<item>` or `lng:<area>:<item>:<level>` (lowercase, hyphens allowed). */
+export function lenguaSkill(area: LenguaArea, item: string, level?: string): SkillKey {
+  return `lng:${area}:${item}${level ? `:${level}` : ''}`
+}
+
 // ---------------------------------------------------------------- parser
 
 const MAX_CARRIES: Record<2 | 3 | 4, number> = { 2: 2, 3: 3, 4: 4 }
@@ -364,6 +373,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^prob:(chance|likely)$/))) return { type: 'chance', variant: m[1] as 'chance' | 'likely' }
   if ((m = key.match(/^pattern:(shapes|numbers|predict)$/))) return { type: 'pattern', variant: m[1] as 'shapes' | 'numbers' | 'predict' }
   if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
+  if ((m = key.match(/^lng:(gram|orto|voc|lect|lit|escr):([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?$/))) {
+    return { type: 'lengua', area: m[1] as LenguaArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
+  }
   return null
 }
 
@@ -498,10 +510,68 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'line': return ['number-line']
     case 'mental': return ['mental']
     case 'equation': return ['equation']
+    case 'lengua': return lenguaKinds(p)
   }
   /* c8 ignore next */
   return []
 }
+
+/** The Lengua kinds of each skill (src/engine/lengua). */
+function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[] {
+  switch (p.area) {
+    case 'gram':
+      switch (p.item) {
+        case 'sustantivo':
+          if (p.level === 'clase') return ['lng-classify', 'lng-tap-words']
+          return ['lng-classify', 'lng-transform', 'lng-tap-words']
+        case 'articulo': return ['lng-tap-words']
+        case 'adjetivo': return ['lng-tap-words', 'lng-transform']
+        case 'verbo': return ['lng-tap-words', 'lng-classify', 'lng-transform']
+        case 'oracion': return ['lng-sentence-parts']
+        case 'silabas': return ['lng-syllables']
+        default: return []
+      }
+    case 'orto':
+      if (p.item === 'tonica') return ['lng-stress']
+      if (p.item === 'signos') return ['lng-punctuation']
+      if (['c-qu', 'g-gu', 'r-rr', 'mp-mb', 'mayusculas'].includes(p.item)) return ['lng-missing-letter']
+      return []
+    case 'voc':
+      if (p.item === 'abecedario') return ['lng-alphabet']
+      if (['sinonimos', 'antonimos', 'familias', 'diminutivos', 'aumentativos', 'compuestas'].includes(p.item)) return ['lng-pair-words']
+      return []
+    case 'lect':
+      if (p.item === 'idea-principal') return ['lng-read-choice']
+      if (p.item === 'preguntas') return ['lng-read-choice', 'lng-read-text']
+      if (p.item === 'ordenar') return ['lng-read-order']
+      return []
+    case 'lit':
+      if (p.item === 'rima' || p.item === 'fabula' || p.item === 'trabalenguas') return ['lng-read-choice']
+      if (p.item === 'adivinanzas') return ['lng-read-text']
+      return []
+    case 'escr':
+      if (p.item === 'copia') return ['lng-copy']
+      if (p.item === 'guiada') return ['lng-guided']
+      return p.item === 'dictado' ? ['lng-dictation'] : []
+    default: return []
+  }
+}
+
+/** Every Lengua skill of the syllabus that has an exercise kind, for the skill universe of a kind. */
+export const LENGUA_SKILLS: SkillKey[] = [
+  'lng:gram:sustantivo:clase', 'lng:gram:sustantivo:genero', 'lng:gram:sustantivo:numero', 'lng:gram:articulo',
+  'lng:gram:adjetivo', 'lng:gram:verbo:presente', 'lng:gram:verbo:pasado', 'lng:gram:verbo:futuro',
+  'lng:gram:oracion:sujeto', 'lng:gram:oracion:predicado', 'lng:gram:silabas',
+  'lng:orto:mayusculas', 'lng:orto:c-qu', 'lng:orto:g-gu', 'lng:orto:r-rr', 'lng:orto:mp-mb', 'lng:orto:tonica',
+  'lng:orto:signos:punto', 'lng:orto:signos:coma', 'lng:orto:signos:pregunta', 'lng:orto:signos:exclamacion',
+  'lng:voc:abecedario', 'lng:voc:sinonimos', 'lng:voc:antonimos', 'lng:voc:familias', 'lng:voc:diminutivos',
+  'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:copia', 'lng:escr:dictado', 'lng:escr:guiada',
+  'lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar',
+  'lng:lit:rima', 'lng:lit:fabula', 'lng:lit:adivinanzas', 'lng:lit:trabalenguas',
+]
+
+/** The grammar skills (lng:gram:…) of the grammar kinds, the first kind of each being its default. */
+export const GRAMMAR_SKILLS: SkillKey[] = LENGUA_SKILLS.filter((k) => k.startsWith('lng:gram:'))
 
 /** A multiplication fact can be practised as a doubling chain when one factor is 4 (2 doublings) or 8 (3). */
 export function canDoubleChain(a: number, b: number): boolean {

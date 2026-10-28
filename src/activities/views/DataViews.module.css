@@ -109,6 +109,13 @@
   font-weight: 700;
 }
 
+/* The cell a lesson reads (TwoWayTable `marked`). */
+.table td[data-marked='true'] {
+  background: var(--c-gold-soft);
+  outline: 3px solid var(--c-primary);
+  outline-offset: -3px;
+}
+
 @media (max-width: 480px) {
   .table th,
   .table td {
@@ -170,6 +177,14 @@
 
 .barEmoji {
   font-size: 30px;
+}
+
+/* The name under a bar (the lesson draws names, the exercise draws pictures). */
+.barName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  fill: var(--c-ink);
 }
 
 /* ---- data list (moda) */

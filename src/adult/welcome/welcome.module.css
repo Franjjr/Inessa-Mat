@@ -244,11 +244,14 @@
   .subj:first-child { grid-column: 1 / -1; min-height: 0; }
   .closing { grid-template-columns: 1fr; }
 }
-/* Phones (390 px): one header row with the logo and the main button; sign-in stays under the hero buttons. */
+/* Phones: the header keeps the logo and «Iniciar sesión», easy to find; «Crear cuenta» and «Probar sin cuenta» are the
+   big buttons of the hero. Everything stays inside the screen (a header wider than the phone makes the page sway). */
 @media (max-width: 640px) {
   .nav { display: none; }
-  .topInner { flex-wrap: nowrap; }
-  .topLogin { display: none; }
+  .topInner { flex-wrap: nowrap; gap: var(--sp-2); }
+  .topCta { min-width: 0; }
+  .topCta > :not(.topLogin) { display: none; }
+  .topLogin { min-height: 44px; white-space: nowrap; border: var(--sticker-border); border-radius: var(--r-pill); background: var(--c-surface); }
 }
 @media (max-width: 480px) {
   .root { font-size: 17px; }

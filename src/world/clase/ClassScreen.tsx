@@ -6,9 +6,9 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { LessonPlayer } from '@/activities'
-import type { ExerciseOutcome } from '@/types'
+import type { ExerciseOutcome, SubjectId } from '@/types'
 import { classForTopic, markClassDone, type ClassDef, type ClassFinish } from '@/content/classes'
-import { allTopics, syllabusForGrade, topicTitle, type SyllabusTopic } from '@/content/syllabus'
+import { allTopics, subjectOfTopic, syllabusFor, topicTitle, type SyllabusTopic } from '@/content/syllabus'
 import { createRng, generate } from '@/engine'
 import { updateProgress, useActiveChild } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
@@ -26,17 +26,19 @@ export default function ClassScreen() {
   const { child, loading } = useActiveChild()
   if (loading) return <Spinner />
   if (!child) return <Navigate to="/kids" replace />
-  const topic = allTopics(syllabusForGrade(child.grade)).find((t) => t.id === topicId)
-  const cls = classForTopic(topicId, child.grade)
+  // The subject comes from the topic: a Lengua topic (lng-…) is looked up in the Lengua temario and marks its session as Lengua.
+  const subject = subjectOfTopic(topicId)
+  const topic = allTopics(syllabusFor(subject, child.grade)).find((t) => t.id === topicId)
+  const cls = classForTopic(topicId, child.grade, subject)
   if (!topic || !cls) return <Navigate to="/play" replace />
   return (
-    <GameHostProvider activity="clase">
-      <ClassRunner childId={child.id} topic={topic} cls={cls} />
+    <GameHostProvider activity="clase" subject={subject}>
+      <ClassRunner childId={child.id} topic={topic} cls={cls} subject={subject} />
     </GameHostProvider>
   )
 }
 
-function ClassRunner({ childId, topic, cls }: { childId: string; topic: SyllabusTopic; cls: ClassDef }) {
+function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic: SyllabusTopic; cls: ClassDef; subject: SubjectId }) {
   const navigate = useNavigate()
   const [phase, setPhase] = useState<Phase>('intro')
   const [index, setIndex] = useState(0)
@@ -84,7 +86,7 @@ function ClassRunner({ childId, topic, cls }: { childId: string; topic: Syllabus
             <div className={s.intro}>
               <h2 className={s.title}>¡Clase terminada!</h2>
               <div className={s.actions}>
-                <Button size="lg" variant="success" onClick={() => navigate('/play/sesion')}>Seguir con la sesión</Button>
+                <Button size="lg" variant="success" onClick={() => navigate(subject === 'language' ? '/play/lengua' : '/play/sesion')}>Seguir con la sesión</Button>
                 <Button variant="secondary" onClick={leave}>Volver al inicio</Button>
               </div>
             </div>

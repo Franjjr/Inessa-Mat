@@ -141,7 +141,8 @@ export async function devMasterUntilTopic(page: Page, topicId: string): Promise<
     if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
     const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
     if (!child) throw new Error('no child on this device')
-    const course = syllabus.syllabusForGrade(child.grade)
+    // A Lengua topic (lng-…) is walked through the Lengua temario of the same course.
+    const course = target.startsWith('lng-') ? syllabus.syllabusFor('language', child.grade) : syllabus.syllabusForGrade(child.grade)
     const map = { ...(await data.getMastery(child.id)) }
     const rows: Parameters<typeof data.saveMastery>[1] = []
     for (let i = 0; i < 300; i++) {
@@ -228,14 +229,14 @@ export async function nodeFinished(page: Page): Promise<boolean> {
   return false
 }
 
-/** Plays exercises on screen the way a child would, one step at a time, until `finished()` says the node is over:
- *  - objects to group or count are tapped ("sin colocar", "sin contar"), then "¡Ya están!" is pressed,
- *  - the total or the missing number is written on the keyboard (from the prompt, the input label or the equation),
- *  - "Siguiente", "Ver el hechizo" or "Probar otra vez" move on. */
 /** Objects still to count: groups label them "… sin contar"; array grids name each object by its position and use
  *  aria-pressed for the counted state. */
 export const UNCOUNTED = '[aria-label$="sin contar"], section[aria-label="Filas y columnas"] [role="group"] > button[aria-pressed="false"]'
 
+/** Plays exercises on screen the way a child would, one step at a time, until `finished()` says the node is over:
+ *  - objects to group or count are tapped ("sin colocar", "sin contar"), then "¡Ya están!" is pressed,
+ *  - the total or the missing number is written on the keyboard (from the prompt, the input label or the equation),
+ *  - "Siguiente", "Ver el hechizo" or "Probar otra vez" move on. */
 export async function driveExercises(page: Page, finished: () => Promise<boolean>, maxSteps = 400): Promise<void> {
   for (let i = 0; i < maxSteps; i++) {
     if (await finished()) return
@@ -321,4 +322,29 @@ export async function answerFromPrompt(page: Page): Promise<number | null> {
   const text = ((await page.locator('main').first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ')
   const m = text.match(/(\d+) (?:grupos|filas) de (\d+)/)
   return m ? Number(m[1]) * Number(m[2]) : null
+}
+
+/** Dev-only: changes settings of the active child (the adult area does the same through their cards). Only the keys given
+    change: `subjects`, `voice` (the lesson narration), `storyVoice` (the stories read aloud), and so on. */
+export async function devSettings(page: Page, patch: Record<string, unknown>): Promise<void> {
+  await page.evaluate(async (p) => {
+    const data = await import('/src/data/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    await data.updateChild(child.id, { settings: { ...child.settings, ...p } })
+  }, patch)
+}
+
+/** Dev-only: sets one progress flag of the active child (e.g. a class done, so the test starts after it). */
+export async function devFlag(page: Page, key: string, value = true): Promise<void> {
+  await page.evaluate(async ([k, v]) => {
+    const data = await import('/src/data/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    await data.updateProgress(child.id, (p) => ({ ...p, flags: { ...p.flags, [k]: v } }))
+  }, [key, value] as const)
 }

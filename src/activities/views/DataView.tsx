@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useState, type ReactNode } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
-import type { ChanceExercise, ChartExercise, ChartTable, ExerciseViewProps, PatternExercise, PositionExercise } from '@/types'
+import type { ChanceExercise, ChartCategory, ChartExercise, ChartTable, ExerciseViewProps, PatternExercise, PositionExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { bare } from '@/engine'
 import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
@@ -26,7 +26,7 @@ function DataRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DataEx } 
   return (
     <section className={g.view} aria-label={label} data-kind={ex.kind} data-status={status}>
       {ex.kind === 'chart' && <ChartRound ex={ex} flow={flow} />}
-      {ex.kind === 'chance' && <ChoiceRound flow={flow} options={ex.options} question={ex.question}><Bag ex={ex} /></ChoiceRound>}
+      {ex.kind === 'chance' && <ChoiceRound flow={flow} options={ex.options} question={ex.question}><Bag bag={ex.bag} /></ChoiceRound>}
       {ex.kind === 'pattern' && <PatternRound ex={ex} flow={flow} />}
       {ex.kind === 'position' && <ChoiceRound flow={flow} options={ex.options} question={ex.question}><Grid ex={ex} /></ChoiceRound>}
     </section>
@@ -99,8 +99,8 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
     <>
       <p className={s.title}>{ex.title}</p>
       <div className={s.card}>
-        {ex.mode === 'pictogram' && <Pictogram ex={ex} />}
-        {ex.mode === 'bars' && <BarChart ex={ex} />}
+        {ex.mode === 'pictogram' && <Pictogram categories={ex.categories} per={ex.per} />}
+        {ex.mode === 'bars' && <BarChart categories={ex.categories} per={ex.per} />}
         {ex.mode === 'table' && ex.table && <TwoWayTable table={ex.table} />}
         {(ex.mode === 'data' || ex.mode === 'tally') && (
           <ul className={s.chips} aria-label="Datos">
@@ -115,8 +115,9 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
   return <NumberRound flow={flow} question={ex.question} ariaLabel="Respuesta" maxDigits={small ? 2 : 3}>{picture}</NumberRound>
 }
 
-/** A double-entry table: the groups down the side, the options across the top, one count in each cell. */
-function TwoWayTable({ table }: { table: ChartTable }) {
+/** A double-entry table: the groups down the side, the options across the top, one count in each cell. `marked` (row, col)
+    highlights one cell (the lesson shows the cell it reads); the exercise never marks one. Shared with the lesson visuals. */
+export function TwoWayTable({ table, marked }: { table: ChartTable; marked?: [number, number] }) {
   return (
     // The wrapper scrolls the table itself if it is ever wider than the card; the page never scrolls sideways.
     <div className={s.tableWrap}>
@@ -136,7 +137,9 @@ function TwoWayTable({ table }: { table: ChartTable }) {
           {table.rows.map((row, r) => (
             <tr key={row}>
               <th scope="row">{row}</th>
-              {table.cells[r].map((v, c) => <td key={c}>{v}</td>)}
+              {table.cells[r].map((v, c) => (
+                <td key={c} data-marked={marked && marked[0] === r && marked[1] === c ? 'true' : undefined}>{v}</td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -145,49 +148,50 @@ function TwoWayTable({ table }: { table: ChartTable }) {
   )
 }
 
-function Pictogram({ ex }: { ex: ChartExercise }) {
+/** Rows of icons: each icon is worth `per`, so a row of `value` is value / per icons. Shared with the lesson visuals. */
+export function Pictogram({ categories, per }: { categories: ChartCategory[]; per: number }) {
   return (
     <>
       <ul className={s.pictRows}>
-        {ex.categories.map((c) => (
+        {categories.map((c) => (
           <li key={c.label} className={s.pictRow}>
             <span className={s.pictLabel}>{c.label.replace(/^(el|la|los|las) /, '').replace(/^./, (x) => x.toUpperCase())}</span>
-            <span className={s.pictIcons} role="img" aria-label={`${c.value / ex.per} dibujos`}>
-              {Array.from({ length: c.value / ex.per }, (_, k) => <span key={k} aria-hidden>{c.emoji}</span>)}
+            <span className={s.pictIcons} role="img" aria-label={`${c.value / per} dibujos`}>
+              {Array.from({ length: c.value / per }, (_, k) => <span key={k} aria-hidden>{c.emoji}</span>)}
             </span>
           </li>
         ))}
       </ul>
-      <p className={s.legend}>Cada dibujo vale {ex.per}.</p>
+      <p className={s.legend}>Cada dibujo vale {per}.</p>
     </>
   )
 }
 
-/** Vertical bars with a scale on the left and the picture of each category below its bar. */
-function BarChart({ ex }: { ex: ChartExercise }) {
-  const top = Math.max(10, Math.ceil(Math.max(...ex.categories.map((c) => c.value)) / ex.per) * ex.per)
+/** Vertical bars with a scale on the left and the picture of each category below its bar (or, with `labels`, its name). */
+export function BarChart({ categories, per, labels = false }: { categories: ChartCategory[]; per: number; labels?: boolean }) {
+  const top = Math.max(10, Math.ceil(Math.max(...categories.map((c) => c.value)) / per) * per)
   // Compact on purpose: on a phone the drawing shrinks to the screen, and the scale must stay readable.
-  const W = 70 + ex.categories.length * 80
+  const W = 70 + categories.length * 80
   const H = 300
   const left = 44
   const bottom = H - 52
   const up = 16
   const y = (v: number) => bottom - ((bottom - up) * v) / top
-  const ticks = Array.from({ length: top / ex.per + 1 }, (_, k) => k * ex.per)
+  const ticks = Array.from({ length: top / per + 1 }, (_, k) => k * per)
   return (
-    <svg className={s.bars} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Gráfica de barras de ${ex.categories.length} columnas`}>
+    <svg className={s.bars} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Gráfica de barras de ${categories.length} columnas`}>
       {ticks.map((t) => (
         <g key={t}>
           <line x1={left} x2={W - 12} y1={y(t)} y2={y(t)} className={s.gridLine} />
-          {(top <= 10 || t % (2 * ex.per) === 0) && <text x={left - 8} y={y(t) + 7} textAnchor="end" className={s.scale}>{t}</text>}
+          {(top <= 10 || t % (2 * per) === 0) && <text x={left - 8} y={y(t) + 7} textAnchor="end" className={s.scale}>{t}</text>}
         </g>
       ))}
-      {ex.categories.map((c, i) => {
+      {categories.map((c, i) => {
         const x = left + 18 + i * 80
         return (
           <g key={c.label}>
             <rect x={x} y={y(c.value)} width={48} height={bottom - y(c.value)} rx={6} className={s.bar} />
-            <text x={x + 24} y={H - 12} textAnchor="middle" className={s.barEmoji}>{c.emoji}</text>
+            <text x={x + 24} y={H - 12} textAnchor="middle" className={labels ? s.barName : s.barEmoji}>{labels ? c.label : c.emoji}</text>
           </g>
         )
       })}
@@ -199,9 +203,10 @@ function BarChart({ ex }: { ex: ChartExercise }) {
 
 // ---------------------------------------------------------------- probabilidad
 
-function Bag({ ex }: { ex: ChanceExercise }) {
-  const balls = ex.bag.flatMap((b) => Array.from({ length: b.count }, () => b.emoji))
-  const text = ex.bag.map((b) => `${b.count} ${b.count === 1 ? b.label : /[aeiou]$/.test(b.label) ? `${b.label}s` : `${b.label}es`}`).join(', ')
+/** The balls in a bag, one icon each, with the words for the screen reader (colours with no ball are left out). */
+export function Bag({ bag }: { bag: ChanceExercise['bag'] }) {
+  const balls = bag.flatMap((b) => Array.from({ length: b.count }, () => b.emoji))
+  const text = bag.filter((b) => b.count > 0).map((b) => `${b.count} ${b.count === 1 ? b.label : /[aeiou]$/.test(b.label) ? `${b.label}s` : `${b.label}es`}`).join(', ')
   return (
     <div className={s.bag} role="img" aria-label={`En la bolsa hay ${text}`}>
       {balls.map((e, i) => <span key={i} aria-hidden>{e}</span>)}

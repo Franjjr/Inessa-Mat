@@ -282,6 +282,10 @@ export class FakeAuth {
   session: { user: FakeUser; access_token: string } | null = null
   /** When true, signUp does not return a session (e-mail confirmation required). */
   requireConfirmation = false
+  /** When true, getUser and updateUser fail as if the server could not be reached. */
+  unreachable = false
+  /** Extra latency of getUser, in ms (to exercise timeouts). */
+  getUserDelayMs = 0
   private listeners: ((event: string, session: unknown) => void)[] = []
   private parent: FakeSupabase
 
@@ -311,6 +315,8 @@ export class FakeAuth {
   }
 
   async getUser() {
+    if (this.getUserDelayMs) await new Promise((r) => setTimeout(r, this.getUserDelayMs))
+    if (this.unreachable) return { data: { user: null }, error: { message: 'Failed to fetch', status: 0 } }
     return { data: { user: this.session?.user ?? null }, error: null }
   }
 
@@ -332,6 +338,7 @@ export class FakeAuth {
   }
 
   async updateUser({ data }: { data?: Record<string, unknown>; password?: string }) {
+    if (this.unreachable) return { data: { user: null }, error: { message: 'Failed to fetch', status: 0 } }
     if (this.session && data) this.session.user.user_metadata = { ...this.session.user.user_metadata, ...data }
     return { data: { user: this.session?.user ?? null }, error: null }
   }

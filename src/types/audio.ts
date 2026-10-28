@@ -13,4 +13,6 @@ export interface SpeechOptions {
   voice?: 'lumi' | 'companion' | 'narrator' | 'guardian'
   rate?: number
   interrupt?: boolean
+  /** An explicit press by the child («Escuchar»): speaks even when the automatic voice setting is off. */
+  force?: boolean
 }

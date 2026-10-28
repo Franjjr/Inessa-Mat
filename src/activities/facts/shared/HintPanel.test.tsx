@@ -22,4 +22,12 @@ describe('hint visuals never draw the answer', () => {
     expect(container.firstElementChild?.children.length).toBe(1)
     expect(container.firstElementChild?.firstElementChild?.children.length).toBe(6)
   })
+
+  it('the Lengua card shows its examples as chips, one per word, and nothing when it has none', () => {
+    const hint = { level: 2 as const, text: 'Mira estos ejemplos.', visual: 'words' as const, params: { words: ['perro → perra', 'pato → pata'] } }
+    const { container } = render(<HintVisual hint={hint} />)
+    expect([...container.querySelectorAll('span')].map((c) => c.textContent)).toEqual(['perro → perra', 'pato → pata'])
+    const empty = render(<HintVisual hint={{ ...hint, params: { words: [] } }} />)
+    expect(empty.container.firstElementChild).toBeNull()
+  })
 })

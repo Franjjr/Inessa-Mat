@@ -7,12 +7,15 @@ import type { ExerciseKind, FactStrategy, HintVisual } from '@/types'
 
 const VISUALS: HintVisual[] = [
   'groups', 'array', 'dots-five-plus-one', 'double-chain', 'mirror', 'nine-trick', 'skip-count', 'place-value', 'carry',
-  'borrow', 'times-ten-minus', 'share', 'family', 'none',
+  'borrow', 'times-ten-minus', 'share', 'family', 'words', 'none',
 ]
 
 const ALL_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
+  'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
+  'lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words',
+  'lng-copy', 'lng-guided',
 ]
 
 describe('strategyForFact — all 100 facts', () => {

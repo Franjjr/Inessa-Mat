@@ -93,4 +93,21 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'decimal-op': lazy(() => import('./views/DecimalOpView')),
   // ---- 3.º: ordinales hasta el 30
   ordinal: lazy(() => import('./views/OrdinalView')),
+  // ---- Lengua de 3.º: gramática (src/activities/views/lengua)
+  'lng-tap-words': lazy(() => import('./views/lengua/TapWordsView')),
+  'lng-sentence-parts': lazy(() => import('./views/lengua/TapWordsView')),
+  'lng-classify': lazy(() => import('./views/lengua/ClassifyView')),
+  'lng-transform': lazy(() => import('./views/lengua/TransformWordView')),
+  'lng-missing-letter': lazy(() => import('./views/lengua/MissingLetterView')),
+  'lng-punctuation': lazy(() => import('./views/lengua/PunctuationView')),
+  'lng-stress': lazy(() => import('./views/lengua/SyllableView')),
+  'lng-syllables': lazy(() => import('./views/lengua/SyllableView')),
+  'lng-dictation': lazy(() => import('./views/lengua/DictationView')),
+  'lng-alphabet': lazy(() => import('./views/lengua/OrderWordsView')),
+  'lng-copy': lazy(() => import('./views/lengua/CopyView')),
+  'lng-guided': lazy(() => import('./views/lengua/GuidedView')),
+  'lng-pair-words': lazy(() => import('./views/lengua/PairWordsView')),
+  'lng-read-choice': lazy(() => import('./views/lengua/ReadingView')),
+  'lng-read-text': lazy(() => import('./views/lengua/ReadingView')),
+  'lng-read-order': lazy(() => import('./views/lengua/ReadingView')),
 }

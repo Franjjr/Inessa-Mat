@@ -90,6 +90,16 @@ export function HintVisual({ hint }: { hint: Hint }) {
         </div>
       )
     }
+    case 'words': {
+      // Lengua: a card of examples or questions (words, never the answer of the exercise; see src/engine/lengua/grammar.ts).
+      const words = Array.isArray(p.words) ? p.words : []
+      if (words.length === 0) return null
+      return (
+        <div className={s.hintVisual}>
+          {words.map((w, i) => <span key={i} className={s.chip}>{w}</span>)}
+        </div>
+      )
+    }
     default:
       return null
   }

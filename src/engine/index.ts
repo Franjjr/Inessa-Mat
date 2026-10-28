@@ -26,13 +26,19 @@ export {
   DAILY_BLOCK_LABEL, DAILY_MINUTES, EXAMPLE_SECONDS, ITEM_SECONDS, NEW_FACT_BUDGET, estimateSeconds, planDailySession,
   scaffoldedSkills, statementOf,
 } from './daily'
+/** Lengua de 3.º: the 15-minute session and the placement test (src/engine/lengua/daily.ts, placement.ts). */
+export { planLenguaSession, storyFlag } from './lengua/daily'
+export { teachableCourse } from './lengua/teachable'
+export type { LenguaPlanInput } from './lengua/daily'
+export { buildLenguaPlacement, lenguaPlacementBlockOf, LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT } from './lengua/placement'
+export type { LenguaPlacementBlockId } from './lengua/placement'
 export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 /** Prueba inicial: items, block mapping and the summary for the adult report. */
 export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
 export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 /** Adult report: temario progress, mistakes by kind, tests (placement runs and recall). */
-export { ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport } from './report'
-export type { BlockReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicReport, TopicState } from './report'
+export { ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
+export type { BlockReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicNeeds, TopicReport, TopicState } from './report'
 
 // ---------------------------------------------------------------- extra helpers (engine extensions)
 
@@ -58,6 +64,11 @@ export { intervalMs, LEITNER_INTERVAL_DAYS } from './mastery'
 export { WORD_TEMPLATES } from './wordProblems'
 export type { WordTemplate } from './wordProblems'
 export { columnName } from './feedback'
+/** Lengua de 3.º, gramática: the exercises, their prompts, check and hints (src/engine/lengua). */
+export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
+export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'
+export { isCompletionOnly } from './lengua/writing'
+export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {
   DEFAULT_METHOD, DIV_METHODS, isDivMethod, isSubMethod, isTableMethod, methodLabel, methodsOf, METHODS, normaliseDivMethod,
@@ -110,3 +121,7 @@ export {
   makeTimeConvert, makeTimeDuration, statementClock,
 } from './clock'
 export { calendarSkill, clockConvertSkill, clockReadSkill, clockSetSkill, timeDurationSkill } from './skills'
+
+/** Subjects: Lengua skills (lng:) apart from maths; maths readers filter with masteryOf / attemptsOf first. */
+export { attemptsOf, masteryOf, minutesOfSubject, placementFlags, subjectOffered, subjectOfSession, subjectOfSkill } from './subjects'
+export type { LessonSubject } from './subjects'

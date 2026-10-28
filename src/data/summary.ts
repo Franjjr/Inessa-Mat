@@ -1,6 +1,6 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { season1 } from '@/content'
-import { factGrid, isDivMethod, isSubMethod, isTableMethod, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
+import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, subjectOfSession } from '@/engine'
 import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
 
 /** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
@@ -46,7 +46,7 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     currentWorld,
     minutesLast7Days: Math.round(stats?.minutes ?? 0),
     accuracyLast7Days: accuracy,
-    factGrid: factGrid(mastery),
+    factGrid: factGrid(masteryOf(mastery, 'math')),
     topErrors: stats?.topErrors ?? [],
     lastPlayedAt: stats?.lastPlayedAt ?? null,
     subtractionMethods: {
@@ -65,11 +65,16 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
 }
 
 /** Stats from local rows. `attempts7` / `sessions7`: last 7 days; `attempts30`: last 30 days (for top errors). */
-export function statsFromLocal(attempts7: AttemptRecord[], attempts30: AttemptRecord[], sessions7: SessionRecord[], lastPlayedAt: string | null): ChildStats {
-  const counted = attempts7.filter((a) => a.errorType !== 'recognition')
+export function statsFromLocal(attempts7All: AttemptRecord[], attempts30All: AttemptRecord[], sessions7: SessionRecord[], lastPlayedAt: string | null): ChildStats {
+  // Maths only: Lengua rows are not in these numbers.
+  const attempts7 = attemptsOf(attempts7All, 'math')
+  const attempts30 = attemptsOf(attempts30All, 'math')
+  // Ungraded rows (a retry, see AttemptRecord.graded) are not counted in accuracy, methods or mistakes.
+  const graded7 = attempts7.filter((a) => a.graded !== false)
+  const counted = graded7.filter((a) => a.errorType !== 'recognition')
   const errors = new Map<string, number>()
   for (const a of attempts30) {
-    if (a.correct || !a.errorType || a.errorType === 'recognition') continue
+    if (a.graded === false || a.correct || !a.errorType || a.errorType === 'recognition') continue
     errors.set(a.errorType, (errors.get(a.errorType) ?? 0) + 1)
   }
   const topErrors = [...errors.entries()]
@@ -79,7 +84,7 @@ export function statsFromLocal(attempts7: AttemptRecord[], attempts30: AttemptRe
   const tally = new Map<string, MethodTally>()
   for (const a of attempts30) {
     const method = a.context?.method
-    if (!method || a.errorType === 'recognition') continue
+    if (!method || a.graded === false || a.errorType === 'recognition') continue
     const t = tally.get(method) ?? { method, attempts: 0, correct: 0 }
     t.attempts += 1
     if (a.correct) t.correct += 1
@@ -89,7 +94,8 @@ export function statsFromLocal(attempts7: AttemptRecord[], attempts30: AttemptRe
     methods: [...tally.values()],
     attempts: counted.length,
     correct: counted.filter((a) => a.correct).length,
-    minutes: sessions7.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0),
+    // Maths minutes only: a Lengua session is not a maths session.
+    minutes: sessions7.filter((s) => subjectOfSession(s) === 'math').reduce((sum, s) => sum + (Number(s.minutes) || 0), 0),
     lastPlayedAt,
     topErrors,
   }

@@ -232,3 +232,272 @@
     transition: none !important;
   }
 }
+
+/* Money (money): a row of coins and notes that wrap on a phone; the price and the change are plain lines under them. */
+.moneyRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 100%;
+}
+
+.moneyPiece {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.moneyPiece svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.moneyTag {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.moneyChange {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-magic);
+  text-align: center;
+}
+
+/* Time (clock, timeline): the face and the digital time side by side, wrapping on a phone; the line's labels stay
+   at 16 units or more, so they read at about 16 px on a 360 px screen. */
+.clockRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-4);
+  max-width: 100%;
+}
+
+.clockFace {
+  width: min(200px, 62vw);
+  height: auto;
+  display: block;
+  overflow: visible;
+  border-radius: 50%;
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+}
+
+.digitalTime {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--c-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.timeAxis {
+  stroke: var(--c-line);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.timeTick {
+  stroke: var(--c-ink-mute);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.timeBar {
+  fill: var(--c-magic-soft);
+  stroke: var(--c-ink);
+  stroke-width: 2;
+}
+
+.timeMark {
+  fill: var(--c-surface);
+  stroke: var(--c-ink);
+  stroke-width: 3;
+}
+
+.timeLabel {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  fill: var(--c-ink);
+}
+
+.timeDuration {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  fill: var(--c-magic);
+}
+
+/* Medida (units): one row per unit, with the unit as a chip and a real object of that size beside it. */
+.unitList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: 420px;
+}
+
+.unitRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  border-radius: var(--r-md);
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.unitEmoji {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex: none;
+}
+
+.unitChip {
+  flex: none;
+  min-width: 64px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--c-magic-soft);
+  color: var(--c-magic);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  white-space: nowrap;
+}
+
+.unitObject {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+  line-height: 1.3;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Geometry (polygon, lines, angle, solid, perimeter, grid-route): one square drawing that fits the lesson board, with
+   its numbers at 15 units or more so they read at 14 px on a 360 px screen. Colours come from the tokens. */
+.geoFigure {
+  display: block;
+  width: min(60vw, 230px);
+  height: auto;
+  max-height: 34vh;
+  overflow: visible;
+}
+
+.geoShape {
+  fill: var(--c-surface);
+  stroke: var(--c-ink);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.geoLabel {
+  fill: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.geoLine {
+  stroke: var(--c-ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.geoMark {
+  fill: none;
+  stroke: var(--c-magic);
+  stroke-width: 3;
+}
+
+.geoSum {
+  margin: 0;
+  color: var(--c-magic);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.geoCell {
+  fill: var(--c-surface);
+  stroke: var(--c-line);
+  stroke-width: 1.5;
+}
+
+.geoPath {
+  stroke: var(--c-magic);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.geoStartCell {
+  fill: var(--c-gold-soft);
+  stroke: var(--c-gold);
+  stroke-width: 3;
+}
+
+.geoMoves {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.geoMove {
+  padding: var(--sp-1) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-blue-soft);
+  border-radius: var(--r-md);
+}
+
+/* Bar chart (bar-chart): the card and its drawing take the height the board gives, so a tall chart is not cut at its top
+   and bottom on a phone (the SVG keeps its proportions). */
+.fitCard {
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* A data card drawn inside the lesson board, which already has its own border: the card drops its border so the edge is single. */
+.stage .boardCard {
+  border: 0;
+}
+
+.fitCard > svg {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  min-height: 0;
+}

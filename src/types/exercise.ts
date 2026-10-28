@@ -105,6 +105,22 @@ export type ExerciseKind =
   | 'ordinal'         // ordinales (3.º): the n-.º of a row, or the word and the number of an ordinal (num:ordinal:*)
   | 'decimal'         // décimas y centésimas: shade, read, compare, money (dec:shade|read:D, dec:compare, dec:money)
   | 'decimal-op'      // sumar y restar decimales en columna (dec:add|sub:D)
+  | 'lng-tap-words'   // Lengua 3.º: tocar las palabras de una clase en una frase (sustantivos, adjetivos, verbos, artículos)
+  | 'lng-sentence-parts' // Lengua 3.º: tocar el sujeto o el predicado de una frase (oracion:sujeto|predicado)
+  | 'lng-classify'    // Lengua 3.º: elegir la clase de una palabra (común/propio, género, número, tiempo del verbo)
+  | 'lng-transform'   // Lengua 3.º: escribir la palabra cambiada (en femenino, en plural, en pasado…)
+  | 'lng-missing-letter' // Lengua 3.º: la letra que falta (c/qu, g/gu/gü, r/rr, mp/mb, mayúscula inicial): elegir o escribir la palabra
+  | 'lng-punctuation' // Lengua 3.º: escribir la frase con sus signos (. , ¿? ¡!)
+  | 'lng-stress'      // Lengua 3.º: tocar la sílaba fuerte de una palabra (orto:tonica)
+  | 'lng-syllables'   // Lengua 3.º: contar las sílabas de una palabra, o elegir su separación en sílabas (gram:silabas)
+  | 'lng-dictation'   // Lengua 3.º: escribir lo que dice la voz de la app (una palabra o una frase)
+  | 'lng-alphabet'    // Lengua 3.º: ordenar palabras por el abecedario (voc:abecedario)
+  | 'lng-pair-words'  // Lengua 3.º: sinónimos, antónimos, familias, diminutivos, aumentativos, compuestas (voc:*)
+  | 'lng-read-choice' // Lengua 3.º: elegir la respuesta a una pregunta de un texto (lect:*, lit:rima, lit:fabula, lit:trabalenguas)
+  | 'lng-read-text'   // Lengua 3.º: escribir una palabra del texto o la respuesta de una adivinanza (lect:preguntas, lit:adivinanzas)
+  | 'lng-read-order'  // Lengua 3.º: poner en orden lo que pasa en el texto (lect:ordenar)
+  | 'lng-copy'        // Lengua 3.º: copiar una frase que se ve en la tarjeta, con el teclado (escr:copia)
+  | 'lng-guided'      // Lengua 3.º: escritura guiada corta, una invitación, una nota, una carta o una descripción con huecos (escr:guiada)
 
 interface ExerciseBase {
   id: ID
@@ -523,7 +539,138 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise
+
+// ---- Lengua de 3.º: gramática (src/engine/lengua/grammar.ts; los bancos de palabras están en words.ts)
+
+/** Tap the words of one class in a sentence. The answer is every target, no more, no less. */
+export interface LngTapWordsExercise extends ExerciseBase {
+  kind: 'lng-tap-words'
+  wanted: 'sustantivo' | 'adjetivo' | 'verbo' | 'articulo'
+  words: string[]
+  /** Indexes of the words to tap, in order. */
+  targets: number[]
+}
+/** Tap the subject or the predicate of a sentence (oracion:sujeto, oracion:predicado). */
+export interface LngSentencePartsExercise extends ExerciseBase {
+  kind: 'lng-sentence-parts'
+  part: 'sujeto' | 'predicado'
+  words: string[]
+  targets: number[]
+}
+/** One word and the question about it; the child picks one of the options (options are shuffled; answer = index). */
+export interface LngClassifyExercise extends ExerciseBase {
+  kind: 'lng-classify'
+  word: string
+  question: string
+  options: string[]
+  answer: number
+}
+/** The word, changed as asked; the child types the changed word (answer, compared with 'exact'). */
+export interface LngTransformExercise extends ExerciseBase {
+  kind: 'lng-transform'
+  word: string
+  change: 'femenino' | 'singular' | 'plural' | 'pasado' | 'presente' | 'futuro'
+  answer: string
+}
+
+/** The letters missing from a word (c/qu, g/gu/gü, r/rr, mp/mb, mayúscula inicial). `shown` has one «_» per missing letter.
+    mode 'choose': the child taps the letters (options; answer is the right group). mode 'type': the child writes the whole
+    word (answer is the word, compared with 'exact'). */
+export interface LngMissingLetterExercise extends ExerciseBase {
+  kind: 'lng-missing-letter'
+  /** The word, written right (the hints use it; it is never shown in the exercise before the answer). */
+  word: string
+  shown: string
+  mode: 'choose' | 'type'
+  options: string[]
+  answer: string
+}
+/** A sentence without its marks (the capitals stay). The child writes it again with . , ¿? ¡! (compared with 'exact'). */
+export interface LngPunctuationExercise extends ExerciseBase {
+  kind: 'lng-punctuation'
+  bare: string
+  answer: string
+}
+/** A word cut into syllables; the child taps the stressed one (answer = syllables[stressed]). */
+export interface LngStressExercise extends ExerciseBase {
+  kind: 'lng-stress'
+  word: string
+  syllables: string[]
+  stressed: number
+}
+/** count: how many syllables the word has; split: which of the splits is right. options shuffled, answer = the right one. */
+export interface LngSyllablesExercise extends ExerciseBase {
+  kind: 'lng-syllables'
+  word: string
+  mode: 'count' | 'split'
+  options: string[]
+  answer: string
+}
+/** The app says `answer` (TTS); the child writes it. A sentence is compared with 'exact', one word with 'ignore-case'. */
+export interface LngDictationExercise extends ExerciseBase {
+  kind: 'lng-dictation'
+  answer: string
+}
+/** Words to put in alphabetical order. words are shown shuffled; targets are their indexes in alphabetical order.
+    mode 'order' (default): every word, in order. mode 'first' (the mini diccionario): two words, the child taps the one that
+    comes first in the dictionary; targets has that one index. */
+export interface LngAlphabetExercise extends ExerciseBase {
+  kind: 'lng-alphabet'
+  words: string[]
+  targets: number[]
+  mode?: 'order' | 'first'
+}
+/** A sentence shown on the card; the child copies it with the keyboard. Compared with 'exact' (capitals and marks count). */
+export interface LngCopyExercise extends ExerciseBase {
+  kind: 'lng-copy'
+  answer: string
+}
+/** A short text with blanks (an invitation, a note, a letter, a description). `parts` are the fixed pieces (one more than the
+    blanks) and `prompts` the question of each blank, in order. The child writes every blank; the exercise is not graded
+    (completion only, see isCompletionOnly). */
+export interface LngGuidedExercise extends ExerciseBase {
+  kind: 'lng-guided'
+  task: string
+  parts: string[]
+  prompts: string[]
+}
+/** A question about a word (synonym, antonym, family, diminutive, augmentative, compound). mode 'choice': the child taps
+    options (answer is the right one); mode 'text': the child writes the word (answer, compared with 'ignore-case'). */
+export interface LngPairWordsExercise extends ExerciseBase {
+  kind: 'lng-pair-words'
+  question: string
+  mode: 'choice' | 'text'
+  options: string[]
+  answer: string
+}
+/** A question of a reading (src/content/lengua/stories): the child taps the right option. `reading` is the reading's id. */
+export interface LngReadChoiceExercise extends ExerciseBase {
+  kind: 'lng-read-choice'
+  reading: string
+  question: string
+  options: string[]
+  answer: number
+}
+/** A question of a reading with a word of the text (or a riddle's answer) as the answer, compared with 'ignore-case'. */
+export interface LngReadTextExercise extends ExerciseBase {
+  kind: 'lng-read-text'
+  reading: string
+  question: string
+  answer: string
+}
+/** Events of a text to put in order. events are shown shuffled; targets are their indexes in the right order. */
+export interface LngReadOrderExercise extends ExerciseBase {
+  kind: 'lng-read-order'
+  reading: string
+  question: string
+  events: string[]
+  targets: number[]
+}
+export type LenguaExercise = LngTapWordsExercise | LngSentencePartsExercise | LngClassifyExercise | LngTransformExercise
+  | LngMissingLetterExercise | LngPunctuationExercise | LngStressExercise | LngSyllablesExercise | LngDictationExercise
+  | LngAlphabetExercise | LngPairWordsExercise | LngReadChoiceExercise | LngReadTextExercise | LngReadOrderExercise
+  | LngCopyExercise | LngGuidedExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 
@@ -667,6 +814,7 @@ export type Answer =
   | { type: 'fraction'; numerator: number | null; denominator: number | null } // fraction-read: written over and under
   | { type: 'marks'; marked: number[] }                                    // fraction-equal, angle-tap: what was tapped
   | { type: 'option'; value: string | null }                               // dinero and medida: the option tapped
+  | { type: 'text'; value: string | null }                                 // a typed word or phrase (Lengua): the letter keyboard or a physical one
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
   | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
 
@@ -706,6 +854,18 @@ export type ErrorType =
   | 'clock-hour'           // reloj: the hour is wrong (the hand that says the hour)
   | 'clock-minute'         // reloj: the minutes are wrong (the long hand, counted in fives)
   | 'clock-period'         // reloj de 24 h: the period of the day (mañana, tarde, noche) is wrong
+  | 'word-class'           // Lengua: the word is taken for another class (sustantivo, adjetivo, verbo, artículo, común/propio…)
+  | 'word-form'            // Lengua: the changed word is misspelt or in the wrong gender, number or tense
+  | 'sentence-part'        // Lengua: a word of the subject is taken for the predicate, or the other way round
+  | 'spelling'            // Lengua: a letter missing or wrong (c/qu, g/gu/gü, r/rr, mp/mb)
+  | 'capital'             // Lengua: a capital letter missing or in the wrong place
+  | 'punctuation'         // Lengua: a mark missing or in the wrong place (. , ¿? ¡!)
+  | 'stress'              // Lengua: the wrong syllable tapped as the stressed one
+  | 'syllable'            // Lengua: the wrong number of syllables or a wrong split
+  | 'dictation'           // Lengua: what was heard was written wrongly
+  | 'alphabet'            // Lengua: the words are out of alphabetical order
+  | 'word-pair'           // Lengua: the wrong synonym, antonym, family member or form
+  | 'reading'             // Lengua: a question about a text answered wrongly (idea, detail, order, rhyme, riddle, fable)
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round
@@ -730,14 +890,14 @@ export interface CheckResult {
 export type HintVisual =
   | 'groups' | 'array' | 'dots-five-plus-one' | 'double-chain' | 'mirror' | 'nine-trick' | 'skip-count'
   | 'place-value' | 'carry' | 'borrow' | 'times-ten-minus' | 'share' | 'family' | 'none'
-  | 'clock' | 'time-line' | 'week' | 'units'
+  | 'clock' | 'time-line' | 'week' | 'units' | 'words'
 
 export interface Hint {
   level: 1 | 2 | 3            // 1 = strategy reminder, 2 = visual scaffold, 3 = worked step
   text: string                // template string
   visual: HintVisual
   /** Parameters for the visual (e.g. { a: 6, b: 7 }). */
-  params?: Record<string, number | string | number[]>
+  params?: Record<string, number | string | number[] | string[]>
 }
 
 /** Mental strategy (the "tricks" of the workbook) for a multiplication fact. */
@@ -778,6 +938,12 @@ export interface AttemptInput {
   hintsUsed: number
   /** Number of times the child corrected a misread digit before submitting. */
   recognitionFixes?: number
+  /** Extra tries after a wrong answer on this exercise (see AttemptRecord.retries). */
+  retries?: number
+  /** The child got it right on a retry. */
+  solvedOnRetry?: boolean
+  /** false for a retry: the attempt is saved (with its retries) but does not grade mastery or the session. Default true. */
+  graded?: boolean
   /** Method used for this exercise when the operation has several (e.g. 'borrow' for a column subtraction). */
   method?: string
 }

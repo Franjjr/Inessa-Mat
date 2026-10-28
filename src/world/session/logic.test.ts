@@ -34,6 +34,16 @@ describe('session run', () => {
     expect(afterAnswer(once, back, false)).toBe(once) // re-asks never come back again
   })
 
+  it('«No lo sé» is a wrong answer for the run: the item comes back later, and it counts as not right', () => {
+    // The screen passes the dont-know outcome (correct: false) to afterAnswer, the same as any wrong answer.
+    const q = startRun(plan)
+    const back = afterAnswer(q, 0, false)
+    expect(back.slots.length).toBe(q.slots.length + 1)
+    expect(back.slots.some((s, i) => i > 0 && s.retry && s.item.uid === q.slots[0].item.uid)).toBe(true)
+    const results = [{ uid: q.slots[0].item.uid, correct: false }]
+    expect(summarizeRun(back, results, true).correct).toBe(0)
+  })
+
   it('the summary counts planned items only', () => {
     let q = startRun(plan)
     q = afterAnswer(q, 0, false)
@@ -89,5 +99,13 @@ describe('session run', () => {
     expect(isTimeUp(SESSION_LIMIT_SECONDS - 1)).toBe(false)
     expect(isTimeUp(SESSION_LIMIT_SECONDS)).toBe(true)
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
+  })
+})
+
+describe('sessionRewardKey', () => {
+  it('keeps the maths key and gives Lengua its own', () => {
+    expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
+    expect(sessionRewardKey(now, 'math')).toBe('sesion:2026-10-22')
+    expect(sessionRewardKey(now, 'language')).toBe('sesion-lengua:2026-10-22')
   })
 })

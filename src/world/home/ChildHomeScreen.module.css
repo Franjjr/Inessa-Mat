@@ -303,7 +303,8 @@
 /* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
 
-/* The family door sits over the string lights: give it a solid surface so it reads on any background. */
+/* The family door sits over the string lights: a solid surface (the same sticker chip as «Cambiar», not an underlined ghost, which
+   doubled its outline with the sticker border). */
 .family.family { color: var(--c-primary-strong); padding: 0 var(--sp-4); }
 
 /* «Hoy» is the main entry: mint sticker (the class or the session). «Mi aventura» is the medium card below it, pink. */

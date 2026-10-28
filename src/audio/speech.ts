@@ -314,7 +314,7 @@ export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
   wire()
   const s = synth()
   const clean = toSpeakable(text)
-  if (!enabled || !clean || ((!s || !UtteranceCtor()) && !neuralAvailable())) return Promise.resolve()
+  if ((!enabled && !opts.force) || !clean || ((!s || !UtteranceCtor()) && !neuralAvailable())) return Promise.resolve()
   return new Promise<void>((resolve) => {
     if (opts.interrupt) stopAll()
     const job: Job = { chunks: chunkForSpeech(clean), index: 0, opts, resolve, done: false, retried: false }

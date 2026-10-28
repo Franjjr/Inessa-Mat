@@ -17,14 +17,16 @@ export function GroupsVisual({ params, phase, runLength, reduced }: VisualProps)
   const emoji = strParam(params, 'emoji', '🍄')
   const st = stateOf({ phase, runLength })
   const sum = Array.from({ length: groups }, () => String(perGroup)).join(' + ')
+  // Many objects (3 × 7 = 21): smaller pictures, so the groups and the sums still fit a 360 px phone board.
+  const many = groups * perGroup > 12
   return (
     <div className={s.stage}>
-      <div className={s.row} style={{ alignItems: 'stretch' }}>
+      <div className={s.row} style={{ alignItems: 'stretch', gap: many ? 'var(--sp-2)' : undefined }}>
         {Array.from({ length: groups }, (_, g) => (
           <motion.div
             key={g}
             className={s.panel}
-            style={{ width: 'auto', padding: 'var(--sp-3)', maxWidth: 'none', background: 'var(--c-primary-soft)', borderColor: 'var(--c-primary)' }}
+            style={{ width: 'auto', padding: many ? 'var(--sp-2)' : 'var(--sp-3)', maxWidth: 'none', background: 'var(--c-primary-soft)', borderColor: 'var(--c-primary)' }}
             initial={reduced ? false : { scale: 0.2, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={motionT(reduced, { ...POP, delay: 0.12 * g })}
@@ -32,7 +34,7 @@ export function GroupsVisual({ params, phase, runLength, reduced }: VisualProps)
           >
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(perGroup, 4)}, auto)`, gap: 4 }}>
               {Array.from({ length: perGroup }, (_, k) => (
-                <span key={k} className={s.emoji}>{emoji}</span>
+                <span key={k} className={s.emoji} style={many ? { fontSize: 20 } : undefined}>{emoji}</span>
               ))}
             </div>
           </motion.div>
