@@ -37,7 +37,7 @@ describe('letra ligada models', () => {
   })
 
   it('x-height letters stay on the x-height band (marks excepted)', () => {
-    for (const ch of 'acemnñorsuvwxzi') {
+    for (const ch of 'acemnñorsuvwxi') {
       for (const st of CURSIVE_LOWER[ch].strokes.filter((s) => !isMark(s))) {
         const { minY, maxY } = bbox(st)
         expect(minY, ch).toBeGreaterThanOrEqual(XHEIGHT - 2)
@@ -51,7 +51,7 @@ describe('letra ligada models', () => {
       const top = Math.min(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(top, ch).toBeLessThan(XHEIGHT - 15)
     }
-    for (const ch of 'fgjpqy') {
+    for (const ch of 'fgjpqyz') {
       const bottom = Math.max(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(bottom, ch).toBeGreaterThan(BASELINE + 15)
     }
