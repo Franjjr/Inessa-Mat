@@ -109,6 +109,13 @@
   font-weight: 700;
 }
 
+/* The cell a lesson reads (TwoWayTable `marked`). */
+.table td[data-marked='true'] {
+  background: var(--c-gold-soft);
+  outline: 3px solid var(--c-primary);
+  outline-offset: -3px;
+}
+
 @media (max-width: 480px) {
   .table th,
   .table td {

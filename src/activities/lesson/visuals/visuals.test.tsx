@@ -57,6 +57,7 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   pictogram: { rows: 'Gatos:3,Perros:5' },
   'bar-chart': { rows: 'Gatos:3,Perros:5' },
   'chance-bag': { balls: 'red:3,blue:0' },
+  table: { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐', cells: '5-2/3-6', at: '0:0' },
 }
 
 /** Reads the LessonVisualId union straight from the shared types, so the test cannot drift from them. */

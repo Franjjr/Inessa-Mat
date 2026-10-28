@@ -102,3 +102,41 @@ describe('clases de gráficos y probabilidad (3.º)', () => {
     expect(JSON.stringify(DATOS_CLASSES)).not.toMatch(/Sin pistas/)
   })
 })
+
+describe('clase de tablas: the grid is shown before the tries', () => {
+  it('the tablas class draws its table in para or ejemplo, before the first try, with a marked cell', () => {
+    const cls = DATOS_CLASSES.find((c) => c.topicId === 'graficos-tablas')!
+    const firstTry = cls.lesson.steps.findIndex((s) => s.interaction === 'try')
+    const before = cls.lesson.steps.slice(0, firstTry).filter((s) => s.visual === 'table')
+    expect(before.length).toBeGreaterThanOrEqual(2)
+    expect(before.some((s) => s.params?.at !== undefined)).toBe(true)
+  })
+
+  it('every table step has as many cells as its rows and columns', () => {
+    const cls = DATOS_CLASSES.find((c) => c.topicId === 'graficos-tablas')!
+    for (const step of cls.lesson.steps.filter((s) => s.visual === 'table')) {
+      const groups = String(step.params!.rows).split(',')
+      const options = String(step.params!.cols).split(',')
+      const grid = String(step.params!.cells).split('/').map((row) => row.split('-'))
+      expect(grid.length, step.text).toBe(groups.length)
+      for (const row of grid) expect(row.length, step.text).toBe(options.length)
+    }
+  })
+})
+
+describe('wording of the pictogram and bar tries', () => {
+  it('the graficos tries about pictograms name the legend, not a scale', () => {
+    const cls = DATOS_CLASSES.find((c) => c.topicId === 'graficos')!
+    for (const step of cls.lesson.steps.filter((s) => s.interaction === 'try' && s.trySelector!.skills!.join() === 'chart:pict:x')) {
+      expect(step.text, step.text).not.toMatch(/escala/)
+    }
+  })
+
+  it('the pictograms of the explanation draw their icons (no default star in the first one)', () => {
+    for (const cls of DATOS_CLASSES) {
+      for (const step of cls.lesson.steps.filter((s) => s.visual === 'pictogram')) {
+        for (const part of String(step.params!.rows).split(',')) expect(part.split(':').length, step.text).toBe(3)
+      }
+    }
+  })
+})

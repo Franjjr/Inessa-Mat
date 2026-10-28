@@ -63,3 +63,34 @@ describe('chance-bag visual', () => {
     unmount()
   })
 })
+
+describe('table visual', () => {
+  const params = { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐', cells: '5-2/3-6' }
+
+  it('draws the grid: groups down the side, options across the top, the counts in the cells', () => {
+    const Table = LESSON_VISUALS.table
+    const { container, unmount } = render(<Table params={params} phase={FINAL} runLength={1} reduced />)
+    expect([...container.querySelectorAll('td')].map((td) => td.textContent)).toEqual(['5', '2', '3', '6'])
+    expect([...container.querySelectorAll('tbody th')].map((th) => th.textContent)).toEqual(['3.º A', '3.º B'])
+    const heads = [...container.querySelectorAll('thead th')].map((th) => th.textContent)
+    expect(heads.some((h) => h?.includes('Manzana'))).toBe(true)
+    expect(heads.some((h) => h?.includes('Pera'))).toBe(true)
+    expect(container.textContent).toContain('🍐')
+    unmount()
+  })
+
+  it('marks the cell named by at, row 0 column 1 being the 2', () => {
+    const Table = LESSON_VISUALS.table
+    const { container, unmount } = render(<Table params={{ ...params, at: '0:1' }} phase={FINAL} runLength={1} reduced />)
+    const marked = [...container.querySelectorAll('td')].filter((td) => td.getAttribute('data-marked') === 'true')
+    expect(marked.map((td) => td.textContent)).toEqual(['2'])
+    unmount()
+  })
+
+  it('a table with no cells for a group still draws zeros instead of breaking', () => {
+    const Table = LESSON_VISUALS.table
+    const { container, unmount } = render(<Table params={{ rows: 'A,B', cols: 'uno:1,dos:2', cells: '4' }} phase={FINAL} runLength={1} reduced />)
+    expect([...container.querySelectorAll('td')].map((td) => td.textContent)).toEqual(['4', '0', '0', '0'])
+    unmount()
+  })
+})

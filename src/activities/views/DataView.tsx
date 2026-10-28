@@ -115,8 +115,9 @@ function ChartRound({ ex, flow }: { ex: ChartExercise; flow: AnswerFlow }) {
   return <NumberRound flow={flow} question={ex.question} ariaLabel="Respuesta" maxDigits={small ? 2 : 3}>{picture}</NumberRound>
 }
 
-/** A double-entry table: the groups down the side, the options across the top, one count in each cell. */
-function TwoWayTable({ table }: { table: ChartTable }) {
+/** A double-entry table: the groups down the side, the options across the top, one count in each cell. `marked` (row, col)
+    highlights one cell (the lesson shows the cell it reads); the exercise never marks one. Shared with the lesson visuals. */
+export function TwoWayTable({ table, marked }: { table: ChartTable; marked?: [number, number] }) {
   return (
     // The wrapper scrolls the table itself if it is ever wider than the card; the page never scrolls sideways.
     <div className={s.tableWrap}>
@@ -136,7 +137,9 @@ function TwoWayTable({ table }: { table: ChartTable }) {
           {table.rows.map((row, r) => (
             <tr key={row}>
               <th scope="row">{row}</th>
-              {table.cells[r].map((v, c) => <td key={c}>{v}</td>)}
+              {table.cells[r].map((v, c) => (
+                <td key={c} data-marked={marked && marked[0] === r && marked[1] === c ? 'true' : undefined}>{v}</td>
+              ))}
             </tr>
           ))}
         </tbody>

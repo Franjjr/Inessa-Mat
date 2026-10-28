@@ -65,6 +65,7 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   pictogram: ['rows'],
   'bar-chart': ['rows'],
   'chance-bag': ['balls'],
+  table: ['rows', 'cols', 'cells'],
   'lng-word': ['word'],
 }
 

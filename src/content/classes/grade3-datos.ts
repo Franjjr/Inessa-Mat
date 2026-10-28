@@ -2,7 +2,7 @@
    (src/content/syllabus/grade3.ts). Mismo formato que las demás: para qué sirve, un ejemplo resuelto, dos prácticas con
    pistas, tres o cuatro sin pistas y una frase que resume la regla. Las prácticas usan solo habilidades de su propio tema
    (src/engine/data.ts), y su texto sirve para todas las variantes del generador: cada dibujo vale 2, 5 o 10 en el pictograma,
-   las barras van de 1 a 10, las tablas tienen 2 o 3 grupos y 3 o 4 opciones, y la bolsa puede tener una o varias colores.
+   las barras van de 1 a 10, las tablas tienen 2 o 3 grupos y 3 o 4 opciones, y la bolsa puede tener uno o varios colores.
    Por eso las prácticas no nombran ningún número. Las figuras de la explicación son los de src/activities/lesson/visuals/data.tsx,
    que dibujan con los mismos componentes que los ejercicios. */
 import { show, tryIt } from '@/content/lessons/dsl'
@@ -14,8 +14,8 @@ const graficos = clase({
   topicId: 'graficos',
   title: 'Pictogramas y gráficas de barras',
   para: [
-    show('pictogram', { rows: 'Gatos:3,Perros:5' }, 'Un pictograma cuenta con dibujos. Cada fila es una cosa, y cada dibujo cuenta una unidad.', 'frog'),
-    show('bar-chart', { rows: 'Gatos:3,Perros:5' }, 'Una gráfica de barras cuenta con barras. La barra de cada fila llega hasta su número en la escala de la izquierda.', 'ladybug'),
+    show('pictogram', { rows: 'Gatos:3:🐱,Perros:5:🐶' }, 'Un pictograma usa dibujos para contar. Cada fila es una cosa, y cada dibujo cuenta una unidad.', 'frog'),
+    show('bar-chart', { rows: 'Gatos:3,Perros:5' }, 'Una gráfica de barras usa barras. La barra de cada fila llega hasta su número en la escala de la izquierda.', 'ladybug'),
   ],
   ejemplo: [
     show('pictogram', { rows: 'Gatos:3:🐱,Perros:5:🐶' }, 'Aquí cada dibujo vale 1. Los gatos son 3 dibujos, y los perros, 5.'),
@@ -24,11 +24,11 @@ const graficos = clase({
     show('bar-chart', { rows: 'Gatos:4,Perros:7,Peces:2' }, 'En la gráfica, mira hasta dónde llega cada barra en la escala. Los perros llegan hasta el 7: es la barra más alta.'),
   ],
   guiada: [
-    tryIt('big-text', { text: 'dibujos · barras' }, '¡Te toca! Mira primero cuánto vale cada dibujo, o qué números marca la escala de la izquierda. Después cuenta.', { skills: ['chart:pict:x'] }),
+    tryIt('big-text', { text: 'dibujos · barras' }, '¡Te toca! Mira primero cuánto vale cada dibujo: lo dice la leyenda de debajo del dibujo. Después cuenta.', { skills: ['chart:pict:x'] }),
     tryIt('big-text', { text: 'cuántos · cuántos más · en total' }, '¡Otra! Lee la pregunta antes de mirar: ¿te piden cuántos hay, cuántos más, cuántos en total o cuál tiene más?', { skills: ['chart:pict:x', 'chart:bars'] }),
   ],
   sola: [
-    tryIt('big-text', { text: 'dibujos · barras' }, '¡Tu turno! Mira cuánto vale cada dibujo o qué marca la escala, y cuenta con calma.', { skills: ['chart:pict:x'] }),
+    tryIt('big-text', { text: 'dibujos · barras' }, '¡Tu turno! Mira primero cuánto vale cada dibujo, según la leyenda, y cuenta con calma.', { skills: ['chart:pict:x'] }),
     tryIt('big-text', { text: 'escala · barras' }, '¡Tu turno! Sigue con el dedo la parte de arriba de cada barra hasta el número de la izquierda.', { skills: ['chart:bars'] }),
     tryIt('big-text', { text: 'cuántos más · en total' }, '¡Tu turno! Si te piden cuántos más, resta. Si te piden en total, suma. Lee bien la pregunta antes.', { skills: ['chart:pict:x', 'chart:bars'] }),
     tryIt('big-text', { text: 'cada fila o barra' }, '¡Tu turno! Lee la pregunta, mira todo el dibujo y no te saltes ninguna fila ni ninguna barra.', { skills: ['chart:pict:x', 'chart:bars'] }),
@@ -42,13 +42,13 @@ const tablas = clase({
   topicId: 'graficos-tablas',
   title: 'Tablas de datos',
   para: [
-    show('big-text', { text: 'Una tabla ordena los datos', sub: 'Filas: los grupos · Columnas: las opciones' }, 'Una tabla de datos anota cuántos hay de cada cosa. Cada fila es un grupo, y cada columna es una opción.', 'frog'),
-    show('big-text', { text: 'El número va donde se cruzan', sub: 'Fila del grupo + columna de la opción' }, 'Para leer un dato, busca la fila del grupo y la columna de la opción. El número donde se cruzan es el dato que buscas.', 'ladybug'),
+    show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1' }, 'Una tabla de datos anota cuántos hay de cada cosa. Las filas son los grupos, a la izquierda; las columnas son las opciones, arriba.', 'frog'),
+    show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1', at: '0:0' }, 'Para leer un dato, busca la fila del grupo y la columna de la opción. El número donde se cruzan es el dato.', 'ladybug'),
   ],
   ejemplo: [
-    show('big-text', { text: '3.º A · manzana: 5', sub: 'Fila 3.º A, columna de la manzana' }, 'En la fila de 3.º A y la columna de la manzana hay un 5: son 5 niños de 3.º A que prefieren la manzana.'),
-    show('big-text', { text: '3.º A · pera: 2', sub: 'Fila 3.º A, columna de la pera' }, 'En la misma fila, la columna de la pera tiene un 2: son 2 niños de 3.º A que prefieren la pera.'),
-    show('big-text', { text: '5 − 2 = 3', sub: '3 niños más prefieren la manzana' }, 'Para saber cuántos más, resta: 5 menos 2 son 3. Hay 3 niños más que prefieren la manzana.'),
+    show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1', at: '0:0' }, 'En la fila de 3.º A y la columna de la manzana hay un 5: son 5 niños de 3.º A que prefieren la manzana.'),
+    show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1', at: '0:1' }, 'En la misma fila, la columna de la pera tiene un 2: son 2 niños de 3.º A que prefieren la pera.'),
+    show('big-text', { text: '5 − 2 = 3', sub: '3 niños más prefieren la manzana que la pera' }, 'Para saber cuántos más, resta: en 3.º A, 5 menos 2 son 3. Hay 3 niños más que prefieren la manzana.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'fila · columna · número' }, '¡Te toca! Busca primero la fila del grupo que te preguntan, y después la columna de la opción.', { skills: ['chart:table'] }),

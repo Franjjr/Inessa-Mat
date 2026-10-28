@@ -109,6 +109,7 @@ export type LessonVisualId =
   | 'grid-route'        // params: { route } — a walk on a 5 × 5 grid from a start star: letters R, L, U, D, one square each (R,R,U)
   | 'pictogram'         // params: { rows, unit? } — rows «Gatos:3,Perros:5» (a third field names the icon: «Gatos:3:🐱»); each icon is worth unit (1 by default)
   | 'bar-chart'         // params: { rows } — the same rows as vertical bars on a numbered scale, each bar named under it
+  | 'table'            // params: { rows, cols, cells, at? } — a double-entry table: rows «3.º A,3.º B», cols «la manzana:🍎,la pera:🍐», cells «5-2/3-6» (rows split by /, counts by -); at «0:1» marks that cell
   | 'chance-bag'        // params: { balls } — a bag of coloured balls, «red:3,blue:0» (red, blue, green or yellow; 0 = none of that colour)
 
 export interface LessonStep {
