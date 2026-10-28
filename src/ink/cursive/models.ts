@@ -173,9 +173,9 @@ export const CURSIVE_LOWER: Record<string, CursiveGlyph> = {
   // m: lead-in plus two arches (three downstrokes)
   m: glyph([arches(0, 3, 15)]),
   n,
-  // r (Playwrite ES, school «r»): a lead-in rising from the baseline to a rounded top at the x-height,
-  // an arch to the right, the stem down to the baseline and a small flick out to the right
-  r: glyph([spline([0, 70, 3, 64, 7, 54, 10, 45, 12, 39, 16, 39.5, 21, 40.5, 25, 42, 28, 46, 29.5, 53, 29.5, 61, 30, 67, 32, 70, 35, 68, 37, 66])]),
+  // r (Playwrite ES, school «r»): a small curl at the baseline, the upstroke up the left side to the x-height,
+  // a tiny eye at the top, then a short shoulder to the right that exits at mid x-height (a high exit, like o)
+  r: glyph([spline([2, 70, 0, 68, 1, 62, 2, 54, 3, 46, 5, 41, 8, 38.5, 12, 38.5, 16, 40, 20, 43, 23, 47, 24.5, 51, 25, 54])]),
   // x (school «x»): two curved diagonals crossing at the middle, each with a bowl at its top and bottom end.
   // The main stroke runs from the top left to the bottom right; the second one, from the top right to the bottom left, follows it.
   x: glyph(
