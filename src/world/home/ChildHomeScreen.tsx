@@ -79,7 +79,7 @@ export default function ChildHomeScreen() {
   const subjects = SUBJECTS.filter((sub) => subjectIds.includes(sub.id))
   const chips = SUBJECTS.filter((sub) => chipIds.includes(sub.id))
   const view = picked ?? homeSubject(subjectIds, progress)
-  const today = todayEntry({ grade: child.grade, mastery, progress, subject: view })
+  const today = todayEntry({ grade: child.grade, mastery, progress, subject: view, sound: child.settings.sound })
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
   const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')

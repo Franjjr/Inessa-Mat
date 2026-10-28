@@ -1,5 +1,6 @@
 /* Lengua de 3.º, ordenar por el abecedario (lng-alphabet): 3 to 5 words, shown shuffled. The child taps them in alphabetical
-   order; each tapped word gets its place (1, 2, 3…). Tapping a placed word takes it back. The answer is the order tapped. */
+   order; each tapped word gets its place (1, 2, 3…). Tapping a placed word takes it back. The answer is the order tapped.
+   mode 'first' (the mini diccionario): two words, the child taps the one that comes first in the dictionary. */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { celebrate } from '@/fx'
@@ -32,10 +33,13 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: {
     const c = flow.submit({ type: 'marks', marked: order })
     if (c.correct) celebrate('small')
   }
+  const first = ex.mode === 'first'
 
   return (
     <section className={s.view} aria-label="Ordenar por el abecedario" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>Toca las palabras en orden del abecedario, de la primera a la última</p>
+      <p className={s.prompt}>
+        {first ? '¿Qué palabra sale antes en el diccionario? Tócala' : 'Toca las palabras en orden del abecedario, de la primera a la última'}
+      </p>
       <div className={s.options} role="group" aria-label="Palabras">
         {ex.words.map((w, i) => {
           const place = order.indexOf(i)
@@ -53,7 +57,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: {
           )
         })}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={order.length === ex.words.length} />
+      <AnswerBar flow={flow} onCheck={submit} canCheck={order.length === ex.targets.length} />
     </section>
   )
 }

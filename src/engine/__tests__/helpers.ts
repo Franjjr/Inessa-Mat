@@ -123,6 +123,10 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'text', value: ex.answer }
     case 'lng-read-order':
       return { type: 'marks', marked: [...ex.targets] }
+    case 'lng-copy':
+      return { type: 'text', value: ex.answer }
+    case 'lng-guided':
+      return { type: 'text', value: ex.parts.join(' ') }
     default:
       return { type: 'number', value: ex.answer as number }
   }

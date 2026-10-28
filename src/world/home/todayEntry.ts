@@ -3,7 +3,7 @@
    maths until today's maths session is done, then on Lengua (homeSubject). */
 import { classForTopic, isClassDone } from '@/content/classes'
 import { currentTopic, syllabusFor, topicTitle } from '@/content/syllabus'
-import { masteryOf, subjectOffered } from '@/engine'
+import { masteryOf, subjectOffered, teachableCourse } from '@/engine'
 import { sessionDoneKey } from '@/world/session/logic'
 import { SUBJECTS, type MasteryMap, type ProgressState, type SubjectId } from '@/types'
 
@@ -14,10 +14,14 @@ export type TodayEntry =
 const FALLBACK_TITLE: Partial<Record<SubjectId, string>> = { math: 'Matemáticas de hoy', language: 'Lengua de hoy' }
 const SESSION_TO: Partial<Record<SubjectId, string>> = { math: '/play/sesion', language: '/play/lengua' }
 
-export function todayEntry({ grade, mastery, progress, subject = 'math' }: {
+export function todayEntry({ grade, mastery, progress, subject = 'math', sound = true }: {
   grade?: number; mastery: MasteryMap; progress: ProgressState; subject?: SubjectId
+  /** The child's sound setting: without it a dictation is not taught (teachableCourse), as in the planner. */
+  sound?: boolean
 }): TodayEntry {
-  const topic = currentTopic(syllabusFor(subject, grade), masteryOf(mastery, subject))
+  const course = syllabusFor(subject, grade)
+  // Lengua names the topic its planner teaches (the same teachable view); maths is unchanged.
+  const topic = currentTopic(subject === 'language' ? teachableCourse(course, sound) : course, masteryOf(mastery, subject))
   const title = topic ? topicTitle(topic) : FALLBACK_TITLE[subject] ?? 'Hoy'
   const cls = topic ? classForTopic(topic.id, grade, subject) : undefined
   if (topic && cls && !isClassDone(progress, cls)) {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
-import { currentTopic, syllabusForGrade } from '@/content/syllabus'
-import type { MasteryMap, ProgressState, SkillMastery } from '@/types'
+import { currentTopic, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { createRng, planLenguaSession, teachableCourse } from '@/engine'
+import type { ChildProfile, MasteryMap, ProgressState, SkillMastery } from '@/types'
 import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
@@ -121,5 +122,29 @@ describe('the home for each child (R22, R23)', () => {
     expect(homeSubject(['math', 'language'], withStars, new Date(NOW))).toBe('math')
     const cut = { ...progress(), flags: { 'sesion-hecha:2026-10-27': true } }
     expect(homeSubject(['math', 'language'], cut, new Date(NOW))).toBe('language')
+  })
+
+  it('Lengua names the topic its planner teaches (the same teachable view), with the sound on or off', () => {
+    const lengua = (mastery: MasteryMap) => ({ grade: 3, mastery, progress: progress(), subject: 'language' as const })
+    // Lengua topics mastered in teaching order up to the sustantivo: «Hoy» names what the planner teaches.
+    const mastery: MasteryMap = {}
+    for (const skill of ['lng:gram:silabas', 'lng:orto:mayusculas', 'lng:voc:abecedario']) {
+      mastery[skill] = { skill, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: NOW } satisfies SkillMastery
+    }
+    const child = { id: 'child-1', name: 'Lía', grade: 3, settings: { sound: true, voice: false } } as unknown as ChildProfile
+    const plan = planLenguaSession({ child, mastery, syllabus: LENGUA3_SYLLABUS, now: new Date(NOW), progress: progress(), rng: createRng(3) })
+    const entry = todayEntry(lengua(mastery))
+    expect(entry.kind === 'clase' || entry.kind === 'sesion').toBe(true)
+    expect(entry.title).toBe(plan.topic ? topicTitle(plan.topic) : 'Lengua de hoy')
+  })
+
+  it('with the sound off a dictation-only topic is not taught, so «Hoy» does not name it', () => {
+    const teachableSound = teachableCourse(LENGUA3_SYLLABUS, true)
+    const teachableMute = teachableCourse(LENGUA3_SYLLABUS, false)
+    const skillsOf = (c: typeof teachableSound) => c.blocks.flatMap((b) => b.topics).flatMap((t) => t.skills)
+    expect(skillsOf(teachableSound)).toContain('lng:escr:dictado')
+    expect(skillsOf(teachableMute)).not.toContain('lng:escr:dictado')
+    // The topic is named by currentTopic over the same view: never the one with no skill left.
+    expect(teachableMute.blocks.flatMap((b) => b.topics).filter((t) => t.skills.length === 0).map((t) => t.id)).toEqual(['lng-dictado'])
   })
 })

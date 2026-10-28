@@ -6,11 +6,12 @@ import { buildDictation, buildMissingLetter, buildPunctuation, checkSpelling, hi
 import { buildStress, buildSyllables, checkStress, checkSyllables, hintsSyllables, statementSyllables } from './syllables'
 import { buildAlphabet, buildPair, checkAlphabet, checkPair, hintsVocabulary, statementVocabulary } from './vocabulary'
 import { buildReading, checkReading, hintsReading, statementReading } from './reading'
+import { buildCopy, buildGuided, checkWriting, hintsWriting, statementWriting } from './writing'
 
 export const LENGUA_KINDS: ExerciseKind[] = [
   'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
   'lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words',
-  'lng-read-choice', 'lng-read-text', 'lng-read-order',
+  'lng-read-choice', 'lng-read-text', 'lng-read-order', 'lng-copy', 'lng-guided',
 ]
 
 /** The exercise of a Lengua kind for one skill. box is the child's mastery box of the skill: from box 2 the answer is typed
@@ -26,11 +27,13 @@ export function buildLengua(kind: ExerciseKind, skill: SkillKey, rng: Rng, box =
     case 'lng-stress': return buildStress(skill, rng)
     case 'lng-syllables': return buildSyllables(skill, rng, box >= 2 ? 'split' : 'count')
     case 'lng-dictation': return buildDictation(skill, rng, box)
-    case 'lng-alphabet': return buildAlphabet(skill, rng)
+    case 'lng-alphabet': return buildAlphabet(skill, rng, box)
     case 'lng-pair-words': return buildPair(skill, rng)
     case 'lng-read-choice':
     case 'lng-read-text':
     case 'lng-read-order': return buildReading(kind, skill, rng)
+    case 'lng-copy': return buildCopy(skill, rng)
+    case 'lng-guided': return buildGuided(skill, rng)
   }
   throw new Error(`lengua: '${kind}' is not a Lengua kind`)
 }
@@ -51,6 +54,8 @@ export function checkLengua(ex: LenguaExercise, answer: Answer): CheckResult {
     case 'lng-read-choice':
     case 'lng-read-text':
     case 'lng-read-order': return checkReading(ex, answer)
+    case 'lng-copy':
+    case 'lng-guided': return checkWriting(ex, answer)
   }
 }
 
@@ -70,6 +75,8 @@ export function hintsLengua(ex: LenguaExercise): Hint[] {
     case 'lng-read-choice':
     case 'lng-read-text':
     case 'lng-read-order': return hintsReading(ex)
+    case 'lng-copy':
+    case 'lng-guided': return hintsWriting(ex)
   }
 }
 
@@ -90,5 +97,7 @@ export function lenguaStatement(ex: LenguaExercise): string {
     case 'lng-read-choice':
     case 'lng-read-text':
     case 'lng-read-order': return statementReading(ex)
+    case 'lng-copy':
+    case 'lng-guided': return statementWriting(ex)
   }
 }

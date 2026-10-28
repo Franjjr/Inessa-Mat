@@ -137,10 +137,32 @@ describe('OrderWordsView', () => {
   })
 
   it('an order that is not alphabetical is graded with the alphabet error', () => {
-    const ex = first('lng-alphabet', 'lng:voc:abecedario')
+    const ex = first('lng-alphabet', 'lng:voc:abecedario', 2)
+    expect(ex.mode).toBeUndefined()
     const onAnswered = vi.fn()
     render(<OrderWordsView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
     for (const i of [...ex.targets].reverse()) fireEvent.click(screen.getByRole('button', { name: ex.words[i] }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.errorType).toBe('alphabet')
+  })
+
+  it('the mini diccionario asks which word comes first: tapping it and checking is right, the other one is an alphabet error', () => {
+    const ex = first('lng-alphabet', 'lng:voc:abecedario', 0)
+    expect(ex.mode).toBe('first')
+    const onAnswered = vi.fn()
+    render(<OrderWordsView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getByText(/¿Qué palabra sale antes en el diccionario\?/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: ex.words[ex.targets[0]] }))
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('the mini diccionario: the other word is wrong', () => {
+    const ex = first('lng-alphabet', 'lng:voc:abecedario', 0)
+    const onAnswered = vi.fn()
+    render(<OrderWordsView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    const other = ex.words.find((_, i) => i !== ex.targets[0]) ?? ''
+    fireEvent.click(screen.getByRole('button', { name: other }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.errorType).toBe('alphabet')
   })

@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
 import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
+import { createRng, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
@@ -182,7 +182,8 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       const skill = exercise.skill
       const now = new Date()
       // A retry (graded: false) is saved with its retries, but only the first answer grades mastery and the session.
-      const next = graded ? updateMastery(
+      // A completion-only text (escritura guiada) is not graded, but finishing it counts as done: its mastery moves.
+      const next = graded || isCompletionOnly(exercise.kind) ? updateMastery(
         masteryRef.current[skill],
         { skill, correct: check.correct, ms, inputMode, hintsUsed, errorType: check.errorType ?? null },
         now,

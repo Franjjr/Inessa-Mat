@@ -226,7 +226,7 @@ export function hintsSyllables(ex: LngSyllablesExercise | LngStressExercise): Hi
     return [
       hint(1, 'Cada palabra tiene una sílaba con más fuerza. Dila despacio y escucha cuál suena más.'),
       hint(2, 'Estas pistas ayudan a encontrarla:', 'words', { words: ['llana: acaba en vocal, n o s', 'aguda: acaba en otra letra', 'con tilde: el acento escrito marca esa sílaba'] }),
-      hint(3, 'Cuenta las sílabas desde el final: ¿suena más fuerte el último golpe o el penúltimo?'),
+      hint(3, 'Si hay tilde escrita, ese golpe es el fuerte. Si no, cuenta desde el final: ¿acaba en vocal, n o s? Entonces el fuerte es el golpe de antes del último; si no, es el último.'),
     ]
   }
   if (ex.mode === 'count') {

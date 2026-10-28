@@ -15,6 +15,7 @@ const ALL_KINDS: ExerciseKind[] = [
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem',
   'lng-tap-words', 'lng-sentence-parts', 'lng-classify', 'lng-transform',
   'lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words',
+  'lng-copy', 'lng-guided',
 ]
 
 describe('strategyForFact — all 100 facts', () => {

@@ -516,8 +516,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
   return []
 }
 
-/** The Lengua kinds of each skill (src/engine/lengua). Skills with no kind yet (copia, guiada) are
-    listed in the syllabus and practised later. */
+/** The Lengua kinds of each skill (src/engine/lengua). */
 function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[] {
   switch (p.area) {
     case 'gram':
@@ -551,6 +550,8 @@ function lenguaKinds(p: Extract<ParsedSkill, { type: 'lengua' }>): ExerciseKind[
       if (p.item === 'adivinanzas') return ['lng-read-text']
       return []
     case 'escr':
+      if (p.item === 'copia') return ['lng-copy']
+      if (p.item === 'guiada') return ['lng-guided']
       return p.item === 'dictado' ? ['lng-dictation'] : []
     default: return []
   }
@@ -564,7 +565,7 @@ export const LENGUA_SKILLS: SkillKey[] = [
   'lng:orto:mayusculas', 'lng:orto:c-qu', 'lng:orto:g-gu', 'lng:orto:r-rr', 'lng:orto:mp-mb', 'lng:orto:tonica',
   'lng:orto:signos:punto', 'lng:orto:signos:coma', 'lng:orto:signos:pregunta', 'lng:orto:signos:exclamacion',
   'lng:voc:abecedario', 'lng:voc:sinonimos', 'lng:voc:antonimos', 'lng:voc:familias', 'lng:voc:diminutivos',
-  'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:dictado',
+  'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:copia', 'lng:escr:dictado', 'lng:escr:guiada',
   'lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar',
   'lng:lit:rima', 'lng:lit:fabula', 'lng:lit:adivinanzas', 'lng:lit:trabalenguas',
 ]

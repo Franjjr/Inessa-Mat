@@ -28,6 +28,7 @@ export {
 } from './daily'
 /** Lengua de 3.º: the 15-minute session and the placement test (src/engine/lengua/daily.ts, placement.ts). */
 export { planLenguaSession, storyFlag } from './lengua/daily'
+export { teachableCourse } from './lengua/teachable'
 export type { LenguaPlanInput } from './lengua/daily'
 export { buildLenguaPlacement, lenguaPlacementBlockOf, LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT } from './lengua/placement'
 export type { LenguaPlacementBlockId } from './lengua/placement'
@@ -66,6 +67,7 @@ export { columnName } from './feedback'
 /** Lengua de 3.º, gramática: the exercises, their prompts, check and hints (src/engine/lengua). */
 export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
 export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'
+export { isCompletionOnly } from './lengua/writing'
 export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {

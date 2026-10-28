@@ -2,14 +2,15 @@
 import { describe, expect, it } from 'vitest'
 import { check, createRng, generate, hintsFor, kindsForSkill } from '@/engine'
 import type { LngAlphabetExercise, LngPairWordsExercise } from '@/types'
-import { ALPHABET_SETS, alphabetKey, inAlphabetOrder } from '../vocabulary'
+import { ALPHABET_SETS, alphabetKey, buildAlphabet, inAlphabetOrder } from '../vocabulary'
 
 const PAIR_SKILLS = ['lng:voc:sinonimos', 'lng:voc:antonimos', 'lng:voc:familias', 'lng:voc:diminutivos', 'lng:voc:aumentativos', 'lng:voc:compuestas']
 
-function sample<K extends 'lng-alphabet' | 'lng-pair-words'>(skill: string, kind: K, n = 40) {
+function sample<K extends 'lng-alphabet' | 'lng-pair-words'>(skill: string, kind: K, n = 40, box = 0) {
   const out: Extract<ReturnType<typeof generate>[number], { kind: K }>[] = []
   for (let seed = 1; seed <= n; seed++) {
-    for (const ex of generate({ skills: [skill], kinds: [kind] }, 6, { rng: createRng(seed) })) if (ex.kind === kind) out.push(ex as never)
+    const mastery = { [skill]: { box } } as never
+    for (const ex of generate({ skills: [skill], kinds: [kind] }, 6, { rng: createRng(seed), mastery })) if (ex.kind === kind) out.push(ex as never)
   }
   return out
 }
@@ -31,12 +32,35 @@ describe('alphabet', () => {
   })
 
   it('the targets are the shown words in alphabetical order, and the right order is the only right answer', () => {
-    for (const ex of sample('lng:voc:abecedario', 'lng-alphabet') as LngAlphabetExercise[]) {
+    for (const ex of sample('lng:voc:abecedario', 'lng-alphabet', 40, 2) as LngAlphabetExercise[]) {
+      expect(ex.mode, ex.id).toBeUndefined()
       expect(ex.targets.map((i) => ex.words[i]), ex.id).toEqual(inAlphabetOrder(ex.words))
       expect(check(ex, { type: 'marks', marked: [...ex.targets] }).correct, ex.id).toBe(true)
       const reversed = [...ex.targets].reverse()
       expect(check(ex, { type: 'marks', marked: reversed }).correct, ex.id).toBe(false)
       expect(check(ex, { type: 'marks', marked: [...ex.targets].slice(0, 1) }).errorType, ex.id).toBe('incomplete')
+    }
+  })
+
+  it('a child still learning the skill gets the mini diccionario: two words, the first one in the dictionary is the answer', () => {
+    for (const ex of sample('lng:voc:abecedario', 'lng-alphabet', 40, 0) as LngAlphabetExercise[]) {
+      expect(ex.mode, ex.id).toBe('first')
+      expect(ex.words.length, ex.id).toBe(2)
+      expect(ex.targets.length, ex.id).toBe(1)
+      expect(ex.words[ex.targets[0]], ex.id).toBe(inAlphabetOrder(ex.words)[0])
+      expect(check(ex, { type: 'marks', marked: [...ex.targets] }).correct, ex.id).toBe(true)
+      const other = ex.words.findIndex((_, i) => i !== ex.targets[0])
+      const wrong = check(ex, { type: 'marks', marked: [other] })
+      expect(wrong.correct, ex.id).toBe(false)
+      expect(wrong.errorType, ex.id).toBe('alphabet')
+      expect(hintsFor(ex).map((h) => h.level), ex.id).toEqual([1, 2, 3])
+    }
+  })
+
+  it('the mini diccionario never shows a pair in the order of the dictionary', () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const ex = buildAlphabet('lng:voc:abecedario', createRng(seed), 0)
+      expect(inAlphabetOrder(ex.words).join(), ex.id).not.toBe(ex.words.join())
     }
   })
 

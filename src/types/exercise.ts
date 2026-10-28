@@ -119,6 +119,8 @@ export type ExerciseKind =
   | 'lng-read-choice' // Lengua 3.º: elegir la respuesta a una pregunta de un texto (lect:*, lit:rima, lit:fabula, lit:trabalenguas)
   | 'lng-read-text'   // Lengua 3.º: escribir una palabra del texto o la respuesta de una adivinanza (lect:preguntas, lit:adivinanzas)
   | 'lng-read-order'  // Lengua 3.º: poner en orden lo que pasa en el texto (lect:ordenar)
+  | 'lng-copy'        // Lengua 3.º: copiar una frase que se ve en la tarjeta, con el teclado (escr:copia)
+  | 'lng-guided'      // Lengua 3.º: escritura guiada corta, una invitación, una nota, una carta o una descripción con huecos (escr:guiada)
 
 interface ExerciseBase {
   id: ID
@@ -610,11 +612,28 @@ export interface LngDictationExercise extends ExerciseBase {
   kind: 'lng-dictation'
   answer: string
 }
-/** Words to put in alphabetical order. words are shown shuffled; targets are their indexes in alphabetical order. */
+/** Words to put in alphabetical order. words are shown shuffled; targets are their indexes in alphabetical order.
+    mode 'order' (default): every word, in order. mode 'first' (the mini diccionario): two words, the child taps the one that
+    comes first in the dictionary; targets has that one index. */
 export interface LngAlphabetExercise extends ExerciseBase {
   kind: 'lng-alphabet'
   words: string[]
   targets: number[]
+  mode?: 'order' | 'first'
+}
+/** A sentence shown on the card; the child copies it with the keyboard. Compared with 'exact' (capitals and marks count). */
+export interface LngCopyExercise extends ExerciseBase {
+  kind: 'lng-copy'
+  answer: string
+}
+/** A short text with blanks (an invitation, a note, a letter, a description). `parts` are the fixed pieces (one more than the
+    blanks) and `prompts` the question of each blank, in order. The child writes every blank; the exercise is not graded
+    (completion only, see isCompletionOnly). */
+export interface LngGuidedExercise extends ExerciseBase {
+  kind: 'lng-guided'
+  task: string
+  parts: string[]
+  prompts: string[]
 }
 /** A question about a word (synonym, antonym, family, diminutive, augmentative, compound). mode 'choice': the child taps
     options (answer is the right one); mode 'text': the child writes the word (answer, compared with 'ignore-case'). */
@@ -651,6 +670,7 @@ export interface LngReadOrderExercise extends ExerciseBase {
 export type LenguaExercise = LngTapWordsExercise | LngSentencePartsExercise | LngClassifyExercise | LngTransformExercise
   | LngMissingLetterExercise | LngPunctuationExercise | LngStressExercise | LngSyllablesExercise | LngDictationExercise
   | LngAlphabetExercise | LngPairWordsExercise | LngReadChoiceExercise | LngReadTextExercise | LngReadOrderExercise
+  | LngCopyExercise | LngGuidedExercise
 
 // ---- 4.º: multiplicar por dos cifras por partes, y el área en cuadraditos (src/engine/bigops.ts, geometry.ts)
 

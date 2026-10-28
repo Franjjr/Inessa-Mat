@@ -3,7 +3,8 @@
    fr, gl, gr, pl, pr, tl, tr), and ch, ll, rr, qu, gu, gü as single sounds. */
 import { describe, expect, it } from 'vitest'
 import { createRng } from '../../rng'
-import { buildSyllables, SYLLABLE_WORDS, stressedSyllable, syllabify, wrongSplits } from '../syllables'
+import { buildSyllables, hintsSyllables, SYLLABLE_WORDS, stressedSyllable, syllabify, wrongSplits } from '../syllables'
+import type { LngStressExercise } from '@/types'
 
 const SPLITS: [string, string][] = [
   ['casa', 'ca-sa'], ['mesa', 'me-sa'], ['perro', 'pe-rro'], ['pelota', 'pe-lo-ta'], ['mariposa', 'ma-ri-po-sa'],
@@ -56,6 +57,28 @@ describe('stressedSyllable: the index of the stressed syllable', () => {
     ['día', 0], // hiato con tilde: dí-a
   ])('%s → sílaba %i', (word, index) => {
     expect(stressedSyllable(word)).toBe(index)
+  })
+})
+
+describe('the stress hints: the level 3 rule is right for esdrújulas (the tilde marks the stress, antepenultimate)', () => {
+  const stressOf = (word: string): LngStressExercise => ({
+    id: `lng-stress:${word}`, kind: 'lng-stress', skill: 'lng:orto:tonica', difficulty: 2,
+    word, syllables: syllabify(word), stressed: stressedSyllable(word),
+  })
+
+  it.each(['murciélago', 'teléfono'])('%s: the tilde is the stressed syllable, and the rule says so', (word) => {
+    const ex = stressOf(word)
+    expect(ex.syllables.length).toBe(4)
+    expect(ex.stressed).toBe(1)
+    const worked = hintsSyllables(ex)[2].text
+    expect(worked).toMatch(/tilde/)
+    expect(worked).toMatch(/antes del último/)
+  })
+
+  it('a word without a tilde that ends in a vowel is stressed on the penultimate, as the rule says', () => {
+    const ex = stressOf('mariposa')
+    expect(ex.syllables[ex.stressed]).toBe('po')
+    expect(hintsSyllables(ex)[2].text).toMatch(/antes del último/)
   })
 })
 

@@ -12,10 +12,11 @@ import { STORY_READINGS } from '@/content/lengua/stories'
 import type { ChildProfile, Exercise, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { generate } from '../generate'
 import { createRng, hashString } from '../rng'
-import { kindsForSkill, parseSkill } from '../skills'
+import { parseSkill } from '../skills'
 import { masteryOf } from '../subjects'
 import { estimateSeconds, urgencyOrder, type DailyItem, type DailyPlan } from '../daily'
 import { readingExercise } from './reading'
+import { makable, teachableCourse } from './teachable'
 
 export const LENGUA_WARMUP_MAX = 4
 /** «Lo nuevo»: up to six items of the topic (its skills taken in turn). */
@@ -44,22 +45,8 @@ function areaOf(skill: SkillKey): string | null {
   return p?.type === 'lengua' ? p.area : null
 }
 
-/** A skill the generator can make now: it has an exercise kind, and a dictation needs the sound. */
-function makable(skill: SkillKey, sound: boolean): boolean {
-  const kinds = kindsForSkill(skill)
-  return kinds.length > 0 && (sound || !kinds.includes('lng-dictation'))
-}
-
-/** The syllabus with only the skills the planner can make. A topic left with none is not offered (availableTopics). */
-function teachable(syllabus: Syllabus, sound: boolean): Syllabus {
-  return {
-    ...syllabus,
-    blocks: syllabus.blocks.map((b) => ({
-      ...b,
-      topics: b.topics.map((t) => ({ ...t, skills: t.skills.filter((s) => makable(s, sound)) })),
-    })),
-  }
-}
+/** The guided writing is done once per topic (completion only): it is taught in «Lo nuevo» and never repeated as warm-up or review. */
+const GUIDED_SKILL: SkillKey[] = ['lng:escr:guiada']
 
 /** The flag that says a story has been read to its last question. */
 export const storyFlag = (readingId: string) => `lectura:${readingId}`
@@ -75,7 +62,7 @@ export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
   const { child, now, progress } = input
   const sound = child.settings.sound
   const mastery = masteryOf(input.mastery, 'language')
-  const course = teachable(input.syllabus, sound)
+  const course = teachableCourse(input.syllabus, sound)
   const today = dayKey(now)
   const rng = input.rng ?? createRng(hashString(`lengua:${child.id}:${today}`))
   const used: string[] = []
@@ -89,7 +76,7 @@ export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
   // 1. Calentamiento: learnt skills not seen today, the most urgent first. Readings are practised in the story, not here.
   const seenBeforeToday = (m: SkillMastery) => m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today
   const learnt = urgencyOrder(mastery, now).filter(seenBeforeToday).map((m) => m.skill)
-    .filter((s) => makable(s, sound) && areaOf(s) !== 'lect' && areaOf(s) !== 'lit')
+    .filter((s) => makable(s, sound) && areaOf(s) !== 'lect' && areaOf(s) !== 'lit' && !GUIDED_SKILL.includes(s))
   const warmup: DailyItem[] = []
   for (const s of learnt.slice(0, LENGUA_WARMUP_MAX)) {
     const ex = make(s, rng)
@@ -127,8 +114,8 @@ export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
     }
   })
 
-  // 4. Mezcla: the spelling and vocabulary the child has learnt; when none yet, those the syllabus has.
-  const spelling = (s: SkillKey) => ['orto', 'voc'].includes(areaOf(s) ?? '')
+  // 4. Mezcla: the spelling, vocabulary and copies the child has learnt; when none yet, those the syllabus has.
+  const spelling = (s: SkillKey) => ['orto', 'voc', 'escr'].includes(areaOf(s) ?? '') && !GUIDED_SKILL.includes(s)
   const review = learnt.filter(spelling)
   const pool = review.length ? review : availableSkills(course).filter((s) => makable(s, sound) && spelling(s))
   const fixedSeconds = secondsOf([...warmup, ...newItems, ...storyItems]) + PASSAGE_SECONDS

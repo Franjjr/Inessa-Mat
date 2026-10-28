@@ -270,7 +270,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       break
     case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
     case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words':
-    case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order':
+    case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order': case 'lng-copy': case 'lng-guided':
       for (const skill of LENGUA_SKILLS) if (kindsForSkill(skill).includes(kind)) addItem(map, skill, kind, 1)
       break
     case 'area':

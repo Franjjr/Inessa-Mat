@@ -48,13 +48,11 @@ describe('temario de Lengua de 3.º', () => {
     }
   })
 
-  it('the grammar, spelling, vocabulary, dictation, reading and literature skills have exercise kinds; copy and guided writing have none yet', () => {
-    // Copia y escritura guiada llegan en sus tareas: sin tipo de ejercicio por ahora.
-    const practised = (k: string) => /^lng:(gram|orto|voc|lect|lit):|^lng:escr:dictado$/.test(k)
-    const withKinds = skills.filter(practised)
-    expect(withKinds.length).toBeGreaterThan(0)
-    for (const s of withKinds) expect(kindsForSkill(s).length, s).toBeGreaterThan(0)
-    for (const s of skills.filter((k) => !practised(k))) expect(kindsForSkill(s), s).toEqual([])
+  it('every skill of the temario has an exercise kind (copy and guided writing included)', () => {
+    expect(skills.length).toBeGreaterThan(0)
+    for (const s of skills) expect(kindsForSkill(s).length, s).toBeGreaterThan(0)
+    expect(kindsForSkill('lng:escr:copia')).toEqual(['lng-copy'])
+    expect(kindsForSkill('lng:escr:guiada')).toEqual(['lng-guided'])
   })
 
   it('teaches every topic in exactly one stage, eight stages over three trimesters, with no world', () => {

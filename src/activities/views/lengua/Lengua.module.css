@@ -143,6 +143,42 @@
   text-align: center;
 }
 
+/* The guided writing: the text with its blanks. A filled blank is bold; the blank being written is underlined; the others wait. */
+.guidedText {
+  text-align: start;
+  line-height: 1.6;
+}
+
+.blank {
+  display: inline-block;
+  min-width: 2.5em;
+  padding: 0 0.2em;
+  border-bottom: 3px solid var(--c-line);
+  overflow-wrap: anywhere;
+}
+
+.blankFilled {
+  font-weight: 800;
+  color: var(--c-primary);
+}
+
+.blankOpen {
+  background: var(--c-magic-soft);
+  border-bottom-color: var(--c-primary);
+}
+
+.blankEmpty {
+  color: var(--c-ink-soft);
+}
+
+.guidedQuestion {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
 /* The «Escuchar» or «Repetir» button of the dictation: centred, above the answer box. */
 .listen {
   display: flex;

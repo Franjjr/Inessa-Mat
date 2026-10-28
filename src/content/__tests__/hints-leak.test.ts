@@ -41,7 +41,7 @@ function wholeToken(alternatives: string[]): RegExp {
 interface Answer { label: string; pattern: RegExp; answer?: number }
 
 /** Lengua (3.º), the kinds added with spelling, syllables, dictation and vocabulary: the text the child writes or taps. */
-const LENGUA_TEXT_KINDS = ['lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words']
+const LENGUA_TEXT_KINDS = ['lng-missing-letter', 'lng-punctuation', 'lng-stress', 'lng-syllables', 'lng-dictation', 'lng-alphabet', 'lng-pair-words', 'lng-copy']
 function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
   const text = (t: string): Answer => ({ label: `«${t}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(t)}(?![\\p{L}\\d])`, 'iu') })
   switch (ex.kind) {
@@ -52,6 +52,7 @@ function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
     case 'lng-stress': return [text(ex.syllables[ex.stressed])]
     case 'lng-syllables': return [text(ex.answer)]
     case 'lng-alphabet': return ex.targets.map((i) => text(ex.words[i]))
+    case 'lng-copy': return [text(ex.answer)]
     default: return []
   }
 }

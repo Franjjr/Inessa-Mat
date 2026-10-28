@@ -22,7 +22,19 @@ export const alphabetKey = (w: string) => w.toLocaleLowerCase('es').replace(/ñ/
 /** The words of a set in alphabetical order. */
 export const inAlphabetOrder = (words: string[]) => [...words].sort((a, b) => (alphabetKey(a) < alphabetKey(b) ? -1 : alphabetKey(a) > alphabetKey(b) ? 1 : 0))
 
-export function buildAlphabet(skill: SkillKey, rng: Rng): LngAlphabetExercise {
+/** The alphabet exercise. A child who is still learning the skill (box below 2) gets the mini diccionario: two words, and
+    the one that comes first in the dictionary is tapped («¿qué palabra sale antes?»). From box 2, every word is put in order. */
+export function buildAlphabet(skill: SkillKey, rng: Rng, box = 2): LngAlphabetExercise {
+  if (box < 2) {
+    const pair = shuffle(rng, pick(rng, ALPHABET_SETS)).slice(0, 2)
+    const sortedPair = inAlphabetOrder(pair)
+    // As in the order exercise, the pair never comes out already in order.
+    const shown = pair.join() === sortedPair.join() ? [...pair].reverse() : pair
+    return {
+      id: `lng-alphabet:first:${pair.join(',')}`, kind: 'lng-alphabet', skill, difficulty: 1,
+      words: shown, targets: [shown.indexOf(sortedPair[0])], mode: 'first',
+    }
+  }
   const set = pick(rng, ALPHABET_SETS)
   const sorted = inAlphabetOrder(set)
   // The words never come out already in order: a sorted shuffle is reversed.
@@ -133,7 +145,7 @@ export function buildPair(skill: SkillKey, rng: Rng): LngPairWordsExercise {
 const CHILD = '¡Muy bien, {child}!'
 
 export function checkAlphabet(ex: LngAlphabetExercise, answer: Answer): CheckResult {
-  const expected = inAlphabetOrder(ex.words).join(', ')
+  const expected = ex.targets.map((i) => ex.words[i]).join(', ')
   if (answer.type !== 'marks') return { correct: false, given: '', expected, errorType: 'other', feedback: 'Toca las palabras en orden.' }
   const given = answer.marked.map((i) => ex.words[i]).join(', ') || '—'
   if (answer.marked.length === ex.targets.length && answer.marked.every((v, i) => v === ex.targets[i])) return { correct: true, given, expected, feedback: CHILD }
@@ -176,6 +188,13 @@ const PAIR_TEXT: Record<string, [string, string]> = {
 
 export function hintsVocabulary(ex: LngAlphabetExercise | LngPairWordsExercise): Hint[] {
   if (ex.kind === 'lng-alphabet') {
+    if (ex.mode === 'first') {
+      return [
+        hint(1, 'En el diccionario va primero la palabra cuya primera letra está antes en el abecedario.'),
+        hint(2, 'Este es el orden de las letras. Mira en él cuál de las dos va antes.', 'words', { words: ['a b c d e f g h i j k l m n ñ o p q r s t u v w x y z'] }),
+        hint(3, '¿Qué letra va antes en el abecedario? Mira la primera letra de cada palabra y, si es la misma, la segunda.'),
+      ]
+    }
     return [
       hint(1, 'Ordenar por el abecedario es mirar la primera letra de cada palabra. Si es la misma, se mira la segunda.'),
       hint(2, 'Este es el orden de las letras. Mira en él cuál va antes.', 'words', { words: ['a b c d e f g h i j k l m n ñ o p q r s t u v w x y z'] }),
@@ -197,5 +216,6 @@ export function hintsVocabulary(ex: LngAlphabetExercise | LngPairWordsExercise):
 }
 
 export function statementVocabulary(ex: LngAlphabetExercise | LngPairWordsExercise): string {
-  return ex.kind === 'lng-alphabet' ? `Ordena por el abecedario: ${ex.words.join(', ')}` : ex.question
+  if (ex.kind !== 'lng-alphabet') return ex.question
+  return ex.mode === 'first' ? `Busca en el diccionario: ${ex.words.join(' o ')}` : `Ordena por el abecedario: ${ex.words.join(', ')}`
 }

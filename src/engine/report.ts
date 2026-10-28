@@ -6,6 +6,7 @@ import { currentTopic, isTopicMastered, stageOfTopic, topicProgress, type Syllab
 import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf } from './placement'
 import { LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT, lenguaPlacementBlockOf } from './lengua/placement'
 import { attemptsOf, masteryOf } from './subjects'
+import { teachableCourse } from './lengua/teachable'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -44,9 +45,11 @@ export interface SyllabusReport {
 /** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. */
 export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number): SyllabusReport {
   const mastery = masteryOf(allMastery, subject)
-  const now = currentTopic(syllabus, mastery, term)
+  // Lengua reports the topics its planner can teach (the same view as the home and the session); maths is unchanged.
+  const course = subject === 'language' ? teachableCourse(syllabus) : syllabus
+  const now = currentTopic(course, mastery, term)
   let current: SyllabusReport['current'] = null
-  const blocks = syllabus.blocks.map((b): BlockReport => {
+  const blocks = course.blocks.map((b): BlockReport => {
     const topics = b.topics.map((t): TopicReport => {
       const pending = t.status !== 'disponible' || t.skills.length === 0
       const seen = t.skills.some((s) => mastery[s])

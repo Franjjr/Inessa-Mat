@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
-import { hintsFor } from '@/engine'
+import { hintsFor, isCompletionOnly } from '@/engine'
 import { Button } from '@/ui'
 import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
@@ -72,6 +72,9 @@ export function ExerciseStep({
   exRef.current = exercise
   const reportRef = useRef(report)
   reportRef.current = report
+
+  /** A completion-only exercise (escritura guiada) is never graded: its attempt is outside accuracy and the session. */
+  const gradedHere = () => !isCompletionOnly(exRef.current.kind)
 
   const enter = (next: Stage) => {
     stageRef.current = next
@@ -146,7 +149,7 @@ export function ExerciseStep({
       first.current = o
       // A view that already gave its own second try (facts) settles the exercise: no further retry here.
       const offer = allowRetry && !o.check.correct && !o.retries
-      pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false, graded: true }
+      pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false, graded: gradedHere() }
       show(o)
       if (offer) {
         enter('offered')
@@ -163,7 +166,7 @@ export function ExerciseStep({
       // (the page was hidden during the offer), the retry is its own attempt, not graded again.
       pending.current = firstSent.current
         ? { outcome: o, retries, solvedOnRetry, graded: false }
-        : { outcome: first.current, retries, solvedOnRetry, graded: true }
+        : { outcome: first.current, retries, solvedOnRetry, graded: gradedHere() }
       show(o)
       send()
       enter('final')
@@ -188,7 +191,7 @@ export function ExerciseStep({
       recognitionFixes: 0,
     }
     first.current = o
-    pending.current = { outcome: o, retries: 0, solvedOnRetry: false, graded: true }
+    pending.current = { outcome: o, retries: 0, solvedOnRetry: false, graded: gradedHere() }
     send()
     setLatest(o)
     setMessage(host.t('No pasa nada. Mira cada pista y, cuando lo entiendas, sigue.'))
