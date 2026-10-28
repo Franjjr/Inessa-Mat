@@ -21,13 +21,13 @@ const descomponer = clase({
     show('big-text', { text: '6 071 = 6 000 + 70 + 1' }, 'Como las centenas son 0, esa casa no suma nada y no la escribimos.'),
   ],
   guiada: [
-    tryIt('place-value', { n: 4325 }, '¡Te toca! Empieza por la casa de los millares.', { skills: ['num:place:expanded'] }),
-    tryIt('place-value', { n: 4325 }, '¡Otra! Mira cuántos bloques tiene cada casa.', { skills: ['num:place:blocks'] }),
+    tryIt('place-value', undefined, '¡Te toca! Empieza por la casa de los millares.', { skills: ['num:place:expanded'] }),
+    tryIt('place-value', undefined, '¡Otra! Mira cuántos bloques tiene cada casa.', { skills: ['num:place:blocks'] }),
   ],
   sola: [
-    tryIt('place-value', { n: 4325 }, '¡Tu turno! Cada cifra vale según su casa.', { skills: ['num:place:expanded'] }),
-    tryIt('place-value', { n: 4325 }, '¡Tu turno! Si una casa tiene 0, no la olvides.', { skills: ['num:place:expanded'] }),
-    tryIt('place-value', { n: 4325 }, '¡Tu turno! Sin pistas: cuenta los bloques de cada casa.', { skills: ['num:place:blocks'] }),
+    tryIt('place-value', undefined, '¡Tu turno! Cada cifra vale según su casa.', { skills: ['num:place:expanded'] }),
+    tryIt('place-value', undefined, '¡Tu turno! Si una casa tiene 0, no la olvides.', { skills: ['num:place:expanded'] }),
+    tryIt('place-value', undefined, '¡Tu turno! Sin pistas: cuenta los bloques de cada casa.', { skills: ['num:place:blocks'] }),
   ],
   cierre: show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'La regla: cada cifra vale según su casa. Si una casa tiene 0, no hace falta escribirla.'),
 })
@@ -48,13 +48,13 @@ const leerEscribir = clase({
     show('big-text', { text: '9 999', sub: 'nueve mil novecientos noventa y nueve' }, 'El número más grande de esta etapa es el 9 999.'),
   ],
   guiada: [
-    tryIt('big-text', { text: '2 064', sub: 'dos mil sesenta y cuatro' }, '¡Te toca! Empieza por los millares.', { skills: ['num:place:words'] }),
-    tryIt('big-text', { text: '7 300', sub: 'siete mil trescientos' }, '¡Otra! Mira los ceros: no se leen.', { skills: ['num:place:words'] }),
+    tryIt('big-text', undefined, '¡Te toca! Empieza por los millares.', { skills: ['num:place:words'] }),
+    tryIt('big-text', undefined, '¡Otra! Mira los ceros: no se leen.', { skills: ['num:place:words'] }),
   ],
   sola: [
-    tryIt('big-text', { text: '2 064', sub: 'dos mil sesenta y cuatro' }, '¡Tu turno! Lee casa a casa.', { skills: ['num:place:words'] }),
-    tryIt('big-text', { text: '7 300', sub: 'siete mil trescientos' }, '¡Tu turno! Cuidado con los ceros.', { skills: ['num:place:words'] }),
-    tryIt('big-text', { text: '9 999', sub: 'nueve mil novecientos noventa y nueve' }, '¡Tu turno! Sin pistas, de mayor a menor.', { skills: ['num:place:words'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Lee casa a casa.', { skills: ['num:place:words'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Cuidado con los ceros.', { skills: ['num:place:words'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Sin pistas, de mayor a menor.', { skills: ['num:place:words'] }),
   ],
   cierre: show('big-text', { text: '2 064', sub: 'dos mil sesenta y cuatro' }, 'La regla: se lee casa a casa, de mayor a menor. Los ceros no se leen, pero ocupan su casa.'),
 })
@@ -76,13 +76,13 @@ const compararOrdenar = clase({
     show('big-text', { text: '1 905 < 2 100 < 3 020', sub: 'de menor a mayor' }, 'Para ordenar, empezamos por el más pequeño y terminamos por el más grande.'),
   ],
   guiada: [
-    tryIt('big-text', { text: '4 052 > 3 998' }, '¡Te toca! Mira primero los millares.', { skills: ['num:compare'] }),
-    tryIt('big-text', { text: '2 760 < 2 809' }, '¡Otra! Si los millares son iguales, mira las centenas.', { skills: ['num:compare'] }),
+    tryIt('big-text', undefined, '¡Te toca! Mira primero los millares.', { skills: ['num:compare'] }),
+    tryIt('big-text', undefined, '¡Otra! Si los millares son iguales, mira las centenas.', { skills: ['num:compare'] }),
   ],
   sola: [
-    tryIt('big-text', { text: '2 760 < 2 809' }, '¡Tu turno! Mira la casa de mayor valor.', { skills: ['num:compare'] }),
-    tryIt('big-text', { text: '1 905 < 2 100 < 3 020' }, '¡Tu turno! Ordena del más pequeño al más grande.', { skills: ['num:order'] }),
-    tryIt('big-text', { text: '5 000 = 5 000' }, '¡Tu turno! Sin pistas: si una casa es igual, pasa a la siguiente.', { skills: ['num:compare'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Mira la casa de mayor valor.', { skills: ['num:compare'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Ordena del más pequeño al más grande.', { skills: ['num:order'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Sin pistas: si una casa es igual, pasa a la siguiente.', { skills: ['num:compare'] }),
   ],
   cierre: show('big-text', { text: '4 052 > 3 998' }, 'La regla: se mira primero la casa de mayor valor. Si es igual, se pasa a la casa siguiente.'),
 })
@@ -102,13 +102,13 @@ const redondear = clase({
     show('number-line', { from: 3400, to: 3500, step: 100, mark: 3456, jump: 44 }, 'Ahora a las centenas miro la cifra de las decenas: es 5, así que sube. Redondeado, 3 456 es 3 500.'),
   ],
   guiada: [
-    tryIt('number-line', { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 }, '¡Te toca! Mira la cifra de al lado: 5 o más sube.', { skills: ['num:round:10'] }),
-    tryIt('number-line', { from: 3400, to: 3500, step: 100, mark: 3456, jump: 44 }, '¡Otra! Para las centenas, mira las decenas.', { skills: ['num:round:100'] }),
+    tryIt('number-line', undefined, '¡Te toca! Mira la cifra de al lado: 5 o más sube.', { skills: ['num:round:10'] }),
+    tryIt('number-line', undefined, '¡Otra! Para las centenas, mira las decenas.', { skills: ['num:round:100'] }),
   ],
   sola: [
-    tryIt('number-line', { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 }, '¡Tu turno! Redondea a las decenas.', { skills: ['num:round:10'] }),
-    tryIt('number-line', { from: 3400, to: 3500, step: 100, mark: 3456, jump: 44 }, '¡Tu turno! Ahora a las centenas.', { skills: ['num:round:100'] }),
-    tryIt('number-line', { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 }, '¡Tu turno! Sin pistas: decenas o centenas, según te pidan.', { skills: ['num:round:10', 'num:round:100'] }),
+    tryIt('number-line', undefined, '¡Tu turno! Redondea a las decenas.', { skills: ['num:round:10'] }),
+    tryIt('number-line', undefined, '¡Tu turno! Ahora a las centenas.', { skills: ['num:round:100'] }),
+    tryIt('number-line', undefined, '¡Tu turno! Sin pistas: decenas o centenas, según te pidan.', { skills: ['num:round:10', 'num:round:100'] }),
   ],
   cierre: show('number-line', { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 }, 'La regla: mira la cifra de al lado. Si es 5 o más, sube; si es menos de 5, se queda la misma decena.'),
 })
@@ -129,13 +129,13 @@ const ordinales = clase({
     show('big-text', { text: '21.º', sub: 'vigésimo primero' }, 'Del veinte en adelante, primero se dice vigésimo y después el número: el 21.º es el vigésimo primero.'),
   ],
   guiada: [
-    tryIt('big-text', { text: '7.º', sub: 'séptimo' }, '¡Te toca! Cuenta desde la punta de la fila.', { skills: ['num:ordinal:10'] }),
-    tryIt('big-text', { text: '4.º', sub: 'cuarto' }, '¡Otra! Mira el orden: primero, segundo, tercero…', { skills: ['num:ordinal:10'] }),
+    tryIt('big-text', undefined, '¡Te toca! Cuenta desde la punta de la fila.', { skills: ['num:ordinal:10'] }),
+    tryIt('big-text', undefined, '¡Otra! Mira el orden: primero, segundo, tercero…', { skills: ['num:ordinal:10'] }),
   ],
   sola: [
-    tryIt('big-text', { text: '7.º', sub: 'séptimo' }, '¡Tu turno! Sin pistas: cuenta con el dedo.', { skills: ['num:ordinal:10'] }),
-    tryIt('big-text', { text: '21.º', sub: 'vigésimo primero' }, '¡Tu turno! Del once al veinte, cuenta con cuidado.', { skills: ['num:ordinal:20'] }),
-    tryIt('big-text', { text: '21.º', sub: 'vigésimo primero' }, '¡Tu turno! Del veinte en adelante, primero el vigésimo.', { skills: ['num:ordinal:30'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Sin pistas: cuenta con el dedo.', { skills: ['num:ordinal:10'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Del once al veinte, cuenta con cuidado.', { skills: ['num:ordinal:20'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Del veinte en adelante, primero el vigésimo.', { skills: ['num:ordinal:30'] }),
   ],
   cierre: show('big-text', { text: '21.º', sub: 'vigésimo primero' }, 'La regla: el ordinal se escribe con el número y la letra o pequeña, y se lee con su palabra: 3.º, tercero.'),
 })
@@ -156,13 +156,13 @@ const cincoCifras = clase({
     show('big-text', { text: '19 999 + 1 = 20 000' }, 'El número que sigue al 19 999 es el 20 000.'),
   ],
   guiada: [
-    tryIt('big-text', { text: '12 345', sub: 'decenas de millar, millares, centenas, decenas, unidades' }, '¡Te toca! Mira la casa de las decenas de millar.', { skills: ['num:place:blocks:19999'] }),
-    tryIt('big-text', { text: '12 345', sub: 'doce mil trescientos cuarenta y cinco' }, '¡Otra! Lee el número casa a casa.', { skills: ['num:place:words:19999'] }),
+    tryIt('big-text', undefined, '¡Te toca! Mira la casa de las decenas de millar.', { skills: ['num:place:blocks:19999'] }),
+    tryIt('big-text', undefined, '¡Otra! Lee el número casa a casa.', { skills: ['num:place:words:19999'] }),
   ],
   sola: [
-    tryIt('big-text', { text: '12 345', sub: 'decenas de millar, millares, centenas, decenas, unidades' }, '¡Tu turno! Cuenta las casas, de la mayor a la menor.', { skills: ['num:place:blocks:19999'] }),
-    tryIt('big-text', { text: '12 345', sub: 'doce mil trescientos cuarenta y cinco' }, '¡Tu turno! Si las decenas de millar son iguales, mira los millares.', { skills: ['num:compare:19999'] }),
-    tryIt('big-text', { text: '12 345', sub: 'doce mil trescientos cuarenta y cinco' }, '¡Tu turno! Sin pistas: cuidado con los ceros.', { skills: ['num:place:words:19999'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Cuenta las casas, de la mayor a la menor.', { skills: ['num:place:blocks:19999'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Si las decenas de millar son iguales, mira los millares.', { skills: ['num:compare:19999'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Sin pistas: cuidado con los ceros.', { skills: ['num:place:words:19999'] }),
   ],
   cierre: show('big-text', { text: '12 345 = 10 000 + 2 000 + 300 + 40 + 5' }, 'La regla no cambia: cada cifra vale según su casa. Con cinco cifras aparece una casa más: la decena de millar.'),
 })
@@ -184,13 +184,13 @@ const igualdad = clase({
     show('big-text', { text: '8 = 3 + 5' }, 'El lado que va primero no importa: 8 = 3 + 5 también es verdad.'),
   ],
   guiada: [
-    tryIt('big-text', { text: '7 + 2 = 4 + 5' }, '¡Te toca! Mira los dos lados: ¿qué número falta para que valgan lo mismo?', { skills: ['eq:flex'] }),
-    tryIt('big-text', { text: '8 = 3 + 5' }, '¡Otra! Calcula un lado y compara con el otro.', { skills: ['eq:flex'] }),
+    tryIt('big-text', undefined, '¡Te toca! Mira los dos lados: ¿qué número falta para que valgan lo mismo?', { skills: ['eq:flex'] }),
+    tryIt('big-text', undefined, '¡Otra! Calcula un lado y compara con el otro.', { skills: ['eq:flex'] }),
   ],
   sola: [
-    tryIt('big-text', { text: '8 = 3 + 5' }, '¡Tu turno! Los dos lados valen lo mismo.', { skills: ['eq:flex'] }),
-    tryIt('big-text', { text: '7 + 2 = 4 + 5' }, '¡Tu turno! Puede faltar un número en cualquier lado.', { skills: ['eq:flex'] }),
-    tryIt('big-text', { text: '7 + 2 = 4 + 5' }, '¡Tu turno! Sin pistas: calcula y compara.', { skills: ['eq:flex'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Los dos lados valen lo mismo.', { skills: ['eq:flex'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Puede faltar un número en cualquier lado.', { skills: ['eq:flex'] }),
+    tryIt('big-text', undefined, '¡Tu turno! Sin pistas: calcula y compara.', { skills: ['eq:flex'] }),
   ],
   cierre: show('big-text', { text: '7 + 2 = 4 + 5' }, 'La regla: el signo = une dos lados que valen lo mismo, aunque estén escritos de forma distinta.'),
 })

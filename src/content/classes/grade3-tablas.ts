@@ -39,7 +39,7 @@ const tabla2 = clase({
   sola: [
     tryIt('easy-tables', undefined, '¡Tu turno! Ahora con números más grandes: el doble.', facts(2, 6, 8)),
     tryIt('easy-tables', undefined, '¡Tu turno! Cuenta de 2 en 2 hasta el final.', facts(2, 6, 10)),
-    tryIt('easy-tables', undefined, '¡Tu turno! Sin pistas: el doble, o de 2 en 2.', facts(2, 8, 10)),
+    tryIt('easy-tables', undefined, '¡Tu turno! Sin ayudas: calcula tú.', facts(2, 8, 10)),
   ],
   cierre: show('big-text', { text: '2 × 7 = 14', sub: 'el doble de 7' }, 'La regla: la tabla del 2 es el doble. Si cuentas de 2 en 2, ya la sabes.'),
 })
@@ -64,7 +64,7 @@ const tabla5 = clase({
   sola: [
     tryIt('easy-tables', undefined, '¡Tu turno! Ahora con números más grandes.', facts(5, 6, 8)),
     tryIt('easy-tables', undefined, '¡Tu turno! Cuenta de 5 en 5 hasta el final.', facts(5, 6, 10)),
-    tryIt('easy-tables', undefined, '¡Tu turno! Sin pistas: de 5 en 5.', facts(5, 8, 10)),
+    tryIt('easy-tables', undefined, '¡Tu turno! Sin ayudas: calcula tú.', facts(5, 8, 10)),
   ],
   cierre: show('big-text', { text: '5 × 7 = 35', sub: 'cinco por siete, treinta y cinco' }, 'La regla: la tabla del 5 acaba en 0 o en 5, y se cuenta de 5 en 5.'),
 })
@@ -89,7 +89,7 @@ const tabla10 = clase({
   sola: [
     tryIt('easy-tables', undefined, '¡Tu turno! Ahora con números más grandes.', facts(10, 6, 8)),
     tryIt('easy-tables', undefined, '¡Tu turno! Cuenta de 10 en 10 o pon un 0.', facts(10, 6, 10)),
-    tryIt('easy-tables', undefined, '¡Tu turno! Sin pistas: un 0 detrás.', facts(10, 8, 10)),
+    tryIt('easy-tables', undefined, '¡Tu turno! Sin ayudas: calcula tú.', facts(10, 8, 10)),
   ],
   cierre: show('big-text', { text: '10 × 9 = 90', sub: 'diez por nueve, noventa' }, 'La regla: en la tabla del 10 se pone un 0 detrás del número.'),
 })
@@ -100,7 +100,7 @@ const tabla3 = clase({
   topicId: 'tabla-3',
   title: 'La tabla del 3',
   para: [
-    show('groups', { groups: 3, perGroup: 4, emoji: '🌻' }, 'En el huerto, Pepa planta 3 filas de 4 girasoles. Hoy aprendemos la tabla del 3.', 'ladybug'),
+    show('groups', { groups: 3, perGroup: 6, emoji: '🌻' }, 'En el huerto, Pepa planta 3 filas de 6 girasoles. Hoy aprendemos la tabla del 3.', 'ladybug'),
   ],
   ejemplo: [
     show('big-text', { text: '3 + 3 + 3 + 3 = 12' }, 'Sumar grupos iguales es multiplicar. Sumar 3 cuatro veces da 12: es 4 × 3 = 12, y también 3 × 4.'),
@@ -114,7 +114,7 @@ const tabla3 = clase({
   sola: [
     tryIt('big-text', { text: 'Tabla del 3' }, '¡Tu turno! Ahora con números más grandes.', facts(3, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 3' }, '¡Tu turno! Cuenta de 3 en 3 o suma el 3 varias veces.', facts(3, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 3' }, '¡Tu turno! Sin pistas: de 3 en 3.', facts(3, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 3' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(3, 8, 10)),
   ],
   cierre: show('big-text', { text: '3 × 5 = 15', sub: 'tres por cinco, quince' }, 'La regla: la tabla del 3 se cuenta de 3 en 3, y el orden de los factores no cambia el resultado.'),
 })
@@ -140,7 +140,7 @@ const tabla4 = clase({
   sola: [
     tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Dobla dos veces, con números más grandes.', facts(4, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Doble y doble otra vez.', facts(4, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Sin pistas: de 4 en 4.', facts(4, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(4, 8, 10)),
   ],
   cierre: show('double-chain', { start: 7, steps: 2 }, 'La regla: para multiplicar por 4, dobla dos veces. 4 × 7: 7 → 14 → 28.'),
 })
@@ -162,7 +162,7 @@ const tabla6 = clase({
   sola: [
     tryIt('big-text', { text: 'Tabla del 6' }, '¡Tu turno! Ahora con números más grandes.', facts(6, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 6' }, '¡Tu turno! Piensa en el 5 y suma uno más, o cuenta de 6 en 6.', facts(6, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 6' }, '¡Tu turno! Sin pistas.', facts(6, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 6' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(6, 8, 10)),
   ],
   cierre: show('five-plus-one', { b: 8 }, 'La regla: 6 × un número es 5 veces ese número, y una vez más. 6 × 8 = 40 + 8 = 48.'),
 })
@@ -179,12 +179,12 @@ const tabla8 = clase({
   ejemplo: w5Pattern.steps.slice(0, 4),
   guiada: [
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Te toca! Dobla tres veces.', facts(8, 1, 5)),
-    tryIt('big-text', { text: 'Tabla del 8' }, '¡Otra! Mira las unidades: 8, 6, 4, 2, 0.', facts(8, 1, 5)),
+    tryIt('big-text', { text: 'Tabla del 8' }, '¡Otra! Mira cómo cambian las unidades al pasar de un resultado al siguiente.', facts(8, 1, 5)),
   ],
   sola: [
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Tu turno! Ahora con números más grandes.', facts(8, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Tu turno! El secreto: mira las unidades.', facts(8, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 8' }, '¡Tu turno! Sin pistas: busca el patrón de las unidades.', facts(8, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 8' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(8, 8, 10)),
   ],
   cierre: show('pattern-units', { table: 8 }, 'La regla: en la tabla del 8, las unidades bajan de 2 en 2: 8, 6, 4, 2, 0.'),
 })
@@ -198,15 +198,15 @@ const tabla7 = clase({
   para: [
     show('known-facts', { table: 7 }, 'Hoy aprendemos la tabla del 7. ¿Da miedo? ¡Vamos a verlo!', 'fairy'),
   ],
-  ejemplo: w6Seven.steps.slice(0, 5),
+  ejemplo: [w6Seven.steps[0], w6Seven.steps[2], w6Seven.steps[3], w6Seven.steps[4]],
   guiada: [
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Te toca! Cuenta de 7 en 7 si te ayuda.', facts(7, 1, 5)),
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Otra! Piensa en las semanas: 7 días cada una.', facts(7, 1, 5)),
   ],
   sola: [
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Ahora con números más grandes.', facts(7, 6, 8)),
-    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin pistas: piensa en la rima.', facts(7, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin pistas: ya conoces casi toda la tabla.', facts(7, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(7, 6, 10)),
+    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(7, 8, 10)),
   ],
   cierre: show('square-rhyme', undefined, 'La regla: la tabla del 7 tiene pocas multiplicaciones nuevas. Si ya sabes 6 × 7, también sabes 7 × 6.'),
 })
@@ -228,7 +228,7 @@ const tabla9 = clase({
   sola: [
     tryIt('big-text', { text: 'Tabla del 9' }, '¡Tu turno! Ahora con números más grandes.', facts(9, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 9' }, '¡Tu turno! Uno menos, y que las dos cifras sumen 9.', facts(9, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 9' }, '¡Tu turno! Sin pistas.', facts(9, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 9' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(9, 8, 10)),
   ],
   cierre: show('nine-trick', { a: 8 }, 'La regla: en la tabla del 9, el resultado empieza por uno menos que el otro número, y sus cifras suman 9.'),
 })

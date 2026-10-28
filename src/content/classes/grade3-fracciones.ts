@@ -38,7 +38,7 @@ const fraccionCantidad = clase({
   topicId: 'fraccion-cantidad',
   title: 'Fracción de una cantidad',
   para: [
-    show('fraction-groups', { total: 20, parts: 4, take: 0 }, 'Lumi tiene 20 caramelos y los reparte en 4 bolsas iguales, con el mismo número en cada bolsa.', 'frog'),
+    show('fraction-groups', { total: 20, parts: 4, take: 0 }, 'Pepa tiene 20 caramelos y los reparte en 4 bolsas iguales, con el mismo número en cada bolsa.', 'frog'),
     show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'Una bolsa es un cuarto de los caramelos. ¿Cuántos caramelos hay en una bolsa?', 'ladybug'),
   ],
   ejemplo: [

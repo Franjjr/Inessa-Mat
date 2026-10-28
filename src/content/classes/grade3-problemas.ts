@@ -42,6 +42,7 @@ const probRestar = clase({
   ejemplo: [
     show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan.'),
     show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta.'),
+    show('bar-model', { a: 9, b: 4, total: 13 }, 'Comparar también es quitar. Pepa tiene 13 cromos y Dani tiene 4. ¿Cuántos más tiene Pepa? Quitamos los de Dani a los de Pepa: 13 − 4 = 9. Pepa tiene 9 más.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'le quedan 9 cromos' }, 'Solución: 13 − 4 = 9. A Dani le quedan 9 cromos.'),
   ],
   guiada: [
@@ -53,7 +54,7 @@ const probRestar = clase({
     tryIt('bar-model', { a: 9, b: 4, total: 13 }, '¡Tu turno! Lee la historia y decide la operación.', { skills: ['word:sub'] }),
     tryIt('bar-model', { a: 9, b: 4, total: 13 }, '¡Tu turno! Qué sabes, qué te preguntan y qué operación.', { skills: ['bar:sub', 'word:sub'] }),
   ],
-  cierre: show('big-text', { text: '13 − 4 = 9', sub: 'quitar es restar' }, 'La regla: si la historia quita una parte del total, la operación es una resta.'),
+  cierre: show('big-text', { text: '13 − 4 = 9', sub: 'quitar es restar' }, 'La regla: si la historia quita una parte del total, o compara dos cantidades para ver cuántos más hay, la operación es una resta.'),
 })
 
 /* Problemas de grupos: se multiplica el número de grupos por lo que hay en cada grupo. */

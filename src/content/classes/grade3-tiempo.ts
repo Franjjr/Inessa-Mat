@@ -24,7 +24,7 @@ const enPuntoMediaCuarto = clase({
   ],
   guiada: [
     tryIt('big-text', { text: 'en punto · y media' }, '¡Te toca! Mira primero la aguja corta: dice la hora. Después mira la larga: ¿marca el 12 o el 6?', { skills: ['clock:read:30'] }),
-    tryIt('big-text', { text: 'y cuarto · menos cuarto' }, '¡Otra! Si la aguja larga marca el 3, son y cuarto; si marca el 9, faltan 15 minutos para la hora siguiente.', { skills: ['clock:read:15'] }),
+    tryIt('big-text', { text: 'y cuarto · menos cuarto' }, '¡Otra! Mira dónde está la aguja larga y cuenta sus minutos desde el 12. Si faltan minutos para la hora siguiente, la frase lleva «menos».', { skills: ['clock:read:15'] }),
   ],
   sola: [
     tryIt('big-text', { text: 'en punto · y media' }, '¡Tu turno! Lee la hora: la aguja corta dice la hora y la larga, si es en punto o y media.', { skills: ['clock:read:30'] }),
@@ -52,7 +52,7 @@ const reloj5Minutos = clase({
   ],
   guiada: [
     tryIt('big-text', { text: 'de 5 en 5' }, '¡Te toca! Cuenta de 5 en 5 desde el 12 hasta donde esté la aguja larga. Ese número son los minutos.', { skills: ['clock:read:5'] }),
-    tryIt('big-text', { text: '«y» · «menos»' }, '¡Otra! Si la aguja larga está en el 12, es en punto. Si los minutos ya han pasado de la hora, la frase lleva «y»; si faltan, lleva «menos».', { skills: ['clock:read:5'] }),
+    tryIt('big-text', { text: '«y» · «menos»' }, '¡Otra! Si la aguja larga está en el 12, es en punto. Hasta la y media (de 1 a 30 minutos) se dice «y»; a partir de la media, «menos».', { skills: ['clock:read:5'] }),
   ],
   sola: [
     tryIt('big-text', { text: 'de 5 en 5' }, '¡Tu turno! Cuenta de 5 en 5 desde el 12 con la aguja larga y mira cuántos minutos son.', { skills: ['clock:read:5'] }),
