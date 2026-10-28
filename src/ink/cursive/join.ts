@@ -3,7 +3,7 @@
    tangents of both ends are kept, so there is no kink). A space starts a new word offset; a letter that
    is not in the alphabet is skipped. Extra strokes (dots, tildes, crossbars) are drawn as separate strokes. */
 
-import { CURSIVE_LOWER, CURSIVE_UPPER, WORD_SPACE, type CursiveGlyph, type ModelPoint, type ModelStroke } from './models'
+import { CURSIVE_LOWER, CURSIVE_UPPER, LINK_GAP, WORD_SPACE, type CursiveGlyph, type ModelPoint, type ModelStroke } from './models'
 
 export function glyphFor(ch: string): CursiveGlyph | undefined {
   return CURSIVE_LOWER[ch] ?? CURSIVE_UPPER[ch]
@@ -58,6 +58,8 @@ export function joinWord(text: string): { strokes: ModelStroke[]; width: number 
     }
     const g = glyphFor(ch)
     if (!g) continue
+    // Inside a word the connector travels a visible gap before the next letter's body.
+    if (pen.exit) x = end + LINK_GAP
 
     const shift = (p: ModelPoint): ModelPoint => ({ x: p.x + x, y: p.y })
     const joined = g.strokes.slice(0, g.main).map((st) => st.map(shift))

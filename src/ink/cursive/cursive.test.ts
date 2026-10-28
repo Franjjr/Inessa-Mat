@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CURSIVE_LOWER, CURSIVE_UPPER, WORD_SPACE, XHEIGHT, BASELINE, type ModelStroke } from './models'
+import { CURSIVE_LOWER, CURSIVE_UPPER, LINK_GAP, WORD_SPACE, XHEIGHT, BASELINE, type ModelStroke } from './models'
 import { joinWord } from './join'
 
 const bbox = (st: ModelStroke) => {
@@ -99,8 +99,8 @@ describe('joinWord', () => {
     expect(w.strokes).toHaveLength(1)
     const xs = w.strokes[0].map((p) => p.x)
     const extent = Math.max(...xs) - Math.min(...xs)
-    expect(extent).toBeCloseTo(CURSIVE_LOWER.o.width + CURSIVE_LOWER.s.width, 0)
-    expect(w.width).toBeCloseTo(CURSIVE_LOWER.o.width + CURSIVE_LOWER.s.width, 1)
+    expect(extent).toBeCloseTo(CURSIVE_LOWER.o.width + LINK_GAP + CURSIVE_LOWER.s.width, 0)
+    expect(w.width).toBeCloseTo(CURSIVE_LOWER.o.width + LINK_GAP + CURSIVE_LOWER.s.width, 1)
   })
 
   it('separates the words of "la casa" by a gap of one space', () => {

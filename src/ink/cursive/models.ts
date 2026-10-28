@@ -15,6 +15,8 @@ export const DESCENDER = 100
 
 /** Gap between words, in units. */
 export const WORD_SPACE = 28
+/** Visible gap the pen travels between two joined letters, in units. */
+export const LINK_GAP = 7
 
 export interface CursiveGlyph {
   /** Strokes in writing order, in glyph coordinates. The first `main` strokes are the joined pen path; the rest are extras. */
@@ -170,14 +172,14 @@ export const CURSIVE_LOWER: Record<string, CursiveGlyph> = {
   m: glyph([arches(0, 3, 15)]),
   n,
   // r: lead-in up to the x-height, a small shoulder to the right, short downstroke, exit
-  r: glyph([spline([0, 70, 1, 60, 3, 46, 6, 41, 9, 40, 12, 40.5, 14.5, 43, 13.5, 46.5, 11, 47, 9.5, 50, 9, 60, 9.5, 67, 12, 70])]),
+  r: glyph([spline([0, 70, 1, 60, 3, 46, 6, 41, 9, 40, 13, 40, 16, 40.5, 17, 43, 15.5, 46, 12, 47, 10.5, 52, 10, 62, 12, 70])]),
   // x: a curved entry stroke crossing a straight diagonal from the top right
   x: glyph(
     [spline([0, 70, 3, 46, 8, 40.5, 13, 47, 17, 58, 21, 69])],
     [spline([22, 41, 14, 52, 7, 63, 2, 69])],
   ),
   // z: top bar, diagonal down to the left, loop below the baseline, exit to the right
-  z: glyph([spline([0, 41, 9, 40, 17, 40, 17, 44, 9, 58, 1, 68, -1, 80, 4, 93, 12, 94, 18, 86, 18, 76, 20, 70])]),
+  z: glyph([spline([0, 41, 6, 40, 12, 40, 17, 40.5, 18, 42, 11, 52, 2, 66, -2, 76, -2, 86, 4, 94, 11, 95, 17, 90, 19, 80, 19, 73, 22, 69])]),
   ñ: marked(n, [wave(5, 29, 26, 3.5)]),
   á: marked(a, [acute(a.width * 0.5)]),
   é: marked(e, [acute(e.width * 0.5)]),
