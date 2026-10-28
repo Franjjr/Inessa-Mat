@@ -107,12 +107,32 @@ export function shortTopStrokes(strokes: ModelStroke[], units: number): ModelStr
 
 /** A spike: `count` consecutive points near the middle of the first stroke pushed sideways by up to amp units. */
 export function spikedStrokes(strokes: ModelStroke[], amp = 6, count = 5): ModelStroke[] {
+  // A true spike: the points around the middle are pushed along the local normal (not sideways), so a stroke that runs
+  // horizontally is spiked too; the push tapers from `amp` at the middle to 0 at the ends of the window.
   const first = strokes[0]
-  const mid = Math.floor(first.length / 2)
+  // The spike goes where the stroke is open: the point near the middle that is farthest from the rest of the stroke
+  // (a tight loop would put the spike back on its own other side, which is not a spike).
   const half = (count - 1) / 2
+  const n = first.length
+  let mid = Math.floor(n / 2)
+  let bestIso = -1
+  for (let j = Math.floor(n * 0.3); j <= Math.floor(n * 0.7); j++) {
+    let minD = Infinity
+    for (let i = 0; i < n; i++) {
+      if (Math.abs(i - j) < 12) continue
+      minD = Math.min(minD, Math.hypot(first[i].x - first[j].x, first[i].y - first[j].y))
+    }
+    if (minD > bestIso) { bestIso = minD; mid = j }
+  }
+  const at = (j: number) => first[Math.max(0, Math.min(first.length - 1, j))]
   const spiked = first.map((p, j) => {
     const d = Math.abs(j - mid)
-    return d <= half ? { x: p.x + amp * (1 - d / (half + 1)), y: p.y } : p
+    if (d > half) return p
+    const a = at(j - 1), b = at(j + 1)
+    const tx = b.x - a.x, ty = b.y - a.y
+    const L = Math.hypot(tx, ty) || 1
+    const push = amp * (1 - d / (half + 1))
+    return { x: p.x - (ty / L) * push, y: p.y + (tx / L) * push }
   })
   return [spiked, ...strokes.slice(1)]
 }

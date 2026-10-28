@@ -55,10 +55,13 @@ describe('letra ligada models', () => {
   })
 
   it('ascender letters reach above the x-height and descender letters below the baseline', () => {
-    for (const ch of 'bdfhklt') {
+    for (const ch of 'bdfhkl') {
       const top = Math.min(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
       expect(top, ch).toBeLessThan(XHEIGHT - 15)
     }
+    // t is a half-ascender in Spanish school cursive: it reaches only about 10 units above the x-height line
+    const topT = Math.min(...CURSIVE_LOWER.t.strokes.flatMap((st) => st.map((p) => p.y)))
+    expect(topT, 't').toBeLessThan(XHEIGHT - 10)
     // z is drawn on the baseline (as in Playwrite ES), so it has no descender
     for (const ch of 'fgjpqy') {
       const bottom = Math.max(...CURSIVE_LOWER[ch].strokes.flatMap((st) => st.map((p) => p.y)))
