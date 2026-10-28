@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_CHILD_SETTINGS, type ChildProfile } from '@/types'
-import { caligrafiaOffered } from './offer'
+import { caligrafiaOffered, showCaligrafiaAtEnd } from './offer'
 
 const child = (over: Partial<ChildProfile> & { handwriting?: unknown } = {}): ChildProfile => {
   const { handwriting, ...rest } = over
@@ -38,5 +38,23 @@ describe('caligrafiaOffered', () => {
     const c = child()
     c.settings = { ...c.settings, subjects: ['math'] }
     expect(caligrafiaOffered(c, { penSeen: true, mode: 'pen' })).toBe(false)
+  })
+})
+
+describe('showCaligrafiaAtEnd: the Lengua end gate', () => {
+  it('is shown after a Lengua session with at least one answer, when offered', () => {
+    expect(showCaligrafiaAtEnd({ offered: true, subject: 'language', answered: 3 })).toBe(true)
+  })
+
+  it('is not shown after a Lengua session with zero answers', () => {
+    expect(showCaligrafiaAtEnd({ offered: true, subject: 'language', answered: 0 })).toBe(false)
+  })
+
+  it('is not shown after a maths session, even when offered', () => {
+    expect(showCaligrafiaAtEnd({ offered: true, subject: 'math', answered: 5 })).toBe(false)
+  })
+
+  it('is not shown when the practice is not offered', () => {
+    expect(showCaligrafiaAtEnd({ offered: false, subject: 'language', answered: 5 })).toBe(false)
   })
 })

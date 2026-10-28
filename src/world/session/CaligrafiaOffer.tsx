@@ -1,5 +1,5 @@
-/* The offer at the end of the Lengua session: «¿Practicamos la letra con el lápiz?». Shown only when the practice is
-   offered (pen in use, setting on, Lengua on: caligrafiaOffered). «Ahora no» goes home, as it does without the offer. */
+/* The offer at the end of the Lengua session: «¿Practicamos la letra con el lápiz?». The screen shows it only when
+   showCaligrafiaAtEnd says so. «Ahora no» goes home, as «Volver al inicio» does. */
 import { useNavigate } from 'react-router-dom'
 import { caligrafiaOffered } from '@/engine/caligrafia/offer'
 import { useInputMode } from '@/ink'
@@ -13,10 +13,9 @@ export function useCaligrafiaOffered(child: ChildProfile): boolean {
   return caligrafiaOffered(child, { penSeen, mode })
 }
 
-export function CaligrafiaOffer({ child, onLater }: { child: ChildProfile; onLater: () => void }) {
+/** The card only; the screen decides whether it is offered (showCaligrafiaAtEnd) and calls this once. */
+export function CaligrafiaOffer({ onLater }: { onLater: () => void }) {
   const navigate = useNavigate()
-  const offered = useCaligrafiaOffered(child)
-  if (!offered) return null
   return (
     <div className={s.actions} role="group" aria-label="Caligrafía con lápiz">
       <p className={s.text}>¿Practicamos la letra con el lápiz? Son 5 minutos.</p>
