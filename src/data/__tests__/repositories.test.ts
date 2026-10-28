@@ -133,6 +133,18 @@ describe('attempts & sessions', () => {
     expect((await listAttempts(c.id, { limit: 2 })).map((a) => a.createdAt.slice(0, 10))).toEqual(['2026-03-05', '2026-03-04'])
   })
 
+  it('the report and the day can leave the handwriting tries out, and the limit then counts only the others', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await recordAttempt(attempt({ childId: c.id, skill: 'mul:6x7', kind: 'fact-mul', createdAt: '2026-03-01T10:00:00.000Z' }))
+    await recordAttempt(attempt({ childId: c.id, skill: 'mul:6x8', kind: 'fact-mul', createdAt: '2026-03-02T10:00:00.000Z' }))
+    for (let i = 3; i <= 6; i++) {
+      await recordAttempt(attempt({ childId: c.id, skill: 'calig:letra:a', kind: 'cursive', createdAt: `2026-03-0${i}T10:00:00.000Z` }))
+    }
+    expect((await listAttempts(c.id, { limit: 2 })).map((a) => a.skill)).toEqual(['calig:letra:a', 'calig:letra:a'])
+    expect((await listAttempts(c.id, { limit: 2, skipHandwriting: true })).map((a) => a.skill)).toEqual(['mul:6x8', 'mul:6x7'])
+    expect((await listAttempts(c.id, { skipHandwriting: true })).length).toBe(2)
+  })
+
   it('sessions: start records the day played; minutes only grow; end is idempotent', async () => {
     const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
     const s = await startSession(c.id)

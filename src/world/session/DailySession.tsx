@@ -98,7 +98,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   useEffect(() => {
     if (!child) return
     let alive = true
-    listAttempts(child.id, { limit: 300 })
+    listAttempts(child.id, { limit: 300, skipHandwriting: true })
       .then((list) => { if (alive) setAttempts(list) })
       .catch(() => { if (alive) setAttempts([]) })
     return () => { alive = false }
