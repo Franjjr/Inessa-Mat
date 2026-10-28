@@ -2,7 +2,7 @@
    (timeline): a bar from a start to an end on an hour line, with both times and the duration written. The clock draws
    with the same face as the clock exercises (the shared styles of views/clock.module.css). Static pictures: reduced
    motion changes nothing. */
-import { durationWords, pad2 } from '@/engine'
+import { digital, durationWords } from '@/engine'
 import c from '@/activities/views/clock.module.css'
 import type { VisualProps } from './types'
 import { numParam } from './types'
@@ -19,14 +19,11 @@ export function handAngles(h: number, m: number): { hour: number; minute: number
 
 const clampInt = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.floor(v)))
 
-/** A 24 h time as «hh:mm». */
-const hhmm = (h: number, m: number) => `${pad2(h)}:${pad2(m)}`
-
 export function ClockVisual({ params }: VisualProps) {
   const h = clampInt(numParam(params, 'h', 0), 0, 23)
   const m = clampInt(numParam(params, 'm', 0), 0, 59)
-  const digital = numParam(params, 'digital', 0) === 1
-  const time = hhmm(h, m)
+  const withDigital = numParam(params, 'digital', 0) === 1
+  const time = digital(h, m)
   const angles = handAngles(h, m)
   const hourTip = point(angles.hour, 50)
   const minuteTip = point(angles.minute, 72)
@@ -50,7 +47,7 @@ export function ClockVisual({ params }: VisualProps) {
           <line x1={CX} y1={CY} x2={minuteTip.x} y2={minuteTip.y} className={c.minuteHand} data-hand="minute" />
           <circle cx={CX} cy={CY} r={6} className={c.hub} />
         </svg>
-        {digital && <p className={s.digitalTime} data-testid="clock-digital">{time}</p>}
+        {withDigital && <p className={s.digitalTime} data-testid="clock-digital">{time}</p>}
       </div>
     </div>
   )
@@ -75,7 +72,7 @@ export function TimelineVisual({ params }: VisualProps) {
   const xe = x(end)
   const hours: number[] = []
   for (let t = from; t <= to; t += 60) hours.push(t)
-  const clock = (t: number) => hhmm(Math.floor(t / 60), t % 60)
+  const clock = (t: number) => digital(Math.floor(t / 60), t % 60)
   const duration = durationWords(end - start)
 
   return (

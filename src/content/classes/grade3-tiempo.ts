@@ -30,7 +30,7 @@ const enPuntoMediaCuarto = clase({
     tryIt('big-text', { text: 'en punto · y media' }, '¡Tu turno! Lee la hora: la aguja corta dice la hora y la larga, si es en punto o y media.', { skills: ['clock:read:30'] }),
     tryIt('big-text', { text: 'y cuarto · menos cuarto' }, '¡Tu turno! Cuenta cuántos minutos marca la aguja larga: un cuarto de hora son 15 minutos.', { skills: ['clock:read:15'] }),
     tryIt('big-text', { text: 'la larga primero, la corta después' }, '¡Tu turno! Pon primero la aguja larga en el minuto que dice la frase y después la corta en la hora.', { skills: ['clock:set:30'] }),
-    tryIt('big-text', { text: 'en punto · y media · y cuarto · menos cuarto' }, '¡Tu turno! Lee la hora con calma: primero los minutos de la aguja larga y luego la hora, con «y» o con «menos».', { skills: ['clock:read:30', 'clock:read:15', 'clock:set:30'] }),
+    tryIt('big-text', { text: 'en punto · y media · y cuarto · menos cuarto' }, '¡Tu turno! Lee o pon la hora con calma: primero los minutos de la aguja larga y luego la hora que marca la corta.', { skills: ['clock:read:30', 'clock:read:15', 'clock:set:30'] }),
   ],
   cierre: show('clock', { h: 2, m: 45 }, 'La regla: con la aguja larga en el 12 es en punto; en el 6, y media; en el 3, y cuarto; y en el 9, menos cuarto.'),
 })
@@ -52,10 +52,10 @@ const reloj5Minutos = clase({
   ],
   guiada: [
     tryIt('big-text', { text: 'de 5 en 5' }, '¡Te toca! Cuenta de 5 en 5 desde el 12 hasta donde esté la aguja larga. Ese número son los minutos.', { skills: ['clock:read:5'] }),
-    tryIt('big-text', { text: '«y» · «menos»' }, '¡Otra! Si la aguja larga está en el 12, es en punto. Si los minutos ya han pasado de la hora, di «y»; si faltan, di «menos».', { skills: ['clock:read:5'] }),
+    tryIt('big-text', { text: '«y» · «menos»' }, '¡Otra! Si la aguja larga está en el 12, es en punto. Si los minutos ya han pasado de la hora, la frase lleva «y»; si faltan, lleva «menos».', { skills: ['clock:read:5'] }),
   ],
   sola: [
-    tryIt('big-text', { text: 'de 5 en 5' }, '¡Tu turno! Cuenta de 5 en 5 desde el 12 con la aguja larga y di cuántos minutos son.', { skills: ['clock:read:5'] }),
+    tryIt('big-text', { text: 'de 5 en 5' }, '¡Tu turno! Cuenta de 5 en 5 desde el 12 con la aguja larga y mira cuántos minutos son.', { skills: ['clock:read:5'] }),
     tryIt('big-text', { text: 'la larga en los minutos, la corta en la hora' }, '¡Tu turno! Pon primero la aguja larga en el número de los minutos y después la corta en la hora.', { skills: ['clock:set:5'] }),
     tryIt('big-text', { text: '«y» · «menos»' }, '¡Tu turno! Mira si los minutos faltan para la hora siguiente o si ya han pasado de la hora.', { skills: ['clock:read:5'] }),
     tryIt('big-text', { text: 'de 5 en 5' }, '¡Tu turno! Lee o pon la hora de 5 en 5 minutos: cuenta despacio y comprueba los minutos.', { skills: ['clock:read:5', 'clock:set:5'] }),
@@ -75,20 +75,21 @@ const relojDigital = clase({
   ejemplo: [
     show('clock', { h: 12, m: 0, digital: 1 }, '12:00 son las doce en punto del mediodía. Después empieza la tarde, y las horas siguen contando: 13, 14, 15…'),
     show('clock', { h: 18, m: 45, digital: 1 }, '18:45 son las siete menos cuarto de la tarde: faltan 15 minutos para las 19:00.'),
-    show('clock', { h: 21, m: 10, digital: 1 }, '21:10 son las nueve y diez de la noche. De 21 a 5 es de la noche.'),
+    show('clock', { h: 21, m: 10, digital: 1 }, '21:10 son las nueve y diez de la noche. De 21 a 23 también es de la noche.'),
     show('clock', { h: 9, m: 20, digital: 1 }, '09:20 son las nueve y veinte de la mañana. De 6 a 11 es de la mañana.'),
+    show('clock', { h: 3, m: 0, digital: 1 }, '03:00 son las tres de la noche. De 0 a 5 es de la noche y el número no cambia: a esa hora no son las 15:00.'),
   ],
   guiada: [
-    tryIt('big-text', { text: 'mañana · tarde · noche' }, '¡Te toca! Mira la hora de 24 horas: de 6 a 11 es de la mañana; 12 es del mediodía; de 13 a 20, de la tarde; de 21 a 5, de la noche.', { skills: ['clock:convert:day'] }),
-    tryIt('big-text', { text: 'horas de 0 a 23' }, '¡Otra! Después de las 12 del mediodía, las horas se cuentan con 12 más: las dos de la tarde son las 14 h.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'mañana · tarde · noche' }, '¡Te toca! Mira la hora de 24 horas: de 6 a 11 es de la mañana; 12 es del mediodía; de 13 a 20, de la tarde; de 21 a 23 y de 0 a 5, de la noche.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'horas de 0 a 23' }, '¡Otra! De 13 a 23, las horas se cuentan con 12 más: las diez de la noche son las 22 h.', { skills: ['clock:convert:day'] }),
   ],
   sola: [
-    tryIt('big-text', { text: 'horas de 0 a 23' }, '¡Tu turno! Lee la hora con calma: en el reloj de 24 horas, cuenta las horas desde la medianoche.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'horas de 0 a 23' }, '¡Tu turno! Mira la hora con calma: en el reloj de 24 horas, cuenta las horas desde la medianoche.', { skills: ['clock:convert:day'] }),
     tryIt('big-text', { text: 'mañana · mediodía · tarde · noche' }, '¡Tu turno! Mira primero el momento del día: mañana, mediodía, tarde o noche. Después mira la hora.', { skills: ['clock:convert:day'] }),
-    tryIt('big-text', { text: 'hh:mm' }, '¡Tu turno! Escribe las horas y los minutos con dos números cada uno, como 07:05 o 14:30.', { skills: ['clock:convert:day'] }),
-    tryIt('big-text', { text: 'la tarde y la noche: 12 más' }, '¡Tu turno! Pasa la hora de la frase a 24 horas: las horas de la tarde y de la noche se cuentan con 12 más.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'hh:mm' }, '¡Tu turno! Une la hora de 24 horas con su frase: mira primero las horas, luego los minutos y el momento del día.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'la tarde y la noche: 12 más' }, '¡Tu turno! Compara la frase con la hora de 24 horas: de 13 a 23, la hora de 24 horas es la de la frase más 12; de 0 a 5, es la misma.', { skills: ['clock:convert:day'] }),
   ],
-  cierre: show('clock', { h: 19, m: 15, digital: 1 }, 'La regla: el reloj digital cuenta las horas de 0 a 23. Después de las 12 del mediodía, las horas de la tarde y de la noche se cuentan con 12 más: 19:15 son las siete y cuarto de la tarde.'),
+  cierre: show('clock', { h: 19, m: 15, digital: 1 }, 'La regla: el reloj digital cuenta de 0 a 23; de 13 a 23 las horas van con 12 más que en la frase, y de 0 a 5 el número no cambia: 19:15 son las siete y cuarto de la tarde.'),
 })
 
 /* Duraciones: la duración es lo que pasa del inicio al final; para la hora de llegada, se suma la duración a la de salida. */
@@ -108,11 +109,11 @@ const duraciones = clase({
   ],
   guiada: [
     tryIt('big-text', { text: '¿A qué hora acaba?' }, '¡Te toca! Dibuja la recta del tiempo: marca la hora de salida y cuenta hacia delante, primero hasta la hora en punto.', { skills: ['time:end'] }),
-    tryIt('big-text', { text: '¿Cuántos minutos pasan?' }, '¡Otra! Cuenta los minutos que faltan para la hora en punto y después las horas enteras.', { skills: ['time:elapsed'] }),
+    tryIt('big-text', { text: '¿Cuántos minutos pasan?' }, '¡Otra! Cuenta los minutos que faltan para la hora en punto y después, si hay, las horas enteras.', { skills: ['time:elapsed'] }),
   ],
   sola: [
     tryIt('big-text', { text: '¿A qué hora acaba?' }, '¡Tu turno! Empieza en la hora de salida y cuenta la duración, paso a paso.', { skills: ['time:end'] }),
-    tryIt('big-text', { text: '¿Cuántos minutos pasan?' }, '¡Tu turno! Cuenta los minutos hasta la hora en punto y después añade las horas enteras.', { skills: ['time:elapsed'] }),
+    tryIt('big-text', { text: '¿Cuántos minutos pasan?' }, '¡Tu turno! Cuenta los minutos hasta la hora en punto y después, si hay horas enteras, añádelas.', { skills: ['time:elapsed'] }),
     tryIt('big-text', { text: '¿A qué hora acaba?' }, '¡Tu turno! Si la duración pasa de la hora en punto, cuenta primero hasta la hora y después lo que falta.', { skills: ['time:end'] }),
     tryIt('big-text', { text: 'llegada o minutos que pasan' }, '¡Tu turno! Mira primero qué te piden: la hora de llegada o los minutos que pasan.', { skills: ['time:end', 'time:elapsed'] }),
   ],
