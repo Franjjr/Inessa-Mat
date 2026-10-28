@@ -254,6 +254,10 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
 
 /** Child-facing comment for each kind of mistake (shown after a wrong verdict). */
 const MISSED: Record<ErrorType, string> = {
+  'calig-shape': 'La forma de la letra ligada no es la del modelo. Sigue el dibujo de la pauta.',
+  'calig-line': 'La letra ligada tiene que apoyarse en la línea de abajo.',
+  'calig-size': 'La letra ligada tiene que llegar hasta la línea de arriba, ni más ni menos.',
+  'calig-start': 'Empieza la letra ligada por el punto verde y sigue la flecha.',
   'carry-forgot': '¡Ojo con la mochila! Hay una llevada que no se ha sumado en esa cuenta.',
   'borrow-forgot': 'Cuando la vecina presta una decena, se queda con una menos. ¡Mira esa resta!',
   fact: 'Hay una cuenta de una sola cifra que no sale. Mira la cuenta columna a columna.',
@@ -352,6 +356,10 @@ export function checkCheckCalc(ex: CheckCalcExercise, answer: Answer): CheckResu
 // ---------------------------------------------------------------- hints
 
 const HUNT_WORKED: Record<ErrorType, string> = {
+  'calig-shape': 'Compara la forma con el modelo de la pauta.',
+  'calig-line': 'Mira si la letra se apoya en la línea de abajo.',
+  'calig-size': 'Mira si la letra llega solo hasta la línea de arriba.',
+  'calig-start': 'Mira por dónde empieza la letra y hacia dónde va.',
   'carry-forgot': 'Mira las llevadas: ¿has sumado la que viene de la columna de la derecha?',
   'borrow-forgot': 'Cuando la vecina presta una decena, ¿se queda con una menos?',
   fact: 'Revisa una sola cuenta de una cifra: ¿cuánto da de verdad?',

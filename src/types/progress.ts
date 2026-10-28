@@ -1,6 +1,6 @@
 import type { ID, ISODate, InputMode } from './common'
 import type { SubjectId } from './child'
-import type { ErrorType, ExerciseKind, SkillKey } from './exercise'
+import type { ErrorType, ExerciseKind, HandwritingKind, SkillKey } from './exercise'
 
 /**
  * Spaced-repetition state for one skill (Leitner boxes 0..5).
@@ -30,7 +30,7 @@ export interface AttemptRecord {
   childId: ID
   sessionId: ID | null
   skill: SkillKey
-  kind: ExerciseKind
+  kind: ExerciseKind | HandwritingKind
   correct: boolean
   given: string
   expected: string
@@ -47,7 +47,11 @@ export interface AttemptRecord {
   graded?: boolean
   /** Where the attempt happened. */
   /** method: the method used when the operation has several (e.g. 'borrow', 'parts'); see src/engine/methods.ts. */
-  context: { worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string }
+  context: {
+    worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string
+    /** Caligrafía: the four criteria (true = passed) and the stars of the try. */
+    shape?: boolean; line?: boolean; size?: boolean; start?: boolean; stars?: number
+  }
   createdAt: ISODate
 }
 

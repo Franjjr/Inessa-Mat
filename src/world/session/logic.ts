@@ -55,6 +55,13 @@ export function sessionDoneKey(now: Date, subject: LessonSubject = 'math'): stri
   return subject === 'language' ? `sesion-hecha-lengua:${day}` : `sesion-hecha:${day}`
 }
 
+/** Caligrafía con lápiz: stars once a day for the first finish, on their own key (never the Lengua session stars). */
+export const CALIG_STARS = 2
+
+export function caligrafiaRewardKey(now: Date): string {
+  return `sesion-caligrafia:${now.toISOString().slice(0, 10)}`
+}
+
 export function isTimeUp(activeSeconds: number): boolean {
   return activeSeconds >= SESSION_LIMIT_SECONDS
 }

@@ -22,6 +22,7 @@ const ShopScreen = lazy(() => import('@/world/shop/ShopScreen'))
 const ChestScreen = lazy(() => import('@/world/chest/ChestScreen'))
 const DiplomaScreen = lazy(() => import('@/world/diploma/DiplomaScreen'))
 const PrizesScreen = lazy(() => import('@/world/prizes/PrizesScreen'))
+const CaligrafiaScreen = lazy(() => import('@/world/caligrafia/CaligrafiaScreen'))
 // adult
 const WelcomeScreen = lazy(() => import('@/adult/welcome/WelcomeScreen'))
 const LoginScreen = lazy(() => import('@/adult/auth/LoginScreen'))
@@ -79,6 +80,7 @@ export function AppRoutes() {
         <Route path="/play/chest" element={<RequireChild><ChestScreen /></RequireChild>} />
         <Route path="/play/diploma" element={<RequireChild><DiplomaScreen /></RequireChild>} />
         <Route path="/play/premios" element={<RequireChild><PrizesScreen /></RequireChild>} />
+        <Route path="/play/caligrafia" element={<RequireChild><CaligrafiaScreen /></RequireChild>} />
 
         <Route path="/adult" element={<Adult><AdultHomeScreen /></Adult>} />
         <Route path="/adult/child/:childId" element={<Adult><ChildReportScreen /></Adult>} />

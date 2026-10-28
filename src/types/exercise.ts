@@ -55,6 +55,9 @@ import type { ID, InputMode } from './common'
  */
 export type SkillKey = string
 
+/** Caligrafía con lápiz: a cursive word written on the pauta (not an exercise kind of the maths/Lengua activities). */
+export type HandwritingKind = 'cursive'
+
 export type ExerciseKind =
   | 'fact-mul'        // a × b = ?
   | 'fact-div'        // p ÷ d = ?
@@ -848,6 +851,10 @@ export type ErrorType =
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
   | 'recognition'          // child said the handwriting was misread (not a maths error!)
+  | 'calig-shape'          // Caligrafía: the letter's form is off (worst criterion of a cursive try)
+  | 'calig-line'           // Caligrafía: the letter does not sit on the baseline
+  | 'calig-size'           // Caligrafía: the letter is too big or too small
+  | 'calig-start'          // Caligrafía: wrong start point or direction
   | 'dont-know'            // the child tapped «No lo sé» (placement test): a topic still to learn, not a slip
   | 'bar-placement'        // a quantity put on the wrong piece of the bar
   | 'place-value'          // a digit written in the wrong column (valor posicional), or a shifted result

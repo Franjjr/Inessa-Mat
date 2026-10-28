@@ -1,0 +1,124 @@
+import { act, fireEvent, render, screen } from '@testing-library/react'
+import { PEN_SEEN_KEY } from '../constants'
+import { InkProvider } from '../InkProvider'
+import { scriptedRecognizer } from '../dev/scripted'
+import { replayStrokes } from '../dev/autoplay'
+import { fixedElementSize, mockCanvas } from '../dev/testing'
+import type { CalItem } from '@/content/caligrafia/curriculum'
+import { TraceCursive } from './TraceCursive'
+import { exactStrokes, scaledStrokes, shiftedStrokes, toInk } from './fixtures'
+import { joinWord } from './join'
+import { fitPauta } from './score'
+
+vi.mock('@/data', () => ({
+  addInkSample: vi.fn(async () => {}),
+  listInkSamples: vi.fn(async () => []),
+  updateChild: vi.fn(async () => ({})),
+  useActiveChild: () => ({ child: null, loading: false, setActiveChild() {} }),
+}))
+vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
+vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
+vi.mock('@/art/worlds/StarIcon', () => ({ StarIcon: ({ filled }: { filled?: boolean }) => <i data-testid={filled ? 'star-on' : 'star-off'} /> }))
+
+const W = 640
+const H = 380
+const LETRA_A: CalItem = { skill: 'calig:letra:a', text: 'a', kind: 'letra', family: 'redondas' }
+const PALABRA_SOL: CalItem = { skill: 'calig:palabra:sol', text: 'sol', kind: 'palabra' }
+
+let restore: () => void
+beforeAll(() => { mockCanvas(); restore = fixedElementSize(W, H) })
+afterAll(() => restore())
+beforeEach(() => { localStorage.clear(); localStorage.setItem(PEN_SEEN_KEY, '2026-10-01') })
+
+function setup(item: CalItem = LETRA_A) {
+  const onDone = vi.fn()
+  render(
+    <InkProvider recognizer={scriptedRecognizer([])}>
+      <TraceCursive item={item} onDone={onDone} />
+    </InkProvider>,
+  )
+  const fit = fitPauta(W, H, joinWord(item.text).width)
+  const toScreen = (strokes: ReturnType<typeof exactStrokes>, pointerType: 'pen' | 'touch' = 'pen') =>
+    toInk(strokes, fit).map((s) => ({ ...s, pointerType }))
+  const writeArea = () => screen.getByRole('img', { name: /escribir/i })
+  const traceArea = () => screen.getByRole('img', { name: /repasar/i })
+  const writeOnce = (strokes: ReturnType<typeof exactStrokes>) => act(() => replayStrokes(writeArea(), toScreen(strokes)))
+  const toWrite = () => {
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
+  }
+  return { onDone, fit, toScreen, traceArea, writeArea, writeOnce, toWrite }
+}
+
+describe('TraceCursive', () => {
+  it('goes Mirar → Repasar → Escribir sola', () => {
+    setup()
+    expect(screen.getByRole('heading', { name: 'Mira' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    expect(screen.getByRole('heading', { name: 'Repasa' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
+    expect(screen.getByRole('heading', { name: 'Escribe sola' })).toBeInTheDocument()
+  })
+
+  it('the exact fixture written alone earns 3 stars', () => {
+    const { writeOnce, toWrite } = setup()
+    toWrite()
+    writeOnce(exactStrokes('a'))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.getAllByTestId('star-on')).toHaveLength(3)
+  })
+
+  it('a scaled letter shows at most 2 stars and the size tip', () => {
+    const { writeOnce, toWrite } = setup()
+    toWrite()
+    writeOnce(scaledStrokes('a', 1.4))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.getAllByTestId('star-on').length).toBeLessThanOrEqual(2)
+    expect(screen.getByText(/muy grande/)).toBeInTheDocument()
+  })
+
+  it('a touch stroke is ignored (palm), the pen writing still scores 3 stars', () => {
+    const { toScreen, writeArea, toWrite } = setup()
+    toWrite()
+    const palm = toScreen(shiftedStrokes(exactStrokes('a'), 10), 'touch')
+    act(() => replayStrokes(writeArea(), [...toScreen(exactStrokes('a')), ...palm]))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.getAllByTestId('star-on')).toHaveLength(3)
+  })
+
+  it('a reversed stroke in Repasar shows «Al revés: sigue la flecha»', () => {
+    const { toScreen, traceArea } = setup()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    const reversed = exactStrokes('a').map((st) => [...st].reverse())
+    act(() => replayStrokes(traceArea(), toScreen(reversed)))
+    expect(screen.getByRole('status')).toHaveTextContent('Al revés: sigue la flecha')
+  })
+
+  it('a stroke far off the model in Repasar shows «Te has salido»', () => {
+    const { toScreen, traceArea } = setup()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    act(() => replayStrokes(traceArea(), toScreen(shiftedStrokes(exactStrokes('a'), 30))))
+    expect(screen.getByRole('status')).toHaveTextContent('Te has salido: vuelve a la línea gris')
+  })
+
+  it('a letter has two tries: the best one is reported with the tries used', () => {
+    const { onDone, writeOnce, toWrite } = setup()
+    toWrite()
+    writeOnce(scaledStrokes('a', 1.4))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Otra vez' }))
+    writeOnce(exactStrokes('a'))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.queryByRole('button', { name: 'Otra vez' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(onDone).toHaveBeenCalledWith({ score: expect.objectContaining({ stars: 3 }), tries: 2 })
+  })
+
+  it('a word has one try only', () => {
+    const { writeOnce, toWrite } = setup(PALABRA_SOL)
+    toWrite()
+    writeOnce(exactStrokes('sol'))
+    fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
+    expect(screen.queryByRole('button', { name: 'Otra vez' })).toBeNull()
+  })
+})
