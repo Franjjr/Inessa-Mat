@@ -1,9 +1,10 @@
 /* The Caligrafía day plan («Caligrafía con lápiz», about 5 minutes after the Lengua session). Pure: no React, no I/O.
-     Repaso      the weakest learnt item due for review (lowest box, then the oldest), ties broken by the seeded rng
+     Repaso      learnt items that are due (dueAt null or past), the weakest first (lowest box, then the soonest due)
      Lo nuevo    the next unlearnt items in curriculum order. A stage (a family of letters, the links, the words, the
                  sentences, the capitals) opens only when every item of the earlier stages has box >= 1.
+     Relleno     when the plan still has fewer than 2 items: learnt items not due, the weakest then the soonest due.
    2 or 3 items; stop adding once the plan has 2 items and about 4 minutes; never more than one sentence and never
-   more than 6 minutes. The same child, day and mastery give the same plan (the rng is seeded from the day). */
+   more than 6 minutes. The same child, day and mastery give the same plan (the default rng is seeded from child and day). */
 import { CAL_CURRICULUM, type CalItem, type CalKind } from '@/content/caligrafia/curriculum'
 import type { MasteryMap, Rng, SkillMastery } from '@/types'
 import { createRng, hashString } from '@/engine/rng'
@@ -22,6 +23,7 @@ export function calEstimateSeconds(item: Pick<CalItem, 'kind'>): number {
 }
 
 export interface CaligrafiaPlanInput {
+  childId: string
   mastery: MasteryMap
   now: Date
   rng?: Rng
@@ -40,33 +42,37 @@ const stageStart = (index: number): number => {
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
 
 export function planCaligrafia(input: CaligrafiaPlanInput): CalItem[] {
-  const { mastery, now } = input
-  const rng = input.rng ?? createRng(hashString(`calig:${dayKey(now)}`))
+  const { mastery, now, childId } = input
+  const rng = input.rng ?? createRng(hashString(`calig:${childId}:${dayKey(now)}`))
   const t = now.getTime()
   const rowOf = (item: CalItem): SkillMastery | undefined => mastery[item.skill] ?? undefined
   const boxOf = (item: CalItem): number => rowOf(item)?.box ?? -1
   const isDue = (m: SkillMastery) => m.dueAt === null || Date.parse(m.dueAt) <= t
-
-  // Repaso: learnt items that are weak (box 0 or 1) or due, the weakest first; equal ones are shuffled by the rng.
   const dueKey = (m: SkillMastery) => (m.dueAt === null ? '' : m.dueAt)
-  const review = CAL_CURRICULUM
-    .filter((i) => { const m = rowOf(i); return !!m && (m.box <= 1 || isDue(m)) })
-    .sort((x, y) => {
-      const mx = rowOf(x)!
-      const my = rowOf(y)!
-      return mx.box - my.box || dueKey(mx).localeCompare(dueKey(my)) || CAL_CURRICULUM.indexOf(x) - CAL_CURRICULUM.indexOf(y)
-    })
-  const headBox = review.length ? boxOf(review[0]) : null
-  const headDue = review.length ? dueKey(rowOf(review[0])!) : null
-  const ties = review.filter((i) => boxOf(i) === headBox && dueKey(rowOf(i)!) === headDue)
+  const indexOf = (item: CalItem) => CAL_CURRICULUM.indexOf(item)
+  /** The weakest first: lowest box, then the soonest due (never-due counts as soonest), then curriculum order. */
+  const weakestFirst = (x: CalItem, y: CalItem) => {
+    const mx = rowOf(x)!
+    const my = rowOf(y)!
+    return mx.box - my.box || dueKey(mx).localeCompare(dueKey(my)) || indexOf(x) - indexOf(y)
+  }
+
+  // Repaso: learnt items that are due. Equal heads are chosen with the seeded rng.
+  const due = CAL_CURRICULUM.filter((i) => { const m = rowOf(i); return !!m && isDue(m) }).sort(weakestFirst)
+  const headBox = due.length ? boxOf(due[0]) : null
+  const headDue = due.length ? dueKey(rowOf(due[0])!) : null
+  const ties = due.filter((i) => boxOf(i) === headBox && dueKey(rowOf(i)!) === headDue)
   const reviewHead = ties.length ? ties[Math.floor(rng() * ties.length)] : null
-  const reviewOrder = reviewHead ? [reviewHead, ...review.filter((i) => i !== reviewHead)] : []
+  const reviewOrder = reviewHead ? [reviewHead, ...due.filter((i) => i !== reviewHead)] : []
 
   // Lo nuevo: unseen items in order, a stage only once every item of the earlier stages has box >= 1.
   const newOrder = CAL_CURRICULUM.filter((item, index) => {
     if (rowOf(item)) return false
     return CAL_CURRICULUM.slice(0, stageStart(index)).every((earlier) => boxOf(earlier) >= 1)
   })
+
+  // Relleno: learnt items not due, used only when the plan is still short.
+  const filler = CAL_CURRICULUM.filter((i) => { const m = rowOf(i); return !!m && !isDue(m) }).sort(weakestFirst)
 
   const plan: CalItem[] = []
   const seconds = () => plan.reduce((sum, i) => sum + calEstimateSeconds(i), 0)
@@ -86,6 +92,10 @@ export function planCaligrafia(input: CaligrafiaPlanInput): CalItem[] {
   }
   for (const item of reviewOrder) {
     if (full()) break
+    add(item)
+  }
+  for (const item of filler) {
+    if (plan.length >= CAL_MIN_ITEMS) break
     add(item)
   }
   return plan
