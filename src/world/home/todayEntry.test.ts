@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
 import { currentTopic, syllabusForGrade } from '@/content/syllabus'
 import type { MasteryMap, ProgressState, SkillMastery } from '@/types'
-import { todayEntry } from './todayEntry'
+import { homeSubject, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
 
@@ -66,5 +66,30 @@ describe('todayEntry', () => {
     const topic = currentTopic(syllabusForGrade(3), {})!
     expect(entry.title).toBe(topic.name.replace(/\s*\(.*\)\s*$/, ''))
     expect(entry.title).not.toMatch(/[()]/)
+  })
+})
+
+describe('Lengua on the home', () => {
+  const lenguaMastery = {} as MasteryMap
+
+  it('the Lengua «Hoy» is the class of the first Lengua topic, and after the class the Lengua session', () => {
+    expect(todayEntry({ grade: 3, mastery: lenguaMastery, progress: progress(), subject: 'language' })).toEqual({
+      kind: 'clase', topicId: 'lng-silabas', title: 'Letras, sílabas y palabras', to: '/play/clase/lng-silabas',
+    })
+    const done = { ...progress(), flags: { 'clase:lng-silabas': true } }
+    expect(todayEntry({ grade: 3, mastery: lenguaMastery, progress: done, subject: 'language' })).toEqual({
+      kind: 'sesion', title: 'Letras, sílabas y palabras', to: '/play/lengua',
+    })
+  })
+
+  it('a maths-only child opens on maths: the home view is maths until today\'s maths session is done', () => {
+    expect(homeSubject(['math'], progress(), new Date(NOW))).toBe('math')
+    expect(homeSubject(['math', 'language'], progress(), new Date(NOW))).toBe('math')
+  })
+
+  it('with both on, the home moves to Lengua once today\'s maths session is done', () => {
+    const mathDone = { ...progress(), flags: { 'sesion:2026-10-27': true } }
+    expect(homeSubject(['math', 'language'], mathDone, new Date(NOW))).toBe('language')
+    expect(homeSubject(['language'], progress(), new Date(NOW))).toBe('language')
   })
 })

@@ -29,12 +29,12 @@ export interface Companion {
 
 export type AnswerInputPreference = 'auto' | 'pen' | 'keyboard' | 'keypad'
 
-/** School subjects. Only 'math' has content today; the others are announced as «Próximamente». */
+/** School subjects. Maths and Lengua (3.º) have content; the others are announced as «Próximamente». */
 export type SubjectId = 'math' | 'language' | 'english' | 'science' | 'history'
 
 export const SUBJECTS: { id: SubjectId; name: string; available: boolean }[] = [
   { id: 'math', name: 'Matemáticas', available: true },
-  { id: 'language', name: 'Lengua', available: false },
+  { id: 'language', name: 'Lengua', available: true },
   { id: 'english', name: 'Inglés', available: false },
   { id: 'science', name: 'Ciencias', available: false },
   { id: 'history', name: 'Historia', available: false },

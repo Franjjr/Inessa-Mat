@@ -22,7 +22,7 @@ export interface ReadingScreenProps {
 
 export function ReadingScreen(props: ReadingScreenProps) {
   return (
-    <GameHostProvider>
+    <GameHostProvider subject="language">
       <ReadingBody {...props} />
     </GameHostProvider>
   )

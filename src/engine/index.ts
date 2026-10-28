@@ -26,6 +26,11 @@ export {
   DAILY_BLOCK_LABEL, DAILY_MINUTES, EXAMPLE_SECONDS, ITEM_SECONDS, NEW_FACT_BUDGET, estimateSeconds, planDailySession,
   scaffoldedSkills, statementOf,
 } from './daily'
+/** Lengua de 3.º: the 15-minute session and the placement test (src/engine/lengua/daily.ts, placement.ts). */
+export { planLenguaSession, storyFlag } from './lengua/daily'
+export type { LenguaPlanInput } from './lengua/daily'
+export { buildLenguaPlacement, LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT } from './lengua/placement'
+export type { LenguaPlacementBlockId } from './lengua/placement'
 export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 /** Prueba inicial: items, block mapping and the summary for the adult report. */
 export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
@@ -116,5 +121,5 @@ export {
 export { calendarSkill, clockConvertSkill, clockReadSkill, clockSetSkill, timeDurationSkill } from './skills'
 
 /** Subjects: Lengua skills (lng:) apart from maths; maths readers filter with masteryOf / attemptsOf first. */
-export { attemptsOf, masteryOf, placementFlags, subjectOfSkill } from './subjects'
+export { attemptsOf, masteryOf, placementFlags, subjectOffered, subjectOfSession, subjectOfSkill } from './subjects'
 export type { LessonSubject } from './subjects'

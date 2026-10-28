@@ -1,6 +1,6 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { season1 } from '@/content'
-import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
+import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, subjectOfSession } from '@/engine'
 import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
 
 /** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
@@ -94,7 +94,8 @@ export function statsFromLocal(attempts7All: AttemptRecord[], attempts30All: Att
     methods: [...tally.values()],
     attempts: counted.length,
     correct: counted.filter((a) => a.correct).length,
-    minutes: sessions7.reduce((sum, s) => sum + (Number(s.minutes) || 0), 0),
+    // Maths minutes only: a Lengua session is not a maths session.
+    minutes: sessions7.filter((s) => subjectOfSession(s) === 'math').reduce((sum, s) => sum + (Number(s.minutes) || 0), 0),
     lastPlayedAt,
     topErrors,
   }

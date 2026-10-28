@@ -1,4 +1,5 @@
 import type { ID, ISODate, InputMode } from './common'
+import type { SubjectId } from './child'
 import type { ErrorType, ExerciseKind, SkillKey } from './exercise'
 
 /**
@@ -57,7 +58,8 @@ export interface SessionRecord {
   endedAt: ISODate | null
   /** Active minutes (idle time excluded). */
   minutes: number
-  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[] } | null
+  /** `subject` marks a Lengua session (missing = maths): it lives in the summary so it syncs without a new column. */
+  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[]; subject?: SubjectId } | null
 }
 
 export interface NodeProgress {

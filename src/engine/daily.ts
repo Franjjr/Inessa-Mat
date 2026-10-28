@@ -7,7 +7,7 @@
    Failed items come back later in the same run (src/activities/shared/requeue.ts) and on later days (mastery).
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
-import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, Rng, SkillKey, SkillMastery } from '@/types'
+import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { availableSkills, behindTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { makeArray } from './make'
 import { statementClock } from './clock'
@@ -64,11 +64,12 @@ const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const ITEM_OVERHEAD_SECONDS = 5
 export const EXAMPLE_SECONDS = 60
 
-export type DailyBlockId = 'warmup' | 'new' | 'mix' | 'problem'
+export type DailyBlockId = 'warmup' | 'new' | 'story' | 'mix' | 'problem'
 
 export const DAILY_BLOCK_LABEL: Record<DailyBlockId, string> = {
   warmup: 'Calentamiento',
   new: 'Lo nuevo',
+  story: 'Lectura',
   mix: 'Mezcla',
   problem: 'Problema',
 }
@@ -82,6 +83,10 @@ export interface DailyItem {
   isNew: boolean
   /** Extra mix item added so that the practice fills the session (short items, known facts). */
   filler?: boolean
+  /** Lengua: the text of the story is shown before this (its first) question. */
+  passage?: ReadingDef
+  /** Lengua: the last question of this story; answering it marks the story read. */
+  finishesReading?: string
 }
 
 export interface DailyPlan {
@@ -94,6 +99,8 @@ export interface DailyPlan {
   practiceSeconds: number
   /** Brand-new hard facts introduced in this session (never above NEW_FACT_BUDGET). */
   newFactCount: number
+  /** Lengua: the topic whose class comes before «Lo nuevo», when it has one and the child has not done it. */
+  classTopicId?: string | null
 }
 
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
@@ -199,7 +206,7 @@ function familyOf(skill: SkillKey): string {
 }
 
 /** Mastery entries in urgency order: due and weak first, then due, then weak, then the rest. */
-function urgencyOrder(mastery: MasteryMap, now: Date): SkillMastery[] {
+export function urgencyOrder(mastery: MasteryMap, now: Date): SkillMastery[] {
   const t = now.getTime()
   const rank = (m: SkillMastery) => {
     const due = m.dueAt === null || Date.parse(m.dueAt) <= t

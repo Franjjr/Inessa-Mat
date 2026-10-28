@@ -141,7 +141,8 @@ export async function devMasterUntilTopic(page: Page, topicId: string): Promise<
     if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
     const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
     if (!child) throw new Error('no child on this device')
-    const course = syllabus.syllabusForGrade(child.grade)
+    // A Lengua topic (lng-…) is walked through the Lengua temario of the same course.
+    const course = target.startsWith('lng-') ? syllabus.syllabusFor('language', child.grade) : syllabus.syllabusForGrade(child.grade)
     const map = { ...(await data.getMastery(child.id)) }
     const rows: Parameters<typeof data.saveMastery>[1] = []
     for (let i = 0; i < 300; i++) {
@@ -321,4 +322,29 @@ export async function answerFromPrompt(page: Page): Promise<number | null> {
   const text = ((await page.locator('main').first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ')
   const m = text.match(/(\d+) (?:grupos|filas) de (\d+)/)
   return m ? Number(m[1]) * Number(m[2]) : null
+}
+
+/** Dev-only: changes settings of the active child (the adult area does the same through their cards). Only the keys given
+    change: `subjects`, `voice` (the lesson narration), `storyVoice` (the stories read aloud), and so on. */
+export async function devSettings(page: Page, patch: Record<string, unknown>): Promise<void> {
+  await page.evaluate(async (p) => {
+    const data = await import('/src/data/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    await data.updateChild(child.id, { settings: { ...child.settings, ...p } })
+  }, patch)
+}
+
+/** Dev-only: sets one progress flag of the active child (e.g. a class done, so the test starts after it). */
+export async function devFlag(page: Page, key: string, value = true): Promise<void> {
+  await page.evaluate(async ([k, v]) => {
+    const data = await import('/src/data/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    await data.updateProgress(child.id, (p) => ({ ...p, flags: { ...p.flags, [k]: v } }))
+  }, [key, value] as const)
 }

@@ -92,7 +92,7 @@ function reportError(where: string, e: unknown) {
   if (import.meta.env.DEV) console.warn(`[game-host] ${where}`, e)
 }
 
-export function GameHostProvider({ worldId, nodeId, activity, children }: GameHostProviderProps) {
+export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', children }: GameHostProviderProps) {
   const { child } = useActiveChild()
   const childId = child?.id ?? null
 
@@ -134,7 +134,7 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
     session.id = null
     let open = true
     let timer: ReturnType<typeof setInterval> | undefined
-    startSession(childId)
+    startSession(childId, subject)
       .then((s: SessionRecord) => {
         if (!open) {
           // Unmounted before the session was created: close it right away.
@@ -161,11 +161,12 @@ export function GameHostProvider({ worldId, nodeId, activity, children }: GameHo
           correct: session.correct,
           starsEarned: 0,
           nodesCompleted: [],
+          ...(subject === 'language' ? { subject } : {}),
         }).catch((e) => reportError('endSession', e))
         void touchSession(id, { minutes }).catch(() => undefined)
       }
     }
-  }, [childId])
+  }, [childId, subject])
 
   const host = useMemo<ActivityHost>(() => {
     const ctx = contextOf(child)

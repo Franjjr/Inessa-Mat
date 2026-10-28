@@ -190,6 +190,29 @@
   gap: var(--sp-2);
 }
 
+.passage {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-4);
+  max-height: 72vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.passageBody {
+  display: grid;
+  gap: var(--sp-3);
+}
+
+.passageText {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--c-ink);
+}
+
 .stars {
   display: flex;
   gap: var(--sp-3);

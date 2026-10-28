@@ -8,7 +8,7 @@ import { statsFromLocal } from '@/data/summary'
 import {
   PLACEMENT_ACTIVITY, errorReport, newMastery, placementRuns, planDailySession, planSession, recallReport, syllabusReport, topicNeeds,
 } from '@/engine'
-import { attemptsOf, masteryOf, placementFlags, subjectOfSkill } from '../subjects'
+import { attemptsOf, masteryOf, placementFlags, subjectOfSession, subjectOfSkill, subjectOffered } from '../subjects'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
@@ -165,5 +165,22 @@ describe('maths readers ignore Lengua rows', () => {
     const sessions: never[] = []
     const onlyMaths = statsFromLocal(attemptsOf(all, 'math'), attemptsOf(all, 'math'), sessions, null)
     expect(statsFromLocal(all, all, sessions, null)).toEqual(onlyMaths)
+  })
+})
+
+describe('the subject of a session and of an offer', () => {
+  it('a session with the Lengua mark is Lengua; any other session is maths', () => {
+    const lengua = { summary: { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject: 'language' as const } }
+    expect(subjectOfSession(lengua)).toBe('language')
+    expect(subjectOfSession({ summary: null })).toBe('math')
+    expect(subjectOfSession({ summary: { attempts: 3, correct: 2, starsEarned: 1, nodesCompleted: [] } })).toBe('math')
+  })
+
+  it('Lengua is offered to 3.º and to a child without a course; maths to every course', () => {
+    expect(subjectOffered('language', 3)).toBe(true)
+    expect(subjectOffered('language', undefined)).toBe(true)
+    expect(subjectOffered('language', 2)).toBe(false)
+    expect(subjectOffered('language', 4)).toBe(false)
+    expect(subjectOffered('math', 2)).toBe(true)
   })
 })

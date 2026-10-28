@@ -30,3 +30,19 @@ describe('statsFromLocal: ungraded retry rows do not count in accuracy', () => {
     expect(statsFromLocal(list, list, [], null).topErrors).toEqual([])
   })
 })
+
+describe('statsFromLocal: Lengua sessions are not maths minutes (R5)', () => {
+  const session = (minutes: number, subject?: 'language') => ({
+    id: `ses-${minutes}-${subject ?? 'math'}`, childId: 'c', startedAt: new Date(now).toISOString(), endedAt: null, minutes,
+    summary: subject ? { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject } : null,
+  })
+
+  it('counts the maths sessions only (a session with no mark is maths)', () => {
+    const sessions = [session(10), session(6, 'language'), session(4)]
+    expect(statsFromLocal([], [], sessions, null).minutes).toBe(14)
+  })
+
+  it('a Lengua session on its own gives no maths minutes', () => {
+    expect(statsFromLocal([], [], [session(9, 'language')], null).minutes).toBe(0)
+  })
+})

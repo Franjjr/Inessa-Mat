@@ -1,36 +1,45 @@
-/* Prueba inicial (route /play/prueba): about ten minutes, fourteen items in five blocks, no hints and no feedback
-   of right or wrong («¡Gracias!» only). «No lo sé» skips an item the child cannot do yet: it counts as not known, so
-   the plan starts there. Each answer goes through the normal mastery update, so the plan starts where
-   the child is. Leaving before the end does not mark it done; the adult can launch it again from the report. */
+/* Prueba inicial (route /play/prueba, maths) and Prueba de Lengua (route /play/prueba-lengua): about ten minutes, no hints
+   and no feedback of right or wrong («¡Gracias!» only). «No lo sé» skips an item the child cannot do yet: it counts as not
+   known, so the plan starts there. Each answer goes through the normal mastery update, so the plan starts where the child
+   is. Leaving before the end does not mark it done; the adult can launch it again from the report. The subject picks the
+   items, the blocks, the activity name and the progress flags (placementFlags). */
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { StarIcon } from '@/art'
 import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
-import { buildPlacement, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, type PlacementItem } from '@/engine'
+import {
+  buildLenguaPlacement, buildPlacement, LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS,
+  placementFlags, type LessonSubject,
+} from '@/engine'
 import { updateProgress, useActiveChild, useProgress } from '@/data'
 import { useInputMode } from '@/ink'
 import { BackButton, Button, Screen, Spinner } from '@/ui'
-import type { ProgressState } from '@/types'
+import type { Exercise, ProgressState } from '@/types'
 import type { ExerciseOutcome } from '@/types'
 import s from '../session/session.module.css'
 
-export default function PlacementScreen() {
+interface PlacementItemOf {
+  block: string
+  exercise: Exercise
+}
+
+export default function PlacementScreen({ subject = 'math' }: { subject?: LessonSubject }) {
   const navigate = useNavigate()
   const leave = () => navigate('/play')
   return (
-    <GameHostProvider activity={PLACEMENT_ACTIVITY}>
-      <PlacementRunner onDone={leave} onExit={leave} />
+    <GameHostProvider activity={subject === 'language' ? LENGUA_PLACEMENT_ACTIVITY : PLACEMENT_ACTIVITY} subject={subject}>
+      <PlacementRunner subject={subject} onDone={leave} onExit={leave} />
     </GameHostProvider>
   )
 }
 
-function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () => void }) {
+function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; onDone: () => void; onExit: () => void }) {
   const host = useActivityHost()
   const { child, loading } = useActiveChild()
   const progress = useProgress(child?.id)
-  const [items, setItems] = useState<PlacementItem[] | null>(null)
+  const [items, setItems] = useState<PlacementItemOf[] | null>(null)
   const [index, setIndex] = useState(0)
   const [thanks, setThanks] = useState(false)
   const [finished, setFinished] = useState(false)
@@ -40,8 +49,9 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
 
   useEffect(() => {
     if (items || !child) return
-    setItems(buildPlacement(`${child.id}|${new Date().toISOString().slice(0, 10)}`, new Date(), child.grade))
-  }, [child, items])
+    const seed = `${child.id}|${new Date().toISOString().slice(0, 10)}`
+    setItems(subject === 'language' ? buildLenguaPlacement(seed, new Date()) : buildPlacement(seed, new Date(), child.grade))
+  }, [child, items, subject])
 
   if (loading || !child || !progress || !items) return <Spinner label="Preparando la prueba…" />
 
@@ -79,14 +89,14 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
       setIndex(index + 1)
       return
     }
-    await markDone(child.id, progress)
+    await markDone(child.id, progress, subject)
     setFinished(true)
   }
 
   const header = (
     <header className={s.header}>
       <BackButton variant="exit" onClick={onExit} />
-      <h1 className={s.headerTitle}>Prueba inicial</h1>
+      <h1 className={s.headerTitle}>{subject === 'language' ? 'Prueba de Lengua' : 'Prueba inicial'}</h1>
       <span />
     </header>
   )
@@ -99,7 +109,11 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
           <div className={`${s.card} ${s.calm}`}>
             <div className={s.stars}>{[0, 1, 2].map((i) => <StarIcon key={i} size={56} filled />)}</div>
             <h2 className={s.title}>{childText(child, '¡Gracias, {child}!')}</h2>
-            <p className={s.text}>Ya sabemos por dónde empezar. Tu sesión de hoy se ajustará a lo que sabes.</p>
+            <p className={s.text}>
+              {subject === 'language'
+                ? 'Ya sabemos por dónde empezar en Lengua. Tu sesión de Lengua se ajustará a lo que sabes.'
+                : 'Ya sabemos por dónde empezar. Tu sesión de hoy se ajustará a lo que sabes.'}
+            </p>
             <div className={s.actions}>
               <Button size="lg" variant="success" onClick={onDone}>Volver al inicio</Button>
             </div>
@@ -109,7 +123,7 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
     )
   }
 
-  const blockLabel = PLACEMENT_BLOCKS.find((b) => b.id === current.block)?.label ?? ''
+  const blockLabel = (subject === 'language' ? LENGUA_PLACEMENT_BLOCKS : PLACEMENT_BLOCKS).find((b) => b.id === current.block)?.label ?? ''
   return (
     <Screen background="var(--c-bg)" className={s.root}>
       {header}
@@ -143,11 +157,12 @@ function PlacementRunner({ onDone, onExit }: { onDone: () => void; onExit: () =>
   )
 }
 
-async function markDone(childId: string, progress: ProgressState): Promise<void> {
-  if (progress.flags?.placement && !progress.flags?.placementRequested) return
+async function markDone(childId: string, progress: ProgressState, subject: LessonSubject): Promise<void> {
+  const flags = placementFlags(subject)
+  if (progress.flags?.[flags.done] && !progress.flags?.[flags.requested]) return
   await updateProgress(childId, (p) => ({
     ...p,
-    flags: { ...p.flags, placement: true, placementRequested: false },
+    flags: { ...p.flags, [flags.done]: true, [flags.requested]: false },
     updatedAt: new Date().toISOString(),
   }))
 }
