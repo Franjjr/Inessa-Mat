@@ -39,6 +39,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'div-climb': { divisor: 4, quotient: 7 },
   'lng-sentence': { text: 'El perro come pan en el parque.', highlight: 'perro', mark: 'noun' },
   'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
+  'big-text': { text: '4 325 = 4 000 + 300 + 20 + 5' },
+  'number-line': { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 },
 }
 
 /** Reads the LessonVisualId union straight from the shared types, so the test cannot drift from them. */

@@ -92,6 +92,8 @@ export type LessonVisualId =
   | 'div-climb'         // params: { divisor, quotient } — multiplicar hacia arriba: the multiples of the divisor
   | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
   | 'lng-word'          // Lengua: params { word, parts?, mark? } — a word cut into parts (ma-ri-po-sa, abre+latas); mark is a class or a part
+  | 'big-text'          // params: { text, sub? } — one or two lines of large text (a rule, an equality), sub under it
+  | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
 
 export interface LessonStep {
   visual: LessonVisualId

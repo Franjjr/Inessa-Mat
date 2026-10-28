@@ -47,6 +47,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'div-parts': ['dividend', 'divisor'],
   'div-climb': ['divisor', 'quotient'],
   'lng-sentence': ['text'],
+  'big-text': ['text'],
+  'number-line': ['from', 'to', 'step'],
   'lng-word': ['word'],
 }
 

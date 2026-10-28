@@ -11,6 +11,7 @@ import {
 import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from './division'
 import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import { LngSentenceVisual, LngWordVisual } from './lengua'
+import { BigTextVisual, NumberLineVisual } from './numbers'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -47,6 +48,8 @@ export const LESSON_VISUALS: VisualRegistry = {
   'div-climb': DivClimbVisual,
   'lng-sentence': LngSentenceVisual,
   'lng-word': LngWordVisual,
+  'big-text': BigTextVisual,
+  'number-line': NumberLineVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */
