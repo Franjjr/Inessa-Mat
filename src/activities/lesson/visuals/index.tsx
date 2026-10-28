@@ -13,6 +13,7 @@ import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import { LngSentenceVisual, LngWordVisual } from './lengua'
 import { BigTextVisual, NumberLineVisual } from './numbers'
 import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
+import { MoneyVisual } from './money'
 import type { VisualRegistry } from './types'
 
 export type { VisualProps, LessonParams } from './types'
@@ -53,6 +54,7 @@ export const LESSON_VISUALS: VisualRegistry = {
   'number-line': NumberLineVisual,
   'fraction-shape': FractionShapeVisual,
   'fraction-groups': FractionGroupsVisual,
+  money: MoneyVisual,
 }
 
 /** Visual ids in a stable order (for galleries and tests). */

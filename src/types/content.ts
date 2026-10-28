@@ -96,6 +96,7 @@ export type LessonVisualId =
   | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
   | 'fraction-shape'    // params: { parts, shaded, shape } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar
   | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted
+  | 'money'             // params: { items, price? } — items: comma list of céntimos (200,50,20), each drawn as a real coin or note; price (céntimos) adds the price tag and the change line «Te devuelven X» when the items pay more
 
 export interface LessonStep {
   visual: LessonVisualId

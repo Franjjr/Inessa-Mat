@@ -44,6 +44,7 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'number-line': { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 },
   'fraction-shape': { parts: 4, shaded: 3, shape: 'circle' },
   'fraction-groups': { total: 20, parts: 4, take: 1 },
+  money: { items: '500,200,20', price: 320 },
 }
 
 const STATES = 5

@@ -232,3 +232,39 @@
     transition: none !important;
   }
 }
+
+/* Money (money): a row of coins and notes that wrap on a phone; the price and the change are plain lines under them. */
+.moneyRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--sp-3);
+  max-width: 100%;
+}
+
+.moneyPiece {
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.moneyPiece svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.moneyTag {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.moneyChange {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--c-magic);
+  text-align: center;
+}
