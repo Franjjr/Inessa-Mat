@@ -173,7 +173,7 @@ describe('ChildReportScreen', () => {
       expect(await screen.findByRole('heading', { name: 'Temario de Lengua de 3.º' })).toBeInTheDocument()
       expect(screen.getByRole('heading', { name: 'En qué falla en Lengua' })).toBeInTheDocument()
       expect(screen.getByText(/Ha leído 2 de 10 lecturas/)).toBeInTheDocument()
-      expect(screen.getByText('12 min esta semana')).toBeInTheDocument()
+      expect(screen.getByText('12 min en los últimos 7 días')).toBeInTheDocument()
       expect(screen.getByRole('heading', { name: 'Prueba inicial de Lengua' })).toBeInTheDocument()
       expect(screen.getByRole('heading', { name: 'Ortografía y sílabas' })).toBeInTheDocument()
       expect(screen.getByText('No lo sabía: 1')).toBeInTheDocument()

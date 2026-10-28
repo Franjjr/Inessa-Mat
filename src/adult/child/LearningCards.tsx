@@ -28,10 +28,11 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** Element ids are unique on the page: Lengua's cards carry a `lengua-` prefix, maths keeps the original ids. */
 const idOf = (subject: LessonSubject, name: string) => `${subject === 'language' ? 'lengua-' : ''}${name}`
 
-interface LearningData { mastery: MasteryMap; attempts: AttemptRecord[]; sessions: SessionRecord[] }
+export interface LearningData { mastery: MasteryMap; attempts: AttemptRecord[]; sessions: SessionRecord[] }
 
-/** The mastery, the attempts (newest first) and the sessions of the last week, read from this device. */
-function useLearningData(childId: string, progressUpdatedAt?: string): { data: LearningData | null; error: string | null } {
+/** The mastery, the attempts (newest first) and the sessions of the last week, read from this device once for the whole
+    report: both sections take this one read (`data`, `loadError`). */
+export function useLearningData(childId: string, progressUpdatedAt?: string): { data: LearningData | null; error: string | null } {
   const [data, setData] = useState<LearningData | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -53,11 +54,31 @@ async function requestPlacement(childId: string, subject: LessonSubject): Promis
   await updateProgress(childId, (p) => ({ ...p, flags: { ...p.flags, [placementFlags(subject).requested]: true }, updatedAt: new Date().toISOString() }))
 }
 
-export function LearningSection({ childId, childName, grade, progress }: { childId: string; childName: string; grade?: number; progress: ProgressState | null }) {
-  const { data, error: loadError } = useLearningData(childId, progress?.updatedAt)
+/** The offer of a subject's prueba inicial: busy while it is sent, and the error («Ofrecer la prueba») if it fails. */
+function useOfferPlacement(childId: string, childName: string, subject: LessonSubject, requested: boolean) {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
-  const requested = !!progress?.flags?.[placementFlags('math').requested]
+  const onOffer = async () => {
+    setBusy(true)
+    setError(null)
+    try {
+      await requestPlacement(childId, subject)
+      toast(subject === 'language'
+        ? `Se le ofrecerá la prueba de Lengua a ${childName} en su próxima visita.`
+        : `Se le ofrecerá la prueba a ${childName} en su próxima visita.`)
+    } catch (e) {
+      setError(errorMessage(e, 'No hemos podido preparar la prueba. Inténtalo de nuevo.'))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return { error, offer: { requested, busy, onOffer: () => void onOffer() } }
+}
+
+export function LearningSection({ childId, childName, grade, progress, data, loadError }: {
+  childId: string; childName: string; grade?: number; progress: ProgressState | null; data: LearningData | null; loadError: string | null
+}) {
+  const { error, offer } = useOfferPlacement(childId, childName, 'math', !!progress?.flags?.[placementFlags('math').requested])
 
   const reports = useMemo(() => {
     if (!data) return null
@@ -70,19 +91,6 @@ export function LearningSection({ childId, childName, grade, progress }: { child
       recall: recallReport(data.attempts, now),
     }
   }, [data, grade])
-
-  const offer = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      await requestPlacement(childId, 'math')
-      toast(`Se le ofrecerá la prueba a ${childName} en su próxima visita.`)
-    } catch (e) {
-      setError(errorMessage(e, 'No hemos podido preparar la prueba. Inténtalo de nuevo.'))
-    } finally {
-      setBusy(false)
-    }
-  }
 
   if (loadError && !reports) {
     return <section className={adult.card}><p className={adult.error} role="alert">{loadError}</p></section>
@@ -99,20 +107,18 @@ export function LearningSection({ childId, childName, grade, progress }: { child
         recall={reports.recall}
         childName={childName}
         error={error}
-        offer={{ requested, busy, onOffer: () => void offer() }}
+        offer={offer}
       />
     </>
   )
 }
 
 /** Lengua for the grown-ups. Shown when Lengua is on for the child (`enabled`) or the child has Lengua attempts; otherwise nothing. */
-export function LenguaSection({ childId, childName, grade, enabled, progress }: {
+export function LenguaSection({ childId, childName, grade, enabled, progress, data, loadError }: {
   childId: string; childName: string; grade?: number; enabled: boolean; progress: ProgressState | null
+  data: LearningData | null; loadError: string | null
 }) {
-  const { data, error: loadError } = useLearningData(childId, progress?.updatedAt)
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
-  const requested = !!progress?.flags?.[placementFlags('language').requested]
+  const { error, offer } = useOfferPlacement(childId, childName, 'language', !!progress?.flags?.[placementFlags('language').requested])
 
   const reports = useMemo(() => {
     if (!data) return null
@@ -129,19 +135,6 @@ export function LenguaSection({ childId, childName, grade, enabled, progress }: 
       read: STORY_READINGS.filter((r) => progress?.flags?.[storyFlag(r.id)]),
     }
   }, [data, grade, progress])
-
-  const offer = async () => {
-    setBusy(true)
-    setError(null)
-    try {
-      await requestPlacement(childId, 'language')
-      toast(`Se le ofrecerá la prueba de Lengua a ${childName} en su próxima visita.`)
-    } catch (e) {
-      setError(errorMessage(e, 'No hemos podido preparar la prueba. Inténtalo de nuevo.'))
-    } finally {
-      setBusy(false)
-    }
-  }
 
   // Not on for the child: nothing until the data says the child has Lengua attempts.
   if (!data) {
@@ -161,7 +154,7 @@ export function LenguaSection({ childId, childName, grade, enabled, progress }: 
         count={LENGUA_PLACEMENT_COUNT}
         childName={childName}
         error={error}
-        offer={{ requested, busy, onOffer: () => void offer() }}
+        offer={offer}
       />
       <ReadingCard read={reports.read} total={STORY_READINGS.length} minutes={reports.minutes} />
     </>
@@ -395,7 +388,7 @@ export function ReadingCard({ read, total, minutes }: { read: ReadingDef[]; tota
     <section className={adult.card} aria-labelledby="lengua-lectura-title">
       <div className={adult.cardHead}>
         <h2 id="lengua-lectura-title" className={adult.subheading}>Lecturas de Lengua</h2>
-        <span className={adult.muted}>{formatMinutes(minutes)} esta semana</span>
+        <span className={adult.muted}>{formatMinutes(minutes)} en los últimos 7 días</span>
       </div>
       {read.length === 0 ? (
         <p className={adult.lead}>Todavía no ha terminado ninguna lectura con sus preguntas.</p>

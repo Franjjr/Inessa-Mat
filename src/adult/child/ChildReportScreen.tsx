@@ -22,7 +22,7 @@ import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
 import { OtherMethodsCard } from './OtherMethodsCard'
-import { LearningSection, LenguaSection } from './LearningCards'
+import { LearningSection, LenguaSection, useLearningData } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -43,6 +43,8 @@ export default function ChildReportScreen() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [sharing, setSharing] = useState(false)
+  // One read of the learning data for both sections (maths and Lengua), not one each.
+  const learning = useLearningData(childId, progress?.updatedAt)
 
   useEffect(() => {
     let alive = true
@@ -204,13 +206,15 @@ export default function ChildReportScreen() {
         </div>
       </section>
 
-      <LearningSection childId={childId} childName={name} grade={child?.grade} progress={progress} />
+      <LearningSection childId={childId} childName={name} grade={child?.grade} progress={progress} data={learning.data} loadError={learning.error} />
       <LenguaSection
         childId={childId}
         childName={name}
         grade={child?.grade}
         enabled={!!child && (child.settings.subjects ?? ['math']).includes('language') && subjectOffered('language', child.grade)}
         progress={progress}
+        data={learning.data}
+        loadError={learning.error}
       />
 
       <div className={s.twoCol}>
