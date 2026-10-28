@@ -35,6 +35,9 @@ export function TextInput({ value, onChange, onSubmit, maxLength, ariaLabel, pla
   const [toggled, setToggled] = useState(false)
   const keyboardHere = useIsActivePad(uid)
   const palm = usePalmGuard()
+  // The «show the keyboard» choice belongs to one input mode: when the mode changes, it starts again from the default.
+  const mode = ink.mode
+  useEffect(() => { setToggled(false) }, [mode])
   // Like NumberInput: a child on a physical keyboard does not get the on-screen one unless they ask for it.
   const keyboardVisible = keyboardHere && (ink.mode !== 'keyboard' || toggled)
   const showToggle = keyboardHere && ink.mode === 'keyboard' && !disabled

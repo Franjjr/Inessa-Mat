@@ -10,6 +10,9 @@
 -- out too, so a child with both subjects keeps a maths-only accuracy here. Lengua sessions carry summary.subject =
 -- 'language' and are left out of the minutes (a session with no mark is maths).
 --
+-- last_played_at is the only aggregate that counts Lengua too, on purpose: «última vez que jugó» means any subject, so
+-- a day of Lengua is a day the child played. Attempts and sessions of both subjects are counted there (no filter).
+--
 -- Same signature, SECURITY INVOKER, search_path, and grants as 0001_init.sql. Only the function body changes.
 -- HOW TO APPLY: paste this whole file into the Supabase SQL editor and press "Run". Idempotent (create or replace,
 -- grants repeated).

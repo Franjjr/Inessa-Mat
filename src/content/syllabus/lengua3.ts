@@ -57,7 +57,7 @@ const BLOCKS: SyllabusBlock[] = [
         concreto: 'Sonidos «ca» y «que» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: _asa', uso: 'Palabras con c y qu en un texto',
       }),
       topic('g-gu', 'g, gu y gü: ga, gue, gui, güe', [lenguaSkill('orto', 'g-gu')], {
-        concreto: 'Sonidos «ga» y «gue» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: gu_tarra, ci_üeña', uso: 'Palabras con g, gu y gü en un texto',
+        concreto: 'Sonidos «ga» y «gue» con fichas', dibujo: 'Dibujos con la palabra escrita debajo', numeros: 'La letra que falta: _uitarra, pin_üino', uso: 'Palabras con g, gu y gü en un texto',
       }),
       topic('r-rr', 'r y rr: entre vocales y al principio', [lenguaSkill('orto', 'r-rr')], {
         concreto: 'La r suave y la rr fuerte con fichas', dibujo: 'Dibujos de palabras con r y rr', numeros: 'Escribir r o rr: ho_a (del reloj), to_e (edificio alto)', uso: 'Palabras con r y rr en una historia',

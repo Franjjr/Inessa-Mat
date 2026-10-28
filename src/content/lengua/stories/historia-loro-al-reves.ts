@@ -23,7 +23,7 @@ export const historiaLoroAlReves: ReadingDef = {
       prompt: '¿De qué trata el texto?',
       options: [
         'De un loro que dice las palabras al revés, y de cómo sus amigos las descifran.',
-        'De una semilla que hace crecer árboles muy altos.',
+        'De una semilla que hace crecer árboles muy altos, y de cómo los pájaros la cuidan.',
         'De un globo que se pierde y nadie vuelve a buscar.',
       ],
       answer: 0,
@@ -34,7 +34,7 @@ export const historiaLoroAlReves: ReadingDef = {
       prompt: '¿Qué quería decir Pipo con «ajab», cuando señaló el árbol?',
       options: [
         'Que bajaran el globo.',
-        'Que subieran a comer.',
+        'Que se fueran a dormir a la cueva.',
         'Que cantaran una canción.',
       ],
       answer: 0,

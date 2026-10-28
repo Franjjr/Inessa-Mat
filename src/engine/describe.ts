@@ -83,7 +83,7 @@ export const LENGUA_SKILL_TEXT: Record<string, string> = {
   'lng:voc:antonimos': 'Antónimos: palabras que significan lo contrario',
   'lng:voc:familias': 'Familias de palabras',
   'lng:voc:diminutivos': 'Diminutivos (-ito, -ita)',
-  'lng:voc:aumentativos': 'Aumentativos (-ón, -ote)',
+  'lng:voc:aumentativos': 'Aumentativos (-ona, -ote, -azo)',
   'lng:voc:compuestas': 'Palabras compuestas (formadas por dos palabras)',
   'lng:escr:dictado': 'Dictado: escribir lo que se oye',
   'lng:escr:copia': 'Copiar frases sin errores',
@@ -250,7 +250,7 @@ const GEO_TEXT: Record<(typeof GEO_OPS)[number], string> = {
   'solid:count': 'Contar caras, vértices y aristas de cubo, prisma y pirámide',
 }
 
-const ERROR_TEXT: Record<ErrorType, string> = {
+export const ERROR_TEXT: Record<ErrorType, string> = {
   'fact': 'Resultado de la tabla o cálculo básico incorrecto',
   'carry-forgot': 'Olvida sumar la llevada',
   'carry-wrong': 'Escribe mal la llevada (o la coloca en otra columna)',

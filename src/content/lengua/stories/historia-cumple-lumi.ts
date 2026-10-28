@@ -24,7 +24,7 @@ export const historiaCumpleLumi: ReadingDef = {
       options: [
         'Lumi cumple años, y la tarta se hace con miel en lugar de azúcar.',
         'Lumi cumple años y se queda sin invitados.',
-        'La señora Oca gana un concurso de tartas.',
+        'La señora Oca gana un concurso de tartas, y después se lleva la receta de Lumi a casa.',
       ],
       answer: 0,
     },

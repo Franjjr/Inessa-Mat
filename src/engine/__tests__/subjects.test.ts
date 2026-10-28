@@ -6,7 +6,8 @@ import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import { initialProgress } from '@/content'
 import { statsFromLocal } from '@/data/summary'
 import {
-  PLACEMENT_ACTIVITY, errorReport, newMastery, placementRuns, planDailySession, planSession, recallReport, syllabusReport, topicNeeds,
+  PLACEMENT_ACTIVITY, dueSkills, errorReport, factGrid, newMastery, placementRuns, planDailySession, planSession, recallReport, syllabusReport,
+  topicNeeds,
 } from '@/engine'
 import { attemptsOf, masteryOf, placementFlags, subjectOfSession, subjectOfSkill, subjectOffered } from '../subjects'
 
@@ -182,5 +183,37 @@ describe('the subject of a session and of an offer', () => {
     expect(subjectOffered('language', 2)).toBe(false)
     expect(subjectOffered('language', 4)).toBe(false)
     expect(subjectOffered('math', 2)).toBe(true)
+  })
+})
+
+describe('the home and the summary read maths mastery only (lng: rows left out)', () => {
+  const mixed = (): MasteryMap => {
+    const m: MasteryMap = {}
+    m['mul:6x7'] = { ...newMastery('mul:6x7', new Date(daysAgo(30))), box: 1, dueAt: daysAgo(5), lastSeenAt: daysAgo(30) }
+    m['mul:3x4'] = { ...newMastery('mul:3x4', new Date(daysAgo(30))), box: 2, dueAt: daysAgo(2), lastSeenAt: daysAgo(30) }
+    for (let i = 0; i < 6; i++) {
+      const skill = `lng:orto:c-qu:${i}`
+      m[skill] = { ...newMastery(skill, new Date(daysAgo(30))), box: 0, dueAt: daysAgo(9), lastSeenAt: daysAgo(30) }
+    }
+    return m
+  }
+
+  it('the home due count (dueSkills over the maths mastery) does not count a Lengua skill that is due', () => {
+    const all = mixed()
+    expect(dueSkills(all, now, 50).length).toBeGreaterThan(2)
+    const mathsDue = dueSkills(masteryOf(all, 'math'), now, 50)
+    expect(mathsDue.every((k) => !k.startsWith('lng:'))).toBe(true)
+    expect(mathsDue.length).toBe(2)
+  })
+
+  it('the summary factGrid is the maths grid: a Lengua row never lands in a multiplication cell', () => {
+    const all = mixed()
+    const maths = factGrid(masteryOf(all, 'math'))
+    expect(maths[5][6]).toBe(1)
+    expect(maths[2][3]).toBe(2)
+    // Each fact fills its cell and the mirror cell: two facts, four cells; no Lengua row adds one.
+    expect(maths.flat().filter((v) => v >= 0).length).toBe(4)
+    const withoutLengua = Object.fromEntries(Object.entries(all).filter(([k]) => !k.startsWith('lng:')))
+    expect(maths).toEqual(factGrid(withoutLengua))
   })
 })

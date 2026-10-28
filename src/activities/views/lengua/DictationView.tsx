@@ -2,8 +2,8 @@
    writes it. The text is never shown on the screen before the answer. «🔊 Escuchar» always speaks when the child presses
    it (R16: an explicit press uses speech.say with force, so the automatic voice setting does not block it). With the voice
    setting on, the sentence is also read once when the exercise opens. With the sound setting off, the button is replaced
-   by «Activa el sonido para hacer el dictado». A sentence is compared with 'exact' (capitals and marks count); a single
-   word ignores its capital (see dictationRule). */
+   by «Activa el sonido para hacer el dictado»; with no Spanish voice on the device (R27) by a short request to read it aloud.
+   A sentence is compared with 'exact' (capitals and marks count); a single word ignores its capital (see dictationRule). */
 import { useEffect, useState } from 'react'
 import { speech } from '@/audio'
 import { celebrate } from '@/fx'
@@ -29,7 +29,8 @@ function DictationRound({ ex, onAnswered, showFeedback, allowHints }: {
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
   const { child } = useActiveChild()
   const voiceOn = child?.settings.voice ?? false
-  const soundOn = child?.settings.sound ?? true
+  // Without a Spanish voice on this device nothing can be heard: the view says so (R27) and never shows the text.
+  const soundOn = (child?.settings.sound ?? true) && speech.available()
   const [value, setValue] = useState('')
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const locked = flow.result?.correct === true
@@ -53,7 +54,7 @@ function DictationRound({ ex, onAnswered, showFeedback, allowHints }: {
         {soundOn ? (
           <Button variant="secondary" size="lg" onClick={say}>🔊 Escuchar</Button>
         ) : (
-          <p className={s.prompt}>Activa el sonido para hacer el dictado</p>
+          <p className={s.prompt}>{child?.settings.sound === false ? 'Activa el sonido para hacer el dictado' : 'Este aparato no tiene voz: pide a alguien que lea la frase en voz alta'}</p>
         )}
       </div>
       <div className={s.typedFrame}>

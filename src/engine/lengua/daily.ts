@@ -36,6 +36,8 @@ export interface LenguaPlanInput {
   now: Date
   /** The child's progress: its flags tell the classes done and the stories read. Without it nothing counts as done. */
   progress?: ProgressState
+  /** A Spanish voice can read the dictation on this device (speech.available()). Default true. Without it no dictation is planned (R27). */
+  voice?: boolean
   rng?: Rng
 }
 
@@ -60,7 +62,8 @@ function secondsOf(items: DailyItem[]): number {
 /** Builds today's Lengua session. The same child and day give the same plan (seeded). */
 export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
   const { child, now, progress } = input
-  const sound = child.settings.sound
+  // The dictation can be heard: the sound is on and a voice reads it (R16, R27). Without that no dictation is planned.
+  const sound = (child.settings?.sound ?? true) && (input.voice ?? true)
   const mastery = masteryOf(input.mastery, 'language')
   const course = teachableCourse(input.syllabus, sound)
   const today = dayKey(now)

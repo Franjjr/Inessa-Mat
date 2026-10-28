@@ -126,7 +126,7 @@ describe('accent feedback names the right sign', () => {
     expect(check(ex, { type: 'text', value: 'pingüíno' }).feedback).toBe('¡Casi! Mira la tilde.')
     const pair = { ...ex, id: 'y', kind: 'lng-missing-letter', skill: 'lng:orto:g-gu', mode: 'type', word: 'pingüino', shown: 'pin__ino', options: [], answer: 'pingüino' } as LngMissingLetterExercise
     expect(check(pair, { type: 'text', value: 'pinguino' }).feedback).toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
-    expect(check(pair, { type: 'text', value: 'pinguíno' }).feedback).toBe('¡Casi! Mira la tilde.')
+    expect(check(pair, { type: 'text', value: 'pinguíno' }).feedback, 'the ü is missing: the diéresis is named').toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
   })
 })
 

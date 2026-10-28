@@ -156,19 +156,19 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
   {
     id: 'lengua-gramatica',
     label: 'Gramática de Lengua',
-    meaning: 'Confunde la clase de una palabra (sustantivo, adjetivo, verbo, artículo), el género, el número, el tiempo del verbo o el sujeto con el predicado.',
+    meaning: 'Confunde la clase de una palabra (sustantivo, adjetivo, verbo, artículo), el género, el número, el tiempo del verbo o la tilde de una palabra cambiada, o confunde el sujeto con el predicado.',
     advice: 'Leer la frase en voz alta y preguntar: ¿quién hace la acción? ¿cuándo pasa? Cambiar una palabra de género o de número y decir cómo queda.',
   },
   {
     id: 'lengua-ortografia',
     label: 'Ortografía y sílabas',
-    meaning: 'Escribe mal una letra (c/qu, g/gu, r/rr, mp/mb), olvida una mayúscula o un signo, corta mal las sílabas o no marca la sílaba fuerte.',
+    meaning: 'Escribe mal una letra (c/qu, g/gu, r/rr, mp/mb), olvida una mayúscula o un signo, corta mal las sílabas o toca otra sílaba como la fuerte.',
     advice: 'Dictarle palabras en voz alta y pedirle que deletree la letra difícil. Leer en voz alta lo que escribe y buscar los signos al final de cada frase.',
   },
   {
     id: 'lengua-vocabulario',
     label: 'Vocabulario y abecedario',
-    meaning: 'Confunde sinónimos, antónimos o familias de palabras, o no ordena bien las palabras del abecedario.',
+    meaning: 'Confunde sinónimos, antónimos, familias de palabras, diminutivos o aumentativos, o no ordena bien las palabras del abecedario.',
     advice: 'Jugar a decir palabras que signifiquen lo mismo o lo contrario, y ordenar una lista (la compra, los nombres de la clase) por la primera letra.',
   },
   {

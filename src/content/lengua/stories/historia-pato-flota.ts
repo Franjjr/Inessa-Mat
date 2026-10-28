@@ -24,7 +24,7 @@ export const historiaPatoFlota: ReadingDef = {
       options: [
         'Un animal presume de nadar muy bien y tiene que aprender a flotar.',
         'Un pato gana una carrera de natación.',
-        'Un lago se queda sin agua en pleno verano.',
+        'Un lago se queda sin agua en pleno verano, y los patos tienen que irse volando.',
       ],
       answer: 0,
     },

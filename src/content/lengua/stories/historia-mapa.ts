@@ -21,8 +21,8 @@ export const historiaMapa: ReadingDef = {
       skill: 'lng:lect:idea-principal',
       prompt: '¿De qué trata la historia?',
       options: [
-        'De un grupo que se pierde porque sostiene el mapa boca abajo, y de cómo lo descubren.',
-        'De un grupo que se pierde porque no encuentra el puente.',
+        'De un grupo que se pierde por un mapa boca abajo, y de cómo lo descubren.',
+        'De un grupo que se pierde porque no encuentra el puente, aunque busca por todo el bosque.',
         'De un grupo que quiere cruzar un río sin puente.',
       ],
       answer: 0,

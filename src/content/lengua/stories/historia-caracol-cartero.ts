@@ -23,7 +23,7 @@ export const historiaCaracolCartero: ReadingDef = {
       prompt: '¿Cuál es el problema que hay que resolver?',
       options: [
         'La carta tiene que llegar pronto, y el caracol va muy despacio.',
-        'El río se ha secado y no hay agua.',
+        'El río se ha secado, y los peces del pueblo buscan agua en otro lugar.',
         'Lumi ha perdido su cuerno.',
       ],
       answer: 0,

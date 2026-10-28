@@ -24,7 +24,7 @@ export const historiaTarta: ReadingDef = {
       options: [
         'Una tarta se escapa de la cocina y acaba repartida entre todos.',
         'Una fiesta se suspende porque no hay pastel.',
-        'Un concurso de cocina reparte premios de pastel.',
+        'Un concurso de cocina premia la tarta más alta, y el jurado no sabe elegir.',
       ],
       answer: 0,
     },

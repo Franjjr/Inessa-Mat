@@ -91,6 +91,7 @@ const FAMILIES: PairItem[] = [
 const DIMINUTIVES: PairItem[] = [
   { word: 'casa', answer: 'casita' }, { word: 'gato', answer: 'gatito' }, { word: 'libro', answer: 'librito' },
   { word: 'perro', answer: 'perrito' }, { word: 'pato', answer: 'patito' },
+  { word: 'mesa', answer: 'mesita' }, { word: 'rana', answer: 'ranita' },
 ]
 const AUGMENTATIVES: PairItem[] = [
   { word: 'casa', answer: 'casona', options: ['casona', 'casita', 'casilla'] },

@@ -27,7 +27,7 @@ export function attemptsOf<T extends { skill: SkillKey }>(list: readonly T[], su
 }
 
 /** Progress flags of the placement test of each subject (the maths names are the original ones). */
-export function placementFlags(subject: LessonSubject): { done: string; requested: string } {
+export function placementFlags(subject: LessonSubject): { done: 'placement' | 'placementLengua'; requested: 'placementRequested' | 'placementLenguaRequested' } {
   return subject === 'language'
     ? { done: 'placementLengua', requested: 'placementLenguaRequested' }
     : { done: 'placement', requested: 'placementRequested' }

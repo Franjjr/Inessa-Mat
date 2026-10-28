@@ -10,6 +10,7 @@ import {
   crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
+import { speech } from '@/audio'
 import { DAILY_MINUTES, dueSkills, masteryOf } from '@/engine'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
@@ -79,7 +80,7 @@ export default function ChildHomeScreen() {
   const subjects = SUBJECTS.filter((sub) => subjectIds.includes(sub.id))
   const chips = SUBJECTS.filter((sub) => chipIds.includes(sub.id))
   const view = picked ?? homeSubject(subjectIds, progress)
-  const today = todayEntry({ grade: child.grade, mastery, progress, subject: view, sound: child.settings.sound })
+  const today = todayEntry({ grade: child.grade, mastery, progress, subject: view, sound: child.settings.sound && speech.available() })
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
   const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')
@@ -162,7 +163,7 @@ export default function ChildHomeScreen() {
             </button>
           ) : lenguaBanner && (view === 'language' || !mathPlacementPending) && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
-              Antes de empezar Lengua: haz la prueba de Lengua ›
+              Haz la prueba de Lengua antes de empezar ›
             </button>
           )}
           {today.kind === 'clase' ? (
@@ -208,11 +209,11 @@ export default function ChildHomeScreen() {
       </main>
 
 {view === 'math' && (
-              <footer className={s.worlds} aria-label="Mundos">
-        {season.worlds.map((w) => (
-          <WorldChip key={w.id} world={w} progress={progress} open={unlockedWorlds.includes(w)} currentWorldId={next?.worldId} onOpen={() => openWorld(w, true)} onLocked={() => openWorld(w, false)} />
-        ))}
-      </footer>
+        <footer className={s.worlds} aria-label="Mundos">
+          {season.worlds.map((w) => (
+            <WorldChip key={w.id} world={w} progress={progress} open={unlockedWorlds.includes(w)} currentWorldId={next?.worldId} onOpen={() => openWorld(w, true)} onLocked={() => openWorld(w, false)} />
+          ))}
+        </footer>
       )}
     </Screen>
   )

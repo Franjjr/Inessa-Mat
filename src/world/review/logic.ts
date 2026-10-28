@@ -22,7 +22,8 @@ export function buildReviewSession(input: {
   const { child, progress, now, rng } = input
   const mastery = masteryOf(input.mastery, 'math')
   const due = dueSkills(mastery, now, 12)
-  const planned = planSession({ child, progress, mastery, now }).review
+  // planSession reads the maths mastery itself (masteryOf): the raw map goes in once.
+  const planned = planSession({ child, progress, mastery: input.mastery, now }).review
   const skills = [...new Set([...due, ...planned])]
   if (skills.length === 0) return { exercises: [], dueCount: 0 }
   // adaptive: due and weak skills first, instead of the same weight for every skill (E5)

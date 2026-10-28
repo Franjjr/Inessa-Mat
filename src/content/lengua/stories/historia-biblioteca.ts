@@ -24,7 +24,7 @@ export const historiaBiblioteca: ReadingDef = {
       options: [
         'De cómo se consigue el silencio en una biblioteca con un gallo muy ruidoso.',
         'De un gallo que quiere ser bibliotecario.',
-        'De una lechuza que se queda dormida en su silla.',
+        'De una lechuza que se queda dormida en su silla, mientras el gallo canta sin parar.',
       ],
       answer: 0,
     },

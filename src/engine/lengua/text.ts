@@ -14,8 +14,11 @@ const unaccent = (s: string) => s.normalize('NFD').replace(/[̀́̈]/g, '').norm
 /** The mark that is missing when a word is only wrong in accents: «tilde», or «diéresis» when the only difference is the ü
     of güe/güi. Feedback names it («Mira la diéresis»), so the child looks at the right sign. */
 export function missingMark(given: string, expected: string): 'tilde' | 'diéresis' {
-  const withoutDiaeresis = (s: string) => fold(s).normalize('NFD').replace(/̈/g, '').normalize('NFC')
-  return withoutDiaeresis(given) === withoutDiaeresis(expected) ? 'diéresis' : 'tilde'
+  // A word that has the ü of expected but not the ü at all (pinguíno for pingüino) is about the diéresis, even when the
+  // child also put a tilde on the u. Only the marks differ: the letters without any mark are the same.
+  const bare = (s: string) => fold(s).normalize('NFD').replace(/[̀-ͯ]/g, '').normalize('NFC')
+  const lacksDiaeresis = fold(expected).includes('ü') && !fold(given).includes('ü')
+  return lacksDiaeresis && bare(given) === bare(expected) ? 'diéresis' : 'tilde'
 }
 
 export interface TextComparison {

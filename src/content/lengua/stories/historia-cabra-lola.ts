@@ -23,7 +23,7 @@ export const historiaCabraLola: ReadingDef = {
       prompt: '¿Cuál es la idea principal del texto?',
       options: [
         'Una cabra cuenta mentiras para parecer admirable, hasta que la descubren.',
-        'Una cabra aprende a contar estrellas.',
+        'Una cabra aprende a contar estrellas con su amigo el búho, cada noche en la montaña.',
         'Una cabra se va a vivir a la montaña.',
       ],
       answer: 0,

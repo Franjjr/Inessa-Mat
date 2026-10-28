@@ -148,7 +148,12 @@ describe('lectura: el género de las palabras que van con {pet} y {child}', () =
         const text = renderTemplate(p, ctx)
         for (const [name, g] of [[PET_NAME, pg], [CHILD_NAME, cg]] as const) {
           for (let at = text.indexOf(name); at >= 0; at = text.indexOf(name, at + name.length)) {
-            const after = text.slice(at + name.length).split(/\s+/).slice(0, 5).map((w) => norm(w.replace(/[^\p{L}]/gu, '')))
+            // The words that follow the name up to the end of its sentence (or the next name): «{pet} miró el papel y se quedó
+            // quieta» has the adjective far from the name, and «dijo, muy seria» has it after a dash.
+            const rest = text.slice(at + name.length)
+            const stop = [PET_NAME, CHILD_NAME].map((n) => rest.indexOf(n)).filter((i) => i >= 0)
+            const sentence = rest.slice(0, Math.min(...stop, rest.length)).split(/[.!?;:—]/)[0]
+            const after = sentence.split(/\s+/).slice(0, 12).map((w) => norm(w.replace(/[^\p{L}]/gu, '')))
             for (const w of after) {
               const pair = AGREEMENT.find((pr) => pr[0] === w || pr[1] === w)
               if (pair && pair[wrongFor(g)] === w) bad.push(`${r.id}: «${name} … ${w}»`)
@@ -159,4 +164,14 @@ describe('lectura: el género de las palabras que van con {pet} y {child}', () =
       expect(bad).toEqual([])
     })
   }
+})
+
+describe('lectura: la idea principal no se adivina por la longitud', () => {
+  it('the right main-idea answer is never the longest option', () => {
+    for (const r of READINGS) for (const q of r.questions) {
+      if (q.kind !== 'choice' || q.skill !== 'lng:lect:idea-principal') continue
+      const lens = q.options.map((o) => o.length)
+      expect(q.options[q.answer].length, `${r.id}: ${q.prompt}`).toBeLessThan(Math.max(...lens))
+    }
+  })
 })

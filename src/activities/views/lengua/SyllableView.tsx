@@ -36,6 +36,7 @@ function SyllableRound({ ex, onAnswered, showFeedback, allowHints }: {
     return (
       <section className={s.view} aria-label="Sílaba fuerte" data-kind={ex.kind} data-status={status}>
         <p className={s.prompt}>Toca la sílaba que se dice con más fuerza</p>
+        <div className={s.card} aria-label={`Palabra: ${ex.word}`}>{ex.word}</div>
         <div className={s.sentence} role="group" aria-label="Sílabas">
           {ex.syllables.map((syl, i) => (
             <button

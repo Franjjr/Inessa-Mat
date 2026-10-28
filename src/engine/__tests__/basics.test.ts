@@ -6,6 +6,7 @@ import {
   WORD_TEMPLATES, wordSkill,
 } from '@/engine'
 import { clamp, hashString, pick, randInt, range, shuffle, weightedIndex } from '@/engine/rng'
+import { ERROR_TEXT } from '@/engine/describe'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, smallerFromLargerValue } from '@/engine/diagnose'
 import { carryableColumns, divisionPool, genAddOperands, genDivision, genMul2x1, genSubPair } from '@/engine/numbers'
 import { columnList, praise } from '@/engine/feedback'
@@ -193,11 +194,17 @@ describe('describe', () => {
     expect(describeSkill('word:sub')).toBe('Problemas de restar')
     expect(describeSkill('weird')).toBe('weird')
   })
-  it('every error type has an adult description', () => {
-    const all: ErrorType[] = ['fact', 'carry-forgot', 'carry-wrong', 'borrow-forgot', 'smaller-from-larger', 'zero-borrow',
-      'misaligned', 'remainder-too-big', 'quotient-off', 'operation', 'incomplete', 'recognition', 'other']
+  it('every error type has an adult description (the table covers every type, maths and Lengua)', () => {
+    const all = Object.keys(ERROR_TEXT) as ErrorType[]
+    expect(all.length).toBeGreaterThan(30)
+    for (const t of all) {
+      expect(describeError(t), t).toBe(ERROR_TEXT[t])
+      expect(describeError(t).length, t).toBeGreaterThan(12)
+    }
     const texts = all.map(describeError)
-    expect(new Set(texts).size).toBe(all.length)
+    expect(new Set(texts).size, 'two error types share a text').toBe(all.length)
+    expect(describeError('stress')).toContain('sílaba')
+    expect(describeError('word-form')).toContain('tilde')
     expect(describeError('carry-forgot')).toBe('Olvida sumar la llevada')
     expect(describeError('recognition')).toContain('no es un error de cálculo')
     expect(describeError('nope' as ErrorType)).toBe('nope')

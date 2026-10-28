@@ -241,7 +241,7 @@ const gGu = clase({
   ],
   ejemplo: [
     show('lng-word', wd('gato', 'ga-to', 'ga'), 'Delante de a, o y u, la g suena fuerte: ga-to.'),
-    show('lng-word', wd('guitarra', 'gui-ta-rra', 'gui'), 'Con e o i, la g suena como una j; para que suene fuerte se escribe una u muda: gui-ta-rra.'),
+    show('lng-word', wd('guitarra', 'gui-ta-rra', 'gui'), 'Con e o i, la g suena como una j; para que la g siga sonando fuerte se escribe una u muda: gui-ta-rra.'),
     show('lng-word', wd('pingüino', 'pin-güi-no', 'güi'), 'Y cuando la u sí suena, lleva dos puntitos: pin-güi-no.'),
   ],
   guiada: [
@@ -253,7 +253,7 @@ const gGu = clase({
     tryIt('lng-sentence', rule('Mira la vocal que viene después de la g.'), '¡Tu turno! Recuerda: en gue y gui la u no suena.', { skills: [lenguaSkill('orto', 'g-gu')] }),
     tryIt('lng-sentence', rule('Mira la vocal que viene después de la g.'), '¡Tu turno! Sin pistas: ¿qué letras faltan?', { skills: [lenguaSkill('orto', 'g-gu')] }),
   ],
-  cierre: show('lng-word', wd('pingüino', 'pin-güi-no', 'güi'), 'Con a, o y u la g suena fuerte; con e e i necesita una u muda, y la diéresis avisa de que la u sí se oye.'),
+  cierre: show('lng-word', wd('pingüino', 'pin-güi-no', 'güi'), 'Con a, o y u la g suena fuerte; con e o i necesita una u muda, y la diéresis avisa de que la u sí se oye.'),
 })
 
 const rRr = clase({

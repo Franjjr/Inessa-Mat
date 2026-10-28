@@ -117,6 +117,20 @@ describe('planLenguaSession', () => {
     }
   })
 
+  it('without a voice on the device (R27) the planner leaves the dictation out too, even with the sound on', () => {
+    const mastery: MasteryMap = {}
+    for (const t of teachingOrder(LENGUA3_SYLLABUS)) {
+      if (t.id === 'lng-dictado') break
+      for (const s of t.skills) mastery[s] = learnt([s])[s]
+    }
+    const p = planLenguaSession({
+      child: child({ sound: true }), mastery, syllabus: LENGUA3_SYLLABUS, now: NOW, progress: progress(), voice: false, rng: createRng(4),
+    })
+    const kinds = p.blocks.flatMap((b) => b.items.map((i) => i.exercise.kind))
+    expect(kinds).not.toContain('lng-dictation')
+    expect(p.topic?.id).not.toBe('lng-dictado')
+  })
+
   it('the same child and day give the same plan, and the plan never holds a maths skill', () => {
     const a = plan({ mastery: learnt(['lng:gram:articulo']) })
     const b = plan({ mastery: learnt(['lng:gram:articulo']) })

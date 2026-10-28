@@ -14,7 +14,7 @@ import SyllableView from './SyllableView'
 
 const voice = vi.hoisted(() => ({ on: false, sound: true }))
 
-vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn(async () => {}) }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
+vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn(async () => {}), available: vi.fn(() => true) }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
 vi.mock('@/data', () => ({
   addInkSample: vi.fn(async () => {}),
@@ -109,6 +109,17 @@ describe('DictationView', () => {
     render(<DictationView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
     expect(screen.queryByRole('button', { name: '🔊 Escuchar' })).toBeNull()
     expect(screen.getByText('Activa el sonido para hacer el dictado')).toBeTruthy()
+    expect(speech.say).not.toHaveBeenCalled()
+    expect(document.body.textContent ?? '').not.toContain(ex.answer)
+  })
+
+  it('with no Spanish voice on the device: nothing is spoken, the view asks for a reader, and the text stays hidden (R27)', () => {
+    vi.mocked(speech.available).mockReturnValueOnce(false)
+    voice.on = true
+    const ex = first('lng-dictation', 'lng:escr:dictado', 0)
+    render(<DictationView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    expect(screen.queryByRole('button', { name: '🔊 Escuchar' })).toBeNull()
+    expect(screen.getByText('Este aparato no tiene voz: pide a alguien que lea la frase en voz alta')).toBeTruthy()
     expect(speech.say).not.toHaveBeenCalled()
     expect(document.body.textContent ?? '').not.toContain(ex.answer)
   })

@@ -106,7 +106,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
     if (plan || !child || !mastery || !attempts || !progress) return
     const now = new Date()
     const made = subject === 'language'
-      ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress })
+      ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress, voice: speech.available() })
       : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now })
     setPlan(made)
     if (made.blocks.every((b) => b.items.length === 0)) setPhase('empty')

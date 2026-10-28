@@ -16,7 +16,7 @@ const SESSION_TO: Partial<Record<SubjectId, string>> = { math: '/play/sesion', l
 
 export function todayEntry({ grade, mastery, progress, subject = 'math', sound = true }: {
   grade?: number; mastery: MasteryMap; progress: ProgressState; subject?: SubjectId
-  /** The child's sound setting: without it a dictation is not taught (teachableCourse), as in the planner. */
+  /** The dictation can be heard (sound setting on and a voice): without it a dictation is not taught (teachableCourse), as in the planner. */
   sound?: boolean
 }): TodayEntry {
   const course = syllabusFor(subject, grade)

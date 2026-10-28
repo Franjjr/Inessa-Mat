@@ -129,6 +129,16 @@ describe('TextInput', () => {
       expect(keyboard()).toBeNull()
     })
 
+    it('the toggle is forgotten when the input mode changes', () => {
+      const { rerender } = render(<Harness preference="keyboard" />)
+      fireEvent.click(toggle('Usar el teclado de letras'))
+      expect(keyboard()).not.toBeNull()
+      rerender(<Harness preference="keypad" />)
+      expect(keyboard()).not.toBeNull()
+      rerender(<Harness preference="keyboard" />)
+      expect(keyboard()).toBeNull()
+    })
+
     it('the toggle is not offered outside keyboard mode', () => {
       render(<Harness preference="keypad" />)
       expect(screen.queryByRole('button', { name: 'Usar el teclado de letras' })).toBeNull()
