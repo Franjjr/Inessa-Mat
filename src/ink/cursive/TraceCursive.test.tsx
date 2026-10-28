@@ -175,6 +175,16 @@ describe('TraceCursive', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Te has salido: vuelve a la línea gris')
   })
 
+  it('a stroke that wandered off and came back shows «Te has salido» only while it is off', () => {
+    const { toScreen, traceArea } = setup()
+    fireEvent.click(screen.getByRole('button', { name: '¡A repasar!' }))
+    // The model's stroke, with a middle part pushed 30 units off the line; the stroke ends back on the line.
+    const [first, ...rest] = exactStrokes('a')
+    const wander = first.map((p, i) => (i >= 8 && i <= 14 ? { x: p.x, y: p.y - 30 } : p))
+    act(() => replayStrokes(traceArea(), toScreen([wander, ...rest])))
+    expect(screen.getByRole('status')).toHaveTextContent('Repasa la línea gris con el lápiz')
+  })
+
   it('the exact model of every curriculum item, traced in Repasar, raises no notice', () => {
     for (const item of CAL_CURRICULUM) {
       const onDone = vi.fn()

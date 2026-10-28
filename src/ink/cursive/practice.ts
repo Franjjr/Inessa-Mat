@@ -54,6 +54,8 @@ function guideOf(strokes: ModelStroke[]): Guide[] {
 
 export interface LiveTracker {
   readonly status: LiveStatus
+  /** Whether the last pen point is on the model line again (a stroke can be back on it while its status stays off). */
+  readonly near: boolean
   /** A new stroke starts: back to ok. */
   reset(): void
   /** One pen point (model units). Once a stroke is off or reversed it stays so. */
@@ -78,6 +80,7 @@ export function createLiveTracker(model: ModelStroke[]): LiveTracker {
   const guide = guideOf(model)
   const limit = CURSIVE_THRESHOLDS.liveOffPath
   let status: LiveStatus = 'ok'
+  let near = true
   let progress = -1
   let back = 0
   const nearestAll = (p: ModelPoint) => {
@@ -91,10 +94,13 @@ export function createLiveTracker(model: ModelStroke[]): LiveTracker {
   }
   return {
     get status() { return status },
-    reset() { status = 'ok'; progress = -1; back = 0 },
+    get near() { return near },
+    reset() { status = 'ok'; near = true; progress = -1; back = 0 },
     push(p) {
-      if (status !== 'ok' || guide.length === 0) return status
+      if (guide.length === 0) return status
       const global = nearestAll(p)
+      near = global.d <= limit
+      if (status !== 'ok') return status
       if (global.d > limit) { status = 'off'; return status }
       if (progress < 0) {
         progress = global.k

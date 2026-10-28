@@ -110,9 +110,10 @@ function TraceCursiveInner({ item, gender, onDone, onTry, className }: TraceCurs
       cursor.current.n += 1
       if (before === 'ok' && st !== 'ok') {
         flagged.current.add(cur)
-        setNotice(LIVE_TEXT[st])
         flaggedNow = true
       }
+      // «Te has salido» only while the pen is off the line; a stroke that is back on it stays orange but says nothing.
+      if (st !== 'ok') setNotice(st === 'off' && tracker.near ? null : LIVE_TEXT[st])
     }
     if (flaggedNow || flagged.current.has(cur)) setFlaggedView([...flagged.current])
   }
