@@ -8,6 +8,7 @@ import { ToastHost } from '@/ui'
 import { AppRoutes } from './routes'
 import { ChunkErrorBoundary } from './ChunkErrorBoundary'
 import { UpdateWatcher } from './UpdateWatcher'
+import { ScrollAssist } from './ScrollAssist'
 
 /** Keeps audio settings and the handwriting recogniser in sync with the active child. */
 function ChildScopedProviders({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ export default function App() {
           <ChunkErrorBoundary>
             <AppRoutes />
           </ChunkErrorBoundary>
+          <ScrollAssist />
           <ToastHost />
         </ChildScopedProviders>
       </AuthProvider>

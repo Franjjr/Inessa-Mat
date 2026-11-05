@@ -4,6 +4,7 @@
    Amounts with céntimos are typed in two boxes (euros and céntimos); a whole number of céntimos in one box. */
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { createPortal } from 'react-dom'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
 import { euros, pieceName } from '@/engine'
@@ -187,10 +188,12 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
           </button>
         ))}
       </div>
-      {ghost && (
+      {/* Portal: a shrunk ancestor (FitToScreen, transform: scale) would make position: fixed relative to it. */}
+      {ghost && createPortal(
         <div className={m.ghost} style={{ transform: `translate(${ghost.x - 36}px, ${ghost.y - 36}px)` }} aria-hidden>
           <MoneyPiece value={ghost.value} size="sm" />
-        </div>
+        </div>,
+        document.body,
       )}
       <AnswerBar
         flow={flow}

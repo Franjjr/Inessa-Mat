@@ -1,0 +1,50 @@
+/* Floating scroll buttons: above the game (HUD level), below dialogs and toasts. Never on a page that fits.
+   In the corners: games are centred, so the sides are free (the companion buddy sits bottom right). */
+.btn {
+  position: fixed;
+  z-index: calc(var(--z-hud) + 5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-width: var(--tap-min, 56px);
+  min-height: var(--tap-min, 56px);
+  padding: 0 var(--sp-4);
+  border: 3px solid #fff;
+  border-radius: var(--r-pill);
+  background: var(--c-primary);
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(46, 26, 71, .35);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn > span[aria-hidden] { font-size: 26px; line-height: 1; }
+
+.down {
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  animation: nudge 1.4s var(--ease-out) infinite;
+}
+.up {
+  right: max(14px, env(safe-area-inset-right));
+  top: max(10px, env(safe-area-inset-top));
+  background: var(--c-surface);
+  color: var(--c-primary-strong);
+  border-color: var(--c-primary-soft);
+  opacity: .92;
+}
+
+.label { white-space: nowrap; }
+
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .down { animation: none; }
+}

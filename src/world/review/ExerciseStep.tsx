@@ -12,6 +12,7 @@ import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
 import { hintsFor, isCompletionOnly } from '@/engine'
 import { Button } from '@/ui'
+import { FitToScreen } from '@/activities/shared/FitToScreen'
 import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
@@ -210,8 +211,9 @@ export function ExerciseStep({
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
 
+  // Shrunk to fit the window (daily session, review, class, guardian, reading): no scrolling to answer or go on.
   return (
-    <div className={s.step}>
+    <FitToScreen className={s.stepOuter} innerClassName={s.step}>
       <div ref={viewRef} className={s.view} inert={inputLocked ? true : undefined}>
         <ExerciseView
           key={view}
@@ -269,6 +271,6 @@ export function ExerciseStep({
           </Button>
         </div>
       )}
-    </div>
+    </FitToScreen>
   )
 }

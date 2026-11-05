@@ -42,6 +42,22 @@ describe('InkCapture', () => {
     expect(cap.strokes[0].points.length).toBeGreaterThan(10)
   })
 
+  it('stores points in the surface\'s own pixels when an ancestor shrinks it (transform: scale)', () => {
+    const { el, cap } = setup()
+    // Laid out 200 × 100, shown at 75 % from (40, 20): the screen box is 150 × 75.
+    Object.defineProperty(el, 'offsetWidth', { value: 200 })
+    Object.defineProperty(el, 'offsetHeight', { value: 100 })
+    el.getBoundingClientRect = () => ({ left: 40, top: 20, width: 150, height: 75, right: 190, bottom: 95, x: 40, y: 20, toJSON: () => ({}) })
+    el.dispatchEvent(pe('pointerdown', { pointerId: 1, pointerType: 'pen', clientX: 40 + 75, clientY: 20 + 30, buttons: 1 }))
+    for (let i = 1; i <= 10; i++) el.dispatchEvent(pe('pointermove', { pointerId: 1, pointerType: 'pen', clientX: 40 + 75, clientY: 20 + 30 + i * 3, buttons: 1 }))
+    el.dispatchEvent(pe('pointerup', { pointerId: 1, pointerType: 'pen', clientX: 40 + 75, clientY: 20 + 60 }))
+    const pts = cap.strokes[0].points
+    // The finger at the middle of the shown box is the middle of the laid-out surface (100, 40), not (75, 30).
+    expect(pts[0].x).toBeCloseTo(100)
+    expect(pts[0].y).toBeCloseTo(40)
+    expect(pts[pts.length - 1].y).toBeCloseTo(80)
+  })
+
   it('reports a quick press as a tap, not ink', () => {
     const { el, cap, events } = setup()
     tap(el, 30, 30)

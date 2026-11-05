@@ -1,3 +1,10 @@
+.stepOuter {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sized by its content: FitToScreen measures it and shrinks it to fit the window. */
 .step {
   display: flex;
   flex-direction: column;

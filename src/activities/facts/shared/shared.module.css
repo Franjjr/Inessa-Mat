@@ -76,9 +76,16 @@
   color: var(--c-ink-soft);
 }
 
-.stage {
+.stageOuter {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Sized by its content (FitToScreen measures it and shrinks it to fit the window): it must not grow to fill. */
+.stage {
   display: flex;
   flex-direction: column;
   align-items: center;

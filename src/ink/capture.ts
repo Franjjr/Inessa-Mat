@@ -51,7 +51,9 @@ interface ActivePointer {
   origin: Origin
 }
 
-interface Origin { left: number; top: number }
+/** Where the surface starts on screen, and its on-screen size per CSS pixel (below 1 when an ancestor is shrunk with
+    transform: scale, e.g. FitToScreen or a lesson board): points are stored in the surface's own CSS pixels. */
+interface Origin { left: number; top: number; sx: number; sy: number }
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
 /** A pointer silent for this long while "down" is considered lifted when another one arrives. */
@@ -133,11 +135,15 @@ export class InkCapture {
 
   private origin(): Origin {
     const r = this.el.getBoundingClientRect()
-    return { left: r.left + (this.el.clientLeft || 0), top: r.top + (this.el.clientTop || 0) }
+    const w = this.el.offsetWidth
+    const h = this.el.offsetHeight
+    const sx = w > 0 && r.width > 0 ? r.width / w : 1
+    const sy = h > 0 && r.height > 0 ? r.height / h : 1
+    return { left: r.left + (this.el.clientLeft || 0) * sx, top: r.top + (this.el.clientTop || 0) * sy, sx, sy }
   }
 
   private point(e: PointerEvent, o: Origin): InkPoint {
-    const pt: InkPoint = { x: e.clientX - o.left, y: e.clientY - o.top, t: e.timeStamp || now() }
+    const pt: InkPoint = { x: (e.clientX - o.left) / o.sx, y: (e.clientY - o.top) / o.sy, t: e.timeStamp || now() }
     if (e.pointerType === 'pen' && typeof e.pressure === 'number' && e.pressure > 0) pt.p = e.pressure
     return pt
   }

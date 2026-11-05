@@ -19,6 +19,7 @@ import { BackButton, Button, Screen, Spinner } from '@/ui'
 import type { Exercise, ProgressState } from '@/types'
 import type { ExerciseOutcome } from '@/types'
 import s from '../session/session.module.css'
+import { FitToScreen } from '@/activities/shared/FitToScreen'
 
 /** One item of either test: the block is a maths or a Lengua one (the runner shows its label). */
 interface PlacementItemOf {
@@ -134,13 +135,16 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
       <div className={s.stage}>
         <div className={s.card}>
           <p className={s.blockChip}>{blockLabel} · {index + 1} de {total}</p>
-          <ExerciseView
-            key={index}
-            exercise={current.exercise}
-            allowHints={false}
-            showFeedback={false}
-            onAnswered={onAnswered}
-          />
+          {/* Shrunk to fit the window: no scrolling to answer. */}
+          <FitToScreen>
+            <ExerciseView
+              key={index}
+              exercise={current.exercise}
+              allowHints={false}
+              showFeedback={false}
+              onAnswered={onAnswered}
+            />
+          </FitToScreen>
         </div>
         {!thanks && (
           <Button variant="secondary" onClick={dontKnow}>No lo sé</Button>

@@ -6,6 +6,7 @@ import { Sparkles, StarIcon } from '@/art'
 import { BackButton, Button } from '@/ui'
 import type { ActivityResult } from '@/types'
 import { useActivityHost } from '../../host'
+import { FitToScreen } from '../../shared/FitToScreen'
 import { formatClock } from './items'
 import s from './shared.module.css'
 
@@ -47,7 +48,8 @@ export function ActivityFrame({ title, instructions, index, total, accent, accen
         <div className={s.progressFill} style={{ width: `${pct}%` }} />
       </div>
       {instructions && <p className={s.instructions}>{host.t(instructions)}</p>}
-      <div className={s.stage}>{children}</div>
+      {/* Shrunk to fit the window: the child never has to scroll to answer or to go on. */}
+      <FitToScreen className={s.stageOuter} innerClassName={s.stage}>{children}</FitToScreen>
     </section>
   )
 }

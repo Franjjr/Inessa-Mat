@@ -2,6 +2,7 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '@/activities/host'
+import { FitToScreen } from '@/activities/shared/FitToScreen'
 import s from './OpsShell.module.css'
 
 export interface OpsShellProps {
@@ -35,7 +36,8 @@ export function OpsShell({ title, index, total, onExit, background, children, cl
       <div className={s.track} aria-hidden>
         <div className={s.fill} style={{ width: `${pct}%` }} />
       </div>
-      <div className={s.body}>{children}</div>
+      {/* Shrunk to fit the window: the child never has to scroll to answer or to go on. */}
+      <FitToScreen className={s.bodyOuter} innerClassName={s.body}>{children}</FitToScreen>
     </main>
   )
 }
