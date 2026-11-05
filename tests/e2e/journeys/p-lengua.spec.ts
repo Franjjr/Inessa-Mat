@@ -18,8 +18,8 @@ test.describe('Lengua de 3.º', () => {
     await devSettings(page, { subjects: ['math', 'language'], voice: false, storyVoice: false })
     await page.goto('/play')
 
-    // Maths first: «Hoy» is the maths session until it is done.
-    await page.getByRole('button', { name: /Mi sesión de hoy/ }).click()
+    // Maths first (the home's «Hoy» opens today's maths class first, see n-hoy): the maths session, then Lengua.
+    await page.goto('/play/sesion')
     await expect(page).toHaveURL(/\/play\/sesion$/)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await playUntil(page, () => sessionEnded(page), 600)

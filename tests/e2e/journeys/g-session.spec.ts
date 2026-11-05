@@ -4,14 +4,10 @@ import { expect, test } from '@playwright/test'
 import { CHILD_NAME, seedDemo, settle } from '../helpers'
 
 test.describe('Mi sesión de hoy', () => {
-  test('the home offers the session as the main entry and the session starts with a warm-up', async ({ page }) => {
+  // The home's «Hoy» opens today's class first (every topic has one, see n-hoy); the session is its own screen.
+  test('the session starts with a warm-up', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play')
-    await expect(page.getByRole('heading', { name: new RegExp(`¡Hola, ${CHILD_NAME}!`) })).toBeVisible()
-    const session = page.getByRole('button', { name: /Mi sesión de hoy/ })
-    await expect(session).toBeVisible()
-    await session.click()
-    await expect(page).toHaveURL(/\/play\/sesion$/)
+    await page.goto('/play/sesion')
     await expect(page.getByText(`¡Vamos, ${CHILD_NAME}!`)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await expect(page.getByText('Calentamiento', { exact: true })).toBeVisible()

@@ -1,5 +1,5 @@
-/* Journey N: the home's order. «Hoy» is the big button: the class of today's topic when there is one and the child has
-   not done it (Lía is put on a topic with a class through the dev helper), otherwise «Mi sesión de hoy». After the class
+/* Journey N: the home's order. «Hoy» is the big button: the class of today's topic when the child has not done it
+   (every topic has a class), otherwise «Mi sesión de hoy». After the class
    («Ya lo sé» answered with the e2e solvers) the home offers the session. «Repasar» only with something due; «Jugar» and
    «Mis premios» are there, «Repaso del día» and «Juego libre» are gone. On a phone the «Hoy» card fits without scrolling. */
 import { devices, expect, test } from '@playwright/test'
@@ -8,14 +8,17 @@ import { CHILD_NAME, devMasterUntilTopic, driveExercises, seedDemo } from '../he
 const CLASS_TOPIC = 'div-con-tablas'
 
 test.describe('Hoy and the menu', () => {
-  test('«Hoy» opens the session when today\'s topic has no class (Lía: descomponer)', async ({ page }) => {
+  // Since every topic has a class (Oct 2026), the demo child's topic (descomponer) opens its class first.
+  test('«Hoy» opens the class of Lía\'s topic (descomponer) before the session', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play')
     await expect(page.getByRole('heading', { name: new RegExp(`¡Hola, ${CHILD_NAME}!`) })).toBeVisible()
-    const hoy = page.getByRole('button', { name: /Mi sesión de hoy/ })
+    const hoy = page.getByRole('button', { name: /Hoy aprendemos/ })
     await expect(hoy).toContainText('Descomponer')
+    await expect(hoy).toContainText('¡Empezar la clase!')
+    await expect(page.getByRole('button', { name: /Mi sesión de hoy/ })).toHaveCount(0)
     await hoy.click()
-    await expect(page).toHaveURL(/\/play\/sesion$/)
+    await expect(page).toHaveURL(/\/play\/clase\/descomponer-9999$/)
   })
 
   test('«Hoy» opens the class of today\'s topic, and after it the home offers the session', async ({ page }) => {

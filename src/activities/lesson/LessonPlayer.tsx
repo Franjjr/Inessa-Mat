@@ -12,6 +12,7 @@ import { LESSON_VISUALS } from './visuals'
 import { noBreakGroups } from './visuals/format'
 import { SafeVisual } from './SafeVisual'
 import TrySlot from './TrySlot'
+import { FitInBoard } from './FitInBoard'
 import ChoiceSlot from './ChoiceSlot'
 import { computeRuns, isAnswerStep, keyAction, stageCharacter, voiceFor } from './navigation'
 import { usePortrait, useReducedMotionFlag } from './useLessonMedia'
@@ -178,11 +179,16 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>
-                  <ChoiceSlot choices={step.choices.map((c) => ({ label: c.label, value: c.value }))} picked={picks.get(current)} onPick={pick} />
+                  <FitInBoard>
+                    <ChoiceSlot choices={step.choices.map((c) => ({ label: c.label, value: c.value }))} picked={picks.get(current)} onPick={pick} />
+                  </FitInBoard>
                 </SafeVisual>
               ) : Visual ? (
                 <SafeVisual>
-                  <Visual params={step.params ?? {}} phase={run.phase} runLength={run.length} reduced={reduced} />
+                  {/* Shrunk to fit the board, which hides overflow: a tall drawing is never cut. */}
+                  <FitInBoard>
+                    <Visual params={step.params ?? {}} phase={run.phase} runLength={run.length} reduced={reduced} />
+                  </FitInBoard>
                 </SafeVisual>
               ) : null}
             </motion.div>
