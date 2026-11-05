@@ -110,7 +110,7 @@
   font-size: var(--fs-md);
 }
 
-.footer { display: flex; justify-content: center; }
+.footer { display: flex; flex-direction: column; align-items: center; }
 
 @media (prefers-reduced-motion: reduce) {
   .card, .add { transition: none; }
@@ -129,3 +129,6 @@
   .grid { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
   .card, .add { min-height: clamp(300px, 42vh, 420px); }
 }
+
+/* Build id, small: lets support tell at a glance whether a device runs the latest version. */
+.version { margin: var(--sp-2) 0 0; font-size: var(--fs-sm); color: var(--c-ink-mute); text-align: center; -webkit-user-select: text; user-select: text; }

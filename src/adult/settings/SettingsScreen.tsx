@@ -13,6 +13,7 @@ import { errorMessage } from '../shared/messages'
 import { copyText } from '../shared/clipboard'
 import { validatePin } from '../auth/validation'
 import { lockAdultArea } from '../gate/AdultGate'
+import { APP_VERSION, fetchServerVersion, hardRefresh, versionLabel } from '@/app/version'
 import s from './settings.module.css'
 import adult from '../shared/adult.module.css'
 
@@ -63,6 +64,8 @@ export default function SettingsScreen() {
           <Button variant="secondary" onClick={() => navigate('/legal/privacidad')}>Leer la política de privacidad</Button>
         </div>
       </section>
+
+      <AppVersionCard />
     </AdultPage>
   )
 }
@@ -438,5 +441,38 @@ function VoicePicker() {
         (España) → descarga «Mónica (mejorada)» y elígela aquí.
       </p>
     </div>
+  )
+}
+
+/** Which build this device runs, compared with the server, and a button that forces the latest one (support). */
+function AppVersionCard() {
+  const [server, setServer] = useState<string | null | undefined>(undefined)
+  const [busy, setBusy] = useState(false)
+  useEffect(() => {
+    let alive = true
+    void fetchServerVersion().then((v) => { if (alive) setServer(v) })
+    return () => { alive = false }
+  }, [])
+  const outdated = !!server && server !== APP_VERSION
+  return (
+    <section className={adult.card} aria-labelledby="version-title">
+      <h2 id="version-title" className={adult.subheading}>Versión de la app</h2>
+      <p className={adult.muted}>
+        Este dispositivo usa la versión <strong>{versionLabel()}</strong>.{' '}
+        {server === undefined ? 'Comprobando si hay una más nueva…'
+          : server === null ? 'No se ha podido comprobar si hay una más nueva (¿sin conexión?).'
+          : outdated ? <strong>Hay una versión más nueva ({server}): pulsa «Actualizar la app».</strong>
+          : 'Es la más reciente.'}
+      </p>
+      <div className={adult.actions}>
+        <Button
+          variant={outdated ? 'primary' : 'secondary'}
+          disabled={busy}
+          onClick={() => { setBusy(true); void hardRefresh() }}
+        >
+          {busy ? 'Actualizando…' : 'Actualizar la app'}
+        </Button>
+      </div>
+    </section>
   )
 }

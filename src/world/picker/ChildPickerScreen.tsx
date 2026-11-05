@@ -7,6 +7,7 @@ import { useActiveChild, useChildren } from '@/data'
 import { Button, Screen, Spinner } from '@/ui'
 import type { ChildProfile } from '@/types'
 import s from './ChildPickerScreen.module.css'
+import { APP_VERSION } from '@/app/version'
 
 export default function ChildPickerScreen() {
   const navigate = useNavigate()
@@ -63,6 +64,7 @@ export default function ChildPickerScreen() {
           <Button variant="ghost" size="sm" className={s.touch} onClick={() => navigate('/adult')}>
             Soy padre, madre o profesor
           </Button>
+          <p className={s.version}>Versión {APP_VERSION}</p>
         </footer>
       </div>
     </Screen>

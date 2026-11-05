@@ -2,6 +2,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv, type Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 
@@ -80,8 +81,32 @@ function prerenderWelcome(): Plugin {
   }
 }
 
+/** Build id shown to adults and compared with /version.json: the commit (Vercel gives it; else git), or «local». */
+function buildVersion(): string {
+  const fromVercel = process.env.VERCEL_GIT_COMMIT_SHA
+  if (fromVercel) return fromVercel.slice(0, 7)
+  try { return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim() || 'local' } catch { return 'local' }
+}
+const APP_VERSION = process.env.NODE_ENV === 'test' ? 'test' : buildVersion()
+const APP_BUILT_AT = new Date().toISOString()
+
+/** Build only: writes /version.json (never precached, see globIgnores) so a running app can tell it is out of date. */
+function versionFile(): Plugin {
+  return {
+    name: 'repasitos-version-file',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ version: APP_VERSION, builtAt: APP_BUILT_AT }) })
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+    __APP_BUILT_AT__: JSON.stringify(APP_BUILT_AT),
+  },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -89,6 +114,7 @@ export default defineConfig({
     react(),
     ttsDevApi(),
     prerenderWelcome(),
+    versionFile(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['fonts/*.woff2', 'models/**/*', 'icons/*'],
@@ -111,7 +137,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,json,bin,mp3,ogg}'],
         // The link-preview image is for social networks, not for the app: no need to download it with the app.
-        globIgnores: ['og/**', '404.html'],
+        globIgnores: ['og/**', '404.html', 'version.json'],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/dev\//, /^\/api\//],
