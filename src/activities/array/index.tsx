@@ -1,7 +1,7 @@
 /* Activity "array": Construye el rectángulo. The child fills the empty frame of rows × columns with objects (tap a
    slot to plant one, tap again to take it out). Then the array view asks for the total, and after a correct answer
    the rectangle turns over to show the mirror rule. */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type CSSProperties } from 'react'
 import type { ActivityProps, ArrayExercise, ExerciseOutcome } from '@/types'
 import { generate } from '@/engine'
 import { useActivityHost } from '@/activities/host'
@@ -61,7 +61,7 @@ function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
         {host.t(`Construye un rectángulo de ${ex.rows} filas y ${ex.cols} columnas. Toca cada hueco para poner un ${ex.emoji}.`)}
       </p>
       <div className={s.frame} role="group" aria-label={`Rectángulo de ${ex.rows} filas y ${ex.cols} columnas`}
-        style={{ gridTemplateColumns: `repeat(${ex.cols}, minmax(0, 1fr))` }}>
+        style={{ gridTemplateColumns: `repeat(${ex.cols}, minmax(0, 1fr))`, ['--rows' as string]: ex.rows, ['--cols' as string]: ex.cols } as CSSProperties}>
         {filled.map((on, i) => (
           <button
             key={i}

@@ -17,7 +17,10 @@
 .frame {
   display: grid;
   gap: 8px;
-  width: min(520px, 72vw);
+  /* As wide as fits, but also short enough that every row fits on the screen with the header and the button
+     (a tall 6 × 2 rectangle sized by width alone measured ~1500 px on a laptop). --rows/--cols come from the
+     exercise; the slots keep their 44 px minimum, and the page scrolls if even that does not fit. */
+  width: min(520px, 72vw, calc((100dvh - 330px) * var(--cols, 1) / var(--rows, 1) + 2 * var(--sp-4)));
   padding: var(--sp-4);
   border-radius: var(--r-xl);
   background: var(--c-surface);

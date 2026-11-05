@@ -8,13 +8,16 @@
   flex-direction: column;
   gap: var(--sp-4);
   width: 100%;
-  height: 100%;
-  min-height: 0;
+  /* Fill the node frame and grow past it when the game is taller than the screen (the page scrolls then):
+     never a fixed height with overflow hidden, which cut the bottom of the game off on laptops. */
+  flex: 1 0 auto;
+  min-height: 100%;
   padding: var(--sp-3) clamp(16px, 3vw, 40px) var(--sp-5);
   box-sizing: border-box;
   color: var(--c-ink);
   font-family: var(--font-read);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .header {

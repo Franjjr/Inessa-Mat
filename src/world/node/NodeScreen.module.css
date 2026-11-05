@@ -1,11 +1,14 @@
-/* Frame for a playing node: fills the screen so the companion buddy can sit in a corner. */
+/* Frame for a playing node: at least the screen tall, so the companion buddy can sit in a corner. It must GROW with
+   its content: a laptop gives a game only ~600–790 px, and a fixed 100dvh height with overflow hidden cut off the
+   bottom rows and the «Comprobar» / «Siguiente» buttons with no way to scroll to them. Clip sideways only. */
 .frame {
   position: relative;
+  flex: 1 0 auto;
   min-height: 100dvh;
-  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-x: clip;
   background: var(--c-bg);
 }
 .missing { flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--sp-5); }
