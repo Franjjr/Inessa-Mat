@@ -7,7 +7,7 @@ import { PHRASES } from '../phrases'
 import { numberToEnglish } from '../numbers'
 import { englishKindsFor, makableEnglish, teachableEnglishCourse } from '../teachable'
 import { INGLES3_SYLLABUS } from '@/content/syllabus/ingles3'
-import type { Answer, EnglishExercise, ExerciseKind } from '@/types'
+import type { Answer, EngMemoryExercise, EngScrambleExercise, EnglishExercise, ExerciseKind } from '@/types'
 
 const now = new Date('2026-11-06T10:00:00.000Z')
 
@@ -32,6 +32,10 @@ function answersOf(ex: EnglishExercise): { right: Answer; wrong: Answer } {
     case 'eng-num-listen':
     case 'eng-op-listen':
       return { right: { type: 'number', value: ex.answer }, wrong: { type: 'number', value: ex.answer + 1 } }
+    case 'eng-memory':
+      return { right: { type: 'memory', flips: 2 * ex.pairs.length, found: ex.pairs.length }, wrong: { type: 'memory', flips: 2 * ex.pairs.length + 5, found: ex.pairs.length } }
+    case 'eng-scramble':
+      return { right: { type: 'text', value: ex.answer }, wrong: { type: 'text', value: 'zzzz' } }
   }
 }
 
@@ -223,6 +227,72 @@ describe('English kinds: check', () => {
   })
 })
 
+describe('English word games: memory and scramble', () => {
+  it('memory has six pairs of a picture and its word, and a deck of 12 cards with each pair twice', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const ex = one('eng-memory', 'eng:voc:animales', seed) as EngMemoryExercise
+      expect(ex.pairs).toHaveLength(6)
+      expect(new Set(ex.pairs.map((p) => p.en)).size).toBe(6)
+      for (const p of ex.pairs) expect(p.emoji, p.en).toBeTruthy()
+      expect(ex.deck).toHaveLength(12)
+      for (let i = 0; i < 6; i++) expect(ex.deck.filter((c) => c.pair === i).map((c) => c.side).sort()).toEqual(['picture', 'word'])
+    }
+  })
+
+  it('memory is planned only on the themes with six pictures: saludos and dias have none', () => {
+    expect(kindsForSkill('eng:voc:animales')).toContain('eng-memory')
+    expect(kindsForSkill('eng:voc:saludos')).not.toContain('eng-memory')
+    expect(kindsForSkill('eng:voc:dias')).not.toContain('eng-memory')
+    for (const skill of ENGLISH_SKILLS.filter((s) => s.startsWith('eng:voc:'))) expect(kindsForSkill(skill), skill).toContain('eng-scramble')
+  })
+
+  it('memory is one attempt: right when every pair is found in at most 2 × pairs + 4 flips', () => {
+    const ex = one('eng-memory', 'eng:voc:comida') as EngMemoryExercise
+    const n = ex.pairs.length
+    expect(check(ex, { type: 'memory', flips: 2 * n + 4, found: n }).correct).toBe(true)
+    expect(check(ex, { type: 'memory', flips: 2 * n + 5, found: n }).correct).toBe(false)
+    expect(check(ex, { type: 'memory', flips: 2 * n, found: n - 1 }).correct).toBe(false)
+  })
+
+  it('a wrong memory names the flips and the limit, and never says «¡Mal!»', () => {
+    const ex = one('eng-memory', 'eng:voc:comida') as EngMemoryExercise
+    const n = ex.pairs.length
+    const bad = check(ex, { type: 'memory', flips: 30, found: n })
+    expect(bad.feedback).toContain('30 giros')
+    expect(bad.feedback).toContain(String(2 * n + 4))
+    expect(bad.feedback).not.toMatch(/Mal/)
+  })
+
+  it('scramble tiles are a permutation of the letters of the word, and never already in order', () => {
+    for (const skill of ENGLISH_SKILLS.filter((s) => s.startsWith('eng:voc:'))) {
+      for (let seed = 1; seed <= 15; seed++) {
+        const ex = one('eng-scramble', skill, seed) as EngScrambleExercise
+        const target = ex.answer.toLowerCase().replace(/[^a-z]/g, '')
+        expect(ex.answer, `${skill} ${ex.answer}`).not.toContain(' ')
+        expect([...ex.tiles].sort(), `${skill} ${ex.answer}`).toEqual([...target].sort())
+        expect(ex.tiles.join(''), `${skill} ${ex.answer}`).not.toBe(target)
+      }
+    }
+  })
+
+  it('the scramble hints of a word of three letters or fewer never reveal all but one of its letters', () => {
+    const short = ENGLISH_WORDS.filter((w) => !w.en.includes(' ') && w.en.replace(/[^a-z]/gi, '').length <= 3)
+    expect(short.length).toBeGreaterThan(5)
+    for (const w of short) {
+      const ex = { id: `t:${w.en}`, kind: 'eng-scramble', skill: 'eng:voc:' + w.theme, difficulty: 2, card: { en: w.en, es: w.es, theme: w.theme }, answer: w.en, alts: [], tiles: [] }
+      const revealed = hintsEnglish(ex as unknown as EnglishExercise).flatMap((h) => [...h.text.matchAll(/«(\p{L})»/gu)]).length
+      expect(revealed, w.en).toBeLessThan(w.en.replace(/[^a-z]/gi, '').length - 1)
+    }
+  })
+
+  it('the memory and scramble statements never show the English words', () => {
+    const memory = one('eng-memory', 'eng:voc:ropa') as EngMemoryExercise
+    for (const p of memory.pairs) expect(statementOf(memory)).not.toContain(p.en)
+    const scramble = one('eng-scramble', 'eng:voc:ropa') as EngScrambleExercise
+    expect(statementOf(scramble)).not.toContain(scramble.answer)
+  })
+})
+
 describe('English kinds: hints and statements', () => {
   it('every kind has three hints, levels 1 to 3', () => {
     for (const kind of ENGLISH_KINDS) {
@@ -260,8 +330,8 @@ describe('English kinds: hints and statements', () => {
 
 describe('English sound filter', () => {
   it('with the sound off, the listening kinds are left out; the other kinds stay', () => {
-    expect(englishKindsFor('eng:voc:animales', true)).toEqual(['eng-listen-pick', 'eng-match', 'eng-write-word'])
-    expect(englishKindsFor('eng:voc:animales', false)).toEqual(['eng-match', 'eng-write-word'])
+    expect(englishKindsFor('eng:voc:animales', true)).toEqual(['eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-memory', 'eng-scramble'])
+    expect(englishKindsFor('eng:voc:animales', false)).toEqual(['eng-match', 'eng-write-word', 'eng-memory', 'eng-scramble'])
     expect(englishKindsFor('eng:num:0-20', false)).toEqual(['eng-num-write'])
     expect(makableEnglish('eng:num:ops:plus', false)).toBe(false)
     expect(makableEnglish('eng:num:ops:plus', true)).toBe(true)

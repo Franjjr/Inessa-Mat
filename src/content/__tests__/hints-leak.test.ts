@@ -58,7 +58,7 @@ function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
 }
 
 /** Inglés (3.º): the English words the child says or writes (the listening numbers are digits, checked below). */
-const ENGLISH_TEXT_KINDS = ['eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-complete', 'eng-num-write']
+const ENGLISH_TEXT_KINDS = ['eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-complete', 'eng-num-write', 'eng-memory', 'eng-scramble']
 function englishAnswersOf(ex: EnglishExercise): Answer[] {
   const text = (t: string): Answer => ({ label: `«${t}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(t)}(?![\\p{L}\\d])`, 'iu') })
   switch (ex.kind) {
@@ -67,6 +67,8 @@ function englishAnswersOf(ex: EnglishExercise): Answer[] {
     case 'eng-write-word': return [text(ex.answer), ...ex.alts.map(text)]
     case 'eng-complete': return [text(ex.options[ex.answer])]
     case 'eng-num-write': return [text(ex.answer)]
+    case 'eng-memory': return ex.pairs.map((p) => text(p.en))
+    case 'eng-scramble': return [text(ex.answer), ...ex.alts.map(text)]
     default: return []
   }
 }

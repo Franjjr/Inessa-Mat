@@ -4,13 +4,18 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { speech } from '@/audio'
 import { createRng, generate, numberToEnglish } from '@/engine'
-import type { EnglishExercise, EngListenPickExercise, EngMatchExercise, EngNumListenExercise, EngOpListenExercise } from '@/types'
+import type {
+  EngListenPickExercise, EngMatchExercise, EngMemoryExercise, EngNumListenExercise, EngOpListenExercise,
+  EnglishExercise,
+} from '@/types'
 import CompleteView from './CompleteView'
 import ListenPickView from './ListenPickView'
 import MatchView from './MatchView'
+import MemoryView from './MemoryView'
 import NumberListenView from './NumberListenView'
 import NumberWriteView from './NumberWriteView'
 import OperationListenView from './OperationListenView'
+import ScrambleView from './ScrambleView'
 import WriteWordView from './WriteWordView'
 
 const cfg = vi.hoisted(() => ({ sound: true, voice: false }))
@@ -244,5 +249,86 @@ describe('NumberListenView and OperationListenView', () => {
     const ex: EngOpListenExercise = first('eng-op-listen', 'eng:num:ops:times')
     expect([2, 5, 10]).toContain(ex.a)
     expect(ex.answer).toBe(ex.a * ex.b)
+  })
+})
+
+describe('MemoryView', () => {
+  const at = (ex: EngMemoryExercise, pair: number, side: 'picture' | 'word') => ex.deck.findIndex((c) => c.pair === pair && c.side === side)
+  const turn = (i: number) => fireEvent.click(screen.getByRole('button', { name: `Carta ${i + 1}` }))
+
+  it('the cards are face down: no English word is written before it is turned', () => {
+    const ex = first('eng-memory', 'eng:voc:animales')
+    render(<MemoryView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    for (const p of ex.pairs) expect(pageText()).not.toContain(p.en)
+  })
+
+  it('a turned word is said in English', () => {
+    const ex = first('eng-memory', 'eng:voc:animales')
+    render(<MemoryView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    turn(at(ex, 2, 'word'))
+    expect(speech.say).toHaveBeenCalledWith(ex.pairs[2].en, expect.objectContaining({ voice: 'english' }))
+  })
+
+  it('finding every pair ends the game with one attempt: the flips are counted and the right game is graded right', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    const onAnswered = vi.fn()
+    render(<MemoryView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    ex.pairs.forEach((_, p) => {
+      turn(at(ex, p, 'picture'))
+      turn(at(ex, p, 'word'))
+    })
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('too many flips is one wrong attempt, and the feedback says the turns', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    const onAnswered = vi.fn()
+    render(<MemoryView exercise={ex} onAnswered={onAnswered} />)
+    // Five mismatched turns (two cards each, the next tap turns the pair back), then the perfect game: 22 flips.
+    for (let p = 0; p < 5; p++) {
+      turn(at(ex, p, 'picture'))
+      turn(at(ex, p + 1, 'word'))
+    }
+    ex.pairs.forEach((_, p) => {
+      turn(at(ex, p, 'picture'))
+      turn(at(ex, p, 'word'))
+    })
+    expect(pageText()).toContain('22 giros')
+    expect(onAnswered).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+})
+
+describe('ScrambleView', () => {
+  const tap = (letter: string) => {
+    const tiles = screen.getAllByRole('button', { name: letter }).filter((b) => !(b as HTMLButtonElement).disabled)
+    fireEvent.click(tiles[0])
+  }
+
+  it('the picture is shown and the word is not written before the answer', () => {
+    const ex = first('eng-scramble', 'eng:voc:ropa')
+    render(<ScrambleView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    expect(pageText()).not.toContain(ex.answer)
+  })
+
+  it('the letters tapped in order are sent as the typed word; the right one is graded right', () => {
+    const ex = first('eng-scramble', 'eng:voc:ropa')
+    const onAnswered = vi.fn()
+    render(<ScrambleView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    for (const ch of ex.answer.toLowerCase()) tap(ch)
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('a wrong word shows the right word and says it in English', () => {
+    const ex = first('eng-scramble', 'eng:voc:ropa')
+    render(<ScrambleView exercise={ex} onAnswered={vi.fn()} />)
+    for (const ch of `${ex.answer.toLowerCase()}`.split('').reverse()) tap(ch)
+    fireEvent.click(comprobar())
+    expect(pageText()).toContain(`«${ex.answer}»`)
+    expect(speech.say).toHaveBeenCalledWith(ex.answer, expect.objectContaining({ voice: 'english' }))
   })
 })

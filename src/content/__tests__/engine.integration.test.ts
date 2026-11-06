@@ -25,6 +25,7 @@ const answerOf = (ex: Exercise): number => {
     case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
     case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words': return NaN
     case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order': case 'lng-copy': case 'lng-guided': return NaN
+    case 'eng-memory': case 'eng-scramble': return NaN
     default: return ex.answer as number
   }
 }

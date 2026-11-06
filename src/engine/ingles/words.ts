@@ -5,6 +5,9 @@
 export type EnglishTheme =
   | 'saludos' | 'colores' | 'animales' | 'familia' | 'comida' | 'ropa' | 'cole' | 'casa' | 'cuerpo' | 'tiempo' | 'dias'
 
+/** The memory game (eng-memory): its pairs of picture and word. A theme needs this many words with a picture. */
+export const MEMORY_PAIRS = 6
+
 /** `alts` son otras respuestas aceptadas (p. ej. «bye» para «goodbye»). */
 export interface EnglishWord { en: string; es: string; emoji?: string; theme: EnglishTheme; alts?: string[] }
 

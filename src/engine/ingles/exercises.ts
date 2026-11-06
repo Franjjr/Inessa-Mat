@@ -5,18 +5,20 @@
 import type {
   Answer, CheckResult, EnglishCard, EnglishExercise, ExerciseKind, Hint, Rng, SkillKey,
   EngCompleteExercise, EngListenPickExercise, EngMatchExercise, EngNumListenExercise, EngNumWriteExercise,
-  EngOpListenExercise, EngWriteWordExercise,
+  EngOpListenExercise, EngWriteWordExercise, EngMemoryExercise, EngScrambleExercise,
 } from '@/types'
 import { parseSkill } from '../skills'
 import { pick, randInt, range, shuffle } from '../rng'
-import { ENGLISH_WORDS, type EnglishTheme, type EnglishWord } from './words'
+import { ENGLISH_WORDS, MEMORY_PAIRS, type EnglishTheme, type EnglishWord } from './words'
 import { numberToEnglish, operationToEnglish } from './numbers'
 import { compareEnglish } from './text'
 import { PHRASE_IDEAS, PHRASES } from './phrases'
 
 export const ENGLISH_KINDS: ExerciseKind[] = [
   'eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-complete', 'eng-num-write', 'eng-num-listen', 'eng-op-listen',
+  'eng-memory', 'eng-scramble',
 ]
+
 
 /** The kinds that the voice reads: none of them is planned, nor shown, with the sound off. */
 export const ENGLISH_LISTENING_KINDS: ExerciseKind[] = ['eng-listen-pick', 'eng-num-listen', 'eng-op-listen']
@@ -50,6 +52,18 @@ function themeOf(item: string): EnglishTheme {
   return theme
 }
 const wordsOf = (theme: EnglishTheme) => ENGLISH_WORDS.filter((w) => w.theme === theme)
+/** Every letter of a one-word English word, in order, as a tile of the scramble (lower case). */
+const tilesOf = (en: string) => [...letters(en)]
+/** The tiles in a shuffled order that is never the word itself (a word of one repeated letter gets its tiles rotated). */
+function scrambledTiles(rng: Rng, en: string): string[] {
+  const target = tilesOf(en).join('')
+  for (let tries = 0; tries < 50; tries++) {
+    const tiles = shuffle(rng, tilesOf(en))
+    if (tiles.join('') !== target) return tiles
+  }
+  const [first, ...rest] = tilesOf(en)
+  return [...rest, first]
+}
 
 // ---------------------------------------------------------------- generation
 
@@ -72,6 +86,24 @@ function buildMatch(skill: SkillKey, theme: EnglishTheme, rng: Rng): EngMatchExe
 function buildWriteWord(skill: SkillKey, theme: EnglishTheme, rng: Rng): EngWriteWordExercise {
   const w = pick(rng, wordsOf(theme))
   return { id: `eng-write-word:${skill}:${w.en}`, kind: 'eng-write-word', skill, difficulty: 2, card: cardOf(w), answer: w.en, alts: w.alts ?? [] }
+}
+
+/** Six words of the theme with a picture; the deck holds each pair twice (the picture and the word), shuffled. */
+function buildMemory(skill: SkillKey, theme: EnglishTheme, rng: Rng): EngMemoryExercise {
+  const words = shuffle(rng, wordsOf(theme).filter((w) => w.emoji)).slice(0, MEMORY_PAIRS)
+  if (words.length < MEMORY_PAIRS) throw new Error(`ingles: '${theme}' has fewer than ${MEMORY_PAIRS} pictures`)
+  const pairs = words.map(cardOf)
+  const deck = shuffle(rng, pairs.flatMap((_, pair) => [{ pair, side: 'picture' as const }, { pair, side: 'word' as const }]))
+  return { id: `eng-memory:${skill}:${[...words.map((w) => w.en)].sort().join(',')}`, kind: 'eng-memory', skill, difficulty: 2, theme, pairs, deck }
+}
+
+/** One word of the theme without a space (the tiles are its letters); the picture is its emoji or its Spanish word. */
+function buildScramble(skill: SkillKey, theme: EnglishTheme, rng: Rng): EngScrambleExercise {
+  const w = pick(rng, wordsOf(theme).filter((x) => !x.en.includes(' ')))
+  return {
+    id: `eng-scramble:${skill}:${w.en}`, kind: 'eng-scramble', skill, difficulty: 2, card: cardOf(w), answer: w.en, alts: w.alts ?? [],
+    tiles: scrambledTiles(rng, w.en),
+  }
 }
 
 function buildComplete(skill: SkillKey, rng: Rng): EngCompleteExercise {
@@ -129,6 +161,8 @@ export function buildEnglish(kind: ExerciseKind, skill: SkillKey, rng: Rng): Eng
     case 'eng-listen-pick': return buildListenPick(skill, themeOf(p.item), rng)
     case 'eng-match': return buildMatch(skill, themeOf(p.item), rng)
     case 'eng-write-word': return buildWriteWord(skill, themeOf(p.item), rng)
+    case 'eng-memory': return buildMemory(skill, themeOf(p.item), rng)
+    case 'eng-scramble': return buildScramble(skill, themeOf(p.item), rng)
     case 'eng-complete': return buildComplete(skill, rng)
     case 'eng-num-write': return buildNumWrite(skill, p.item, rng)
     case 'eng-num-listen': return buildNumListen(skill, p.item, rng)
@@ -179,8 +213,24 @@ function checkMatch(ex: EngMatchExercise, answer: Answer): CheckResult {
   return { correct: false, given: marked.join(','), expected: pairs, errorType: 'other', feedback: `Las parejas son: ${pairs}.` }
 }
 
+/** The memory game is one attempt: right when every pair is found in at most 2 × pairs + 4 flips (a card turned counts). */
+function checkMemory(ex: EngMemoryExercise, answer: Answer): CheckResult {
+  const pairs = ex.pairs.length
+  const limit = 2 * pairs + 4
+  const flips = answer.type === 'memory' ? answer.flips : 0
+  const found = answer.type === 'memory' ? answer.found : 0
+  const expected = `${pairs} parejas en ${limit} giros o menos`
+  if (found === pairs && flips <= limit) return { correct: true, given: `${flips} giros`, expected }
+  const feedback = found < pairs
+    ? 'Aún quedan parejas por encontrar.'
+    : `Has encontrado las ${pairs} parejas en ${flips} giros. Para acertar hay que hacerlo en ${limit} o menos.`
+  return { correct: false, given: `${flips} giros`, expected, errorType: 'other', feedback }
+}
+
 export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
   switch (ex.kind) {
+    case 'eng-memory': return checkMemory(ex, answer)
+    case 'eng-scramble': return checkText(answer, ex.answer, ex.alts)
     case 'eng-listen-pick':
       return checkChoice(answer, ex.answer, ex.word, `La palabra es «${ex.word}».`)
     case 'eng-complete': {
@@ -198,6 +248,17 @@ export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
 // ---------------------------------------------------------------- hints (three levels, never the answer)
 
 const hint = (level: Hint['level'], text: string): Hint => ({ level, text, visual: 'none' })
+
+/** The hints of a word to spell (eng-write-word, eng-scramble). Short words: the hints never reveal all but one letter.
+    Two letters or fewer: the count and a cue, no letter. Three: the count, then the first letter. Longer: the first
+    letter, then the count and the last letter. */
+function spellingHints(en: string, theme: string): Hint[] {
+  const n = letters(en).length
+  const themeHint = hint(1, `Es una palabra del tema «${THEME_NAME[theme]}».`)
+  if (n <= 2) return [themeHint, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, 'Es una palabra muy corta: escríbela como la dices.')]
+  if (n === 3) return [themeHint, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, `Empieza por «${letters(en)[0]}».`)]
+  return [themeHint, hint(2, `Empieza por «${letters(en)[0]}».`), hint(3, `Tiene ${n} letras y acaba en «${letters(en).slice(-1)}».`)]
+}
 
 /** The idea of a number, in Spanish: the English ending that gives it away, never the word itself. */
 function numberIdea(n: number): string {
@@ -224,16 +285,14 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
         hint(2, 'Mira cada dibujo y piensa cómo se dice en inglés; después busca su palabra.'),
         hint(3, 'Si te quedan dos sin pareja, prueba a cambiarlas entre ellas.'),
       ]
-    case 'eng-write-word': {
-      // Short words: the hints never reveal all but one letter. Two letters or fewer: the count and a cue, no letter.
-      // Three letters: the count, then the first letter. Longer: the first letter, then the count and the last letter.
-      const en = ex.answer
-      const n = letters(en).length
-      const theme = hint(1, `Es una palabra del tema «${THEME_NAME[ex.card.theme]}».`)
-      if (n <= 2) return [theme, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, 'Es una palabra muy corta: escríbela como la dices.')]
-      if (n === 3) return [theme, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, `Empieza por «${letters(en)[0]}».`)]
-      return [theme, hint(2, `Empieza por «${letters(en)[0]}».`), hint(3, `Tiene ${n} letras y acaba en «${letters(en).slice(-1)}».`)]
-    }
+    case 'eng-write-word': return spellingHints(ex.answer, ex.card.theme)
+    case 'eng-scramble': return spellingHints(ex.answer, ex.card.theme)
+    case 'eng-memory':
+      return [
+        hint(1, 'Cada dibujo tiene su palabra en inglés: busca las parejas.'),
+        hint(2, 'Mira el dibujo, piensa cómo se dice en inglés y busca esa palabra.'),
+        hint(3, 'Si una carta no encaja, fíjate dónde estaba su pareja antes de girarla.'),
+      ]
     case 'eng-complete': {
       const word = ex.options[ex.answer]
       return [
@@ -275,5 +334,7 @@ export function statementEnglish(ex: EnglishExercise): string {
     case 'eng-num-write': return `Escribe en inglés el número ${ex.value}`
     case 'eng-num-listen': return 'Escucha el número y escríbelo con cifras.'
     case 'eng-op-listen': return 'Escucha la operación y escribe el resultado.'
+    case 'eng-memory': return 'Gira las cartas y encuentra las parejas: cada dibujo con su palabra en inglés.'
+    case 'eng-scramble': return 'Toca las letras en orden y escribe la palabra en inglés.'
   }
 }

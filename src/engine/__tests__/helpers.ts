@@ -127,6 +127,10 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'text', value: ex.answer }
     case 'lng-guided':
       return { type: 'text', value: ex.parts.join(' ') }
+    case 'eng-memory':
+      return { type: 'memory', flips: 2 * ex.pairs.length, found: ex.pairs.length }
+    case 'eng-scramble':
+      return { type: 'text', value: ex.answer }
     default:
       return { type: 'number', value: ex.answer as number }
   }

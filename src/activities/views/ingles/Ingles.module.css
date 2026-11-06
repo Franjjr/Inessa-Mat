@@ -211,3 +211,138 @@
   width: 100%;
   min-width: 0;
 }
+
+/* Memory: a grid of 12 cards that wraps to three or four columns on a phone. */
+.count {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-md, 1.1rem);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.memoryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  gap: var(--sp-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.memoryCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  padding: var(--sp-2);
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 7vw, 2.5rem);
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.memoryCard:disabled {
+  cursor: default;
+}
+
+.memoryUp {
+  background: var(--c-surface);
+  outline: 3px solid var(--c-primary);
+  outline-offset: -3px;
+}
+
+.memoryBack {
+  color: var(--c-ink-soft);
+  font-weight: 800;
+}
+
+.memoryWord {
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 4vw, 1.2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* Scramble: the word being built, the tiles to tap, and the backspace. */
+.built {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.builtEmpty {
+  color: var(--c-ink-soft);
+  letter-spacing: 0.2em;
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.tile {
+  min-width: 56px;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.tile:disabled {
+  opacity: 0.35;
+  box-shadow: none;
+  cursor: default;
+}
+
+.tileActions {
+  display: flex;
+  justify-content: center;
+}
+
+.backspace {
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-4);
+  font-family: var(--font-display);
+  font-size: var(--fs-md, 1.1rem);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: transparent;
+  border: 2px dashed var(--c-line);
+  border-radius: var(--r-lg, 16px);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.backspace:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

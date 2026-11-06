@@ -131,6 +131,8 @@ export type ExerciseKind =
   | 'eng-num-write'   // Inglés 3.º: escribir en inglés un número que se ve con cifras (eng:num:0-20|decenas|21-100)
   | 'eng-num-listen'  // Inglés 3.º: escuchar un número en inglés y escribirlo con cifras (eng:num:0-20|decenas|21-100)
   | 'eng-op-listen'   // Inglés 3.º: escuchar una operación en inglés y escribir el resultado (eng:num:ops:*)
+  | 'eng-memory'      // Inglés 3.º: juego de memoria, seis parejas de dibujo y palabra en inglés (eng:voc:*)
+  | 'eng-scramble'    // Inglés 3.º: ordenar las letras de una palabra con su dibujo y escribirla (eng:voc:*)
 
 interface ExerciseBase {
   id: ID
@@ -570,8 +572,18 @@ export interface EngNumListenExercise extends ExerciseBase {
 export interface EngOpListenExercise extends ExerciseBase {
   kind: 'eng-op-listen'; a: number; op: '+' | '-' | '×'; b: number; spoken: string; answer: number
 }
+/** Memory: six pairs (picture and English word) in a deck of 12 cards; each pair is in the deck twice, one per side.
+    `deck` is shuffled by the engine (the same seed, the same board). The answer is the flips and the pairs found. */
+export interface EngMemoryExercise extends ExerciseBase {
+  kind: 'eng-memory'; theme: string; pairs: EnglishCard[]; deck: { pair: number; side: 'picture' | 'word' }[]
+}
+/** The picture and its Spanish word; the child taps the letters (`tiles`, shuffled, never in order) and the word is
+    graded as typed text (compareEnglish; `alts` are accepted too). */
+export interface EngScrambleExercise extends ExerciseBase {
+  kind: 'eng-scramble'; card: EnglishCard; answer: string; alts: string[]; tiles: string[]
+}
 export type EnglishExercise = EngListenPickExercise | EngMatchExercise | EngWriteWordExercise | EngCompleteExercise
-  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise
+  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise | EngMemoryExercise | EngScrambleExercise
 
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
@@ -863,6 +875,7 @@ export type Answer =
   | { type: 'text'; value: string | null }                                 // a typed word or phrase (Lengua): the letter keyboard or a physical one
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
   | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
+  | { type: 'memory'; flips: number; found: number }                       // juego de memoria: cards turned and pairs found
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per

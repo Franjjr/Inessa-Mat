@@ -64,6 +64,7 @@ import type {
   BarOp, DecimalMode, DecimalPlaces, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode,
   SkillKey,
 } from '@/types'
+import { ENGLISH_WORDS, MEMORY_PAIRS } from './ingles/words'
 import { CAL_SKILLS } from '@/content/caligrafia/curriculum'
 
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
@@ -592,7 +593,11 @@ export const LENGUA_SKILLS: SkillKey[] = [
     kinds are left out of the plan (englishKindsFor in src/engine/ingles/teachable.ts); the other kinds stay. */
 function englishKinds(p: Extract<ParsedSkill, { type: 'ingles' }>): ExerciseKind[] {
   switch (p.area) {
-    case 'voc': return ['eng-listen-pick', 'eng-match', 'eng-write-word']
+    case 'voc': {
+      // The memory game needs six pictures in the theme (saludos and dias have none).
+      const memory: ExerciseKind[] = ENGLISH_WORDS.filter((w) => w.theme === p.item && w.emoji).length >= MEMORY_PAIRS ? ['eng-memory'] : []
+      return ['eng-listen-pick', 'eng-match', 'eng-write-word', ...memory, 'eng-scramble']
+    }
     case 'frase': return ['eng-complete']
     case 'num':
       if (p.item === 'ops') return ['eng-op-listen']

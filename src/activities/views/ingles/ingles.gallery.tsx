@@ -5,9 +5,11 @@ import type { Exercise } from '@/types'
 import CompleteView from './CompleteView'
 import ListenPickView from './ListenPickView'
 import MatchView from './MatchView'
+import MemoryView from './MemoryView'
 import NumberListenView from './NumberListenView'
 import NumberWriteView from './NumberWriteView'
 import OperationListenView from './OperationListenView'
+import ScrambleView from './ScrambleView'
 import WriteWordView from './WriteWordView'
 
 /** The first exercise of a kind for a skill (deterministic). */
@@ -33,6 +35,16 @@ const entries: GalleryEntry[] = [
   {
     title: 'Completar la frase (I like…)',
     render: () => <CompleteView exercise={first('eng-complete', 'eng:frase:i-like')} onAnswered={() => {}} showFeedback={false} />,
+    width: 390,
+  },
+  {
+    title: 'Juego de memoria (animales)',
+    render: () => <MemoryView exercise={first('eng-memory', 'eng:voc:animales')} onAnswered={() => {}} showFeedback={false} />,
+    width: 390,
+  },
+  {
+    title: 'Ordenar las letras (comida)',
+    render: () => <ScrambleView exercise={first('eng-scramble', 'eng:voc:comida')} onAnswered={() => {}} showFeedback={false} />,
     width: 390,
   },
   {

@@ -441,7 +441,9 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'eng-complete':
     case 'eng-num-write':
     case 'eng-num-listen':
-    case 'eng-op-listen': return hintsEnglish(ex)
+    case 'eng-op-listen':
+    case 'eng-memory':
+    case 'eng-scramble': return hintsEnglish(ex)
   }
 }
 
