@@ -198,7 +198,7 @@ const hint = (level: Hint['level'], text: string): Hint => ({ level, text, visua
 
 /** The idea of a number, in Spanish: the English ending that gives it away, never the word itself. */
 function numberIdea(n: number): string {
-  if (n === 100) return 'Es el número más grande de la lista: se dice con un uno delante de la palabra de los cientos.'
+  if (n === 100) return 'Es el número más grande de la lista, y se escribe con dos palabras.'
   if (n <= 12) return 'Es un número corto: hay que aprenderlo de memoria.'
   if (n >= 13 && n <= 19) return 'Los números del 13 al 19 acaban en «-teen».'
   if (n % 10 === 0) return 'Las decenas exactas acaban en «-ty».'

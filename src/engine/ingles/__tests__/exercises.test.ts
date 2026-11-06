@@ -87,22 +87,29 @@ describe('English kinds: generation', () => {
     }
   })
 
-  it('every noun of a phrase is a word of the vocabulary; the rest are function words, verbs, adjectives or interjections', () => {
+  it('every noun of a phrase (its sentence, its answer and its distractors) is a word of the vocabulary or its regular plural', () => {
+    // Not nouns: function words, verbs, adjectives, adverbs, interjections and the pieces of contractions.
     const NOT_NOUNS = new Set([
-      'a', 'an', 'some', 'is', 'am', 'are', 'in', 'on', 'under', 'like', 'likes', 'have', 'has', 'got', 'get', 'gets',
-      'you', 'your', 'my', 'can', 'here', 'it', 'yes', 'no', 'swim', 'fly', 'sing', 'sit', 'wash', 'repeat', 'eat',
-      'sleep', 'read', 'walk', 'watch', 'write', 'stand', 'wear', 'wears', 'wearing', 'hello', 'sorry', 'please', 'bye', 'thank', 'good',
-      'sunny', 'rainy', 'snowy', 'windy', 'cold', 'hot', 'big', 'small', 'tall', 'old', 'sad', 'today', 'tomorrow', 'yesterday',
-      'moo', 'meow', 'woof',
+      'a', 'an', 'some', 'the', 'is', 'am', 'are', 'be', 'in', 'on', 'under', 'like', 'likes', 'have', 'has', 'got', 'get', 'gets',
+      'you', 'your', 'my', 'it', 'i', 'can', 'here', 'yes', 'no', 'and', 'there', 'this', 'she', 'he', 'we', 'they', 'so', 'up',
+      'to', 'at', 'of', 'please', 'swim', 'fly', 'sing', 'sit', 'wash', 'repeat', 'eat', 'sleep', 'read', 'walk', 'watch', 'write',
+      'stand', 'wear', 'wears', 'wearing', 'let', 'look', 'thank', 'hello', 'bye', 'good', 'nice', 'happy', 'sorry',
+      'sunny', 'rainy', 'snowy', 'windy', 'cloudy', 'cold', 'hot', 'big', 'small', 'tall', 'old', 'grey', 'yellow',
+      'today', 'tomorrow', 'yesterday', 'outside', 'moo', 'meow', 'woof', 'how', 'what', 'who', 'do', 'does',
+      'fine', 'see', 'later', 'says', 'say', 'high', 'very', 'their', 'new', 'long', 'funny', 'down', 'sad', 'open', 'listen',
+      'take', 'falling', 'go', 'going', 'swimming', 'one', 'two', 'out', 'meet', 'cooks', 'cook', 'comes', 'after', 'before',
+      'little', 'our', 'with',
+      // Pieces of contractions and marks (I'm, It's, don't, Let's, Mum's).
+      's', 'm', 're', 've', 't', 'd', 'll', 'don',
     ])
     const vocabulary = new Set(ENGLISH_WORDS.flatMap((w) => w.en.toLowerCase().split(' ')))
+    const isNoun = (token: string) => vocabulary.has(token) || (token.endsWith('s') && vocabulary.has(token.slice(0, -1)))
     const unknown: string[] = []
     for (const items of Object.values(PHRASES)) {
       for (const item of items) {
-        for (const word of [item.answer, ...item.distractors]) {
-          for (const token of word.toLowerCase().split(' ')) {
-            if (!vocabulary.has(token) && !NOT_NOUNS.has(token)) unknown.push(`${token} (${item.sentence})`)
-          }
+        const text = [item.sentence.replace(/___/g, ' '), item.answer, ...item.distractors].join(' ')
+        for (const token of text.toLowerCase().split(/[^a-z]+/).filter(Boolean)) {
+          if (!isNoun(token) && !NOT_NOUNS.has(token)) unknown.push(`${token} (${item.sentence})`)
         }
       }
     }
