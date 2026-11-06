@@ -12,6 +12,7 @@ import { DivisionCheckVisual, FactFamilyVisual, GaleraVisual, ShareVisual } from
 import { BarModelVisual, DivClimbVisual, DivPartsVisual } from './methods'
 import { LngSentenceVisual, LngWordVisual } from './lengua'
 import { BigTextVisual, NumberLineVisual } from './numbers'
+import { EngNumberVisual, EngWordVisual } from './english'
 import { FractionGroupsVisual, FractionShapeVisual } from './fractions'
 import { MoneyVisual } from './money'
 import { ClockVisual, TimelineVisual } from './time'
@@ -55,6 +56,8 @@ export const LESSON_VISUALS: VisualRegistry = {
   'lng-sentence': LngSentenceVisual,
   'lng-word': LngWordVisual,
   'big-text': BigTextVisual,
+  'eng-word': EngWordVisual,
+  'eng-number': EngNumberVisual,
   'number-line': NumberLineVisual,
   'fraction-shape': FractionShapeVisual,
   'fraction-groups': FractionGroupsVisual,

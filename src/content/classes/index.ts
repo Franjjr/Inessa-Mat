@@ -16,6 +16,7 @@ import { NUMEROS_CLASSES } from './grade3-numeros'
 import { PROBLEMAS_CLASSES } from './grade3-problemas'
 import { TABLAS_CLASSES } from './grade3-tablas'
 import { LENGUA_CLASSES } from './lengua3'
+import { INGLES_CLASSES } from './ingles3'
 
 export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
@@ -25,13 +26,16 @@ export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TA
 /** The Lengua classes (3.º): one per grammar, spelling and vocabulary topic. */
 export { LENGUA_CLASSES }
 
+/** The English classes (3.º): one per topic of the English syllabus. */
+export { INGLES_CLASSES }
+
 /** The class that teaches a syllabus topic of a grade, if there is one yet. Topic ids repeat across grades (e.g.
     `mul-3x1` is in 3.º and 4.º), and every class so far is for 3.º, so a child of any other grade gets none. A child
     without a grade follows the 3.º syllabus (syllabusForGrade), so for them it is 3.º too. The subject is maths unless
     said otherwise; a subject with no classes has none. */
 export function classForTopic(topicId: string, grade?: number, subject: SubjectId = 'math'): ClassDef | undefined {
   if ((grade ?? 3) !== 3) return undefined
-  const classes = subject === 'math' ? CLASSES : subject === 'language' ? LENGUA_CLASSES : []
+  const classes = subject === 'math' ? CLASSES : subject === 'language' ? LENGUA_CLASSES : subject === 'english' ? INGLES_CLASSES : []
   return classes.find((c) => c.topicId === topicId)
 }
 

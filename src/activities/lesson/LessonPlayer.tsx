@@ -5,6 +5,7 @@ import { MotionConfig, motion } from 'motion/react'
 import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
+import { parseMixed, plainMixed, sayMixed, type SpanishVoice } from '@/audio/sayMixed'
 import type { LessonDef, LessonStep, SubMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
@@ -17,6 +18,12 @@ import ChoiceSlot from './ChoiceSlot'
 import { computeRuns, isAnswerStep, keyAction, stageCharacter, voiceFor } from './navigation'
 import { usePortrait, useReducedMotionFlag } from './useLessonMedia'
 import styles from './LessonPlayer.module.css'
+
+/** Speaks a line of the lesson: the English marked with «*…*» through sayMixed, the rest as Lumi (or the speaker) says it. */
+function speakLine(line: string, voice: SpanishVoice) {
+  const parts = parseMixed(line)
+  return parts ? sayMixed(parts, { spanish: voice, interrupt: true }) : speech.say(line, { voice, interrupt: true })
+}
 
 /** Which favourite a choose step saves: the subtraction method unless the step says otherwise. */
 function preferenceOf(step: LessonStep | undefined): 'subMethod' | 'divMethod' | 'tableMethod' {
@@ -67,7 +74,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   // Voice: read each step aloud when it appears (the speech module ignores the call when voice is off).
   useEffect(() => {
     if (!step || !host.prefs.voice) return
-    void speech.say(host.t(step.text), { voice, interrupt: true })
+    void speakLine(host.t(step.text), voice)
     // Only the step itself should trigger speech; host and voice are stable for a lesson.
   }, [current])
 
@@ -155,7 +162,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
         )}
         <h1 className={styles.title}>{host.t(lesson.title)}</h1>
         {host.prefs.voice ? (
-          <Button variant="secondary" size="sm" onClick={() => void speech.say(text, { voice, interrupt: true })} aria-label="Escuchar otra vez">
+          <Button variant="secondary" size="sm" onClick={() => void speakLine(text, voice)} aria-label="Escuchar otra vez">
             🔊 Escuchar
           </Button>
         ) : (
@@ -200,7 +207,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             <Character id={stageId} pose={pose} size={avatarSize} animated={!reduced} />
           </div>
           <div className={styles.bubble} aria-live="polite">
-            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(text)}</p>
+            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(plainMixed(text))}</p>
           </div>
         </aside>
       </div>

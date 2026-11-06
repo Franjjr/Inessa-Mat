@@ -100,9 +100,9 @@ describe('Lengua on the home', () => {
 })
 
 describe('English on the home', () => {
-  it('the English «Hoy» names its first topic (no class yet, so the session goes to /play/ingles)', () => {
+  it('the English «Hoy» opens the class of its first topic', () => {
     expect(todayEntry({ grade: 3, mastery: {}, progress: progress(), subject: 'english' })).toEqual({
-      kind: 'sesion', title: 'Saludos y yo', to: '/play/ingles',
+      kind: 'clase', topicId: 'eng-saludos', title: 'Saludos y yo', to: '/play/clase/eng-saludos',
     })
   })
 

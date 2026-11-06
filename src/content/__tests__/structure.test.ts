@@ -67,6 +67,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'chance-bag': ['balls'],
   table: ['rows', 'cols', 'cells'],
   'lng-word': ['word'],
+  'eng-word': ['en', 'es'],
+  'eng-number': ['n', 'en'],
 }
 
 function checkSelector(where: string, sel: SkillSelector) {

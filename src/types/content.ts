@@ -93,6 +93,8 @@ export type LessonVisualId =
   | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
   | 'lng-word'          // Lengua: params { word, parts?, mark? } — a word cut into parts (ma-ri-po-sa, abre+latas); mark is a class or a part
   | 'big-text'          // params: { text, sub? } — one or two lines of large text (a rule, an equality), sub under it
+  | 'eng-word'          // Inglés: params { emoji?, en, es } — a picture (optional), the English word (tap: said in English) and its Spanish meaning
+  | 'eng-number'        // Inglés: params { n, en } — a number in figures with its English word under it (tap: said in English)
   | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
   | 'fraction-shape'    // params: { parts, shaded, shape } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar
   | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted

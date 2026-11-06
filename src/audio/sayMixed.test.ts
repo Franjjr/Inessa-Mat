@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { sayMixed } from './sayMixed'
+import { parseMixed, plainMixed, sayMixed } from './sayMixed'
 import { speech } from './speech'
 
 afterEach(() => vi.restoreAllMocks())
@@ -35,5 +35,39 @@ describe('sayMixed', () => {
     await sayMixed([{ text: 'uno', lang: 'es' }, { text: 'two', lang: 'en' }], { interrupt: true, rate: 0.9 })
     expect(say).toHaveBeenNthCalledWith(1, 'uno', { voice: 'lumi', interrupt: true, rate: 0.9 })
     expect(say).toHaveBeenNthCalledWith(2, 'two', { voice: 'english', interrupt: false, rate: 0.9 })
+  })
+})
+
+describe('parseMixed («*…*» marks the English parts of a line)', () => {
+  it('splits a marked line into Spanish and English parts, in order', () => {
+    expect(parseMixed('Mira, *seven* es siete.')).toEqual([
+      { text: 'Mira, ', lang: 'es' },
+      { text: 'seven', lang: 'en' },
+      { text: ' es siete.', lang: 'es' },
+    ])
+  })
+
+  it('a line that starts or ends with English has no empty Spanish part', () => {
+    expect(parseMixed('*Good morning*, Mum!')).toEqual([{ text: 'Good morning', lang: 'en' }, { text: ', Mum!', lang: 'es' }])
+    expect(parseMixed('Se dice *hello*')).toEqual([{ text: 'Se dice ', lang: 'es' }, { text: 'hello', lang: 'en' }])
+  })
+
+  it('a line with no marks is not mixed', () => {
+    expect(parseMixed('Hoy {pet} quiere contar.')).toBeNull()
+    expect(parseMixed('')).toBeNull()
+  })
+
+  it('plainMixed drops the marks, for the text on the screen', () => {
+    expect(plainMixed('Mira, *seven* es siete.')).toBe('Mira, seven es siete.')
+    expect(plainMixed('Sin marcas.')).toBe('Sin marcas.')
+  })
+})
+
+describe('sayMixed with the Spanish voice of the speaker', () => {
+  it('reads the Spanish parts with the speaker’s voice and the English ones with the english voice', async () => {
+    const say = vi.spyOn(speech, 'say').mockResolvedValue()
+    await sayMixed([{ text: 'Hola,', lang: 'es' }, { text: 'hello', lang: 'en' }], { spanish: 'companion', interrupt: true })
+    expect(say).toHaveBeenNthCalledWith(1, 'Hola,', { voice: 'companion', interrupt: true })
+    expect(say).toHaveBeenNthCalledWith(2, 'hello', { voice: 'english', interrupt: false })
   })
 })
