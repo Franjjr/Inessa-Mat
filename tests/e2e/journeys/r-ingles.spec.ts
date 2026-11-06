@@ -22,6 +22,8 @@ const SPEECH_STUB = `(() => {
     cancel() {}, pause() {}, resume() {},
     addEventListener() {}, removeEventListener() {},
   }
+  // The app keeps the voice off in automated browsers (navigator.webdriver): the stub is a voice, so the browser looks like one.
+  Object.defineProperty(navigator, 'webdriver', { get: () => false, configurable: true })
   Object.defineProperty(window, 'speechSynthesis', { value: fake, configurable: true })
   window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text } }
 })()`
@@ -39,8 +41,8 @@ async function coarsePointer(page: Page): Promise<void> {
   })
 }
 
-/** What the driver answers with: the pictures and their words (the memory pairs), the English word of each Spanish word, and
-    the English words of the numbers 0 to 100 (read from the app's own vocabulary and number modules). */
+/** What the driver answers with: the vocabulary (the English word of each Spanish word, and the cards of the memory and the
+    match), and the English words of the numbers 0 to 100 (read from the app's own vocabulary and number modules). */
 async function englishKit(page: Page): Promise<EnglishKit> {
   const data = await page.evaluate(async () => {
     const words = await import('/src/engine/ingles/words.ts')
@@ -49,13 +51,9 @@ async function englishKit(page: Page): Promise<EnglishKit> {
     const digits = Array.from({ length: 101 }, (_, n) => [String(n), numbers.numberToEnglish(n)] as [string, string])
     return { list, digits }
   })
-  const partner = new Map<string, string>()
   const words = new Map<string, string>()
-  for (const w of data.list) {
-    if (w.emoji) { partner.set(w.emoji, w.en); partner.set(w.en, w.emoji) }
-    if (!words.has(w.es)) words.set(w.es, w.en)
-  }
-  return { partner, words, numbers: new Map(data.digits), cards: data.list }
+  for (const w of data.list) if (!words.has(w.es)) words.set(w.es, w.en)
+  return { words, numbers: new Map(data.digits), cards: data.list }
 }
 
 /** Lía's English setup for today: maths, Lengua and their placements are done, English is on and its placement is done. */
@@ -79,6 +77,24 @@ async function openEnglishHome(page: Page, topic: string): Promise<void> {
   await expect(page.getByRole('button', { name: /Hoy aprendemos/ })).toContainText(topic)
 }
 
+/** Test setup only: the skills of a topic go back to the first box, so the topic is the current one again (see classThenSession). */
+async function reopenTopic(page: Page, topicId: string): Promise<void> {
+  await page.evaluate(async (target) => {
+    const data = await import('/src/data/index.ts')
+    const syllabus = await import('/src/content/syllabus/index.ts')
+    const dev = window.__numeriaDev
+    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
+    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
+    if (!child) throw new Error('no child on this device')
+    const topic = syllabus.allTopics(syllabus.syllabusFor(syllabus.subjectOfTopic(target), child.grade)).find((t) => t.id === target)
+    if (!topic) throw new Error(`no topic ${target}`)
+    const now = new Date().toISOString()
+    await data.saveMastery(child.id, topic.skills.map((skill) => ({
+      skill, box: 0 as const, attempts: 0, correct: 0, streak: 0, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: now,
+    })))
+  }, topicId)
+}
+
 /** The English class of a topic and the session after it, played to the end. */
 async function classThenSession(page: Page, viewport: { width: number; height: number }, topicId: string, topicName: string): Promise<{ classSeen: EnglishSeen; sessionSeen: EnglishSeen }> {
   const kit = await englishKit(page)
@@ -94,6 +110,9 @@ async function classThenSession(page: Page, viewport: { width: number; height: n
   expect(classSeen.typed, 'the class has a typed word (the letter keyboard)').toBe(true)
   expect(await noSidewaysScroll(page), `class at ${viewport.width}×${viewport.height}: no sideways scroll`).toBe(true)
 
+  // The class practice moves the mastery on, so the topic of the session would be the next one (its class first). The journey
+  // checks the session of the topic just taught: its skills go back to the first box (the class itself stays done).
+  await reopenTopic(page, topicId)
   await tapReachable(page, page.getByRole('button', { name: 'Seguir con la sesión' }), '«Seguir con la sesión»')
   await expect(page).toHaveURL(/\/play\/ingles$/)
   await expect(page.getByRole('heading', { name: 'Mi sesión de Inglés' })).toBeVisible()
@@ -133,7 +152,9 @@ test.describe('Inglés de 3.º', () => {
       await page.setViewportSize(viewport)
       await coarsePointer(page)
       await linaWithEnglish(page)
-      // The numbers 0 to 20 are the topic of the day: its last game is the listening one (the sound is on).
+      // The numbers 0 to 20 are the topic of the day: its last game is the listening one (the sound is on, so the planner
+      // offers the listening games).
+      await devSettings(page, { sound: true })
       await devMasterUntilTopic(page, 'eng-num-0-20')
       const { sessionSeen } = await classThenSession(page, viewport, 'eng-num-0-20', 'Números del 0 al 20')
       expect(sessionSeen.numberListen, 'the last game of a numbers topic is a number to listen to').toBe(true)
