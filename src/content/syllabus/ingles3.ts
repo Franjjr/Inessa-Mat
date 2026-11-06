@@ -55,7 +55,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'Colores y formas',
     topics: [
       topic('colores', 'Colores y formas', [voc('colores')], {
-        concreto: 'Objetos de colores: a red ball, a blue cup', dibujo: 'Un gato para colorear con su color escrito al lado', numeros: 'La palabra del color escrita: red, blue, green', uso: 'Colorear siguiendo una orden: colour the cat red',
+        concreto: 'Objetos de colores: a red apple, a blue book', dibujo: 'Figuras para colorear: a circle, a square, a triangle', numeros: 'La palabra del color y de la forma escrita: red, blue, circle', uso: 'Colorear siguiendo una orden: colour the triangle red',
       }),
     ],
   },
@@ -82,7 +82,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'Comida',
     topics: [
       topic('comida', 'Comida', [voc('comida'), frase('i-like'), frase('can-i-have')], {
-        concreto: 'Tarjetas de fruta, verdura y comidas', dibujo: 'Un personaje con lo que le gusta dibujado', numeros: 'La frase escrita: I like apples. Can I have a juice, please?', uso: 'Pedir algo en una tienda o en la cantina',
+        concreto: 'Tarjetas de fruta, verdura y comidas', dibujo: 'Un personaje con lo que le gusta dibujado', numeros: 'La frase escrita: I like apples. Can I have some milk, please?', uso: 'Pedir algo en una tienda o en la cantina',
       }),
     ],
   },
@@ -91,7 +91,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'Ropa',
     topics: [
       topic('ropa', 'Ropa', [voc('ropa'), frase('im-wearing')], {
-        concreto: 'Prendas para vestir a un muñeco: a T-shirt, shoes', dibujo: 'Un personaje vestido con su ropa escrita al lado', numeros: 'La frase escrita: I\'m wearing red shoes.', uso: 'Vestir al compañero siguiendo una orden',
+        concreto: 'Prendas para vestir a un muñeco: a shirt, shoes', dibujo: 'Un personaje vestido con su ropa escrita al lado', numeros: 'La frase escrita: I\'m wearing red shoes.', uso: 'Vestir al compañero siguiendo una orden',
       }),
     ],
   },
@@ -100,7 +100,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'El cole',
     topics: [
       topic('cole', 'El cole', [voc('cole'), frase('classroom')], {
-        concreto: 'Objetos del estuche: a pencil, a rubber', dibujo: 'La clase dibujada con cada objeto escrito', numeros: 'La orden escrita: Sit down. Open your book.', uso: 'Obedecer las órdenes de la clase',
+        concreto: 'Objetos del estuche: a pencil, a pen', dibujo: 'La clase dibujada con cada objeto escrito', numeros: 'La orden escrita: Sit down. Open your book.', uso: 'Obedecer las órdenes de la clase',
       }),
     ],
   },
@@ -118,7 +118,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'El cuerpo',
     topics: [
       topic('cuerpo', 'El cuerpo', [voc('cuerpo'), frase('ive-got')], {
-        concreto: 'Señalar las partes de un muñeco: head, arms, legs', dibujo: 'Una figura con las partes escritas', numeros: 'La frase escrita: I\'ve got two arms.', uso: 'Describir un personaje: I\'ve got a big head',
+        concreto: 'Señalar las partes de un muñeco: eye, nose, hand, leg', dibujo: 'Una figura con las partes escritas', numeros: 'La frase escrita: I\'ve got two hands.', uso: 'Describir un personaje: I\'ve got a big nose',
       }),
     ],
   },
@@ -127,7 +127,7 @@ const BLOCKS: SyllabusBlock[] = [
     name: 'El tiempo y las estaciones',
     topics: [
       topic('tiempo', 'El tiempo y las estaciones', [voc('tiempo'), frase('weather')], {
-        concreto: 'Tarjetas del tiempo: sunny, rainy, cold', dibujo: 'Un cielo dibujado con el tiempo escrito debajo', numeros: 'La pregunta escrita: What\'s the weather like? It\'s sunny.', uso: 'Contar qué tiempo hace hoy',
+        concreto: 'Tarjetas del tiempo y de las estaciones: sunny, rainy, cold, winter', dibujo: 'Un cielo dibujado con el tiempo escrito debajo', numeros: 'La pregunta escrita: What\'s the weather like? It\'s sunny.', uso: 'Contar qué tiempo hace hoy y en qué estación estamos: It\'s summer',
       }),
     ],
   },

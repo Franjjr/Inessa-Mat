@@ -21,7 +21,7 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'no', es: 'no', theme: 'saludos' },
   { en: 'sorry', es: 'lo siento', theme: 'saludos' },
 
-  // colores (sin «grey»: no hay un emoji gris claro)
+  // colores (sin «grey»: no hay un emoji gris claro) y formas (sin «rectangle»: no hay un emoji de rectángulo claro)
   { en: 'red', es: 'rojo', emoji: '🔴', theme: 'colores' },
   { en: 'blue', es: 'azul', emoji: '🔵', theme: 'colores' },
   { en: 'green', es: 'verde', emoji: '🟢', theme: 'colores' },
@@ -31,6 +31,11 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'brown', es: 'marrón', emoji: '🟤', theme: 'colores' },
   { en: 'black', es: 'negro', emoji: '⚫', theme: 'colores' },
   { en: 'white', es: 'blanco', emoji: '⚪', theme: 'colores' },
+  { en: 'circle', es: 'círculo', emoji: '⭕', theme: 'colores' },
+  { en: 'square', es: 'cuadrado', emoji: '🔲', theme: 'colores' },
+  { en: 'triangle', es: 'triángulo', emoji: '🔺', theme: 'colores' },
+  { en: 'star', es: 'estrella', emoji: '⭐', theme: 'colores' },
+  { en: 'heart', es: 'corazón', emoji: '❤️', theme: 'colores' },
 
   // animales
   { en: 'cat', es: 'gato', emoji: '🐱', theme: 'animales' },
@@ -133,6 +138,17 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'wind', es: 'viento', emoji: '💨', theme: 'tiempo' },
   { en: 'rainbow', es: 'arcoíris', emoji: '🌈', theme: 'tiempo' },
   { en: 'clock', es: 'reloj', emoji: '⏰', theme: 'tiempo' },
+  { en: 'sunny', es: 'soleado', emoji: '🌞', theme: 'tiempo' },
+  { en: 'rainy', es: 'lluvioso', emoji: '☔', theme: 'tiempo' },
+  { en: 'cloudy', es: 'nublado', emoji: '🌥️', theme: 'tiempo' },
+  { en: 'windy', es: 'ventoso', emoji: '🌬️', theme: 'tiempo' },
+  { en: 'snowy', es: 'nevado', emoji: '🌨️', theme: 'tiempo' },
+  { en: 'hot', es: 'caluroso', emoji: '🥵', theme: 'tiempo' },
+  { en: 'cold', es: 'frío', emoji: '🥶', theme: 'tiempo' },
+  { en: 'spring', es: 'primavera', emoji: '🌸', theme: 'tiempo' },
+  { en: 'summer', es: 'verano', emoji: '🏖️', theme: 'tiempo' },
+  { en: 'autumn', es: 'otoño', emoji: '🍂', theme: 'tiempo' },
+  { en: 'winter', es: 'invierno', emoji: '⛄', theme: 'tiempo' },
 
   // dias: días de la semana y meses
   { en: 'Monday', es: 'lunes', theme: 'dias' },
