@@ -25,6 +25,7 @@ import { OtherMethodsCard } from './OtherMethodsCard'
 import { CaligrafiaSection, EnglishSection, LearningSection, LenguaSection, useLearningData } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
+import { SpeakingCard } from './SpeakingCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
 import s from './child.module.css'
 import adult from '../shared/adult.module.css'
@@ -274,6 +275,7 @@ export default function ChildReportScreen() {
         <h2 id="settings-group-title" className={adult.heading} style={{ fontSize: 'var(--fs-lg)' }}>Ajustes de {name}</h2>
         <p className={adult.muted}>Cambian cómo se usa Repasitos con {name}. No cambian lo que ya sabe.</p>
         {child && <SubjectsCard child={child} />}
+        {child && <SpeakingCard child={child} />}
         {child && <ChildSettingsCard child={child} />}
       </section>
 

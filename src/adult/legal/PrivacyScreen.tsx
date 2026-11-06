@@ -10,7 +10,7 @@ export default function PrivacyScreen() {
     <AdultPage title="Privacidad y datos" back="/">
       <article className={s.doc} aria-labelledby="privacy-doc-title">
         <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Repasitos</h2>
-        <p className={s.updated}>Última actualización: 22 de octubre de 2026</p>
+        <p className={s.updated}>Última actualización: 6 de noviembre de 2026</p>
 
         <p>
           Repasitos es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
@@ -32,6 +32,7 @@ export default function PrivacyScreen() {
         <ul>
           <li><strong>Del niño:</strong> su apodo, su género gramatical (para las frases de la aplicación), su curso y su año de nacimiento si lo indicas, y el nombre y tipo del compañero animal que elija.</li>
           <li><strong>Su aprendizaje:</strong> respuestas a los ejercicios (acierto o error, tipo de error, tiempo de respuesta), sesiones de juego (fecha y minutos), avances por mundos y ajustes de juego que elijas.</li>
+          <li><strong>Pronunciación en inglés:</strong> solo si un adulto activa el micrófono, la fecha de su consentimiento y si está encendido o apagado. El audio no se guarda (apartado 11).</li>
           <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo y nunca se suben a la nube.</li>
           <li><strong>De los adultos:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
         </ul>
@@ -68,8 +69,8 @@ export default function PrivacyScreen() {
           solo puede ver sus propios perfiles.
         </p>
         <p>
-          La web y nuestro servidor de voz están alojados en Vercel, que actúa como proveedor de alojamiento. La voz usa además Microsoft
-          Azure (ver el apartado 10).
+          La web y nuestro servidor de voz están alojados en Vercel, que actúa como proveedor de alojamiento. La voz y la pronunciación en
+          inglés usan además Microsoft Azure (ver los apartados 10 y 11).
         </p>
 
         <h2>7. Cuánto tiempo los guardamos</h2>
@@ -104,7 +105,26 @@ export default function PrivacyScreen() {
           dispositivo. Si lo prefieres, en la zona de adultos, en Ajustes, puedes elegir una voz del dispositivo o apagar la voz.
         </p>
 
-        <h2>11. Cambios en esta política</h2>
+        <h2>11. Micrófono (Inglés)</h2>
+        <p>
+          El micrófono está apagado de serie. Solo un adulto puede activarlo, en la ficha del niño de la zona de adultos, después de leer
+          un aviso y confirmarlo. Repasitos guarda la fecha de ese consentimiento y si el micrófono está encendido. El adulto puede
+          apagarlo en cualquier momento desde la misma ficha.
+        </p>
+        <p>
+          Para qué: el micrófono sirve para puntuar cómo el niño pronuncia las palabras y frases en inglés, con estrellas que animan.
+          Nunca bloquea el avance.
+        </p>
+        <p>
+          Dónde va el audio: cada intento se envía a Microsoft Azure, con centro de datos en Irlanda (Unión Europea), que actúa como
+          proveedor, solo para puntuarlo. El audio no se guarda: Repasitos no lo guarda y Microsoft no lo usa para entrenar sus sistemas.
+        </p>
+        <p>
+          Límites: como máximo 10 intentos de hablar al día por niño. Si el servicio falla o no está disponible, el ejercicio se salta
+          sin penalización y no se vuelve a intentar ese día.
+        </p>
+
+        <h2>12. Cambios en esta política</h2>
         <p>Si cambiamos esta política de forma importante, te lo diremos dentro de la aplicación antes de que el cambio entre en vigor.</p>
 
       </article>
