@@ -1,8 +1,9 @@
 /* Informe del adulto: temario progress, mistakes by kind, placement runs and recall. */
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ErrorType, MasteryMap, SkillMastery } from '@/types'
-import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
-import { ERROR_GROUPS, errorGroupOf, errorReport, newMastery, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
+import { GRADE3_SYLLABUS, INGLES3_SYLLABUS, teachingOrder } from '@/content/syllabus'
+import { initialProgress } from '@/content'
+import { ERROR_GROUPS, errorGroupOf, errorReport, markEnglishClassToday, newMastery, placementRuns, recallReport, syllabusReport, topicNeeds, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
@@ -17,6 +18,27 @@ function attempt(over: Partial<AttemptRecord> & { createdAt: string }): AttemptR
   }
 }
 const newestFirst = (list: AttemptRecord[]) => list.slice().sort((x, y) => y.createdAt.localeCompare(x.createdAt))
+
+/** Every skill of a topic of the English temario at box 5 (mastered). */
+const englishMastered = (topicId: string): MasteryMap => {
+  const skills = INGLES3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === topicId)!.skills
+  return Object.fromEntries(skills.map((sk) => [sk, { skill: sk, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: '2026-11-02T09:00:00.000Z', dueAt: null, updatedAt: '2026-11-01T09:00:00.000Z' } satisfies SkillMastery]))
+}
+
+describe('syllabusReport de Inglés: «ahora» es el tema de hoy', () => {
+  const NOON = new Date('2026-11-06T10:00:00.000Z')
+  const mastery = englishMastered('eng-num-0-20')
+  it('after today\'s English class the current topic is the one just taught, not the next one', () => {
+    const progress = markEnglishClassToday(initialProgress('child-ingles', new Date('2026-10-01T10:00:00.000Z')), 'eng-num-0-20', NOON)
+    const r = syllabusReport(INGLES3_SYLLABUS, mastery, 'english', undefined, { progress, now: NOON })
+    expect(r.current?.topicName).toBe('Números del 0 al 20')
+    expect(r.blocks.flatMap((b) => b.topics).find((t) => t.current)?.id).toBe('eng-num-0-20')
+  })
+  it('without today\'s class the current topic moves on (the mastered topic is behind)', () => {
+    const r = syllabusReport(INGLES3_SYLLABUS, mastery, 'english', undefined, { progress: initialProgress('child-ingles', NOON), now: NOON })
+    expect(r.current?.topicName).not.toBe('Números del 0 al 20')
+  })
+})
 
 describe('syllabusReport', () => {
   it('a new child: nothing mastered, the first topic is the current one and is «sin empezar»', () => {

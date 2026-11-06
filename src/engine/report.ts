@@ -1,7 +1,7 @@
 /* Informe del adulto (docs/curriculum/PLAN_DOCENTE.md §6): where the child is in the temario, what the mistakes say
    (grouped by kind, with what to do at home) and how the tests went (each prueba inicial and the recall of what was
    learnt weeks ago). Pure: reads the mastery map and the attempts (newest first), no React, no I/O. */
-import type { AttemptRecord, EnglishTheme, ErrorType, MasteryMap, SkillKey, SubjectId } from '@/types'
+import type { AttemptRecord, EnglishTheme, ErrorType, MasteryMap, ProgressState, SkillKey, SubjectId } from '@/types'
 import { currentTopic, isTopicMastered, MASTERED_BOX, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
 import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf } from './placement'
 import { LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT, lenguaPlacementBlockOf } from './lengua/placement'
@@ -10,6 +10,7 @@ import { ENGLISH_WORDS, ENGLISH_THEMES } from './ingles/words'
 import { attemptsOf, masteryOf } from './subjects'
 import { teachableCourse } from './lengua/teachable'
 import { teachableEnglishCourse } from './ingles/teachable'
+import { englishTopicOfToday } from './ingles/daily'
 import { englishSkill } from './skills'
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -52,12 +53,16 @@ const TEMARIO_COURSE: Partial<Record<SubjectId, (syllabus: Syllabus) => Syllabus
   english: (syllabus) => teachableEnglishCourse(syllabus),
 }
 
-/** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. */
-export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number): SyllabusReport {
+/** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. English
+    «ahora» is today's topic (englishTopicOfToday: the topic of today's class stays until tomorrow), as on the home and in the
+    session; `today` gives its progress flags and the day (default: now). */
+export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number, today?: { progress?: ProgressState; now?: Date }): SyllabusReport {
   const mastery = masteryOf(allMastery, subject)
   // Lengua and English report the topics their planners can teach (the same view as the home and the session); maths is unchanged.
   const course = TEMARIO_COURSE[subject]?.(syllabus) ?? syllabus
-  const now = currentTopic(course, mastery, term)
+  const now = subject === 'english'
+    ? englishTopicOfToday(course, mastery, today?.progress, today?.now ?? new Date())
+    : currentTopic(course, mastery, term)
   let current: SyllabusReport['current'] = null
   const blocks = course.blocks.map((b): BlockReport => {
     const topics = b.topics.map((t): TopicReport => {
