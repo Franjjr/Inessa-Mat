@@ -16,7 +16,7 @@ import { useSoundOn, sayEnglish } from './sound'
 import s from './Ingles.module.css'
 
 /** Silent tries («No te he oído») allowed in one item: the second one moves on without a recording, the child is never kept looping. */
-export const SILENT_MAX = 2
+const SILENT_MAX = 2
 
 /** Days on which the service failed or the microphone was refused: this page load tries no more speaking that day. */
 const offDays = new Set<string>()
