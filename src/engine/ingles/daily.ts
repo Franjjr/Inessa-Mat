@@ -25,9 +25,9 @@ export const ENGLISH_WARMUP_SECONDS = 120
 /** «Lo nuevo»: between three and five items of the topic. */
 export const ENGLISH_NEW_MIN = 3
 export const ENGLISH_NEW_MAX = 5
-/** The mix: at least three items, at most eight, and it fills the time with the rest. */
+/** The mix: at least three items, and it fills the time with the rest (at most twelve, a safety cap). */
 export const ENGLISH_MIX_MIN = 3
-export const ENGLISH_MIX_MAX = 8
+export const ENGLISH_MIX_MAX = 12
 /** Most skills of failed words the mix starts with. */
 export const ENGLISH_FAILED_MAX = 3
 /** The exercises (not the class nor the transitions) fill this much of the ten minutes. */
