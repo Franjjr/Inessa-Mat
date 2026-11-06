@@ -19,7 +19,7 @@ export { strategyForFact } from './strategies'
 /** Leitner mastery: newMastery, updateMastery (fluency-aware), dueSkills, fluencyThresholdMs, starsFor, factGrid. */
 export { dueSkills, factGrid, fluencyThresholdMs, newMastery, starsFor, updateMastery } from './mastery'
 /** Spanish descriptions for adult dashboards. */
-export { describeError, describeSkill } from './describe'
+export { describeError, describeSkill, ENGLISH_SKILL_TEXT } from './describe'
 /** Review plan and selectors (daily review), and the 15-minute daily session plan (blocks, scaffolding). */
 export { planSession, selectorForSkills } from './session'
 export {
@@ -37,8 +37,11 @@ export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
 export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 /** Adult report: temario progress, mistakes by kind, tests (placement runs and recall). */
-export { ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
-export type { BlockReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicNeeds, TopicReport, TopicState } from './report'
+export { englishWordsReport, ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
+export type {
+  BlockReport, EnglishWordsReport, ErrorGroupId, ErrorGroupReport, ErrorReport, PlacementRun, RecallReport, SyllabusReport, TopicNeeds,
+  TopicReport, TopicState,
+} from './report'
 
 // ---------------------------------------------------------------- extra helpers (engine extensions)
 
@@ -74,9 +77,11 @@ export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingle
 /** Inglés de 3.º: the 10-minute session and the placement test (src/engine/ingles/daily.ts, placement.ts). */
 export { planEnglishSession } from './ingles/daily'
 export type { EnglishPlanInput } from './ingles/daily'
-export { buildEnglishPlacement, ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, ENGLISH_PLACEMENT_COUNT } from './ingles/placement'
+export { buildEnglishPlacement, englishPlacementBlockOf, ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, ENGLISH_PLACEMENT_COUNT } from './ingles/placement'
 export type { EnglishPlacementBlockId, EnglishPlacementItem } from './ingles/placement'
 export { numberToEnglish, operationToEnglish } from './ingles/numbers'
+export { ENGLISH_THEMES } from './ingles/words'
+export { THEME_NAME } from './ingles/exercises'
 export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {

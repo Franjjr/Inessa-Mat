@@ -3,7 +3,7 @@
    Las pistas tienen tres niveles (la idea, una pregunta, un paso) y nunca dan la respuesta. Un error muestra la respuesta
    correcta; una palabra a una letra de distancia es «¡Casi!», nunca «¡Mal!». */
 import type {
-  Answer, CheckResult, EnglishCard, EnglishExercise, ExerciseKind, Hint, Rng, SkillKey,
+  Answer, CheckResult, EnglishCard, EnglishExercise, ErrorType, ExerciseKind, Hint, Rng, SkillKey,
   EngCompleteExercise, EngListenPickExercise, EngMatchExercise, EngNumListenExercise, EngNumWriteExercise,
   EngOpListenExercise, EngWriteWordExercise, EngMemoryExercise, EngScrambleExercise,
 } from '@/types'
@@ -179,33 +179,33 @@ export function buildEnglish(kind: ExerciseKind, skill: SkillKey, rng: Rng): Eng
 
 // ---------------------------------------------------------------- checking
 
-/** A tap on one of the choices: the index must be the right one. */
-function checkChoice(answer: Answer, expected: number, label: string, feedback: string): CheckResult {
+/** A tap on one of the choices: the index must be the right one. `errorType` tags a wrong tap (a heard word is «eng-listening»). */
+function checkChoice(answer: Answer, expected: number, label: string, feedback: string, errorType: ErrorType = 'other'): CheckResult {
   const picked = answer.type === 'choice' ? answer.index : null
-  if (picked === null) return { correct: false, given: '', expected: label, errorType: 'other', feedback: 'Toca una respuesta.' }
+  if (picked === null) return { correct: false, given: '', expected: label, errorType, feedback: 'Toca una respuesta.' }
   if (picked === expected) return { correct: true, given: label, expected: label }
-  return { correct: false, given: String(picked), expected: label, errorType: 'other', feedback }
+  return { correct: false, given: String(picked), expected: label, errorType, feedback }
 }
 
-/** A typed English word or phrase: a letter away is «¡Casi!», anything else shows the right word. */
+/** A typed English word or phrase: a letter away is «¡Casi!» («eng-near-miss»), anything else shows the right word («eng-spelling»). */
 function checkText(answer: Answer, expected: string, alts: string[] = []): CheckResult {
   const value = answer.type === 'text' ? (answer.value ?? '') : ''
   const cmp = compareEnglish(value, expected, alts)
   if (cmp.correct) return { correct: true, given: value.trim(), expected }
   return {
     correct: false, given: value.trim(), expected,
-    errorType: cmp.nearMiss ? 'spelling' : 'other',
+    errorType: cmp.nearMiss ? 'eng-near-miss' : 'eng-spelling',
     feedback: cmp.nearMiss ? `¡Casi! Se escribe «${expected}».` : `Se escribe «${expected}».`,
   }
 }
 
-/** Digits: the number the child wrote must be the number of the exercise. */
-function checkNumber(answer: Answer, expected: number): CheckResult {
+/** Digits: the number the child wrote must be the number of the exercise. A heard number is «eng-listening», a result is «eng-number». */
+function checkNumber(answer: Answer, expected: number, errorType: ErrorType): CheckResult {
   const value = answer.type === 'number' ? answer.value : null
   const label = String(expected)
   if (value === expected) return { correct: true, given: label, expected: label }
   return {
-    correct: false, given: value === null ? '' : String(value), expected: label, errorType: 'other',
+    correct: false, given: value === null ? '' : String(value), expected: label, errorType,
     feedback: `La respuesta es ${expected}.`,
   }
 }
@@ -238,7 +238,7 @@ export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
     case 'eng-memory': return checkMemory(ex, answer)
     case 'eng-scramble': return checkText(answer, ex.answer, ex.alts)
     case 'eng-listen-pick':
-      return checkChoice(answer, ex.answer, ex.word, `La palabra es «${ex.word}».`)
+      return checkChoice(answer, ex.answer, ex.word, `La palabra es «${ex.word}».`, 'eng-listening')
     case 'eng-complete': {
       const filled = ex.sentence.replace('___', ex.options[ex.answer])
       return checkChoice(answer, ex.answer, ex.options[ex.answer], `Va «${ex.options[ex.answer]}»: ${filled}`)
@@ -246,8 +246,8 @@ export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
     case 'eng-match': return checkMatch(ex, answer)
     case 'eng-write-word': return checkText(answer, ex.answer, ex.alts)
     case 'eng-num-write': return checkText(answer, ex.answer)
-    case 'eng-num-listen':
-    case 'eng-op-listen': return checkNumber(answer, ex.answer)
+    case 'eng-num-listen': return checkNumber(answer, ex.answer, 'eng-listening')
+    case 'eng-op-listen': return checkNumber(answer, ex.answer, 'eng-number')
   }
 }
 

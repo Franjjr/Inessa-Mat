@@ -205,3 +205,79 @@ describe('ChildReportScreen', () => {
     })
   })
 })
+
+describe('ChildReportScreen English', () => {
+  const ENGLISH_CHILD: ChildProfile = { ...CHILD, grade: 3, settings: { ...DEFAULT_CHILD_SETTINGS, subjects: ['math', 'english'] } }
+  const DAY = 86_400_000
+  const ago = (d: number) => new Date(Date.now() - d * DAY).toISOString()
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    data.useChildren.mockReturnValue([ENGLISH_CHILD])
+    data.getChildSummary.mockResolvedValue(SUMMARY)
+    data.getProgress.mockResolvedValue(PROGRESS)
+    data.getRewards.mockResolvedValue([])
+    data.getMastery.mockResolvedValue({})
+    data.listSessions.mockResolvedValue([])
+    data.listAttempts.mockResolvedValue([])
+  })
+
+  /** English rows: a word typed wrong and then right, and a prueba inicial run (two answers, not finished). */
+  function englishRows() {
+    const row = (over: Record<string, unknown>) => ({
+      childId: 'c1', sessionId: 'e', given: '', expected: '', ms: 1000, inputMode: 'keyboard', hintsUsed: 0, context: {}, ...over,
+    })
+    return [
+      row({ id: 'e1', skill: 'eng:voc:animales', kind: 'eng-write-word', expected: 'dog', given: 'dgo', correct: false, errorType: 'eng-spelling', createdAt: ago(1) }),
+      row({ id: 'e2', skill: 'eng:voc:animales', kind: 'eng-write-word', expected: 'dog', given: 'dog', correct: true, createdAt: ago(2) }),
+      row({ id: 'p1', skill: 'eng:voc:saludos', kind: 'eng-write-word', sessionId: 'pi', correct: true, context: { activity: 'prueba-ingles' }, createdAt: new Date(Date.now() - 5 * DAY).toISOString() }),
+      row({ id: 'p2', skill: 'eng:num:0-20', kind: 'eng-num-write', sessionId: 'pi', correct: false, errorType: 'eng-spelling', context: { activity: 'prueba-ingles' }, createdAt: new Date(Date.now() - 5 * DAY + 30_000).toISOString() }),
+    ]
+  }
+
+  it('shows the English words learnt, the words that fail with what was written, the numbers and the minutes', async () => {
+    data.useChildren.mockReturnValue([ENGLISH_CHILD])
+    data.getProgress.mockResolvedValue({ ...PROGRESS, flags: { placementIngles: true } } as unknown as ProgressState)
+    data.getMastery.mockResolvedValue({
+      'eng:voc:animales': { ...newMastery('eng:voc:animales', new Date()), box: 2 },
+      'eng:num:0-20': { ...newMastery('eng:num:0-20', new Date()), box: 2 },
+      'eng:num:ops:plus': { ...newMastery('eng:num:ops:plus', new Date()), box: 2 },
+    })
+    data.listAttempts.mockResolvedValue([...englishRows()])
+    data.listSessions.mockResolvedValue([{ id: 'se', minutes: 9, summary: { subject: 'english' }, startedAt: ago(1) }])
+    renderReport()
+
+    expect(await screen.findByRole('heading', { name: 'Inglés' })).toBeInTheDocument()
+    const learnt = screen.getByRole('list', { name: 'Palabras aprendidas por tema' })
+    expect(within(learnt).getByText(/animales/)).toBeInTheDocument()
+    expect(within(learnt).getByText(/cat, dog/)).toBeInTheDocument()
+    expect(screen.getByText('Escribe «dgo» por «dog»')).toBeInTheDocument()
+    expect(screen.getByText('Cuenta en inglés hasta el 20.')).toBeInTheDocument()
+    expect(screen.getByText(/Sumas \(plus\)/)).toBeInTheDocument()
+    expect(screen.getByText('9 min en los últimos 7 días')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Prueba inicial de Inglés' })).toBeInTheDocument()
+    expect(screen.getByText(/Quedó a medias \(2 de 10\)/)).toBeInTheDocument()
+
+    // The maths and Lengua cards keep their text, and every id on the page stays unique.
+    expect(screen.getByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Lengua/ })).toBeNull()
+    const ids = Array.from(document.querySelectorAll('[id]'), (e) => e.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('leaves the English cards out for a child who is not on English and has no English rows', async () => {
+    data.useChildren.mockReturnValue([{ ...ENGLISH_CHILD, settings: { ...DEFAULT_CHILD_SETTINGS, subjects: ['math'] } }])
+    renderReport()
+    expect(await screen.findByRole('heading', { name: 'Temario de 3.º' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Inglés' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: /Prueba inicial de Inglés/ })).toBeNull()
+  })
+
+  it('shows the English cards for a child on English with no rows yet, and offers the prueba inicial', async () => {
+    renderReport()
+    expect(await screen.findByRole('heading', { name: 'Inglés' })).toBeInTheDocument()
+    expect(screen.getByText('Todavía no ha dominado ningún tema de palabras.')).toBeInTheDocument()
+    const tests = screen.getByRole('heading', { name: 'Prueba inicial de Inglés' }).closest('section')!
+    expect(within(tests).getByRole('button', { name: 'Ofrecer la prueba' })).toBeInTheDocument()
+  })
+})

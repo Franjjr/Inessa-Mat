@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
 import { currentTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
 import { createRng, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
-import type { ChildProfile, MasteryMap, ProgressState, SkillMastery } from '@/types'
+import type { ChildProfile, MasteryMap, ProgressState, SkillMastery, SubjectId } from '@/types'
 import { sessionDoneKey } from '@/world/session/logic'
-import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
+import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
 
@@ -210,5 +210,36 @@ describe('the home for each child (R22, R23)', () => {
     expect(skillsOf(teachableMute)).not.toContain('lng:escr:dictado')
     // The topic is named by currentTopic over the same view: never the one with no skill left.
     expect(teachableMute.blocks.flatMap((b) => b.topics).filter((t) => t.skills.length === 0).map((t) => t.id)).toEqual(['lng-dictado'])
+  })
+})
+
+describe('placement banner on the home', () => {
+  const ALL: SubjectId[] = ['math', 'language', 'english']
+  const pendingOnly = (...ids: LessonSubject[]) => Object.fromEntries(ids.map((id) => [id, true])) as Partial<Record<LessonSubject, boolean>>
+
+  it('shows the banner of the view\'s own subject while its test is pending', () => {
+    expect(placementBannerOf('math', pendingOnly('math'), ALL)).toBe('math')
+    expect(placementBannerOf('language', pendingOnly('language', 'math'), ALL)).toBe('language')
+    expect(placementBannerOf('english', pendingOnly('english', 'language'), ALL)).toBe('english')
+  })
+
+  it('shows the next pending subject after the view, and never another view\'s maths banner', () => {
+    // Maths done, Lengua pending: the banner shows on the maths view (the next one).
+    expect(placementBannerOf('math', pendingOnly('language'), ALL)).toBe('language')
+    // Maths and Lengua done, English pending: the banner shows on the Lengua and maths views.
+    expect(placementBannerOf('language', pendingOnly('english'), ALL)).toBe('english')
+    expect(placementBannerOf('math', pendingOnly('english'), ALL)).toBe('english')
+    // Maths still pending: nothing shows on another view.
+    expect(placementBannerOf('language', pendingOnly('math', 'english'), ALL)).toBeNull()
+  })
+
+  it('never shows the Lengua banner on the English home once English is done', () => {
+    expect(placementBannerOf('english', pendingOnly('language'), ALL)).toBeNull()
+    expect(placementBannerOf('english', {}, ALL)).toBeNull()
+  })
+
+  it('leaves out a subject that is not on for the child', () => {
+    expect(placementBannerOf('math', pendingOnly('language', 'english'), ['math', 'english'])).toBe('english')
+    expect(placementBannerOf('math', pendingOnly('language'), ['math'])).toBeNull()
   })
 })

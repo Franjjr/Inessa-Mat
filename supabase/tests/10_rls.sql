@@ -223,6 +223,13 @@ insert into public.attempts (id, child_id, skill, kind, correct, given, expected
          (gen_random_uuid(), tests.id('a1'), 'mul:6x7', 'fact-mul', false, '40', '42', 2000, 'pen', 'carry-forgot', '{"retries": 1, "graded": false}', now());
 select tests.eq((select attempts || '/' || correct from public.child_stats(array[tests.id('a1')], now() - interval '1 day')), tests.get('stats_before'), 'ungraded retry rows do not change attempts or correct in child_stats');
 select tests.eq((select count(*) from public.child_stats(array[tests.id('a1')], now() - interval '1 day') s, jsonb_array_elements(s.top_errors) e where e ->> 'errorType' = 'carry-forgot'), 0::bigint, 'an ungraded wrong retry is not a top error');
+-- 0005: English rows (skill eng:…) and English sessions (summary subject 'english') add nothing to the maths aggregates
+select tests.set('stats_eng_before', (select attempts || '/' || correct || '/' || minutes::int || '/' || top_errors::text from public.child_stats(array[tests.id('a1')], now() - interval '1 day')));
+insert into public.attempts (id, child_id, skill, kind, correct, given, expected, ms, input_mode, error_type, context, created_at)
+  values (gen_random_uuid(), tests.id('a1'), 'eng:voc:animales', 'eng-write-word', false, 'dgo', 'dog', 2000, 'keyboard', 'eng-spelling', '{}', now());
+insert into public.sessions (id, child_id, started_at, ended_at, minutes, summary, updated_at)
+  values (gen_random_uuid(), tests.id('a1'), now(), now(), 9, '{"subject": "english"}', now());
+select tests.eq((select attempts || '/' || correct || '/' || minutes::int || '/' || top_errors::text from public.child_stats(array[tests.id('a1')], now() - interval '1 day')), tests.get('stats_eng_before'), 'English attempts and English sessions do not change the maths aggregates');
 commit;
 
 begin;
@@ -299,8 +306,8 @@ select tests.login('tere');
 select tests.eq(tests.rows($$select * from public.children where id = tests.id('a1')$$), 1::bigint, 'the teacher sees the enrolled child');
 select tests.eq(tests.rows($$select * from public.progress where child_id = tests.id('a1')$$), 1::bigint, 'the teacher reads progress of the enrolled child');
 select tests.eq(tests.rows($$select * from public.skill_mastery where child_id = tests.id('a1')$$), 2::bigint, 'the teacher reads mastery of the enrolled child');
-select tests.eq(tests.rows($$select * from public.attempts where child_id = tests.id('a1')$$), 3::bigint, 'the teacher reads attempts of the enrolled child');
-select tests.eq(tests.rows($$select * from public.sessions where child_id = tests.id('a1')$$), 1::bigint, 'the teacher reads sessions of the enrolled child');
+select tests.eq(tests.rows($$select * from public.attempts where child_id = tests.id('a1')$$), 6::bigint, 'the teacher reads attempts of the enrolled child (3 answers, the 0003 retry rows and the 0005 English row)');
+select tests.eq(tests.rows($$select * from public.sessions where child_id = tests.id('a1')$$), 2::bigint, 'the teacher reads sessions of the enrolled child (the maths one and the 0005 English one)');
 select tests.eq(tests.rows($$select * from public.rewards where child_id = tests.id('a1')$$), 0::bigint, 'the teacher cannot see family rewards');
 select tests.eq(tests.affected($$update public.children set nickname = 'x', updated_at = now() + interval '1 hour' where id = tests.id('a1')$$), 0::bigint, 'the teacher cannot edit the child');
 select tests.eq(tests.affected($$update public.progress set state = '{}' where child_id = tests.id('a1')$$), 0::bigint, 'the teacher cannot modify progress');

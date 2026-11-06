@@ -26,6 +26,16 @@ const HOME_ORDER: LessonSubject[] = ['math', 'language', 'english']
 /** The subjects shown as a disabled chip to a child whose course does not get them: Lengua always, the others only when on. */
 const ADVERTISED_OUTSIDE_COURSE: SubjectId[] = ['language']
 
+/** The placement banner (the thin bar above «Hoy») for a home view, or null. A subject's banner shows on its own view while
+    its test is pending; on another view only the next pending subject after it in HOME_ORDER shows, and never maths (its
+    banner is only on the maths view). `pending` is each subject's test still to do; `enabled` the subjects on for the child. */
+export function placementBannerOf(view: SubjectId, pending: Partial<Record<LessonSubject, boolean>>, enabled: SubjectId[]): LessonSubject | null {
+  const isPending = (id: SubjectId): boolean => enabled.includes(id) && !!pending[id as LessonSubject]
+  if (isPending(view) && HOME_ORDER.includes(view as LessonSubject)) return view as LessonSubject
+  const next = HOME_ORDER.find((id) => isPending(id))
+  return next && next !== 'math' && HOME_ORDER.indexOf(next) > HOME_ORDER.indexOf(view as LessonSubject) ? next : null
+}
+
 export function todayEntry({ grade, mastery, progress, subject = 'math', sound = true }: {
   grade?: number; mastery: MasteryMap; progress: ProgressState; subject?: SubjectId
   /** The dictation can be heard (sound setting on and a voice): without it a dictation is not taught (teachableCourse), as in the planner. */

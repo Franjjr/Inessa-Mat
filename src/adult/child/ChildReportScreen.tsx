@@ -1,6 +1,6 @@
 /* One child's report for the grown-ups. Order: the conclusion first (which tables to praise and which to review),
    the four figures for the last 7 days, what the child is learning (temario, mistakes by kind, tests), then Lengua
-   (the same cards, shown when Lengua is on for the child), then the times-table grid with its legend and the worlds.
+   and Inglés (the same kind of cards, shown when each is on for the child), then the times-table grid with its legend and the worlds.
    Then the real prize, the subjects and game settings, and data tools (calibration reset, GDPR export, deletion).
    A picture of the story so far can be shared. */
 import { useEffect, useState } from 'react'
@@ -22,7 +22,7 @@ import { formatMinutes, formatPercent, formatRelative, plural } from '../shared/
 import { ChildSettingsCard } from './ChildSettingsCard'
 import { SubtractionMethodsCard } from './SubtractionMethodsCard'
 import { OtherMethodsCard } from './OtherMethodsCard'
-import { CaligrafiaSection, LearningSection, LenguaSection, useLearningData } from './LearningCards'
+import { CaligrafiaSection, EnglishSection, LearningSection, LenguaSection, useLearningData } from './LearningCards'
 import { RewardCard } from './RewardCard'
 import { SubjectsCard } from './SubjectsCard'
 import { renderSummaryPng, shareSummaryPng } from './shareSummary'
@@ -212,6 +212,14 @@ export default function ChildReportScreen() {
         childName={name}
         grade={child?.grade}
         enabled={!!child && (child.settings.subjects ?? ['math']).includes('language') && subjectOffered('language', child.grade)}
+        progress={progress}
+        data={learning.data}
+        loadError={learning.error}
+      />
+      <EnglishSection
+        childId={childId}
+        childName={name}
+        enabled={!!child && (child.settings.subjects ?? ['math']).includes('english') && subjectOffered('english', child.grade)}
         progress={progress}
         data={learning.data}
         loadError={learning.error}

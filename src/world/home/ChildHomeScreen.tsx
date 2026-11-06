@@ -18,7 +18,7 @@ import { SUBJECTS } from '@/types'
 import type { ProgressState, SubjectId, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
-import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
+import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
 import s from './ChildHomeScreen.module.css'
 
 /** The «Hoy» session card of each subject: its kicker (the subject and its minutes) and what the session holds. */
@@ -95,9 +95,8 @@ export default function ChildHomeScreen() {
   const today = todayEntry({ grade: child.grade, mastery, progress, subject: view, sound: child.settings.sound && speech.available() })
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
-  const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')
   const inglesPlacementPending = !progress.flags?.placementIngles || !!progress.flags?.placementInglesRequested
-  const inglesBanner = inglesPlacementPending && subjects.some((sub) => sub.id === 'english')
+  const banner = placementBannerOf(view, { math: mathPlacementPending, language: lenguaPlacementPending, english: inglesPlacementPending }, subjectIds)
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -170,16 +169,18 @@ export default function ChildHomeScreen() {
         </div>
 
         <div className={s.right}>
-          {/* The placement test is a thin bar on top while it is pending; «Hoy» comes first after it. */}
-          {view === 'math' && mathPlacementPending ? (
+          {/* The placement test is a thin bar on top while it is pending (placementBannerOf); «Hoy» comes first after it. */}
+          {banner === 'math' && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
               Antes de empezar: haz la prueba inicial ›
             </button>
-          ) : view === 'english' && inglesBanner ? (
+          )}
+          {banner === 'english' && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-ingles')}>
               Haz la prueba de Inglés antes de empezar ›
             </button>
-          ) : lenguaBanner && (view === 'language' || !mathPlacementPending) && (
+          )}
+          {banner === 'language' && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
               Haz la prueba de Lengua antes de empezar ›
             </button>

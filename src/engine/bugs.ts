@@ -296,6 +296,10 @@ const MISSED: Record<ErrorType, string> = {
   'alphabet': 'Mira la primera letra de cada palabra y, si es igual, la segunda.',
   'word-pair': 'Piensa en lo que quiere decir la palabra y vuelve a mirar las opciones.',
   'reading': 'Vuelve a leer el texto despacio y busca la frase que habla de eso.',
+  'eng-spelling': 'Mira cada letra de la palabra en inglés y compárala con el dibujo.',
+  'eng-near-miss': 'Casi: revisa una sola letra de la palabra.',
+  'eng-listening': 'Escucha otra vez la palabra o el número antes de tocar.',
+  'eng-number': 'Repasa la operación en inglés: primero el primer número, luego el signo y luego el segundo.',
 }
 
 export const HUNT_FEEDBACK = {
@@ -398,6 +402,10 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'alphabet': 'Que compare la primera letra de cada palabra con el abecedario.',
   'word-pair': 'Que diga cada opción en una frase para ver cuál encaja.',
   'reading': 'Que vuelva al texto y compruebe cada opción con la frase donde se habla de eso.',
+  'eng-spelling': 'Que deletree la palabra letra a letra y la compare con el dibujo.',
+  'eng-near-miss': 'Que revise una sola letra: casi está bien.',
+  'eng-listening': 'Que vuelva a oír la palabra o el número y lo diga en voz alta.',
+  'eng-number': 'Que diga la operación en inglés y haga la cuenta paso a paso.',
 }
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */

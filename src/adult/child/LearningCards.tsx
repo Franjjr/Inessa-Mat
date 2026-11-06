@@ -1,18 +1,20 @@
 /* Lo que aprende, for the grown-ups (docs/curriculum/PLAN_DOCENTE.md §6): where the child is in the temario, what
    the mistakes say and what helps at home, and the tests (each prueba inicial and the recall of what was learnt
    weeks ago). Maths is LearningSection; Lengua is LenguaSection (its own temario, mistakes, placement, readings and
-   minutes), shown only when Lengua is on for the child or has Lengua attempts. Each section reads only its subject's
-   rows. The cards are pure (fixed data in the gallery); the sections read the data and offer the test again. A failing
-   read shows inside the section and never takes the whole report down. */
-import { useEffect, useMemo, useState } from 'react'
+   minutes), shown only when Lengua is on for the child or has Lengua attempts; English is EnglishSection (the words
+   learnt by theme, the words that fail with what was written, the numbers, the prueba inicial and the minutes).
+   Each section reads only its subject's rows. The cards are pure (fixed data in the gallery); the sections read the
+   data and offer the test again. A failing read shows inside the section and never takes the whole report down. */
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { getMastery, listAttempts, listSessions, updateProgress } from '@/data'
 import { syllabusFor, syllabusForGrade } from '@/content/syllabus'
 import { STORY_READINGS } from '@/content/lengua/stories'
 import { handwritingReport } from '@/engine/caligrafia/report'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
-  attemptsOf, describeError, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag, syllabusReport, topicNeeds,
-  LENGUA_PLACEMENT_COUNT, PLACEMENT_COUNT, type ErrorReport, type LessonSubject, type PlacementRun, type RecallReport, type SyllabusReport,
+  attemptsOf, describeError, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
+  syllabusReport, topicNeeds, ENGLISH_PLACEMENT_COUNT, ENGLISH_SKILL_TEXT, ENGLISH_THEMES, LENGUA_PLACEMENT_COUNT, PLACEMENT_COUNT, THEME_NAME,
+  type EnglishWordsReport, type ErrorReport, type LessonSubject, type PlacementRun, type RecallReport, type SyllabusReport,
   type TopicNeeds, type TopicState,
 } from '@/engine'
 import type { AttemptRecord, MasteryMap, ProgressState, ReadingDef, SessionRecord } from '@/types'
@@ -26,8 +28,9 @@ import s from './child.module.css'
 const ATTEMPT_LIMIT = 5000
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** Element ids are unique on the page: Lengua's cards carry a `lengua-` prefix, maths keeps the original ids. */
-const idOf = (subject: LessonSubject, name: string) => `${subject === 'language' ? 'lengua-' : ''}${name}`
+/** Element ids are unique on the page: Lengua's cards carry a `lengua-` prefix, English's an `ingles-` one, maths keeps the original ids. */
+const ID_PREFIX: Record<LessonSubject, string> = { math: '', language: 'lengua-', english: 'ingles-' }
+const idOf = (subject: LessonSubject, name: string) => `${ID_PREFIX[subject]}${name}`
 
 export interface LearningData { mastery: MasteryMap; attempts: AttemptRecord[]; sessions: SessionRecord[] }
 
@@ -50,6 +53,13 @@ export function useLearningData(childId: string, progressUpdatedAt?: string): { 
   return { data, error }
 }
 
+/** The toast after the prueba inicial of a subject is offered: the subject's name is in it (maths has none). */
+const OFFER_TOAST: Record<LessonSubject, (childName: string) => string> = {
+  math: (name) => `Se le ofrecerá la prueba a ${name} en su próxima visita.`,
+  language: (name) => `Se le ofrecerá la prueba de Lengua a ${name} en su próxima visita.`,
+  english: (name) => `Se le ofrecerá la prueba de Inglés a ${name} en su próxima visita.`,
+}
+
 /** Asks for the subject's prueba inicial again on the child's next visit. */
 async function requestPlacement(childId: string, subject: LessonSubject): Promise<void> {
   await updateProgress(childId, (p) => ({ ...p, flags: { ...p.flags, [placementFlags(subject).requested]: true }, updatedAt: new Date().toISOString() }))
@@ -64,9 +74,7 @@ function useOfferPlacement(childId: string, childName: string, subject: LessonSu
     setError(null)
     try {
       await requestPlacement(childId, subject)
-      toast(subject === 'language'
-        ? `Se le ofrecerá la prueba de Lengua a ${childName} en su próxima visita.`
-        : `Se le ofrecerá la prueba a ${childName} en su próxima visita.`)
+      toast(OFFER_TOAST[subject](childName))
     } catch (e) {
       setError(errorMessage(e, 'No hemos podido preparar la prueba. Inténtalo de nuevo.'))
     } finally {
@@ -162,6 +170,92 @@ export function LenguaSection({ childId, childName, grade, enabled, progress, da
   )
 }
 
+/** English for the grown-ups. Shown when English is on for the child (`enabled`) or the child has English attempts; otherwise nothing. */
+export function EnglishSection({ childId, childName, enabled, progress, data, loadError }: {
+  childId: string; childName: string; enabled: boolean; progress: ProgressState | null
+  data: LearningData | null; loadError: string | null
+}) {
+  const { error, offer } = useOfferPlacement(childId, childName, 'english', !!progress?.flags?.[placementFlags('english').requested])
+
+  const reports = useMemo(() => {
+    if (!data) return null
+    return {
+      attempts: attemptsOf(data.attempts, 'english').length,
+      words: englishWordsReport(data.attempts, data.mastery),
+      runs: placementRuns(data.attempts, 'english'),
+      minutes: minutesOfSubject(data.sessions, 'english'),
+    }
+  }, [data])
+
+  // Not on for the child: nothing until the data says the child has English attempts.
+  if (!data) {
+    if (!enabled) return null
+    if (loadError) return <section className={adult.card}><p className={adult.error} role="alert">{loadError}</p></section>
+    return <p className={adult.muted} role="status">Leyendo lo que ha practicado en Inglés…</p>
+  }
+  if (!reports || (!enabled && reports.attempts === 0)) return null
+
+  return (
+    <>
+      <EnglishWordsCard report={reports.words} minutes={reports.minutes} />
+      <TestsCard
+        subject="english"
+        runs={reports.runs}
+        count={ENGLISH_PLACEMENT_COUNT}
+        childName={childName}
+        error={error}
+        offer={offer}
+      />
+    </>
+  )
+}
+
+/** A typed word as the report shows it: what was written, or «en blanco» when nothing was. */
+const writtenText = (given: string) => (given.trim() ? `«${given}»` : '(en blanco)')
+
+/** The English words learnt by theme, the words that fail with what was written, and the numbers the child knows; the minutes
+    of English this week are in the head. */
+export function EnglishWordsCard({ report, minutes }: { report: EnglishWordsReport; minutes: number }) {
+  const themes = ENGLISH_THEMES.filter((t) => report.learnt[t].length > 0)
+  const ops = report.numbers.ops.map((op) => ENGLISH_SKILL_TEXT[`eng:num:ops:${op}`])
+  return (
+    <section className={adult.card} aria-labelledby="ingles-palabras-title">
+      <div className={adult.cardHead}>
+        <h2 id="ingles-palabras-title" className={adult.subheading}>Inglés</h2>
+        <span className={adult.muted}>{formatMinutes(minutes)} en los últimos 7 días</span>
+      </div>
+
+      <h3 className={s.mistakeTitle}>Palabras aprendidas</h3>
+      {themes.length === 0 ? (
+        <p className={adult.lead}>Todavía no ha dominado ningún tema de palabras.</p>
+      ) : (
+        <ul className={adult.list} aria-label="Palabras aprendidas por tema">
+          {themes.map((t) => (
+            <li key={t}><strong className={adult.strong}>{THEME_NAME[t]}</strong>: {report.learnt[t].join(', ')}</li>
+          ))}
+        </ul>
+      )}
+
+      <h3 className={s.mistakeTitle}>Palabras en las que falla</h3>
+      {report.failing.length === 0 ? (
+        <p className={adult.muted}>Ninguna por ahora.</p>
+      ) : (
+        <ul className={adult.list} aria-label="Palabras en las que falla">
+          {report.failing.map((f) => (
+            <li key={f.word}>Escribe {f.given.map(writtenText).join(', ')} por «{f.word}»</li>
+          ))}
+        </ul>
+      )}
+
+      <h3 className={s.mistakeTitle}>Números</h3>
+      <p className={adult.lead}>
+        {report.numbers.upTo === 0 ? 'Todavía no ha dominado los números en inglés.' : `Cuenta en inglés hasta el ${report.numbers.upTo}.`}
+      </p>
+      {ops.length > 0 && <p className={adult.muted}>Ya domina: {ops.join(', ')}.</p>}
+    </section>
+  )
+}
+
 /** Caligrafía con lápiz for the grown-ups: the letters and links learnt, the ones that cost, and the criterion that fails
     most. Hidden while the data is not read and when the child has no handwriting try (the section is not for everyone). */
 export function CaligrafiaSection({ data, childName }: { data: LearningData | null; childName: string }) {
@@ -188,6 +282,23 @@ export function CaligrafiaSection({ data, childName }: { data: LearningData | nu
 
 const TERM_TEXT: Record<number, string> = { 1: '1.er trimestre', 2: '2.º trimestre', 3: '3.er trimestre' }
 
+/** The heading of the temario of each subject. */
+const TEMARIO_TITLE: Record<LessonSubject, (course: number) => string> = {
+  math: (course) => `Temario de ${course}.º`,
+  language: (course) => `Temario de Lengua de ${course}.º`,
+  english: (course) => `Temario de Inglés de ${course}.º`,
+}
+
+/** Which adventure world a stage is in: maths only (2.º plays its own season on the same maps; Lengua and English have none). */
+const ADVENTURE: Record<LessonSubject, boolean> = { math: true, language: false, english: false }
+
+/** The sentence after the stage: maths goes in a spiral, Lengua and English go from the easy to the hard. */
+const STAGE_NOTE: Record<LessonSubject, (course: number) => ReactNode> = {
+  math: (course) => <> Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas{course >= 3 ? ', fracciones' : ''} o figuras.</>,
+  language: () => ' Las etapas van de lo fácil a lo difícil, y cada tema vuelve a repasarse en la sesión de cada día.',
+  english: () => ' Las etapas van de lo fácil a lo difícil, y cada tema vuelve a repasarse en la sesión de cada día.',
+}
+
 const STATE_TEXT: Record<TopicState, string> = {
   'dominado': 'Dominado',
   'trabajando': 'Trabajando',
@@ -198,16 +309,13 @@ const STATE_TEXT: Record<TopicState, string> = {
 export function TemarioCard({ report, needs, childName, subject = 'math' }: {
   report: SyllabusReport; needs: Record<string, TopicNeeds>; childName: string; subject?: LessonSubject
 }) {
-  const lengua = subject === 'language'
-  // The stage's world in the adventure of the course (2.º plays its own season on the same maps; Lengua has no adventure).
-  const stageId = lengua ? undefined : report.current?.stage?.worldId
+  // The stage's world in the adventure of the course (2.º plays its own season on the same maps).
+  const stageId = ADVENTURE[subject] ? report.current?.stage?.worldId : undefined
   const stageWorld = stageId ? getWorld(stageId, seasonIdForGrade(report.course)) : undefined
   return (
     <section className={`${adult.card} ${adult.cardBlue}`} aria-labelledby={idOf(subject, 'temario-title')}>
       <div className={adult.cardHead}>
-        <h2 id={idOf(subject, 'temario-title')} className={adult.subheading}>
-          {lengua ? `Temario de Lengua de ${report.course}.º` : `Temario de ${report.course}.º`}
-        </h2>
+        <h2 id={idOf(subject, 'temario-title')} className={adult.subheading}>{TEMARIO_TITLE[subject](report.course)}</h2>
         <span className={adult.muted}>{report.mastered} de {report.available} temas dominados</span>
       </div>
       <p className={adult.lead}>
@@ -219,9 +327,7 @@ export function TemarioCard({ report, needs, childName, subject = 'math' }: {
         <p className={adult.muted}>
           Etapa {report.current.stage.number} de {report.current.stage.total} · {TERM_TEXT[report.current.stage.term]}
           {stageWorld ? ` · en la aventura, ${stageWorld.name}` : ''}.
-          {lengua
-            ? ' Las etapas van de lo fácil a lo difícil, y cada tema vuelve a repasarse en la sesión de cada día.'
-            : <> Seguimos un orden propio, en espiral: cada etapa mezcla números y operaciones con dinero, reloj, medidas{report.course >= 3 ? ', fracciones' : ''} o figuras.</>}
+          {STAGE_NOTE[subject](report.course)}
         </p>
       )}
       <p className={adult.muted}>Un tema está dominado cuando acierta con soltura casi todos sus ejercicios, más de una vez.</p>
@@ -263,6 +369,8 @@ export function TemarioCard({ report, needs, childName, subject = 'math' }: {
 
 // ------------------------------------------------------------------------------------------------ mistakes
 
+const MISTAKES_TITLE: Record<LessonSubject, string> = { math: 'En qué falla', language: 'En qué falla en Lengua', english: 'En qué falla en Inglés' }
+
 function trendText(count: number, previous: number): string | null {
   if (previous === 0) return null
   if (count === 0) return 'Ya no le pasa: el mes anterior sí.'
@@ -277,7 +385,7 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
   return (
     <section className={adult.card} aria-labelledby={idOf(subject, 'mistakes-title')}>
       <div className={adult.cardHead}>
-        <h2 id={idOf(subject, 'mistakes-title')} className={adult.subheading}>{subject === 'language' ? 'En qué falla en Lengua' : 'En qué falla'}</h2>
+        <h2 id={idOf(subject, 'mistakes-title')} className={adult.subheading}>{MISTAKES_TITLE[subject]}</h2>
         <span className={adult.muted}>Último mes</span>
       </div>
       {report.answered === 0 ? (
@@ -324,6 +432,13 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
 
 // ------------------------------------------------------------------------------------------------ tests
 
+const TESTS_TITLE: Record<LessonSubject, string> = { math: 'Pruebas', language: 'Prueba inicial de Lengua', english: 'Prueba inicial de Inglés' }
+const TESTS_INTRO: Record<LessonSubject, (count: number) => string> = {
+  math: (count) => `${count} preguntas de todo el curso, sin pistas ni aviso de acierto o fallo. Marca el punto de partida.`,
+  language: (count) => `${count} preguntas de gramática, ortografía y vocabulario, sin pistas ni aviso de acierto o fallo. No hay lectura ni dictado. Marca el punto de partida.`,
+  english: (count) => `${count} preguntas de palabras, frases y números en inglés, sin pistas ni aviso de acierto o fallo. No hay audio. Marca el punto de partida.`,
+}
+
 export function TestsCard({ runs, count, subject = 'math', recall, childName, error, offer }: {
   runs: PlacementRun[]
   /** Questions in one prueba inicial of this subject. */
@@ -338,13 +453,11 @@ export function TestsCard({ runs, count, subject = 'math', recall, childName, er
   const latest = runs[runs.length - 1] ?? null
   const first = runs.length > 1 ? runs[0] : null
   const blocks = latest ? latest.blocks.filter((b) => b.total > 0) : []
-  const intro = subject === 'language'
-    ? `${count} preguntas de gramática, ortografía y vocabulario, sin pistas ni aviso de acierto o fallo. No hay lectura ni dictado. Marca el punto de partida.`
-    : `${count} preguntas de todo el curso, sin pistas ni aviso de acierto o fallo. Marca el punto de partida.`
+  const intro = TESTS_INTRO[subject](count)
   return (
     <section className={adult.card} aria-labelledby={idOf(subject, 'tests-title')}>
       <div className={adult.cardHead}>
-        <h2 id={idOf(subject, 'tests-title')} className={adult.subheading}>{subject === 'language' ? 'Prueba inicial de Lengua' : 'Pruebas'}</h2>
+        <h2 id={idOf(subject, 'tests-title')} className={adult.subheading}>{TESTS_TITLE[subject]}</h2>
         <span className={adult.muted}>{runs.length === 0 ? 'Sin hacer' : plural(runs.length, 'prueba inicial', 'pruebas iniciales')}</span>
       </div>
 

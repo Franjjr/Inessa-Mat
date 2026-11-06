@@ -282,3 +282,22 @@ Las estrellas son estrictas: **3** si pasan los cuatro criterios; **2** si falla
 5. Anotar el cambio y el porqué en el historial del repositorio, en el mismo commit.
 
 **Qué queda fuera, por ahora:** la escritura a mano de textos largos y la caligrafía sin lápiz. Los trazos se puntúan en el dispositivo y no se guardan ni se envían; solo se guarda el intento (habilidad, acierto, tipo de error y los cuatro criterios).
+
+## 13. Inglés de 3.º
+
+Tercera asignatura, con su temario, su clase de cada tema, su sesión de unos 10 minutos y su prueba inicial. Detalle de decisiones: `docs/superpowers/specs/2026-11-06-ingles-3-design.md`.
+
+**Qué se enseña** (doce bloques; ocho etapas en tres trimestres, de lo fácil a lo difícil): saludos y yo, números (del 0 al 20, decenas, del 21 al 100, y plus, minus y times), colores y formas, animales, familia, comida, ropa, el cole, la casa, el cuerpo, el tiempo y las estaciones, y días y meses. Las palabras son de inglés británico.
+
+**Cómo se practica:**
+
+- **Clases:** cada tema empieza con una clase que explica antes de practicar: se ven todas las palabras y números del tema, y las frases con su patrón.
+- **Escritura:** las palabras en inglés se escriben con el teclado de letras. Se aceptan sin mayúsculas, y «grey» y «gray» valen igual. Una letra de diferencia cuenta como fallo («¡Casi!»), y el informe muestra lo que escribió.
+- **Números:** se escriben con cifras, a mano o con el teclado de números.
+- **Oír:** lo dice la voz de la app, con su voz británica. Sin sonido, las actividades de oír no salen y la operación en inglés no se enseña.
+- **Juegos:** la memoria (parejas de dibujo y palabra) y las letras desordenadas de cada tema, al final de la sesión.
+- **Prueba inicial:** 10 preguntas de saludos, números, colores, animales y comida, sin audio y sin pistas.
+
+**Qué ve el adulto en el informe:** las palabras aprendidas por tema (las del tema cuya destreza está dominada), las palabras en las que falla con lo que el niño escribió («escribe «tre» por «three»»), los números que ya cuenta y las operaciones que domina, la prueba inicial y los minutos de la semana.
+
+**Qué queda fuera, por ahora:** la pronunciación con el micrófono, la isla de la aventura de Inglés y el inglés de 4.º.

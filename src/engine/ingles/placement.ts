@@ -34,6 +34,11 @@ const PLAN: { block: EnglishPlacementBlockId; skill: SkillKey; kind: ExerciseKin
   { block: 'comida', skill: englishSkill('voc', 'comida'), kind: 'eng-write-word' },
 ]
 
+/** The block of an English placement skill, or null when the placement does not test it. */
+export function englishPlacementBlockOf(skill: SkillKey): EnglishPlacementBlockId | null {
+  return PLAN.find((p) => p.skill === skill)?.block ?? null
+}
+
 export interface EnglishPlacementItem {
   block: EnglishPlacementBlockId
   exercise: Exercise

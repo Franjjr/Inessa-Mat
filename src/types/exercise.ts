@@ -932,6 +932,10 @@ export type ErrorType =
   | 'alphabet'            // Lengua: the words are out of alphabetical order
   | 'word-pair'           // Lengua: the wrong synonym, antonym, family member or form
   | 'reading'             // Lengua: a question about a text answered wrongly (idea, detail, order, rhyme, riddle, fable)
+  | 'eng-spelling'         // Inglés: a typed English word wrong (not one letter away)
+  | 'eng-near-miss'        // Inglés: a typed English word one letter away from the right one («¡Casi!»)
+  | 'eng-listening'        // Inglés: a word or a number heard in English and taken for another
+  | 'eng-number'           // Inglés: the result of an operation said in English is wrong
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round
