@@ -98,7 +98,7 @@ describe('English kinds: generation', () => {
       'today', 'tomorrow', 'yesterday', 'outside', 'moo', 'meow', 'woof', 'how', 'what', 'who', 'do', 'does',
       'fine', 'see', 'later', 'says', 'say', 'high', 'very', 'their', 'new', 'long', 'funny', 'down', 'sad', 'open', 'listen',
       'take', 'falling', 'go', 'going', 'swimming', 'one', 'two', 'out', 'meet', 'cooks', 'cook', 'comes', 'after', 'before',
-      'little', 'our', 'with',
+      'little', 'our', 'with', 'thanks', 'than', 'bigger', 'smaller', 'blue', 'clouds', 'let', 'comes', 'after', 'before', 'hot',
       // Pieces of contractions and marks (I'm, It's, don't, Let's, Mum's).
       's', 'm', 're', 've', 't', 'd', 'll', 'don',
     ])
@@ -114,6 +114,16 @@ describe('English kinds: generation', () => {
       }
     }
     expect(unknown).toEqual([])
+  })
+
+  it('the answer of a phrase is never written in its sentence, and no distractor is the answer', () => {
+    for (const items of Object.values(PHRASES)) {
+      for (const item of items) {
+        const escaped = item.answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        expect(new RegExp(`\\b${escaped}\\b`, 'i').test(item.sentence), item.sentence).toBe(false)
+        expect(item.distractors, item.sentence).not.toContain(item.answer)
+      }
+    }
   })
 
   it('every frase skill has at least six items, each with one gap, its answer among the options', () => {
