@@ -3,6 +3,7 @@ import { AdultPage } from '../shared/AdultPage'
 import { useDocumentTitle } from '@/app/useDocumentTitle'
 import s from './legal.module.css'
 import adult from '../shared/adult.module.css'
+import { AUDIO_FACT } from '../child/speakingCopy'
 
 export default function PrivacyScreen() {
   useDocumentTitle('Privacidad y datos · Repasitos')
@@ -32,7 +33,7 @@ export default function PrivacyScreen() {
         <ul>
           <li><strong>Del niño:</strong> su apodo, su género gramatical (para las frases de la aplicación), su curso y su año de nacimiento si lo indicas, y el nombre y tipo del compañero animal que elija.</li>
           <li><strong>Su aprendizaje:</strong> respuestas a los ejercicios (acierto o error, tipo de error, tiempo de respuesta), sesiones de juego (fecha y minutos), avances por mundos y ajustes de juego que elijas.</li>
-          <li><strong>Pronunciación en inglés:</strong> solo si un adulto activa el micrófono, la fecha de su consentimiento y si está encendido o apagado. El audio no se guarda (apartado 11).</li>
+          <li><strong>Pronunciación en inglés:</strong> solo si un adulto activa el micrófono, la fecha de su consentimiento y si está encendido o apagado. Repasitos no guarda el audio (apartado 11).</li>
           <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo y nunca se suben a la nube.</li>
           <li><strong>De los adultos:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
         </ul>
@@ -117,7 +118,7 @@ export default function PrivacyScreen() {
         </p>
         <p>
           Dónde va el audio: cada intento se envía a Microsoft Azure, con centro de datos en Irlanda (Unión Europea), que actúa como
-          proveedor, solo para puntuarlo. El audio no se guarda: Repasitos no lo guarda y Microsoft no lo usa para entrenar sus sistemas.
+          proveedor. {AUDIO_FACT}
         </p>
         <p>
           Límites: como máximo 10 intentos de hablar al día por niño. Si el servicio falla o no está disponible, el ejercicio se salta

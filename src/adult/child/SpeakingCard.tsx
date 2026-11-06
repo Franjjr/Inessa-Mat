@@ -7,6 +7,7 @@ import { toast } from '@/ui'
 import { errorMessage } from '../shared/messages'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { SwitchRow } from './SwitchRow'
+import { AUDIO_FACT } from './speakingCopy'
 import adult from '../shared/adult.module.css'
 
 export function SpeakingCard({ child }: { child: ChildProfile }) {
@@ -22,6 +23,7 @@ export function SpeakingCard({ child }: { child: ChildProfile }) {
     try {
       await updateChild(child.id, { settings: { ...child.settings, speaking: next } })
       toast('Cambio guardado')
+      setError(null)
       setAsking(false)
     } catch (e) {
       setError(errorMessage(e, 'No hemos podido guardar el cambio. Inténtalo otra vez.'))
@@ -44,6 +46,7 @@ export function SpeakingCard({ child }: { child: ChildProfile }) {
           ? 'Encendido. Puedes apagarlo cuando quieras.'
           : 'Apagado de serie. Solo un adulto lo puede activar, con su consentimiento.'}
         checked={on}
+        disabled={busy}
         onChange={(v) => {
           if (v) {
             setError(null)
@@ -61,7 +64,7 @@ export function SpeakingCard({ child }: { child: ChildProfile }) {
         confirmLabel="Activar"
         busy={busy}
         error={error}
-        onCancel={() => setAsking(false)}
+        onCancel={() => { setError(null); setAsking(false) }}
         onConfirm={() => void save({ on: true, consentAt: new Date().toISOString() })}
       >
         <p className={adult.muted} style={{ fontSize: 'var(--fs-md)' }}>
@@ -69,8 +72,8 @@ export function SpeakingCard({ child }: { child: ChildProfile }) {
           Es opcional: sin él, el inglés funciona igual.
         </p>
         <p className={adult.muted} style={{ fontSize: 'var(--fs-md)' }}>
-          <strong>Dónde va el audio:</strong> se envía a Microsoft Azure, en Irlanda (Unión Europea), solo para puntuarlo.
-          El audio no se guarda: Repasitos no lo guarda y Microsoft no lo usa para entrenar sus sistemas.
+          <strong>Dónde va el audio:</strong> se envía a Microsoft Azure, en Irlanda (Unión Europea).
+          {AUDIO_FACT}
         </p>
         <p className={adult.muted} style={{ fontSize: 'var(--fs-md)' }}>
           <strong>Quién decide:</strong> solo un adulto puede activarlo, y puede apagarlo en cualquier momento desde esta misma ficha.

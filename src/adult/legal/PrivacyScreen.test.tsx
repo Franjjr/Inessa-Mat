@@ -20,7 +20,8 @@ describe('PrivacyScreen: micrófono (Inglés)', () => {
     expect(text).toMatch(/Solo un adulto puede activarlo/)
     expect(text).toMatch(/Microsoft Azure/)
     expect(text).toMatch(/Irlanda/)
-    expect(text).toMatch(/El audio no se guarda/)
+    expect(text).toMatch(/Repasitos no guarda el audio/)
+    expect(text).toMatch(/entrenar sus modelos/)
     expect(text).toMatch(/10 intentos/)
   })
 

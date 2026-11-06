@@ -72,6 +72,19 @@ describe('SpeakingCard', () => {
     expect(updateChild).not.toHaveBeenCalled()
   })
 
+  it('the switch is disabled while the save is pending, so a second tap cannot write twice', async () => {
+    let finish: () => void = () => {}
+    updateChild.mockImplementationOnce(() => new Promise<undefined>((resolve) => { finish = () => resolve(undefined) }))
+    render(<SpeakingCard child={child(['english'])} />)
+    fireEvent.click(sw())
+    fireEvent.click(within(dialog()!).getByRole('button', { name: 'Activar' }))
+    await waitFor(() => expect(sw().hasAttribute('disabled')).toBe(true))
+    fireEvent.click(sw())
+    expect(updateChild).toHaveBeenCalledTimes(1)
+    finish()
+    await waitFor(() => expect(sw().hasAttribute('disabled')).toBe(false))
+  })
+
   it('the confirmation says what the microphone is for, where the audio goes and who can turn it off', () => {
     render(<SpeakingCard child={child(['english'])} />)
     fireEvent.click(sw())
@@ -79,7 +92,7 @@ describe('SpeakingCard', () => {
     expect(text).toMatch(/puntuar cómo .* pronuncia/)
     expect(text).toMatch(/Irlanda/)
     expect(text).toMatch(/Unión Europea/)
-    expect(text).toMatch(/no se guarda/)
+    expect(text).toMatch(/Repasitos no guarda el audio/)
     expect(text).toMatch(/[Ss]olo un adulto puede activarlo/)
     expect(text).toMatch(/en cualquier momento/)
     expect(text).toMatch(/nunca bloquea/)
