@@ -65,7 +65,7 @@ export interface Take {
 /** Starts a take. Rejects when the microphone is denied or missing: the caller then skips the item without penalty. */
 export async function startTake(maxSeconds = TAKE_MAX_SECONDS): Promise<Take> {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } })
-  let ctx: AudioContext
+  let ctx: AudioContext | undefined
   let source: MediaStreamAudioSourceNode
   let processor: ScriptProcessorNode
   try {
@@ -75,8 +75,9 @@ export async function startTake(maxSeconds = TAKE_MAX_SECONDS): Promise<Take> {
     // ScriptProcessor is deprecated but works on every browser the tablets use; AudioWorklet would need a second file.
     processor = ctx.createScriptProcessor(4096, 1, 1)
   } catch (e) {
-    // Nothing is recording yet: the microphone is given back before the error goes to the caller.
+    // Nothing is recording yet: the microphone is given back, and the context if it was made, before the error goes to the caller.
     stream.getTracks().forEach((t) => t.stop())
+    void ctx?.close().catch(() => undefined)
     throw e
   }
   const chunks: Float32Array[] = []

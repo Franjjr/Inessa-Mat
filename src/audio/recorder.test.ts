@@ -120,4 +120,20 @@ describe('startTake: a failure while setting up the audio releases the microphon
     await expect(startTake(10)).rejects.toThrow('no audio here')
     expect(track.stop).toHaveBeenCalledTimes(1)
   })
+
+  it('closes the audio context too when a later node cannot be created (the context was already open)', async () => {
+    const track = { stop: vi.fn() }
+    const close = vi.fn(async () => {})
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } })
+    vi.stubGlobal('AudioContext', class {
+      sampleRate = 48000
+      destination = {}
+      createMediaStreamSource() { throw new Error('no source here') }
+      close = close
+    })
+    const { startTake } = await import('./recorder')
+    await expect(startTake(10)).rejects.toThrow('no source here')
+    expect(track.stop).toHaveBeenCalledTimes(1)
+    expect(close).toHaveBeenCalledTimes(1)
+  })
 })
