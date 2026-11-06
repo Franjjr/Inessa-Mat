@@ -40,7 +40,8 @@ export interface LessonPlayerProps {
 export default function LessonPlayer(props: LessonPlayerProps) {
   return (
     <MotionConfig reducedMotion="user">
-      <Player {...props} />
+      {/* Keyed by the lesson: another lesson starts at its first step, with no outcome nor grown try of the previous one. */}
+      <Player key={props.lesson.id} {...props} />
     </MotionConfig>
   )
 }
