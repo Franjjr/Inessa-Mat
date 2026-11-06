@@ -1,4 +1,4 @@
-/* Inglés de 3.º: los siete ejercicios en inglés (eng-*): generar, comprobar, pistas y enunciado. Puro: sin React ni audio.
+/* Inglés de 3.º: los nueve ejercicios en inglés (eng-*): generar, comprobar, pistas y enunciado. Puro: sin React ni audio.
    Los de oír (eng-listen-pick, eng-num-listen, eng-op-listen) los dice la voz en inglés; su texto nunca va en el enunciado.
    Las pistas tienen tres niveles (la idea, una pregunta, un paso) y nunca dan la respuesta. Un error muestra la respuesta
    correcta; una palabra a una letra de distancia es «¡Casi!», nunca «¡Mal!». */
@@ -18,7 +18,6 @@ export const ENGLISH_KINDS: ExerciseKind[] = [
   'eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-complete', 'eng-num-write', 'eng-num-listen', 'eng-op-listen',
   'eng-memory', 'eng-scramble',
 ]
-
 
 /** The kinds that the voice reads: none of them is planned, nor shown, with the sound off. */
 export const ENGLISH_LISTENING_KINDS: ExerciseKind[] = ['eng-listen-pick', 'eng-num-listen', 'eng-op-listen']
@@ -213,18 +212,18 @@ function checkMatch(ex: EngMatchExercise, answer: Answer): CheckResult {
   return { correct: false, given: marked.join(','), expected: pairs, errorType: 'other', feedback: `Las parejas son: ${pairs}.` }
 }
 
-/** The memory game is one attempt: right when every pair is found in at most 2 × pairs + 4 flips (a card turned counts). */
+/** The memory game is one attempt. A turn is two cards turned; right when every pair is found in at most 2 × pairs + 4 turns. */
 function checkMemory(ex: EngMemoryExercise, answer: Answer): CheckResult {
   const pairs = ex.pairs.length
   const limit = 2 * pairs + 4
-  const flips = answer.type === 'memory' ? answer.flips : 0
+  const turns = answer.type === 'memory' ? answer.turns : 0
   const found = answer.type === 'memory' ? answer.found : 0
-  const expected = `${pairs} parejas en ${limit} giros o menos`
-  if (found === pairs && flips <= limit) return { correct: true, given: `${flips} giros`, expected }
+  const expected = `${pairs} parejas en ${limit} turnos o menos`
+  if (found === pairs && turns <= limit) return { correct: true, given: `${turns} turnos`, expected }
   const feedback = found < pairs
     ? 'Aún quedan parejas por encontrar.'
-    : `Has encontrado las ${pairs} parejas en ${flips} giros. Para acertar hay que hacerlo en ${limit} o menos.`
-  return { correct: false, given: `${flips} giros`, expected, errorType: 'other', feedback }
+    : `Has encontrado las ${pairs} parejas en ${turns} turnos. Para acertar hay que hacerlo en ${limit} o menos.`
+  return { correct: false, given: `${turns} turnos`, expected, errorType: 'other', feedback }
 }
 
 export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {

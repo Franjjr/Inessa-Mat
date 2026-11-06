@@ -572,10 +572,13 @@ export interface EngNumListenExercise extends ExerciseBase {
 export interface EngOpListenExercise extends ExerciseBase {
   kind: 'eng-op-listen'; a: number; op: '+' | '-' | '×'; b: number; spoken: string; answer: number
 }
+/** The themes of the English vocabulary (src/engine/ingles/words.ts). */
+export type EnglishTheme =
+  | 'saludos' | 'colores' | 'animales' | 'familia' | 'comida' | 'ropa' | 'cole' | 'casa' | 'cuerpo' | 'tiempo' | 'dias'
 /** Memory: six pairs (picture and English word) in a deck of 12 cards; each pair is in the deck twice, one per side.
-    `deck` is shuffled by the engine (the same seed, the same board). The answer is the flips and the pairs found. */
+    `deck` is shuffled by the engine (the same seed, the same board). The answer is the turns and the pairs found. */
 export interface EngMemoryExercise extends ExerciseBase {
-  kind: 'eng-memory'; theme: string; pairs: EnglishCard[]; deck: { pair: number; side: 'picture' | 'word' }[]
+  kind: 'eng-memory'; theme: EnglishTheme; pairs: EnglishCard[]; deck: { pair: number; side: 'picture' | 'word' }[]
 }
 /** The picture and its Spanish word; the child taps the letters (`tiles`, shuffled, never in order) and the word is
     graded as typed text (compareEnglish; `alts` are accepted too). */
@@ -875,7 +878,7 @@ export type Answer =
   | { type: 'text'; value: string | null }                                 // a typed word or phrase (Lengua): the letter keyboard or a physical one
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
   | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
-  | { type: 'memory'; flips: number; found: number }                       // juego de memoria: cards turned and pairs found
+  | { type: 'memory'; turns: number; found: number }                      // juego de memoria: turns (two cards each) and pairs found
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per

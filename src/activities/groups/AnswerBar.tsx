@@ -12,9 +12,11 @@ export interface AnswerBarProps {
   canCheck: boolean
   /** Label of the forward button (default Siguiente). */
   nextLabel?: string
+  /** The view submits by itself (the memory game): no Comprobar and no Revisar, only the hint and the forward button. */
+  selfChecking?: boolean
 }
 
-export function AnswerBar({ flow, onCheck, canCheck, nextLabel }: AnswerBarProps) {
+export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = false }: AnswerBarProps) {
   const host = useActivityHost()
   const r = flow.result
   const lastHint = flow.hintsShown > 0 ? flow.hints[flow.hintsShown - 1] : null
@@ -42,14 +44,14 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel }: AnswerBarProps
         )}
       </div>
       <div className={s.side}>
-        {!flow.submitted && (
+        {!flow.submitted && !selfChecking && (
           <Button variant="success" size="lg" onClick={onCheck} disabled={!canCheck}>
             ✓ Comprobar
           </Button>
         )}
         {flow.submitted && !hostOwnsResult && (
           <>
-            {!r?.correct && (
+            {!r?.correct && !selfChecking && (
               <Button variant="secondary" size="md" onClick={onCheck} disabled={!canCheck}>
                 Revisar
               </Button>

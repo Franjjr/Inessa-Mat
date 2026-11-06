@@ -2,8 +2,9 @@
    Los glosarios van en español de España. Los temas con dibujo llevan un emoji en cada palabra (Unicode ≤ 13); si no
    hay un emoji claro para una palabra, se elige otra palabra. `saludos` y `dias` no llevan emoji. */
 
-export type EnglishTheme =
-  | 'saludos' | 'colores' | 'animales' | 'familia' | 'comida' | 'ropa' | 'cole' | 'casa' | 'cuerpo' | 'tiempo' | 'dias'
+import type { EnglishTheme } from '@/types'
+
+export type { EnglishTheme }
 
 /** The memory game (eng-memory): its pairs of picture and word. A theme needs this many words with a picture. */
 export const MEMORY_PAIRS = 6

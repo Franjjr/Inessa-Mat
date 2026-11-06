@@ -269,7 +269,7 @@ describe('MemoryView', () => {
     expect(speech.say).toHaveBeenCalledWith(ex.pairs[2].en, expect.objectContaining({ voice: 'english' }))
   })
 
-  it('finding every pair ends the game with one attempt: the flips are counted and the right game is graded right', () => {
+  it('finding every pair ends the game with one attempt: the turns are counted and the right game is graded right', () => {
     const ex = first('eng-memory', 'eng:voc:comida')
     const onAnswered = vi.fn()
     render(<MemoryView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
@@ -281,24 +281,61 @@ describe('MemoryView', () => {
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
-  it('too many flips is one wrong attempt, and the feedback says the turns', () => {
-    const ex = first('eng-memory', 'eng:voc:comida')
-    const onAnswered = vi.fn()
-    render(<MemoryView exercise={ex} onAnswered={onAnswered} />)
-    // Five mismatched turns (two cards each, the next tap turns the pair back), then the perfect game: 22 flips.
-    for (let p = 0; p < 5; p++) {
-      turn(at(ex, p, 'picture'))
-      turn(at(ex, p + 1, 'word'))
+  /** `mismatches` turns of two different pairs (each turn is two cards; the next turn's first tap turns the pair back), then
+      the six pairs one by one. The turns are `mismatches + pairs`. */
+  function play(ex: EngMemoryExercise, mismatches: number) {
+    const n = ex.pairs.length
+    for (let r = 0; r < mismatches; r++) {
+      turn(at(ex, r % n, 'picture'))
+      turn(at(ex, (r + 1) % n, 'word'))
     }
     ex.pairs.forEach((_, p) => {
       turn(at(ex, p, 'picture'))
       turn(at(ex, p, 'word'))
     })
-    expect(pageText()).toContain('22 giros')
+  }
+
+  it('the turns count two cards each: 11 turns (5 mismatched, 6 pairs) is right within the 16 allowed', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    const onAnswered = vi.fn()
+    render(<MemoryView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    play(ex, 5)
+    expect(pageText()).toContain('Turnos: 11')
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('16 turns is still right, 17 turns is wrong', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    const sixteen = vi.fn()
+    const { unmount } = render(<MemoryView exercise={ex} onAnswered={sixteen} showFeedback={false} />)
+    play(ex, 10)
+    expect(sixteen.mock.calls[0][0].check.correct).toBe(true)
+    unmount()
+    const seventeen = vi.fn()
+    render(<MemoryView exercise={ex} onAnswered={seventeen} showFeedback={false} />)
+    play(ex, 11)
+    expect(seventeen.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('too many turns is one wrong attempt, and the feedback says the turns and the limit', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    const onAnswered = vi.fn()
+    render(<MemoryView exercise={ex} onAnswered={onAnswered} />)
+    play(ex, 11)
+    expect(pageText()).toContain('17 turnos')
     expect(onAnswered).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: /Siguiente/ }))
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('the memory bar has no Comprobar and no Revisar: the game submits itself', () => {
+    const ex = first('eng-memory', 'eng:voc:comida')
+    render(<MemoryView exercise={ex} onAnswered={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /Comprobar/ })).toBeNull()
+    expect(screen.queryByRole('button', { name: /Revisar/ })).toBeNull()
+    expect(screen.getByRole('button', { name: /Pista/ })).toBeTruthy()
   })
 })
 

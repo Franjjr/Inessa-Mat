@@ -1,6 +1,7 @@
 /* Inglés de 3.º, juego de memoria (eng-memory): six pairs, a picture and its English word, in a deck of 12 cards. The child
    turns two cards; a pair is kept, a mismatch stays face up until the next tap (no timer) and then turns back. Each turned
-   word is said in English. Every card turned is a flip. The game is one attempt, graded when the last pair is found. */
+   word is said in English. A turn is two cards: the first card of a turn counts, the second does not. The game is one
+   attempt, graded when the last pair is found. */
 import clsx from 'clsx'
 import { useState } from 'react'
 import { celebrate } from '@/fx'
@@ -26,13 +27,15 @@ function MemoryRound({ ex, onAnswered, showFeedback, allowHints }: {
   /** Deck positions face up and not yet paired: at most two. A third turn first turns the mismatched two back. */
   const [up, setUp] = useState<number[]>([])
   const [found, setFound] = useState<number[]>([])
-  const [flips, setFlips] = useState(0)
+  /** Turns: two cards each. */
+  const [turns, setTurns] = useState(0)
 
   const turn = (i: number) => {
     const slot = ex.deck[i]
     if (flow.submitted || found.includes(slot.pair) || up.includes(i)) return
-    const nextFlips = flips + 1
-    setFlips(nextFlips)
+    // A card that is the second of an open turn (one card face up) does not start a new turn.
+    const nextTurns = up.length === 1 ? turns : turns + 1
+    setTurns(nextTurns)
     if (slot.side === 'word') sayEnglish(ex.pairs[slot.pair].en)
     const open = up.length === 2 ? [i] : [...up, i]
     if (open.length === 2 && ex.deck[open[0]].pair === ex.deck[open[1]].pair) {
@@ -41,7 +44,7 @@ function MemoryRound({ ex, onAnswered, showFeedback, allowHints }: {
       setUp([])
       // The last pair ends the game: one attempt, graded now.
       if (nextFound.length === ex.pairs.length) {
-        const c = flow.submit({ type: 'memory', flips: nextFlips, found: nextFound.length })
+        const c = flow.submit({ type: 'memory', turns: nextTurns, found: nextFound.length })
         if (c.correct) celebrate('small')
       }
     } else {
@@ -52,7 +55,7 @@ function MemoryRound({ ex, onAnswered, showFeedback, allowHints }: {
   return (
     <section className={s.view} aria-label="Juego de memoria" data-kind={ex.kind} data-status={statusOf(flow.result)}>
       <p className={s.prompt}>Gira las cartas y encuentra las parejas</p>
-      <p className={s.count}>Giros: {flips}</p>
+      <p className={s.count}>Turnos: {turns}</p>
       <div className={s.memoryGrid} role="group" aria-label="Cartas">
         {ex.deck.map((slot, i) => {
           const isFound = found.includes(slot.pair)
@@ -76,7 +79,7 @@ function MemoryRound({ ex, onAnswered, showFeedback, allowHints }: {
         })}
       </div>
       {/* The game submits itself when the last pair is found: the bar has the hint, and the forward button after it. */}
-      <AnswerBar flow={flow} onCheck={() => {}} canCheck={false} />
+      <AnswerBar flow={flow} onCheck={() => {}} canCheck={false} selfChecking />
     </section>
   )
 }

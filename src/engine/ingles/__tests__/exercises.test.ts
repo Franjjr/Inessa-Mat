@@ -33,7 +33,7 @@ function answersOf(ex: EnglishExercise): { right: Answer; wrong: Answer } {
     case 'eng-op-listen':
       return { right: { type: 'number', value: ex.answer }, wrong: { type: 'number', value: ex.answer + 1 } }
     case 'eng-memory':
-      return { right: { type: 'memory', flips: 2 * ex.pairs.length, found: ex.pairs.length }, wrong: { type: 'memory', flips: 2 * ex.pairs.length + 5, found: ex.pairs.length } }
+      return { right: { type: 'memory', turns: ex.pairs.length, found: ex.pairs.length }, wrong: { type: 'memory', turns: 2 * ex.pairs.length + 5, found: ex.pairs.length } }
     case 'eng-scramble':
       return { right: { type: 'text', value: ex.answer }, wrong: { type: 'text', value: 'zzzz' } }
   }
@@ -246,19 +246,20 @@ describe('English word games: memory and scramble', () => {
     for (const skill of ENGLISH_SKILLS.filter((s) => s.startsWith('eng:voc:'))) expect(kindsForSkill(skill), skill).toContain('eng-scramble')
   })
 
-  it('memory is one attempt: right when every pair is found in at most 2 × pairs + 4 flips', () => {
+  it('memory is one attempt in turns (two cards each): 16 turns for six pairs is right, 17 is wrong', () => {
     const ex = one('eng-memory', 'eng:voc:comida') as EngMemoryExercise
     const n = ex.pairs.length
-    expect(check(ex, { type: 'memory', flips: 2 * n + 4, found: n }).correct).toBe(true)
-    expect(check(ex, { type: 'memory', flips: 2 * n + 5, found: n }).correct).toBe(false)
-    expect(check(ex, { type: 'memory', flips: 2 * n, found: n - 1 }).correct).toBe(false)
+    expect(2 * n + 4).toBe(16)
+    expect(check(ex, { type: 'memory', turns: 2 * n + 4, found: n }).correct).toBe(true)
+    expect(check(ex, { type: 'memory', turns: 2 * n + 5, found: n }).correct).toBe(false)
+    expect(check(ex, { type: 'memory', turns: n, found: n - 1 }).correct).toBe(false)
   })
 
-  it('a wrong memory names the flips and the limit, and never says «¡Mal!»', () => {
+  it('a wrong memory names the turns and the limit, and never says «¡Mal!»', () => {
     const ex = one('eng-memory', 'eng:voc:comida') as EngMemoryExercise
     const n = ex.pairs.length
-    const bad = check(ex, { type: 'memory', flips: 30, found: n })
-    expect(bad.feedback).toContain('30 giros')
+    const bad = check(ex, { type: 'memory', turns: 30, found: n })
+    expect(bad.feedback).toContain('30 turnos')
     expect(bad.feedback).toContain(String(2 * n + 4))
     expect(bad.feedback).not.toMatch(/Mal/)
   })
