@@ -54,6 +54,34 @@ describe('/api/pronunciation', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it('refuses a chunked body over 400 KB without reading all of it (no content-length)', async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    const chunk = new Uint8Array(100 * 1024)
+    let pulled = 0
+    const stream = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled++
+        if (pulled > 50) controller.close()
+        else controller.enqueue(chunk.slice())
+      },
+    })
+    const req = new Request('https://repasitos.es/api/pronunciation?text=apple', {
+      method: 'POST', headers: { ...ORIGIN }, body: stream, duplex: 'half',
+    } as RequestInit)
+    expect((await handler(req, env)).status).toBe(413)
+    expect(fetchMock).not.toHaveBeenCalled()
+    // Stopped soon after the limit (about 5 chunks of 100 KB), not after the 50 offered.
+    expect(pulled).toBeLessThan(10)
+  })
+
+  it('answers noSpeech, not a score, when Azure heard nothing (NoMatch)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ RecognitionStatus: 'NoMatch' }), { status: 200 })))
+    const res = await call('text=apple')
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ noSpeech: true })
+  })
+
   it('answers skipped when the key or the region is missing', async () => {
     const res = await call('text=apple', wav(), ORIGIN, {})
     expect(await res.json()).toEqual({ skipped: true })

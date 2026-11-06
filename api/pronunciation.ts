@@ -51,6 +51,28 @@ export function __resetPronunciationLimitForTests(): void {
   hits.clear()
 }
 
+/** The whole body, or null as soon as it passes `max` bytes (the rest is not read). */
+async function readUpTo(req: Request, max: number): Promise<Uint8Array | null> {
+  if (!req.body) return new Uint8Array(0)
+  const reader = req.body.getReader()
+  const parts: Uint8Array[] = []
+  let total = 0
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > max) {
+      await reader.cancel().catch(() => undefined)
+      return null
+    }
+    parts.push(value)
+  }
+  const out = new Uint8Array(total)
+  let at = 0
+  for (const p of parts) { out.set(p, at); at += p.byteLength }
+  return out
+}
+
 /** A RIFF/WAVE container: the only audio this endpoint takes. */
 function isWav(bytes: Uint8Array): boolean {
   if (bytes.byteLength < 44) return false
@@ -76,8 +98,9 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   const declared = Number(req.headers.get('content-length') ?? '0')
   if (declared > MAX_BYTES) return fail(413, 'Clip too large')
 
-  const body = new Uint8Array(await req.arrayBuffer())
-  if (body.byteLength > MAX_BYTES) return fail(413, 'Clip too large')
+  // Counted while it streams: a body without content-length (chunked) is cut at the limit, never read whole.
+  const body = await readUpTo(req, MAX_BYTES)
+  if (!body) return fail(413, 'Clip too large')
   if (!isWav(body)) return fail(400, 'Bad audio')
 
   const key = env.AZURE_SPEECH_KEY
@@ -105,9 +128,10 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   // Quota reached (F0 answers 429 or 403), a transient error, or a stall: the app skips the speaking item.
   if (!azure || !azure.ok) return SKIPPED()
   const data = (await azure.json().catch(() => null)) as { RecognitionStatus?: string; NBest?: { PronScore?: number }[] } | null
-  const pron = data?.NBest?.[0]?.PronScore
+  if (!data) return SKIPPED()
+  // Silence or nothing recognised is not a score: the app asks the child to try again (no record, no attempt counted).
+  if (data.RecognitionStatus !== 'Success') return Response.json({ noSpeech: true }, { headers: { 'Cache-Control': 'no-store' } })
+  const pron = data.NBest?.[0]?.PronScore
   if (typeof pron !== 'number' || !Number.isFinite(pron)) return SKIPPED()
-  // Nothing recognised is a result too (a score of 0, one star and encouragement), not a failure.
-  const score = data?.RecognitionStatus === 'Success' ? Math.min(100, Math.max(0, Math.round(pron))) : 0
-  return Response.json({ score }, { headers: { 'Cache-Control': 'no-store' } })
+  return Response.json({ score: Math.min(100, Math.max(0, Math.round(pron))) }, { headers: { 'Cache-Control': 'no-store' } })
 }

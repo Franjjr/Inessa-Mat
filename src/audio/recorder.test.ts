@@ -108,3 +108,16 @@ describe('startTake: the clip, the limit and the release of the microphone', () 
     expect(blob.size).toBe(44 + 16000 * 1 * 2)
   })
 })
+
+describe('startTake: a failure while setting up the audio releases the microphone', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('stops the microphone tracks when the audio context cannot be created', async () => {
+    const track = { stop: vi.fn() }
+    vi.stubGlobal('navigator', { mediaDevices: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) } })
+    vi.stubGlobal('AudioContext', class { constructor() { throw new Error('no audio here') } })
+    const { startTake } = await import('./recorder')
+    await expect(startTake(10)).rejects.toThrow('no audio here')
+    expect(track.stop).toHaveBeenCalledTimes(1)
+  })
+})
