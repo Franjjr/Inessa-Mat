@@ -33,7 +33,7 @@ interface Props {
   allowHints?: boolean
   /** The lesson has grown to hold this try (the board takes the exercise's height, see LessonPlayer). */
   grown?: boolean
-  /** Called when the exercise does not fit the board even at MIN_FIT_SCALE and «Comprobar» is out of reach: the lesson grows. */
+  /** Called when the exercise does not fit the board even at MIN_FIT_SCALE and one of its controls is out of reach: the lesson grows. */
   onOverflow?: () => void
 }
 
@@ -53,16 +53,28 @@ export function fitScale(available: number, natural: number): number {
   return Math.max(MIN_FIT_SCALE, available / natural)
 }
 
-/** Whether «Comprobar» (the exercise's answer bar; its whole bottom when there is none) is seen in the board at `scale`, with no
-    growing: its bottom is above the board's bottom and above the window's. The exercise is drawn from its top centre, so its
-    top stays where it is and the unscaled offsets are read at the `applied` scale and projected to `scale`. */
-function commandReachable(wrap: HTMLElement, inner: HTMLElement, applied: number, scale: number, natural: number): boolean {
+const CONTROLS = 'button, input, textarea, select'
+
+/** Whether every control of the try (the exercise's, and the footer's «Inténtalo otra vez») is seen in the board at `scale`,
+    with no growing: the lowest one's bottom is above the board's bottom and above the window's. The exercise is drawn from its
+    top centre, so its top stays where it is: its controls are read at the `applied` scale and projected to `scale`; the footer
+    sits under the exercise, so its controls move with the exercise's height. No control: the exercise's own bottom. */
+function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLElement | null, applied: number, scale: number, natural: number): boolean {
   const top = inner.getBoundingClientRect().top
-  const command = [...inner.querySelectorAll('button')].find((b) => /Comprobar/.test(b.textContent ?? ''))
-  const unscaledBottom = command ? (command.getBoundingClientRect().bottom - top) / applied : natural
-  const bottom = top + unscaledBottom * scale
+  const gap = parseFloat(getComputedStyle(wrap).rowGap) || 0
+  let lowest = Number.NEGATIVE_INFINITY
+  for (const c of inner.querySelectorAll<HTMLElement>(CONTROLS)) {
+    lowest = Math.max(lowest, top + ((c.getBoundingClientRect().bottom - top) / applied) * scale)
+  }
+  if (footer) {
+    const footerTop = footer.getBoundingClientRect().top
+    for (const c of footer.querySelectorAll<HTMLElement>(CONTROLS)) {
+      lowest = Math.max(lowest, top + natural * scale + gap + (c.getBoundingClientRect().bottom - footerTop))
+    }
+  }
+  if (lowest === Number.NEGATIVE_INFINITY) lowest = top + natural * scale
   const visibleBottom = Math.min(wrap.getBoundingClientRect().bottom, window.innerHeight)
-  return bottom <= visibleBottom - 1
+  return lowest <= visibleBottom - 1
 }
 
 export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
@@ -102,9 +114,9 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       const natural = inner.offsetHeight
       const scale = fitScale(available, natural)
       setFit({ scale, height: natural })
-      // Taller than the board even at the smallest scale AND «Comprobar» out of reach: the lesson has to grow to hold it.
-      // A tall exercise whose «Comprobar» is still in view keeps its size (its lower part scrolls inside the board).
-      if (!grown && natural * scale > available + 1 && !commandReachable(wrap, inner, appliedScale.current, scale, natural)) onOverflow?.()
+      // Taller than the board even at the smallest scale AND a control of the try out of reach: the lesson has to grow to hold it.
+      // A tall exercise whose controls are all in view keeps its size (its lower part scrolls inside the board).
+      if (!grown && natural * scale > available + 1 && !controlsReachable(wrap, inner, footerRef.current, appliedScale.current, scale, natural)) onOverflow?.()
       appliedScale.current = scale
     }
     measure()

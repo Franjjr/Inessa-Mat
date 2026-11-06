@@ -96,11 +96,12 @@ export async function tapReachable(page: Page, loc: Locator, label: string, opts
   const info = await loc.evaluate((el) => {
     const r = el.getBoundingClientRect()
     let clipped: string | null = null
-    // Each axis on its own: an overflow-x clip does not cut what overflows the box downwards (overflow-y visible).
+    // Each axis on its own: an overflow-x clip does not cut what overflows the box downwards (overflow-y visible). A scroll box
+    // (auto, scroll) cuts too: what lies outside it is out of sight until the box is scrolled, which the child does not do.
     for (let a = el.parentElement; a && a !== document.body && !clipped; a = a.parentElement) {
       const cs = getComputedStyle(a)
-      const clipX = /(hidden|clip)/.test(cs.overflowX)
-      const clipY = /(hidden|clip)/.test(cs.overflowY)
+      const clipX = /(hidden|clip|auto|scroll)/.test(cs.overflowX)
+      const clipY = /(hidden|clip|auto|scroll)/.test(cs.overflowY)
       if (!clipX && !clipY) continue
       const ar = a.getBoundingClientRect()
       const cut = (clipX && (r.left < ar.left - 1 || r.right > ar.right + 1)) || (clipY && (r.top < ar.top - 1 || r.bottom > ar.bottom + 1))
@@ -113,7 +114,11 @@ export async function tapReachable(page: Page, loc: Locator, label: string, opts
     }
   }).catch((e: Error) => ({ rect: `error ${e.message.slice(0, 120)}`, sideways: false, clipped: null }))
   reach.log.push({ label, ok, moreShown, viaMore, rect: info.rect, sideways: info.sideways, clipped: info.clipped })
-  if (!reach.soft) expect(ok, `${label} is visible or reachable with «⬇ Más abajo» (top,bottom,innerHeight,left,right,innerWidth: ${info.rect})`).toBe(true)
+  if (!reach.soft) {
+    expect(ok, `${label} is visible or reachable with «⬇ Más abajo» (top,bottom,innerHeight,left,right,innerWidth: ${info.rect})`).toBe(true)
+    // A control cut by a box (the lesson board, a scroll box) is not a tap the child can make, even when it is in the window.
+    expect(info.clipped, `${label} is not cut by the box it sits in (${info.clipped})`).toBeNull()
+  }
   if (opts.click !== false) await loc.evaluate((el) => (el as HTMLElement).click())
 }
 

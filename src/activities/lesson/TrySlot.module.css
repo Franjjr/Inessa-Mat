@@ -14,8 +14,10 @@
   overflow: auto;
 }
 
-/* The lesson grew to hold this try: the board has the exercise's height, so nothing scrolls inside it. */
+/* The lesson grew to hold this try: the wrap takes the height of its content (not the board's), so nothing scrolls or
+   is cut inside it. */
 .wrapGrown {
+  height: auto;
   overflow: visible;
 }
 
