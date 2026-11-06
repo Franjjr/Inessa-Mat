@@ -2,12 +2,14 @@
    in the mix, the final game of every session, and that the listening kinds are left out without sound. */
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
+import { classForTopic, markClassDone } from '@/content/classes'
 import { INGLES3_SYLLABUS, currentTopic } from '@/content/syllabus'
 import { DEFAULT_CHILD_SETTINGS, type AttemptRecord, type ChildProfile, type MasteryMap, type ProgressState, type SkillMastery } from '@/types'
 import { createRng } from '../../rng'
 import { ENGLISH_LISTENING_KINDS } from '../exercises'
 import { ENGLISH_WORDS } from '../words'
-import { ENGLISH_PRACTICE_TARGET_SECONDS, planEnglishSession } from '../daily'
+import { ENGLISH_PRACTICE_TARGET_SECONDS, englishTopicOfToday, markEnglishClassToday, planEnglishSession } from '../daily'
+import { teachableEnglishCourse } from '../teachable'
 import { ENGLISH_SESSION_MINUTES } from '../../subjects'
 
 const NOW = new Date('2026-11-06T10:00:00.000Z')
@@ -115,5 +117,40 @@ describe('planEnglishSession', () => {
     const b = planEnglishSession({ child: child(), mastery: {}, attempts: [], syllabus: INGLES3_SYLLABUS, now: NOW, progress: progress() })
     expect(b.blocks).toEqual(a.blocks)
     expect(currentTopic(INGLES3_SYLLABUS, {})?.id).toBe('eng-saludos')
+  })
+})
+
+describe('the English topic of today stays after its class', () => {
+  // The class of «Números del 0 al 20» is one skill (eng:num:0-20); its practice (correct answers, no hints) masters it, so the
+  // current topic would move on to the next one («Colores y formas»). Today's topic must stay the one the class taught.
+  const numbers = 'eng-num-0-20'
+  const numbersSkills = INGLES3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === numbers)!.skills
+  const masteredNumbers: MasteryMap = { ...masteredTopics(['eng-saludos']), ...learnt(numbersSkills) }
+  const classDone = (now: Date = NOW) => markEnglishClassToday(markClassDone(progress(), classForTopic(numbers, 3, 'english')!, 'lesson'), numbers, now)
+
+  it('the session of the day keeps the class topic, with its own skills to practise', () => {
+    const p = plan({ mastery: masteredNumbers, progress: classDone() })
+    expect(p.topic?.id).toBe(numbers)
+    expect(p.classTopicId).toBeNull()
+    expect(p.blocks[1].items.length).toBeGreaterThanOrEqual(3)
+    expect(p.blocks[1].items.every((i) => i.exercise.skill === numbersSkills[0])).toBe(true)
+    expect(p.blocks[3].items[0].exercise.skill).toBe(numbersSkills[0])
+  })
+
+  it('without the mark of today the session moves on to the next topic (the cause)', () => {
+    const p = plan({ mastery: masteredNumbers, progress: progress({ [`clase:${numbers}`]: true }) })
+    expect(p.topic?.id).toBe('eng-colores')
+  })
+
+  it('a class finished on an earlier day does not keep its topic', () => {
+    const p = plan({ mastery: masteredNumbers, progress: classDone(new Date('2026-11-05T10:00:00.000Z')) })
+    expect(p.topic?.id).toBe('eng-colores')
+  })
+
+  it('with two classes finished today, the later one in teaching order is today\'s topic', () => {
+    const course = teachableEnglishCourse(INGLES3_SYLLABUS, true)
+    const both = markEnglishClassToday(classDone(), 'eng-saludos', NOW)
+    expect(englishTopicOfToday(course, masteredNumbers, both, NOW)?.id).toBe(numbers)
+    expect(englishTopicOfToday(course, masteredNumbers, progress(), NOW)?.id).toBe('eng-colores')
   })
 })

@@ -9,7 +9,7 @@ import { LessonPlayer } from '@/activities'
 import type { ExerciseOutcome, SubjectId } from '@/types'
 import { classForTopic, markClassDone, type ClassDef, type ClassFinish } from '@/content/classes'
 import { allTopics, subjectOfTopic, syllabusFor, topicTitle, type SyllabusTopic } from '@/content/syllabus'
-import { createRng, generate } from '@/engine'
+import { createRng, generate, markEnglishClassToday } from '@/engine'
 import { updateProgress, useActiveChild } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import { GameHostProvider } from '@/world/host/GameHost'
@@ -55,7 +55,11 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
 
   const finish = async (via: ClassFinish) => {
     try {
-      await updateProgress(childId, (p) => markClassDone(p, cls, via))
+      // An English class also dates its topic: the topic stays today's topic after its practice (englishTopicOfToday).
+      await updateProgress(childId, (p) => {
+        const done = markClassDone(p, cls, via)
+        return subject === 'english' ? markEnglishClassToday(done, topic.id, new Date()) : done
+      })
       setPhase('done')
     } catch {
       toast('No hemos podido guardar la clase. Vuelve a intentarlo en un momento.')

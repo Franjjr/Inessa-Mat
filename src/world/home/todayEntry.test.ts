@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
+import { classForTopic, markClassDone } from '@/content/classes'
 import { currentTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { createRng, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
+import { createRng, markEnglishClassToday, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
 import type { ChildProfile, MasteryMap, ProgressState, SkillMastery, SubjectId } from '@/types'
 import { sessionDoneKey } from '@/world/session/logic'
 import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
@@ -241,5 +242,16 @@ describe('placement banner on the home', () => {
   it('leaves out a subject that is not on for the child', () => {
     expect(placementBannerOf('math', pendingOnly('language', 'english'), ['math', 'english'])).toBe('english')
     expect(placementBannerOf('math', pendingOnly('language'), ['math'])).toBeNull()
+  })
+})
+
+describe('todayEntry: English keeps the topic of today\'s class', () => {
+  it('after the class, the home still names its topic and leads to the session (not to the next topic\'s class)', () => {
+    const numbers = INGLES3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === 'eng-num-0-20')!
+    const learnt = Object.fromEntries(numbers.skills.map((skill) => [skill, { skill, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: NOW } satisfies SkillMastery]))
+    const done = markEnglishClassToday(markClassDone(progress(), classForTopic('eng-num-0-20', 3, 'english')!, 'lesson'), 'eng-num-0-20', new Date(NOW))
+    expect(todayEntry({ grade: 3, mastery: learnt, progress: done, subject: 'english', now: new Date(NOW) })).toEqual({
+      kind: 'sesion', title: topicTitle(numbers), to: '/play/ingles',
+    })
   })
 })

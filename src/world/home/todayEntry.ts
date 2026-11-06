@@ -3,7 +3,7 @@
    maths until today's maths session is done, then on Lengua (homeSubject). */
 import { classForTopic, isClassDone } from '@/content/classes'
 import { currentTopic, syllabusFor, topicTitle, type Syllabus } from '@/content/syllabus'
-import { masteryOf, subjectOffered, teachableCourse, teachableEnglishCourse, type LessonSubject } from '@/engine'
+import { englishTopicOfToday, masteryOf, subjectOffered, teachableCourse, teachableEnglishCourse, type LessonSubject } from '@/engine'
 import { sessionDoneKey } from '@/world/session/logic'
 import { SUBJECTS, type MasteryMap, type ProgressState, type SubjectId } from '@/types'
 
@@ -36,15 +36,20 @@ export function placementBannerOf(view: SubjectId, pending: Partial<Record<Lesso
   return next && next !== 'math' && HOME_ORDER.indexOf(next) > HOME_ORDER.indexOf(view as LessonSubject) ? next : null
 }
 
-export function todayEntry({ grade, mastery, progress, subject = 'math', sound = true }: {
+export function todayEntry({ grade, mastery, progress, subject = 'math', sound = true, now = new Date() }: {
   grade?: number; mastery: MasteryMap; progress: ProgressState; subject?: SubjectId
   /** The dictation can be heard (sound setting on and a voice): without it a dictation is not taught (teachableCourse), as in the planner. */
   sound?: boolean
+  now?: Date
 }): TodayEntry {
   const course = syllabusFor(subject, grade)
-  // Lengua and English name the topic their planner teaches (the same teachable view); maths is unchanged.
+  // Lengua and English name the topic their planner teaches (the same teachable view); maths is unchanged. English keeps the
+  // topic of today's class (englishTopicOfToday), as its session does.
   const teachable = TEACHABLE[subject]
-  const topic = currentTopic(teachable ? teachable(course, sound) : course, masteryOf(mastery, subject))
+  const view = teachable ? teachable(course, sound) : course
+  const topic = subject === 'english'
+    ? englishTopicOfToday(view, masteryOf(mastery, subject), progress, now)
+    : currentTopic(view, masteryOf(mastery, subject))
   const title = topic ? topicTitle(topic) : FALLBACK_TITLE[subject] ?? 'Hoy'
   const cls = topic ? classForTopic(topic.id, grade, subject) : undefined
   if (topic && cls && !isClassDone(progress, cls)) {

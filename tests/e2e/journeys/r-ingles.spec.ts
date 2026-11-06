@@ -77,24 +77,6 @@ async function openEnglishHome(page: Page, topic: string): Promise<void> {
   await expect(page.getByRole('button', { name: /Hoy aprendemos/ })).toContainText(topic)
 }
 
-/** Test setup only: the skills of a topic go back to the first box, so the topic is the current one again (see classThenSession). */
-async function reopenTopic(page: Page, topicId: string): Promise<void> {
-  await page.evaluate(async (target) => {
-    const data = await import('/src/data/index.ts')
-    const syllabus = await import('/src/content/syllabus/index.ts')
-    const dev = window.__numeriaDev
-    if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
-    const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
-    if (!child) throw new Error('no child on this device')
-    const topic = syllabus.allTopics(syllabus.syllabusFor(syllabus.subjectOfTopic(target), child.grade)).find((t) => t.id === target)
-    if (!topic) throw new Error(`no topic ${target}`)
-    const now = new Date().toISOString()
-    await data.saveMastery(child.id, topic.skills.map((skill) => ({
-      skill, box: 0 as const, attempts: 0, correct: 0, streak: 0, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: now,
-    })))
-  }, topicId)
-}
-
 /** The English class of a topic and the session after it, played to the end. */
 async function classThenSession(page: Page, viewport: { width: number; height: number }, topicId: string, topicName: string): Promise<{ classSeen: EnglishSeen; sessionSeen: EnglishSeen }> {
   const kit = await englishKit(page)
@@ -110,9 +92,7 @@ async function classThenSession(page: Page, viewport: { width: number; height: n
   expect(classSeen.typed, 'the class has a typed word (the letter keyboard)').toBe(true)
   expect(await noSidewaysScroll(page), `class at ${viewport.width}×${viewport.height}: no sideways scroll`).toBe(true)
 
-  // The class practice moves the mastery on, so the topic of the session would be the next one (its class first). The journey
-  // checks the session of the topic just taught: its skills go back to the first box (the class itself stays done).
-  await reopenTopic(page, topicId)
+  // The session after the class is the session of the topic just taught (the class practice may have mastered it already).
   await tapReachable(page, page.getByRole('button', { name: 'Seguir con la sesión' }), '«Seguir con la sesión»')
   await expect(page).toHaveURL(/\/play\/ingles$/)
   await expect(page.getByRole('heading', { name: 'Mi sesión de Inglés' })).toBeVisible()

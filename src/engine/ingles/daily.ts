@@ -1,7 +1,7 @@
 /* The English session («Mi sesión de Inglés»): about ten minutes. Pure: no React, no I/O.
      Calentamiento (about 2 min)  learnt English skills not seen today, most urgent first, no hints
-     Lo nuevo                     the current topic: its class comes first (classTopicId) when the child has not done it;
-                                  then 3 to 5 items of the topic
+     Lo nuevo                     today's topic (englishTopicOfToday: the topic of today's class, else the current topic): its
+                                  class comes first (classTopicId) when the child has not done it; then 3 to 5 items of the topic
      Mezcla                       the skills of the words the child failed (newest first), then the learnt ones
      Juego                        one final game on the topic of the day: eng-memory or eng-scramble (memory only when the
                                   theme has its pictures), or a number game (eng-num-write, eng-num-listen, eng-op-listen)
@@ -52,6 +52,22 @@ export interface EnglishPlanInput {
 
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
 
+/** The dated flag of an English class finished on `now`'s day (ProgressState.flags; only the English class sets it). */
+const classTodayKey = (topicId: string, now: Date) => `ingles-clase-hoy:${dayKey(now)}:${topicId}`
+
+/** Records that the English class of a topic was finished today (with the class flag, see markClassDone). */
+export function markEnglishClassToday(progress: ProgressState, topicId: string, now: Date): ProgressState {
+  return { ...progress, flags: { ...progress.flags, [classTodayKey(topicId, now)]: true } }
+}
+
+/** Today's English topic. The class practice moves the mastery on, so once the class of a topic is finished the next topic
+    would become the current one; the topic of today's class stays today's topic (the session and the home «Hoy»). It is the
+    last one in teaching order whose class was finished today, else the current topic. */
+export function englishTopicOfToday(course: Syllabus, mastery: MasteryMap, progress: ProgressState | undefined, now: Date): SyllabusTopic | null {
+  const taught = availableTopics(course).filter((t) => progress?.flags?.[classTodayKey(t.id, now)])
+  return taught[taught.length - 1] ?? currentTopic(course, mastery)
+}
+
 function secondsOf(items: DailyItem[]): number {
   return items.reduce((sum, i) => sum + estimateSeconds(i), 0)
 }
@@ -98,13 +114,15 @@ export function planEnglishSession(input: EnglishPlanInput): DailyPlan {
   }
 
   // 2. Lo nuevo: the current topic (its class first when the child has not done it); an ordered topic teaches one step.
-  const topic = currentTopic(course, mastery)
+  const topic = englishTopicOfToday(course, mastery, progress, now)
   const cls = topic ? classForTopic(topic.id, child.grade, 'english') : undefined
   const classTopicId = topic && cls && !(progress && isClassDone(progress, cls)) ? topic.id : null
   const newItems: DailyItem[] = []
   if (topic) {
+    // A topic its class has already mastered (today's topic) still teaches its own skills, so «Lo nuevo» never comes out empty.
     const open = topic.skills.filter((s) => (mastery[s]?.box ?? -1) < 2)
-    const candidates = topic.ordered ? open.slice(0, 1) : open.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
+    const toTeach = open.length ? open : [...topic.skills]
+    const candidates = topic.ordered ? toTeach.slice(0, 1) : toTeach.sort((x, y) => Number(!mastery[x]) - Number(!mastery[y]) || (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0))
     for (let i = 0; candidates.length && newItems.length < ENGLISH_NEW_MAX && i < ENGLISH_NEW_MAX * 3; i++) {
       const skill = candidates[i % candidates.length]
       const ex = make(skill, englishKindsFor(skill, sound), rng)
