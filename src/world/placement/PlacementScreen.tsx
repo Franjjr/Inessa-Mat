@@ -149,7 +149,7 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
       <div className={s.progressTrack} role="progressbar" aria-label={`Pregunta ${index + 1} de ${total}`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={index + (thanks ? 1 : 0)}>
         <div className={s.progressFill} style={{ width: `${Math.round(((index + (thanks ? 1 : 0)) / total) * 100)}%` }} />
       </div>
-      <div className={s.stage}>
+      <div className={`${s.stage} ${s.stageEnd}`}>
         <div className={s.card}>
           <p className={s.blockChip}>{blockLabel} · {index + 1} de {total}</p>
           {/* Shrunk to fit the window: no scrolling to answer. */}

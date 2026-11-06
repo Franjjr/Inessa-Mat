@@ -9,6 +9,8 @@ import { devFlag, devMasterUntilTopic, devSettings, seedDemo } from '../helpers'
 import { newSeen, noSidewaysScroll, playEnglish, tapReachable, type EnglishKit, type EnglishSeen } from '../ingles-driver'
 
 const VIEWPORTS = [{ width: 390, height: 844 }, { width: 1000, height: 490 }]
+/** The placement is a short card: it also runs on a 1366 × 657 laptop window. */
+const PLACEMENT_VIEWPORTS = [...VIEWPORTS, { width: 1366, height: 657 }]
 
 /** A Spanish voice that speaks nothing: the app sees a voice (the English items need one) and no audio is played. */
 const SPEECH_STUB = `(() => {
@@ -53,7 +55,7 @@ async function englishKit(page: Page): Promise<EnglishKit> {
     if (w.emoji) { partner.set(w.emoji, w.en); partner.set(w.en, w.emoji) }
     if (!words.has(w.es)) words.set(w.es, w.en)
   }
-  return { partner, words, numbers: new Map(data.digits) }
+  return { partner, words, numbers: new Map(data.digits), cards: data.list }
 }
 
 /** Lía's English setup for today: maths, Lengua and their placements are done, English is on and its placement is done. */
@@ -105,13 +107,10 @@ async function classThenSession(page: Page, viewport: { width: number; height: n
 }
 
 test.describe('Inglés de 3.º', () => {
-  // KNOWN BUG (found by these journeys, not fixed in Task 8): at 390 × 844 the typed English answers (the letter keyboard of the
-  // session) push «Comprobar» below the card, which clips it (no «⬇ Más abajo» shows: the card hides the overflow). At 1000 × 490
-  // the class's typed word is clipped inside its lesson board the same way. The journeys stay as fixme until the layout is fixed.
   for (const viewport of VIEWPORTS) {
     const size = `${viewport.width} × ${viewport.height}`
 
-    test.fixme(`the class, a typed word, the memory game and the stars at ${size}`, async ({ page }) => {
+    test(`the class, a typed word, the memory game and the stars at ${size}`, async ({ page }) => {
       test.setTimeout(480_000)
       await page.addInitScript(SPEECH_STUB)
       await page.setViewportSize(viewport)
@@ -128,7 +127,7 @@ test.describe('Inglés de 3.º', () => {
       expect(await noSidewaysScroll(page), `home at ${size}: no sideways scroll`).toBe(true)
     })
 
-    test.fixme(`a number to listen to, written with the keypad, at ${size}`, async ({ page }) => {
+    test(`a number to listen to, written with the keypad, at ${size}`, async ({ page }) => {
       test.setTimeout(480_000)
       await page.addInitScript(SPEECH_STUB)
       await page.setViewportSize(viewport)
@@ -142,24 +141,28 @@ test.describe('Inglés de 3.º', () => {
     })
   }
 
-  test('the English placement from the home banner, at a phone', async ({ page }) => {
-    test.setTimeout(300_000)
-    await page.addInitScript(SPEECH_STUB)
-    await page.setViewportSize({ width: 390, height: 844 })
-    await coarsePointer(page)
-    await linaWithEnglish(page, false)
-    await page.goto('/play')
-    const banner = page.getByRole('button', { name: /Haz la prueba de Inglés antes de empezar/ })
-    await tapReachable(page, banner, 'el aviso de la prueba de Inglés')
-    await expect(page).toHaveURL(/\/play\/prueba-ingles$/)
-    for (let i = 0; i < 10; i++) {
-      await tapReachable(page, page.getByRole('button', { name: 'No lo sé' }), '«No lo sé»')
-      await tapReachable(page, page.getByRole('button', { name: /^(Siguiente|Terminar)$/ }), '«Siguiente» o «Terminar»')
-    }
-    await expect(page.getByText(/¡Gracias, Lía!/)).toBeVisible()
-    await expect(page.getByText(/Ya sabemos por dónde empezar en Inglés/)).toBeVisible()
-    await tapReachable(page, page.getByRole('button', { name: 'Volver al inicio' }), '«Volver al inicio»')
-    await expect(page).toHaveURL(/\/play$/)
-    await expect(page.getByRole('button', { name: /Haz la prueba de Inglés/ })).toHaveCount(0)
-  })
+  for (const viewport of PLACEMENT_VIEWPORTS) {
+    const size = `${viewport.width} × ${viewport.height}`
+    test(`the English placement from the home banner at ${size}`, async ({ page }) => {
+      test.setTimeout(300_000)
+      await page.addInitScript(SPEECH_STUB)
+      await page.setViewportSize(viewport)
+      await coarsePointer(page)
+      await linaWithEnglish(page, false)
+      await page.goto('/play')
+      const banner = page.getByRole('button', { name: /Haz la prueba de Inglés antes de empezar/ })
+      await tapReachable(page, banner, 'el aviso de la prueba de Inglés')
+      await expect(page).toHaveURL(/\/play\/prueba-ingles$/)
+      for (let i = 0; i < 10; i++) {
+        await tapReachable(page, page.getByRole('button', { name: 'No lo sé' }), '«No lo sé»')
+        await tapReachable(page, page.getByRole('button', { name: /^(Siguiente|Terminar)$/ }), '«Siguiente» o «Terminar»')
+        expect(await noSidewaysScroll(page), `placement at ${size}: no sideways scroll`).toBe(true)
+      }
+      await expect(page.getByText(/¡Gracias, Lía!/)).toBeVisible()
+      await expect(page.getByText(/Ya sabemos por dónde empezar en Inglés/)).toBeVisible()
+      await tapReachable(page, page.getByRole('button', { name: 'Volver al inicio' }), '«Volver al inicio»')
+      await expect(page).toHaveURL(/\/play$/)
+      await expect(page.getByRole('button', { name: /Haz la prueba de Inglés/ })).toHaveCount(0)
+    })
+  }
 })

@@ -12,6 +12,8 @@ export interface EnglishKit {
   partner: Map<string, string>
   words: Map<string, string>
   numbers: Map<string, string>
+  /** The vocabulary: a memory card shows the English word, or the picture (its emoji, or the Spanish word when it has none). */
+  cards: { es: string; en: string; emoji: string | null }[]
 }
 
 /** The buttons that move an English class or session on. */
@@ -105,8 +107,11 @@ async function typeWord(page: Page, seen: EnglishSeen, kit: EnglishKit): Promise
   // The typed text is the live region of the box (the placeholder «Escribe aquí» is a separate, hidden span).
   const current = ((await word.evaluate((el) => ('value' in el ? String((el as HTMLInputElement).value) : (el.querySelector('[aria-live]')?.textContent ?? ''))).catch(() => '')) ?? '').trim()
   if (!current) {
-    const digits = ((await page.locator('[aria-label^="Número "]').first().getAttribute('aria-label').catch(() => null)) ?? '').replace('Número ', '')
-    const spanish = ((await page.locator('[aria-label^="Palabra: "]').first().getAttribute('aria-label').catch(() => null)) ?? '').replace('Palabra: ', '')
+    // Read without waiting: a locator's getAttribute waits for a match, and the word and the number tries never have both,
+    // so the driver would hang on the missing one (evaluateAll answers at once with what is on screen).
+    const label = (prefix: string) => page.locator(`[aria-label^="${prefix}"]`).evaluateAll((els) => els[0]?.getAttribute('aria-label') ?? '').catch(() => '')
+    const digits = ((await label('Número ')) ?? '').replace('Número ', '')
+    const spanish = ((await label('Palabra: ')) ?? '').replace('Palabra: ', '')
     const target = (digits && kit.numbers.get(digits)) || kit.words.get(spanish) || 'ab'
     const toggle = page.getByRole('button', { name: 'Usar el teclado de letras' })
     if (await toggle.isVisible().catch(() => false)) await tapReachable(page, toggle, '«Usar el teclado de letras»')
@@ -176,27 +181,35 @@ async function optionAnswer(page: Page, seen: EnglishSeen, kit: EnglishKit): Pro
   return true
 }
 
-/** The memory game: turns two cards at a time, and keeps the faces it has seen (a picture and its word are a pair; the
-    pairs come from the vocabulary, passed in as `partner`). A card left face down is «?». */
-async function memoryTurn(page: Page, partner: Map<string, string>, seen: EnglishSeen): Promise<boolean> {
+/** The memory game: turns two cards at a time, and keeps the faces it has seen. A card shows its English word, or its
+    picture: the emoji, with the Spanish word when the picture has one, or only the Spanish word when it has no emoji.
+    Two cards are a pair when they show the same English word. A card left face down is «?». */
+async function memoryTurn(page: Page, cards: EnglishKit['cards'], seen: EnglishSeen): Promise<boolean> {
   const grid = page.getByRole('group', { name: 'Cartas' })
   if (!(await grid.isVisible().catch(() => false))) return false
   seen.memory = true
-  const cards = grid.getByRole('button')
-  const n = await cards.count()
-  const state = await cards.evaluateAll((els) => els.map((el) => ({
+  const all = grid.getByRole('button')
+  const n = await all.count()
+  const state = await all.evaluateAll((els) => els.map((el) => ({
     text: (el.textContent ?? '').replace(/\s+/g, ' ').trim(), disabled: (el as HTMLButtonElement).disabled,
   })))
   seen.memoryFound = state.filter((c) => c.disabled && c.text !== '?').length / 2
   if (state.every((c) => c.disabled)) return false
   const known = seen.faces
   state.forEach((c, i) => { if (c.text !== '?') known.set(i, c.text) })
+  /** The English word a card shows (undefined when the text is not a card of the vocabulary). */
+  const wordOf = (text: string | undefined): string | undefined => {
+    if (!text) return undefined
+    const en = cards.find((c) => c.en === text)
+    if (en) return en.en
+    return cards.find((c) => (c.emoji && text.includes(c.emoji)) || (c.es && text.includes(c.es)))?.en
+  }
   const up = state.map((c, i) => (c.text !== '?' && !c.disabled ? i : -1)).filter((i) => i >= 0)
   const faceDown = (i: number) => !state[i].disabled && state[i].text === '?'
   const pickPartner = (x: number): number | undefined => {
-    const want = partner.get(known.get(x) ?? '')
+    const want = wordOf(known.get(x))
     if (!want) return undefined
-    for (const [i, t] of known) if (i !== x && t === want && !state[i].disabled && faceDown(i)) return i
+    for (const [i, t] of known) if (i !== x && wordOf(t) === want && faceDown(i)) return i
     return undefined
   }
   let target: number | undefined
@@ -205,15 +218,15 @@ async function memoryTurn(page: Page, partner: Map<string, string>, seen: Englis
     // Two known faces that are a pair (both face down): turn the first now, its partner next time.
     for (const [i, t] of known) {
       if (!faceDown(i)) continue
-      const want = partner.get(t)
-      if (want && [...known.values()].includes(want)) { target = i; break }
+      const want = wordOf(t)
+      if (want && [...known].some(([j, u]) => j !== i && wordOf(u) === want && faceDown(j))) { target = i; break }
     }
   }
   if (target === undefined) {
     for (let i = 0; i < n; i++) if (faceDown(i)) { target = i; break }
   }
   if (target === undefined) return false
-  await tapReachable(page, cards.nth(target), `la carta ${target + 1}`)
+  await tapReachable(page, all.nth(target), `la carta ${target + 1}`)
   return true
 }
 
@@ -223,16 +236,32 @@ async function noteViews(page: Page, seen: EnglishSeen): Promise<void> {
   if (await page.getByText('Escucha el número y escríbelo con cifras').isVisible().catch(() => false)) seen.numberListen = true
 }
 
+/** Set INGLES_DEBUG=1 to log each step of the driver (the branch taken and the screen) to the test output. */
+const DEBUG = process.env.INGLES_DEBUG === '1'
+
+/** One line per driver step: the branch taken, the screen title and the question on screen (only with INGLES_DEBUG). */
+async function logStep(page: Page, step: number, branch: string): Promise<void> {
+  if (!DEBUG) return
+  const screen = await page.evaluate(() => {
+    const title = document.querySelector('h1')?.textContent?.trim() ?? ''
+    const question = document.querySelector('[role="region"] p, [role="status"] p, [class*="_blockChip_"]')?.textContent?.trim() ?? ''
+    const progress = document.querySelector('[role="progressbar"]')?.getAttribute('aria-label') ?? ''
+    return `${title} | ${question.slice(0, 60)} | ${progress}`
+  }).catch(() => '?')
+  console.log(`[ingles] step ${step} ${branch} :: ${screen}`)
+}
+
 /** Plays whatever is on screen, one step at a time, until `done()`. */
 export async function playEnglish(page: Page, done: () => Promise<boolean>, seen: EnglishSeen, kit: EnglishKit, maxSteps = 500): Promise<void> {
   for (let i = 0; i < maxSteps; i++) {
     if (await done()) return
     await noteViews(page, seen)
-    if (await advanceOnce(page)) { await settle(page, 200); continue }
-    if (await memoryTurn(page, kit.partner, seen)) { await settle(page, 200); continue }
-    if (await typeWord(page, seen, kit)) { continue }
-    if (await numberAnswer(page)) { await settle(page, 200); continue }
-    if (await optionAnswer(page, seen, kit)) { await settle(page, 200); continue }
+    if (await advanceOnce(page)) { await logStep(page, i, 'advance'); await settle(page, 200); continue }
+    if (await memoryTurn(page, kit.cards, seen)) { await logStep(page, i, 'memory'); await settle(page, 200); continue }
+    if (await typeWord(page, seen, kit)) { await logStep(page, i, 'typeWord'); continue }
+    if (await numberAnswer(page)) { await logStep(page, i, 'number'); await settle(page, 200); continue }
+    if (await optionAnswer(page, seen, kit)) { await logStep(page, i, 'option'); await settle(page, 200); continue }
+    await logStep(page, i, 'wait')
     await settle(page, 300)
   }
   throw new Error('the English flow did not finish')
