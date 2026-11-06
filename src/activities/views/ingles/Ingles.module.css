@@ -1,0 +1,204 @@
+/* Inglés de 3.º views. Same frame as the Lengua views: every tap target is at least 56 px, and nothing widens a 390 px phone. */
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+}
+
+.prompt {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.listen {
+  display: flex;
+  justify-content: center;
+}
+
+.card {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: min(240px, 100%);
+  max-width: 100%;
+  padding: var(--sp-4) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 8vw, 3.5rem);
+  font-weight: 800;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl, 24px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  overflow-wrap: anywhere;
+}
+
+.face {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gloss {
+  font-family: var(--font-display);
+  font-size: var(--fs-md, 1.1rem);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.pictureCard {
+  min-width: 96px;
+  min-height: 96px;
+  padding: var(--sp-3);
+  font-size: clamp(2rem, 7vw, 3rem);
+  line-height: 1.1;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.pictureRight {
+  background: var(--c-magic-soft);
+  outline: 4px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+.paired {
+  background: var(--c-magic-soft);
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
+}
+
+.option {
+  min-height: 72px;
+  min-width: 120px;
+  padding: var(--sp-3) var(--sp-5);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  box-shadow: var(--sticker-shadow, var(--shadow-1));
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.optionOn {
+  background: var(--c-magic-soft);
+}
+
+.matchGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+  min-width: 0;
+}
+
+.matchCol {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.matchWord {
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-lg, 16px);
+  cursor: pointer;
+  touch-action: manipulation;
+  overflow-wrap: anywhere;
+}
+
+.sentence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+  min-width: 0;
+}
+
+.gap {
+  min-width: 96px;
+  min-height: 56px;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: center;
+  color: var(--c-ink-soft);
+  border-bottom: 4px dashed var(--c-line);
+}
+
+.gapFilled {
+  color: var(--c-ink);
+  border-bottom-style: solid;
+}
+
+.digits {
+  align-self: center;
+  min-width: min(240px, 100%);
+  padding: var(--sp-4) var(--sp-5);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 10vw, 4rem);
+  font-weight: 800;
+  color: var(--c-ink);
+  background: var(--c-surface);
+  border: var(--sticker-border, 3px solid var(--c-line));
+  border-radius: var(--r-xl, 24px);
+}
+
+.numberRow {
+  display: flex;
+  justify-content: center;
+}
+
+.typedFrame {
+  min-width: 0;
+  padding-inline: 8px;
+}
+
+.typed {
+  width: 100%;
+  min-width: 0;
+}

@@ -110,4 +110,12 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'lng-read-choice': lazy(() => import('./views/lengua/ReadingView')),
   'lng-read-text': lazy(() => import('./views/lengua/ReadingView')),
   'lng-read-order': lazy(() => import('./views/lengua/ReadingView')),
+  // ---- Inglés de 3.º: palabras, frases y números en inglés (src/activities/views/ingles)
+  'eng-listen-pick': lazy(() => import('./views/ingles/ListenPickView')),
+  'eng-match': lazy(() => import('./views/ingles/MatchView')),
+  'eng-write-word': lazy(() => import('./views/ingles/WriteWordView')),
+  'eng-complete': lazy(() => import('./views/ingles/CompleteView')),
+  'eng-num-write': lazy(() => import('./views/ingles/NumberWriteView')),
+  'eng-num-listen': lazy(() => import('./views/ingles/NumberListenView')),
+  'eng-op-listen': lazy(() => import('./views/ingles/OperationListenView')),
 }

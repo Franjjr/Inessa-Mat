@@ -528,8 +528,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'mental': return ['mental']
     case 'equation': return ['equation']
     case 'lengua': return lenguaKinds(p)
-    /* English exercise kinds are defined with the English exercises (Task 5): until then an English skill has none. */
-    case 'ingles': return []
+    case 'ingles': return englishKinds(p)
   }
   /* c8 ignore next */
   return []
@@ -587,6 +586,29 @@ export const LENGUA_SKILLS: SkillKey[] = [
   'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:copia', 'lng:escr:dictado', 'lng:escr:guiada',
   'lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar',
   'lng:lit:rima', 'lng:lit:fabula', 'lng:lit:adivinanzas', 'lng:lit:trabalenguas',
+]
+
+/** The English kinds of each skill (src/engine/ingles). The first one is the default. With the sound off the listening
+    kinds are left out of the plan (englishKindsFor in src/engine/ingles/teachable.ts); the other kinds stay. */
+function englishKinds(p: Extract<ParsedSkill, { type: 'ingles' }>): ExerciseKind[] {
+  switch (p.area) {
+    case 'voc': return ['eng-listen-pick', 'eng-match', 'eng-write-word']
+    case 'frase': return ['eng-complete']
+    case 'num':
+      if (p.item === 'ops') return ['eng-op-listen']
+      return ['eng-num-write', 'eng-num-listen']
+    default: return []
+  }
+}
+
+/** Every English skill of the temario de 3.º that has an exercise kind (the skill universe of an English kind). */
+export const ENGLISH_SKILLS: SkillKey[] = [
+  'eng:voc:saludos', 'eng:voc:colores', 'eng:voc:animales', 'eng:voc:familia', 'eng:voc:comida', 'eng:voc:ropa',
+  'eng:voc:cole', 'eng:voc:casa', 'eng:voc:cuerpo', 'eng:voc:tiempo', 'eng:voc:dias',
+  'eng:frase:saludos', 'eng:frase:its-a', 'eng:frase:this-is-my', 'eng:frase:i-like', 'eng:frase:can-i-have',
+  'eng:frase:im-wearing', 'eng:frase:classroom', 'eng:frase:where-is:in', 'eng:frase:where-is:on', 'eng:frase:where-is:under',
+  'eng:frase:ive-got', 'eng:frase:weather', 'eng:frase:what-day',
+  'eng:num:0-20', 'eng:num:decenas', 'eng:num:21-100', 'eng:num:ops:plus', 'eng:num:ops:minus', 'eng:num:ops:times',
 ]
 
 /** The grammar skills (lng:gram:…) of the grammar kinds, the first kind of each being its default. */

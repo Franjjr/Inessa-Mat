@@ -124,6 +124,13 @@ export type ExerciseKind =
   | 'lng-read-order'  // Lengua 3.º: poner en orden lo que pasa en el texto (lect:ordenar)
   | 'lng-copy'        // Lengua 3.º: copiar una frase que se ve en la tarjeta, con el teclado (escr:copia)
   | 'lng-guided'      // Lengua 3.º: escritura guiada corta, una invitación, una nota, una carta o una descripción con huecos (escr:guiada)
+  | 'eng-listen-pick' // Inglés 3.º: oír una palabra y tocar su tarjeta (eng:voc:*)
+  | 'eng-match'       // Inglés 3.º: unir cuatro palabras en inglés con sus cuatro dibujos (eng:voc:*)
+  | 'eng-write-word'  // Inglés 3.º: escribir en inglés la palabra de un dibujo o de una palabra en español (eng:voc:*)
+  | 'eng-complete'    // Inglés 3.º: elegir la palabra que completa una frase (eng:frase:*)
+  | 'eng-num-write'   // Inglés 3.º: escribir en inglés un número que se ve con cifras (eng:num:0-20|decenas|21-100)
+  | 'eng-num-listen'  // Inglés 3.º: escuchar un número en inglés y escribirlo con cifras (eng:num:0-20|decenas|21-100)
+  | 'eng-op-listen'   // Inglés 3.º: escuchar una operación en inglés y escribir el resultado (eng:num:ops:*)
 
 interface ExerciseBase {
   id: ID
@@ -530,6 +537,41 @@ export interface MeasureEstimateExercise extends ExerciseBase {
   answer: boolean
 }
 
+// ---- Inglés de 3.º (src/engine/ingles/exercises.ts): palabras, frases y números en inglés
+
+/** A word as the exercises show it: its Spanish word, and its picture (emoji) when the theme has one. */
+export interface EnglishCard { en: string; es: string; emoji?: string; theme: string }
+/** Hears `word` (the English voice; never shown before the answer) and taps its card among 3 or 4 (answer = index in cards). */
+export interface EngListenPickExercise extends ExerciseBase {
+  kind: 'eng-listen-pick'; word: string; theme: string; cards: EnglishCard[]; answer: number
+}
+/** Pairs four English words with four pictures: `answer[i]` is the index in `cards` of `words[i]`. Answer: marks (pair order). */
+export interface EngMatchExercise extends ExerciseBase {
+  kind: 'eng-match'; words: string[]; cards: EnglishCard[]; answer: number[]
+}
+/** The picture (or the Spanish word) is shown; the child types the English word (compareEnglish; `alts` are accepted too). */
+export interface EngWriteWordExercise extends ExerciseBase {
+  kind: 'eng-write-word'; card: EnglishCard; answer: string; alts: string[]
+}
+/** A sentence with one gap («___»); the child taps the word that fits (options shuffled, answer = index). */
+export interface EngCompleteExercise extends ExerciseBase {
+  kind: 'eng-complete'; sentence: string; options: string[]; answer: number
+}
+/** A number shown in digits; the child types it in English (answer = the English words, compared with compareEnglish). */
+export interface EngNumWriteExercise extends ExerciseBase {
+  kind: 'eng-num-write'; value: number; answer: string
+}
+/** The app says `spoken` (never shown); the child writes the digits. */
+export interface EngNumListenExercise extends ExerciseBase {
+  kind: 'eng-num-listen'; value: number; spoken: string; answer: number
+}
+/** The app says `spoken` («three plus four») (never shown); the child writes the result. */
+export interface EngOpListenExercise extends ExerciseBase {
+  kind: 'eng-op-listen'; a: number; op: '+' | '-' | '×'; b: number; spoken: string; answer: number
+}
+export type EnglishExercise = EngListenPickExercise | EngMatchExercise | EngWriteWordExercise | EngCompleteExercise
+  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
@@ -542,7 +584,7 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise | EnglishExercise
 
 // ---- Lengua de 3.º: gramática (src/engine/lengua/grammar.ts; los bancos de palabras están en words.ts)
 

@@ -34,6 +34,7 @@ import { checkPosition } from './position'
 import { WORD_SENSE_SKILL } from './skills'
 import { checkSense } from './wordProblems'
 import { checkLengua } from './lengua/exercises'
+import { checkEnglish } from './ingles/exercises'
 
 // ---------------------------------------------------------------- answer normalisation
 
@@ -614,5 +615,12 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'lng-read-order':
     case 'lng-copy':
     case 'lng-guided': return checkLengua(exercise, answer)
+    case 'eng-listen-pick':
+    case 'eng-match':
+    case 'eng-write-word':
+    case 'eng-complete':
+    case 'eng-num-write':
+    case 'eng-num-listen':
+    case 'eng-op-listen': return checkEnglish(exercise, answer)
   }
 }

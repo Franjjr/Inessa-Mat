@@ -68,6 +68,10 @@ export { columnName } from './feedback'
 export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
 export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'
 export { isCompletionOnly } from './lengua/writing'
+/** Inglés de 3.º: the English exercises (src/engine/ingles). The sound filter is for the planner (Task 8). */
+export { ENGLISH_KINDS, ENGLISH_LISTENING_KINDS, buildEnglish, checkEnglish, hintsEnglish, statementEnglish } from './ingles/exercises'
+export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingles/teachable'
+export { numberToEnglish, operationToEnglish } from './ingles/numbers'
 export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {
