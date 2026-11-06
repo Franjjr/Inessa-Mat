@@ -35,6 +35,13 @@ const NUMBERS: Record<string, () => number[]> = {
   '21-100': () => range(21, 100),
 }
 
+/** The numbers an English number skill draws from (eng:num:<item>): 0 to 20, the tens 30 to 100, or 21 to 100. */
+export function numberPool(item: string): number[] {
+  const pool = NUMBERS[item]
+  if (!pool) throw new Error(`ingles: '${item}' is not a number skill`)
+  return pool()
+}
+
 const OPERATIONS: Record<string, '+' | '-' | '×'> = { plus: '+', minus: '-', times: '×' }
 
 /** The letters of an English text, lower case, without spaces, hyphens and marks. */
@@ -263,9 +270,9 @@ function spellingHints(en: string, theme: string): Hint[] {
 function numberIdea(n: number): string {
   if (n === 100) return 'Es el número más grande de la lista, y se escribe con dos palabras.'
   if (n <= 12) return 'Es un número corto: hay que aprenderlo de memoria.'
-  if (n >= 13 && n <= 19) return 'Los números del 13 al 19 acaban en «-teen».'
-  if (n % 10 === 0) return 'Las decenas exactas acaban en «-ty».'
-  return 'Las decenas acaban en «-ty» y la unidad va después, con un guion.'
+  if (n >= 13 && n <= 19) return 'Los números del 13 al 19 terminan en «teen».'
+  if (n % 10 === 0) return 'Las decenas exactas terminan en «ty».'
+  return 'Las decenas terminan en «ty» y la unidad va después, con un guion.'
 }
 
 export function hintsEnglish(ex: EnglishExercise): Hint[] {
@@ -310,7 +317,7 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
     case 'eng-num-listen':
       return [
         hint(1, 'Escucha otra vez y fíjate en la primera palabra que oyes.'),
-        hint(2, 'Si oyes «-teen», el número está entre trece y diecinueve; si oyes «-ty», es una decena exacta.'),
+        hint(2, 'Si el número termina en «teen», está entre trece y diecinueve; si termina en «ty», es una decena exacta.'),
         hint(3, 'Escribe primero la cifra de las decenas y después la de las unidades.'),
       ]
     case 'eng-op-listen':

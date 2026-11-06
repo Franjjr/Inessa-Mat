@@ -28,6 +28,16 @@
   line-height: 1.1;
 }
 
+.singleEs {
+  font-size: var(--fs-md);
+  color: var(--c-ink-soft);
+}
+
+.singleEnNumber {
+  font-size: clamp(1.6rem, 9cqmin, 3rem);
+  font-weight: 600;
+}
+
 .singleNumber {
   font-size: clamp(3.5rem, 30cqmin, 8rem);
   font-weight: 700;

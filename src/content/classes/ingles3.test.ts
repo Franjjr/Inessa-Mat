@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { allTopics, INGLES3_SYLLABUS } from '@/content/syllabus'
 import { createRng, generate } from '@/engine'
-import { ENGLISH_WORDS, ENGLISH_LISTENING_KINDS, numberToEnglish } from '@/engine/ingles'
+import { ENGLISH_WORDS, ENGLISH_LISTENING_KINDS, numberPool, numberToEnglish } from '@/engine/ingles'
 import { parseMixed, plainMixed } from '@/audio/sayMixed'
 import { classForTopic } from './index'
 import { INGLES_CLASSES } from './ingles3'
@@ -131,7 +131,7 @@ describe('clases de Inglés de 3.º', () => {
     }
   })
 
-  it('the number classes show their whole range: 0 to 20, the decades 30 to 90, and for 21 to 100 the decades and the rule', () => {
+  it('the number classes show the whole pool the engine draws from (0 to 20, 30 to 100), and for 21 to 100 the tens and the rule', () => {
     const shownBy = (cls: EnglishClass) => new Set(cls.lesson.steps.flatMap((st) => {
       if (st.visual === 'eng-number-list') {
         const from = Number(st.params!.from)
@@ -141,19 +141,55 @@ describe('clases de Inglés de 3.º', () => {
       }
       return st.visual === 'eng-number' ? [Number(st.params!.n)] : []
     }))
-    const range = (from: number, to: number, step = 1) => Array.from({ length: Math.floor((to - from) / step) + 1 }, (_, i) => from + i * step)
+    // The values the tries can draw, from the engine itself (not a copy of the pools here).
     const expected: Record<string, number[]> = {
-      'eng-num-0-20': range(0, 20),
-      'eng-num-decenas': range(30, 90, 10),
-      'eng-num-21-100': range(20, 100, 10),
+      'eng-num-0-20': numberPool('0-20'),
+      'eng-num-decenas': numberPool('decenas'),
+      'eng-num-21-100': numberPool('21-100').filter((n) => n % 10 === 0),
     }
     for (const [topicId, values] of Object.entries(expected)) {
       const cls = INGLES_CLASSES.find((c) => c.topicId === topicId)!
       const shown = shownBy(cls)
       for (const v of values) expect(shown.has(v), `${topicId}: ${v}`).toBe(true)
     }
-    const decadesRule = INGLES_CLASSES.find((c) => c.topicId === 'eng-num-21-100')!
-    expect(decadesRule.lesson.steps.map((s) => s.text).join(' ')).toContain('guion')
+    const teensAndRule = INGLES_CLASSES.find((c) => c.topicId === 'eng-num-21-100')!
+    expect(teensAndRule.lesson.steps.map((s) => s.text).join(' ')).toContain('guion')
+  })
+
+  it('the tens class has the syllabus title and explains one hundred, the top of its pool', () => {
+    const topic = allTopics(INGLES3_SYLLABUS).find((t) => t.id === 'eng-num-decenas')!
+    const cls = INGLES_CLASSES.find((c) => c.topicId === 'eng-num-decenas')!
+    expect(cls.lesson.title).toBe(topic.name)
+    expect(numberPool('decenas')).toContain(100)
+    expect(cls.lesson.steps.map((s) => s.text).join(' ')).toContain('one hundred')
+  })
+
+  it('every phrase topic explains the pattern its items use (the keyword of each item family appears in its class)', () => {
+    // The pattern keyword of each phrase topic: the words its eng-complete items build on.
+    const PATTERNS: Record<string, string[]> = {
+      'saludos': ['good morning', 'how are you', 'nice to meet', 'see you'],
+      'its-a': ['bigger than', 'says', 'it can'],
+      'this-is-my': ['this is my'],
+      'i-like': ['i like', 'do you like', 'i don\'t like', 'likes'],
+      'can-i-have': ['can i have'],
+      'im-wearing': ['i\'m wearing'],
+      'classroom': ['sit down', 'open your'],
+      'where-is': ['where is'],
+      'ive-got': ['i\'ve got'],
+      'weather': ['what\'s the weather like'],
+      'what-day': ['what day', 'comes after'],
+    }
+    const topics = allTopics(INGLES3_SYLLABUS)
+    const phraseIds = topics.flatMap((t) => t.skills.filter((s) => s.startsWith('eng:frase:')).map((s) => s.split(':')[2]))
+    expect([...new Set(phraseIds)].sort()).toEqual(Object.keys(PATTERNS).sort())
+    for (const cls of INGLES_CLASSES) {
+      const topic = topics.find((t) => t.id === cls.topicId)!
+      const text = cls.lesson.steps.map((st) => st.text).join(' ').replace(/’/g, '\'').toLowerCase()
+      for (const skill of topic.skills.filter((s) => s.startsWith('eng:frase:'))) {
+        const id = skill.split(':')[2]
+        for (const keyword of PATTERNS[id]) expect(text, `${cls.lesson.id} (${id}): «${keyword}»`).toContain(keyword)
+      }
+    }
   })
 
   it('the tries of the number classes practise the numbers the lists show', () => {

@@ -49,7 +49,7 @@ const saludos = clase({
     show('big-text', big('What\'s your name? My name is…', '¿Cómo te llamas? Mi nombre es…'), 'Para preguntar el nombre: *What\'s your name?*. Y para responder: *My name is…*, mi nombre es…'),
     show('big-text', big('How are you? I\'m fine, thank you.', '¿Cómo estás? Estoy bien, gracias.'), 'Para saber cómo está alguien: *How are you?*. Se contesta *I\'m fine*.'),
     show('big-text', big('How old are you? I\'m eight.', '¿Cuántos años tienes? Tengo ocho.'), 'Para preguntar la edad: *How old are you?*. Se responde con el número: *I\'m eight*.'),
-    show('big-text', big('Thank you. Please. Sorry.', 'Gracias. Por favor. Lo siento.'), 'Las palabras educadas: *thank you*, *please* y *sorry*. Sirven para hablar con buenos modales.'),
+    show('big-text', big('It is nice to meet you. See you later!', 'Encantado de conocerte. Hasta luego.'), 'Para presentarse se dice *It is nice to meet you*, y para despedirse, *See you later*: hasta luego.'),
   ],
   guiada: [
     practica('¡Te toca! Une cada palabra en inglés con lo que significa en español.', [voc('saludos')], ['eng-match']),
@@ -74,7 +74,7 @@ const num020 = clase({
   ejemplo: [
     losNumeros(0, 20),
     show('eng-number', num(1, 'one'), 'Del uno al cinco: *one*, *two*, *three*, *four*, *five*. Son palabras muy cortas, sin trucos.'),
-    show('eng-number', num(10, 'ten'), 'El diez es *ten*: con él acaban las palabras más cortas del bloque.'),
+    show('eng-number', num(10, 'ten'), 'El diez es *ten*. El once y el doce también son palabras cortas; a partir del trece, las palabras se alargan.'),
     show('eng-number', num(13, 'thirteen'), 'Del trece al diecinueve, la palabra termina en *teen*: *thirteen*, *fourteen*, *fifteen*. *Teen* suena a *ten*: es como un sombrero de diez.'),
     show('eng-number', num(18, 'eighteen'), 'Fíjate en *eighteen*: lleva *eight*, que es el ocho, y el final *teen*. El 18 es el 8 con su sombrero.'),
   ],
@@ -93,17 +93,17 @@ const num020 = clase({
 const decenas = clase({
   id: 'eng3-num-decenas',
   topicId: 'eng-num-decenas',
-  title: 'Decenas: 30, 40… 90',
+  title: 'Decenas: 30 a 100',
   para: [
     show('eng-number', num(30, 'thirty'), '{pet} ha ganado caramelos y quiere contarlos de diez en diez. Mira: el 30 se dice *thirty*.'),
     show('eng-number', num(40, 'forty'), 'Las decenas tienen otro final: termina en *ty*. Es como el cartel que dice «¡Esto son decenas!».'),
   ],
   ejemplo: [
-    losNumeros(30, 90, 10),
+    losNumeros(30, 100, 10),
     show('eng-number', num(50, 'fifty'), 'El cincuenta es *fifty*: *five*, el cinco, cambia la *v* por una *f*, pierde la *e* y añade el final *ty*.'),
     show('eng-number', num(60, 'sixty'), 'Del sesenta al noventa sigue la misma regla: *sixty*, *seventy*, *eighty*, *ninety*. Todas terminan en *ty*.'),
     show('eng-number', num(30, 'thirty'), 'No te confundas: *thirteen* es el trece, y termina en *teen*. *Thirty* es el treinta, y termina en *ty*. Se parecen, pero no son iguales.'),
-    show('eng-number', num(80, 'eighty'), '¿Te acuerdas de *eight*, el ocho? El ochenta es *eighty*: ocho con la terminación de las decenas.'),
+    show('eng-number', num(100, 'one hundred'), 'El cien no es una decena, y no termina en *ty*: se dice *one hundred*. Es el número más grande de este bloque.'),
   ],
   guiada: [
     practica('¡Te toca! Escribe con letras la decena que sale.', [numSkill('decenas')], ['eng-num-write']),
@@ -205,12 +205,12 @@ const animales = clase({
   title: 'Animales',
   para: [
     show('eng-word', word('🐱', 'cat', 'gato'), '{pet} ha intentado maullar, ladrar y piar a la vez, y el zoo de Lumi se ha quedado en silencio. Mejor aprender los nombres en inglés: el gato es *cat*.'),
-    show('eng-word', word('🐶', 'dog', 'perro'), 'El perro es *dog*, y ladra en inglés: *woof*. Lumi dice que los animales hablan todos los idiomas, pero el perro es el más ruidoso.'),
+    show('eng-word', word('🐶', 'dog', 'perro'), 'El perro es *dog*, y es el más ruidoso del zoo. Para contar lo que dice un animal se usa *It says*: *It says woof*.'),
   ],
   ejemplo: [
     laLista('animales'),
     show('eng-word', word('🐘', 'elephant', 'elefante'), 'El elefante es *elephant*. Es largo de decir, pero es el animal más grande del zoo: *It\'s big*.'),
-    show('eng-word', word('🐭', 'mouse', 'ratón'), 'El ratón es *mouse*, y es muy pequeño: *It\'s small*. ¡Ni se ve!'),
+    show('big-text', big('An elephant is bigger than a mouse.', 'Un elefante es más grande que un ratón.'), 'Para comparar dos animales se usa *bigger than*: el elefante es *bigger than* el ratón, y el ratón es *mouse*.'),
     show('eng-word', word('🐦', 'bird', 'pájaro'), 'El pájaro es *bird*. Para decir qué animal es: *It\'s a bird*. Ojo: el *a* va delante del nombre.'),
     show('eng-word', word('🐟', 'fish', 'pez'), 'Un pez es *fish*. Para contar lo que hace: *It\'s a fish. It can swim.* ¡Nada, nada!'),
   ],
@@ -263,7 +263,7 @@ const comida = clase({
   ],
   ejemplo: [
     laLista('comida'),
-    show('eng-word', word('🍌', 'banana', 'plátano'), 'Un plátano es *banana*. Y una manzana, *apple*. Son palabras cortas y muy útiles.'),
+    show('big-text', big('Do you like pizza? I don\'t like cheese.', '¿Te gusta la pizza? No me gusta el queso.'), 'Para preguntar si a alguien le gusta algo: *Do you like* y la comida. Para decir que no te gusta: *I don\'t like*.'),
     show('eng-word', word('🥛', 'milk', 'leche'), '*Milk* es leche. Para decir lo que te gusta, usa *I like*: *I like milk*.'),
     show('big-text', big('I like apples.', 'Me gustan las manzanas.'), 'Con *I like* dices lo que te gusta. Si hablas de *he* o *she*, la palabra cambia: *She likes* y *He likes*, con una *s*.'),
     show('big-text', big('Can I have some milk, please?', '¿Me das un poco de leche, por favor?'), 'Para pedir algo, di *Can I have* y lo que quieres, y añade *please* al final.'),
@@ -290,7 +290,7 @@ const ropa = clase({
   ],
   ejemplo: [
     laLista('ropa'),
-    show('eng-word', word('👖', 'trousers', 'pantalones'), 'Los pantalones son *trousers*. También van en plural: un par de pantalones, dos piernas, una palabra con *s*.'),
+    show('eng-word', word('👖', 'trousers', 'pantalones'), 'Los pantalones son *trousers*, y van en plural, como los zapatos: siempre llevan *s*.'),
     show('eng-word', word('👗', 'dress', 'vestido'), 'El vestido es *dress*. El sombrero es *hat*, y la bufanda, *scarf*, sirve para el invierno.'),
     show('eng-word', word('🧥', 'jacket', 'chaqueta'), 'La chaqueta es *jacket*. Para decir lo que llevas puesto: *I\'m wearing*.'),
     show('big-text', big('I\'m wearing red shoes.', 'Llevo zapatos rojos.'), 'Con *I\'m wearing* dices lo que llevas. Si lo dice otra persona: *She\'s wearing a dress*.'),
@@ -401,7 +401,7 @@ const tiempo = clase({
     show('eng-word', word('🌈', 'rainbow', 'arcoíris'), 'Tras la lluvia, a veces sale un *rainbow*: un arcoíris, con sus colores.'),
     show('eng-word', word('❄️', 'snow', 'nieve'), 'La nieve es *snow*. Y para decir que nieva: *It\'s snowy*.'),
     show('big-text', big('What\'s the weather like?', '¿Qué tiempo hace?'), 'Para preguntar qué tiempo hace: *What\'s the weather like?* Para responder: *It\'s sunny*, *It\'s cold*.'),
-    show('big-text', big('It\'s summer.', 'Es verano.'), 'Las estaciones son *spring*, *summer*, *autumn* y *winter*. Con *It\'s* dices en cuál estás.'),
+    show('big-text', big('It\'s summer.', 'Es verano.'), 'Las estaciones son *spring*, *summer*, *autumn* y *winter*. Para decir en qué estación estamos: *It\'s summer*.'),
   ],
   guiada: [
     practica('¡Te toca! Une cada dibujo del tiempo con su palabra en inglés.', [voc('tiempo')], ['eng-match']),
@@ -426,7 +426,7 @@ const dias = clase({
   ejemplo: [
     laLista('dias'),
     show('eng-word', word('', 'Tuesday', 'martes'), 'El martes es *Tuesday*. En inglés, los días y los meses siempre empiezan con mayúscula.'),
-    show('eng-word', word('', 'Wednesday', 'miércoles'), 'El miércoles es *Wednesday*. Tiene tres sílabas, así que ¡cuéntalas al decirlo!'),
+    show('big-text', big('Monday comes after Sunday.', 'El lunes va después del domingo.'), 'Para decir qué va después de otro día o mes: *Monday comes after Sunday*. Lo mismo con los meses: *July comes after June*.'),
     show('eng-word', word('', 'October', 'octubre'), 'Los meses también: *October* es octubre. Y *June* es junio.'),
     show('big-text', big('What day is it today? It\'s Monday.', '¿Qué día es hoy? Es lunes.'), 'Para preguntar el día: *What day is it today?* Y para responder: *It\'s Monday*.'),
   ],

@@ -33,7 +33,7 @@ export function EngWordVisual({ params, reduced }: VisualProps) {
       >
         {emoji && <span aria-hidden="true" className={e.singleEmoji}>{emoji}</span>}
         <span className={e.singleEn}>{en}</span>
-        {es && <span className={s.muted} style={{ fontSize: 'var(--fs-md)' }}>{es}</span>}
+        {es && <span className={e.singleEs}>{es}</span>}
       </motion.button>
     </div>
   )
@@ -77,7 +77,7 @@ export function EngNumberVisual({ params, reduced }: VisualProps) {
         className={`${e.button} ${e.single}`}
       >
         <span className={e.singleNumber}>{n}</span>
-        <span style={{ fontSize: 'clamp(1.6rem, 9cqmin, 3rem)', fontWeight: 600 }}>{en}</span>
+        <span className={e.singleEnNumber}>{en}</span>
       </motion.button>
     </div>
   )
