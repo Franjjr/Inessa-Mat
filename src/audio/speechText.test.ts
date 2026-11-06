@@ -89,6 +89,14 @@ describe('toSpeakable in English', () => {
     expect(toSpeakable('1 star, 3-4 apples', 'en')).toBe('1 star, 3-4 apples')
   })
 
+  it('reads an ampersand as "and" in English and as "y" in Spanish', () => {
+    expect(toSpeakable('Q&A', 'en')).toContain(' and ')
+    expect(toSpeakable('Q&A', 'en')).not.toContain(' y ')
+    expect(toSpeakable('Q&amp;A', 'en')).toContain(' and ')
+    expect(toSpeakable('Q&A')).toBe('Q y A')
+    expect(toSpeakable('Q&A', 'es')).toBe('Q y A')
+  })
+
   it('still strips emojis and markup', () => {
     expect(toSpeakable('**Well done!** 🎉', 'en')).toBe('Well done!')
   })

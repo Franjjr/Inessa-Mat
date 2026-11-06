@@ -97,7 +97,7 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es'): string {
     .replace(/<br\s*\/?>/gi, '. ')
     .replace(/<\/(p|div|li|h\d)>/gi, '. ')
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, ' y ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, lang === 'en' ? ' and ' : ' y ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/https?:\/\/\S+/g, ' ')
@@ -137,7 +137,7 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es'): string {
     .replace(/[*_~`#>|]+/g, ' ')
     .replace(/[→➜⇒⟶↦➔➡]/g, ', ')
     .replace(/\s[•·]\s/g, ', ')
-    .replace(/&/g, ' y ')
+    .replace(/&/g, lang === 'en' ? ' and ' : ' y ')
     .replace(EMOJI_RE, ' ')
     .replace(SYMBOLS_RE, ' ')
 
