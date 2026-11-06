@@ -1,5 +1,5 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
-import { season1 } from '@/content'
+import { seasonOf } from '@/content'
 import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, subjectOfSession } from '@/engine'
 import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
 
@@ -19,18 +19,16 @@ export interface ChildStats {
   methods?: MethodTally[]
 }
 
-function naturalWorldOrder(ids: string[]): string[] {
-  return [...ids].sort((a, b) => a.localeCompare(b, 'en', { numeric: true }))
-}
-
 export function buildSummary(child: ChildProfile, progress: ProgressState | null, mastery: MasteryMap, stats: ChildStats | null): ChildSummary {
+  // Only the worlds of the child's season count and order here: the island of Inglés has its own progress and is not
+  // one of the maths map's worlds (the report says «de 8 cristales»).
   const worlds = progress?.worlds ?? {}
-  const seasonOrder = season1.worlds.map((w) => w.id)
-  const order = seasonOrder.length ? [...seasonOrder, ...naturalWorldOrder(Object.keys(worlds).filter((id) => !seasonOrder.includes(id)))] : naturalWorldOrder(Object.keys(worlds))
-  const worldsCompleted = Object.values(worlds).filter((w) => w?.crystal).length
+  const order = seasonOf(progress).worlds.map((w) => w.id)
+  const worldsCompleted = order.filter((id) => worlds[id]?.crystal).length
   let currentWorld: string | null = null
   if (progress) {
-    const last = progress.lastNode?.worldId
+    const lastId = progress.lastNode?.worldId
+    const last = lastId && order.includes(lastId) ? lastId : undefined
     if (last && !worlds[last]?.crystal) currentWorld = last
     else currentWorld = order.find((id) => worlds[id]?.unlocked && !worlds[id]?.crystal) ?? last ?? null
   }

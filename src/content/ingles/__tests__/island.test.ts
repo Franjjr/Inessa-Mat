@@ -3,10 +3,11 @@ import { plainMixed } from '@/audio/sayMixed'
 import { mergeProgress } from '@/data/merge'
 import type { ProgressState } from '@/types'
 import {
-  applyNodeResult, getGuardian, getLesson, getNode, getStory, getWorld, guardianForWorld, initialProgress, INGLES_CLASSES,
+  allTopics, applyNodeResult, classForTopic, getGuardian, getLesson, getNode, getStory, getWorld, guardianForWorld, initialProgress, INGLES_CLASSES,
   ISLAND_ID, ISLAND_STAGES, ISLAND_STOP_PX, islandGuardians, islandWorld, isNodeUnlocked, isWorldUnlocked, lettersOf,
   switchSeason, getSeason,
 } from '@/content'
+import { INGLES3_STAGES, INGLES3_SYLLABUS } from '../../syllabus/ingles3'
 import { ISLAND_KINDS } from '../island'
 import { ISLAND_STORIES } from '../stories'
 
@@ -100,6 +101,22 @@ describe('La Isla de las Palabras: teaching order', () => {
     }
   })
 
+  it('cross-checks each stage with the syllabus: its lessons are the classes of its topics, its skills are the topics skills', () => {
+    expect(ISLAND_STAGES.length).toBe(INGLES3_STAGES.length)
+    const topicsOf = allTopics(INGLES3_SYLLABUS)
+    ISLAND_STAGES.forEach((stage, i) => {
+      const syl = INGLES3_STAGES[i]
+      // ops has only listening exercises: no stop of its own (see island.ts), so it is left out of both sides.
+      const topics = syl.topics.filter((id) => id !== 'eng-ops').map((id) => topicsOf.find((t) => t.id === id)!)
+      expect(stage.lessons.map((l) => l.id), syl.id).toEqual(
+        topics.map((t) => classForTopic(t.id, 3, 'english')?.lesson.id),
+      )
+      const islandSkills = [...stage.words, ...stage.phrases, ...stage.numbers].sort()
+      const syllabusSkills = topics.flatMap((t) => t.skills).sort()
+      expect(islandSkills, syl.id).toEqual(syllabusSkills)
+    })
+  })
+
   it('has a lesson stop for every English class except ops (listening only, taught with the sound on)', () => {
     const lessonStops = stops.filter((n) => n.kind === 'lesson')
     const classIds = INGLES_CLASSES.map((c) => c.lesson.id).filter((id) => id !== 'eng3-ops')
@@ -173,8 +190,8 @@ describe('La Isla de las Palabras: stories', () => {
   })
 })
 
-describe('La Isla de las Palabras: unlocks come from English alone', () => {
-  it('only the first stop is open at the start; each next stop opens when the one before it is done', () => {
+describe('La Isla de las Palabras: unlocks are the sequence within the island, never the maths path', () => {
+  it('the first stop is open at the start, and each stop opens when the one before it in the island is done', () => {
     const p = initialProgress(CHILD, NOW)
     expect(isNodeUnlocked(p, ISLAND_ID, stops[0].id)).toBe(true)
     expect(isNodeUnlocked(p, ISLAND_ID, stops[1].id)).toBe(false)
@@ -206,7 +223,7 @@ describe('La Isla de las Palabras: unlocks come from English alone', () => {
     const p = withDone(initialProgress(CHILD, NOW), stops.slice(0, -1).map((n) => n.id))
     const after = applyNodeResult(p, ISLAND_ID, last.id, { stars: 3, passed: true }, NOW)
     expect(after.worlds[ISLAND_ID]!.crystal).toBe(true)
-    expect(guardianForWorld(ISLAND_ID)?.id).toBe(islandGuardians[0].id)
+    expect(guardianForWorld(ISLAND_ID)?.id).toBe(islandGuardians[islandGuardians.length - 1].id)
   })
 
   it('switching the season keeps the island progress and resets the maths map', () => {

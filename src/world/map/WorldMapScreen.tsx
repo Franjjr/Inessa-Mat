@@ -14,6 +14,7 @@ import s from './WorldMapScreen.module.css'
 
 /** Path coordinates are authored in 0..1 (x → right, y → down); the SVG works in a 1000-unit square. */
 const VB = 1000
+
 type Pt = { x: number; y: number }
 
 /** Smooth segment from points[i] to points[i+1] (Catmull-Rom converted to a cubic Bézier). */

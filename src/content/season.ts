@@ -89,8 +89,10 @@ export function nextWorldId(worldId: string, seasonId = 's1'): string | undefine
   return i >= 0 ? worlds[i + 1]?.id : undefined
 }
 
-/** The guardian of a world (its last node). */
+/** The guardian of a world (its last guardian stop). */
 export function guardianForWorld(worldId: string, seasonId = 's1'): GuardianDef | undefined {
-  const node = getWorld(worldId, seasonId)?.nodes.find((n) => n.kind === 'guardian')
+  // The last guardian of the world: the maths worlds have one (their last stop); the island has one per stage.
+  const guardianStops = getWorld(worldId, seasonId)?.nodes.filter((n) => n.kind === 'guardian') ?? []
+  const node = guardianStops[guardianStops.length - 1]
   return node?.ref ? getGuardian(node.ref) : undefined
 }

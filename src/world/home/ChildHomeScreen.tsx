@@ -121,7 +121,7 @@ export default function ChildHomeScreen() {
   }
 
   return (
-    <Screen className={s.screen}>
+    <Screen className={view === 'english' ? `${s.screen} ${s.english}` : s.screen}>
       <WorldBackground id="home" vividness={0.45 + 0.55 * (crystalCount / season.worlds.length)} />
 
       <header className={s.top}>
