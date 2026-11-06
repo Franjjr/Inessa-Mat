@@ -46,6 +46,18 @@ export function scoreVoice(v: VoiceLike, online = true): number {
   return s
 }
 
+/** Best British English voice (en-GB, then any English), or null when the platform has none. Never a Spanish one. */
+export function pickEnglishVoice<T extends VoiceLike>(voices: readonly T[], online = true, exclude: ReadonlySet<string> = new Set()): T | null {
+  const usable = voices.filter((v) => !exclude.has(v.voiceURI || v.name) && (v.localService || online))
+  const isLang = (v: VoiceLike, prefix: string) => {
+    const l = normLang(v.lang)
+    return l === prefix || l.startsWith(`${prefix}-`)
+  }
+  const candidates = usable.filter((v) => isLang(v, 'en') && normLang(v.lang).startsWith('en-gb'))
+  const pool = candidates.length ? candidates : usable.filter((v) => isLang(v, 'en'))
+  return pool.find((v) => v.localService) ?? pool[0] ?? null
+}
+
 /** Best Spanish voice, or null when the platform has none. `exclude` holds voiceURIs/names that failed. */
 export function pickBestVoice<T extends VoiceLike>(voices: readonly T[], online = true, exclude: ReadonlySet<string> = new Set()): T | null {
   let best: T | null = null

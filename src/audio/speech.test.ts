@@ -69,6 +69,33 @@ describe('voice selection', () => {
   })
 })
 
+describe('english voice', () => {
+  const gb = { name: 'Daniel', lang: 'en-GB', localService: true, default: false, voiceURI: 'daniel' }
+
+  it('speaks English text with an en-GB device voice, not a Spanish one', async () => {
+    setup([VOICES.samantha, VOICES.monica, gb])
+    void speech.say('21', { voice: 'english' })
+    expect(last().text).toBe('21')
+    expect(last().lang).toBe('en-GB')
+    expect(last().voice?.name).toBe('Daniel')
+  })
+
+  it('falls back to any en voice when there is no en-GB one', async () => {
+    setup([VOICES.monica, VOICES.samantha])
+    void speech.say('seven', { voice: 'english' })
+    expect(last().voice?.name).toBe('Samantha')
+  })
+
+  it('speaks nothing rather than using a Spanish voice when no English voice exists', async () => {
+    setup([VOICES.monica, VOICES.paulina])
+    let done = false
+    const p = speech.say('seven', { voice: 'english' }).then(() => { done = true })
+    await p
+    expect(done).toBe(true)
+    expect(synth.spoken).toHaveLength(0)
+  })
+})
+
 describe('say()', () => {
   it('speaks cleaned, verbalised Spanish with the right voice and resolves on end', async () => {
     setup()

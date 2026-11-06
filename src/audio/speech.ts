@@ -13,9 +13,9 @@ import type { SpeechOptions } from '@/types'
 import { onGesture, onVisibility, resumeQuietly } from './context'
 import { music } from './music'
 import { clamp } from './notes'
-import { chunkForSpeech, toSpeakable } from './speechText'
+import { chunkForSpeech, toSpeakable, type SpeechLang } from './speechText'
 import { fetchClip, neuralAvailable, playClip, stopClip } from './neuralVoice'
-import { isSpanish, pickBestVoice, scoreVoice } from './voices'
+import { isSpanish, pickBestVoice, pickEnglishVoice, scoreVoice } from './voices'
 
 export type SpeechCharacter = NonNullable<SpeechOptions['voice']>
 
@@ -24,6 +24,12 @@ export const CHARACTERS: Record<SpeechCharacter, { pitch: number; rate: number }
   companion: { pitch: 1.1, rate: 1.0 },
   narrator: { pitch: 1.0, rate: 0.95 },
   guardian: { pitch: 0.94, rate: 0.9 },
+  english: { pitch: 1.0, rate: 0.92 },
+}
+
+/** The language a character speaks: only `english` reads English, everything else Spanish. */
+export function langOf(character: SpeechCharacter | undefined): SpeechLang {
+  return character === 'english' ? 'en' : 'es'
 }
 
 const MAX_QUEUE = 4
@@ -134,6 +140,11 @@ function preferredVoiceId(): string | null {
   try { return localStorage.getItem(VOICE_KEY) } catch { return null }
 }
 
+function englishVoice(): SpeechSynthesisVoice | null {
+  if (!voicesLoaded) refreshVoices()
+  return pickEnglishVoice(voices, online(), badVoices)
+}
+
 function bestVoice(): SpeechSynthesisVoice | null {
   if (!voicesLoaded) refreshVoices()
   const wanted = preferredVoiceId()
@@ -213,11 +224,13 @@ function speakNext(): void {
 
 function speakChunk(job: Job): void {
   if (job !== current || job.done) return
-  if (preferredVoiceId() || !neuralAvailable()) {
+  const character = job.opts.voice ?? 'lumi'
+  // The adult's device voice is Spanish: it never speaks the English character.
+  const adultVoice = langOf(character) === 'es' && !!preferredVoiceId()
+  if (adultVoice || !neuralAvailable()) {
     speakChunkOnDevice(job)
     return
   }
-  const character = job.opts.voice ?? 'lumi'
   const ahead = job.chunks[job.index + 1]
   if (ahead) void fetchClip(ahead, character)
   void fetchClip(job.chunks[job.index], character).then(async (url) => {
@@ -246,10 +259,16 @@ function speakChunkOnDevice(job: Job): void {
     return
   }
   const text = job.chunks[job.index]
-  const voice = bestVoice()
+  const english = langOf(job.opts.voice) === 'en'
+  const voice = english ? englishVoice() : bestVoice()
+  // No English voice on this device: say nothing rather than read English with a Spanish voice.
+  if (english && !voice) {
+    finishCurrent()
+    return
+  }
   const char = CHARACTERS[job.opts.voice ?? 'lumi'] ?? CHARACTERS.lumi
   const u = new U(text)
-  u.lang = voice?.lang?.replace('_', '-') || 'es-ES'
+  u.lang = voice?.lang?.replace('_', '-') || (english ? 'en-GB' : 'es-ES')
   if (voice) u.voice = voice
   u.pitch = clamp(char.pitch, 0.5, 2)
   u.rate = clamp(char.rate * (job.opts.rate ?? 1), 0.5, 1.6)
@@ -313,7 +332,7 @@ function speakChunkOnDevice(job: Job): void {
 export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
   wire()
   const s = synth()
-  const clean = toSpeakable(text)
+  const clean = toSpeakable(text, langOf(opts.voice))
   if ((!enabled && !opts.force) || !clean || ((!s || !UtteranceCtor()) && !neuralAvailable())) return Promise.resolve()
   return new Promise<void>((resolve) => {
     if (opts.interrupt) stopAll()

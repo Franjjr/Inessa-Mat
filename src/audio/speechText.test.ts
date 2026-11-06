@@ -82,6 +82,18 @@ describe('toSpeakable', () => {
   })
 })
 
+describe('toSpeakable in English', () => {
+  it('leaves digits and maths as they are, so the English voice reads them in English', () => {
+    expect(toSpeakable('21', 'en')).toBe('21')
+    expect(toSpeakable('6 × 7 = 42', 'en')).toBe('6 × 7 = 42')
+    expect(toSpeakable('1 star, 3-4 apples', 'en')).toBe('1 star, 3-4 apples')
+  })
+
+  it('still strips emojis and markup', () => {
+    expect(toSpeakable('**Well done!** 🎉', 'en')).toBe('Well done!')
+  })
+})
+
 describe('chunkForSpeech', () => {
   it('keeps short text whole', () => {
     expect(chunkForSpeech('Hola. ¿Qué tal?')).toEqual(['Hola. ¿Qué tal?'])

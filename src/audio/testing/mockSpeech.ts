@@ -123,4 +123,5 @@ export const VOICES: Record<string, VoiceLike> = {
   androidEs: { name: 'español España', lang: 'es_ES', localService: true, default: false, voiceURI: 'android-es' },
   elvira: { name: 'Microsoft Elvira Online (Natural) - Spanish (Spain)', lang: 'es-ES', localService: false, default: false, voiceURI: 'elvira' },
   helena: { name: 'Microsoft Helena - Spanish (Spain)', lang: 'es-ES', localService: true, default: false, voiceURI: 'helena' },
+  daniel: { name: 'Daniel', lang: 'en-GB', localService: true, default: false, voiceURI: 'daniel' },
 }

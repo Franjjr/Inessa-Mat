@@ -9,8 +9,8 @@ export type SfxName =
 export type MusicTheme = 'map' | 'calm' | 'play' | 'guardian' | 'celebration' | 'none'
 
 export interface SpeechOptions {
-  /** 'lumi' slightly higher/brighter, 'companion' playful, 'narrator' neutral. */
-  voice?: 'lumi' | 'companion' | 'narrator' | 'guardian'
+  /** 'lumi' slightly higher/brighter, 'companion' playful, 'narrator' neutral, 'english' a British voice for English words. */
+  voice?: 'lumi' | 'companion' | 'narrator' | 'guardian' | 'english'
   rate?: number
   interrupt?: boolean
   /** An explicit press by the child («Escuchar»): speaks even when the automatic voice setting is off. */
