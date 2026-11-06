@@ -82,6 +82,15 @@ describe('/api/pronunciation', () => {
     expect(await res.json()).toEqual({ noSpeech: true })
   })
 
+  it('answers skipped, not noSpeech, for a recognition error or any other status (only silence asks again)', async () => {
+    for (const status of ['Error', 'BabbleTimeout', 'Canceled']) {
+      vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ RecognitionStatus: status }), { status: 200 })))
+      expect(await (await call('text=apple')).json()).toEqual({ skipped: true })
+    }
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ RecognitionStatus: 'InitialSilenceTimeout' }), { status: 200 })))
+    expect(await (await call('text=apple')).json()).toEqual({ noSpeech: true })
+  })
+
   it('answers skipped when the key or the region is missing', async () => {
     const res = await call('text=apple', wav(), ORIGIN, {})
     expect(await res.json()).toEqual({ skipped: true })

@@ -130,7 +130,11 @@ export async function handler(req: Request, env: Env): Promise<Response> {
   const data = (await azure.json().catch(() => null)) as { RecognitionStatus?: string; NBest?: { PronScore?: number }[] } | null
   if (!data) return SKIPPED()
   // Silence or nothing recognised is not a score: the app asks the child to try again (no record, no attempt counted).
-  if (data.RecognitionStatus !== 'Success') return Response.json({ noSpeech: true }, { headers: { 'Cache-Control': 'no-store' } })
+  if (data.RecognitionStatus === 'NoMatch' || data.RecognitionStatus === 'InitialSilenceTimeout') {
+    return Response.json({ noSpeech: true }, { headers: { 'Cache-Control': 'no-store' } })
+  }
+  // Any other status (Error, a service fault): not a result either, so the item is skipped, as when Azure fails.
+  if (data.RecognitionStatus !== 'Success') return SKIPPED()
   const pron = data.NBest?.[0]?.PronScore
   if (typeof pron !== 'number' || !Number.isFinite(pron)) return SKIPPED()
   return Response.json({ score: Math.min(100, Math.max(0, Math.round(pron))) }, { headers: { 'Cache-Control': 'no-store' } })
