@@ -2,6 +2,7 @@
    a correct answer unlocks "Siguiente". The slot owns the feedback (showFeedback off), so the child never sees two
    "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import clsx from 'clsx'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { createRng, generate } from '@/engine'
 import type { DivMethod, ExerciseOutcome, SkillSelector, SubMethod } from '@/types'
@@ -30,6 +31,10 @@ interface Props {
   divMethod?: DivMethod
   /** Offer the hint button (default true; a lesson step with `hints: false` turns it off). */
   allowHints?: boolean
+  /** The lesson has grown to hold this try (the board takes the exercise's height, see LessonPlayer). */
+  grown?: boolean
+  /** Called when the exercise does not fit the board even at MIN_FIT_SCALE: the lesson grows instead of cutting it. */
+  onOverflow?: () => void
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -48,7 +53,7 @@ export function fitScale(available: number, natural: number): number {
   return Math.max(MIN_FIT_SCALE, available / natural)
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true }: Props) {
+export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -81,7 +86,10 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       const footer = footerRef.current?.offsetHeight ?? 0
       const available = wrap.clientHeight - padding - footer - gap
       const natural = inner.offsetHeight
-      setFit({ scale: fitScale(available, natural), height: natural })
+      const scale = fitScale(available, natural)
+      setFit({ scale, height: natural })
+      // Even at the smallest scale the exercise is taller than the board: the lesson has to grow to hold it.
+      if (!grown && natural * scale > available + 1) onOverflow?.()
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
@@ -89,7 +97,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     ro.observe(wrap)
     ro.observe(inner)
     return () => ro.disconnect()
-  }, [live, exercise])
+  }, [live, exercise, status, grown, onOverflow])
 
   if (settled !== undefined) {
     return (
@@ -143,7 +151,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   }
 
   return (
-    <div ref={wrapRef} className={s.wrap} data-status={status}>
+    <div ref={wrapRef} className={clsx(s.wrap, grown && s.wrapGrown)} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
           <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} method={method} divMethod={divMethod} />

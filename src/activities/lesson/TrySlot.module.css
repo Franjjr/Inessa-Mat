@@ -14,6 +14,11 @@
   overflow: auto;
 }
 
+/* The lesson grew to hold this try: the board has the exercise's height, so nothing scrolls inside it. */
+.wrapGrown {
+  overflow: visible;
+}
+
 /* Box that takes the scaled height of the exercise, so the layout follows the visual size. */
 .fit {
   width: 100%;

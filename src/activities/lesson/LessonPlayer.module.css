@@ -216,6 +216,19 @@
   }
 }
 
+/* A try that does not fit the board even at its smallest scale: the lesson grows to hold it. The board takes the exercise's
+   height (no inner scroll box, no cut), the page scrolls and «⬇ Más abajo» shows; «Comprobar» and «Siguiente» stay in the page. */
+.playerGrow {
+  /* Content-sized: a min-height would make the grid definite and the middle row would keep the window's leftover height. */
+  height: auto;
+  overflow: visible;
+  grid-template-rows: auto auto auto;
+}
+
+.boardGrow {
+  height: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .text { animation: none; }
   .dot { transition: none; }

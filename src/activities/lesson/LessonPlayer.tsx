@@ -63,6 +63,9 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   /** A "choose" step: the child picks one option (saved through the host) before going on. */
   const isChoose = !!step && step.interaction === 'choose' && !!step.choices?.length
   const [picks, setPicks] = useState<ReadonlyMap<number, string>>(() => new Map())
+  /** The step whose try did not fit the board at its smallest scale: from then on the lesson grows to hold it. */
+  const [overflowAt, setOverflowAt] = useState<number | null>(null)
+  const growing = isTry && overflowAt === current
   const canContinue = total === 0 || (!isTry && !isChoose) || outcome !== undefined
   const isLast = current >= total - 1
   const speaker = step?.speaker
@@ -104,6 +107,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const settle = useCallback((solvedNow: boolean) => {
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
   }, [current])
+
+  const onTryOverflow = useCallback(() => setOverflowAt(current), [current])
 
   // Choosing settles the step at once and saves the pick as the child's preference.
   const pick = useCallback((value: string) => {
@@ -153,7 +158,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const avatarSize = portrait ? 150 : 200
 
   return (
-    <main className={styles.player} aria-label={host.t(lesson.title)}>
+    <main className={clsx(styles.player, growing && styles.playerGrow)} aria-label={host.t(lesson.title)}>
       <header className={styles.top}>
         {onExit ? (
           <BackButton variant="exit" onClick={onExit} aria-label="Salir de la lección" />
@@ -171,7 +176,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
       </header>
 
       <div className={styles.stage}>
-        <div className={styles.board}>
+        <div className={clsx(styles.board, growing && styles.boardGrow)}>
           {run && (
             <motion.div
               key={`run-${run.start}-${isTry ? 'try' : 'show'}`}
@@ -182,7 +187,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>
