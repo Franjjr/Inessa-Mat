@@ -2,8 +2,8 @@
    otherwise the session of the subject. The classes are for 3.º (see classForTopic). With both subjects on, the home opens on
    maths until today's maths session is done, then on Lengua (homeSubject). */
 import { classForTopic, isClassDone } from '@/content/classes'
-import { currentTopic, syllabusFor, topicTitle, type Syllabus } from '@/content/syllabus'
-import { englishTopicOfToday, masteryOf, subjectOffered, teachableCourse, teachableEnglishCourse, type LessonSubject } from '@/engine'
+import { syllabusFor, topicTitle, type Syllabus } from '@/content/syllabus'
+import { topicOfToday, masteryOf, subjectOffered, teachableCourse, teachableEnglishCourse, type LessonSubject } from '@/engine'
 import { sessionDoneKey } from '@/world/session/logic'
 import { SUBJECTS, type MasteryMap, type ProgressState, type SubjectId } from '@/types'
 
@@ -43,13 +43,11 @@ export function todayEntry({ grade, mastery, progress, subject = 'math', sound =
   now?: Date
 }): TodayEntry {
   const course = syllabusFor(subject, grade)
-  // Lengua and English name the topic their planner teaches (the same teachable view); maths is unchanged. English keeps the
-  // topic of today's class (englishTopicOfToday), as its session does.
+  // Lengua and English name the topic their planner teaches (the same teachable view); maths reads its whole temario. Every
+  // subject keeps the topic of today's class (topicOfToday), as its session does.
   const teachable = TEACHABLE[subject]
   const view = teachable ? teachable(course, sound) : course
-  const topic = subject === 'english'
-    ? englishTopicOfToday(view, masteryOf(mastery, subject), progress, now)
-    : currentTopic(view, masteryOf(mastery, subject))
+  const topic = topicOfToday(view, masteryOf(mastery, subject), progress, now)
   const title = topic ? topicTitle(topic) : FALLBACK_TITLE[subject] ?? 'Hoy'
   const cls = topic ? classForTopic(topic.id, grade, subject) : undefined
   if (topic && cls && !isClassDone(progress, cls)) {

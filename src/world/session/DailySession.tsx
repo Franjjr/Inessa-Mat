@@ -124,7 +124,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
       ? planEnglishSession({ child, mastery, attempts, syllabus: syllabusFor('english', child.grade), now, progress, sound: child.settings.sound && speech.available() })
       : subject === 'language'
         ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress, voice: speech.available() })
-        : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now })
+        : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now, progress })
     setPlan(made)
     if (made.blocks.every((b) => b.items.length === 0)) setPhase('empty')
   }, [child, mastery, attempts, progress, plan, subject])

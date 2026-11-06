@@ -7,8 +7,9 @@
    Failed items come back later in the same run (src/activities/shared/requeue.ts) and on later days (mastery).
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
-import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
-import { availableSkills, behindTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
+import { availableSkills, behindTopics, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { topicOfToday } from './topicOfToday'
 import { makeArray } from './make'
 import { statementClock } from './clock'
 import { generate } from './generate'
@@ -290,6 +291,8 @@ export interface PlanInput {
   now: Date
   /** Trimester, when the school's programme is set. */
   term?: number
+  /** The child's progress: a class finished today keeps its topic as today's topic (topicOfToday). */
+  progress?: ProgressState
   rng?: Rng
 }
 
@@ -323,12 +326,15 @@ export function planDailySession(input: PlanInput): DailyPlan {
     if (ex) warmup.push({ exercise: ex, block: 'warmup', scaffold: false, isNew: false })
   }
 
-  // 2. Lo nuevo: the current topic, unmastered skills first (seen before, then unseen), within the new-fact budget.
-  const topic = currentTopic(syllabus, mastery, input.term)
+  // 2. Lo nuevo: today's topic (topicOfToday: the topic of today's class, else the current one), unmastered skills first
+  // (seen before, then unseen), within the new-fact budget.
+  const topic = topicOfToday(syllabus, mastery, input.progress, now, input.term)
   let example: DailyPlan['example'] = null
   const newItems: DailyItem[] = []
   if (topic) {
-    const open = topic.skills.filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
+    // A topic its class has already mastered (today's topic) still practises its own skills, so «Lo nuevo» is not empty.
+    const unmastered = topic.skills.filter((s) => parseSkill(s) !== null && (mastery[s]?.box ?? -1) < 2)
+    const open = unmastered.length ? unmastered : topic.skills.filter((s) => parseSkill(s) !== null)
     // An ordered topic's skills are steps: only the first open one the generator can make is new, the next waits until it
     // is mastered. A step it cannot make is skipped, or the topic would stay stuck on it.
     const step = topic.ordered ? open.find(canMake) : undefined

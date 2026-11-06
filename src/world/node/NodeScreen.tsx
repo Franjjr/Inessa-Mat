@@ -8,7 +8,7 @@ import {
   applyNodeResult, finaleStoryId, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
   newStickers, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, type ClassDef,
 } from '@/content'
-import { markEnglishClassToday, starsFor } from '@/engine'
+import { markClassToday, starsFor } from '@/engine'
 import { getProgress, updateProgress, useActiveChild, useProgress } from '@/data'
 import { Button, Card, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
@@ -84,7 +84,7 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       const before: ProgressState = await getProgress(child.id)
       const after = await updateProgress(child.id, (p) => {
         const done = applyNodeResult(p, world.id, node.id, result)
-        return englishClass ? markEnglishClassToday(markClassDone(done, englishClass, 'lesson'), englishClass.topicId, new Date()) : done
+        return englishClass ? markClassToday(markClassDone(done, englishClass, 'lesson'), englishClass.topicId, new Date()) : done
       })
       const stars = after.worlds[world.id]?.nodes[node.id]?.stars ?? result.stars
       setPhase({

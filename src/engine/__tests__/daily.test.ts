@@ -8,6 +8,8 @@ import {
 import { newMastery } from '../mastery'
 import { isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
 import { createRng } from '../rng'
+import { markClassToday } from '../topicOfToday'
+import { initialProgress } from '@/content'
 
 /** Skill keys the generator is told to make nothing for (empty set = the real generator). */
 const unmakeable = vi.hoisted(() => new Set<string>())
@@ -266,5 +268,28 @@ describe('scaffoldedSkills (escalera adaptativa)', () => {
     const plan = planDailySession({ child, mastery: midYearMastery(), attempts, syllabus: GRADE3_SYLLABUS, now, rng: createRng(5) })
     const all = plan.blocks.flatMap((b) => b.items)
     for (const i of all) if (i.scaffold) expect(i.exercise.kind).toBe('array')
+  })
+})
+
+describe('the maths topic of today stays after its class', () => {
+  // «Leer y escribir hasta 9 999» is one skill (num:place:words); the practice of its class can master it, and the current
+  // topic would move on to «Comparar y ordenar», whose class the child has not had. Today's topic stays the class topic.
+  const taught = 'leer-escribir-9999'
+  const masteredTaught: MasteryMap = { ...masteredBefore(taught), 'num:place:words': m('num:place:words', 2, { dueDays: 1, seenDays: 0 }) }
+  const progressWith = (flags: Record<string, boolean>) => ({ ...initialProgress(child.id, now), flags })
+  const plan = (flags: Record<string, boolean>, at: Date = now) =>
+    planDailySession({ child, mastery: masteredTaught, syllabus: GRADE3_SYLLABUS, now, progress: markClassToday(progressWith(flags), taught, at) })
+
+  it('the session keeps the class topic, with its own skill in «Lo nuevo»', () => {
+    const p = plan({ [`clase:${taught}`]: true })
+    expect(p.topic?.id).toBe(taught)
+    const items = p.blocks.find((b) => b.id === 'new')!.items
+    expect(items.length).toBeGreaterThanOrEqual(3)
+    expect(items.every((i) => i.exercise.skill === 'num:place:words')).toBe(true)
+  })
+
+  it('without the mark the session moves on (the cause), and a mark of an earlier day does not keep the topic', () => {
+    expect(planDailySession({ child, mastery: masteredTaught, syllabus: GRADE3_SYLLABUS, now }).topic?.id).toBe('comparar-ordenar-9999')
+    expect(plan({}, new Date(now.getTime() - DAY)).topic?.id).toBe('comparar-ordenar-9999')
   })
 })

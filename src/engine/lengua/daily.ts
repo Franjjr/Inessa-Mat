@@ -7,7 +7,8 @@
    At least 12 of the 15 minutes are exercises or reading. Dictation needs the sound (R16): without it the planner leaves
    the dictation skill out. Lengua has no problem block and no worked example. */
 import { classForTopic, isClassDone } from '@/content/classes'
-import { availableSkills, currentTopic, type Syllabus } from '@/content/syllabus'
+import { availableSkills, type Syllabus } from '@/content/syllabus'
+import { topicOfToday } from '../topicOfToday'
 import { STORY_READINGS } from '@/content/lengua/stories'
 import type { ChildProfile, Exercise, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { generate } from '../generate'
@@ -86,13 +87,16 @@ export function planLenguaSession(input: LenguaPlanInput): DailyPlan {
     if (ex) warmup.push({ exercise: ex, block: 'warmup', scaffold: false, isNew: false })
   }
 
-  // 2. Lo nuevo: the current topic (its class first when it has one and it is not done), unmastered skills first.
-  const topic = currentTopic(course, mastery)
+  // 2. Lo nuevo: today's topic (topicOfToday: the topic of today's class, else the current one; its class first when it has
+  // one and it is not done), unmastered skills first.
+  const topic = topicOfToday(course, mastery, progress, now)
   const cls = topic ? classForTopic(topic.id, child.grade, 'language') : undefined
   const classTopicId = topic && cls && !(progress && isClassDone(progress, cls)) ? topic.id : null
   const newItems: DailyItem[] = []
   if (topic) {
-    const open = topic.skills.filter((s) => (mastery[s]?.box ?? -1) < 2)
+    // A topic its class has already mastered (today's topic) still practises its own skills, so «Lo nuevo» is not empty.
+    const unmastered = topic.skills.filter((s) => (mastery[s]?.box ?? -1) < 2)
+    const open = unmastered.length ? unmastered : [...topic.skills]
     // An ordered topic's skills are steps: only the first open one the generator can make is taught now.
     const candidates = topic.ordered
       ? open.filter(canMake).slice(0, 1)

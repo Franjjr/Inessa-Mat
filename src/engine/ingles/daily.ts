@@ -1,6 +1,6 @@
 /* The English session («Mi sesión de Inglés»): about ten minutes. Pure: no React, no I/O.
      Calentamiento (about 2 min)  learnt English skills not seen today, most urgent first, no hints
-     Lo nuevo                     today's topic (englishTopicOfToday: the topic of today's class, else the current topic): its
+     Lo nuevo                     today's topic (topicOfToday: the topic of today's class, else the current topic): its
                                   class comes first (classTopicId) when the child has not done it; then 3 to 5 items of the topic
      Mezcla                       the skills of the words the child failed (newest first), then the learnt ones
      Juego                        one final game on the topic of the day: eng-memory or eng-scramble (memory only when the
@@ -10,7 +10,7 @@
    leaves them out otherwise, and the operations topic is not taught then (teachableEnglishCourse). The stars and the day
    key are the English ones (sessionRewardKey(now, 'english')). */
 import { classForTopic, isClassDone } from '@/content/classes'
-import { availableTopics, currentTopic, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { availableTopics, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ProgressState, Rng, SkillKey, SkillMastery } from '@/types'
 import { generate } from '../generate'
 import { createRng, hashString } from '../rng'
@@ -20,6 +20,7 @@ import { ENGLISH_LISTENING_KINDS, speakExercise } from './exercises'
 import { englishKindsFor, makableEnglish, teachableEnglishCourse } from './teachable'
 import { SPEAK_DAILY_MAX, SPEAK_PER_SESSION_MAX, speakAttemptsToday, speakOffKey, speakingAvailable } from './speaking'
 import { ENGLISH_WORDS } from './words'
+import { topicOfToday } from '../topicOfToday'
 
 /** The warm-up: at most this many items and about this many seconds. */
 export const ENGLISH_WARMUP_MAX = 3
@@ -55,22 +56,6 @@ export interface EnglishPlanInput {
 }
 
 const dayKey = (now: Date) => now.toISOString().slice(0, 10)
-
-/** The dated flag of an English class finished on `now`'s day (ProgressState.flags; only the English class sets it). */
-const classTodayKey = (topicId: string, now: Date) => `ingles-clase-hoy:${dayKey(now)}:${topicId}`
-
-/** Records that the English class of a topic was finished today (with the class flag, see markClassDone). */
-export function markEnglishClassToday(progress: ProgressState, topicId: string, now: Date): ProgressState {
-  return { ...progress, flags: { ...progress.flags, [classTodayKey(topicId, now)]: true } }
-}
-
-/** Today's English topic. The class practice moves the mastery on, so once the class of a topic is finished the next topic
-    would become the current one; the topic of today's class stays today's topic (the session and the home «Hoy»). It is the
-    last one in teaching order whose class was finished today, else the current topic. */
-export function englishTopicOfToday(course: Syllabus, mastery: MasteryMap, progress: ProgressState | undefined, now: Date): SyllabusTopic | null {
-  const taught = availableTopics(course).filter((t) => progress?.flags?.[classTodayKey(t.id, now)])
-  return taught[taught.length - 1] ?? currentTopic(course, mastery)
-}
 
 function secondsOf(items: DailyItem[]): number {
   return items.reduce((sum, i) => sum + estimateSeconds(i), 0)
@@ -149,7 +134,7 @@ export function planEnglishSession(input: EnglishPlanInput): DailyPlan {
   }
 
   // 2. Lo nuevo: the current topic (its class first when the child has not done it); an ordered topic teaches one step.
-  const topic = englishTopicOfToday(course, mastery, progress, now)
+  const topic = topicOfToday(course, mastery, progress, now)
   const cls = topic ? classForTopic(topic.id, child.grade, 'english') : undefined
   const classTopicId = topic && cls && !(progress && isClassDone(progress, cls)) ? topic.id : null
   const newItems: DailyItem[] = []

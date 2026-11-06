@@ -7,6 +7,7 @@ import { initialProgress } from '@/content'
 import { DEFAULT_CHILD_SETTINGS, type ChildProfile, type MasteryMap, type ProgressState, type SkillMastery } from '@/types'
 import { LENGUA_PRACTICE_TARGET_SECONDS, planLenguaSession, storyFlag } from '../daily'
 import { createRng } from '../../rng'
+import { markClassToday } from '../../topicOfToday'
 
 const NOW = new Date('2026-10-27T10:00:00.000Z')
 const child = (settings: Partial<ChildProfile['settings']> = {}): ChildProfile => ({
@@ -148,5 +149,23 @@ describe('planLenguaSession', () => {
     const b = plan({ mastery: learnt(['lng:gram:articulo']) })
     expect(a.blocks.flatMap((x) => x.items.map((i) => i.exercise.id))).toEqual(b.blocks.flatMap((x) => x.items.map((i) => i.exercise.id)))
     for (const block of a.blocks) for (const item of block.items) expect(item.exercise.skill.startsWith('lng:')).toBe(true)
+  })
+})
+
+describe('the Lengua topic of today stays after its class', () => {
+  // «Sílabas» is one skill; the practice of its class can master it and the current topic would move on to «Mayúsculas».
+  const skill = LENGUA3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === 'lng-silabas')!.skills[0]
+  const mastered: MasteryMap = { [skill]: { ...learnt([skill])[skill], box: 2, lastSeenAt: NOW.toISOString() } }
+
+  it('the session keeps the class topic, with no class to show and its own skill in «Lo nuevo»', () => {
+    const p = plan({ mastery: mastered, progress: markClassToday(progress({ 'clase:lng-silabas': true }), 'lng-silabas', NOW) })
+    expect(p.topic?.id).toBe('lng-silabas')
+    expect(p.classTopicId).toBeNull()
+    expect(p.blocks[1].items.length).toBeGreaterThanOrEqual(3)
+    expect(p.blocks[1].items.every((i) => i.exercise.skill === skill)).toBe(true)
+  })
+
+  it('without the mark of today the session moves on to the next topic (the cause)', () => {
+    expect(plan({ mastery: mastered, progress: progress({ 'clase:lng-silabas': true }) }).topic?.id).toBe('lng-mayusculas')
   })
 })

@@ -90,7 +90,10 @@ describe('ClassScreen', () => {
     expect(updateProgress).toHaveBeenCalledTimes(1)
     const [id, update] = vi.mocked(updateProgress).mock.calls[0]
     expect(id).toBe(CHILD_ID)
-    expect(update(initialProgress(CHILD_ID)).flags[`clase:${TOPIC}`]).toBe(true)
+    const flags = update(initialProgress(CHILD_ID)).flags
+    expect(flags[`clase:${TOPIC}`]).toBe(true)
+    // A maths class dates its topic too, so it stays today's topic after its practice (topicOfToday).
+    expect(flags[`clase-hoy:${new Date().toISOString().slice(0, 10)}:${TOPIC}`]).toBe(true)
   })
 
   it('«Ya lo sé» with all three right skips the class', async () => {

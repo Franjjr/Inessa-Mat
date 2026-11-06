@@ -94,7 +94,7 @@ export function LearningSection({ childId, childName, grade, progress, data, loa
     if (!data) return null
     const now = new Date()
     return {
-      syllabus: syllabusReport(syllabusForGrade(grade), data.mastery),
+      syllabus: syllabusReport(syllabusForGrade(grade), data.mastery, 'math', undefined, { progress: progress ?? undefined }),
       needs: topicNeeds(syllabusForGrade(grade), data.attempts, now),
       errors: errorReport(data.attempts, now),
       runs: placementRuns(data.attempts),
@@ -137,7 +137,7 @@ export function LenguaSection({ childId, childName, grade, enabled, progress, da
     const attempts = attemptsOf(data.attempts, 'language')
     return {
       attempts: attempts.length,
-      syllabus: syllabusReport(syllabus, data.mastery, 'language'),
+      syllabus: syllabusReport(syllabus, data.mastery, 'language', undefined, { progress: progress ?? undefined }),
       needs: topicNeeds(syllabus, data.attempts, now, 30, 'language'),
       errors: errorReport(data.attempts, now, 30, 'language'),
       runs: placementRuns(data.attempts, 'language'),

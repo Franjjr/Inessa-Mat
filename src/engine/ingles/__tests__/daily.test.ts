@@ -8,7 +8,8 @@ import { DEFAULT_CHILD_SETTINGS, type AttemptRecord, type ChildProfile, type Mas
 import { createRng } from '../../rng'
 import { ENGLISH_LISTENING_KINDS } from '../exercises'
 import { ENGLISH_WORDS } from '../words'
-import { ENGLISH_PRACTICE_TARGET_SECONDS, englishTopicOfToday, markEnglishClassToday, planEnglishSession } from '../daily'
+import { ENGLISH_PRACTICE_TARGET_SECONDS, planEnglishSession } from '../daily'
+import { markClassToday, topicOfToday } from '../../topicOfToday'
 import { teachableEnglishCourse } from '../teachable'
 import { ENGLISH_SESSION_MINUTES } from '../../subjects'
 
@@ -126,7 +127,7 @@ describe('the English topic of today stays after its class', () => {
   const numbers = 'eng-num-0-20'
   const numbersSkills = INGLES3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === numbers)!.skills
   const masteredNumbers: MasteryMap = { ...masteredTopics(['eng-saludos']), ...learnt(numbersSkills) }
-  const classDone = (now: Date = NOW) => markEnglishClassToday(markClassDone(progress(), classForTopic(numbers, 3, 'english')!, 'lesson'), numbers, now)
+  const classDone = (now: Date = NOW) => markClassToday(markClassDone(progress(), classForTopic(numbers, 3, 'english')!, 'lesson'), numbers, now)
 
   it('the session of the day keeps the class topic, with its own skills to practise', () => {
     const p = plan({ mastery: masteredNumbers, progress: classDone() })
@@ -149,8 +150,8 @@ describe('the English topic of today stays after its class', () => {
 
   it('with two classes finished today, the later one in teaching order is today\'s topic', () => {
     const course = teachableEnglishCourse(INGLES3_SYLLABUS, true)
-    const both = markEnglishClassToday(classDone(), 'eng-saludos', NOW)
-    expect(englishTopicOfToday(course, masteredNumbers, both, NOW)?.id).toBe(numbers)
-    expect(englishTopicOfToday(course, masteredNumbers, progress(), NOW)?.id).toBe('eng-colores')
+    const both = markClassToday(classDone(), 'eng-saludos', NOW)
+    expect(topicOfToday(course, masteredNumbers, both, NOW)?.id).toBe(numbers)
+    expect(topicOfToday(course, masteredNumbers, progress(), NOW)?.id).toBe('eng-colores')
   })
 })
