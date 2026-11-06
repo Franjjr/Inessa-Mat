@@ -27,6 +27,7 @@ import { TABLE_METHODS } from './methods'
 import { fractionHints } from './fractions'
 import { geometryHints } from './geometry'
 import { hintsLengua } from './lengua/exercises'
+import { hintsEnglish } from './ingles/exercises'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
@@ -434,6 +435,16 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'lng-read-order':
     case 'lng-copy':
     case 'lng-guided': return hintsLengua(ex)
+    case 'eng-listen-pick':
+    case 'eng-match':
+    case 'eng-write-word':
+    case 'eng-complete':
+    case 'eng-num-write':
+    case 'eng-num-listen':
+    case 'eng-op-listen':
+    case 'eng-memory':
+    case 'eng-scramble':
+    case 'eng-speak': return hintsEnglish(ex)
   }
 }
 

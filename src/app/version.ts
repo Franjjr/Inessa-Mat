@@ -76,7 +76,7 @@ export function handleForceUpdateLink(): boolean {
 }
 
 /** Routes where reloading would interrupt the child mid-exercise: an update waits until they leave. */
-const BUSY_ROUTE = /^\/(play\/w\/[^/]+\/[^/]+|play\/(sesion|lengua|clase|prueba|prueba-lengua|review|caligrafia)(\/|$)|kids\/new)/
+const BUSY_ROUTE = /^\/(play\/w\/[^/]+\/[^/]+|play\/(sesion|lengua|ingles|clase|prueba|prueba-lengua|prueba-ingles|review|caligrafia)(\/|$)|kids\/new)/
 
 export function isSafeToReload(pathname: string): boolean {
   return !BUSY_ROUTE.test(pathname)

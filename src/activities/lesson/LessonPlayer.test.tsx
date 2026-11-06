@@ -5,6 +5,7 @@ import { lessons } from '@/content'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
 import type { ActivityHost, LessonDef, LessonStep } from '@/types'
 import LessonPlayer from './LessonPlayer'
+import { speech as realSpeech } from '@/audio/speech'
 
 // The real ExerciseView is lazy-loaded from the activity views; lesson tests use a fake that answers on demand.
 vi.mock('@/activities', async () => {
@@ -287,5 +288,24 @@ describe('LessonPlayer: hints on try steps', () => {
   it('a try step without the flag keeps its «Pista» button', () => {
     render(<LessonPlayer lesson={withHints} onDone={() => undefined} />)
     expect(screen.getByRole('button', { name: 'Pista' })).toBeInTheDocument()
+  })
+})
+
+describe('LessonPlayer: English inside a line', () => {
+  it('reads the marked English with the english voice, shows the line without marks, and keeps the rest for Lumi', async () => {
+    const say = vi.spyOn(realSpeech, 'say').mockResolvedValue()
+    const marked: LessonDef = {
+      id: 'test-marked',
+      title: 'Prueba',
+      steps: [{ visual: 'big-text', params: { text: 'seven' }, text: 'Mira, *seven* es siete.', interaction: 'tap' }],
+    }
+    const host: ActivityHost = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
+    render(<ActivityHostProvider value={host}><LessonPlayer lesson={marked} onDone={() => undefined} /></ActivityHostProvider>)
+    expect(screen.getByTestId('lesson-text').textContent).toBe('Mira, seven es siete.')
+    await vi.waitFor(() => expect(say).toHaveBeenCalledTimes(3))
+    expect(say).toHaveBeenNthCalledWith(1, 'Mira, ', expect.objectContaining({ voice: 'lumi' }))
+    expect(say).toHaveBeenNthCalledWith(2, 'seven', expect.objectContaining({ voice: 'english' }))
+    expect(say).toHaveBeenNthCalledWith(3, ' es siete.', expect.objectContaining({ voice: 'lumi' }))
+    say.mockRestore()
   })
 })

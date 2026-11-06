@@ -5,6 +5,7 @@ import { MotionConfig, motion } from 'motion/react'
 import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
+import { parseMixed, plainMixed, sayMixed, type SpanishVoice } from '@/audio/sayMixed'
 import type { LessonDef, LessonStep, SubMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
@@ -17,6 +18,12 @@ import ChoiceSlot from './ChoiceSlot'
 import { computeRuns, isAnswerStep, keyAction, stageCharacter, voiceFor } from './navigation'
 import { usePortrait, useReducedMotionFlag } from './useLessonMedia'
 import styles from './LessonPlayer.module.css'
+
+/** Speaks a line of the lesson: the English marked with «*…*» through sayMixed, the rest as Lumi (or the speaker) says it. */
+function speakLine(line: string, voice: SpanishVoice) {
+  const parts = parseMixed(line)
+  return parts ? sayMixed(parts, { spanish: voice, interrupt: true }) : speech.say(line, { voice, interrupt: true })
+}
 
 /** Which favourite a choose step saves: the subtraction method unless the step says otherwise. */
 function preferenceOf(step: LessonStep | undefined): 'subMethod' | 'divMethod' | 'tableMethod' {
@@ -33,7 +40,8 @@ export interface LessonPlayerProps {
 export default function LessonPlayer(props: LessonPlayerProps) {
   return (
     <MotionConfig reducedMotion="user">
-      <Player {...props} />
+      {/* Keyed by the lesson: another lesson starts at its first step, with no outcome nor grown try of the previous one. */}
+      <Player key={props.lesson.id} {...props} />
     </MotionConfig>
   )
 }
@@ -56,6 +64,9 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   /** A "choose" step: the child picks one option (saved through the host) before going on. */
   const isChoose = !!step && step.interaction === 'choose' && !!step.choices?.length
   const [picks, setPicks] = useState<ReadonlyMap<number, string>>(() => new Map())
+  /** The step whose try did not fit the board at its smallest scale: from then on the lesson grows to hold it. */
+  const [overflowAt, setOverflowAt] = useState<number | null>(null)
+  const growing = isTry && overflowAt === current
   const canContinue = total === 0 || (!isTry && !isChoose) || outcome !== undefined
   const isLast = current >= total - 1
   const speaker = step?.speaker
@@ -67,7 +78,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   // Voice: read each step aloud when it appears (the speech module ignores the call when voice is off).
   useEffect(() => {
     if (!step || !host.prefs.voice) return
-    void speech.say(host.t(step.text), { voice, interrupt: true })
+    void speakLine(host.t(step.text), voice)
     // Only the step itself should trigger speech; host and voice are stable for a lesson.
   }, [current])
 
@@ -97,6 +108,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const settle = useCallback((solvedNow: boolean) => {
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
   }, [current])
+
+  const onTryOverflow = useCallback(() => setOverflowAt(current), [current])
 
   // Choosing settles the step at once and saves the pick as the child's preference.
   const pick = useCallback((value: string) => {
@@ -146,7 +159,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const avatarSize = portrait ? 150 : 200
 
   return (
-    <main className={styles.player} aria-label={host.t(lesson.title)}>
+    <main className={clsx(styles.player, growing && styles.playerGrow)} aria-label={host.t(lesson.title)}>
       <header className={styles.top}>
         {onExit ? (
           <BackButton variant="exit" onClick={onExit} aria-label="Salir de la lección" />
@@ -155,7 +168,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
         )}
         <h1 className={styles.title}>{host.t(lesson.title)}</h1>
         {host.prefs.voice ? (
-          <Button variant="secondary" size="sm" onClick={() => void speech.say(text, { voice, interrupt: true })} aria-label="Escuchar otra vez">
+          <Button variant="secondary" size="sm" onClick={() => void speakLine(text, voice)} aria-label="Escuchar otra vez">
             🔊 Escuchar
           </Button>
         ) : (
@@ -164,7 +177,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
       </header>
 
       <div className={styles.stage}>
-        <div className={styles.board}>
+        <div className={clsx(styles.board, growing && styles.boardGrow)}>
           {run && (
             <motion.div
               key={`run-${run.start}-${isTry ? 'try' : 'show'}`}
@@ -175,7 +188,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>
@@ -200,7 +213,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             <Character id={stageId} pose={pose} size={avatarSize} animated={!reduced} />
           </div>
           <div className={styles.bubble} aria-live="polite">
-            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(text)}</p>
+            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(plainMixed(text))}</p>
           </div>
         </aside>
       </div>

@@ -273,3 +273,19 @@ describe('ExerciseStep: the escritura guiada is never graded (lng-guided, graded
     expect(reportAttempt.mock.calls[0][0].graded).toBeUndefined()
   })
 })
+
+describe('ExerciseStep «Ahora dilo tú» (eng-speak)', () => {
+  const speak = { id: 'eng-speak:voc:animales:cat', kind: 'eng-speak', skill: 'eng:voc:animales', difficulty: 2, word: 'cat', es: 'gato', theme: 'animales' } as unknown as Exercise
+
+  it('never reports an attempt (no mastery, no stars), and shows no «Ahora no» or «No lo sé»', async () => {
+    script.outcomes = [{ check: { correct: true, given: 'cat', expected: 'cat', feedback: 'Muy bien, lo has intentado.' }, ms: 2000, inputMode: 'tap', hintsUsed: 0, recognitionFixes: 0 }]
+    const { reportAttempt, onContinue } = renderStep({ exercise: speak, allowDontKnow: true, onSkip: vi.fn(), allowHints: false, okLabel: 'Siguiente' })
+    expect(screen.queryByRole('button', { name: 'Ahora no' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'No lo sé' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Responder' }))
+    expect(screen.getByText('Muy bien, lo has intentado.')).toBeTruthy()
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt).not.toHaveBeenCalled()
+    expect(onContinue).toHaveBeenCalledTimes(1)
+  })
+})

@@ -1,12 +1,17 @@
 /* Informe del adulto (docs/curriculum/PLAN_DOCENTE.md §6): where the child is in the temario, what the mistakes say
    (grouped by kind, with what to do at home) and how the tests went (each prueba inicial and the recall of what was
    learnt weeks ago). Pure: reads the mastery map and the attempts (newest first), no React, no I/O. */
-import type { AttemptRecord, ErrorType, MasteryMap, SkillKey, SubjectId } from '@/types'
-import { currentTopic, isTopicMastered, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
+import type { AttemptRecord, EnglishTheme, ErrorType, MasteryMap, ProgressState, SkillKey, SubjectId } from '@/types'
+import { currentTopic, isTopicMastered, MASTERED_BOX, stageOfTopic, topicProgress, type Syllabus } from '@/content/syllabus'
 import { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, placementBlockOf } from './placement'
 import { LENGUA_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_COUNT, lenguaPlacementBlockOf } from './lengua/placement'
+import { ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, ENGLISH_PLACEMENT_COUNT, englishPlacementBlockOf } from './ingles/placement'
+import { ENGLISH_WORDS, ENGLISH_THEMES } from './ingles/words'
 import { attemptsOf, masteryOf } from './subjects'
 import { teachableCourse } from './lengua/teachable'
+import { teachableEnglishCourse } from './ingles/teachable'
+import { englishTopicOfToday } from './ingles/daily'
+import { englishSkill } from './skills'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -42,12 +47,22 @@ export interface SyllabusReport {
   available: number
 }
 
-/** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. */
-export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number): SyllabusReport {
+/** The course each subject's temario report reads: what its planner can teach now (maths reads the whole temario). */
+const TEMARIO_COURSE: Partial<Record<SubjectId, (syllabus: Syllabus) => Syllabus>> = {
+  language: (syllabus) => teachableCourse(syllabus),
+  english: (syllabus) => teachableEnglishCourse(syllabus),
+}
+
+/** Where the child is in the temario: every topic with its state, and the topic the daily session works on now. English
+    «ahora» is today's topic (englishTopicOfToday: the topic of today's class stays until tomorrow), as on the home and in the
+    session; `today` gives its progress flags and the day (default: now). */
+export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subject: SubjectId = 'math', term?: number, today?: { progress?: ProgressState; now?: Date }): SyllabusReport {
   const mastery = masteryOf(allMastery, subject)
-  // Lengua reports the topics its planner can teach (the same view as the home and the session); maths is unchanged.
-  const course = subject === 'language' ? teachableCourse(syllabus) : syllabus
-  const now = currentTopic(course, mastery, term)
+  // Lengua and English report the topics their planners can teach (the same view as the home and the session); maths is unchanged.
+  const course = TEMARIO_COURSE[subject]?.(syllabus) ?? syllabus
+  const now = subject === 'english'
+    ? englishTopicOfToday(course, mastery, today?.progress, today?.now ?? new Date())
+    : currentTopic(course, mastery, term)
   let current: SyllabusReport['current'] = null
   const blocks = course.blocks.map((b): BlockReport => {
     const topics = b.topics.map((t): TopicReport => {
@@ -114,6 +129,7 @@ export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptReco
 
 export type ErrorGroupId = 'tablas' | 'llevadas' | 'posicion' | 'problemas' | 'reloj' | 'fracciones-geometria' | 'despiste' | 'otros'
   | 'lengua-gramatica' | 'lengua-ortografia' | 'lengua-vocabulario' | 'lengua-lectura' | 'lengua-otros'
+  | 'ingles-escritura' | 'ingles-oido' | 'ingles-numeros' | 'ingles-otros'
 
 /** The kinds of mistake of the plan (§6), each with what it means and what helps at home. */
 export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; advice: string }[] = [
@@ -184,6 +200,30 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
     advice: 'Pedirle que diga en voz alta cómo lo ha pensado: así se ve dónde se lía.',
   },
   {
+    id: 'ingles-escritura',
+    label: 'Escribir palabras en inglés',
+    meaning: 'Escribe mal una palabra en inglés: le falta una letra, le sobra una o cambia una.',
+    advice: 'Deletrear la palabra en voz alta, letra a letra, y mirar bien el dibujo antes de escribirla.',
+  },
+  {
+    id: 'ingles-oido',
+    label: 'Oír en inglés',
+    meaning: 'Confunde la palabra o el número que oye en inglés.',
+    advice: 'Repetir juntos la palabra en voz alta y señalar el dibujo o el número con los dedos.',
+  },
+  {
+    id: 'ingles-numeros',
+    label: 'Operaciones en inglés',
+    meaning: 'Da mal el resultado de una suma, una resta o una multiplicación que oye en inglés.',
+    advice: 'Decir la operación en inglés y en español, y hacer la cuenta con fichas o con los dedos.',
+  },
+  {
+    id: 'ingles-otros',
+    label: 'Otros fallos de Inglés',
+    meaning: 'Toca otra tarjeta o pierde una pareja del juego de memoria.',
+    advice: 'Pedirle que diga la palabra en inglés antes de tocar la respuesta.',
+  },
+  {
     id: 'despiste',
     label: 'Despistes',
     meaning: 'Deja casillas sin completar, se pasa con el resto de la división o ve un error donde no lo hay.',
@@ -197,7 +237,7 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
   },
 ]
 
-const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
+const GROUP_OF: Partial<Record<ErrorType, ErrorGroupId | null>> = {
   'fact': 'tablas',
   'quotient-off': 'tablas',
   'carry-forgot': 'llevadas',
@@ -242,11 +282,33 @@ const GROUP_OF: Record<ErrorType, ErrorGroupId | null> = {
 /** In Lengua a blank answer and any other slip are not maths-like «despiste» or «otros». */
 const LENGUA_OWN: Partial<Record<ErrorType, ErrorGroupId>> = { incomplete: 'lengua-otros', other: 'lengua-otros' }
 
+/** English: a typed word goes to «escribir», a heard word or number to «oír», a result to «operaciones». */
+const ENGLISH_GROUP_OF: Partial<Record<ErrorType, ErrorGroupId | null>> = {
+  'eng-spelling': 'ingles-escritura',
+  'eng-near-miss': 'ingles-escritura',
+  'eng-listening': 'ingles-oido',
+  'eng-number': 'ingles-numeros',
+  'other': 'ingles-otros',
+  'recognition': null,
+  'dont-know': null,
+}
+
+/** Per subject: the group of each error type (its own table over the maths one) and the group of any other type. */
+const GROUP_BY_SUBJECT: Partial<Record<SubjectId, { table: Partial<Record<ErrorType, ErrorGroupId | null>>; other: ErrorGroupId }>> = {
+  math: { table: GROUP_OF, other: 'otros' },
+  language: { table: { ...GROUP_OF, ...LENGUA_OWN }, other: 'otros' },
+  english: { table: ENGLISH_GROUP_OF, other: 'ingles-otros' },
+}
+
 /** The group of an error type of a subject; null when it is not a mistake to report (recognition, «No lo sé»). */
 export function errorGroupOf(errorType: ErrorType, subject: SubjectId = 'math'): ErrorGroupId | null {
-  if (subject === 'language' && errorType in LENGUA_OWN) return LENGUA_OWN[errorType] ?? null
-  return errorType in GROUP_OF ? GROUP_OF[errorType] : 'otros'
+  const { table, other } = GROUP_BY_SUBJECT[subject] ?? GROUP_BY_SUBJECT.math!
+  return errorType in table ? table[errorType] ?? null : other
 }
+
+/** The subject a group belongs to: the Lengua and English groups carry their prefix, the rest are maths. */
+const SUBJECT_OF_GROUP: [prefix: string, subject: SubjectId][] = [['lengua-', 'language'], ['ingles-', 'english']]
+const groupSubject = (id: ErrorGroupId): SubjectId => SUBJECT_OF_GROUP.find(([prefix]) => id.startsWith(prefix))?.[1] ?? 'math'
 
 export interface ErrorGroupReport {
   id: ErrorGroupId
@@ -303,7 +365,7 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
     days,
     answered,
     wrong,
-    groups: ERROR_GROUPS.filter((d) => groups.has(d.id) && d.id.startsWith('lengua-') === (subject === 'language'))
+    groups: ERROR_GROUPS.filter((d) => groups.has(d.id) && groupSubject(d.id) === subject)
       .map((d) => {
         const g = groups.get(d.id)!
         const types = [...g.types].map(([errorType, count]) => ({ errorType, count })).sort((x, y) => y.count - x.count || x.errorType.localeCompare(y.errorType))
@@ -311,6 +373,44 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
       })
       .sort((x, y) => Number(x.id === 'otros') - Number(y.id === 'otros') || y.count - x.count || y.previous - x.previous),
   }
+}
+
+// ------------------------------------------------------------------------------------------------ English words
+
+/** The English words of the report: learnt by theme, the ones that fail, and the numbers the child knows. */
+export interface EnglishWordsReport {
+  /** Per theme, the English words of the theme when its skill is mastered (every theme is listed, empty when none). */
+  learnt: Record<EnglishTheme, string[]>
+  /** Words whose last two first answers include a wrong one, with what the child typed in each wrong one. Newest first. */
+  failing: { word: string; given: string[] }[]
+  /** Up to 100 once 21 to 100 is mastered, up to 20 once 0 to 20 is (0 when none). The operations mastered. */
+  numbers: { upTo: number; ops: ('plus' | 'minus' | 'times')[] }
+}
+
+/** The typed English kinds: the child writes the word, so what was written can be shown. */
+const TYPED_WORD_KINDS = ['eng-write-word', 'eng-scramble']
+
+/** The English words and numbers of the report, from the mastery map and the attempts (newest first). */
+export function englishWordsReport(allAttempts: readonly AttemptRecord[], mastery: MasteryMap): EnglishWordsReport {
+  const mastered = (skill: SkillKey) => (mastery[skill]?.box ?? -1) >= MASTERED_BOX
+  const learnt = Object.fromEntries(ENGLISH_THEMES.map((t) => [t, [] as string[]])) as Record<EnglishTheme, string[]>
+  for (const w of ENGLISH_WORDS) if (mastered(englishSkill('voc', w.theme))) learnt[w.theme].push(w.en)
+
+  // The first two graded answers of each typed word, newest first (a retry row does not grade, and is not a first answer).
+  const lastTwo = new Map<string, AttemptRecord[]>()
+  for (const a of attemptsOf(allAttempts, 'english')) {
+    if (a.graded === false || !TYPED_WORD_KINDS.includes(a.kind)) continue
+    const list = lastTwo.get(a.expected) ?? []
+    if (list.length < 2) list.push(a)
+    lastTwo.set(a.expected, list)
+  }
+  const failing = [...lastTwo]
+    .filter(([, list]) => list.some((a) => !a.correct))
+    .map(([word, list]) => ({ word, given: [...new Set(list.filter((a) => !a.correct).map((a) => a.given))] }))
+
+  const upTo = mastered(englishSkill('num', '21-100')) ? 100 : mastered(englishSkill('num', '0-20')) ? 20 : 0
+  const ops = (['plus', 'minus', 'times'] as const).filter((op) => mastered(englishSkill('num', 'ops', op)))
+  return { learnt, failing, numbers: { upTo, ops } }
 }
 
 // ------------------------------------------------------------------------------------------------ tests
@@ -328,12 +428,17 @@ export interface PlacementRun {
 const RUN_GAP_MS = 2 * 60 * 60 * 1000
 
 /** Every prueba inicial of a subject the child has done, oldest first. Attempts come newest first. */
+/** Each subject's prueba inicial: the activity name its attempts carry, its questions, its blocks and the block of a skill. */
+const PLACEMENT_BY_SUBJECT: Partial<Record<SubjectId, {
+  activity: string; count: number; blocks: { id: string; label: string }[]; blockOf: (skill: SkillKey) => string | null
+}>> = {
+  math: { activity: PLACEMENT_ACTIVITY, count: PLACEMENT_COUNT, blocks: PLACEMENT_BLOCKS, blockOf: placementBlockOf },
+  language: { activity: LENGUA_PLACEMENT_ACTIVITY, count: LENGUA_PLACEMENT_COUNT, blocks: LENGUA_PLACEMENT_BLOCKS, blockOf: lenguaPlacementBlockOf },
+  english: { activity: ENGLISH_PLACEMENT_ACTIVITY, count: ENGLISH_PLACEMENT_COUNT, blocks: ENGLISH_PLACEMENT_BLOCKS, blockOf: englishPlacementBlockOf },
+}
+
 export function placementRuns(allAttempts: readonly AttemptRecord[], subject: SubjectId = 'math'): PlacementRun[] {
-  const lengua = subject === 'language'
-  const activity = lengua ? LENGUA_PLACEMENT_ACTIVITY : PLACEMENT_ACTIVITY
-  const count = lengua ? LENGUA_PLACEMENT_COUNT : PLACEMENT_COUNT
-  const defs: { id: string; label: string }[] = lengua ? LENGUA_PLACEMENT_BLOCKS : PLACEMENT_BLOCKS
-  const blockOf = (skill: SkillKey): string | null => (lengua ? lenguaPlacementBlockOf(skill) : placementBlockOf(skill))
+  const { activity, count, blocks: defs, blockOf } = PLACEMENT_BY_SUBJECT[subject] ?? PLACEMENT_BY_SUBJECT.math!
   const items = attemptsOf(allAttempts, subject).filter((a) => a.context.activity === activity).slice().reverse()
   const runs: AttemptRecord[][] = []
   for (const a of items) {

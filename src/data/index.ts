@@ -29,6 +29,9 @@ export { recordAttempt, listAttempts, startSession, touchSession, endSession, li
 // ---------------------------------------------------------------- rewards (parent-defined real-world prize)
 export { getRewards, setChestReward, markRewardUnlocked, markRewardClaimed } from './rewards'
 
+// ---------------------------------------------------------------- «Ahora dilo tú» results (this device only, no audio)
+export { listSpeaking, recordSpeaking } from './speaking'
+
 // ---------------------------------------------------------------- handwriting samples (local only by default)
 export { addInkSample, listInkSamples, clearInkSamples } from './rewards'
 

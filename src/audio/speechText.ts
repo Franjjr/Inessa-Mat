@@ -81,8 +81,11 @@ function readMath(expr: string): string {
 const EMOJI_RE = /[\p{Extended_Pictographic}\u{1F3FB}-\u{1F3FF}\u{1F1E6}-\u{1F1FF}‍︎️⃣]/gu
 const SYMBOLS_RE = /[☆✓✗✘❖◆◇○●■▪▫►▶◀♡♢♤♧★✦✧✩✪✫✬✭✮✯✰⋆]/gu
 
-/** Clean and verbalise a piece of child-facing copy for TTS. */
-export function toSpeakable(input: string): string {
+/** The language a text is spoken in. English keeps its digits: the English voice reads them itself. */
+export type SpeechLang = 'es' | 'en'
+
+/** Clean and verbalise a piece of child-facing copy for TTS. Digits become Spanish words unless `lang` is 'en'. */
+export function toSpeakable(input: string, lang: SpeechLang = 'es'): string {
   if (!input) return ''
   let s = input.normalize('NFC').replace(/[   ]/g, ' ')
 
@@ -94,44 +97,47 @@ export function toSpeakable(input: string): string {
     .replace(/<br\s*\/?>/gi, '. ')
     .replace(/<\/(p|div|li|h\d)>/gi, '. ')
     .replace(/<[^>]*>/g, ' ')
-    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, ' y ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, lang === 'en' ? ' and ' : ' y ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
     .replace(/https?:\/\/\S+/g, ' ')
     .replace(/\{[^{}]*\}/g, ' ')
 
-  // Maths spans first (they may contain "?" / "_" blanks that markdown stripping would eat).
-  s = s.replace(MATH_RE, (_m, pre: string, expr: string) => `${pre}${readMath(expr)}`)
+  // Spanish only: the English voice reads digits and maths itself.
+  if (lang === 'es') {
+    // Maths spans first (they may contain "?" / "_" blanks that markdown stripping would eat).
+    s = s.replace(MATH_RE, (_m, pre: string, expr: string) => `${pre}${readMath(expr)}`)
 
-  // Ranges "3-4" → "tres a cuatro".
-  s = s.replace(/(\d+)-(\d+)/g, (_m, a: string, b: string) => `${numWords(a, 'm')} a ${numWords(b, 'm')}`)
+    // Ranges "3-4" → "tres a cuatro".
+    s = s.replace(/(\d+)-(\d+)/g, (_m, a: string, b: string) => `${numWords(a, 'm')} a ${numWords(b, 'm')}`)
 
-  // Ordinals: 1º, 2ª, 3.º. A feminine article ("la 1º") or ª makes the ordinal agree ("la primera").
-  s = s.replace(/(^|\s)((?:la|las)\s+)?(\d+)\.?\s?([ºª°])/gi, (_m, pre: string, art: string | undefined, n: string, o: string) =>
-    `${pre}${art ?? ''}${ordinalToSpanish(Number(n), o === 'ª' || !!art)}`)
+    // Ordinals: 1º, 2ª, 3.º. A feminine article ("la 1º") or ª makes the ordinal agree ("la primera").
+    s = s.replace(/(^|\s)((?:la|las)\s+)?(\d+)\.?\s?([ºª°])/gi, (_m, pre: string, art: string | undefined, n: string, o: string) =>
+      `${pre}${art ?? ''}${ordinalToSpanish(Number(n), o === 'ª' || !!art)}`)
 
-  // Numbers followed by a unit or currency.
-  s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)\s?(€|%|cm|km|kg|ml|min|m|g|l|h|s)(?![\p{L}\d])/gu, (_m, n: string, u: string) => {
-    const { int, dec } = parseNum(n)
-    const [sing, plural] = UNITS[u]
-    const fem = u === 'h'
-    const words = dec ? numWords(n, 'm') : numberToSpanish(int, fem ? 'f' : 'apocope')
-    return `${words} ${int === 1 && !dec ? sing : plural}`
-  })
+    // Numbers followed by a unit or currency.
+    s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)\s?(€|%|cm|km|kg|ml|min|m|g|l|h|s)(?![\p{L}\d])/gu, (_m, n: string, u: string) => {
+      const { int, dec } = parseNum(n)
+      const [sing, plural] = UNITS[u]
+      const fem = u === 'h'
+      const words = dec ? numWords(n, 'm') : numberToSpanish(int, fem ? 'f' : 'apocope')
+      return `${words} ${int === 1 && !dec ? sing : plural}`
+    })
 
-  // Remaining numbers, agreeing with the next word.
-  s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)(\s+[\p{L}]+)?/gu, (_m, n: string, next?: string) => {
-    if (!next) return numWords(n, 'm')
-    const form: NumberForm = isFeminine(next.trim()) ? 'f' : 'apocope'
-    return numWords(n, form) + next
-  })
+    // Remaining numbers, agreeing with the next word.
+    s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)(\s+[\p{L}]+)?/gu, (_m, n: string, next?: string) => {
+      if (!next) return numWords(n, 'm')
+      const form: NumberForm = isFeminine(next.trim()) ? 'f' : 'apocope'
+      return numWords(n, form) + next
+    })
+  }
 
   // Markdown emphasis, bullets, arrows and other symbols.
   s = s
     .replace(/[*_~`#>|]+/g, ' ')
     .replace(/[→➜⇒⟶↦➔➡]/g, ', ')
     .replace(/\s[•·]\s/g, ', ')
-    .replace(/&/g, ' y ')
+    .replace(/&/g, lang === 'en' ? ' and ' : ' y ')
     .replace(EMOJI_RE, ' ')
     .replace(SYMBOLS_RE, ' ')
 

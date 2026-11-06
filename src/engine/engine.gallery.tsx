@@ -53,6 +53,7 @@ function showAnswer(a: Answer): string {
     case 'text': return a.value ?? '—'
     case 'pieces': return a.pieces.length ? a.pieces.join(' + ') : '—'
     case 'long-mul': return `${a.rows.map((r) => r.map((d) => d ?? '·').reverse().join('')).join(' + ')} = ${a.total.map((d) => d ?? '·').reverse().join('')}`
+    case 'memory': return `${a.found} parejas en ${a.turns} turnos`
   }
 }
 

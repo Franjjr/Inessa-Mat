@@ -2,6 +2,7 @@
    a correct answer unlocks "Siguiente". The slot owns the feedback (showFeedback off), so the child never sees two
    "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import clsx from 'clsx'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { createRng, generate } from '@/engine'
 import type { DivMethod, ExerciseOutcome, SkillSelector, SubMethod } from '@/types'
@@ -30,6 +31,10 @@ interface Props {
   divMethod?: DivMethod
   /** Offer the hint button (default true; a lesson step with `hints: false` turns it off). */
   allowHints?: boolean
+  /** The lesson has grown to hold this try (the board takes the exercise's height, see LessonPlayer). */
+  grown?: boolean
+  /** Called when the exercise does not fit the board even at MIN_FIT_SCALE and one of its controls is out of reach: the lesson grows. */
+  onOverflow?: () => void
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -48,7 +53,34 @@ export function fitScale(available: number, natural: number): number {
   return Math.max(MIN_FIT_SCALE, available / natural)
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true }: Props) {
+const CONTROLS = 'button, input, textarea, select'
+
+/** Whether every control of the try (the exercise's, and the footer's «Inténtalo otra vez») is seen at `scale`, without growing:
+    the lowest one's bottom is above the bottom of the wrap (the try's box on the board, which scrolls) and above the window's,
+    whichever is higher. The exercise is drawn from its top centre, so its top stays where it is: its controls are read at the
+    `applied` scale (the one drawn now) and projected to `scale`. The footer sits under the exercise's box at natural × scale plus
+    the row gap, because the box carries that height once a measure has set it; the first measure has no footer control yet,
+    so the projection is only used where it holds. The footer's controls are read from the footer's top. No control: the
+    exercise's own bottom. */
+function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLElement | null, applied: number, scale: number, natural: number): boolean {
+  const top = inner.getBoundingClientRect().top
+  const gap = parseFloat(getComputedStyle(wrap).rowGap) || 0
+  let lowest = Number.NEGATIVE_INFINITY
+  for (const c of inner.querySelectorAll<HTMLElement>(CONTROLS)) {
+    lowest = Math.max(lowest, top + ((c.getBoundingClientRect().bottom - top) / applied) * scale)
+  }
+  if (footer) {
+    const footerTop = footer.getBoundingClientRect().top
+    for (const c of footer.querySelectorAll<HTMLElement>(CONTROLS)) {
+      lowest = Math.max(lowest, top + natural * scale + gap + (c.getBoundingClientRect().bottom - footerTop))
+    }
+  }
+  if (lowest === Number.NEGATIVE_INFINITY) lowest = top + natural * scale
+  const visibleBottom = Math.min(wrap.getBoundingClientRect().bottom, window.innerHeight)
+  return lowest <= visibleBottom - 1
+}
+
+export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -57,6 +89,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   const innerRef = useRef<HTMLDivElement>(null)
   const footerRef = useRef<HTMLDivElement>(null)
   const [fit, setFit] = useState({ scale: 1, height: 0 })
+  /** The scale the exercise is drawn with now (the last one measured): positions are read at it and projected to the next. */
+  const appliedScale = useRef(1)
 
   const exercise = useMemo(
     () => generate(selector, 1, { rng: createRng(seedOf(`${seedKey}:${attempt}`)) })[0],
@@ -81,7 +115,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       const footer = footerRef.current?.offsetHeight ?? 0
       const available = wrap.clientHeight - padding - footer - gap
       const natural = inner.offsetHeight
-      setFit({ scale: fitScale(available, natural), height: natural })
+      const scale = fitScale(available, natural)
+      setFit({ scale, height: natural })
+      // Taller than the board even at the smallest scale AND a control of the try out of reach: the lesson has to grow to hold it.
+      // A tall exercise whose controls are all in view keeps its size (its lower part scrolls inside the board).
+      if (!grown && natural * scale > available + 1 && !controlsReachable(wrap, inner, footerRef.current, appliedScale.current, scale, natural)) onOverflow?.()
+      appliedScale.current = scale
     }
     measure()
     if (typeof ResizeObserver === 'undefined') return
@@ -89,7 +128,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     ro.observe(wrap)
     ro.observe(inner)
     return () => ro.disconnect()
-  }, [live, exercise])
+  }, [live, exercise, status, grown, onOverflow])
 
   if (settled !== undefined) {
     return (
@@ -143,7 +182,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   }
 
   return (
-    <div ref={wrapRef} className={s.wrap} data-status={status}>
+    <div ref={wrapRef} className={clsx(s.wrap, grown && s.wrapGrown)} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
           <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} method={method} divMethod={divMethod} />

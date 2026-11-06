@@ -30,7 +30,7 @@ export function allSelectors(): { where: string; selector: SkillSelector; count:
   for (const l of lessons) l.steps.forEach((s, i) => { if (s.trySelector) out.push({ where: `${l.id}#${i}`, selector: s.trySelector, count: 1 }) })
   for (const g of guardians) {
     g.rounds.forEach((r, i) => out.push({ where: `${g.id}/round${i}`, selector: r.selector, count: r.count }))
-    if (g.spell.selector) out.push({ where: `${g.id}/spell`, selector: g.spell.selector, count: 1 })
+    if (g.spell?.selector) out.push({ where: `${g.id}/spell`, selector: g.spell?.selector as SkillSelector, count: 1 })
   }
   return out
 }
@@ -64,7 +64,7 @@ export function allCopy(): Copy[] {
   for (const g of guardians) {
     ui(`${g.id}/title`, g.title)
     ui(`${g.id}/intro`, g.intro)
-    ui(`${g.id}/spell`, g.spell.text)
+    ui(`${g.id}/spell`, g.spell?.text ?? '')
     ui(`${g.id}/retry`, g.retryText)
   }
   for (const [k, list] of Object.entries(PHRASES)) list.forEach((p, i) => ui(`phrase/${k}/${i}`, p))

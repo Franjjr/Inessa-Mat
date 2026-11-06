@@ -3,8 +3,8 @@
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
 import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf, strategyForFact } from '@/engine'
-import type { DivMethod, Exercise, Hint, LenguaExercise, SubMethod, TableMethod } from '@/types'
-import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
+import type { DivMethod, EnglishExercise, Exercise, Hint, LenguaExercise, SubMethod, TableMethod } from '@/types'
+import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const PER_SKILL = 30
@@ -57,10 +57,27 @@ function lenguaAnswersOf(ex: LenguaExercise): Answer[] {
   }
 }
 
+/** Inglés (3.º): the English words the child says or writes (the listening numbers are digits, checked below). */
+const ENGLISH_TEXT_KINDS = ['eng-listen-pick', 'eng-match', 'eng-write-word', 'eng-complete', 'eng-num-write', 'eng-memory', 'eng-scramble']
+function englishAnswersOf(ex: EnglishExercise): Answer[] {
+  const text = (t: string): Answer => ({ label: `«${t}»`, pattern: new RegExp(`(?<![\\p{L}\\d])${escape(t)}(?![\\p{L}\\d])`, 'iu') })
+  switch (ex.kind) {
+    case 'eng-listen-pick': return [text(ex.word)]
+    case 'eng-match': return ex.words.map(text)
+    case 'eng-write-word': return [text(ex.answer), ...ex.alts.map(text)]
+    case 'eng-complete': return [text(ex.options[ex.answer])]
+    case 'eng-num-write': return [text(ex.answer)]
+    case 'eng-memory': return ex.pairs.map((p) => text(p.en))
+    case 'eng-scramble': return [text(ex.answer), ...ex.alts.map(text)]
+    default: return []
+  }
+}
+
 /** The numbers and texts the child must write for this exercise. */
 function answersOf(ex: Exercise): Answer[] {
   const out: Answer[] = []
   if (LENGUA_TEXT_KINDS.includes(ex.kind)) return lenguaAnswersOf(ex as LenguaExercise)
+  if (ENGLISH_TEXT_KINDS.includes(ex.kind)) return englishAnswersOf(ex as EnglishExercise)
   const numbers: { n: number; isAnswer: boolean }[] = []
   const add = (v: unknown, isAnswer = false) => {
     if (typeof v === 'number') numbers.push({ n: v, isAnswer })
@@ -157,9 +174,10 @@ function leaks(ex: Exercise): { level: number; text: string; answer: string }[] 
 }
 
 describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
-  // Lengua: only the skills that have exercise kinds (the others, such as spelling, have none yet).
+  // Lengua and Inglés: only the skills that have exercise kinds (the others, such as spelling, have none yet).
   const lengua = availableSkills(LENGUA3_SYLLABUS).filter((s) => kindsForSkill(s).length > 0)
-  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS), ...lengua])].sort()
+  const english = availableSkills(INGLES3_SYLLABUS).filter((s) => kindsForSkill(s).length > 0)
+  const skills = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availableSkills(GRADE4_SYLLABUS), ...lengua, ...english])].sort()
 
   it('the checker catches the answer in each written form and not inside a longer number', () => {
     const hit = (n: number, text: string) => numberPattern(n)!.test(text)
@@ -195,6 +213,18 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
         for (const l of leaks(ex)) found.push(`${skill} [${ex.kind}] level ${l.level} (${l.answer}): ${l.text}`)
       }
     }
+    expect([...new Set(found)]).toEqual([])
+  })
+  it('no English hint gives the answer away, for every English kind of its skills', () => {
+    const found: string[] = []
+    for (const skill of english) {
+      for (const kind of kindsForSkill(skill)) {
+        for (const ex of generate({ skills: [skill], kinds: [kind] }, PER_SKILL, { now })) {
+          for (const l of leaks(ex)) found.push(`${skill} [${ex.kind}] level ${l.level} (${l.answer}): ${l.text}`)
+        }
+      }
+    }
+    expect(english.length).toBeGreaterThan(20)
     expect([...new Set(found)]).toEqual([])
   })
   it('no division hint states a quotient digit (level 3 names the next step, it does not write the partial quotient)', () => {

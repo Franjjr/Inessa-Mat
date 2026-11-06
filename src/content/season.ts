@@ -18,6 +18,10 @@ import { c2Guardians } from './c2/guardians'
 import { c2Lessons } from './c2/lessons'
 import { c2Stories } from './c2/stories'
 import { c2Worlds } from './c2/worlds'
+import { INGLES_CLASSES } from './classes/ingles3'
+import { islandGuardians } from './ingles/guardians'
+import { ISLAND_ID, islandWorld } from './ingles/island'
+import { ISLAND_STORIES } from './ingles/stories'
 
 export const season1: SeasonDef = {
   id: 's1',
@@ -48,17 +52,21 @@ export function seasonIdForGrade(grade?: number): string {
 const key = (seasonId: string, worldId: string) => `${seasonId}:${worldId}`
 const WORLDS = new Map(SEASONS.flatMap((s) => s.worlds.map((w) => [key(s.id, w.id), w] as const)))
 const NODES = new Map(SEASONS.flatMap((s) => s.worlds.map((w) => [key(s.id, w.id), new Map(w.nodes.map((n) => [n.id, n]))] as const)))
-const STORIES = new Map([...stories, ...c2Stories, c2Finale].map((s) => [s.id, s]))
-const LESSONS = new Map([...lessons, ...c2Lessons].map((l) => [l.id, l]))
-const GUARDIANS = new Map([...guardians, ...c2Guardians].map((g) => [g.id, g]))
+const STORIES = new Map([...stories, ...c2Stories, c2Finale, ...ISLAND_STORIES].map((s) => [s.id, s]))
+// The English classes' lessons are the lesson stops of the island (src/content/ingles/island.ts).
+const LESSONS = new Map([...lessons, ...c2Lessons, ...INGLES_CLASSES.map((c) => c.lesson)].map((l) => [l.id, l]))
+const GUARDIANS = new Map([...guardians, ...c2Guardians, ...islandGuardians].map((g) => [g.id, g]))
 
 export { guardians, lessons, stories }
 
+// The island of Inglés is the same world whatever the season: it is not one of the seasons' maps (see island.ts).
 export function getWorld(id: string, seasonId = 's1'): WorldDef | undefined {
+  if (id === ISLAND_ID) return islandWorld
   return WORLDS.get(key(getSeason(seasonId).id, id))
 }
 
 export function getNode(worldId: string, nodeId: string, seasonId = 's1'): NodeDef | undefined {
+  if (worldId === ISLAND_ID) return islandWorld.nodes.find((n) => n.id === nodeId)
   return NODES.get(key(getSeason(seasonId).id, worldId))?.get(nodeId)
 }
 
@@ -81,8 +89,10 @@ export function nextWorldId(worldId: string, seasonId = 's1'): string | undefine
   return i >= 0 ? worlds[i + 1]?.id : undefined
 }
 
-/** The guardian of a world (its last node). */
+/** The guardian of a world (its last guardian stop). */
 export function guardianForWorld(worldId: string, seasonId = 's1'): GuardianDef | undefined {
-  const node = getWorld(worldId, seasonId)?.nodes.find((n) => n.kind === 'guardian')
+  // The last guardian of the world: the maths worlds have one (their last stop); the island has one per stage.
+  const guardianStops = getWorld(worldId, seasonId)?.nodes.filter((n) => n.kind === 'guardian') ?? []
+  const node = guardianStops[guardianStops.length - 1]
   return node?.ref ? getGuardian(node.ref) : undefined
 }

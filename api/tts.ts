@@ -13,16 +13,18 @@
    - Still to configure by the owner in the Vercel Firewall dashboard (not in this repo): a rate-limit rule on
      /api/tts per IP. The coordinator proposes it; until it exists, the limits above are all there is. */
 
-type Character = 'lumi' | 'companion' | 'narrator' | 'guardian'
+type Character = 'lumi' | 'companion' | 'narrator' | 'guardian' | 'english'
 
-/** Spanish (Spain) neural voices per character, chosen by the owner by ear (Ximena Multilingual for Lumi and the
-    narrator, Irene for the companion). Small prosody changes only: big ones sound artificial. When a voice changes,
-    bump VOICE_REVISION in src/audio/neuralVoice.ts so devices fetch the new clips instead of their cached ones. */
+/** Neural voices per character, chosen by the owner by ear. The Spanish ones (Spain): Ximena Multilingual for Lumi and
+    the narrator, Irene for the companion. Small prosody changes only: big ones sound artificial. The english one is a
+    British voice for the English words (en-GB). When a voice changes, bump VOICE_REVISION in src/audio/neuralVoice.ts
+    so devices fetch the new clips instead of their cached ones. */
 export const VOICES: Record<Character, { name: string; pitch: string; rate: string }> = {
   lumi: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-4%' },
   companion: { name: 'es-ES-IreneNeural', pitch: '0%', rate: '0%' },
   narrator: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-6%' },
   guardian: { name: 'es-ES-AlvaroNeural', pitch: '-3%', rate: '-8%' },
+  english: { name: 'en-GB-SoniaNeural', pitch: '0%', rate: '-8%' },
 }
 
 const MAX_CHARS = 400
@@ -33,7 +35,7 @@ const RATE_LIMIT = 120
 const RATE_WINDOW_MS = 10 * 60_000
 const MAX_TRACKED_IPS = 10_000
 /** Letters (with Spanish accents), digits, spaces and ordinary punctuation. Nothing that could become markup. */
-const SAFE_TEXT = /^[\p{L}\p{N}\s.,;:¡!¿?'"«»()\-–—…%+×÷=/]+$/u
+const SAFE_TEXT = /^[\p{L}\p{N}\s.,;:¡!¿?'‘’"«»()\-–—…%+×÷=/]+$/u
 
 interface Env {
   AZURE_SPEECH_KEY?: string
@@ -48,7 +50,8 @@ function fail(status: number, message: string): Response {
   return new Response(message, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } })
 }
 
-function allowedCaller(req: Request): boolean {
+/** The Origin/Referer guard, shared with /api/pronunciation: only our own pages may call the voice services. */
+export function allowedCaller(req: Request): boolean {
   // Sec-Fetch-Site is sent by browsers on every request; when present it must say same-origin.
   const fetchSite = req.headers.get('sec-fetch-site')
   if (fetchSite !== null && fetchSite !== 'same-origin') return false
@@ -85,10 +88,12 @@ export function __resetRateLimitForTests(): void {
 
 export function ssml(text: string, character: Character): string {
   const v = VOICES[character]
-  // Multilingual voices guess the language from the text: <lang> pins Spanish from Spain (accent and numbers).
+  // English is read as British English; the Spanish characters keep Spain's accent and numbers.
+  const lang = character === 'english' ? 'en-GB' : 'es-ES'
   const body = `<prosody pitch="${v.pitch}" rate="${v.rate}">${escapeXml(text)}</prosody>`
-  const spoken = v.name.includes('Multilingual') ? `<lang xml:lang="es-ES">${body}</lang>` : body
-  return `<speak version="1.0" xml:lang="es-ES" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts">` +
+  // Multilingual voices guess the language from the text: <lang> pins it (accent and numbers).
+  const spoken = v.name.includes('Multilingual') || lang !== 'es-ES' ? `<lang xml:lang="${lang}">${body}</lang>` : body
+  return `<speak version="1.0" xml:lang="${lang}" xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="https://www.w3.org/2001/mstts">` +
     `<voice name="${v.name}">${spoken}</voice></speak>`
 }
 

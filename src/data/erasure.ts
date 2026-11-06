@@ -24,6 +24,7 @@ export async function eraseLocalChild(childId: string): Promise<void> {
       db.outbox.where('childId').equals(childId).delete(),
       db.meta.delete(META.progressVersion(childId)),
       db.meta.delete(META.assignmentsCache(childId)),
+      db.meta.delete(META.speaking(childId)),
     ])
     const active = await db.meta.get(META.activeChildId)
     if (active?.value === childId) await db.meta.delete(META.activeChildId)

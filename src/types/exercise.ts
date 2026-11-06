@@ -124,6 +124,16 @@ export type ExerciseKind =
   | 'lng-read-order'  // Lengua 3.º: poner en orden lo que pasa en el texto (lect:ordenar)
   | 'lng-copy'        // Lengua 3.º: copiar una frase que se ve en la tarjeta, con el teclado (escr:copia)
   | 'lng-guided'      // Lengua 3.º: escritura guiada corta, una invitación, una nota, una carta o una descripción con huecos (escr:guiada)
+  | 'eng-listen-pick' // Inglés 3.º: oír una palabra y tocar su tarjeta (eng:voc:*)
+  | 'eng-match'       // Inglés 3.º: unir cuatro palabras en inglés con sus cuatro dibujos (eng:voc:*)
+  | 'eng-write-word'  // Inglés 3.º: escribir en inglés la palabra de un dibujo o de una palabra en español (eng:voc:*)
+  | 'eng-complete'    // Inglés 3.º: elegir la palabra que completa una frase (eng:frase:*)
+  | 'eng-num-write'   // Inglés 3.º: escribir en inglés un número que se ve con cifras (eng:num:0-20|decenas|21-100)
+  | 'eng-num-listen'  // Inglés 3.º: escuchar un número en inglés y escribirlo con cifras (eng:num:0-20|decenas|21-100)
+  | 'eng-op-listen'   // Inglés 3.º: escuchar una operación en inglés y escribir el resultado (eng:num:ops:*)
+  | 'eng-memory'      // Inglés 3.º: juego de memoria, seis parejas de dibujo y palabra en inglés (eng:voc:*)
+  | 'eng-scramble'    // Inglés 3.º: ordenar las letras de una palabra con su dibujo y escribirla (eng:voc:*)
+  | 'eng-speak'       // Inglés 3.º: «Ahora dilo tú», la palabra en inglés que la niña dice y el micrófono puntúa (solo con micrófono)
 
 interface ExerciseBase {
   id: ID
@@ -530,6 +540,60 @@ export interface MeasureEstimateExercise extends ExerciseBase {
   answer: boolean
 }
 
+// ---- Inglés de 3.º (src/engine/ingles/exercises.ts): palabras, frases y números en inglés
+
+/** A word as the exercises show it: its Spanish word, and its picture (emoji) when the theme has one. */
+export interface EnglishCard { en: string; es: string; emoji?: string; theme: string }
+/** Hears `word` (the English voice; never shown before the answer) and taps its card among 3 or 4 (answer = index in cards). */
+export interface EngListenPickExercise extends ExerciseBase {
+  kind: 'eng-listen-pick'; word: string; theme: string; cards: EnglishCard[]; answer: number
+}
+/** Pairs four English words with four pictures: `answer[i]` is the index in `cards` of `words[i]`. Answer: marks (pair order). */
+export interface EngMatchExercise extends ExerciseBase {
+  kind: 'eng-match'; words: string[]; cards: EnglishCard[]; answer: number[]
+}
+/** The picture (or the Spanish word) is shown; the child types the English word (compareEnglish; `alts` are accepted too). */
+export interface EngWriteWordExercise extends ExerciseBase {
+  kind: 'eng-write-word'; card: EnglishCard; answer: string; alts: string[]
+}
+/** A sentence with one gap («___»); the child taps the word that fits (options shuffled, answer = index). `es` is an
+    optional Spanish cue shown above the sentence (never the answer, never read out by the English voice). */
+export interface EngCompleteExercise extends ExerciseBase {
+  kind: 'eng-complete'; sentence: string; options: string[]; answer: number; es?: string
+}
+/** A number shown in digits; the child types it in English (answer = the English words, compared with compareEnglish). */
+export interface EngNumWriteExercise extends ExerciseBase {
+  kind: 'eng-num-write'; value: number; answer: string
+}
+/** The app says `spoken` (never shown); the child writes the digits. */
+export interface EngNumListenExercise extends ExerciseBase {
+  kind: 'eng-num-listen'; value: number; spoken: string; answer: number
+}
+/** The app says `spoken` («three plus four») (never shown); the child writes the result. */
+export interface EngOpListenExercise extends ExerciseBase {
+  kind: 'eng-op-listen'; a: number; op: '+' | '-' | '×'; b: number; spoken: string; answer: number
+}
+/** The themes of the English vocabulary (src/engine/ingles/words.ts). */
+export type EnglishTheme =
+  | 'saludos' | 'colores' | 'animales' | 'familia' | 'comida' | 'ropa' | 'cole' | 'casa' | 'cuerpo' | 'tiempo' | 'dias'
+/** Memory: six pairs (picture and English word) in a deck of 12 cards; each pair is in the deck twice, one per side.
+    `deck` is shuffled by the engine (the same seed, the same board). The answer is the turns and the pairs found. */
+export interface EngMemoryExercise extends ExerciseBase {
+  kind: 'eng-memory'; theme: EnglishTheme; pairs: EnglishCard[]; deck: { pair: number; side: 'picture' | 'word' }[]
+}
+/** The picture and its Spanish word; the child taps the letters (`tiles`, shuffled, never in order) and the word is
+    graded as typed text (compareEnglish; `alts` are accepted too). */
+export interface EngScrambleExercise extends ExerciseBase {
+  kind: 'eng-scramble'; card: EnglishCard; answer: string; alts: string[]; tiles: string[]
+}
+/** «Ahora dilo tú»: the English word (and its Spanish gloss) is shown; the child says it. Never graded as a word: the
+    pronunciation stars are not an attempt (src/engine/ingles/speaking.ts). */
+export interface EngSpeakExercise extends ExerciseBase {
+  kind: 'eng-speak'; word: string; es: string; theme: EnglishTheme
+}
+export type EnglishExercise = EngListenPickExercise | EngMatchExercise | EngWriteWordExercise | EngCompleteExercise
+  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise | EngMemoryExercise | EngScrambleExercise | EngSpeakExercise
+
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise
   | ArrayExercise | DoubleChainExercise | FactFamilyExercise | ColumnAddExercise | ColumnSubExercise
@@ -542,7 +606,7 @@ export type Exercise =
   | MoneyRecogniseExercise | MoneyPayExercise | MoneyChangeExercise | MoneyAddExercise | MoneyCompareExercise | MoneyConvertExercise | MoneyBudgetExercise
   | MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
   | ChartExercise | ChanceExercise | PatternExercise | PositionExercise | MulPartsExercise | AreaExercise | FractionAddExercise
-  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise
+  | LongMulExercise | OrdinalExercise | DecimalExercise | DecimalOpExercise | LenguaExercise | EnglishExercise
 
 // ---- Lengua de 3.º: gramática (src/engine/lengua/grammar.ts; los bancos de palabras están en words.ts)
 
@@ -820,6 +884,7 @@ export type Answer =
   | { type: 'text'; value: string | null }                                 // a typed word or phrase (Lengua): the letter keyboard or a physical one
   | { type: 'pieces'; pieces: number[] }                                   // dinero pay: coins and notes in the tray (céntimos)
   | { type: 'long-mul'; rows: (number | null)[][]; total: (number | null)[] } // multiplicar en columna: partial rows and the total, units first
+  | { type: 'memory'; turns: number; found: number }                      // juego de memoria: turns (two cards each) and pairs found
 
 /**
  * Subtraction methods a child can learn (see src/engine/methods.ts for labels and the registry of methods per
@@ -873,6 +938,10 @@ export type ErrorType =
   | 'alphabet'            // Lengua: the words are out of alphabetical order
   | 'word-pair'           // Lengua: the wrong synonym, antonym, family member or form
   | 'reading'             // Lengua: a question about a text answered wrongly (idea, detail, order, rhyme, riddle, fable)
+  | 'eng-spelling'         // Inglés: a typed English word wrong (not one letter away)
+  | 'eng-near-miss'        // Inglés: a typed English word one letter away from the right one («¡Casi!»)
+  | 'eng-listening'        // Inglés: a word or a number heard in English and taken for another
+  | 'eng-number'           // Inglés: the result of an operation said in English is wrong
   | 'step'                 // the first step of a two-step problem is wrong
   | 'false-alarm'          // the child said there was an error in a right calculation
   | 'fraction-parts'       // took as equal parts a split that is not equal, or the other way round

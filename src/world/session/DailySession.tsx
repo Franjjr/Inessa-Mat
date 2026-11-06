@@ -14,36 +14,49 @@ import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { classForTopic, getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
 import { syllabusFor, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { DAILY_BLOCK_LABEL, DAILY_MINUTES, planDailySession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
+import { DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
 import type { RunQueue } from '@/activities/shared/requeue'
 import { CaligrafiaOffer, useCaligrafiaOffered } from './CaligrafiaOffer'
 import { showCaligrafiaAtEnd } from '@/engine/caligrafia/offer'
-import { afterAnswer, postpone, SESSION_STARS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
+import { afterAnswer, postpone, SESSION_STARS, SUBJECT_LIMIT_SECONDS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
 export interface DailySessionProps {
-  /** maths (default) or Lengua: the planner, the blocks and the reward key follow it. */
+  /** maths (default), Lengua or English: the planner, the blocks and the reward key follow it. */
   subject?: LessonSubject
   onDone: () => void
   onExit: () => void
 }
 
+/** What each subject's session shows and runs: the activity name of its attempts, its title and minutes, the blocks the intro
+    lists, whether its class comes first (its «Empezar» opens the class), and whether the adventure is offered at the end. */
+const SESSION_SETUP: Record<LessonSubject, {
+  activity: string; title: string; minutes: number; classFirst: boolean; adventure: boolean; blocks: [string, string][]
+}> = {
+  math: {
+    activity: 'sesion', title: 'Mi sesión de hoy', minutes: DAILY_MINUTES, classFirst: false, adventure: true,
+    blocks: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con un ejemplo'], ['Mezcla', '5 min · de todo un poco'], ['Problema', '2 min · con historia']],
+  },
+  language: {
+    activity: 'sesion-lengua', title: 'Mi sesión de Lengua', minutes: DAILY_MINUTES, classFirst: true, adventure: false,
+    blocks: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con la clase'], ['Lectura', '4 min · un cuento y sus preguntas'], ['Mezcla', '4 min · ortografía y palabras']],
+  },
+  english: {
+    activity: 'sesion-ingles', title: 'Mi sesión de Inglés', minutes: ENGLISH_SESSION_MINUTES, classFirst: true, adventure: false,
+    blocks: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '4 min · con la clase'], ['Mezcla', '3 min · lo que se te resiste'], ['Juego', '2 min · memoria, letras o números']],
+  },
+}
+
 /** The screen: the host gives the run its attempts and reward hooks; the planner decides the content. */
 export default function DailySession({ subject = 'math', ...props }: DailySessionProps) {
   return (
-    <GameHostProvider activity={subject === 'language' ? 'sesion-lengua' : 'sesion'} subject={subject}>
+    <GameHostProvider activity={SESSION_SETUP[subject].activity} subject={subject}>
       <SessionRunner subject={subject} {...props} />
     </GameHostProvider>
   )
-}
-
-/** The blocks the intro lists, per subject (the planner's blocks, in order, with their timing). */
-const INTRO_BLOCKS: Record<LessonSubject, [string, string][]> = {
-  math: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con un ejemplo'], ['Mezcla', '5 min · de todo un poco'], ['Problema', '2 min · con historia']],
-  language: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con la clase'], ['Lectura', '4 min · un cuento y sus preguntas'], ['Mezcla', '4 min · ortografía y palabras']],
 }
 
 /** Active seconds of the run: stops while paused and when the run is not on screen. */
@@ -107,15 +120,17 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   useEffect(() => {
     if (plan || !child || !mastery || !attempts || !progress) return
     const now = new Date()
-    const made = subject === 'language'
-      ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress, voice: speech.available() })
-      : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now })
+    const made = subject === 'english'
+      ? planEnglishSession({ child, mastery, attempts, syllabus: syllabusFor('english', child.grade), now, progress, sound: child.settings.sound && speech.available() })
+      : subject === 'language'
+        ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress, voice: speech.available() })
+        : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now })
     setPlan(made)
     if (made.blocks.every((b) => b.items.length === 0)) setPhase('empty')
   }, [child, mastery, attempts, progress, plan, subject])
 
   useEffect(() => {
-    if (phase === 'play' && isTimeUp(seconds)) setFinishing(true)
+    if (phase === 'play' && isTimeUp(seconds, SUBJECT_LIMIT_SECONDS[subject])) setFinishing(true)
   }, [phase, seconds])
 
   const slots = queue?.slots ?? []
@@ -133,8 +148,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   if (loading || !child || !progress || !mastery || !attempts || !plan) {
     return <Spinner label="Preparando tu sesión…" />
   }
-  const isLenguaRun = subject === 'language'
-  const sessionTitle = isLenguaRun ? 'Mi sesión de Lengua' : 'Mi sesión de hoy'
+  const setup = SESSION_SETUP[subject]
+  const sessionTitle = setup.title
 
   function start() {
     if (!plan) return
@@ -179,7 +194,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   const topicName = topic ? topicTitle(topic) : ''
   const topicClass = topic ? classForTopic(topic.id, child.grade, subject) : undefined
   // Lengua: the class of the topic comes before «Lo nuevo» when the child has not done it yet.
-  const pendingClass = isLenguaRun ? plan.classTopicId ?? null : null
+  const pendingClass = setup.classFirst ? plan.classTopicId ?? null : null
   const summary: RunSummary = summarizeRun(queue ?? { slots: [], retried: [] }, results, !endedByTime)
   const ctx = templateContext(child)
 
@@ -187,7 +202,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
     <header className={s.header}>
       <BackButton variant="exit" onClick={() => setPaused(true)} />
       <h1 className={s.headerTitle}>{title}</h1>
-      {phase === 'play' ? <span className={s.clock} aria-live="off">{formatClock(seconds)} de {DAILY_MINUTES}</span> : <span />}
+      {phase === 'play' ? <span className={s.clock} aria-live="off">{formatClock(seconds)} de {SESSION_SETUP[subject].minutes}</span> : <span />}
     </header>
   )
 
@@ -212,11 +227,11 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
         {header(sessionTitle)}
         <div className={s.stage}>
           <div className={`${s.card} ${s.intro}`}>
-            <p className={s.kicker}>Unos {DAILY_MINUTES} minutos</p>
+            <p className={s.kicker}>Unos {setup.minutes} minutos</p>
             <h2 className={s.title}>{childText(child, '¡Vamos, {child}!')}</h2>
             {topic && <p className={s.topicChip}>Hoy aprendemos: <strong>{topicName}</strong></p>}
             <ol className={s.blocks}>
-              {INTRO_BLOCKS[subject].map(([name, time]) => <li key={name}><span>{name}</span><small>{time}</small></li>)}
+              {setup.blocks.map(([name, time]) => <li key={name}><span>{name}</span><small>{time}</small></li>)}
             </ol>
             {pendingClass ? (
               <Button size="lg" variant="success" onClick={() => navigate(`/play/clase/${pendingClass}`)}>¡Empezar la clase!</Button>
@@ -414,7 +429,7 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
   const offered = useCaligrafiaOffered(child)
   const caligrafiaAtEnd = showCaligrafiaAtEnd({ offered, subject, answered: summary.answered })
   // The adventure is maths: a Lengua session does not point at the map.
-  const next = subject === 'language' ? null : safeNext(progress)
+  const next = SESSION_SETUP[subject].adventure ? safeNext(progress) : null
   const nextWorld = next ? getWorld(next.worldId, progress.seasonId) : undefined
   const nextDef = next ? getNode(next.worldId, next.nodeId, progress.seasonId) : undefined
   const hook = nextWorld && nextDef ? renderTemplate(nextWorld.hook, ctx) : null
@@ -435,7 +450,9 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
             {finished ? childText(child, '¡Lo has conseguido, {child}!') : childText(child, '¡Buen trabajo, {child}!')}
           </h2>
           <p className={s.text}>
-            {summary.answered > 0 ? `Has acertado ${summary.correct} de ${summary.total} ejercicios.` : 'Hoy no has llegado a contestar ninguno.'}
+            {summary.answered === 0
+              ? 'Hoy no has llegado a contestar ninguno.'
+              : summary.total > 0 ? `Has acertado ${summary.correct} de ${summary.total} ejercicios.` : 'Hoy has hablado en inglés.'}
             {' '}{finished ? 'Descansa y vuelve mañana.' : 'Hemos llegado al tiempo de hoy: lo que has hecho cuenta.'}
           </p>
           {topicName && <p className={s.topicChip}>Hoy has trabajado: <strong>{topicName}</strong></p>}

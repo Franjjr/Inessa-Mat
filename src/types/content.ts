@@ -93,6 +93,10 @@ export type LessonVisualId =
   | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
   | 'lng-word'          // Lengua: params { word, parts?, mark? } — a word cut into parts (ma-ri-po-sa, abre+latas); mark is a class or a part
   | 'big-text'          // params: { text, sub? } — one or two lines of large text (a rule, an equality), sub under it
+  | 'eng-word'          // Inglés: params { emoji?, en, es } — a picture (optional), the English word (tap: said in English) and its Spanish meaning
+  | 'eng-number'        // Inglés: params { n, en } — a number in figures with its English word under it (tap: said in English)
+  | 'eng-words'         // Inglés: params { theme } — every word of a vocabulary theme as a grid, each with its Spanish meaning (tap: said in English)
+  | 'eng-number-list'   // Inglés: params { from, to, step? } — a range of numbers (0 to 100) as a grid of figures and English words
   | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
   | 'fraction-shape'    // params: { parts, shaded, shape } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar
   | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted
@@ -171,8 +175,9 @@ export interface GuardianDef {
   rounds: { selector: SkillSelector; count: number }[]
   /** Minimum correct answers to pass (out of the total of rounds). */
   passMin: number
-  /** Final "Hechizo del Cristal": a single story problem; its result reveals the letter. */
-  spell: { text: TemplateString; selector?: SkillSelector; fixed?: { kind: 'fact-mul' | 'column-add' | 'column-sub' | 'column-mul' | 'division'; a: number; b: number } }
+  /** Final "Hechizo del Cristal": a single story problem; its result reveals the letter. Absent when the guardian has no spell
+   *  (the English island: its guardians are beaten by the rounds alone, see src/content/ingles/guardians.ts). */
+  spell?: { text: TemplateString; selector?: SkillSelector; fixed?: { kind: 'fact-mul' | 'column-add' | 'column-sub' | 'column-mul' | 'division'; a: number; b: number } }
   letter: string
   /** Rescue scene played on success (companion freed). */
   rescueStory: string

@@ -17,6 +17,8 @@ export const META = {
   assignmentsCache: (childId: string) => `cache.assignments:${childId}`,
   /** Set (true) once the child was erased (GDPR): the device never stores or uploads anything for that id again. */
   erased: (childId: string) => `erased:${childId}`,
+  /** The «Ahora dilo tú» results of a child (word, stars, time): this device only, never synced (src/data/speaking.ts). */
+  speaking: (childId: string) => `speaking:${childId}`,
 } as const
 
 export async function getMeta<T>(key: string): Promise<T | undefined> {

@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt, Crystal, NodeIcon, Predicament, StarIcon, WorldBackground } from '@/art'
 import {
-  getWorld, isNodeUnlocked, isWorldUnlocked, nextNode, renderTemplate, templateContext,
+  getWorld, ISLAND_ID, ISLAND_STOP_PX, isNodeUnlocked, isWorldUnlocked, nextNode, renderTemplate, templateContext,
 } from '@/content'
 import { useActiveChild, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
@@ -73,6 +73,8 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
   const next = nextNode(progress)
   const continueTarget = next && next.worldId === world.id ? next.nodeId : current
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  // The island has many stops (one group per stage): its stage is as tall as they need, so they never stack on each other.
+  const stageHeight = world.id === ISLAND_ID ? { height: `${world.nodes.length * ISLAND_STOP_PX}px` } : undefined
 
   // Bring the child's next step into view.
   useEffect(() => {
@@ -114,7 +116,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
       </div>
 
       <div className={s.scroll} ref={scrollRef}>
-        <div className={s.stage}>
+        <div className={s.stage} style={stageHeight}>
           <svg className={s.path} viewBox={`0 0 ${VB} ${VB}`} preserveAspectRatio="none" aria-hidden="true">
             {path.slice(0, -1).map((_, i) => (
               <path

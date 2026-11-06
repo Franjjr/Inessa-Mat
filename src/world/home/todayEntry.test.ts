@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
-import { currentTopic, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { createRng, planLenguaSession, teachableCourse } from '@/engine'
-import type { ChildProfile, MasteryMap, ProgressState, SkillMastery } from '@/types'
-import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
+import { classForTopic, markClassDone } from '@/content/classes'
+import { currentTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { createRng, markEnglishClassToday, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
+import type { ChildProfile, MasteryMap, ProgressState, SkillMastery, SubjectId } from '@/types'
+import { sessionDoneKey } from '@/world/session/logic'
+import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
 
@@ -98,6 +100,66 @@ describe('Lengua on the home', () => {
   })
 })
 
+describe('English on the home', () => {
+  it('the English «Hoy» opens the class of its first topic', () => {
+    expect(todayEntry({ grade: 3, mastery: {}, progress: progress(), subject: 'english' })).toEqual({
+      kind: 'clase', topicId: 'eng-saludos', title: 'Saludos y yo', to: '/play/clase/eng-saludos',
+    })
+  })
+
+  it('with the sound off the English «Hoy» never names the operations topic (no listening item is taught)', () => {
+    const before = ['eng-saludos', 'eng-num-0-20', 'eng-num-decenas', 'eng-num-21-100', 'eng-colores', 'eng-animales', 'eng-familia',
+      'eng-comida', 'eng-ropa', 'eng-cole', 'eng-casa', 'eng-cuerpo', 'eng-tiempo', 'eng-dias']
+    const mastery: MasteryMap = {}
+    for (const block of INGLES3_SYLLABUS.blocks) for (const t of block.topics) {
+      if (!before.includes(t.id)) continue
+      for (const skill of t.skills) mastery[skill] = { skill, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: NOW }
+    }
+    const withSound = todayEntry({ grade: 3, mastery, progress: { ...progress(), flags: { 'clase:eng-ops': true } }, subject: 'english', sound: true })
+    expect(withSound).toEqual({ kind: 'sesion', title: 'Plus, minus y times', to: '/play/ingles' })
+    const noSound = todayEntry({ grade: 3, mastery, progress: { ...progress(), flags: { 'clase:eng-ops': true } }, subject: 'english', sound: false })
+    expect(noSound.title).not.toBe('Plus, minus y times')
+  })
+
+  it('after the English class the English «Hoy» is the session, which opens at /play/ingles', () => {
+    const done = { ...progress(), flags: { 'clase:eng-saludos': true } }
+    expect(todayEntry({ grade: 3, mastery: {}, progress: done, subject: 'english' })).toEqual({
+      kind: 'sesion', title: 'Saludos y yo', to: '/play/ingles',
+    })
+  })
+
+  it('homeSubject: the subsets of the subjects on, in the order math, Lengua, English', () => {
+    const at = new Date(NOW)
+    const done = (...subjects: LessonSubject[]) => ({ ...progress(), flags: Object.fromEntries(subjects.map((s) => [sessionDoneKey(at, s), true])) })
+    // Only one subject on: it is the one.
+    expect(homeSubject(['math'], progress(), at)).toBe('math')
+    expect(homeSubject(['language'], progress(), at)).toBe('language')
+    expect(homeSubject(['english'], progress(), at)).toBe('english')
+    // Two on: the first not done today; with both done, the last one.
+    expect(homeSubject(['math', 'english'], progress(), at)).toBe('math')
+    expect(homeSubject(['math', 'english'], done('math'), at)).toBe('english')
+    expect(homeSubject(['math', 'english'], done('math', 'english'), at)).toBe('english')
+    expect(homeSubject(['language', 'english'], progress(), at)).toBe('language')
+    expect(homeSubject(['language', 'english'], done('language'), at)).toBe('english')
+    // All three on: math, then Lengua, then English.
+    expect(homeSubject(['english', 'language', 'math'], progress(), at)).toBe('math')
+    expect(homeSubject(['english', 'language', 'math'], done('math'), at)).toBe('language')
+    expect(homeSubject(['english', 'language', 'math'], done('math', 'language'), at)).toBe('english')
+    expect(homeSubject(['english', 'language', 'math'], done('math', 'language', 'english'), at)).toBe('english')
+  })
+
+  it('the home subjects: English is offered to 3.º only and a disabled chip when on outside it', () => {
+    expect(homeSubjects(['math', 'english'], 3)).toEqual({ subjects: ['math', 'english'], chips: ['math', 'english'] })
+    expect(homeSubjects(['math', 'english'], 4)).toEqual({ subjects: ['math'], chips: ['math', 'language', 'english'] })
+    expect(homeSubjects(['english'], undefined)).toEqual({ subjects: ['english'], chips: ['english'] })
+  })
+
+  it('a maths child outside 3.º sees the same chips as before English existed', () => {
+    expect(homeSubjects(['math'], 4).chips).toEqual(['math', 'language'])
+    expect(homeSubjects(['math'], 2).chips).toEqual(['math', 'language'])
+  })
+})
+
 describe('the home for each child (R22, R23)', () => {
   it('a maths-only 3.º child sees maths and no picker', () => {
     expect(homeSubjects(['math'], 3)).toEqual({ subjects: ['math'], chips: ['math'] })
@@ -149,5 +211,47 @@ describe('the home for each child (R22, R23)', () => {
     expect(skillsOf(teachableMute)).not.toContain('lng:escr:dictado')
     // The topic is named by currentTopic over the same view: never the one with no skill left.
     expect(teachableMute.blocks.flatMap((b) => b.topics).filter((t) => t.skills.length === 0).map((t) => t.id)).toEqual(['lng-dictado'])
+  })
+})
+
+describe('placement banner on the home', () => {
+  const ALL: SubjectId[] = ['math', 'language', 'english']
+  const pendingOnly = (...ids: LessonSubject[]) => Object.fromEntries(ids.map((id) => [id, true])) as Partial<Record<LessonSubject, boolean>>
+
+  it('shows the banner of the view\'s own subject while its test is pending', () => {
+    expect(placementBannerOf('math', pendingOnly('math'), ALL)).toBe('math')
+    expect(placementBannerOf('language', pendingOnly('language', 'math'), ALL)).toBe('language')
+    expect(placementBannerOf('english', pendingOnly('english', 'language'), ALL)).toBe('english')
+  })
+
+  it('shows the next pending subject after the view, and never another view\'s maths banner', () => {
+    // Maths done, Lengua pending: the banner shows on the maths view (the next one).
+    expect(placementBannerOf('math', pendingOnly('language'), ALL)).toBe('language')
+    // Maths and Lengua done, English pending: the banner shows on the Lengua and maths views.
+    expect(placementBannerOf('language', pendingOnly('english'), ALL)).toBe('english')
+    expect(placementBannerOf('math', pendingOnly('english'), ALL)).toBe('english')
+    // Maths still pending: nothing shows on another view.
+    expect(placementBannerOf('language', pendingOnly('math', 'english'), ALL)).toBeNull()
+  })
+
+  it('never shows the Lengua banner on the English home once English is done', () => {
+    expect(placementBannerOf('english', pendingOnly('language'), ALL)).toBeNull()
+    expect(placementBannerOf('english', {}, ALL)).toBeNull()
+  })
+
+  it('leaves out a subject that is not on for the child', () => {
+    expect(placementBannerOf('math', pendingOnly('language', 'english'), ['math', 'english'])).toBe('english')
+    expect(placementBannerOf('math', pendingOnly('language'), ['math'])).toBeNull()
+  })
+})
+
+describe('todayEntry: English keeps the topic of today\'s class', () => {
+  it('after the class, the home still names its topic and leads to the session (not to the next topic\'s class)', () => {
+    const numbers = INGLES3_SYLLABUS.blocks.flatMap((b) => b.topics).find((t) => t.id === 'eng-num-0-20')!
+    const learnt = Object.fromEntries(numbers.skills.map((skill) => [skill, { skill, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: NOW } satisfies SkillMastery]))
+    const done = markEnglishClassToday(markClassDone(progress(), classForTopic('eng-num-0-20', 3, 'english')!, 'lesson'), 'eng-num-0-20', new Date(NOW))
+    expect(todayEntry({ grade: 3, mastery: learnt, progress: done, subject: 'english', now: new Date(NOW) })).toEqual({
+      kind: 'sesion', title: topicTitle(numbers), to: '/play/ingles',
+    })
   })
 })

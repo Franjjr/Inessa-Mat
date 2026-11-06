@@ -1,6 +1,6 @@
 /* Daily session runner logic (pure): the run order of the plan, the re-asks of failed items, the time-box and the
    reward key. The screen (DailySession.tsx) only renders what this file decides. */
-import { DAILY_MINUTES, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
+import { DAILY_MINUTES, ENGLISH_SESSION_MINUTES, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
 import { startQueue, requeueWrong, type RunQueue } from '@/activities/shared/requeue'
 
 /** One planned item of the run, with an id unique inside the run (the same exercise id can come twice). */
@@ -12,6 +12,10 @@ export interface RunItem {
 }
 
 export const SESSION_LIMIT_SECONDS = DAILY_MINUTES * 60
+/** The time-box of each subject's session: fifteen minutes for maths and Lengua, ten for English. */
+export const SUBJECT_LIMIT_SECONDS: Record<LessonSubject, number> = {
+  math: DAILY_MINUTES * 60, language: DAILY_MINUTES * 60, english: ENGLISH_SESSION_MINUTES * 60,
+}
 /** Stars given once per day for finishing the session (not per correct answer). */
 export const SESSION_STARS = 3
 
@@ -42,17 +46,19 @@ export function postpone(q: RunQueue<RunItem>, pos: number): RunQueue<RunItem> {
   return { ...q, slots: [...rest, { item: { ...slot.item, postponed: true }, retry: slot.retry }] }
 }
 
-/** The day key for the once-per-day reward. Maths keeps its original key; Lengua has its own. */
+/** The day keys of each subject. Maths keeps its original keys; Lengua and English have their own. */
+const REWARD_KEY: Record<LessonSubject, string> = { math: 'sesion', language: 'sesion-lengua', english: 'sesion-ingles' }
+const DONE_KEY: Record<LessonSubject, string> = { math: 'sesion-hecha', language: 'sesion-hecha-lengua', english: 'sesion-hecha-ingles' }
+
+/** The day key for the once-per-day reward. */
 export function sessionRewardKey(now: Date, subject: LessonSubject = 'math'): string {
-  const day = now.toISOString().slice(0, 10)
-  return subject === 'language' ? `sesion-lengua:${day}` : `sesion:${day}`
+  return `${REWARD_KEY[subject]}:${now.toISOString().slice(0, 10)}`
 }
 
-/** The day marker of a session that had answers, finished or cut by the time: the home moves on to Lengua after the maths
-    one (it is not the stars key, which only a finished run earns). */
+/** The day marker of a session that had answers, finished or cut by the time: the home moves on to the next subject
+    (it is not the stars key, which only a finished run earns). */
 export function sessionDoneKey(now: Date, subject: LessonSubject = 'math'): string {
-  const day = now.toISOString().slice(0, 10)
-  return subject === 'language' ? `sesion-hecha-lengua:${day}` : `sesion-hecha:${day}`
+  return `${DONE_KEY[subject]}:${now.toISOString().slice(0, 10)}`
 }
 
 /** Caligrafía con lápiz: stars once a day for the first finish, on their own key (never the Lengua session stars). */
@@ -62,8 +68,8 @@ export function caligrafiaRewardKey(now: Date): string {
   return `sesion-caligrafia:${now.toISOString().slice(0, 10)}`
 }
 
-export function isTimeUp(activeSeconds: number): boolean {
-  return activeSeconds >= SESSION_LIMIT_SECONDS
+export function isTimeUp(activeSeconds: number, limitSeconds: number = SESSION_LIMIT_SECONDS): boolean {
+  return activeSeconds >= limitSeconds
 }
 
 /** Result of the run for the closing screen: planned items only (re-asks are practice, not graded). */
@@ -75,8 +81,14 @@ export interface RunSummary {
   finished: boolean
 }
 
+/** «Ahora dilo tú» (eng-speak) is not graded: its stars are a pronunciation result, not an answer to be right or wrong. It is
+    still an answer for the run (a session with only that item is done, not «no has llegado a contestar ninguno»). */
+const isGraded = (kind: string) => kind !== 'eng-speak'
+
 export function summarizeRun(q: RunQueue<RunItem>, results: readonly { uid: string; correct: boolean }[], finished: boolean): RunSummary {
-  const planned = q.slots.filter((s) => !s.retry).length
-  const correct = results.filter((r) => r.correct).length
+  const kindOf = new Map(q.slots.map((s) => [s.item.uid, s.item.item.exercise.kind]))
+  const graded = results.filter((r) => isGraded(kindOf.get(r.uid) ?? ''))
+  const planned = q.slots.filter((s) => !s.retry && isGraded(s.item.item.exercise.kind)).length
+  const correct = graded.filter((r) => r.correct).length
   return { answered: results.length, correct, total: planned, finished }
 }

@@ -7,19 +7,31 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
 import {
-  crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
+  crystalsOf, ISLAND_ID, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
 import { speech } from '@/audio'
-import { DAILY_MINUTES, dueSkills, masteryOf } from '@/engine'
+import { DAILY_MINUTES, dueSkills, ENGLISH_SESSION_MINUTES, masteryOf } from '@/engine'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
 import type { ProgressState, SubjectId, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
-import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
+import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
 import s from './ChildHomeScreen.module.css'
+
+/** The «Hoy» session card of each subject: its kicker (the subject and its minutes) and what the session holds. */
+const SESSION_KICKER: Partial<Record<SubjectId, string>> = {
+  math: `Mi sesión de hoy · ${DAILY_MINUTES} min`,
+  language: `Ahora, Lengua · ${DAILY_MINUTES} min`,
+  english: `Ahora, Inglés · ${ENGLISH_SESSION_MINUTES} min`,
+}
+const SESSION_TEXT: Partial<Record<SubjectId, string>> = {
+  math: 'Calentamiento, lo nuevo, mezcla y un problema.',
+  language: 'Lectura, ortografía y palabras.',
+  english: 'Palabras, frases y números, y un juego al final.',
+}
 
 const SYNC_LABEL: Record<SyncStatus['state'], string> = {
   'local-only': 'Guardado en este dispositivo',
@@ -83,7 +95,8 @@ export default function ChildHomeScreen() {
   const today = todayEntry({ grade: child.grade, mastery, progress, subject: view, sound: child.settings.sound && speech.available() })
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
-  const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')
+  const inglesPlacementPending = !progress.flags?.placementIngles || !!progress.flags?.placementInglesRequested
+  const banner = placementBannerOf(view, { math: mathPlacementPending, language: lenguaPlacementPending, english: inglesPlacementPending }, subjectIds)
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -108,7 +121,7 @@ export default function ChildHomeScreen() {
   }
 
   return (
-    <Screen className={s.screen}>
+    <Screen className={view === 'english' ? `${s.screen} ${s.english}` : s.screen}>
       <WorldBackground id="home" vividness={0.45 + 0.55 * (crystalCount / season.worlds.length)} />
 
       <header className={s.top}>
@@ -156,12 +169,18 @@ export default function ChildHomeScreen() {
         </div>
 
         <div className={s.right}>
-          {/* The placement test is a thin bar on top while it is pending; «Hoy» comes first after it. */}
-          {view === 'math' && mathPlacementPending ? (
+          {/* The placement test is a thin bar on top while it is pending (placementBannerOf); «Hoy» comes first after it. */}
+          {banner === 'math' && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
               Antes de empezar: haz la prueba inicial ›
             </button>
-          ) : lenguaBanner && (view === 'language' || !mathPlacementPending) && (
+          )}
+          {banner === 'english' && (
+            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-ingles')}>
+              Haz la prueba de Inglés antes de empezar ›
+            </button>
+          )}
+          {banner === 'language' && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
               Haz la prueba de Lengua antes de empezar ›
             </button>
@@ -174,19 +193,9 @@ export default function ChildHomeScreen() {
             </button>
           ) : (
             <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
-              {view === 'language' ? (
-                <>
-                  <span className={s.nextKicker}>Ahora, Lengua · {DAILY_MINUTES} min</span>
-                  <span className={s.nextTitle}>{today.title}</span>
-                  <span className={s.nextText}>Lectura, ortografía y palabras.</span>
-                </>
-              ) : (
-                <>
-                  <span className={s.nextKicker}>Mi sesión de hoy · {DAILY_MINUTES} min</span>
-                  <span className={s.nextTitle}>{today.title}</span>
-                  <span className={s.nextText}>Calentamiento, lo nuevo, mezcla y un problema.</span>
-                </>
-              )}
+              <span className={s.nextKicker}>{SESSION_KICKER[view]}</span>
+              <span className={s.nextTitle}>{today.title}</span>
+              <span className={s.nextText}>{SESSION_TEXT[view]}</span>
               <span className={s.nextCta}>¡Empezar!</span>
             </button>
           )}
@@ -202,6 +211,7 @@ export default function ChildHomeScreen() {
 
           <div className={s.tiles}>
             {view === 'math' && due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
+            {view === 'english' && <Tile label="Isla de Inglés" tone="green" onClick={() => navigate(`/play/w/${ISLAND_ID}`)} />}
             <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />
             <Tile label="Mis premios" tone="yellow" onClick={() => navigate('/play/premios')} />
           </div>

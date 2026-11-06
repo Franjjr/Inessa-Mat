@@ -10,6 +10,18 @@ import { SwitchRow } from './SwitchRow'
 import adult from '../shared/adult.module.css'
 import s from './child.module.css'
 
+/** What each subject is, under its switch. */
+const DESCRIPTION: Partial<Record<SubjectId, string>> = {
+  language: 'Gramática, ortografía, vocabulario y lectura.',
+  english: 'Vocabulario, frases y números en inglés.',
+}
+
+/** Why a child outside 3.º cannot switch a subject on: Lengua and English are for 3.º (for now). */
+const NOT_OFFERED_HINT: Partial<Record<SubjectId, string>> = {
+  language: 'Lengua de 3.º: disponible para los niños de 3.º.',
+  english: 'Pronto: de momento, para niños de 3.º.',
+}
+
 export function SubjectsCard({ child }: { child: ChildProfile }) {
   const [error, setError] = useState<string | null>(null)
   const active: SubjectId[] = child.settings.subjects ?? ['math']
@@ -47,9 +59,9 @@ export function SubjectsCard({ child }: { child: ChildProfile }) {
         }
         const offered = subjectOffered(subject.id, child.grade)
         const hint = !offered
-          ? 'Lengua de 3.º: disponible para los niños de 3.º.'
+          ? NOT_OFFERED_HINT[subject.id] ?? 'Disponible para los niños de 3.º.'
           : on && active.length === 1 ? 'Es la única activa: no se puede desactivar.'
-            : subject.id === 'language' ? 'Gramática, ortografía, vocabulario y lectura.' : 'Tablas de multiplicar y cálculo.'
+            : DESCRIPTION[subject.id] ?? 'Tablas de multiplicar y cálculo.'
         return (
           <SwitchRow
             key={subject.id}

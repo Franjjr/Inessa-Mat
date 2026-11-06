@@ -216,6 +216,40 @@
   }
 }
 
+/* A try that does not fit the board even at its smallest scale: the lesson grows to hold it. The board takes the exercise's
+   height (no inner scroll box, no cut), the page scrolls and «⬇ Más abajo» shows; «Comprobar» and «Siguiente» stay in the page. */
+.playerGrow {
+  /* Content-sized column (header, stage, footer): a grid with a leftover-height track would give the stage the window's
+     share and squeeze Lumi's row or cover the footer; the page scrolls instead. */
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.playerGrow > .stage {
+  flex: 0 0 auto;
+}
+
+/* A grown board takes the height of its content: not stretched to the stage's row, and the drawing box (the frame) is a block
+   so the try's wrap takes its own height (a flex row would stretch the wrap to the frame's height). The stage's rows are
+   sized by their content too (a fixed or auto row kept the board at the window's share and cut the try). */
+.boardGrow {
+  height: auto;
+  align-self: start;
+}
+
+.boardGrow > .frame {
+  display: block;
+  height: auto;
+}
+
+.playerGrow .stage {
+  grid-template-rows: max-content;
+  grid-auto-rows: max-content;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .text { animation: none; }
   .dot { transition: none; }

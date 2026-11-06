@@ -61,6 +61,12 @@
   margin: 0 auto;
 }
 
+/* A stage that overflows the window (a short tablet): its padding is part of the scrolled height, so the last button
+   keeps its shadow and border in view when the child scrolls to the bottom (the root's own padding is not). */
+.stageEnd {
+  padding-bottom: var(--sp-6);
+}
+
 .card {
   width: 100%;
   box-sizing: border-box;

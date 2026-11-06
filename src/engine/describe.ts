@@ -1,6 +1,6 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
 import type { ErrorType, MeasureDimension, MeasureMode, MoneyMode, SkillKey } from '@/types'
-import { GEO_OPS, parseSkill, type LenguaArea } from './skills'
+import { GEO_OPS, parseSkill, type EnglishArea, type LenguaArea } from './skills'
 import { DIMENSION_NAME } from './measure'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
@@ -53,6 +53,42 @@ const WORD_TEXT: Record<string, string> = {
 
 const LENGUA_AREA_TEXT: Record<LenguaArea, string> = {
   gram: 'gramática', orto: 'ortografía', voc: 'vocabulario', lect: 'lectura', lit: 'literatura', escr: 'escritura',
+}
+
+const ENGLISH_AREA_TEXT: Record<EnglishArea, string> = { voc: 'vocabulario', frase: 'frases', num: 'números' }
+
+/** Plain adult label of every English skill of the temario (the child's word for it is in the exercise itself). */
+export const ENGLISH_SKILL_TEXT: Record<string, string> = {
+  'eng:voc:saludos': 'Palabras de saludos y cortesía',
+  'eng:voc:colores': 'Palabras de colores y formas',
+  'eng:voc:animales': 'Palabras de animales',
+  'eng:voc:familia': 'Palabras de la familia',
+  'eng:voc:comida': 'Palabras de comida',
+  'eng:voc:ropa': 'Palabras de la ropa',
+  'eng:voc:cole': 'Palabras del cole',
+  'eng:voc:casa': 'Palabras de la casa',
+  'eng:voc:cuerpo': 'Palabras del cuerpo',
+  'eng:voc:tiempo': 'Palabras del tiempo y las estaciones',
+  'eng:voc:dias': 'Días de la semana',
+  'eng:frase:saludos': 'Frases para presentarse y decir la edad',
+  'eng:frase:its-a': 'Frases para describir un animal',
+  'eng:frase:this-is-my': 'Frases para presentar a alguien de la familia',
+  'eng:frase:i-like': 'Frases para decir lo que te gusta',
+  'eng:frase:can-i-have': 'Frases para pedir algo',
+  'eng:frase:im-wearing': 'Frases para decir la ropa que llevas',
+  'eng:frase:classroom': 'Órdenes de la clase',
+  'eng:frase:where-is:in': 'Dónde está algo: dentro de (in)',
+  'eng:frase:where-is:on': 'Dónde está algo: encima de (on)',
+  'eng:frase:where-is:under': 'Dónde está algo: debajo de (under)',
+  'eng:frase:ive-got': 'Frases para describir el cuerpo',
+  'eng:frase:weather': 'Preguntar y decir qué tiempo hace',
+  'eng:frase:what-day': 'Preguntar y decir qué día es',
+  'eng:num:0-20': 'Números del 0 al 20',
+  'eng:num:decenas': 'Decenas: 30, 40… 100',
+  'eng:num:21-100': 'Números del 21 al 100',
+  'eng:num:ops:plus': 'Sumas (plus)',
+  'eng:num:ops:minus': 'Restas (minus)',
+  'eng:num:ops:times': 'Multiplicaciones (times)',
 }
 
 /** Plain adult label of every Lengua skill of the temario (the child's word for it is in the exercise itself). */
@@ -154,6 +190,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
     case 'lengua': return LENGUA_SKILL_TEXT[skill] ?? `Lengua, ${LENGUA_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
+    case 'ingles': return ENGLISH_SKILL_TEXT[skill] ?? `Inglés, ${ENGLISH_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
   }
 }
 
@@ -268,6 +305,10 @@ export const ERROR_TEXT: Record<ErrorType, string> = {
   'calig-size': 'El tamaño de la letra ligada no es el de la pauta',
   'calig-start': 'Empieza la letra ligada en otro sitio o con otra dirección',
   'dont-know': 'Dice que todavía no lo sabe',
+  'eng-spelling': 'Escribe mal una palabra en inglés: le falta, le sobra o cambia una letra',
+  'eng-near-miss': 'Escribe una palabra en inglés a una letra de la correcta («¡Casi!»)',
+  'eng-listening': 'Confunde la palabra o el número que oye en inglés',
+  'eng-number': 'Se equivoca en el resultado de una operación dicha en inglés',
   'bar-placement': 'Pone una cantidad en la parte equivocada de la barra',
   'place-value': 'Escribe una cifra en una columna que no le toca (valor posicional)',
   'step': 'Se equivoca en el primer paso de un problema de dos pasos',

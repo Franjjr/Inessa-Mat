@@ -35,7 +35,7 @@ export type SubjectId = 'math' | 'language' | 'english' | 'science' | 'history'
 export const SUBJECTS: { id: SubjectId; name: string; available: boolean }[] = [
   { id: 'math', name: 'Matemáticas', available: true },
   { id: 'language', name: 'Lengua', available: true },
-  { id: 'english', name: 'Inglés', available: false },
+  { id: 'english', name: 'Inglés', available: true },
   { id: 'science', name: 'Ciencias', available: false },
   { id: 'history', name: 'Historia', available: false },
 ]
@@ -66,6 +66,8 @@ export interface ChildSettings {
   tableMethod: TableMethod | null
   /** Caligrafía con lápiz (calig: skills). Only offered on a device where the pen was used; false hides it. */
   handwriting: boolean
+  /** Pronunciation with the microphone (English). Off when absent; only an adult turns it on, after confirming (consentAt). */
+  speaking?: { on: boolean; consentAt?: ISODate }
 }
 
 export const DEFAULT_CHILD_SETTINGS: ChildSettings = {

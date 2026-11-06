@@ -161,7 +161,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
           correct: session.correct,
           starsEarned: 0,
           nodesCompleted: [],
-          ...(subject === 'language' ? { subject } : {}),
+          ...(subject === 'math' ? {} : { subject }),
         }).catch((e) => reportError('endSession', e))
         void touchSession(id, { minutes }).catch(() => undefined)
       }

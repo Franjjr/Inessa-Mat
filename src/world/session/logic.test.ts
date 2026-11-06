@@ -3,7 +3,7 @@ import { planDailySession } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 import type { ChildProfile } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
+import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS, SUBJECT_LIMIT_SECONDS } from './logic'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const child: ChildProfile = {
@@ -100,6 +100,14 @@ describe('session run', () => {
     expect(isTimeUp(SESSION_LIMIT_SECONDS)).toBe(true)
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
   })
+
+  it('each subject has its own time-box: English ends at ten minutes, maths and Lengua at fifteen', () => {
+    expect(SUBJECT_LIMIT_SECONDS.english).toBe(10 * 60)
+    expect(SUBJECT_LIMIT_SECONDS.math).toBe(15 * 60)
+    expect(isTimeUp(10 * 60 - 1, SUBJECT_LIMIT_SECONDS.english)).toBe(false)
+    expect(isTimeUp(10 * 60, SUBJECT_LIMIT_SECONDS.english)).toBe(true)
+    expect(isTimeUp(10 * 60, SUBJECT_LIMIT_SECONDS.language)).toBe(false)
+  })
 })
 
 describe('sessionRewardKey', () => {
@@ -107,5 +115,31 @@ describe('sessionRewardKey', () => {
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
     expect(sessionRewardKey(now, 'math')).toBe('sesion:2026-10-22')
     expect(sessionRewardKey(now, 'language')).toBe('sesion-lengua:2026-10-22')
+    expect(sessionRewardKey(now, 'english')).toBe('sesion-ingles:2026-10-22')
+  })
+
+  it('the done keys: maths and Lengua unchanged, English its own', () => {
+    expect(sessionDoneKey(now)).toBe('sesion-hecha:2026-10-22')
+    expect(sessionDoneKey(now, 'math')).toBe('sesion-hecha:2026-10-22')
+    expect(sessionDoneKey(now, 'language')).toBe('sesion-hecha-lengua:2026-10-22')
+    expect(sessionDoneKey(now, 'english')).toBe('sesion-hecha-ingles:2026-10-22')
+  })
+})
+
+describe('summarizeRun: «Ahora dilo tú» is not counted', () => {
+  const slot = (uid: string, kind: string) => ({
+    item: { uid, item: { exercise: { id: uid, kind, skill: 'eng:voc:animales' }, block: 'new', scaffold: false, isNew: false } as never },
+    retry: false,
+  })
+
+  it('the speaking item is an answer (answered) but stays out of correct and total', () => {
+    const q = { slots: [slot('0:speak', 'eng-speak'), slot('1:word', 'eng-write-word')], retried: [] }
+    const s = summarizeRun(q as never, [{ uid: '0:speak', correct: true }, { uid: '1:word', correct: false }], true)
+    expect(s).toMatchObject({ answered: 2, correct: 0, total: 1 })
+  })
+
+  it('a run with only speaking items is answered (done), with nothing graded', () => {
+    const q = { slots: [slot('0:speak', 'eng-speak')], retried: [] }
+    expect(summarizeRun(q as never, [{ uid: '0:speak', correct: true }], true)).toMatchObject({ answered: 1, correct: 0, total: 0 })
   })
 })

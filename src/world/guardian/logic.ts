@@ -27,6 +27,7 @@ export function buildRounds(guardian: GuardianDef, rng: Rng): Exercise[] {
 }
 
 export function buildSpell(guardian: GuardianDef, rng: Rng): Exercise | null {
+  if (!guardian.spell) return null
   const fixed = guardian.spell.fixed
   if (fixed) return makeExercise(fixed.kind, fixed.a, fixed.b)
   const [spell] = generate(guardian.spell.selector ?? { kinds: ['fact-mul'] }, 1, { rng })

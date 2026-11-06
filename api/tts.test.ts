@@ -79,7 +79,30 @@ describe('/api/tts', () => {
     expect((await call('t=Hola')).status).toBe(503)
   })
 
+  it('speaks English with the British voice in en-GB and never pins Spanish', async () => {
+    const fetchMock = vi.fn(async () => new Response(new Uint8Array([1]), { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+    expect((await call('t=seven&v=english')).status).toBe(200)
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    const body = String(init.body)
+    expect(body).toContain('en-GB-SoniaNeural')
+    expect(body).toContain('xml:lang="en-GB"')
+    expect(body).not.toContain('es-ES')
+  })
+
+  it('accepts apostrophes, curly or straight, in English text', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(new Uint8Array([1]), { status: 200 })))
+    expect((await call(`t=${encodeURIComponent("what's")}&v=english`)).status).toBe(200)
+    expect((await call(`t=${encodeURIComponent('What’s your name?')}&v=english`)).status).toBe(200)
+  })
+
   it('escapes the text inside SSML', () => {
     expect(ssml(`Tom & "Jerry"`, 'narrator')).toContain('Tom &amp; &quot;Jerry&quot;')
+  })
+
+  it('wraps English in en-GB and keeps the Spanish characters in es-ES', () => {
+    expect(ssml('seven', 'english')).toContain('xml:lang="en-GB"')
+    expect(ssml('hola', 'lumi')).toContain('xml:lang="es-ES"')
+    expect(ssml('hola', 'lumi')).not.toContain('en-GB')
   })
 })

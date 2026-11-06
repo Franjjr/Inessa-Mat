@@ -25,6 +25,7 @@ const answerOf = (ex: Exercise): number => {
     case 'lng-tap-words': case 'lng-sentence-parts': case 'lng-classify': case 'lng-transform': case 'lng-missing-letter':
     case 'lng-punctuation': case 'lng-stress': case 'lng-syllables': case 'lng-dictation': case 'lng-alphabet': case 'lng-pair-words': return NaN
     case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order': case 'lng-copy': case 'lng-guided': return NaN
+    case 'eng-memory': case 'eng-scramble': case 'eng-speak': return NaN
     default: return ex.answer as number
   }
 }
@@ -71,7 +72,7 @@ describe.skipIf(!engineReady)('engine integration (generate from every selector)
 
   it('each Hechizo del Cristal builds the workbook exercise and its result is the magic number', () => {
     for (const g of guardians) {
-      const f = g.spell.fixed!
+      const f = g.spell!.fixed!
       const ex = makeExercise(f.kind, f.a, f.b)
       expect(answerOf(ex), g.id).toBe(SPELL_CODES[g.id].result)
       const answer = ex.kind === 'division'

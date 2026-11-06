@@ -16,6 +16,7 @@
      switchSeason starts the adventure of another school year. */
 import type { AccessoryDef, NodeProgress, ProgressState, WorldDef, WorldProgress } from '@/types'
 import { getAccessory } from './accessories'
+import { ISLAND_ID } from './ingles/island'
 import { getNode, getSeason, getWorld, guardianForWorld, nextWorldId } from './season'
 import { stickerRuleMet, stickers } from './stickers'
 
@@ -136,7 +137,10 @@ export function applyNodeResult(
   }
   const worlds: Record<string, WorldProgress> = { ...progress.worlds, [worldId]: wp }
 
-  if (node.kind === 'guardian' && passed) {
+  // A guardian gives the world's crystal at its last stop (every maths guardian is last; the island has one guardian per
+  // stage, and only its last one is the island's crystal).
+  const lastStop = world.nodes[world.nodes.length - 1]?.id === nodeId
+  if (node.kind === 'guardian' && passed && lastStop) {
     wp.crystal = true
     wp.letter = guardianForWorld(worldId, progress.seasonId)?.letter ?? result.letter
     if (!wp.completedAt) wp.completedAt = iso
@@ -206,10 +210,12 @@ export function switchSeason(progress: ProgressState, seasonId: string, now: Dat
   const crystals = crystalsOf(progress)
   const won = crystals.filter(Boolean).length
   if (won > 0 && won < crystals.length) return progress
+  // The island of Inglés is not a season's map: its progress is kept.
+  const island = progress.worlds[ISLAND_ID]
   return {
     ...progress,
     seasonId,
-    worlds: { w1: { unlocked: true, nodes: {}, crystal: false } },
+    worlds: { w1: { unlocked: true, nodes: {}, crystal: false }, ...(island ? { [ISLAND_ID]: island } : {}) },
     lastNode: undefined,
     chestOpened: false,
     diplomaEarnedAt: undefined,

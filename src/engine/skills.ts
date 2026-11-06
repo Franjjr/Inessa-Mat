@@ -56,11 +56,15 @@
    measure:convert:<dim>:all  every unit of the dimension (km … mm, kg … mg, kl … ml): one step first, then several; whole numbers only
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
    num:ordinal:10|20|30     ordinales (3.º): the n-.º of a row (10), or reading and writing 1.º–20.º / 1.º–30.º (src/engine/ordinals.ts)
+   eng:voc:<tema>           inglés (3.º): the words of one theme (src/engine/ingles/words.ts), e.g. eng:voc:animales
+   eng:frase:<id>[:<nivel>] inglés (3.º): a phrase topic, e.g. eng:frase:i-like, eng:frase:where-is:in
+   eng:num:0-20|decenas|21-100 | eng:num:ops:plus|minus|times   numbers and operations in English (3.º)
 */
 import type {
   BarOp, DecimalMode, DecimalPlaces, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode,
   SkillKey,
 } from '@/types'
+import { ENGLISH_WORDS, MEMORY_PAIRS } from './ingles/words'
 import { CAL_SKILLS } from '@/content/caligrafia/curriculum'
 
 /* ---- fracciones and geometría (block E). Builders and the parser live here with the rest of the keys. */
@@ -104,6 +108,9 @@ export type NumberMax = 999 | 19999 | 99999
 
 /** The areas of Lengua: grammar, spelling, vocabulary, reading, literature and writing (`lng:<area>:<item>[:<level>]`). */
 export type LenguaArea = 'gram' | 'orto' | 'voc' | 'lect' | 'lit' | 'escr'
+
+/** The areas of English: words (voc), phrases (frase) and numbers (num) (`eng:<area>:<item>[:<level>]`). */
+export type EnglishArea = 'voc' | 'frase' | 'num'
 
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
@@ -150,6 +157,7 @@ export type ParsedSkill =
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
   | { type: 'position'; variant: 'relative' | 'next' | 'route' }
   | { type: 'lengua'; area: LenguaArea; item: string; level?: string }
+  | { type: 'ingles'; area: EnglishArea; item: string; level?: string }
 
 // ---------------------------------------------------------------- builders
 
@@ -269,6 +277,11 @@ export function lenguaSkill(area: LenguaArea, item: string, level?: string): Ski
   return `lng:${area}:${item}${level ? `:${level}` : ''}`
 }
 
+/** An English skill key: `eng:<area>:<item>` or `eng:<area>:<item>:<level>` (lowercase; items may start with a digit, e.g. num:0-20). */
+export function englishSkill(area: EnglishArea, item: string, level?: string): SkillKey {
+  return `eng:${area}:${item}${level ? `:${level}` : ''}`
+}
+
 // ---------------------------------------------------------------- parser
 
 const MAX_CARRIES: Record<2 | 3 | 4, number> = { 2: 2, 3: 3, 4: 4 }
@@ -376,6 +389,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
   if ((m = key.match(/^lng:(gram|orto|voc|lect|lit|escr):([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?$/))) {
     return { type: 'lengua', area: m[1] as LenguaArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
+  }
+  if ((m = key.match(/^eng:(voc|frase|num):([a-z0-9][a-z0-9-]*)(?::([a-z0-9][a-z0-9-]*))?$/))) {
+    return { type: 'ingles', area: m[1] as EnglishArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
   }
   return null
 }
@@ -513,6 +529,7 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'mental': return ['mental']
     case 'equation': return ['equation']
     case 'lengua': return lenguaKinds(p)
+    case 'ingles': return englishKinds(p)
   }
   /* c8 ignore next */
   return []
@@ -570,6 +587,33 @@ export const LENGUA_SKILLS: SkillKey[] = [
   'lng:voc:aumentativos', 'lng:voc:compuestas', 'lng:escr:copia', 'lng:escr:dictado', 'lng:escr:guiada',
   'lng:lect:idea-principal', 'lng:lect:preguntas', 'lng:lect:ordenar',
   'lng:lit:rima', 'lng:lit:fabula', 'lng:lit:adivinanzas', 'lng:lit:trabalenguas',
+]
+
+/** The English kinds of each skill (src/engine/ingles). The first one is the default. With the sound off the listening
+    kinds are left out of the plan (englishKindsFor in src/engine/ingles/teachable.ts); the other kinds stay. */
+function englishKinds(p: Extract<ParsedSkill, { type: 'ingles' }>): ExerciseKind[] {
+  switch (p.area) {
+    case 'voc': {
+      // The memory game needs six pictures in the theme (saludos and dias have none).
+      const memory: ExerciseKind[] = ENGLISH_WORDS.filter((w) => w.theme === p.item && w.emoji).length >= MEMORY_PAIRS ? ['eng-memory'] : []
+      return ['eng-listen-pick', 'eng-match', 'eng-write-word', ...memory, 'eng-scramble']
+    }
+    case 'frase': return ['eng-complete']
+    case 'num':
+      if (p.item === 'ops') return ['eng-op-listen']
+      return ['eng-num-write', 'eng-num-listen']
+    default: return []
+  }
+}
+
+/** Every English skill of the temario de 3.º that has an exercise kind (the skill universe of an English kind). */
+export const ENGLISH_SKILLS: SkillKey[] = [
+  'eng:voc:saludos', 'eng:voc:colores', 'eng:voc:animales', 'eng:voc:familia', 'eng:voc:comida', 'eng:voc:ropa',
+  'eng:voc:cole', 'eng:voc:casa', 'eng:voc:cuerpo', 'eng:voc:tiempo', 'eng:voc:dias',
+  'eng:frase:saludos', 'eng:frase:its-a', 'eng:frase:this-is-my', 'eng:frase:i-like', 'eng:frase:can-i-have',
+  'eng:frase:im-wearing', 'eng:frase:classroom', 'eng:frase:where-is:in', 'eng:frase:where-is:on', 'eng:frase:where-is:under',
+  'eng:frase:ive-got', 'eng:frase:weather', 'eng:frase:what-day',
+  'eng:num:0-20', 'eng:num:decenas', 'eng:num:21-100', 'eng:num:ops:plus', 'eng:num:ops:minus', 'eng:num:ops:times',
 ]
 
 /** The grammar skills (lng:gram:…) of the grammar kinds, the first kind of each being its default. */

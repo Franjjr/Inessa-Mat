@@ -7,7 +7,7 @@ import { tryIt } from '@/content/lessons/dsl'
 import { LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, allTopics } from '@/content/syllabus'
 import { createRng, generate, kindsForSkill } from '@/engine'
 import { syllabify } from '@/engine/lengua/syllables'
-import { clase, CLASSES, classForTopic, isClassDone, LENGUA_CLASSES, markClassDone } from './index'
+import { clase, CLASSES, classForTopic, INGLES_CLASSES, isClassDone, LENGUA_CLASSES, markClassDone } from './index'
 
 const sola = tryIt('borrow', { a: 352, b: 127 }, '¡Tu turno!', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
 
@@ -135,6 +135,7 @@ describe('clases de sumar y restar (3.º)', () => {
     const everyClass = [
       ...CLASSES.map((cls) => ({ cls, syllabus: syllabusForGrade(3) })),
       ...LENGUA_CLASSES.map((cls) => ({ cls, syllabus: syllabusFor('language', 3) })),
+      ...INGLES_CLASSES.map((cls) => ({ cls, syllabus: syllabusFor('english', 3) })),
     ]
     expect(new Set(everyClass.map((e) => e.cls.lesson.id)).size).toBe(everyClass.length)
     for (const { cls, syllabus } of everyClass) {
@@ -161,7 +162,7 @@ describe('clases de sumar y restar (3.º)', () => {
         for (let seed = 1; seed <= 20; seed++) {
           const [exercise] = generate(step.trySelector!, 1, { rng: createRng(seed) })
           expect(allowed.has(exercise.skill), `${cls.lesson.id}: ${exercise.skill} (seed ${seed})`).toBe(true)
-          if (cls.topicId.startsWith('lng-')) {
+          if (cls.topicId.startsWith('lng-') || cls.topicId.startsWith('eng-')) {
             expect(kindsForSkill(exercise.skill), `${cls.lesson.id}: ${exercise.skill}`).toContain(exercise.kind)
           }
         }
