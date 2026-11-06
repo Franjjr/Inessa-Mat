@@ -81,13 +81,14 @@ export interface RunSummary {
   finished: boolean
 }
 
-/** «Ahora dilo tú» (eng-speak) is not counted: its stars are a pronunciation result, not an answer to be right or wrong. */
-const isCounted = (kind: string) => kind !== 'eng-speak'
+/** «Ahora dilo tú» (eng-speak) is not graded: its stars are a pronunciation result, not an answer to be right or wrong. It is
+    still an answer for the run (a session with only that item is done, not «no has llegado a contestar ninguno»). */
+const isGraded = (kind: string) => kind !== 'eng-speak'
 
 export function summarizeRun(q: RunQueue<RunItem>, results: readonly { uid: string; correct: boolean }[], finished: boolean): RunSummary {
   const kindOf = new Map(q.slots.map((s) => [s.item.uid, s.item.item.exercise.kind]))
-  const counted = results.filter((r) => isCounted(kindOf.get(r.uid) ?? ''))
-  const planned = q.slots.filter((s) => !s.retry && isCounted(s.item.item.exercise.kind)).length
-  const correct = counted.filter((r) => r.correct).length
-  return { answered: counted.length, correct, total: planned, finished }
+  const graded = results.filter((r) => isGraded(kindOf.get(r.uid) ?? ''))
+  const planned = q.slots.filter((s) => !s.retry && isGraded(s.item.item.exercise.kind)).length
+  const correct = graded.filter((r) => r.correct).length
+  return { answered: results.length, correct, total: planned, finished }
 }

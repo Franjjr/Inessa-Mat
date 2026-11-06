@@ -132,14 +132,14 @@ describe('summarizeRun: «Ahora dilo tú» is not counted', () => {
     retry: false,
   })
 
-  it('leaves the speaking item out of answered, correct and total', () => {
+  it('the speaking item is an answer (answered) but stays out of correct and total', () => {
     const q = { slots: [slot('0:speak', 'eng-speak'), slot('1:word', 'eng-write-word')], retried: [] }
     const s = summarizeRun(q as never, [{ uid: '0:speak', correct: true }, { uid: '1:word', correct: false }], true)
-    expect(s).toMatchObject({ answered: 1, correct: 0, total: 1 })
+    expect(s).toMatchObject({ answered: 2, correct: 0, total: 1 })
   })
 
-  it('a run with only speaking items answers nothing (no stars for it)', () => {
+  it('a run with only speaking items is answered (done), with nothing graded', () => {
     const q = { slots: [slot('0:speak', 'eng-speak')], retried: [] }
-    expect(summarizeRun(q as never, [{ uid: '0:speak', correct: true }], true)).toMatchObject({ answered: 0, total: 0 })
+    expect(summarizeRun(q as never, [{ uid: '0:speak', correct: true }], true)).toMatchObject({ answered: 1, correct: 0, total: 0 })
   })
 })

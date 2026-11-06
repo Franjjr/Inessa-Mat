@@ -450,7 +450,9 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
             {finished ? childText(child, '¡Lo has conseguido, {child}!') : childText(child, '¡Buen trabajo, {child}!')}
           </h2>
           <p className={s.text}>
-            {summary.answered > 0 ? `Has acertado ${summary.correct} de ${summary.total} ejercicios.` : 'Hoy no has llegado a contestar ninguno.'}
+            {summary.answered === 0
+              ? 'Hoy no has llegado a contestar ninguno.'
+              : summary.total > 0 ? `Has acertado ${summary.correct} de ${summary.total} ejercicios.` : 'Hoy has hablado en inglés.'}
             {' '}{finished ? 'Descansa y vuelve mañana.' : 'Hemos llegado al tiempo de hoy: lo que has hecho cuenta.'}
           </p>
           {topicName && <p className={s.topicChip}>Hoy has trabajado: <strong>{topicName}</strong></p>}
