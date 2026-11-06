@@ -13,6 +13,7 @@ import { createRng, generate } from '@/engine'
 import { updateProgress, useActiveChild } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import { GameHostProvider } from '@/world/host/GameHost'
+import { sessionRouteOf } from '@/world/home/todayEntry'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { seedFrom } from '@/world/review/logic'
 import s from '../session/session.module.css'
@@ -86,7 +87,7 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
             <div className={s.intro}>
               <h2 className={s.title}>¡Clase terminada!</h2>
               <div className={s.actions}>
-                <Button size="lg" variant="success" onClick={() => navigate(subject === 'language' ? '/play/lengua' : '/play/sesion')}>Seguir con la sesión</Button>
+                <Button size="lg" variant="success" onClick={() => navigate(sessionRouteOf(subject))}>Seguir con la sesión</Button>
                 <Button variant="secondary" onClick={leave}>Volver al inicio</Button>
               </div>
             </div>

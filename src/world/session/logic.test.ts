@@ -3,7 +3,7 @@ import { planDailySession } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 import type { ChildProfile } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
+import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const child: ChildProfile = {
@@ -107,5 +107,13 @@ describe('sessionRewardKey', () => {
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
     expect(sessionRewardKey(now, 'math')).toBe('sesion:2026-10-22')
     expect(sessionRewardKey(now, 'language')).toBe('sesion-lengua:2026-10-22')
+    expect(sessionRewardKey(now, 'english')).toBe('sesion-ingles:2026-10-22')
+  })
+
+  it('the done keys: maths and Lengua unchanged, English its own', () => {
+    expect(sessionDoneKey(now)).toBe('sesion-hecha:2026-10-22')
+    expect(sessionDoneKey(now, 'math')).toBe('sesion-hecha:2026-10-22')
+    expect(sessionDoneKey(now, 'language')).toBe('sesion-hecha-lengua:2026-10-22')
+    expect(sessionDoneKey(now, 'english')).toBe('sesion-hecha-ingles:2026-10-22')
   })
 })

@@ -42,17 +42,19 @@ export function postpone(q: RunQueue<RunItem>, pos: number): RunQueue<RunItem> {
   return { ...q, slots: [...rest, { item: { ...slot.item, postponed: true }, retry: slot.retry }] }
 }
 
-/** The day key for the once-per-day reward. Maths keeps its original key; Lengua has its own. */
+/** The day keys of each subject. Maths keeps its original keys; Lengua and English have their own. */
+const REWARD_KEY: Record<LessonSubject, string> = { math: 'sesion', language: 'sesion-lengua', english: 'sesion-ingles' }
+const DONE_KEY: Record<LessonSubject, string> = { math: 'sesion-hecha', language: 'sesion-hecha-lengua', english: 'sesion-hecha-ingles' }
+
+/** The day key for the once-per-day reward. */
 export function sessionRewardKey(now: Date, subject: LessonSubject = 'math'): string {
-  const day = now.toISOString().slice(0, 10)
-  return subject === 'language' ? `sesion-lengua:${day}` : `sesion:${day}`
+  return `${REWARD_KEY[subject]}:${now.toISOString().slice(0, 10)}`
 }
 
-/** The day marker of a session that had answers, finished or cut by the time: the home moves on to Lengua after the maths
-    one (it is not the stars key, which only a finished run earns). */
+/** The day marker of a session that had answers, finished or cut by the time: the home moves on to the next subject
+    (it is not the stars key, which only a finished run earns). */
 export function sessionDoneKey(now: Date, subject: LessonSubject = 'math'): string {
-  const day = now.toISOString().slice(0, 10)
-  return subject === 'language' ? `sesion-hecha-lengua:${day}` : `sesion-hecha:${day}`
+  return `${DONE_KEY[subject]}:${now.toISOString().slice(0, 10)}`
 }
 
 /** Caligrafía con lápiz: stars once a day for the first finish, on their own key (never the Lengua session stars). */

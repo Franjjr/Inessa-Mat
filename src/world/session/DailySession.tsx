@@ -44,6 +44,7 @@ export default function DailySession({ subject = 'math', ...props }: DailySessio
 const INTRO_BLOCKS: Record<LessonSubject, [string, string][]> = {
   math: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con un ejemplo'], ['Mezcla', '5 min · de todo un poco'], ['Problema', '2 min · con historia']],
   language: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con la clase'], ['Lectura', '4 min · un cuento y sus preguntas'], ['Mezcla', '4 min · ortografía y palabras']],
+  english: [],
 }
 
 /** Active seconds of the run: stops while paused and when the run is not on screen. */

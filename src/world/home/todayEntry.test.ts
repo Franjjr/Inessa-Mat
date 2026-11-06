@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
 import { currentTopic, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { createRng, planLenguaSession, teachableCourse } from '@/engine'
+import { createRng, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
 import type { ChildProfile, MasteryMap, ProgressState, SkillMastery } from '@/types'
+import { sessionDoneKey } from '@/world/session/logic'
 import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
 
 const NOW = '2026-10-27T10:00:00.000Z'
@@ -95,6 +96,45 @@ describe('Lengua on the home', () => {
     const mathDone = { ...progress(), flags: { 'sesion-hecha:2026-10-27': true } }
     expect(homeSubject(['math', 'language'], mathDone, new Date(NOW))).toBe('language')
     expect(homeSubject(['language'], progress(), new Date(NOW))).toBe('language')
+  })
+})
+
+describe('English on the home', () => {
+  it('the English «Hoy» with no topic yet is its fallback title, and its session goes to /play/ingles', () => {
+    expect(todayEntry({ grade: 3, mastery: {}, progress: progress(), subject: 'english' })).toEqual({
+      kind: 'sesion', title: 'Inglés de hoy', to: '/play/ingles',
+    })
+  })
+
+  it('homeSubject: the subsets of the subjects on, in the order math, Lengua, English', () => {
+    const at = new Date(NOW)
+    const done = (...subjects: LessonSubject[]) => ({ ...progress(), flags: Object.fromEntries(subjects.map((s) => [sessionDoneKey(at, s), true])) })
+    // Only one subject on: it is the one.
+    expect(homeSubject(['math'], progress(), at)).toBe('math')
+    expect(homeSubject(['language'], progress(), at)).toBe('language')
+    expect(homeSubject(['english'], progress(), at)).toBe('english')
+    // Two on: the first not done today; with both done, the last one.
+    expect(homeSubject(['math', 'english'], progress(), at)).toBe('math')
+    expect(homeSubject(['math', 'english'], done('math'), at)).toBe('english')
+    expect(homeSubject(['math', 'english'], done('math', 'english'), at)).toBe('english')
+    expect(homeSubject(['language', 'english'], progress(), at)).toBe('language')
+    expect(homeSubject(['language', 'english'], done('language'), at)).toBe('english')
+    // All three on: math, then Lengua, then English.
+    expect(homeSubject(['english', 'language', 'math'], progress(), at)).toBe('math')
+    expect(homeSubject(['english', 'language', 'math'], done('math'), at)).toBe('language')
+    expect(homeSubject(['english', 'language', 'math'], done('math', 'language'), at)).toBe('english')
+    expect(homeSubject(['english', 'language', 'math'], done('math', 'language', 'english'), at)).toBe('english')
+  })
+
+  it('the home subjects: English is offered to 3.º only and a disabled chip when on outside it', () => {
+    expect(homeSubjects(['math', 'english'], 3)).toEqual({ subjects: ['math', 'english'], chips: ['math', 'english'] })
+    expect(homeSubjects(['math', 'english'], 4)).toEqual({ subjects: ['math'], chips: ['math', 'language', 'english'] })
+    expect(homeSubjects(['english'], undefined)).toEqual({ subjects: ['english'], chips: ['english'] })
+  })
+
+  it('a maths child outside 3.º sees the same chips as before English existed', () => {
+    expect(homeSubjects(['math'], 4).chips).toEqual(['math', 'language'])
+    expect(homeSubjects(['math'], 2).chips).toEqual(['math', 'language'])
   })
 })
 

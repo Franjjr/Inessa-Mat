@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
+import { GRADE3_SYLLABUS, subjectOfTopic, syllabusFor, teachingOrder } from '@/content/syllabus'
 import { initialProgress } from '@/content'
 import { statsFromLocal } from '@/data/summary'
 import {
@@ -10,7 +10,8 @@ import {
   topicNeeds,
 } from '@/engine'
 import {
-  attemptsOf, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, placementFlags, subjectOfSession, subjectOfSkill, subjectOffered,
+  ENGLISH_SESSION_MINUTES, attemptsOf, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, placementFlags, subjectOfSession,
+  subjectOfSkill, subjectOffered,
 } from '../subjects'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
@@ -78,6 +79,74 @@ describe('subjectOfSkill', () => {
     expect(subjectOfSkill('mul:6x7')).toBe('math')
     expect(subjectOfSkill('word:add')).toBe('math')
     expect(subjectOfSkill('lngx:none')).toBe('math')
+  })
+
+  it('eng: keys are English, lng: stays Lengua and every other key is maths', () => {
+    expect(subjectOfSkill('eng:num:0-20')).toBe('english')
+    expect(subjectOfSkill('lng:ortografia:b-v')).toBe('language')
+    expect(subjectOfSkill('engx:none')).toBe('math')
+  })
+})
+
+describe('English rows (eng:) are kept apart from maths and Lengua', () => {
+  const engRow = (skill: string): SkillMastery => mastery(skill, 1)
+  const withEnglish = (): MasteryMap => ({ ...withLanguage(mathMastery()), 'eng:num:0-20': engRow('eng:num:0-20') })
+
+  it('masteryOf returns only the rows of each subject', () => {
+    const all = withEnglish()
+    expect(Object.keys(masteryOf(all, 'english'))).toEqual(['eng:num:0-20'])
+    expect(Object.keys(masteryOf(all, 'language')).sort()).toEqual([...LNG_SKILLS].sort())
+    expect(Object.keys(masteryOf(all, 'math'))).toEqual(Object.keys(mathMastery()))
+  })
+
+  it('attemptsOf returns only the attempts of each subject, in their order', () => {
+    const eng = attempt({ skill: 'eng:num:0-20', createdAt: daysAgo(2), correct: false, errorType: 'fact' })
+    const base = mixedAttempts()
+    const all = [eng, ...base]
+    expect(attemptsOf(all, 'english')).toEqual([eng])
+    expect(attemptsOf(all, 'math')).toEqual(attemptsOf(base, 'math'))
+    expect(attemptsOf(all, 'language')).toEqual(attemptsOf(base, 'language'))
+  })
+
+  it('the maths planner, review and reports ignore eng: rows', () => {
+    const all = withEnglish()
+    const plan = (m: MasteryMap) => planDailySession({ child, mastery: m, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(plan(all).blocks.map((b) => b.items.map((i) => i.exercise.id))).toEqual(plan(mathMastery()).blocks.map((b) => b.items.map((i) => i.exercise.id)))
+    const progress = initialProgress(child.id, now)
+    expect(planSession({ child, progress, mastery: all, now }).review).toEqual(planSession({ child, progress, mastery: mathMastery(), now }).review)
+    const eng = [attempt({ skill: 'eng:num:0-20', createdAt: daysAgo(1), correct: false, errorType: 'fact' })]
+    expect(errorReport([...eng, ...mixedAttempts()], now)).toEqual(errorReport(mixedAttempts(), now))
+    expect(recallReport([...eng, ...mixedAttempts()], now)).toEqual(recallReport(mixedAttempts(), now))
+    expect(dueSkills(masteryOf(all, 'math'), now, 50).some((k) => k.startsWith('eng:'))).toBe(false)
+  })
+})
+
+describe('English subject table', () => {
+  it('placement flags are their own', () => {
+    expect(placementFlags('english')).toEqual({ done: 'placementIngles', requested: 'placementInglesRequested' })
+  })
+
+  it('English is offered to 3.º and to a child without a course, like Lengua', () => {
+    expect(subjectOffered('english', 3)).toBe(true)
+    expect(subjectOffered('english', undefined)).toBe(true)
+    expect(subjectOffered('english', 2)).toBe(false)
+    expect(subjectOffered('english', 4)).toBe(false)
+  })
+
+  it('a session marked english is English', () => {
+    expect(subjectOfSession({ summary: { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject: 'english' } })).toBe('english')
+  })
+
+  it('an English session lasts ten minutes', () => {
+    expect(ENGLISH_SESSION_MINUTES).toBe(10)
+  })
+
+  it('a topic with the eng- prefix is English; its syllabus is empty until Task 4', () => {
+    expect(subjectOfTopic('eng-numeros')).toBe('english')
+    expect(subjectOfTopic('lng-silabas')).toBe('language')
+    expect(subjectOfTopic('suma-2d')).toBe('math')
+    expect(syllabusFor('english', 3).blocks).toEqual([])
+    expect(syllabusFor('english').blocks).toEqual([])
   })
 })
 
