@@ -7,6 +7,7 @@ import { AnimatePresence, MotionConfig, motion } from 'motion/react'
 import { Character, CompanionArt, Predicament, WorldBackground } from '@/art'
 import { FALLBACK_CHILD_NAME, renderTemplate, templateContext, type TemplateContext } from '@/content'
 import { sfx, speech } from '@/audio'
+import { parseMixed, plainMixed, sayMixed, type SpanishVoice } from '@/audio/sayMixed'
 import { useActiveChild } from '@/data'
 import type { CharacterId, Pose, SfxName, SpeechOptions, StoryDef, StoryLine, StoryScene } from '@/types'
 import type { StoryPlayerProps } from '../contracts'
@@ -96,7 +97,12 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
     if (!line) return
     const plain = renderTemplate(line.text, ctx).replace(/^—\s*/, '')
     const voice = line.speaker === 'companion' ? 'companion' : SPEAKER_VOICE[line.speaker] ?? 'narrator'
-    void speech.say(plain, { voice, interrupt: true }).catch(() => undefined)
+    // English between asterisks («*Hello!*») is said by the English voice; the rest by the speaker (see sayMixed.ts).
+    const parts = parseMixed(plain)
+    const said = parts
+      ? sayMixed(parts, { spanish: voice as SpanishVoice, interrupt: true })
+      : speech.say(plain, { voice, interrupt: true })
+    void said.catch(() => undefined)
   }
 
   const advance = () => {
@@ -138,7 +144,7 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
 
   const isChildLine = !!line && line.text.trim().startsWith('—')
   const speakerLabel = isChildLine ? ctx.childName : speakerName(line?.speaker)
-  const text = line ? renderTemplate(line.text, ctx).replace(/^—\s*/, '') : ''
+  const text = line ? plainMixed(renderTemplate(line.text, ctx).replace(/^—\s*/, '')) : ''
   const rescue = sceneCount > 1 ? (beat?.scene ?? 0) / (sceneCount - 1) : 1
 
   return (

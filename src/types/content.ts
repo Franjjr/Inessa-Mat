@@ -175,8 +175,9 @@ export interface GuardianDef {
   rounds: { selector: SkillSelector; count: number }[]
   /** Minimum correct answers to pass (out of the total of rounds). */
   passMin: number
-  /** Final "Hechizo del Cristal": a single story problem; its result reveals the letter. */
-  spell: { text: TemplateString; selector?: SkillSelector; fixed?: { kind: 'fact-mul' | 'column-add' | 'column-sub' | 'column-mul' | 'division'; a: number; b: number } }
+  /** Final "Hechizo del Cristal": a single story problem; its result reveals the letter. Absent when the guardian has no spell
+   *  (the English island: its guardians are beaten by the rounds alone, see src/content/ingles/guardians.ts). */
+  spell?: { text: TemplateString; selector?: SkillSelector; fixed?: { kind: 'fact-mul' | 'column-add' | 'column-sub' | 'column-mul' | 'division'; a: number; b: number } }
   letter: string
   /** Rescue scene played on success (companion freed). */
   rescueStory: string

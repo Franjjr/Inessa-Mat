@@ -13,7 +13,7 @@ export interface MixedPart {
 }
 
 /** The Spanish voice of a line: Lumi unless the speaker of the step is someone else. */
-export type SpanishVoice = 'lumi' | 'companion' | 'guardian'
+export type SpanishVoice = 'lumi' | 'companion' | 'guardian' | 'narrator'
 
 const MARK = /\*([^*\n]+)\*/g
 

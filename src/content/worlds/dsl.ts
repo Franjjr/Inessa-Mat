@@ -2,7 +2,7 @@
 import type { ActivityConfig, NodeDef, WorldDef } from '@/types'
 import { layoutPath } from './path'
 
-type NodeSpec = Omit<NodeDef, 'pos'>
+export type NodeSpec = Omit<NodeDef, 'pos'>
 
 export const storyNode = (id: string, title: string, ref: string): NodeSpec => ({ id, kind: 'story', title, ref })
 export const lessonNode = (id: string, title: string, ref: string): NodeSpec => ({ id, kind: 'lesson', title, ref })

@@ -63,7 +63,7 @@ describe('the 2.º season', () => {
       expect(g.passMin).toBe(total - 1)
       expect(g.letter).toBe(season1.secretWord[i])
       expect(getStory(g.rescueStory)).toBeDefined()
-      const spell = makeExercise(g.spell.fixed!.kind, g.spell.fixed!.a, g.spell.fixed!.b)
+      const spell = makeExercise(g.spell!.fixed!.kind, g.spell!.fixed!.a, g.spell!.fixed!.b)
       expect(check(spell, { type: 'number', value: SPELL_CODES[g.id].result }).correct, g.id).toBe(true)
     })
   })

@@ -385,9 +385,9 @@ describe('guardians', () => {
       expect(g.passMin, g.id).toBe(total - 1)
       expect(g.rescueStory).toBe(`${w.id}-rescue`)
       expect(g.retryText).toContain('{child}')
-      expect(g.spell.fixed, g.id).toBeDefined()
+      expect(g.spell!.fixed, g.id).toBeDefined()
       letters.push(g.letter)
-      const f = g.spell.fixed!
+      const f = g.spell!.fixed!
       const result = f.kind === 'fact-mul' || f.kind === 'column-mul' ? f.a * f.b
         : f.kind === 'column-add' ? f.a + f.b
         : f.kind === 'column-sub' ? f.a - f.b
@@ -395,11 +395,11 @@ describe('guardians', () => {
       expect(result, g.id).toBe(SPELL_CODES[g.id].result)
       expect(g.letter).toBe(SPELL_CODES[g.id].letter)
       // the spell text shows (or tells) the numbers of the operation
-      expect(g.spell.text, g.id).toContain(String(f.a))
-      expect(g.spell.text, g.id).toContain(String(f.b))
+      expect(g.spell!.text, g.id).toContain(String(f.a))
+      expect(g.spell!.text, g.id).toContain(String(f.b))
     }
     expect(letters.join('')).toBe(season1.secretWord)
-    const spells = guardians.map((g) => g.spell.fixed!)
+    const spells = guardians.map((g) => g.spell!.fixed!)
     expect(spells.map((s) => `${s.kind}:${s.a}:${s.b}`)).toEqual([
       'fact-mul:7:5', 'column-add:2486:1357', 'fact-mul:7:6', 'column-sub:4521:1367',
       'fact-mul:8:7', 'fact-mul:7:7', 'column-mul:47:6', 'division:63:3',

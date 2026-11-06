@@ -6,9 +6,9 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ActivityRunner, LessonPlayer } from '@/activities'
 import {
   applyNodeResult, finaleStoryId, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
-  newStickers, COMPLETION_STARS,
+  newStickers, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, type ClassDef,
 } from '@/content'
-import { starsFor } from '@/engine'
+import { markEnglishClassToday, starsFor } from '@/engine'
 import { getProgress, updateProgress, useActiveChild, useProgress } from '@/data'
 import { Button, Card, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
@@ -77,11 +77,15 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
 
   const exit = () => navigate(mapPath)
 
-  /** Save a node result, then show the reward (or go back to the map if saving fails). */
-  const complete = async (result: NodeResult, kind: RewardPayload['kind'] = 'node') => {
+  /** Save a node result, then show the reward (or go back to the map if saving fails). An island lesson stop is its English
+      class: the class is marked taught and dated today, as when the class is played from «Hoy». */
+  const complete = async (result: NodeResult, kind: RewardPayload['kind'] = 'node', englishClass?: ClassDef) => {
     try {
       const before: ProgressState = await getProgress(child.id)
-      const after = await updateProgress(child.id, (p) => applyNodeResult(p, world.id, node.id, result))
+      const after = await updateProgress(child.id, (p) => {
+        const done = applyNodeResult(p, world.id, node.id, result)
+        return englishClass ? markEnglishClassToday(markClassDone(done, englishClass, 'lesson'), englishClass.topicId, new Date()) : done
+      })
       const stars = after.worlds[world.id]?.nodes[node.id]?.stars ?? result.stars
       setPhase({
         name: 'reward',
@@ -134,11 +138,12 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       case 'lesson': {
         const lesson = node.ref ? getLesson(node.ref) : undefined
         if (!lesson) return <Missing onBack={exit} />
+        const englishClass = world.id === ISLAND_ID ? INGLES_CLASSES.find((c) => c.lesson.id === node.ref) : undefined
         return (
           <GameHostProvider worldId={world.id} nodeId={node.id} activity="lesson">
             <LessonPlayer
               lesson={lesson}
-              onDone={() => void complete({ stars: COMPLETION_STARS, passed: true })}
+              onDone={() => void complete({ stars: COMPLETION_STARS, passed: true }, 'node', englishClass)}
               onExit={exit}
             />
           </GameHostProvider>
@@ -205,7 +210,8 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       )
       const earnedLetter = after.worlds[world.id]?.letter ?? letter
       const stickers = newStickers(before, after)
-      const reward = rewardPhase({ kind: 'crystal', stars, letter: earnedLetter, stickers })
+      // The island's guardians give no maths crystal (the horn and the secret word are the maths adventure's): a plain reward.
+      const reward = rewardPhase({ kind: world.id === ISLAND_ID ? 'node' : 'crystal', stars, letter: earnedLetter, stickers })
       const finale: Phase = world.index === 8
         ? { name: 'story', storyId: finaleStoryId(after.seasonId), then: rewardPhase({ kind: 'season', stars, letter: earnedLetter, stickers }) }
         : reward

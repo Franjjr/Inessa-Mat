@@ -56,6 +56,7 @@
   --w6: #c026d3; --w6-soft: #fae8ff;   /* Jardín del Arcoíris */
   --w7: #ea580c; --w7-soft: #ffedd5;   /* Forja del Dragón */
   --w8: #a16207; --w8-soft: #fef9c3;   /* Castillo del Reparto */
+  --isla-ingles: #0284c7; --isla-ingles-soft: #e0f2fe;   /* La Isla de las Palabras (Inglés, src/content/ingles/island.ts) */
 
   /* Direction C «lúdica y colorista» (docs/design/proposals/c-ludica-colorista): sticker panels with a thick ink
      outline and a hard offset shadow, and soft colour fills per section. */

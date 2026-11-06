@@ -72,7 +72,7 @@ describe.skipIf(!engineReady)('engine integration (generate from every selector)
 
   it('each Hechizo del Cristal builds the workbook exercise and its result is the magic number', () => {
     for (const g of guardians) {
-      const f = g.spell.fixed!
+      const f = g.spell!.fixed!
       const ex = makeExercise(f.kind, f.a, f.b)
       expect(answerOf(ex), g.id).toBe(SPELL_CODES[g.id].result)
       const answer = ex.kind === 'division'

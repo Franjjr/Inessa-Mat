@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
 import {
-  crystalsOf, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
+  crystalsOf, ISLAND_ID, isWorldUnlocked, nextNode, getNode, getWorld, renderTemplate, seasonIdForGrade, seasonOf, switchSeason,
   templateContext,
 } from '@/content'
 import { speech } from '@/audio'
@@ -211,6 +211,7 @@ export default function ChildHomeScreen() {
 
           <div className={s.tiles}>
             {view === 'math' && due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
+            {view === 'english' && <Tile label="Isla de Inglés" tone="green" onClick={() => navigate(`/play/w/${ISLAND_ID}`)} />}
             <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />
             <Tile label="Mis premios" tone="yellow" onClick={() => navigate('/play/premios')} />
           </div>

@@ -295,6 +295,16 @@
   .tiles > :last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 
+/* Short windows (a small tablet in landscape, 1000 × 490): the menu and the tiles fit in view. The screen scrolls itself, but
+   «⬇ Más abajo» only follows the page, so a tile below the fold could not be reached: the cards get smaller instead. */
+@media (max-height: 600px) and (min-width: 761px) {
+  .left, .right { gap: var(--sp-3); }
+  .next { padding: var(--sp-3) var(--sp-5); gap: 4px; }
+  .nextTitle { font-size: clamp(24px, 3vw, 30px); }
+  .nextText { display: none; }
+  .tile { min-height: 72px; padding: var(--sp-2) var(--sp-3); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .toneBusy .syncDot { animation: none; }
   .next, .tile { transition: none; }

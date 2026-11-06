@@ -3,6 +3,7 @@
 const WORLD_HEX: Record<string, string> = {
   w1: '#15803d', w2: '#2563eb', w3: '#dc2626', w4: '#0e7490',
   w5: '#7c3aed', w6: '#c026d3', w7: '#ea580c', w8: '#a16207',
+  'isla-ingles': '#0284c7',
 }
 
 export function worldHex(worldId: string): string {

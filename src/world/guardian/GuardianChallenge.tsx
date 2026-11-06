@@ -150,7 +150,7 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
             <Crystal color={color} state="empty" size={72} />
             <h2 className={s.spellTitle}>{host.t('El Hechizo del Cristal')}</h2>
           </div>
-          <p className={s.spellText}>{host.t(guardian.spell.text)}</p>
+          <p className={s.spellText}>{host.t(guardian.spell?.text ?? '')}</p>
           <div className={s.card}>
             <ExerciseStep
               key={`spell-${spellTry}`}

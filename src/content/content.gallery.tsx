@@ -118,14 +118,14 @@ function Guardians() {
       <tbody>
         {guardians.map((g) => {
           const total = g.rounds.reduce((n, r) => n + r.count, 0)
-          const f = g.spell.fixed!
+          const f = g.spell!.fixed!
           const op = { 'fact-mul': '×', 'column-mul': '×', 'column-add': '+', 'column-sub': '−', division: '÷' }[f.kind]
           return (
             <tr key={g.id}>
               <td><span className={s.big}>{CHAR_EMOJI[g.character]}</span> {t(g.title)}</td>
               <td>{g.rounds.map((r) => `${r.count}× ${(r.selector.kinds ?? []).join('/')}`).join(' + ')}</td>
               <td className={s.num}>{g.passMin} de {total}</td>
-              <td>{t(g.spell.text)} <b className={s.num}>{f.a} {op} {f.b}</b></td>
+              <td>{t(g.spell!.text)} <b className={s.num}>{f.a} {op} {f.b}</b></td>
               <td className={s.letter}>{g.letter}</td>
             </tr>
           )
