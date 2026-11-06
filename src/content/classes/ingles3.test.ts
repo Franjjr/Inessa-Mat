@@ -7,17 +7,27 @@ import { classForTopic } from './index'
 import { INGLES_CLASSES } from './ingles3'
 import type { LessonStep } from '@/types'
 
-/** The text a step puts before the child’s ears: its Spanish parts (the English ones go through sayMixed). */
-const spanishParts = (text: string) => (parseMixed(text) ?? [{ text, lang: 'es' as const }]).filter((p) => p.lang === 'es')
-const stepsOf = (cls: (typeof INGLES_CLASSES)[number]) => cls.lesson.steps
-const allSteps = () => INGLES_CLASSES.flatMap((cls) => stepsOf(cls).map((step) => ({ cls, step })))
+type EnglishClass = (typeof INGLES_CLASSES)[number]
 
-/** An English word of the vocabulary, as it may be written in Spanish text. A word that is also Spanish (no, pizza) is not one. */
+/** The Spanish parts of a step: what Lumi reads. The English parts go through sayMixed. */
+const spanishParts = (text: string) => (parseMixed(text) ?? [{ text, lang: 'es' as const }]).filter((p) => p.lang === 'es')
+const allSteps = () => INGLES_CLASSES.flatMap((cls) => cls.lesson.steps.map((step) => ({ cls, step })))
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+/** The word or phrase as a whole, case-insensitive: not inside another word. */
+const wholeRe = (en: string) => new RegExp(`(^|[^\\p{L}])${escapeRe(en)}($|[^\\p{L}])`, 'iu')
+/** The ejemplo phase of a class: its steps after the para phase, before the guiada tries. */
+const ejemploOf = (cls: EnglishClass) => cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
+
+/** An English vocabulary word, as it may be written in Spanish text. A word that is also Spanish (no, pizza) is not one. */
 const englishWordsToCheck = ENGLISH_WORDS
   .map((w) => w.en.toLowerCase())
   .filter((en, i, all) => all.indexOf(en) === i)
   .filter((en) => en !== ENGLISH_WORDS.find((w) => w.en.toLowerCase() === en)!.es.toLowerCase())
-const wordRe = (en: string) => new RegExp(`(^|[^\\p{L}])${en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}])`, 'iu')
+
+/** The English phrases the classes use: marked parts with a space or an apostrophe (good morning, It's big…). */
+const englishPhrases = [...new Set(allSteps().flatMap(({ step }) =>
+  (parseMixed(step.text) ?? []).filter((p) => p.lang === 'en').map((p) => p.text.replace(/[.?!,]+$/, '').trim()),
+).filter((p) => /[\s']/.test(p)))]
 
 describe('clases de Inglés de 3.º', () => {
   it('every English topic of the syllabus has its class, in syllabus order', () => {
@@ -38,21 +48,45 @@ describe('clases de Inglés de 3.º', () => {
     expect(classForTopic('eng-saludos', undefined, 'english')?.topicId).toBe('eng-saludos')
   })
 
+  it('the saludos class has the syllabus title «Saludos y yo»', () => {
+    const topic = allTopics(INGLES3_SYLLABUS).find((t) => t.id === 'eng-saludos')!
+    expect(INGLES_CLASSES.find((c) => c.topicId === 'eng-saludos')!.lesson.title).toBe(topic.name)
+  })
+
+  it('every class starts with its companion, so the intro is theirs', () => {
+    for (const cls of INGLES_CLASSES) expect(cls.lesson.steps[0].text, cls.lesson.id).toContain('{pet}')
+  })
+
   it('no Spanish line says an English vocabulary word: English goes between asterisks, through sayMixed', () => {
     for (const { cls, step } of allSteps()) {
       for (const part of spanishParts(step.text)) {
         for (const en of englishWordsToCheck) {
-          expect(wordRe(en).test(part.text), `${cls.lesson.id}: «${en}» in «${part.text}»`).toBe(false)
+          expect(wholeRe(en).test(part.text), `${cls.lesson.id}: «${en}» in «${part.text}»`).toBe(false)
         }
       }
     }
   })
 
-  it('every mark closes, and holds some English', () => {
+  it('no Spanish line says an English phrase of the classes either (good morning, It’s big…)', () => {
+    expect(englishPhrases).toContain('good morning')
+    expect(englishPhrases).toContain('It\'s big')
+    for (const { cls, step } of allSteps()) {
+      for (const part of spanishParts(step.text)) {
+        for (const phrase of englishPhrases) {
+          expect(wholeRe(phrase).test(part.text), `${cls.lesson.id}: «${phrase}» in «${part.text}»`).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('every mark closes and holds some English; the hyphen of an ending stays outside the mark', () => {
     for (const { cls, step } of allSteps()) {
       expect(step.text.split('*').length % 2, `${cls.lesson.id}: ${step.text}`).toBe(1)
       for (const part of parseMixed(step.text) ?? []) {
-        if (part.lang === 'en') expect(part.text.trim(), cls.lesson.id).not.toBe('')
+        if (part.lang === 'en') {
+          expect(part.text.trim(), cls.lesson.id).not.toBe('')
+          expect(part.text.startsWith('-'), `${cls.lesson.id}: «${part.text}»`).toBe(false)
+        }
       }
     }
   })
@@ -77,11 +111,58 @@ describe('clases de Inglés de 3.º', () => {
     }
   })
 
-  it('teaches -teen (13 to 19) and -ty (the decades) explicitly, and equals in the operations', () => {
+  it('teaches the ending teen (13 to 19) and ty (the decades) explicitly, and equals in the operations', () => {
     const text = (id: string) => INGLES_CLASSES.find((c) => c.lesson.id === id)!.lesson.steps.map((s) => s.text).join(' ')
-    expect(text('eng3-num-0-20')).toContain('*-teen*')
-    expect(text('eng3-num-decenas')).toContain('*-ty*')
+    expect(text('eng3-num-0-20')).toContain('*teen*')
+    expect(text('eng3-num-decenas')).toContain('*ty*')
     expect(text('eng3-ops')).toContain('*equals*')
+  })
+
+  it('every vocabulary class shows every word its tries practise: an eng-words grid of that theme in the ejemplo phase', () => {
+    const topics = allTopics(INGLES3_SYLLABUS)
+    for (const cls of INGLES_CLASSES) {
+      const topic = topics.find((t) => t.id === cls.topicId)!
+      const themes = topic.skills.filter((s) => s.startsWith('eng:voc:')).map((s) => s.split(':')[2])
+      for (const theme of themes) {
+        const grid = ejemploOf(cls).find((st) => st.visual === 'eng-words' && st.params?.theme === theme)
+        expect(grid, `${cls.lesson.id}: the grid of «${theme}»`).toBeDefined()
+        expect(grid!.text).toBe('Estas son las palabras de hoy. Toca cada una para oírla.')
+      }
+    }
+  })
+
+  it('the number classes show their whole range: 0 to 20, the decades 30 to 90, and for 21 to 100 the decades and the rule', () => {
+    const shownBy = (cls: EnglishClass) => new Set(cls.lesson.steps.flatMap((st) => {
+      if (st.visual === 'eng-number-list') {
+        const from = Number(st.params!.from)
+        const to = Number(st.params!.to)
+        const step = Number(st.params!.step ?? 1)
+        return Array.from({ length: Math.floor((to - from) / step) + 1 }, (_, i) => from + i * step)
+      }
+      return st.visual === 'eng-number' ? [Number(st.params!.n)] : []
+    }))
+    const range = (from: number, to: number, step = 1) => Array.from({ length: Math.floor((to - from) / step) + 1 }, (_, i) => from + i * step)
+    const expected: Record<string, number[]> = {
+      'eng-num-0-20': range(0, 20),
+      'eng-num-decenas': range(30, 90, 10),
+      'eng-num-21-100': range(20, 100, 10),
+    }
+    for (const [topicId, values] of Object.entries(expected)) {
+      const cls = INGLES_CLASSES.find((c) => c.topicId === topicId)!
+      const shown = shownBy(cls)
+      for (const v of values) expect(shown.has(v), `${topicId}: ${v}`).toBe(true)
+    }
+    const decadesRule = INGLES_CLASSES.find((c) => c.topicId === 'eng-num-21-100')!
+    expect(decadesRule.lesson.steps.map((s) => s.text).join(' ')).toContain('guion')
+  })
+
+  it('the tries of the number classes practise the numbers the lists show', () => {
+    const topics = allTopics(INGLES3_SYLLABUS)
+    for (const cls of INGLES_CLASSES.filter((c) => c.topicId.startsWith('eng-num-'))) {
+      const topic = topics.find((t) => t.id === cls.topicId)!
+      expect(topic.skills.every((s) => s.startsWith('eng:num:')), cls.lesson.id).toBe(true)
+      expect(cls.lesson.steps.some((st) => st.visual === 'eng-number-list' || st.visual === 'eng-number'), cls.lesson.id).toBe(true)
+    }
   })
 
   it('the two guiada tries use the topic’s first skill and keep their hints; the three sola tries have none', () => {

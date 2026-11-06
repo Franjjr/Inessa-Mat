@@ -41,6 +41,8 @@ const SAMPLE: Record<LessonVisualId, Record<string, number | string>> = {
   'lng-word': { word: 'mariposa', parts: 'ma-ri-po-sa', mark: 'ri' },
   'eng-word': { emoji: '🐱', en: 'cat', es: 'gato' },
   'eng-number': { n: 13, en: 'thirteen' },
+  'eng-words': { theme: 'animales' },
+  'eng-number-list': { from: 0, to: 20 },
   'big-text': { text: '4 325 = 4 000 + 300 + 20 + 5' },
   'number-line': { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 },
   'fraction-shape': { parts: 4, shaded: 1, shape: 'circle' },

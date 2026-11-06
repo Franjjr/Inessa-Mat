@@ -69,6 +69,8 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
   'lng-word': ['word'],
   'eng-word': ['en', 'es'],
   'eng-number': ['n', 'en'],
+  'eng-words': ['theme'],
+  'eng-number-list': ['from', 'to'],
 }
 
 function checkSelector(where: string, sel: SkillSelector) {

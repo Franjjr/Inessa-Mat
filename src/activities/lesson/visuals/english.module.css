@@ -1,0 +1,80 @@
+/* Inglés visuals: a single word, the list of a theme's words, and a list of numbers. Cells wrap and stay compact so a
+   whole theme fits a 390 px phone. Every cell is a button: a tap says the English word. */
+
+.button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.single {
+  gap: var(--sp-2);
+}
+
+.singleEmoji {
+  font-size: clamp(3rem, 22cqmin, 7rem);
+  line-height: 1;
+}
+
+.singleEn {
+  font-size: clamp(2rem, 12cqmin, 4.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.singleNumber {
+  font-size: clamp(3.5rem, 30cqmin, 8rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  gap: var(--sp-2);
+}
+
+.cell {
+  background: var(--c-primary-soft);
+  border-radius: var(--r-md, 12px);
+  padding: var(--sp-2) var(--sp-1);
+  min-height: 0;
+}
+
+.cellEmoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.cellEn {
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.cellEs {
+  font-size: 0.8rem;
+  color: var(--c-ink-soft);
+  line-height: 1.15;
+  text-align: center;
+}
+
+.cellNumber {
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
