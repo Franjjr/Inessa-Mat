@@ -66,9 +66,10 @@
 
 .pictureCard {
   min-width: 96px;
-  min-height: 96px;
-  padding: var(--sp-3);
-  font-size: clamp(2rem, 7vw, 3rem);
+  /* As tall as the word buttons beside it (56 px), so the two columns of «unir» line up and fit a short screen. */
+  min-height: 56px;
+  padding: var(--sp-2);
+  font-size: clamp(1.5rem, 4vw, 2rem);
   line-height: 1.1;
   color: var(--c-ink);
   background: var(--c-surface);
