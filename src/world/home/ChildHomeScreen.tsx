@@ -11,7 +11,7 @@ import {
   templateContext,
 } from '@/content'
 import { speech } from '@/audio'
-import { DAILY_MINUTES, dueSkills, masteryOf } from '@/engine'
+import { DAILY_MINUTES, dueSkills, ENGLISH_SESSION_MINUTES, masteryOf } from '@/engine'
 import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
@@ -20,6 +20,18 @@ import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
 import { homeSubject, homeSubjects, todayEntry } from './todayEntry'
 import s from './ChildHomeScreen.module.css'
+
+/** The «Hoy» session card of each subject: its kicker (the subject and its minutes) and what the session holds. */
+const SESSION_KICKER: Partial<Record<SubjectId, string>> = {
+  math: `Mi sesión de hoy · ${DAILY_MINUTES} min`,
+  language: `Ahora, Lengua · ${DAILY_MINUTES} min`,
+  english: `Ahora, Inglés · ${ENGLISH_SESSION_MINUTES} min`,
+}
+const SESSION_TEXT: Partial<Record<SubjectId, string>> = {
+  math: 'Calentamiento, lo nuevo, mezcla y un problema.',
+  language: 'Lectura, ortografía y palabras.',
+  english: 'Palabras, frases y números, y un juego al final.',
+}
 
 const SYNC_LABEL: Record<SyncStatus['state'], string> = {
   'local-only': 'Guardado en este dispositivo',
@@ -84,6 +96,8 @@ export default function ChildHomeScreen() {
   const mathPlacementPending = !progress.flags?.placement || !!progress.flags?.placementRequested
   const lenguaPlacementPending = !progress.flags?.placementLengua || !!progress.flags?.placementLenguaRequested
   const lenguaBanner = lenguaPlacementPending && subjects.some((sub) => sub.id === 'language')
+  const inglesPlacementPending = !progress.flags?.placementIngles || !!progress.flags?.placementInglesRequested
+  const inglesBanner = inglesPlacementPending && subjects.some((sub) => sub.id === 'english')
 
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
@@ -161,6 +175,10 @@ export default function ChildHomeScreen() {
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
               Antes de empezar: haz la prueba inicial ›
             </button>
+          ) : view === 'english' && inglesBanner ? (
+            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-ingles')}>
+              Haz la prueba de Inglés antes de empezar ›
+            </button>
           ) : lenguaBanner && (view === 'language' || !mathPlacementPending) && (
             <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
               Haz la prueba de Lengua antes de empezar ›
@@ -174,19 +192,9 @@ export default function ChildHomeScreen() {
             </button>
           ) : (
             <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
-              {view === 'language' ? (
-                <>
-                  <span className={s.nextKicker}>Ahora, Lengua · {DAILY_MINUTES} min</span>
-                  <span className={s.nextTitle}>{today.title}</span>
-                  <span className={s.nextText}>Lectura, ortografía y palabras.</span>
-                </>
-              ) : (
-                <>
-                  <span className={s.nextKicker}>Mi sesión de hoy · {DAILY_MINUTES} min</span>
-                  <span className={s.nextTitle}>{today.title}</span>
-                  <span className={s.nextText}>Calentamiento, lo nuevo, mezcla y un problema.</span>
-                </>
-              )}
+              <span className={s.nextKicker}>{SESSION_KICKER[view]}</span>
+              <span className={s.nextTitle}>{today.title}</span>
+              <span className={s.nextText}>{SESSION_TEXT[view]}</span>
               <span className={s.nextCta}>¡Empezar!</span>
             </button>
           )}

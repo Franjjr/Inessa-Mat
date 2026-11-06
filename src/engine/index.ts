@@ -71,6 +71,11 @@ export { isCompletionOnly } from './lengua/writing'
 /** Inglés de 3.º: the English exercises (src/engine/ingles). The sound filter is for the planner (Task 8). */
 export { ENGLISH_KINDS, ENGLISH_LISTENING_KINDS, buildEnglish, checkEnglish, hintsEnglish, statementEnglish } from './ingles/exercises'
 export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingles/teachable'
+/** Inglés de 3.º: the 10-minute session and the placement test (src/engine/ingles/daily.ts, placement.ts). */
+export { planEnglishSession } from './ingles/daily'
+export type { EnglishPlanInput } from './ingles/daily'
+export { buildEnglishPlacement, ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, ENGLISH_PLACEMENT_COUNT } from './ingles/placement'
+export type { EnglishPlacementBlockId, EnglishPlacementItem } from './ingles/placement'
 export { numberToEnglish, operationToEnglish } from './ingles/numbers'
 export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
@@ -128,7 +133,7 @@ export { calendarSkill, clockConvertSkill, clockReadSkill, clockSetSkill, timeDu
 
 /** Subjects: Lengua skills (lng:) apart from maths; maths readers filter with masteryOf / attemptsOf first. */
 export {
-  attemptsOf, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, minutesOfSubject, placementFlags,
+  attemptsOf, ENGLISH_SESSION_MINUTES, handwritingAttempts, handwritingMastery, isHandwritingSkill, masteryOf, minutesOfSubject, placementFlags,
   subjectOffered, subjectOfSession, subjectOfSkill,
 } from './subjects'
 export type { LessonSubject } from './subjects'

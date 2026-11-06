@@ -2,8 +2,8 @@
    otherwise the session of the subject. The classes are for 3.º (see classForTopic). With both subjects on, the home opens on
    maths until today's maths session is done, then on Lengua (homeSubject). */
 import { classForTopic, isClassDone } from '@/content/classes'
-import { currentTopic, syllabusFor, topicTitle } from '@/content/syllabus'
-import { masteryOf, subjectOffered, teachableCourse, type LessonSubject } from '@/engine'
+import { currentTopic, syllabusFor, topicTitle, type Syllabus } from '@/content/syllabus'
+import { masteryOf, subjectOffered, teachableCourse, teachableEnglishCourse, type LessonSubject } from '@/engine'
 import { sessionDoneKey } from '@/world/session/logic'
 import { SUBJECTS, type MasteryMap, type ProgressState, type SubjectId } from '@/types'
 
@@ -13,6 +13,8 @@ export type TodayEntry =
 
 const FALLBACK_TITLE: Partial<Record<SubjectId, string>> = { math: 'Matemáticas de hoy', language: 'Lengua de hoy', english: 'Inglés de hoy' }
 const SESSION_TO: Partial<Record<SubjectId, string>> = { math: '/play/sesion', language: '/play/lengua', english: '/play/ingles' }
+/** The view of a subject's syllabus that its planner teaches, with the sound on or off (the dictation and the listening items need it). */
+const TEACHABLE: Partial<Record<SubjectId, (course: Syllabus, sound: boolean) => Syllabus>> = { language: teachableCourse, english: teachableEnglishCourse }
 
 /** The route of a subject's daily session (after a class too). */
 export function sessionRouteOf(subject: SubjectId): string {
@@ -30,8 +32,9 @@ export function todayEntry({ grade, mastery, progress, subject = 'math', sound =
   sound?: boolean
 }): TodayEntry {
   const course = syllabusFor(subject, grade)
-  // Lengua names the topic its planner teaches (the same teachable view); maths is unchanged.
-  const topic = currentTopic(subject === 'language' ? teachableCourse(course, sound) : course, masteryOf(mastery, subject))
+  // Lengua and English name the topic their planner teaches (the same teachable view); maths is unchanged.
+  const teachable = TEACHABLE[subject]
+  const topic = currentTopic(teachable ? teachable(course, sound) : course, masteryOf(mastery, subject))
   const title = topic ? topicTitle(topic) : FALLBACK_TITLE[subject] ?? 'Hoy'
   const cls = topic ? classForTopic(topic.id, grade, subject) : undefined
   if (topic && cls && !isClassDone(progress, cls)) {

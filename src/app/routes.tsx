@@ -75,6 +75,8 @@ export function AppRoutes() {
         <Route path="/play/lengua" element={<RequireChild><DailySessionScreen subject="language" /></RequireChild>} />
         <Route path="/play/prueba" element={<RequireChild><PlacementScreen /></RequireChild>} />
         <Route path="/play/prueba-lengua" element={<RequireChild><PlacementScreen subject="language" /></RequireChild>} />
+        <Route path="/play/ingles" element={<RequireChild><DailySessionScreen subject="english" /></RequireChild>} />
+        <Route path="/play/prueba-ingles" element={<RequireChild><PlacementScreen subject="english" /></RequireChild>} />
         <Route path="/play/clase/:topicId" element={<RequireChild><ClassLessonScreen /></RequireChild>} />
         <Route path="/play/album" element={<RequireChild><AlbumScreen /></RequireChild>} />
         <Route path="/play/shop" element={<RequireChild><ShopScreen /></RequireChild>} />

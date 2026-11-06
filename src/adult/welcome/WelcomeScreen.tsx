@@ -46,13 +46,15 @@ const STEPS: { title: string; text: string; caption: string; shot: Shot; tone: s
 const SUBJECT_TEXT: Record<string, string> = {
   math: 'Números, cálculo, problemas, medidas, geometría y fracciones, con el temario de cada curso.',
   language: 'Gramática, ortografía, vocabulario y lectura. De momento, para 3.º de Primaria.',
+  english: 'Vocabulario, frases y números en inglés, con su clase. De momento, para 3.º de Primaria.',
 }
 
-/** Lengua is offered to 3.º only: its name and its pill say so. */
-const subjectName = (subject: { id: string; name: string }) => (subject.id === 'language' ? 'Lengua de 3.º' : subject.name)
+/** Lengua and English are offered to 3.º only: their names and pills say so. */
+const SUBJECT_NAME: Record<string, string> = { language: 'Lengua de 3.º', english: 'Inglés de 3.º' }
+const subjectName = (subject: { id: string; name: string }) => SUBJECT_NAME[subject.id] ?? subject.name
 const subjectPill = (subject: { id: string; available: boolean }) => {
   if (!subject.available) return 'Próximamente'
-  return subject.id === 'language' ? 'Lengua de 3.º · ¡ya disponible!' : '¡Ya disponible!'
+  return SUBJECT_NAME[subject.id] ? `${SUBJECT_NAME[subject.id]} · ¡ya disponible!` : '¡Ya disponible!'
 }
 
 function Capture({ shot: sh, eager = false }: { shot: Shot; eager?: boolean }) {

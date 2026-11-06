@@ -68,7 +68,7 @@ const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
 export const ITEM_OVERHEAD_SECONDS = 5
 export const EXAMPLE_SECONDS = 60
 
-export type DailyBlockId = 'warmup' | 'new' | 'story' | 'mix' | 'problem'
+export type DailyBlockId = 'warmup' | 'new' | 'story' | 'mix' | 'problem' | 'game'
 
 export const DAILY_BLOCK_LABEL: Record<DailyBlockId, string> = {
   warmup: 'Calentamiento',
@@ -76,6 +76,7 @@ export const DAILY_BLOCK_LABEL: Record<DailyBlockId, string> = {
   story: 'Lectura',
   mix: 'Mezcla',
   problem: 'Problema',
+  game: 'Juego',
 }
 
 export interface DailyItem {

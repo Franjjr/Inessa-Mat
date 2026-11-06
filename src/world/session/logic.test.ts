@@ -3,7 +3,7 @@ import { planDailySession } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 import type { ChildProfile } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS } from './logic'
+import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS, SUBJECT_LIMIT_SECONDS } from './logic'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const child: ChildProfile = {
@@ -99,6 +99,14 @@ describe('session run', () => {
     expect(isTimeUp(SESSION_LIMIT_SECONDS - 1)).toBe(false)
     expect(isTimeUp(SESSION_LIMIT_SECONDS)).toBe(true)
     expect(sessionRewardKey(now)).toBe('sesion:2026-10-22')
+  })
+
+  it('each subject has its own time-box: English ends at ten minutes, maths and Lengua at fifteen', () => {
+    expect(SUBJECT_LIMIT_SECONDS.english).toBe(10 * 60)
+    expect(SUBJECT_LIMIT_SECONDS.math).toBe(15 * 60)
+    expect(isTimeUp(10 * 60 - 1, SUBJECT_LIMIT_SECONDS.english)).toBe(false)
+    expect(isTimeUp(10 * 60, SUBJECT_LIMIT_SECONDS.english)).toBe(true)
+    expect(isTimeUp(10 * 60, SUBJECT_LIMIT_SECONDS.language)).toBe(false)
   })
 })
 

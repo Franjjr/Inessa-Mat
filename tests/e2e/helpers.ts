@@ -141,8 +141,8 @@ export async function devMasterUntilTopic(page: Page, topicId: string): Promise<
     if (!dev) throw new Error('window.__numeriaDev missing: run the dev server for seeded journeys')
     const child = (await dev.db.children.toArray()).find((c) => !c.deletedAt)
     if (!child) throw new Error('no child on this device')
-    // A Lengua topic (lng-…) is walked through the Lengua temario of the same course.
-    const course = target.startsWith('lng-') ? syllabus.syllabusFor('language', child.grade) : syllabus.syllabusForGrade(child.grade)
+    // A Lengua or English topic (lng-…, eng-…) is walked through its own temario of the same course.
+    const course = syllabus.syllabusFor(syllabus.subjectOfTopic(target), child.grade)
     const map = { ...(await data.getMastery(child.id)) }
     const rows: Parameters<typeof data.saveMastery>[1] = []
     for (let i = 0; i < 300; i++) {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { initialProgress } from '@/content'
-import { currentTopic, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { currentTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusForGrade, topicTitle } from '@/content/syllabus'
 import { createRng, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
 import type { ChildProfile, MasteryMap, ProgressState, SkillMastery } from '@/types'
 import { sessionDoneKey } from '@/world/session/logic'
@@ -103,6 +103,27 @@ describe('English on the home', () => {
   it('the English «Hoy» opens the class of its first topic', () => {
     expect(todayEntry({ grade: 3, mastery: {}, progress: progress(), subject: 'english' })).toEqual({
       kind: 'clase', topicId: 'eng-saludos', title: 'Saludos y yo', to: '/play/clase/eng-saludos',
+    })
+  })
+
+  it('with the sound off the English «Hoy» never names the operations topic (no listening item is taught)', () => {
+    const before = ['eng-saludos', 'eng-num-0-20', 'eng-num-decenas', 'eng-num-21-100', 'eng-colores', 'eng-animales', 'eng-familia',
+      'eng-comida', 'eng-ropa', 'eng-cole', 'eng-casa', 'eng-cuerpo', 'eng-tiempo', 'eng-dias']
+    const mastery: MasteryMap = {}
+    for (const block of INGLES3_SYLLABUS.blocks) for (const t of block.topics) {
+      if (!before.includes(t.id)) continue
+      for (const skill of t.skills) mastery[skill] = { skill, box: 5, attempts: 5, correct: 5, streak: 5, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: NOW }
+    }
+    const withSound = todayEntry({ grade: 3, mastery, progress: { ...progress(), flags: { 'clase:eng-ops': true } }, subject: 'english', sound: true })
+    expect(withSound).toEqual({ kind: 'sesion', title: 'Plus, minus y times', to: '/play/ingles' })
+    const noSound = todayEntry({ grade: 3, mastery, progress: { ...progress(), flags: { 'clase:eng-ops': true } }, subject: 'english', sound: false })
+    expect(noSound.title).not.toBe('Plus, minus y times')
+  })
+
+  it('after the English class the English «Hoy» is the session, which opens at /play/ingles', () => {
+    const done = { ...progress(), flags: { 'clase:eng-saludos': true } }
+    expect(todayEntry({ grade: 3, mastery: {}, progress: done, subject: 'english' })).toEqual({
+      kind: 'sesion', title: 'Saludos y yo', to: '/play/ingles',
     })
   })
 
