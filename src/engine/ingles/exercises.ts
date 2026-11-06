@@ -326,7 +326,7 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
     case 'eng-num-listen':
       return [
         hint(1, 'Escucha otra vez y fíjate en la primera palabra que oyes.'),
-        hint(2, 'Si el número termina en «teen», está entre trece y diecinueve; si termina en «ty», es una decena exacta.'),
+        hint(2, 'Si oyes «teen» al final, el número está entre trece y diecinueve; si oyes «ty» al final, es una decena exacta.'),
         hint(3, 'Escribe primero la cifra de las decenas y después la de las unidades.'),
       ]
     case 'eng-op-listen':

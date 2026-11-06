@@ -74,7 +74,7 @@ const num020 = clase({
   ejemplo: [
     losNumeros(0, 20),
     show('eng-number', num(1, 'one'), 'Del uno al cinco: *one*, *two*, *three*, *four*, *five*. Son palabras muy cortas, sin trucos.'),
-    show('eng-number', num(10, 'ten'), 'El diez es *ten*. El once y el doce también son palabras cortas; a partir del trece, las palabras se alargan.'),
+    show('eng-number', num(10, 'ten'), 'El diez es *ten*. A partir del trece, las palabras se alargan.'),
     show('eng-number', num(13, 'thirteen'), 'Del trece al diecinueve, la palabra termina en *teen*: *thirteen*, *fourteen*, *fifteen*. *Teen* suena a *ten*: es como un sombrero de diez.'),
     show('eng-number', num(18, 'eighteen'), 'Fíjate en *eighteen*: lleva *eight*, que es el ocho, y el final *teen*. El 18 es el 8 con su sombrero.'),
   ],
@@ -290,7 +290,7 @@ const ropa = clase({
   ],
   ejemplo: [
     laLista('ropa'),
-    show('eng-word', word('👖', 'trousers', 'pantalones'), 'Los pantalones son *trousers*, y van en plural, como los zapatos: siempre llevan *s*.'),
+    show('eng-word', word('👖', 'trousers', 'pantalones'), 'Los pantalones son *trousers*, y van en plural, como los zapatos: acaban en *s*.'),
     show('eng-word', word('👗', 'dress', 'vestido'), 'El vestido es *dress*. El sombrero es *hat*, y la bufanda, *scarf*, sirve para el invierno.'),
     show('eng-word', word('🧥', 'jacket', 'chaqueta'), 'La chaqueta es *jacket*. Para decir lo que llevas puesto: *I\'m wearing*.'),
     show('big-text', big('I\'m wearing red shoes.', 'Llevo zapatos rojos.'), 'Con *I\'m wearing* dices lo que llevas. Si lo dice otra persona: *She\'s wearing a dress*.'),
