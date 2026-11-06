@@ -33,10 +33,10 @@ export const PHRASE_IDEAS: Record<string, string> = {
 
 export const PHRASES: Record<string, PhraseItem[]> = {
   'eng:frase:saludos': [
-    { sentence: '___, Mum! How are you?', answer: 'Hello', distractors: ['Goodbye', 'Sorry'] },
+    { sentence: '___, Mum! How are you?', answer: 'Hello', distractors: ['Goodbye', 'Please'] },
     { sentence: '___, Dad. See you later!', answer: 'Goodbye', distractors: ['Hello', 'Please'], es: 'Adiós, papá. Hasta luego.' },
     { sentence: 'Thank ___ for the cake, Mum!', answer: 'you', distractors: ['me', 'them'], es: 'Gracias por la tarta, mamá.' },
-    { sentence: 'It is ___ to meet you.', answer: 'nice', distractors: ['sad', 'angry'] },
+    { sentence: 'It is ___ to meet you.', answer: 'nice', distractors: ['sad', 'angry'], es: 'Encantado de conocerte.' },
     { sentence: 'How ___ you?', answer: 'are', distractors: ['is', 'am'] },
     { sentence: 'Good ___, Mum! Let\'s eat some bread.', answer: 'morning', distractors: ['night', 'afternoon'], es: 'Buenos días, mamá. Vamos a comer pan.' },
   ],
@@ -67,7 +67,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
   'eng:frase:can-i-have': [
     { sentence: 'Can I ___ some milk, please?', answer: 'have', distractors: ['swim', 'sleep'] },
     { sentence: 'Can I have ___ apple, please?', answer: 'an', distractors: ['a', 'some'] },
-    { sentence: 'I am thirsty. Can I have some ___?', answer: 'milk', distractors: ['bread', 'cheese'] },
+    { sentence: 'I am thirsty. Can I have some ___?', answer: 'milk', distractors: ['bread', 'cheese'], es: 'Tengo sed: quiero algo para beber.' },
     { sentence: 'Yes, you ___ have it.', answer: 'can', distractors: ['is', 'am'] },
     { sentence: 'Here ___ your sandwich.', answer: 'is', distractors: ['are', 'am'] },
     { sentence: 'Can I have ___ banana, please?', answer: 'a', distractors: ['an', 'some'] },
@@ -81,7 +81,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
     { sentence: 'Look! I\'m ___ new gloves.', answer: 'wearing', distractors: ['wear', 'wears'] },
   ],
   'eng:frase:classroom': [
-    { sentence: '___ down, please.', answer: 'Sit', distractors: ['Wash', 'Sing'] },
+    { sentence: '___ down, please.', answer: 'Sit', distractors: ['Sing', 'Sleep'] },
     { sentence: 'Open your ___ and read, please.', answer: 'book', distractors: ['pencil', 'ruler'] },
     { sentence: '___ your hands, please.', answer: 'Wash', distractors: ['Sing', 'Fly'] },
     { sentence: 'Listen and ___.', answer: 'repeat', distractors: ['eat', 'sleep'] },
