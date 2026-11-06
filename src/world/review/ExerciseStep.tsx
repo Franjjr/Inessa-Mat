@@ -5,7 +5,9 @@
      first answer is the graded one (mastery, the run's requeue); the attempt is reported once, at the end, with the
      retries it took.
    - «No lo sé» (allowDontKnow): before any answer. It records one wrong attempt with errorType 'dont-know', then shows
-     every hint («Así se hace»), which never give the final answer. Nothing else is graded. */
+     every hint («Así se hace»), which never give the final answer. Nothing else is graded.
+   - «Ahora dilo tú» (eng-speak) is never an attempt: nothing is reported (no mastery, no stars in the wallet), it has no
+     «Ahora no» nor «No lo sé» (the view has its own «Saltar»), and its message is the view's own (check.feedback). */
 import { useEffect, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
@@ -86,7 +88,7 @@ export function ExerciseStep({
   const send = () => {
     const p = pending.current
     pending.current = null
-    if (!p) return
+    if (!p || exRef.current.kind === 'eng-speak') return
     if (p.graded) firstSent.current = true
     if (!reportRef.current) return
     const { outcome: o, retries, solvedOnRetry, graded } = p
@@ -135,7 +137,7 @@ export function ExerciseStep({
   }, [view])
 
   const show = (o: ExerciseOutcome) => {
-    const custom = feedbackFor?.(o)
+    const custom = feedbackFor?.(o) ?? (exRef.current.kind === 'eng-speak' ? o.check.feedback : undefined)
     const phrase = o.check.correct
       ? pickPhrase('correct', hostRef.current.rng)
       : pickPhrase('wrong', hostRef.current.rng, o.check.errorType)
@@ -226,7 +228,7 @@ export function ExerciseStep({
           tableMethod={host.prefs.tableMethod}
         />
       </div>
-      {stage === 'asking' && (onSkip || allowDontKnow) && (
+      {stage === 'asking' && (onSkip || allowDontKnow) && exercise.kind !== 'eng-speak' && (
         <div className={s.skip}>
           {onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
           {allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}

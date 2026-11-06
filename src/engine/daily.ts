@@ -61,6 +61,7 @@ export const ITEM_SECONDS: Record<ExerciseKind, number> = {
   'lng-copy': 40, 'lng-guided': 90,
   'eng-listen-pick': 25, 'eng-match': 45, 'eng-write-word': 25, 'eng-complete': 20,
   'eng-num-write': 20, 'eng-num-listen': 25, 'eng-op-listen': 30, 'eng-memory': 90, 'eng-scramble': 35,
+  'eng-speak': 25,
 }
 /** One «encuentra el error» in every mix (PLAN_DOCENTE §3): the column operations of the temario, the weakest one first. */
 const HUNT_OPS: HuntOp[] = ['add', 'sub', 'mul']
@@ -170,7 +171,7 @@ export function statementOf(ex: Exercise): string {
     case 'lng-read-choice': case 'lng-read-text': case 'lng-read-order': case 'lng-copy': case 'lng-guided':
       return lenguaStatement(ex)
     case 'eng-listen-pick': case 'eng-match': case 'eng-write-word': case 'eng-complete':
-    case 'eng-num-write': case 'eng-num-listen': case 'eng-op-listen': case 'eng-memory': case 'eng-scramble':
+    case 'eng-num-write': case 'eng-num-listen': case 'eng-op-listen': case 'eng-memory': case 'eng-scramble': case 'eng-speak':
       return statementEnglish(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`

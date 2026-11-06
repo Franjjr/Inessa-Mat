@@ -16,8 +16,10 @@ import { generate } from '../generate'
 import { createRng, hashString } from '../rng'
 import { masteryOf, ENGLISH_SESSION_MINUTES } from '../subjects'
 import { estimateSeconds, urgencyOrder, type DailyItem, type DailyPlan } from '../daily'
-import { ENGLISH_LISTENING_KINDS } from './exercises'
+import { ENGLISH_LISTENING_KINDS, speakExercise } from './exercises'
 import { englishKindsFor, makableEnglish, teachableEnglishCourse } from './teachable'
+import { SPEAK_DAILY_MAX, SPEAK_PER_SESSION_MAX, speakAttemptsToday, speakOffKey, speakingAvailable } from './speaking'
+import { ENGLISH_WORDS } from './words'
 
 /** The warm-up: at most this many items and about this many seconds. */
 export const ENGLISH_WARMUP_MAX = 3
@@ -47,6 +49,8 @@ export interface EnglishPlanInput {
   progress?: ProgressState
   /** The sound is on and a voice can speak English: the listening kinds are planned only then. Default true. */
   sound?: boolean
+  /** A microphone exists on this device («Ahora dilo tú» is planned only then). Default: navigator.mediaDevices. */
+  mic?: boolean
   rng?: Rng
 }
 
@@ -72,6 +76,36 @@ function secondsOf(items: DailyItem[]): number {
   return items.reduce((sum, i) => sum + estimateSeconds(i), 0)
 }
 
+/** The English word a word exercise is about (its answer, or the word it says), when it has one. */
+function wordOf(ex: Exercise): string | null {
+  if (ex.kind === 'eng-write-word' || ex.kind === 'eng-scramble') return ex.answer
+  if (ex.kind === 'eng-listen-pick') return ex.word
+  return null
+}
+
+/** «Ahora dilo tú» right after an item of the same word, at most `max` of them, in the order of the items. */
+function speakingAfterWords(items: DailyItem[], max: number): { items: DailyItem[]; added: number } {
+  const out: DailyItem[] = []
+  let added = 0
+  for (const item of items) {
+    out.push(item)
+    const en = wordOf(item.exercise)
+    const word = en ? ENGLISH_WORDS.find((w) => w.en === en) : undefined
+    if (word && added < max) {
+      out.push({ exercise: speakExercise(item.exercise.skill, word), block: item.block, scaffold: false, isNew: false })
+      added++
+    }
+  }
+  return { items: out, added }
+}
+
+/** The speaking items allowed now: the speaking is available, the service has not failed today, and the day's limit is not reached. */
+function speakingLeft(child: ChildProfile, progress: ProgressState | undefined, now: Date, mic: boolean): number {
+  if (!speakingAvailable(child, mic) || progress?.flags?.[speakOffKey(now)]) return 0
+  const left = SPEAK_DAILY_MAX - speakAttemptsToday(progress?.flags, now)
+  return Math.max(0, Math.min(SPEAK_PER_SESSION_MAX, left))
+}
+
 /** The English skills of the failed words, newest first, each once (only those the planner can make). */
 function failedSkills(attempts: readonly AttemptRecord[], sound: boolean): SkillKey[] {
   const out: SkillKey[] = []
@@ -87,6 +121,7 @@ function failedSkills(attempts: readonly AttemptRecord[], sound: boolean): Skill
 export function planEnglishSession(input: EnglishPlanInput): DailyPlan {
   const { child, now, progress, attempts } = input
   const sound = input.sound ?? true
+  const mic = input.mic ?? (typeof navigator !== 'undefined' && !!navigator.mediaDevices)
   const mastery = masteryOf(input.mastery, 'english')
   const course = teachableEnglishCourse(input.syllabus, sound)
   const today = dayKey(now)
@@ -151,10 +186,22 @@ export function planEnglishSession(input: EnglishPlanInput): DailyPlan {
     if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: false, isNew: false })
   }
 
+  // «Ahora dilo tú»: up to two, each right after a word of its own (new first, then the mix), when the child may speak.
+  // A speaking item needs a word to follow: when the session has too few word items, a vocabulary word joins the mix.
+  const left = speakingLeft(child, progress, now, mic)
+  const wordItems = () => [...newItems, ...mixItems].filter((i) => wordOf(i.exercise) !== null).length
+  for (const skill of pool.filter((s) => s.startsWith('eng:voc:'))) {
+    if (wordItems() >= left) break
+    const ex = make(skill, ['eng-write-word'], rng)
+    if (ex) mixItems.push({ exercise: ex, block: 'mix', scaffold: false, isNew: false })
+  }
+  const speakNew = speakingAfterWords(newItems, left)
+  const speakMix = speakingAfterWords(mixItems, left - speakNew.added)
+
   const blocks: DailyPlan['blocks'] = [
     { id: 'warmup', items: warmup },
-    { id: 'new', items: newItems },
-    { id: 'mix', items: mixItems },
+    { id: 'new', items: speakNew.items },
+    { id: 'mix', items: speakMix.items },
     { id: 'game', items: gameItems },
   ]
   const practiceSeconds = secondsOf(blocks.flatMap((b) => b.items))

@@ -5,7 +5,7 @@
 import type {
   Answer, CheckResult, EnglishCard, EnglishExercise, ErrorType, ExerciseKind, Hint, Rng, SkillKey,
   EngCompleteExercise, EngListenPickExercise, EngMatchExercise, EngNumListenExercise, EngNumWriteExercise,
-  EngOpListenExercise, EngWriteWordExercise, EngMemoryExercise, EngScrambleExercise,
+  EngOpListenExercise, EngWriteWordExercise, EngMemoryExercise, EngScrambleExercise, EngSpeakExercise,
 } from '@/types'
 import { parseSkill } from '../skills'
 import { pick, randInt, range, shuffle } from '../rng'
@@ -235,6 +235,8 @@ function checkMemory(ex: EngMemoryExercise, answer: Answer): CheckResult {
 
 export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
   switch (ex.kind) {
+    // The pronunciation is scored by the speaking view (src/audio/pronunciation.ts), never by a typed or tapped answer.
+    case 'eng-speak': return { correct: true, given: ex.word, expected: ex.word }
     case 'eng-memory': return checkMemory(ex, answer)
     case 'eng-scramble': return checkText(answer, ex.answer, ex.alts)
     case 'eng-listen-pick':
@@ -249,6 +251,11 @@ export function checkEnglish(ex: EnglishExercise, answer: Answer): CheckResult {
     case 'eng-num-listen': return checkNumber(answer, ex.answer, 'eng-listening')
     case 'eng-op-listen': return checkNumber(answer, ex.answer, 'eng-number')
   }
+}
+
+/** «Ahora dilo tú» for a word the child has just met in this session (the planner puts it right after that word). */
+export function speakExercise(skill: SkillKey, word: EnglishWord): EngSpeakExercise {
+  return { id: `eng-speak:${skill}:${word.en}`, kind: 'eng-speak', skill, difficulty: 2, word: word.en, es: word.es, theme: word.theme }
 }
 
 // ---------------------------------------------------------------- hints (three levels, never the answer)
@@ -277,6 +284,8 @@ function numberIdea(n: number): string {
 
 export function hintsEnglish(ex: EnglishExercise): Hint[] {
   switch (ex.kind) {
+    // The speaking item has no hints: the child only says the word (and may skip it).
+    case 'eng-speak': return []
     case 'eng-listen-pick': {
       const first = letters(ex.word)[0]
       return [
@@ -342,5 +351,6 @@ export function statementEnglish(ex: EnglishExercise): string {
     case 'eng-op-listen': return 'Escucha la operación y escribe el resultado.'
     case 'eng-memory': return 'Gira las cartas y encuentra las parejas: cada dibujo con su palabra en inglés.'
     case 'eng-scramble': return 'Toca las letras en orden y escribe la palabra en inglés.'
+    case 'eng-speak': return `Dilo tú en voz alta: ${ex.word} (${ex.es}).`
   }
 }

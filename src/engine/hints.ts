@@ -443,7 +443,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'eng-num-listen':
     case 'eng-op-listen':
     case 'eng-memory':
-    case 'eng-scramble': return hintsEnglish(ex)
+    case 'eng-scramble':
+    case 'eng-speak': return hintsEnglish(ex)
   }
 }
 

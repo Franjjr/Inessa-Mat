@@ -621,6 +621,6 @@ export function check(exercise: Exercise, answer: Answer): CheckResult {
     case 'eng-complete':
     case 'eng-num-write':
     case 'eng-num-listen':
-    case 'eng-op-listen': case 'eng-memory': case 'eng-scramble': return checkEnglish(exercise, answer)
+    case 'eng-op-listen': case 'eng-memory': case 'eng-scramble': case 'eng-speak': return checkEnglish(exercise, answer)
   }
 }

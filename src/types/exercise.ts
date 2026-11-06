@@ -133,6 +133,7 @@ export type ExerciseKind =
   | 'eng-op-listen'   // Inglés 3.º: escuchar una operación en inglés y escribir el resultado (eng:num:ops:*)
   | 'eng-memory'      // Inglés 3.º: juego de memoria, seis parejas de dibujo y palabra en inglés (eng:voc:*)
   | 'eng-scramble'    // Inglés 3.º: ordenar las letras de una palabra con su dibujo y escribirla (eng:voc:*)
+  | 'eng-speak'       // Inglés 3.º: «Ahora dilo tú», la palabra en inglés que la niña dice y el micrófono puntúa (solo con micrófono)
 
 interface ExerciseBase {
   id: ID
@@ -585,8 +586,13 @@ export interface EngMemoryExercise extends ExerciseBase {
 export interface EngScrambleExercise extends ExerciseBase {
   kind: 'eng-scramble'; card: EnglishCard; answer: string; alts: string[]; tiles: string[]
 }
+/** «Ahora dilo tú»: the English word (and its Spanish gloss) is shown; the child says it. Never graded as a word: the
+    pronunciation stars are not an attempt (src/engine/ingles/speaking.ts). */
+export interface EngSpeakExercise extends ExerciseBase {
+  kind: 'eng-speak'; word: string; es: string; theme: EnglishTheme
+}
 export type EnglishExercise = EngListenPickExercise | EngMatchExercise | EngWriteWordExercise | EngCompleteExercise
-  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise | EngMemoryExercise | EngScrambleExercise
+  | EngNumWriteExercise | EngNumListenExercise | EngOpListenExercise | EngMemoryExercise | EngScrambleExercise | EngSpeakExercise
 
 export type Exercise =
   | FactMulExercise | FactDivExercise | MissingFactorExercise | SkipCountExercise | GroupsExercise

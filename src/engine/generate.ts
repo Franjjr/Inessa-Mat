@@ -277,7 +277,7 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       for (const skill of LENGUA_SKILLS) if (kindsForSkill(skill).includes(kind)) addItem(map, skill, kind, 1)
       break
     case 'eng-listen-pick': case 'eng-match': case 'eng-write-word': case 'eng-complete':
-    case 'eng-num-write': case 'eng-num-listen': case 'eng-op-listen': case 'eng-memory': case 'eng-scramble':
+    case 'eng-num-write': case 'eng-num-listen': case 'eng-op-listen': case 'eng-memory': case 'eng-scramble': case 'eng-speak':
       for (const skill of ENGLISH_SKILLS) if (kindsForSkill(skill).includes(kind)) addItem(map, skill, kind, 1)
       break
     case 'area':

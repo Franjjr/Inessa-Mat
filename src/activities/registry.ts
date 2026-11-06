@@ -120,4 +120,5 @@ export const exerciseViewRegistry: Record<ExerciseKind, LazyView> = {
   'eng-op-listen': lazy(() => import('./views/ingles/OperationListenView')),
   'eng-memory': lazy(() => import('./views/ingles/MemoryView')),
   'eng-scramble': lazy(() => import('./views/ingles/ScrambleView')),
+  'eng-speak': lazy(() => import('./views/ingles/SpeakView')),
 }

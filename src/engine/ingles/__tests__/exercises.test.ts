@@ -36,6 +36,9 @@ function answersOf(ex: EnglishExercise): { right: Answer; wrong: Answer } {
       return { right: { type: 'memory', turns: ex.pairs.length, found: ex.pairs.length }, wrong: { type: 'memory', turns: 2 * ex.pairs.length + 5, found: ex.pairs.length } }
     case 'eng-scramble':
       return { right: { type: 'text', value: ex.answer }, wrong: { type: 'text', value: 'zzzz' } }
+    // Not in ENGLISH_KINDS (the speaking item is scored by its view): the type is complete, no test iterates it.
+    case 'eng-speak':
+      return { right: { type: 'text', value: ex.word }, wrong: { type: 'text', value: 'zzzz' } }
   }
 }
 

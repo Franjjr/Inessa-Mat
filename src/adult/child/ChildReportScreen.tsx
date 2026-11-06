@@ -221,6 +221,7 @@ export default function ChildReportScreen() {
         childId={childId}
         childName={name}
         enabled={!!child && (child.settings.subjects ?? ['math']).includes('english') && subjectOffered('english', child.grade)}
+        speakingOn={child?.settings.speaking?.on === true}
         progress={progress}
         data={learning.data}
         loadError={learning.error}

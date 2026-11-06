@@ -131,6 +131,8 @@ export function correctAnswer(ex: Exercise): Answer {
       return { type: 'memory', turns: ex.pairs.length, found: ex.pairs.length }
     case 'eng-scramble':
       return { type: 'text', value: ex.answer }
+    case 'eng-speak':
+      return { type: 'text', value: ex.word }
     default:
       return { type: 'number', value: ex.answer as number }
   }

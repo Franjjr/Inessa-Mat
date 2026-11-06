@@ -50,7 +50,8 @@ function fail(status: number, message: string): Response {
   return new Response(message, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } })
 }
 
-function allowedCaller(req: Request): boolean {
+/** The Origin/Referer guard, shared with /api/pronunciation: only our own pages may call the voice services. */
+export function allowedCaller(req: Request): boolean {
   // Sec-Fetch-Site is sent by browsers on every request; when present it must say same-origin.
   const fetchSite = req.headers.get('sec-fetch-site')
   if (fetchSite !== null && fetchSite !== 'same-origin') return false

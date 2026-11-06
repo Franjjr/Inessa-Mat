@@ -20,6 +20,7 @@ import {
 import type { AttemptRecord, MasteryMap, ProgressState, ReadingDef, SessionRecord } from '@/types'
 import { Button, toast } from '@/ui'
 import { errorMessage } from '../shared/messages'
+import { SpeakingWordsCard } from './SpeakingWordsCard'
 import { formatDate, formatMinutes, formatPercent, plural } from '../shared/format'
 import adult from '../shared/adult.module.css'
 import s from './child.module.css'
@@ -171,8 +172,8 @@ export function LenguaSection({ childId, childName, grade, enabled, progress, da
 }
 
 /** English for the grown-ups. Shown when English is on for the child (`enabled`) or the child has English attempts; otherwise nothing. */
-export function EnglishSection({ childId, childName, enabled, progress, data, loadError }: {
-  childId: string; childName: string; enabled: boolean; progress: ProgressState | null
+export function EnglishSection({ childId, childName, enabled, speakingOn = false, progress, data, loadError }: {
+  childId: string; childName: string; enabled: boolean; speakingOn?: boolean; progress: ProgressState | null
   data: LearningData | null; loadError: string | null
 }) {
   const { error, offer } = useOfferPlacement(childId, childName, 'english', !!progress?.flags?.[placementFlags('english').requested])
@@ -198,6 +199,7 @@ export function EnglishSection({ childId, childName, enabled, progress, data, lo
   return (
     <>
       <EnglishWordsCard report={reports.words} minutes={reports.minutes} />
+      <SpeakingWordsCard childId={childId} speakingOn={speakingOn} />
       <TestsCard
         subject="english"
         runs={reports.runs}
