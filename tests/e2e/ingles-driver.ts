@@ -42,10 +42,24 @@ export async function inWindow(loc: Locator): Promise<boolean> {
   }).catch(() => false)
 }
 
+/** Waits until the element stops moving (an entrance animation of a view, a card that grows): two equal rects 120 ms apart,
+    at most 3 s. Without it a reachability check can read the element in the middle of its animation. */
+export async function settleRect(loc: Locator): Promise<void> {
+  const rect = () => loc.evaluate((el) => { const r = el.getBoundingClientRect(); return `${r.top},${r.bottom},${r.left},${r.right}` }).catch(() => '')
+  let last = await rect()
+  for (let k = 0; k < 25; k++) {
+    await new Promise((resolve) => setTimeout(resolve, 120))
+    const now = await rect()
+    if (now === last) return
+    last = now
+  }
+}
+
 /** Taps an element that must be reachable: visible in the window, or brought there with «⬇ Más abajo». The tap is
     element.click(); when the element cannot be reached the test fails here (a stuck button is a bug, not a scroll). */
 export async function tapReachable(page: Page, loc: Locator, label: string): Promise<void> {
   await loc.waitFor({ state: 'attached', timeout: 15_000 })
+  await settleRect(loc)
   for (let k = 0; k < 4 && !(await inWindow(loc)); k++) {
     // «⬇ Más abajo» is checked every half second: give it a moment to show after a change of the layout.
     const more = page.getByRole('button', { name: 'Ver lo de abajo' })
@@ -88,7 +102,8 @@ async function typeWord(page: Page, seen: EnglishSeen, kit: EnglishKit): Promise
   const word = page.getByRole('textbox', { name: /^Escribe (la palabra|el número) en inglés$/ })
   if (!(await word.isVisible().catch(() => false))) return false
   seen.typed = true
-  const current = ((await word.evaluate((el) => ('value' in el ? String((el as HTMLInputElement).value) : (el.textContent ?? ''))).catch(() => '')) ?? '').trim()
+  // The typed text is the live region of the box (the placeholder «Escribe aquí» is a separate, hidden span).
+  const current = ((await word.evaluate((el) => ('value' in el ? String((el as HTMLInputElement).value) : (el.querySelector('[aria-live]')?.textContent ?? ''))).catch(() => '')) ?? '').trim()
   if (!current) {
     const digits = ((await page.locator('[aria-label^="Número "]').first().getAttribute('aria-label').catch(() => null)) ?? '').replace('Número ', '')
     const spanish = ((await page.locator('[aria-label^="Palabra: "]').first().getAttribute('aria-label').catch(() => null)) ?? '').replace('Palabra: ', '')
@@ -129,7 +144,26 @@ async function numberAnswer(page: Page): Promise<boolean> {
 
 /** The options of the views that choose: the words, the pictures, the letter tiles. Each tap takes the next enabled one (in
     turn), and «Comprobar» is pressed as soon as it is enabled. */
-async function optionAnswer(page: Page, seen: EnglishSeen): Promise<boolean> {
+async function optionAnswer(page: Page, seen: EnglishSeen, kit: EnglishKit): Promise<boolean> {
+  // The match view (a word, then its picture): the word tapped is paired with the picture of its partner (the emoji of the
+  // vocabulary), so that «Comprobar» is reached with every word paired.
+  const words = page.getByRole('group', { name: 'Palabras' }).getByRole('button')
+  if (await page.getByRole('group', { name: 'Dibujos' }).isVisible().catch(() => false) && (await words.count()) > 0) {
+    if (await checkIfReady(page)) return true
+    const picked = await words.evaluateAll((els) => els.findIndex((el) => el.getAttribute('aria-pressed') === 'true'))
+    if (picked >= 0) {
+      const word = ((await words.nth(picked).textContent()) ?? '').trim()
+      const emoji = kit.partner.get(word) ?? ''
+      const cards = page.getByRole('group', { name: 'Dibujos' }).getByRole('button')
+      const card = emoji ? cards.filter({ hasText: emoji }).first() : cards.first()
+      await tapReachable(page, card, `el dibujo de «${word}»`)
+      return true
+    }
+    const free = await words.evaluateAll((els) => els.findIndex((el) => !(el.className || '').includes('paired')))
+    if (free < 0) return false
+    await tapReachable(page, words.nth(free), 'una palabra')
+    return true
+  }
   const sel = '[role="group"][aria-label="Palabras"] button, [role="group"][aria-label="Dibujos"] button, [role="group"][aria-label="Letras"] button, [role="radiogroup"] button'
   const options = page.locator(sel)
   const enabled = await options.evaluateAll((els) => els.map((el, i) => ((el as HTMLButtonElement).disabled ? -1 : i)).filter((i) => i >= 0))
@@ -198,7 +232,7 @@ export async function playEnglish(page: Page, done: () => Promise<boolean>, seen
     if (await memoryTurn(page, kit.partner, seen)) { await settle(page, 200); continue }
     if (await typeWord(page, seen, kit)) { continue }
     if (await numberAnswer(page)) { await settle(page, 200); continue }
-    if (await optionAnswer(page, seen)) { await settle(page, 200); continue }
+    if (await optionAnswer(page, seen, kit)) { await settle(page, 200); continue }
     await settle(page, 300)
   }
   throw new Error('the English flow did not finish')
