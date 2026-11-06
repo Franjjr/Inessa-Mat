@@ -15,6 +15,9 @@ import type { EngSpeakExercise, ExerciseOutcome, ExerciseViewProps } from '@/typ
 import { useSoundOn, sayEnglish } from './sound'
 import s from './Ingles.module.css'
 
+/** Silent tries («No te he oído») allowed in one item: the second one moves on without a recording, the child is never kept looping. */
+export const SILENT_MAX = 2
+
 /** Days on which the service failed or the microphone was refused: this page load tries no more speaking that day. */
 const offDays = new Set<string>()
 const dayOf = (now: Date) => now.toISOString().slice(0, 10)
@@ -49,6 +52,8 @@ function SpeakRound({ ex, onAnswered }: { ex: EngSpeakExercise; onAnswered: Exer
   /** Set by «Saltar» (and on leaving the page): every step still running stops here and writes nothing. */
   const cancelled = useRef(false)
   const answered = useRef(false)
+  /** Silent tries so far in this item (see SILENT_MAX). */
+  const silentTries = useRef(0)
   const startedAt = useRef(performance.now())
   const childId = child?.id
 
@@ -115,6 +120,11 @@ function SpeakRound({ ex, onAnswered }: { ex: EngSpeakExercise; onAnswered: Exer
     const result = await scoreSpeech(ex.word, clip)
     if (cancelled.current) return
     if ('noSpeech' in result) {
+      silentTries.current += 1
+      if (silentTries.current >= SILENT_MAX) {
+        finish(FEEDBACK.saltar)
+        return
+      }
       setPhase('ready')
       setNotice(FEEDBACK.noSpeech)
       return
