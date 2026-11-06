@@ -55,10 +55,13 @@ export function fitScale(available: number, natural: number): number {
 
 const CONTROLS = 'button, input, textarea, select'
 
-/** Whether every control of the try (the exercise's, and the footer's «Inténtalo otra vez») is seen in the board at `scale`,
-    with no growing: the lowest one's bottom is above the board's bottom and above the window's. The exercise is drawn from its
-    top centre, so its top stays where it is: its controls are read at the `applied` scale and projected to `scale`; the footer
-    sits under the exercise, so its controls move with the exercise's height. No control: the exercise's own bottom. */
+/** Whether every control of the try (the exercise's, and the footer's «Inténtalo otra vez») is seen at `scale`, without growing:
+    the lowest one's bottom is above the bottom of the wrap (the try's box on the board, which scrolls) and above the window's,
+    whichever is higher. The exercise is drawn from its top centre, so its top stays where it is: its controls are read at the
+    `applied` scale (the one drawn now) and projected to `scale`. The footer sits under the exercise's box at natural × scale plus
+    the row gap, because the box carries that height once a measure has set it; the first measure has no footer control yet,
+    so the projection is only used where it holds. The footer's controls are read from the footer's top. No control: the
+    exercise's own bottom. */
 function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLElement | null, applied: number, scale: number, natural: number): boolean {
   const top = inner.getBoundingClientRect().top
   const gap = parseFloat(getComputedStyle(wrap).rowGap) || 0
