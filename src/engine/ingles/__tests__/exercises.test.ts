@@ -98,7 +98,7 @@ describe('English kinds: generation', () => {
       'today', 'tomorrow', 'yesterday', 'outside', 'moo', 'meow', 'woof', 'how', 'what', 'who', 'do', 'does',
       'fine', 'see', 'later', 'says', 'say', 'high', 'very', 'their', 'new', 'long', 'funny', 'down', 'sad', 'open', 'listen',
       'take', 'falling', 'go', 'going', 'swimming', 'one', 'two', 'out', 'meet', 'cooks', 'cook', 'comes', 'after', 'before',
-      'little', 'our', 'with', 'thanks', 'than', 'bigger', 'smaller', 'blue', 'clouds', 'let', 'comes', 'after', 'before', 'hot',
+      'little', 'our', 'with', 'thanks', 'than', 'bigger', 'smaller', 'me', 'them', 'angry', 'thirsty', 'lighter', 'for', 'where',
       // Pieces of contractions and marks (I'm, It's, don't, Let's, Mum's).
       's', 'm', 're', 've', 't', 'd', 'll', 'don',
     ])
@@ -124,6 +124,41 @@ describe('English kinds: generation', () => {
         expect(item.distractors, item.sentence).not.toContain(item.answer)
       }
     }
+  })
+
+  it('where-is items: the options are exactly in, on and under, and each has the Spanish cue', () => {
+    const skills = ENGLISH_SKILLS.filter((s) => s.startsWith('eng:frase:where-is:'))
+    expect(skills).toHaveLength(3)
+    for (const skill of skills) {
+      for (const item of PHRASES[skill]) {
+        expect([item.answer, ...item.distractors].sort(), item.sentence).toEqual(['in', 'on', 'under'])
+        expect(item.es, item.sentence).toBeTruthy()
+      }
+    }
+  })
+
+  it('weather items: every option is a word of the weather theme, and each has the Spanish cue', () => {
+    const tiempo = new Set(ENGLISH_WORDS.filter((w) => w.theme === 'tiempo').map((w) => w.en))
+    for (const item of PHRASES['eng:frase:weather']) {
+      expect(tiempo.has(item.answer), item.sentence).toBe(true)
+      for (const d of item.distractors) expect(tiempo.has(d), `${d} (${item.sentence})`).toBe(true)
+      expect(item.es, item.sentence).toBeTruthy()
+    }
+  })
+
+  it('a Spanish cue never contains the English answer', () => {
+    for (const items of Object.values(PHRASES)) {
+      for (const item of items) {
+        if (!item.es) continue
+        const escaped = item.answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        expect(new RegExp(`\\b${escaped}\\b`, 'i').test(item.es), item.es).toBe(false)
+      }
+    }
+  })
+
+  it('a generated phrase carries its cue', () => {
+    const ex = one('eng-complete', 'eng:frase:where-is:on')
+    expect(ex.kind === 'eng-complete' && ex.es).toBeTruthy()
   })
 
   it('every frase skill has at least six items, each with one gap, its answer among the options', () => {

@@ -146,6 +146,15 @@
   overflow-wrap: anywhere;
 }
 
+/* The Spanish cue of a phrase: smaller and muted, above the English sentence. */
+.cue {
+  margin: 0;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  overflow-wrap: anywhere;
+}
+
 .sentence {
   display: flex;
   flex-wrap: wrap;

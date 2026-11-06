@@ -36,6 +36,7 @@ function CompleteRound({ ex, onAnswered, showFeedback, allowHints }: {
   return (
     <section className={s.view} aria-label="Completar la frase" data-kind={ex.kind} data-status={statusOf(flow.result)}>
       <p className={s.prompt}>Elige la palabra que completa la frase</p>
+      {ex.es && <p className={s.cue} lang="es">{ex.es}</p>}
       <p className={s.sentence} aria-label={`Frase: ${ex.sentence}`}>
         <span>{before}</span>
         <span className={clsx(s.gap, picked !== null && s.gapFilled)}>{picked === null ? '___' : ex.options[picked]}</span>

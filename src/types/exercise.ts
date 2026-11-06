@@ -553,9 +553,10 @@ export interface EngMatchExercise extends ExerciseBase {
 export interface EngWriteWordExercise extends ExerciseBase {
   kind: 'eng-write-word'; card: EnglishCard; answer: string; alts: string[]
 }
-/** A sentence with one gap («___»); the child taps the word that fits (options shuffled, answer = index). */
+/** A sentence with one gap («___»); the child taps the word that fits (options shuffled, answer = index). `es` is an
+    optional Spanish cue shown above the sentence (never the answer, never read out by the English voice). */
 export interface EngCompleteExercise extends ExerciseBase {
-  kind: 'eng-complete'; sentence: string; options: string[]; answer: number
+  kind: 'eng-complete'; sentence: string; options: string[]; answer: number; es?: string
 }
 /** A number shown in digits; the child types it in English (answer = the English words, compared with compareEnglish). */
 export interface EngNumWriteExercise extends ExerciseBase {

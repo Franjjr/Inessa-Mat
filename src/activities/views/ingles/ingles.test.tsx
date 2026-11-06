@@ -167,6 +167,15 @@ describe('WriteWordView', () => {
 })
 
 describe('CompleteView', () => {
+  it('the Spanish cue shows above the English sentence, and the sentence is not read out', () => {
+    const ex = first('eng-complete', 'eng:frase:where-is:under')
+    render(<CompleteView exercise={ex} onAnswered={vi.fn()} />)
+    const cue = screen.getByText(ex.es ?? '')
+    const sentence = screen.getByLabelText(`Frase: ${ex.sentence}`)
+    expect(cue.compareDocumentPosition(sentence) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(speech.say).not.toHaveBeenCalled()
+  })
+
   it('the word tapped is sent as a choice; the right one is graded right', () => {
     const ex = first('eng-complete', 'eng:frase:i-like')
     const onAnswered = vi.fn()

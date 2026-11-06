@@ -79,7 +79,10 @@ function buildComplete(skill: SkillKey, rng: Rng): EngCompleteExercise {
   if (!items) throw new Error(`ingles: no phrases for '${skill}'`)
   const item = pick(rng, items)
   const options = shuffle(rng, [item.answer, ...item.distractors])
-  return { id: `eng-complete:${skill}:${item.sentence}`, kind: 'eng-complete', skill, difficulty: 2, sentence: item.sentence, options, answer: options.indexOf(item.answer) }
+  return {
+    id: `eng-complete:${skill}:${item.sentence}`, kind: 'eng-complete', skill, difficulty: 2, sentence: item.sentence, options,
+    answer: options.indexOf(item.answer), ...(item.es ? { es: item.es } : {}),
+  }
 }
 
 function buildNumWrite(skill: SkillKey, item: string, rng: Rng): EngNumWriteExercise {
@@ -268,7 +271,7 @@ export function statementEnglish(ex: EnglishExercise): string {
     case 'eng-listen-pick': return 'Escucha la palabra y toca su dibujo.'
     case 'eng-match': return 'Une cada palabra en inglés con su dibujo.'
     case 'eng-write-word': return `Escribe en inglés: ${ex.card.es}`
-    case 'eng-complete': return `Completa la frase: ${ex.sentence}`
+    case 'eng-complete': return `Completa la frase: ${ex.sentence}${ex.es ? ` (${ex.es})` : ''}`
     case 'eng-num-write': return `Escribe en inglés el número ${ex.value}`
     case 'eng-num-listen': return 'Escucha el número y escríbelo con cifras.'
     case 'eng-op-listen': return 'Escucha la operación y escribe el resultado.'
