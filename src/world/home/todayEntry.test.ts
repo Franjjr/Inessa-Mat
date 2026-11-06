@@ -100,9 +100,9 @@ describe('Lengua on the home', () => {
 })
 
 describe('English on the home', () => {
-  it('the English «Hoy» with no topic yet is its fallback title, and its session goes to /play/ingles', () => {
+  it('the English «Hoy» names its first topic (no class yet, so the session goes to /play/ingles)', () => {
     expect(todayEntry({ grade: 3, mastery: {}, progress: progress(), subject: 'english' })).toEqual({
-      kind: 'sesion', title: 'Inglés de hoy', to: '/play/ingles',
+      kind: 'sesion', title: 'Saludos y yo', to: '/play/ingles',
     })
   })
 

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord, ChildProfile, MasteryMap, SkillMastery } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { GRADE3_SYLLABUS, LENGUA3_SYLLABUS, subjectOfTopic, syllabusFor, teachingOrder } from '@/content/syllabus'
+import { allTopics, GRADE3_SYLLABUS, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, subjectOfTopic, syllabusFor, teachingOrder } from '@/content/syllabus'
 import { initialProgress } from '@/content'
 import { statsFromLocal } from '@/data/summary'
 import { planLenguaSession } from '@/engine/lengua/daily'
@@ -180,12 +180,14 @@ describe('English subject table', () => {
     expect(ENGLISH_SESSION_MINUTES).toBe(10)
   })
 
-  it('a topic with the eng- prefix is English; its syllabus is empty until Task 4', () => {
-    expect(subjectOfTopic('eng-numeros')).toBe('english')
+  it('a topic with the eng- prefix is English; English has the 3.º temario (2.º and 4.º are empty)', () => {
+    expect(subjectOfTopic('eng-num-0-20')).toBe('english')
     expect(subjectOfTopic('lng-silabas')).toBe('language')
     expect(subjectOfTopic('suma-2d')).toBe('math')
-    expect(syllabusFor('english', 3).blocks).toEqual([])
-    expect(syllabusFor('english').blocks).toEqual([])
+    expect(syllabusFor('english', 3)).toBe(INGLES3_SYLLABUS)
+    expect(syllabusFor('english')).toBe(INGLES3_SYLLABUS)
+    expect(allTopics(syllabusFor('english', 2))).toEqual([])
+    expect(allTopics(syllabusFor('english', 4))).toEqual([])
   })
 })
 

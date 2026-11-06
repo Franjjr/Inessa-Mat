@@ -56,6 +56,9 @@
    measure:convert:<dim>:all  every unit of the dimension (km … mm, kg … mg, kl … ml): one step first, then several; whole numbers only
    measure:ruler | measure:add | measure:estimate            (src/engine/measure.ts)
    num:ordinal:10|20|30     ordinales (3.º): the n-.º of a row (10), or reading and writing 1.º–20.º / 1.º–30.º (src/engine/ordinals.ts)
+   eng:voc:<tema>           inglés (3.º): the words of one theme (src/engine/ingles/words.ts), e.g. eng:voc:animales
+   eng:frase:<id>[:<nivel>] inglés (3.º): a phrase topic, e.g. eng:frase:i-like, eng:frase:where-is:in
+   eng:num:0-20|decenas|21-100 | eng:num:ops:plus|minus|times   numbers and operations in English (3.º)
 */
 import type {
   BarOp, DecimalMode, DecimalPlaces, DivisionExercise, ExerciseKind, MeasureDimension, MeasureMode, MentalFamily, MoneyMode, PlaceMode,
@@ -105,6 +108,9 @@ export type NumberMax = 999 | 19999 | 99999
 /** The areas of Lengua: grammar, spelling, vocabulary, reading, literature and writing (`lng:<area>:<item>[:<level>]`). */
 export type LenguaArea = 'gram' | 'orto' | 'voc' | 'lect' | 'lit' | 'escr'
 
+/** The areas of English: words (voc), phrases (frase) and numbers (num) (`eng:<area>:<item>[:<level>]`). */
+export type EnglishArea = 'voc' | 'frase' | 'num'
+
 export type ParsedSkill =
   | { type: 'mul'; a: number; b: number }
   | { type: 'div'; p: number; d: number; q: number }
@@ -150,6 +156,7 @@ export type ParsedSkill =
   | { type: 'pattern'; variant: 'shapes' | 'numbers' | 'predict' }
   | { type: 'position'; variant: 'relative' | 'next' | 'route' }
   | { type: 'lengua'; area: LenguaArea; item: string; level?: string }
+  | { type: 'ingles'; area: EnglishArea; item: string; level?: string }
 
 // ---------------------------------------------------------------- builders
 
@@ -269,6 +276,11 @@ export function lenguaSkill(area: LenguaArea, item: string, level?: string): Ski
   return `lng:${area}:${item}${level ? `:${level}` : ''}`
 }
 
+/** An English skill key: `eng:<area>:<item>` or `eng:<area>:<item>:<level>` (lowercase; items may start with a digit, e.g. num:0-20). */
+export function englishSkill(area: EnglishArea, item: string, level?: string): SkillKey {
+  return `eng:${area}:${item}${level ? `:${level}` : ''}`
+}
+
 // ---------------------------------------------------------------- parser
 
 const MAX_CARRIES: Record<2 | 3 | 4, number> = { 2: 2, 3: 3, 4: 4 }
@@ -376,6 +388,9 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^pos:(relative|next|route)$/))) return { type: 'position', variant: m[1] as 'relative' | 'next' | 'route' }
   if ((m = key.match(/^lng:(gram|orto|voc|lect|lit|escr):([a-z][a-z0-9-]*)(?::([a-z][a-z0-9-]*))?$/))) {
     return { type: 'lengua', area: m[1] as LenguaArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
+  }
+  if ((m = key.match(/^eng:(voc|frase|num):([a-z0-9][a-z0-9-]*)(?::([a-z0-9][a-z0-9-]*))?$/))) {
+    return { type: 'ingles', area: m[1] as EnglishArea, item: m[2], ...(m[3] ? { level: m[3] } : {}) }
   }
   return null
 }
@@ -513,6 +528,8 @@ export function kindsForSkill(key: SkillKey): ExerciseKind[] {
     case 'mental': return ['mental']
     case 'equation': return ['equation']
     case 'lengua': return lenguaKinds(p)
+    /* English exercise kinds are defined with the English exercises (Task 5): until then an English skill has none. */
+    case 'ingles': return []
   }
   /* c8 ignore next */
   return []

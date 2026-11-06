@@ -1,6 +1,6 @@
 /* Spanish descriptions for adult dashboards (families and teachers). */
 import type { ErrorType, MeasureDimension, MeasureMode, MoneyMode, SkillKey } from '@/types'
-import { GEO_OPS, parseSkill, type LenguaArea } from './skills'
+import { GEO_OPS, parseSkill, type EnglishArea, type LenguaArea } from './skills'
 import { DIMENSION_NAME } from './measure'
 
 const llevadas = (n: number) => (n === 0 ? 'sin llevadas' : n === 1 ? 'con 1 llevada' : `con ${n} llevadas`)
@@ -54,6 +54,8 @@ const WORD_TEXT: Record<string, string> = {
 const LENGUA_AREA_TEXT: Record<LenguaArea, string> = {
   gram: 'gramática', orto: 'ortografía', voc: 'vocabulario', lect: 'lectura', lit: 'literatura', escr: 'escritura',
 }
+
+const ENGLISH_AREA_TEXT: Record<EnglishArea, string> = { voc: 'vocabulario', frase: 'frases', num: 'números' }
 
 /** Plain adult label of every Lengua skill of the temario (the child's word for it is in the exercise itself). */
 export const LENGUA_SKILL_TEXT: Record<string, string> = {
@@ -154,6 +156,7 @@ export function describeSkill(skill: SkillKey): string {
     case 'pattern': return PATTERN_TEXT[p.variant]
     case 'position': return POSITION_TEXT[p.variant]
     case 'lengua': return LENGUA_SKILL_TEXT[skill] ?? `Lengua, ${LENGUA_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
+    case 'ingles': return `Inglés, ${ENGLISH_AREA_TEXT[p.area]}: ${p.item}${p.level ? ` (${p.level})` : ''}`
   }
 }
 

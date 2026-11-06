@@ -6,6 +6,7 @@ import { GRADE2_SYLLABUS } from './grade2'
 import { GRADE3_SYLLABUS } from './grade3'
 import { GRADE4_SYLLABUS } from './grade4'
 import { LENGUA3_SYLLABUS } from './lengua3'
+import { INGLES3_SYLLABUS } from './ingles3'
 
 export type { Syllabus, SyllabusBlock, SyllabusRung, SyllabusStage, SyllabusTopic } from './model'
 export { topicTitle } from './helpers'
@@ -14,6 +15,7 @@ export { GRADE3_STAGES, GRADE3_SYLLABUS, divisionFactSkills, tableSkills } from 
 export { GRADE2_STAGES, GRADE2_SYLLABUS } from './grade2'
 export { GRADE4_STAGES, GRADE4_SYLLABUS } from './grade4'
 export { LENGUA3_STAGES, LENGUA3_SYLLABUS } from './lengua3'
+export { INGLES3_STAGES, INGLES3_SYLLABUS } from './ingles3'
 
 /** The temario a child follows. 1.º takes 2.º and 5.º–6.º take 4.º (the closest ones there are) until theirs exist;
     a child without a course follows 3.º. */
@@ -30,11 +32,12 @@ export function subjectOfTopic(topicId: string): SubjectId {
 
 const TOPIC_SUBJECT_PREFIXES: [prefix: string, subject: SubjectId][] = [['lng-', 'language'], ['eng-', 'english']]
 
-/** The temario of a subject for a course. Maths is syllabusForGrade. Lengua has 3.º (a child without a course follows it);
-    2.º and 4.º are empty until their temarios exist, so they have no topics. */
+/** The temario of a subject for a course. Maths is syllabusForGrade. Lengua and English have 3.º (a child without a course
+    follows it); 2.º and 4.º are empty until their temarios exist, so they have no topics. */
 export function syllabusFor(subject: SubjectId, grade?: number): Syllabus {
   if (subject === 'math') return syllabusForGrade(grade)
   if (subject === 'language' && (grade === undefined || grade === 3)) return LENGUA3_SYLLABUS
+  if (subject === 'english' && (grade === undefined || grade === 3)) return INGLES3_SYLLABUS
   const course = grade ?? 3
   return { id: `${subject}-${course}-vacio`, course, blocks: [] }
 }
