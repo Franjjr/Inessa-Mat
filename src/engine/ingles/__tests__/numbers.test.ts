@@ -25,6 +25,10 @@ describe('operationToEnglish', () => {
     expect(operationToEnglish(9, '-', 2)).toBe('nine minus two')
     expect(operationToEnglish(2, '×', 5)).toBe('two times five')
   })
+  it('reads minus with the number words', () => {
+    expect(operationToEnglish(20, '-', 1)).toBe('twenty minus one')
+    expect(operationToEnglish(15, '-', 15)).toBe('fifteen minus fifteen')
+  })
   it('uses the hyphenated number words inside the sum', () => {
     expect(operationToEnglish(21, '+', 10)).toBe('twenty-one plus ten')
   })

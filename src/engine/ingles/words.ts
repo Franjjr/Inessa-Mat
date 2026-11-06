@@ -82,7 +82,7 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'shirt', es: 'camiseta', emoji: '👕', theme: 'ropa' },
   { en: 'trousers', es: 'pantalones', emoji: '👖', theme: 'ropa' },
   { en: 'dress', es: 'vestido', emoji: '👗', theme: 'ropa' },
-  { en: 'shoes', es: 'zapatillas', emoji: '👟', theme: 'ropa' },
+  { en: 'shoes', es: 'zapatos', emoji: '👟', theme: 'ropa' },
   { en: 'socks', es: 'calcetines', emoji: '🧦', theme: 'ropa' },
   { en: 'jacket', es: 'chaqueta', emoji: '🧥', theme: 'ropa' },
   { en: 'hat', es: 'sombrero', emoji: '👒', theme: 'ropa' },
@@ -109,7 +109,7 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'chair', es: 'silla', emoji: '🪑', theme: 'casa' },
   { en: 'sofa', es: 'sofá', emoji: '🛋️', theme: 'casa' },
   { en: 'bath', es: 'bañera', emoji: '🛁', theme: 'casa' },
-  { en: 'toilet', es: 'servicio', emoji: '🚽', theme: 'casa' },
+  { en: 'toilet', es: 'váter', emoji: '🚽', theme: 'casa' },
   { en: 'lamp', es: 'lámpara', emoji: '💡', theme: 'casa' },
   { en: 'key', es: 'llave', emoji: '🔑', theme: 'casa' },
 

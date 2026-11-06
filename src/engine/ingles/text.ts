@@ -28,6 +28,7 @@ function withinOneEdit(a: string, b: string): boolean {
 
 export function compareEnglish(given: string, expected: string, alts: string[] = []): EnglishComparison {
   const g = canon(given)
+  if (g === '') return { correct: false, nearMiss: false }
   const accepted = [expected, ...alts].map(canon)
   if (accepted.includes(g)) return { correct: true, nearMiss: false }
   return { correct: false, nearMiss: accepted.some((a) => withinOneEdit(g, a)) }
