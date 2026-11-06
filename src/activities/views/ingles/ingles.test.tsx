@@ -130,7 +130,7 @@ describe('MatchView', () => {
       fireEvent.click(screen.getByRole('button', { name: `Dibujo ${((ex.answer[i] + 1) % ex.cards.length) + 1}` }))
     })
     fireEvent.click(comprobar())
-    expect(pageText()).toContain(ex.words[0])
+    expect(pageText()).toContain('Las parejas son:')
   })
 })
 
@@ -234,5 +234,6 @@ describe('NumberListenView and OperationListenView', () => {
   it('the operation results of the times skill are the tables of 2, 5 and 10', () => {
     const ex: EngOpListenExercise = first('eng-op-listen', 'eng:num:ops:times')
     expect([2, 5, 10]).toContain(ex.a)
+    expect(ex.answer).toBe(ex.a * ex.b)
   })
 })

@@ -38,6 +38,8 @@ const OPERATIONS: Record<string, '+' | '-' | '×'> = { plus: '+', minus: '-', ti
 
 /** The letters of an English text, lower case, without spaces, hyphens and marks. */
 const letters = (s: string) => s.replace(/[^\p{L}]/gu, '').toLowerCase()
+/** «1 letra», «3 letras»: the count in a hint, with its plural. */
+const letrasDe = (n: number) => `${n} ${n === 1 ? 'letra' : 'letras'}`
 const cardOf = (w: EnglishWord): EnglishCard => ({ en: w.en, es: w.es, theme: w.theme, ...(w.emoji ? { emoji: w.emoji } : {}) })
 /** What a card shows as its picture: the emoji, or the Spanish word when the theme has no picture. */
 const faceOf = (c: EnglishCard) => c.emoji ?? c.es
@@ -196,7 +198,7 @@ const hint = (level: Hint['level'], text: string): Hint => ({ level, text, visua
 
 /** The idea of a number, in Spanish: the English ending that gives it away, never the word itself. */
 function numberIdea(n: number): string {
-  if (n === 100) return 'El número más grande de la lista tiene la palabra «hundred».'
+  if (n === 100) return 'Es el número más grande de la lista: se dice con un uno delante de la palabra de los cientos.'
   if (n <= 12) return 'Es un número corto: hay que aprenderlo de memoria.'
   if (n >= 13 && n <= 19) return 'Los números del 13 al 19 acaban en «-teen».'
   if (n % 10 === 0) return 'Las decenas exactas acaban en «-ty».'
@@ -210,7 +212,7 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
       return [
         hint(1, `Es una palabra del tema «${THEME_NAME[ex.theme]}».`),
         hint(2, `Empieza por «${first}».`),
-        hint(3, `Empieza por «${first}» y tiene ${letters(ex.word).length} letras.`),
+        hint(3, `Empieza por «${first}» y tiene ${letrasDe(letters(ex.word).length)}.`),
       ]
     }
     case 'eng-match':
@@ -220,12 +222,14 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
         hint(3, 'Si te quedan dos sin pareja, prueba a cambiarlas entre ellas.'),
       ]
     case 'eng-write-word': {
+      // Short words: the hints never reveal all but one letter. Two letters or fewer: the count and a cue, no letter.
+      // Three letters: the count, then the first letter. Longer: the first letter, then the count and the last letter.
       const en = ex.answer
-      return [
-        hint(1, `Es una palabra del tema «${THEME_NAME[ex.card.theme]}».`),
-        hint(2, `Empieza por «${letters(en)[0]}».`),
-        hint(3, `Tiene ${letters(en).length} letras y acaba en «${letters(en).slice(-1)}».`),
-      ]
+      const n = letters(en).length
+      const theme = hint(1, `Es una palabra del tema «${THEME_NAME[ex.card.theme]}».`)
+      if (n <= 2) return [theme, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, 'Es una palabra muy corta: escríbela como la dices.')]
+      if (n === 3) return [theme, hint(2, `Tiene ${letrasDe(n)}.`), hint(3, `Empieza por «${letters(en)[0]}».`)]
+      return [theme, hint(2, `Empieza por «${letters(en)[0]}».`), hint(3, `Tiene ${n} letras y acaba en «${letters(en).slice(-1)}».`)]
     }
     case 'eng-complete': {
       const word = ex.options[ex.answer]
@@ -233,7 +237,7 @@ export function hintsEnglish(ex: EnglishExercise): Hint[] {
         hint(1, PHRASE_IDEAS[ex.skill] ?? 'Lee la frase entera.'),
         hint(2, 'Prueba cada opción en el hueco y di cuál suena natural en inglés.'),
         // A one- or two-letter answer («a», «an») is the first letter itself: the hint counts its letters instead.
-        hint(3, letters(word).length > 2 ? `Empieza por «${letters(word)[0]}».` : `La palabra tiene ${letters(word).length} letras.`),
+        hint(3, letters(word).length > 2 ? `Empieza por «${letters(word)[0]}».` : `La palabra tiene ${letrasDe(letters(word).length)}.`),
       ]
     }
     case 'eng-num-write':

@@ -29,7 +29,7 @@ export const PHRASE_IDEAS: Record<string, string> = {
 
 export const PHRASES: Record<string, PhraseItem[]> = {
   'eng:frase:saludos': [
-    { sentence: 'Good ___! It is nine in the morning.', answer: 'morning', distractors: ['night', 'bye'] },
+    { sentence: '___, Mum! I am fine, thanks.', answer: 'Hello', distractors: ['Sorry', 'Please'] },
     { sentence: 'How ___ you?', answer: 'are', distractors: ['is', 'am'] },
     { sentence: 'Thank ___, Mum.', answer: 'you', distractors: ['yes', 'dog'] },
     { sentence: 'My name ___ Ana.', answer: 'is', distractors: ['am', 'are'] },
@@ -40,7 +40,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
     { sentence: 'A mouse is very ___.', answer: 'small', distractors: ['tall', 'cold'] },
     { sentence: 'An elephant is very ___.', answer: 'big', distractors: ['cold', 'hot'] },
     { sentence: 'It is a cow. It says ___.', answer: 'moo', distractors: ['woof', 'meow'] },
-    { sentence: 'It is a fish. It lives in the ___.', answer: 'water', distractors: ['tree', 'sky'] },
+    { sentence: 'It is a fish. It can ___.', answer: 'swim', distractors: ['fly', 'sing'] },
     { sentence: 'It is a bird. It can ___ high.', answer: 'fly', distractors: ['sleep', 'read'] },
     { sentence: 'It is a cat. It says ___.', answer: 'meow', distractors: ['moo', 'woof'] },
   ],
@@ -106,7 +106,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
     { sentence: 'The frog is ___ the bed.', answer: 'under', distractors: ['in', 'on'] },
     { sentence: 'The key is ___ the door.', answer: 'under', distractors: ['in', 'on'] },
     { sentence: 'The mouse is ___ the bed.', answer: 'under', distractors: ['in', 'on'] },
-    { sentence: 'The dog is ___ the bath.', answer: 'under', distractors: ['in', 'on'] },
+    { sentence: 'The cat is ___ the bed.', answer: 'under', distractors: ['in', 'on'] },
   ],
   'eng:frase:ive-got': [
     { sentence: 'I ___ got two hands.', answer: 'have', distractors: ['has', 'is'] },
@@ -120,7 +120,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
     { sentence: 'It\'s ___ today. The sun is out.', answer: 'sunny', distractors: ['rainy', 'snowy'] },
     { sentence: 'It\'s ___. Take your coat.', answer: 'cold', distractors: ['hot', 'sunny'] },
     { sentence: 'It\'s ___ today. The rain is falling.', answer: 'rainy', distractors: ['sunny', 'windy'] },
-    { sentence: 'What\'s the ___ like?', answer: 'weather', distractors: ['water', 'winter'] },
+    { sentence: 'It is ___ and there is a strong wind.', answer: 'windy', distractors: ['sunny', 'snowy'] },
     { sentence: 'It\'s ___ outside. There is snow on the ground.', answer: 'snowy', distractors: ['sunny', 'windy'] },
     { sentence: 'It\'s very ___. Let\'s go swimming.', answer: 'hot', distractors: ['cold', 'rainy'] },
   ],
@@ -128,7 +128,7 @@ export const PHRASES: Record<string, PhraseItem[]> = {
     { sentence: 'What day is it ___?', answer: 'today', distractors: ['tomorrow', 'yesterday'] },
     { sentence: 'Today is Thursday. Tomorrow is ___.', answer: 'Friday', distractors: ['Sunday', 'Tuesday'] },
     { sentence: 'The day before Monday is ___.', answer: 'Sunday', distractors: ['Friday', 'Tuesday'] },
-    { sentence: 'Christmas is in ___.', answer: 'December', distractors: ['March', 'June'] },
+    { sentence: 'The month after July is ___.', answer: 'August', distractors: ['March', 'June'] },
     { sentence: 'The month after June is ___.', answer: 'July', distractors: ['May', 'March'] },
     { sentence: 'The month before June is ___.', answer: 'May', distractors: ['July', 'March'] },
   ],

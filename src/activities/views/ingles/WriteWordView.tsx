@@ -38,7 +38,7 @@ function WriteWordRound({ ex, onAnswered, showFeedback, allowHints }: {
       <p className={s.prompt}>Escribe la palabra en inglés</p>
       <div className={s.card} aria-label={`Palabra: ${ex.card.es}`}>
         <PictureFace card={ex.card} />
-        {ex.card.emoji && <span className={s.gloss}>{ex.card.es}</span>}
+        {ex.card.emoji && ex.card.theme !== 'familia' && <span className={s.gloss}>{ex.card.es}</span>}
       </div>
       <div className={s.typedFrame}>
         <TextInput

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { check, createRng, generate, hintsFor, kindsForSkill, statementOf } from '@/engine'
 import { ENGLISH_SKILLS } from '@/engine/skills'
-import { ENGLISH_KINDS, ENGLISH_LISTENING_KINDS } from '../exercises'
+import { ENGLISH_KINDS, ENGLISH_LISTENING_KINDS, hintsEnglish } from '../exercises'
+import { ENGLISH_WORDS } from '../words'
 import { PHRASES } from '../phrases'
 import { numberToEnglish } from '../numbers'
 import { englishKindsFor, makableEnglish, teachableEnglishCourse } from '../teachable'
@@ -71,6 +72,41 @@ describe('English kinds: generation', () => {
       const times = one('eng-op-listen', 'eng:num:ops:times', seed) as Extract<EnglishExercise, { kind: 'eng-op-listen' }>
       expect([2, 5, 10]).toContain(times.a)
     }
+  })
+
+  it('the write-word hints of a word of three letters or fewer never reveal all but one of its letters', () => {
+    const short = ENGLISH_WORDS.filter((w) => w.en.replace(/[^a-z]/gi, '').length <= 3)
+    expect(short.length).toBeGreaterThan(10)
+    for (const w of short) {
+      const ex = { id: `t:${w.en}`, kind: 'eng-write-word', skill: 'eng:voc:' + w.theme, difficulty: 1, card: { en: w.en, es: w.es, theme: w.theme }, answer: w.en, alts: [] }
+      const hints = hintsEnglish(ex as unknown as EnglishExercise)
+      const letters = w.en.replace(/[^a-z]/gi, '').length
+      // The letters the hints give away: each «x» quoted as one letter (the count and the cues give none).
+      const revealed = hints.flatMap((h) => [...h.text.matchAll(/«(\p{L})»/gu)]).length
+      expect(revealed, w.en).toBeLessThan(letters - 1)
+    }
+  })
+
+  it('every noun of a phrase is a word of the vocabulary; the rest are function words, verbs, adjectives or interjections', () => {
+    const NOT_NOUNS = new Set([
+      'a', 'an', 'some', 'is', 'am', 'are', 'in', 'on', 'under', 'like', 'likes', 'have', 'has', 'got', 'get', 'gets',
+      'you', 'your', 'my', 'can', 'here', 'it', 'yes', 'no', 'swim', 'fly', 'sing', 'sit', 'wash', 'repeat', 'eat',
+      'sleep', 'read', 'walk', 'watch', 'write', 'stand', 'wear', 'wears', 'wearing', 'hello', 'sorry', 'please', 'bye', 'thank', 'good',
+      'sunny', 'rainy', 'snowy', 'windy', 'cold', 'hot', 'big', 'small', 'tall', 'old', 'sad', 'today', 'tomorrow', 'yesterday',
+      'moo', 'meow', 'woof',
+    ])
+    const vocabulary = new Set(ENGLISH_WORDS.flatMap((w) => w.en.toLowerCase().split(' ')))
+    const unknown: string[] = []
+    for (const items of Object.values(PHRASES)) {
+      for (const item of items) {
+        for (const word of [item.answer, ...item.distractors]) {
+          for (const token of word.toLowerCase().split(' ')) {
+            if (!vocabulary.has(token) && !NOT_NOUNS.has(token)) unknown.push(`${token} (${item.sentence})`)
+          }
+        }
+      }
+    }
+    expect(unknown).toEqual([])
   })
 
   it('every frase skill has at least six items, each with one gap, its answer among the options', () => {
