@@ -118,4 +118,25 @@ describe('SignupScreen form', () => {
     )
     expect(await screen.findByText('Te hemos enviado un correo de confirmación')).toBeInTheDocument()
   })
+
+  it('an address with an account says the password was not saved and leads to the sign-in with the address filled in', async () => {
+    const taken = Object.assign(new Error('Ya existe una cuenta con este correo. Prueba a iniciar sesión.'), { name: 'DataError', code: 'email-taken' })
+    data.useAuth.mockReturnValue({ status: 'anonymous', backendAvailable: true, signUp: vi.fn().mockRejectedValue(taken) })
+    render(
+      <MemoryRouter>
+        <SignupScreen />
+      </MemoryRouter>,
+    )
+    fireEvent.change(screen.getByLabelText('Tu nombre'), { target: { value: 'Fran' } })
+    fireEvent.change(screen.getByLabelText('Correo electrónico'), { target: { value: 'fran@example.com' } })
+    fireEvent.change(screen.getByLabelText('Contraseña'), { target: { value: 'clave1234' } })
+    fireEvent.change(screen.getByLabelText('Repite la contraseña'), { target: { value: 'clave1234' } })
+    fireEvent.click(screen.getByRole('radio', { name: /Familia/ }))
+    fireEvent.change(screen.getByLabelText('Nombre de tu familia'), { target: { value: 'Familia' } })
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: 'Crear cuenta' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La contraseña que acabas de escribir no se ha guardado')
+    expect(screen.getByRole('link', { name: 'Iniciar sesión con este correo' })).toHaveAttribute('href', '/login?email=fran%40example.com')
+  })
 })

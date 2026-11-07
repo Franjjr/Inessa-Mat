@@ -37,6 +37,53 @@ Estas dos son **públicas**: van dentro de la app y la seguridad la ponen las re
 2. Ve a **Authentication → URL Configuration**:
    - **Site URL:** la dirección que te dé Vercel (la de producción es `https://repasitos.es`).
    - **Redirect URLs:** añade esa misma dirección con `/**` al final, y también `http://localhost:5173/**`.
+   - Comprueba que la **Site URL** es `https://repasitos.es` y no `localhost`: si no, los enlaces de los correos abren localhost.
+
+## Paso 4b · Correo propio con Resend (imprescindible para que lleguen los correos)
+
+El correo que trae Supabase por defecto **solo entrega a los miembros del equipo del proyecto** y como mucho
+**2 correos por hora** en total. Además no deja cambiar las plantillas. Con él, las familias no reciben ni la
+confirmación de la cuenta ni el código para entrar. Se arregla con un servicio de correo propio:
+
+1. **Instala Resend desde Vercel:** https://vercel.com/marketplace → busca **Resend** → **Install** en el proyecto
+   de Repasitos. Así se paga en la misma factura (tiene un plan gratuito suficiente para empezar).
+2. **Da de alta el dominio en Resend:** en el panel de Resend → **Domains** → **Add domain** → `repasitos.es`
+   (región UE). Resend te enseña unos registros DNS (SPF y DKIM, y uno para los rebotes). Añádelos tal cual en
+   el sitio donde gestionas el dominio y espera a que Resend lo marque como **Verified** (suele tardar minutos,
+   a veces horas). Recomendable también un registro DMARC: `_dmarc` TXT `v=DMARC1; p=none;`.
+3. **Crea una clave:** Resend → **API Keys** → **Create** con permiso *Sending access*, limitada al dominio
+   `repasitos.es`. Guárdala en tu gestor de contraseñas. No la pegues en el chat.
+4. **Ponla en Supabase:** **Authentication → Emails → SMTP Settings → Enable custom SMTP**:
+   - **Sender email:** `hola@repasitos.es` (cualquier dirección del dominio) · **Sender name:** `Repasitos`
+   - **Host:** `smtp.resend.com` · **Port:** `465` · **Username:** `resend` · **Password:** la clave de Resend
+5. **Límites:** **Authentication → Rate Limits** → correos por hora: al menos `30` (súbelo si hay muchas familias).
+6. **Plantillas en español** (**Authentication → Emails → Templates**). Tienen que llevar el **código**
+   (`{{ .Token }}`): en la tableta es lo más cómodo, porque el enlace se abre en el navegador y no en la app.
+
+   **Magic Link** — asunto `Tu código para entrar en Repasitos`:
+   ```html
+   <h2>Tu código para entrar</h2>
+   <p>Escribe este código en Repasitos:</p>
+   <p style="font-size:28px;font-weight:700;letter-spacing:6px">{{ .Token }}</p>
+   <p>O pulsa <a href="{{ .ConfirmationURL }}">este enlace</a> si lo abres en el mismo dispositivo.</p>
+   <p>Si no lo has pedido tú, ignora este correo.</p>
+   ```
+   **Reset Password** — asunto `Tu código para elegir una contraseña nueva`:
+   ```html
+   <h2>Elige una contraseña nueva</h2>
+   <p>Escribe este código en Repasitos:</p>
+   <p style="font-size:28px;font-weight:700;letter-spacing:6px">{{ .Token }}</p>
+   <p>O pulsa <a href="{{ .ConfirmationURL }}">este enlace</a> si lo abres en el mismo dispositivo.</p>
+   <p>Si no lo has pedido tú, ignora este correo: tu contraseña no cambia.</p>
+   ```
+   **Confirm signup** — asunto `Confirma tu cuenta de Repasitos`:
+   ```html
+   <h2>Confirma tu cuenta</h2>
+   <p><a href="{{ .ConfirmationURL }}">Pulsa aquí para confirmar tu correo</a>.</p>
+   <p>Si no has creado tú la cuenta, ignora este correo.</p>
+   ```
+7. **Comprueba:** en la app, **Iniciar sesión → Entrar con un código por correo** con tu correo. Debe llegar en
+   menos de un minuto (mira también en spam la primera vez). Si no llega, mira **Authentication → Logs**.
 
 ## Paso 5 · Conectar Vercel (cuando el código esté en GitHub)
 

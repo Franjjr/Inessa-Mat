@@ -14,6 +14,7 @@ export type DataErrorCode =
   | 'not-found'
   | 'invalid'
   | 'invalid-code'
+  | 'wrong-otp'        // the code sent by e-mail to sign in or reset the password is wrong or expired
   | 'conflict'
   | 'unknown'
 
@@ -31,6 +32,7 @@ export const MESSAGES: Record<DataErrorCode, string> = {
   'not-found': 'No lo hemos encontrado. Puede que se haya borrado.',
   invalid: 'Algún dato no es válido. Revísalo y vuelve a intentarlo.',
   'invalid-code': 'Ese código de clase no existe o ya no está activo. Revisa las letras con el profe.',
+  'wrong-otp': 'Ese código no es correcto o ha caducado. Revisa los números o pide otro.',
   conflict: 'Otro usuario ha cambiado esto a la vez. Vuelve a intentarlo.',
   unknown: 'Algo no ha ido bien. Vuelve a intentarlo dentro de un momento.',
 }
@@ -76,6 +78,7 @@ export function toDataError(e: unknown): DataError {
   const code = String(err.code ?? '')
   const msg = String(err.message ?? '')
   // Supabase Auth (error.code is set by GoTrue ≥ 2.x; older servers only send messages)
+  if (code === 'otp_expired' || /token has expired or is invalid|otp.*(expired|invalid)/i.test(msg)) return new DataError('wrong-otp', undefined, e)
   if (code === 'invalid_credentials' || /invalid login credentials/i.test(msg)) return new DataError('invalid-credentials', undefined, e)
   if (code === 'email_not_confirmed' || /email not confirmed/i.test(msg)) return new DataError('email-not-confirmed', undefined, e)
   if (code === 'user_already_exists' || code === 'email_exists' || /already registered|already exists/i.test(msg)) return new DataError('email-taken', undefined, e)

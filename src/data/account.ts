@@ -304,10 +304,26 @@ export async function signUp(input: { email: string; password: string; displayNa
   if (data.session?.user) await loadAccountFor(data.session.user, generation)
 }
 
+/** Sends the sign-in e-mail. An address with no account gets the same answer as one with an account, so the screen never
+    tells anyone which addresses are registered. */
 export async function sendMagicLink(email: string): Promise<void> {
   const sb = await backend()
   const { error } = await sb.auth.signInWithOtp({ email: cleanEmail(email), options: { shouldCreateUser: false, emailRedirectTo: `${origin()}/` } })
+  if (!error) return
+  const err = toDataError(error)
+  if (err.code === 'no-account') return
+  throw err
+}
+
+/** Signs in with the code of the sign-in e-mail (`login`), or opens the new-password step with the code of the reset e-mail
+    (`recovery`: Supabase then reports PASSWORD_RECOVERY, so auth.passwordRecovery is true). */
+export async function verifyEmailCode(email: string, code: string, purpose: 'login' | 'recovery'): Promise<void> {
+  const sb = await backend()
+  const token = String(code ?? '').replace(/\D/g, '')
+  if (token.length < 6) throw new DataError('wrong-otp')
+  const { data, error } = await sb.auth.verifyOtp({ email: cleanEmail(email), token, type: purpose === 'recovery' ? 'recovery' : 'email' })
   if (error) throw toDataError(error)
+  if (data.user) await loadAccountFor(data.user, generation)
 }
 
 export async function resetPassword(email: string): Promise<void> {
@@ -419,12 +435,14 @@ export async function listOrgMembers(orgId: string): Promise<{ membership: Membe
 }
 
 /** Upload local-only children (and all their data) to the active organization. */
-export async function claimLocalData(): Promise<{ children: number }> {
+/** Moves the profiles made on this device into the active org: all of them, or only `ids` when given (a profile the account
+    already has, the same child, is left out so it is not duplicated). */
+export async function claimLocalData(ids?: readonly string[]): Promise<{ children: number }> {
   const a = getAuth()
   if (a.status !== 'signed-in' || !a.user) throw new DataError('not-signed-in')
   const org = a.activeOrg
   if (!org) throw new DataError('invalid', 'Primero crea una familia o un colegio en tu cuenta.')
-  const locals = await db.children.filter((c) => c.orgId === null && !c.deletedAt).toArray()
+  const locals = await db.children.filter((c) => c.orgId === null && !c.deletedAt && (!ids || ids.includes(c.id))).toArray()
   if (!locals.length) return { children: 0 }
   await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.outbox], async () => {
     for (const c of locals) {

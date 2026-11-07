@@ -349,11 +349,29 @@ export class FakeAuth {
     return { error: null }
   }
 
-  async signInWithOtp() {
+  /** The last code e-mailed to each address (sign-in or reset), as the fake server would send it. */
+  codes = new Map<string, { token: string; type: 'email' | 'recovery' }>()
+
+  async signInWithOtp({ email }: { email: string }) {
+    if (!this.users.some((x) => x.email === email)) return { data: {}, error: { message: 'Signups not allowed for otp', code: 'otp_disabled', status: 422 } }
+    this.codes.set(email, { token: '123456', type: 'email' })
     return { data: {}, error: null }
   }
 
-  async resetPasswordForEmail() {
+  async resetPasswordForEmail(email: string) {
+    if (this.users.some((x) => x.email === email)) this.codes.set(email, { token: '654321', type: 'recovery' })
     return { data: {}, error: null }
+  }
+
+  async verifyOtp({ email, token, type }: { email: string; token: string; type: 'email' | 'recovery' }) {
+    const sent = this.codes.get(email)
+    const u = this.users.find((x) => x.email === email)
+    if (!u || !sent || sent.token !== token || sent.type !== type) {
+      return { data: { user: null, session: null }, error: { message: 'Token has expired or is invalid', code: 'otp_expired', status: 403 } }
+    }
+    this.codes.delete(email)
+    this.session = { user: u, access_token: 'token' }
+    this.emit(type === 'recovery' ? 'PASSWORD_RECOVERY' : 'SIGNED_IN')
+    return { data: { user: u, session: this.session }, error: null }
   }
 }

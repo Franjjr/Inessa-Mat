@@ -1,8 +1,8 @@
 /* Integrator-owned. Route table. Screens are lazy-loaded from the files each module agent owns. */
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { Spinner } from '@/ui'
-import { useActiveChild } from '@/data'
+import { useActiveChild, useAuthExtras } from '@/data'
 import EntryScreen from './EntryScreen'
 
 // world-core
@@ -53,9 +53,18 @@ function Adult({ children }: { children: ReactNode }) {
   return <AdultGate>{children}</AdultGate>
 }
 
+/** A reset e-mail's link can land on any page (Supabase falls back to the site URL): wherever it lands, the adult is taken
+    to the new-password step, or they would be signed in without choosing a password. */
+function PasswordRecoveryRedirect() {
+  const { passwordRecovery } = useAuthExtras()
+  const { pathname } = useLocation()
+  return passwordRecovery && pathname !== '/login' ? <Navigate to="/login" replace /> : null
+}
+
 export function AppRoutes() {
   return (
     <Suspense fallback={<Spinner />}>
+      <PasswordRecoveryRedirect />
       <Routes>
         <Route path="/" element={<EntryScreen />} />
         <Route path="/welcome" element={<WelcomeScreen />} />
