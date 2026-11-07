@@ -304,10 +304,15 @@ export async function signUp(input: { email: string; password: string; displayNa
   if (data.session?.user) await loadAccountFor(data.session.user, generation)
 }
 
+/** Sends the sign-in e-mail. An address with no account gets the same answer as one with an account, so the screen never
+    tells anyone which addresses are registered. */
 export async function sendMagicLink(email: string): Promise<void> {
   const sb = await backend()
   const { error } = await sb.auth.signInWithOtp({ email: cleanEmail(email), options: { shouldCreateUser: false, emailRedirectTo: `${origin()}/` } })
-  if (error) throw toDataError(error)
+  if (!error) return
+  const err = toDataError(error)
+  if (err.code === 'no-account') return
+  throw err
 }
 
 /** Signs in with the code of the sign-in e-mail (`login`), or opens the new-password step with the code of the reset e-mail

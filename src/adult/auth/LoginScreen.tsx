@@ -128,7 +128,7 @@ export default function LoginScreen() {
       await sendMagicLink(email)
       setCode('')
       setCodeStep('login')
-      setNotice({ tone: 'ok', text: `Te hemos enviado un correo a ${email.trim()}. Escribe aquí el código que trae (o pulsa su enlace, si lo abres en este mismo dispositivo). Si no llega en unos minutos, revisa la carpeta de spam.` })
+      setNotice({ tone: 'ok', text: `Si hay una cuenta con ${email.trim()}, te hemos enviado un correo. Escribe aquí el código que trae (o pulsa su enlace, si lo abres en este mismo dispositivo). Si no llega en unos minutos, revisa la carpeta de spam.` })
     } catch (err) {
       setNotice({ tone: 'error', text: errorMessage(err) })
     } finally {

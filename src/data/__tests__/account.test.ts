@@ -158,6 +158,12 @@ describe('codes by e-mail (sign-in and password reset)', () => {
     await expect(verifyEmailCode('ana@correo.es', '123456', 'login')).rejects.toMatchObject({ code: 'wrong-otp' })
   })
 
+  it('an address with no account gets the same answer as one with an account', async () => {
+    await boot()
+    await expect(sendMagicLink('nadie@correo.es')).resolves.toBeUndefined()
+    await expect(verifyEmailCode('nadie@correo.es', '123456', 'login')).rejects.toMatchObject({ code: 'wrong-otp' })
+  })
+
   it('a code shorter than six digits is refused without asking the server', async () => {
     await boot()
     await expect(verifyEmailCode('ana@correo.es', '12', 'login')).rejects.toMatchObject({ code: 'wrong-otp' })
