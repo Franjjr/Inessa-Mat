@@ -5,7 +5,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { updatePassword, useAuth, useAuthExtras } from '@/data'
-import { Button, Spinner } from '@/ui'
+import { Button, Spinner, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { TextField } from '../shared/Field'
 import { errorMessage } from '../shared/messages'
@@ -94,7 +94,8 @@ export default function LoginScreen() {
       setBusy(true)
       try {
         await updatePassword(newPassword)
-        setNotice({ tone: 'ok', text: 'Contraseña guardada. Ya puedes seguir.' })
+        // The step closes (passwordRecovery goes false) and «Sesión iniciada» follows: the confirmation is a toast.
+        toast('Contraseña guardada')
       } catch (err) {
         setNotice({ tone: 'error', text: errorMessage(err) })
       } finally {
@@ -177,7 +178,7 @@ export default function LoginScreen() {
           )}
           <TextField
             id="email-code" label="Código del correo" inputMode="numeric" autoComplete="one-time-code" maxLength={12}
-            value={code} onChange={(e) => setCode(e.target.value)} hint="Son 6 cifras."
+            value={code} onChange={(e) => setCode(e.target.value)} hint="Las cifras que trae el correo."
           />
           <Button type="submit" size="lg" block disabled={busy}>{busy ? 'Comprobando…' : codeStep === 'recovery' ? 'Seguir' : 'Entrar'}</Button>
           <div className={s.footerLinks}>
