@@ -4,7 +4,7 @@ import {
   createChild, createOrganization, getProgress, inviteMember, joinClassWithCode, listAssignmentsForChild, listChildren,
   recordAttempt, setChestReward, startSession, updateProgress, DataError,
 } from '@/data'
-import { continueLocalOnly, signInWithPassword, signOut, signUp, claimLocalData, setActiveOrg, startAuth, createInviteLink } from '../account'
+import { continueLocalOnly, signInWithPassword, signOut, signUp, claimLocalData, setActiveOrg, startAuth, createInviteLink, sendMagicLink, resetPassword, verifyEmailCode } from '../account'
 import { db } from '../db'
 import { META, setMeta } from '../meta'
 import { getAuth } from '../store'
@@ -146,6 +146,33 @@ describe('auth', () => {
   })
 })
 
+describe('codes by e-mail (sign-in and password reset)', () => {
+  it('the sign-in code signs in; a wrong or reused code gets a clear error', async () => {
+    await boot()
+    fake.auth.addUser('ana@correo.es', 'bien12345')
+    await sendMagicLink(' Ana@Correo.es')
+    await expect(verifyEmailCode('ana@correo.es', '000000', 'login')).rejects.toMatchObject({ code: 'wrong-otp', message: 'Ese código no es correcto o ha caducado. Revisa los números o pide otro.' })
+    await verifyEmailCode('ana@correo.es', '123 456', 'login')
+    expect(getAuth().status).toBe('signed-in')
+    await signOut()
+    await expect(verifyEmailCode('ana@correo.es', '123456', 'login')).rejects.toMatchObject({ code: 'wrong-otp' })
+  })
+
+  it('a code shorter than six digits is refused without asking the server', async () => {
+    await boot()
+    await expect(verifyEmailCode('ana@correo.es', '12', 'login')).rejects.toMatchObject({ code: 'wrong-otp' })
+  })
+
+  it('the reset code opens the new-password step', async () => {
+    await boot()
+    fake.auth.addUser('ana@correo.es', 'olvidada1')
+    await resetPassword('ana@correo.es')
+    await verifyEmailCode('ana@correo.es', '654321', 'recovery')
+    await flushTimers(5)
+    expect(getAuth().passwordRecovery).toBe(true)
+  })
+})
+
 describe('local-only → account (claimLocalData)', () => {
   const attempt = (childId: string, i: number): AttemptRecord => ({
     id: crypto.randomUUID(), childId, sessionId: null, skill: 'mul:6x8', kind: 'fact-mul', correct: i % 2 === 0, given: '48',
@@ -181,6 +208,18 @@ describe('local-only → account (claimLocalData)', () => {
     expect((await getProgress(c.id)).stars).toBe(17)
     // Claiming twice is harmless.
     expect(await claimLocalData()).toEqual({ children: 0 })
+  })
+
+  it('with ids, only those profiles move to the account (the others stay on this device)', async () => {
+    await boot()
+    continueLocalOnly()
+    const lia = await createChild({ nickname: 'Lía', gender: 'f', grade: 3, companion: LUNA })
+    const leo = await createChild({ nickname: 'Leo', gender: 'm', grade: 2, companion: LUNA })
+    await signUp({ email: 'ana@correo.es', password: 'secreto123', displayName: 'Ana', orgKind: 'family', orgName: 'Familia' })
+    expect(await claimLocalData([leo.id])).toEqual({ children: 1 })
+    await runSync({ pull: true })
+    expect(fake.rows('children').map((r) => r.nickname)).toEqual(['Leo'])
+    expect((await db.children.get(lia.id))?.orgId).toBeNull()
   })
 
   it('requires an account with an organization', async () => {

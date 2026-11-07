@@ -97,10 +97,13 @@ export default function AdultHomeScreen() {
         <div className={`${adult.notice} ${adult.noticeInfo}`} role="note">
           <div className={adult.stack} style={{ gap: 6, flex: 1 }}>
             <strong>Estás usando Repasitos sin cuenta.</strong>
-            <span>Los datos solo están en este dispositivo. Si creas una cuenta, puedes guardarlos y verlos desde otros dispositivos.</span>
+            <span>Los datos solo están en este dispositivo. Si ya tienes cuenta, inicia sesión; si no, crea una para guardarlos y verlos desde otros dispositivos.</span>
           </div>
           {backendAvailable && (
-            <Button size="sm" onClick={() => navigate('/signup')}>Crear cuenta</Button>
+            <div className={adult.actions}>
+              <Button size="sm" onClick={() => navigate('/login')}>Iniciar sesión</Button>
+              <Button size="sm" variant="secondary" onClick={() => navigate('/signup')}>Crear cuenta</Button>
+            </div>
           )}
         </div>
       )}

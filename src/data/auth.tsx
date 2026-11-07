@@ -3,7 +3,7 @@ import { useEffect, useMemo, type ReactNode } from 'react'
 import type { Membership, Organization, OrgKind, AdultProfile } from '@/types'
 import {
   claimLocalData, continueLocalOnly, resetPassword, sendMagicLink, setActiveOrg, signInWithPassword, signOut, signUp,
-  startAuth,
+  startAuth, verifyEmailCode,
 } from './account'
 import { useAuthSnapshot, type AuthStatus } from './store'
 
@@ -21,11 +21,13 @@ export interface AuthState {
   signUp(input: { email: string; password: string; displayName: string; orgKind: OrgKind; orgName: string }): Promise<void>
   sendMagicLink(email: string): Promise<void>
   resetPassword(email: string): Promise<void>
+  /** The code of the sign-in e-mail (`login`) or of the reset e-mail (`recovery`, then the new-password step). */
+  verifyEmailCode(email: string, code: string, purpose: 'login' | 'recovery'): Promise<void>
   signOut(): Promise<void>
   /** Use the app without an account (data stays on this device; can be upgraded later). */
   continueLocalOnly(): void
-  /** Upload local-only children/progress to the signed-in account's active org. */
-  claimLocalData(): Promise<{ children: number }>
+  /** Upload local-only children/progress to the signed-in account's active org (only `ids` when given). */
+  claimLocalData(ids?: readonly string[]): Promise<{ children: number }>
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -49,6 +51,7 @@ export function useAuth(): AuthState {
       signUp,
       sendMagicLink,
       resetPassword,
+      verifyEmailCode,
       signOut,
       continueLocalOnly,
       claimLocalData,

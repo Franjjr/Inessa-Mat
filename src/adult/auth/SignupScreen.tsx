@@ -97,8 +97,13 @@ export default function SignupScreen() {
       })
       setSent(form.email.trim())
     } catch (err) {
-      const text = errorMessage(err, 'No hemos podido crear la cuenta. Revisa la conexión e inténtalo de nuevo.')
-      setFormError({ text, taken: text.includes('Ya existe una cuenta') })
+      // An address that already has an account: nothing changed (the password typed here was not saved), so say it and
+      // lead to the sign-in with the address filled in.
+      const taken = err instanceof Error && (err as { code?: string }).code === 'email-taken'
+      const text = taken
+        ? 'Ya existe una cuenta con este correo. La contraseña que acabas de escribir no se ha guardado: entra con la tuya o, si no la recuerdas, pide un código para elegir otra.'
+        : errorMessage(err, 'No hemos podido crear la cuenta. Revisa la conexión e inténtalo de nuevo.')
+      setFormError({ text, taken })
     } finally {
       setBusy(false)
     }
@@ -176,7 +181,7 @@ export default function SignupScreen() {
         {formError && (
           <p className={adult.error} role="alert">
             {formError.text}{' '}
-            {formError.taken && <Link to="/login" className={s.link}>Iniciar sesión</Link>}
+            {formError.taken && <Link to={`/login?email=${encodeURIComponent(form.email.trim())}`} className={s.link}>Iniciar sesión con este correo</Link>}
           </p>
         )}
 
