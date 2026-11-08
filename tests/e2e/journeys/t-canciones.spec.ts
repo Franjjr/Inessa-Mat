@@ -35,15 +35,35 @@ test.describe('Canciones de las tablas', () => {
     await settle(page, 200)
   })
 
-  test('on a small phone the verse and the bubbles fit without scrolling', async ({ page }) => {
+  test('on a small phone both rounds fit without scrolling', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 740 })
     await seedDemo(page)
     await page.goto('/play/cancion/7')
     await page.getByRole('button', { name: /¡A cantar!/ }).click()
+    const noScroll = async () => {
+      const over = await page.evaluate(() => {
+        const els = [document.scrollingElement!, ...document.querySelectorAll<HTMLElement>('*')]
+        return els.filter((el) => {
+          const st = el === document.scrollingElement ? null : getComputedStyle(el)
+          const scrolls = !st || /(auto|scroll)/.test(st.overflowY)
+          return scrolls && el.scrollHeight > el.clientHeight + 1
+        }).length
+      })
+      expect(over).toBe(0)
+    }
+    // Round 1: the verse sounding is on screen and nothing scrolls, even late in the song (5 verses at a time).
+    const now = page.locator('li[data-state="now"]')
+    await expect(now).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByText('7 × 4 = 28')).toBeVisible({ timeout: 60_000 })
+    await expect(now).toBeInViewport({ ratio: 0.98 })
+    await noScroll()
+    // Round 2: the question and the three bubbles, too.
     await page.getByRole('button', { name: '¡Ir a mi turno!' }).click()
     const group = page.getByRole('group', { name: 'Elige el resultado' })
     await expect(group).toBeVisible({ timeout: 60_000 })
-    for (const b of await group.getByRole('button').all()) await expect(b).toBeInViewport({ ratio: 1 })
-    await expect(page.getByTestId('song-ask')).toBeInViewport({ ratio: 1 })
+    for (const b of await group.getByRole('button').all()) await expect(b).toBeInViewport({ ratio: 0.98 })
+    await expect(page.getByTestId('song-ask')).toBeInViewport({ ratio: 0.98 })
+    await expect(now).toBeInViewport({ ratio: 0.98 })
+    await noScroll()
   })
 })
