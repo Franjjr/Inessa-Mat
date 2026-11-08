@@ -19,9 +19,11 @@ import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress }
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
 import type { RunQueue } from '@/activities/shared/requeue'
+import { CancionOffer } from './CancionOffer'
+import { songTables } from '@/world/cancion/logic'
 import { CaligrafiaOffer, useCaligrafiaOffered } from './CaligrafiaOffer'
 import { showCaligrafiaAtEnd } from '@/engine/caligrafia/offer'
-import { afterAnswer, postpone, SESSION_STARS, SUBJECT_LIMIT_SECONDS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
+import { afterAnswer, missedTable, postpone, SESSION_STARS, SUBJECT_LIMIT_SECONDS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
 export interface DailySessionProps {
@@ -196,6 +198,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   // Lengua: the class of the topic comes before «Lo nuevo» when the child has not done it yet.
   const pendingClass = setup.classFirst ? plan.classTopicId ?? null : null
   const summary: RunSummary = summarizeRun(queue ?? { slots: [], retried: [] }, results, !endedByTime)
+  // A maths session with a missed times-table fact ends offering the song of that table.
+  const missed = subject === 'math' ? missedTable(queue ?? { slots: [], retried: [] }, results, songTables(child.grade)) : null
   const ctx = templateContext(child)
 
   const header = (title: string) => (
@@ -251,6 +255,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
         progress={progress}
         subject={subject}
         summary={summary}
+        missed={missed}
         topicName={topic ? topicName : null}
         finished={!endedByTime}
         onDone={onDone}
@@ -396,8 +401,8 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
   )
 }
 
-function Closing({ child, progress, subject, summary, topicName, finished, onDone, onGo, ctx }: {
-  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; topicName: string | null; finished: boolean
+function Closing({ child, progress, subject, summary, missed, topicName, finished, onDone, onGo, ctx }: {
+  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null; finished: boolean
   onDone: () => void; onGo: (worldId: string, nodeId: string) => void; ctx: ReturnType<typeof templateContext>
 }) {
   const key = sessionRewardKey(new Date(), subject)
@@ -462,6 +467,8 @@ function Closing({ child, progress, subject, summary, topicName, finished, onDon
           {hook && <p className={s.story}>Tu aventura: {hook}</p>}
           {caligrafiaAtEnd ? (
             <CaligrafiaOffer onLater={onDone} />
+          ) : missed !== null ? (
+            <CancionOffer table={missed} onLater={onDone} />
           ) : (
             <div className={s.actions}>
               {next && <Button size="lg" variant="secondary" onClick={() => onGo(next.worldId, next.nodeId)}>Seguir la aventura</Button>}
