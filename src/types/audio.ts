@@ -6,7 +6,8 @@ export type SfxName =
   | 'whoosh' | 'pop' | 'sparkle' | 'page' | 'dice' | 'step'
   | 'chest-open' | 'fanfare' | 'tick' | 'timeup' | 'coin'
 
-export type MusicTheme = 'map' | 'calm' | 'play' | 'guardian' | 'celebration' | 'none'
+/** 'song': the times-table songs (steady 100 bpm, with a bar clock: music.nextBarIn). */
+export type MusicTheme = 'map' | 'calm' | 'play' | 'guardian' | 'celebration' | 'song' | 'none'
 
 export interface SpeechOptions {
   /** 'lumi' slightly higher/brighter, 'companion' playful, 'narrator' neutral, 'english' a British voice for English words. */

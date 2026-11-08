@@ -165,3 +165,28 @@ describe('music controller', () => {
     expect(added.length).toBeLessThan(40)
   })
 })
+
+describe('song theme', () => {
+  it('song: 100 bpm and a bar clock', () => {
+    const ctx = ready()
+    expect(music.nextBarIn()).toBeNull()
+    music.play('song')
+    run(ctx, 1)
+    expect(music.barSeconds()).toBeCloseTo(2.4, 5)
+    const a = music.nextBarIn()!
+    expect(a).toBeGreaterThanOrEqual(0)
+    expect(a).toBeLessThanOrEqual(2.4)
+    run(ctx, 1)
+    const b = music.nextBarIn()!
+    expect(((a - b + 2.4) % 2.4)).toBeCloseTo(1, 1)
+  })
+
+  it('force plays even when music is disabled', () => {
+    ready()
+    music.setEnabled(false)
+    music.play('song', { force: true })
+    expect(music.isPlaying()).toBe(true)
+    music.play('map')
+    expect(music.isPlaying()).toBe(false)
+  })
+})

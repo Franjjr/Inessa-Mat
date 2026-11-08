@@ -265,6 +265,7 @@ const THEME_INFO: Record<Theme, { icon: string; name: string; desc: string }> = 
   play: { icon: '🧩', name: 'Juego', desc: 'Discreta, para concentrarse en las cuentas.' },
   guardian: { icon: '🛡️', name: 'Guardián', desc: 'Valiente y con ritmo, para el gran desafío.' },
   celebration: { icon: '🎉', name: 'Fiesta', desc: 'Brillante, para celebrar un cristal.' },
+  song: { icon: '🎵', name: 'Canción', desc: 'Marimba con pulso fijo, para cantar las tablas.' },
 }
 
 const KEY_NAMES: Record<number, string> = { 57: 'la menor', 60: 'do mayor', 65: 'fa mayor', 67: 'sol mayor' }

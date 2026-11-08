@@ -85,6 +85,18 @@ export const THEMES: Record<Exclude<MusicTheme, 'none'>, ThemeDef> = {
     thump: { steps: [0, 4], peak: 0.16 },
     sparkle: 0.4,
   },
+  // The times-table songs: a steady, cheerful marimba tune under the voice. Straight time (no swing) so every verse
+  // can start on the first beat of a bar (music.nextBarIn).
+  song: {
+    bpm: 100, swing: 0, level: 0.9, reverb: 0.25, root: 60, scale: PENTA_MAJOR,
+    chords: [C, Am, F, G], barsPerChord: 1,
+    melody: { inst: 'marimba', density: 0.5, lo: 67, hi: 86, peak: 0.3 },
+    bass: { steps: [0, 4], peak: 0.3, dur: 0.4 },
+    pad: { peak: 0.08, cutoff: 1500 },
+    shaker: { steps: [1, 3, 5, 7], peak: 0.022 },
+    thump: { steps: [0, 4], peak: 0.2 },
+    sparkle: 0.15,
+  },
 }
 
 const STEPS_PER_BAR = 8
@@ -113,6 +125,8 @@ export class ThemePlayer {
   private timer: ReturnType<typeof setTimeout> | undefined
   private nextTime = 0
   private step = 0
+  /** Audio time of the latest bar start scheduled (step 0 of a bar), for nextBarIn. */
+  private barAnchor: number | null = null
   private motif: MotifNote[] = []
   private variant: MotifNote[] = []
   private melIdx = 0
@@ -133,6 +147,19 @@ export class ThemePlayer {
 
   get stepDur(): number {
     return 60 / this.def.bpm / 2
+  }
+
+  /** Seconds per bar (4 beats). */
+  get barDur(): number {
+    return this.stepDur * STEPS_PER_BAR
+  }
+
+  /** Seconds from `now` (audio time) to the next first beat of a bar; null before the first bar is scheduled. */
+  nextBarIn(now: number): number | null {
+    if (this.barAnchor === null) return null
+    const d = this.barDur
+    const k = Math.ceil((now - this.barAnchor) / d - 1e-9)
+    return Math.max(0, this.barAnchor + k * d - now)
   }
 
   get activeVoices(): number {
@@ -177,6 +204,7 @@ export class ThemePlayer {
   renderAhead(seconds: number): void {
     const end = this.e.ctx.currentTime + seconds
     while (this.nextTime < end) {
+      if (this.step % STEPS_PER_BAR === 0) this.barAnchor = this.nextTime
       this.scheduleStep(this.step, this.nextTime)
       this.step += 1
       this.nextTime += this.stepDur
@@ -198,6 +226,7 @@ export class ThemePlayer {
     // After a stall (main thread busy, context resumed) jump ahead instead of firing a burst of late notes.
     if (this.nextTime < now - 0.05) this.nextTime = now + 0.05
     while (this.nextTime < now + LOOKAHEAD) {
+      if (this.step % STEPS_PER_BAR === 0) this.barAnchor = this.nextTime
       this.scheduleStep(this.step, this.nextTime)
       this.step += 1
       this.nextTime += this.stepDur
@@ -346,6 +375,8 @@ export class ThemePlayer {
 
 let enabled = true
 let desired: MusicTheme = 'none'
+/** The desired theme was asked with force (a song): it plays even with the music turned off. */
+let forced = false
 let current: ThemePlayer | null = null
 let hidden = false
 let ducked = false
@@ -371,7 +402,7 @@ function stopCurrent(fade: number): void {
 }
 
 function maybeStart(): void {
-  if (!enabled || hidden || desired === 'none') return
+  if ((!enabled && !forced) || hidden || desired === 'none') return
   if (current && current.theme === desired) return
   const e = getEngine()
   if (!e || e.ctx.state !== 'running') return
@@ -392,10 +423,12 @@ function applyDuck(): void {
 }
 
 export const music = {
-  play(theme: MusicTheme): void {
+  /** force: plays even when the music is turned off (the times-table songs need their music). */
+  play(theme: MusicTheme, opts: { force?: boolean } = {}): void {
     wire()
     desired = theme
-    if (theme === 'none') stopCurrent(1.2)
+    forced = !!opts.force
+    if (theme === 'none' || (!enabled && !forced)) stopCurrent(1.2)
     else maybeStart()
   },
   stop(): void {
@@ -406,7 +439,7 @@ export const music = {
   setEnabled(on: boolean): void {
     wire()
     enabled = on
-    if (!on) stopCurrent(0.6)
+    if (!on && !forced) stopCurrent(0.6)
     else maybeStart()
   },
   /** Lower music volume while speech plays. */
@@ -423,6 +456,15 @@ export const music = {
   current(): MusicTheme {
     return desired
   },
+  /** Seconds until the next first beat of a bar of the theme sounding now (null when nothing sounds yet). */
+  nextBarIn(): number | null {
+    const e = peekEngine()
+    return current && !current.stopping && e ? current.nextBarIn(e.ctx.currentTime) : null
+  },
+  /** Seconds per bar of the theme sounding now (null when nothing sounds). */
+  barSeconds(): number | null {
+    return current && !current.stopping ? current.barDur : null
+  },
   /** Extra: whether a theme is actually sounding right now. */
   isPlaying(): boolean {
     return !!current && !current.stopping
@@ -438,6 +480,7 @@ export function __resetMusicForTests(): void {
   current = null
   enabled = true
   desired = 'none'
+  forced = false
   hidden = false
   ducked = false
 }
