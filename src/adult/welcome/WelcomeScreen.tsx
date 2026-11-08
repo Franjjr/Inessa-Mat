@@ -3,8 +3,9 @@
    inside an adventure, with a report for the grown-up) for Primaria, not only maths, next to an animated demo of the
    app (HeroDemo); then how it works in three steps,
    each with a real capture (the last one is the grown-up's report); who it is for; the subjects (Matemáticas now, the
-   others later); the trust promises right before the closing choice between a local-only try, signing in or creating
-   an account. Children never see this page. */
+   others later); the trust promises right before the closing call to create an account (or sign in). There is no
+   «try without an account» here: only a build without accounts (no backend) still offers the local-only try, since
+   that is then the only way in. Children never see this page. */
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { SUBJECTS } from '@/types'
 import { useAuth } from '@/data'
@@ -85,9 +86,10 @@ export default function WelcomeScreen() {
     navigate('/', { replace: true })
   }
 
-  const accountButtons = backendAvailable && (
-    <Button variant="gold" size="lg" onClick={() => navigate('/signup')}>Crear cuenta</Button>
-  )
+  // With accounts, the way in is an account; without a backend, the local-only try is the only way in.
+  const startButtons = backendAvailable
+    ? <Button variant="gold" size="lg" onClick={() => navigate('/signup')}>Crear cuenta</Button>
+    : <Button variant="gold" size="lg" onClick={tryWithoutAccount}>Empezar</Button>
   const comingSoon = SUBJECTS.filter((subject) => !subject.available).map((subject) => subject.name)
   const available = SUBJECTS.filter((subject) => subject.available).map(subjectName)
 
@@ -109,7 +111,7 @@ export default function WelcomeScreen() {
             {backendAvailable && (
               <Button variant="ghost" className={s.topLogin} onClick={() => navigate('/login')}>Iniciar sesión</Button>
             )}
-            {accountButtons}
+            {backendAvailable && startButtons}
           </div>
         </div>
       </header>
@@ -134,11 +136,7 @@ export default function WelcomeScreen() {
                   <span key={name} className={s.chip}>{name} · pronto</span>
                 ))}
               </div>
-              <p className={s.tryLine}>Pruébalo con tu hijo unos días: puedes empezar sin crear cuenta.</p>
-              <div className={s.row}>
-                {accountButtons}
-                <Button variant="secondary" size="lg" onClick={tryWithoutAccount}>Probar sin cuenta</Button>
-              </div>
+              <div className={s.row}>{startButtons}</div>
               {backendAvailable && (
                 <p className={s.small}>
                   ¿Ya tienes cuenta? <Button variant="ghost" onClick={() => navigate('/login')}>Iniciar sesión</Button>
@@ -243,7 +241,7 @@ export default function WelcomeScreen() {
               </article>
               <article className={`${s.sticker} ${s.trustCard} ${s.cBlue}`}>
                 <span className={s.check} aria-hidden>✓</span>
-                <div><h3>Prueba sin cuenta</h3><p>Sin cuenta, el progreso se guarda solo en este dispositivo. Creas la cuenta cuando quieras.</p></div>
+                <div><h3>Su progreso, en tu cuenta</h3><p>Entra con tu cuenta en otra tablet o en el móvil y sigue donde lo dejó.</p></div>
               </article>
               <article className={`${s.sticker} ${s.trustCard} ${s.cYellow}`}>
                 <span className={s.check} aria-hidden>✓</span>
@@ -259,10 +257,7 @@ export default function WelcomeScreen() {
               <h2 id="empezar">¿Empezamos la primera aventura?</h2>
               <p>Cada día, lo que toca. Cada semana, lo que cuesta. Y tú lo ves todo en el informe.</p>
             </div>
-            <div className={s.row}>
-              {accountButtons}
-              <Button variant="secondary" size="lg" onClick={tryWithoutAccount}>Probar sin cuenta</Button>
-            </div>
+            <div className={s.row}>{startButtons}</div>
           </div>
         </section>
       </main>

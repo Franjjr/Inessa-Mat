@@ -105,7 +105,6 @@
 .deck { margin: 0; max-width: 36em; font-size: clamp(19px, 1.45vw, 30px); color: var(--c-ink-soft); }
 .row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
 .row > * { flex: 0 1 auto; }
-.tryLine { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(18px, 1.4vw, 26px); color: var(--c-ink); }
 .small { margin: 0; font-size: var(--fs-sm); color: var(--c-ink-soft); }
 .small button { min-height: 44px; }
 
@@ -244,8 +243,8 @@
   .subj:first-child { grid-column: 1 / -1; min-height: 0; }
   .closing { grid-template-columns: 1fr; }
 }
-/* Phones: the header keeps the logo and «Iniciar sesión», easy to find; «Crear cuenta» and «Probar sin cuenta» are the
-   big buttons of the hero. Everything stays inside the screen (a header wider than the phone makes the page sway). */
+/* Phones: the header keeps the logo and «Iniciar sesión», easy to find; «Crear cuenta» is the big button
+   of the hero. Everything stays inside the screen (a header wider than the phone makes the page sway). */
 @media (max-width: 640px) {
   .nav { display: none; }
   .topInner { flex-wrap: nowrap; gap: var(--sp-2); }
