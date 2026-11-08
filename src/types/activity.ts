@@ -40,6 +40,13 @@ export interface ExerciseViewProps {
   divMethod?: DivMethod
   /** Favourite trick for the tables: used by the hint of the fact when it applies (see methods.ts). */
   tableMethod?: TableMethod | null
+  /** Teaching after a wrong multiplication fact, when the view hides its own feedback (default 'none'):
+   *  'clue' shows the engine's clue (the trick) after the first wrong try; 'full' also, after the second one, shows the
+   *  drawing and the worked step and asks the child to write the answer before going on. Ignored by other kinds. */
+  teach?: 'none' | 'clue' | 'full'
+  /** A wrong try that the view follows with another one (or with the copy step): the exercise has begun, so the
+   *  screen around it can drop «Ahora no» / «No lo sé». Only FactView calls it for now. */
+  onTry?: () => void
 }
 
 export interface ExerciseOutcome {

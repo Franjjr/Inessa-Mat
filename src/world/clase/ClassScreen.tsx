@@ -119,6 +119,7 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
               key={exercise.id}
               exercise={exercise}
               allowHints={false}
+              teach="none"
               okLabel={last ? 'Terminar' : 'Siguiente'}
               wrongLabel="Siguiente"
               onContinue={onKnowItContinue}

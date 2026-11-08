@@ -112,7 +112,7 @@ function checkFactMul(ex: FactMulExercise, answer: Answer): CheckResult {
   if (v === ex.a + ex.b) return { correct: false, given, expected, errorType: 'operation', feedback: FEEDBACK.factAdded(ex.a, ex.b) }
   const neighbours: [number, number][] = [[ex.a, ex.b - 1], [ex.a, ex.b + 1], [ex.a - 1, ex.b], [ex.a + 1, ex.b]]
   const nb = neighbours.find(([x, y]) => x >= 1 && y >= 1 && x * y === v)
-  const feedback = nb ? FEEDBACK.factNeighbour(v, nb[0], nb[1], strategy) : FEEDBACK.factWrong(strategy)
+  const feedback = nb ? FEEDBACK.factNeighbour(v, nb[0], nb[1], strategy, ex.answer) : FEEDBACK.factWrong(strategy)
   return { correct: false, given, expected, errorType: 'fact', feedback }
 }
 

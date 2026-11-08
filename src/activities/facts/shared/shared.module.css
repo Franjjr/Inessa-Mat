@@ -1,4 +1,6 @@
-/* Shared look of the facts minigames: frame, equation rows, hints, clues, sequences and result cards. */
+/* Shared look of the facts minigames: frame, equation rows, hints, clues, sequences and result cards.
+   The accent is set by .frame; outside a minigame (the daily session, the review) it falls back to the magic colour,
+   or the hint box and its dots would be transparent. */
 
 .frame {
   --accent: var(--c-magic);
@@ -65,7 +67,7 @@
 .progressFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent), var(--c-gold));
+  background: linear-gradient(90deg, var(--accent, var(--c-magic)), var(--c-gold));
   transition: width var(--dur-med) var(--ease-out);
 }
 
@@ -120,7 +122,7 @@
 }
 
 .sign {
-  color: var(--accent);
+  color: var(--accent, var(--c-magic));
   font-weight: 500;
 }
 
@@ -134,9 +136,9 @@
   min-height: var(--tap-min);
   min-width: var(--tap-min);
   padding: 0 var(--sp-4);
-  border: 2px solid var(--accent);
+  border: 2px solid var(--accent, var(--c-magic));
   border-radius: var(--r-pill);
-  background: var(--accent-soft);
+  background: var(--accent-soft, var(--c-magic-soft));
   color: var(--c-ink);
   font-family: var(--font-display);
   font-weight: 600;
@@ -154,7 +156,7 @@
 }
 
 .hintBtn:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--accent, var(--c-magic));
   outline-offset: 3px;
 }
 
@@ -163,8 +165,8 @@
   box-sizing: border-box;
   padding: var(--sp-3) var(--sp-4);
   border-radius: var(--r-lg);
-  background: var(--accent-soft);
-  border: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-soft, var(--c-magic-soft));
+  border: 2px solid color-mix(in srgb, var(--accent, var(--c-magic)) 35%, transparent);
   display: grid;
   gap: var(--sp-2);
 }
@@ -209,7 +211,7 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent, var(--c-magic));
   flex: none;
 }
 
@@ -235,7 +237,7 @@
 }
 
 .chipHot {
-  background: var(--accent);
+  background: var(--accent, var(--c-magic));
   color: #fff;
 }
 
@@ -302,18 +304,18 @@
 
 .beadOpen {
   background: var(--c-surface);
-  border: 3px dashed var(--accent);
+  border: 3px dashed var(--accent, var(--c-magic));
   color: var(--c-ink-mute);
   box-shadow: none;
 }
 
 .beadCurrent {
   transform: scale(1.12);
-  box-shadow: 0 0 0 4px var(--accent-soft), 0 0 0 7px var(--accent), var(--shadow-2);
+  box-shadow: 0 0 0 4px var(--accent-soft, var(--c-magic-soft)), 0 0 0 7px var(--accent, var(--c-magic)), var(--shadow-2);
 }
 
 .beadFilled {
-  background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--accent-soft) 60%, color-mix(in srgb, var(--accent) 60%, #fff) 100%);
+  background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--accent-soft, var(--c-magic-soft)) 60%, color-mix(in srgb, var(--accent, var(--c-magic)) 60%, #fff) 100%);
   color: var(--c-ink);
 }
 
@@ -342,24 +344,24 @@
 
 .linkGiven {
   background: var(--c-surface-2);
-  border-color: var(--accent-soft);
+  border-color: var(--accent-soft, var(--c-magic-soft));
 }
 
 .linkOpen {
   border-style: dashed;
-  border-color: var(--accent);
+  border-color: var(--accent, var(--c-magic));
   color: var(--c-ink-mute);
 }
 
 .linkCurrent {
   transform: scale(1.1);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 5px var(--accent-soft), var(--shadow-2);
+  border-color: var(--accent, var(--c-magic));
+  box-shadow: 0 0 0 5px var(--accent-soft, var(--c-magic-soft)), var(--shadow-2);
 }
 
 .linkFilled {
-  border-color: var(--accent);
-  background: var(--accent-soft);
+  border-color: var(--accent, var(--c-magic));
+  background: var(--accent-soft, var(--c-magic-soft));
 }
 
 .linkRevealed {
@@ -422,7 +424,7 @@
 .statPill {
   padding: 8px 14px;
   border-radius: var(--r-pill);
-  background: var(--accent-soft);
+  background: var(--accent-soft, var(--c-magic-soft));
   font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--fs-sm);

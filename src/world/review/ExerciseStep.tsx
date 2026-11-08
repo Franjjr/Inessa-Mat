@@ -44,6 +44,9 @@ export interface ExerciseStepProps {
   allowRetry?: boolean
   /** Offer «No lo sé» before the child answers: records a dont-know attempt and shows the hints (default false). */
   allowDontKnow?: boolean
+  /** Teaching after a wrong multiplication fact (default 'full': the trick, then the drawing and copying the answer);
+   *  'clue' only the trick (warm-up), 'none' nothing (a check before a class). See ExerciseViewProps.teach. */
+  teach?: 'none' | 'clue' | 'full'
 }
 
 /**
@@ -56,6 +59,7 @@ const now = (): number => (typeof performance !== 'undefined' ? performance.now(
 
 export function ExerciseStep({
   exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue, onSkip, allowRetry = false, allowDontKnow = false,
+  teach = 'full',
 }: ExerciseStepProps) {
   const host = useActivityHost()
   const [stage, setStage] = useState<Stage>('asking')
@@ -124,6 +128,8 @@ export function ExerciseStep({
 
   // After «Inténtalo otra vez» the focus goes to the new exercise (its first input), not to the page body.
   const viewRef = useRef<HTMLDivElement>(null)
+  // The view already took a wrong try (its own second try, or copying the answer): «Ahora no» and «No lo sé» go away.
+  const [tried, setTried] = useState(false)
   useEffect(() => {
     if (view === 0) return
     const root = viewRef.current
@@ -137,7 +143,12 @@ export function ExerciseStep({
   }, [view])
 
   const show = (o: ExerciseOutcome) => {
-    const custom = feedbackFor?.(o) ?? (exRef.current.kind === 'eng-speak' ? o.check.feedback : undefined)
+    const ex = exRef.current
+    // A missed multiplication fact the child has just seen worked out: the fact itself, to remember, not a generic phrase.
+    const factLine = ex.kind === 'fact-mul' && !o.check.correct && teach !== 'none'
+      ? `¡Recuérdalo: ${ex.a} × ${ex.b} = ${ex.answer}!`
+      : undefined
+    const custom = feedbackFor?.(o) ?? (ex.kind === 'eng-speak' ? o.check.feedback : factLine)
     const phrase = o.check.correct
       ? pickPhrase('correct', hostRef.current.rng)
       : pickPhrase('wrong', hostRef.current.rng, o.check.errorType)
@@ -223,12 +234,14 @@ export function ExerciseStep({
           onAnswered={handleAnswered}
           allowHints={allowHints}
           showFeedback={false}
+          teach={teach}
+          onTry={() => setTried(true)}
           method={host.prefs.subMethod}
           divMethod={host.prefs.divMethod}
           tableMethod={host.prefs.tableMethod}
         />
       </div>
-      {stage === 'asking' && (onSkip || allowDontKnow) && exercise.kind !== 'eng-speak' && (
+      {stage === 'asking' && !tried && (onSkip || allowDontKnow) && exercise.kind !== 'eng-speak' && (
         <div className={s.skip}>
           {onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
           {allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
