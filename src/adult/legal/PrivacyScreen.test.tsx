@@ -29,4 +29,12 @@ describe('PrivacyScreen: micrófono (Inglés)', () => {
     render(<MemoryRouter><PrivacyScreen /></MemoryRouter>)
     expect(sectionText(/Dónde se guardan los datos/)).toMatch(/Azure/)
   })
+
+  it('says what Google sends and what it never gets', () => {
+    render(<MemoryRouter><PrivacyScreen /></MemoryRouter>)
+    const text = sectionText(/Dónde se guardan los datos/)
+    expect(text).toMatch(/Entrar con Google es opcional/)
+    expect(text).toMatch(/la aplicación solo\s+usa el nombre y el correo/)
+    expect(text).toMatch(/nunca le damos a Google datos de\s+los niños/)
+  })
 })

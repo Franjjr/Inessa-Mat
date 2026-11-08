@@ -11,6 +11,7 @@ import { TextField } from '../shared/Field'
 import { errorMessage } from '../shared/messages'
 import { validateEmail, validateLogin, validateNewPassword } from './validation'
 import { AfterSignIn } from './AfterSignIn'
+import { GoogleButton } from './GoogleButton'
 import { useInviteAcceptance } from './invite'
 import s from './auth.module.css'
 import adult from '../shared/adult.module.css'
@@ -220,6 +221,7 @@ export default function LoginScreen() {
           </div>
         )}
         <form className={`${adult.card} ${s.panel}`} onSubmit={submitPassword} noValidate aria-label="Iniciar sesión">
+          <GoogleButton context="signin" />
           <TextField
             id="login-email" label="Correo electrónico" type="email" autoComplete="username" inputMode="email"
             value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} autoCapitalize="none"

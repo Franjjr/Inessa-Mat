@@ -4,7 +4,7 @@ import {
   createChild, createOrganization, getProgress, inviteMember, joinClassWithCode, listAssignmentsForChild, listChildren,
   recordAttempt, setChestReward, startSession, updateProgress, DataError,
 } from '@/data'
-import { continueLocalOnly, signInWithPassword, signOut, signUp, claimLocalData, setActiveOrg, startAuth, createInviteLink, sendMagicLink, resetPassword, verifyEmailCode } from '../account'
+import { completeAccount, signInWithGoogle, suggestedDisplayName, continueLocalOnly, signInWithPassword, signOut, signUp, claimLocalData, setActiveOrg, startAuth, createInviteLink, sendMagicLink, resetPassword, verifyEmailCode } from '../account'
 import { db } from '../db'
 import { META, setMeta } from '../meta'
 import { getAuth } from '../store'
@@ -272,5 +272,64 @@ describe('schools (online)', () => {
     const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
     expect(await listAssignmentsForChild(c.id)).toEqual([])
     await expect(joinClassWithCode('K7M2QP', c.id)).rejects.toMatchObject({ code: 'not-signed-in' })
+  })
+})
+
+describe('Google', () => {
+  it('a new address signs in with no organisation; completing the account saves the name and creates the family', async () => {
+    await boot()
+    await signInWithGoogle('google|marta@gmail.com|Marta Ruiz|n1', 'n1')
+    await flushTimers(5)
+    expect(getAuth().status).toBe('signed-in')
+    expect(getAuth().memberships).toHaveLength(0)
+    expect(await suggestedDisplayName()).toBe('Marta Ruiz')
+    await completeAccount({ displayName: ' Marta ', orgKind: 'family', orgName: 'Familia Ruiz' })
+    expect(getAuth().activeOrg).toMatchObject({ kind: 'family', name: 'Familia Ruiz' })
+    expect(getAuth().profile?.displayName).toBe('Marta')
+    // A second call does not create another organisation.
+    await completeAccount({ displayName: 'Marta', orgKind: 'family', orgName: 'Otra' })
+    expect(getAuth().organizations).toHaveLength(1)
+  })
+
+  it('an address with an account joins it, with its family', async () => {
+    await boot()
+    await signUp({ email: 'ana@correo.es', password: 'bien12345', displayName: 'Ana', orgKind: 'family', orgName: 'Casa' })
+    await signOut()
+    await signInWithGoogle('google|ana@correo.es|Ana G|n2', 'n2')
+    await flushTimers(5)
+    expect(getAuth().user?.email).toBe('ana@correo.es')
+    expect(getAuth().activeOrg?.name).toBe('Casa')
+    expect(await suggestedDisplayName()).toBe('Ana')
+  })
+
+  it('a stranger\'s unconfirmed sign-up with the address does not create its family when the owner comes in with Google', async () => {
+    await boot()
+    fake.auth.requireConfirmation = true
+    await signUp({ email: 'eva@gmail.com', password: 'otro12345', displayName: 'Otro', orgKind: 'school', orgName: 'Del otro' })
+    // Supabase drops the unconfirmed e-mail identity when the Google one is linked.
+    fake.auth.users.find((u) => u.email === 'eva@gmail.com')!.identities = [{ provider: 'google' }]
+    await signInWithGoogle('google|eva@gmail.com|Eva|n4', 'n4')
+    await flushTimers(5)
+    expect(getAuth().memberships).toHaveLength(0)
+    expect(fake.rows('organizations')).toHaveLength(0)
+  })
+
+  it('completing does not create a second organisation when the server already has one', async () => {
+    await boot()
+    await signInWithGoogle('google|leo@gmail.com|Leo|n5', 'n5')
+    await flushTimers(5)
+    // Another tab completed it meanwhile.
+    fake.rpcs.create_organization!({ p_kind: 'family', p_name: 'Desde otra pestaña' })
+    await completeAccount({ displayName: 'Leo', orgKind: 'family', orgName: 'Repetida' })
+    expect(fake.rows('organizations')).toHaveLength(1)
+    expect(getAuth().activeOrg?.name).toBe('Desde otra pestaña')
+  })
+
+  it('a token without the right nonce is refused with a Spanish message', async () => {
+    await boot()
+    await expect(signInWithGoogle('google|x@gmail.com|X|otro', 'n3')).rejects.toMatchObject({
+      code: 'google-failed', message: 'No hemos podido entrar con Google. Vuelve a intentarlo o entra con un código por correo.',
+    })
+    expect(getAuth().status).toBe('anonymous')
   })
 })

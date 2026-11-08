@@ -32,12 +32,25 @@ export interface SignupInput {
 
 export type SignupErrors = Partial<Record<keyof SignupInput, string>>
 
-export function validateSignup(input: SignupInput): SignupErrors {
-  const errors: SignupErrors = {}
+/** What every new account needs, whatever the way in (the sign-up form, or Google the first time). */
+export type AccountSetupInput = Pick<SignupInput, 'displayName' | 'orgKind' | 'orgName' | 'acceptedPrivacy'>
+export type AccountSetupErrors = Partial<Record<keyof AccountSetupInput, string>>
+
+export function validateAccountSetup(input: AccountSetupInput): AccountSetupErrors {
+  const errors: AccountSetupErrors = {}
   const name = input.displayName.trim()
   if (!name) errors.displayName = 'Escribe tu nombre.'
   else if (name.length > 80) errors.displayName = 'Tu nombre es demasiado largo (máximo 80 letras).'
+  if (!input.orgKind) errors.orgKind = 'Elige si lo usarás en familia o en colegio.'
+  if (!input.orgName.trim()) {
+    errors.orgName = input.orgKind === 'school' ? 'Escribe el nombre del colegio.' : 'Escribe un nombre para tu familia.'
+  }
+  if (!input.acceptedPrivacy) errors.acceptedPrivacy = 'Para crear la cuenta, lee y acepta la política de privacidad.'
+  return errors
+}
 
+export function validateSignup(input: SignupInput): SignupErrors {
+  const errors: SignupErrors = {}
   const emailError = validateEmail(input.email)
   if (emailError) errors.email = emailError
 
@@ -45,12 +58,7 @@ export function validateSignup(input: SignupInput): SignupErrors {
   if (passwordError) errors.password = passwordError
   else if (input.confirm !== input.password) errors.confirm = 'Las contraseñas no coinciden.'
 
-  if (!input.orgKind) errors.orgKind = 'Elige si lo usarás en familia o en colegio.'
-  if (!input.orgName.trim()) {
-    errors.orgName = input.orgKind === 'school' ? 'Escribe el nombre del colegio.' : 'Escribe un nombre para tu familia.'
-  }
-  if (!input.acceptedPrivacy) errors.acceptedPrivacy = 'Para crear la cuenta, lee y acepta la política de privacidad.'
-  return errors
+  return { ...errors, ...validateAccountSetup(input) }
 }
 
 export function validateLogin(email: string, password: string): { email?: string; password?: string } {

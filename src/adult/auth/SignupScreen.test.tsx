@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const data = vi.hoisted(() => ({ useAuth: vi.fn(), acceptInvite: vi.fn(), useChildren: vi.fn() }))
+const data = vi.hoisted(() => ({ useAuth: vi.fn(), useAuthExtras: () => ({ offline: false, passwordRecovery: false }), acceptInvite: vi.fn(), useChildren: vi.fn(), googleClientId: () => null }))
 vi.mock('@/data', () => data)
 
 import SignupScreen from './SignupScreen'

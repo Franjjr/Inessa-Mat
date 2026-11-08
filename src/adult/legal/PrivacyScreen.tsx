@@ -11,7 +11,7 @@ export default function PrivacyScreen() {
     <AdultPage title="Privacidad y datos" back="/">
       <article className={s.doc} aria-labelledby="privacy-doc-title">
         <h2 id="privacy-doc-title" className={adult.heading} style={{ fontSize: 'var(--fs-xl)' }}>Política de privacidad de Repasitos</h2>
-        <p className={s.updated}>Última actualización: 6 de noviembre de 2026</p>
+        <p className={s.updated}>Última actualización: 8 de noviembre de 2026</p>
 
         <p>
           Repasitos es una aplicación para aprender matemáticas en Primaria. Esta política explica qué datos tratamos, para qué,
@@ -35,7 +35,7 @@ export default function PrivacyScreen() {
           <li><strong>Su aprendizaje:</strong> respuestas a los ejercicios (acierto o error, tipo de error, tiempo de respuesta), sesiones de juego (fecha y minutos), avances por mundos y ajustes de juego que elijas.</li>
           <li><strong>Pronunciación en inglés:</strong> solo si un adulto activa el micrófono, la fecha de su consentimiento y si está encendido o apagado. Repasitos no guarda el audio (apartado 11).</li>
           <li><strong>Escritura a mano:</strong> las muestras con las que la aplicación aprende a leer su letra se guardan solo en este dispositivo y nunca se suben a la nube.</li>
-          <li><strong>De los adultos:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número).</li>
+          <li><strong>De los adultos:</strong> nombre, correo y contraseña de la cuenta (la contraseña la gestiona el proveedor de la base de datos y nosotros no la vemos), y el PIN de la zona de adultos, que se guarda solo en este dispositivo en forma cifrada (un resumen, no el número). Si entras con Google, en lugar de la contraseña (apartado 6).</li>
         </ul>
         <p>No pedimos el nombre completo, la dirección, el teléfono ni fotos de los niños.</p>
 
@@ -72,6 +72,14 @@ export default function PrivacyScreen() {
         <p>
           La web y nuestro servidor de voz están alojados en Vercel, que actúa como proveedor de alojamiento. La voz y la pronunciación en
           inglés usan además Microsoft Azure (ver los apartados 10 y 11).
+        </p>
+        <p>
+          Entrar con Google es opcional: también puedes entrar con tu correo y una contraseña o un código. Si eliges Google, Google
+          confirma que el correo es tuyo y nos envía el nombre, el correo, la foto de perfil y un identificador de tu cuenta de
+          Google. El proveedor de la base de datos los guarda con tu cuenta para reconocerte la próxima vez; la aplicación solo
+          usa el nombre y el correo. No guardamos ninguna clave ni permiso de Google, no pedimos acceso a tu correo, contactos ni archivos, y nunca le damos a Google datos de
+          los niños. El botón de Google solo se carga en las pantallas de iniciar sesión y crear cuenta, nunca en la zona de los
+          niños. Google trata esos datos según su propia política de privacidad (policies.google.com/privacy).
         </p>
 
         <h2>7. Cuánto tiempo los guardamos</h2>

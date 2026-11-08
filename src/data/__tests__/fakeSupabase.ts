@@ -298,7 +298,7 @@ export class FakeAuth {
   }
 
   addUser(email: string, password: string, meta: Record<string, unknown> = {}): FakeUser {
-    const user = { id: crypto.randomUUID(), email, password, created_at: new Date().toISOString(), user_metadata: meta, identities: [{}] }
+    const user = { id: crypto.randomUUID(), email, password, created_at: new Date().toISOString(), user_metadata: meta, identities: [{ provider: String(meta.provider ?? 'email') }] }
     this.users.push(user)
     this.parent.rows('profiles').push({ id: user.id, email, display_name: String(meta.display_name ?? ''), locale: 'es-ES', created_at: user.created_at })
     return user
@@ -361,6 +361,19 @@ export class FakeAuth {
   async resetPasswordForEmail(email: string) {
     if (this.users.some((x) => x.email === email)) this.codes.set(email, { token: '654321', type: 'recovery' })
     return { data: {}, error: null }
+  }
+
+  /** Google ID tokens, as the tests write them: `google|<email>|<name>|<raw nonce>` (the real token carries the nonce's
+      SHA-256; the fake keeps it raw). An e-mail with an account joins it, as Supabase links verified addresses. */
+  async signInWithIdToken({ provider, token, nonce }: { provider: string; token: string; nonce?: string }) {
+    const [kind, email, name, tokenNonce] = token.split('|')
+    if (provider !== 'google' || kind !== 'google' || !email || !nonce || tokenNonce !== nonce) {
+      return { data: { user: null, session: null }, error: { message: 'Passed nonce and nonce in id_token should either both exist or not.', status: 400 } }
+    }
+    const u = this.users.find((x) => x.email === email) ?? this.addUser(email, crypto.randomUUID(), { full_name: name, provider: 'google' })
+    this.session = { user: u, access_token: 'token' }
+    this.emit('SIGNED_IN')
+    return { data: { user: u, session: this.session }, error: null }
   }
 
   async verifyOtp({ email, token, type }: { email: string; token: string; type: 'email' | 'recovery' }) {

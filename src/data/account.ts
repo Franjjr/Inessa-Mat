@@ -71,9 +71,12 @@ async function fetchAccount(sb: SupabaseClient, user: User): Promise<AccountData
   }
   let memberships = await loadMemberships()
 
-  // First sign-in after sign-up with e-mail confirmation: create the organization chosen at sign-up.
+  // First sign-in after sign-up with e-mail confirmation: create the organization chosen at sign-up. Only while the account
+  // still has its e-mail identity: when someone signs up with another person's address and never confirms it, and that
+  // person then comes in with Google, Supabase drops the unconfirmed identity, and the stranger's choice must not apply.
   const meta = (user.user_metadata ?? {}) as { org_kind?: string; org_name?: string }
-  if (!memberships.length && (meta.org_kind === 'family' || meta.org_kind === 'school') && meta.org_name) {
+  const viaEmail = !Array.isArray(user.identities) || user.identities.some((i) => i.provider === 'email')
+  if (!memberships.length && viaEmail && (meta.org_kind === 'family' || meta.org_kind === 'school') && meta.org_name) {
     const { error } = await sb.rpc('create_organization', { p_kind: meta.org_kind, p_name: meta.org_name })
     if (!error) {
       await sb.auth.updateUser({ data: { org_kind: null, org_name: null } }).then(() => undefined, () => undefined)
@@ -313,6 +316,54 @@ export async function sendMagicLink(email: string): Promise<void> {
   const err = toDataError(error)
   if (err.code === 'no-account') return
   throw err
+}
+
+/** Signs in with the credential of the Google button. `nonce` is the raw value whose SHA-256 was given to Google: Supabase
+    checks that the token carries it, so a token caught elsewhere cannot be replayed. An address that already has an account
+    joins it (Google has verified the address); a new one gets an account with no family or school yet: see completeAccount. */
+export async function signInWithGoogle(credential: string, nonce: string): Promise<void> {
+  const sb = await backend()
+  if (!credential) throw new DataError('google-failed')
+  const { data, error } = await sb.auth.signInWithIdToken({ provider: 'google', token: credential, nonce })
+  if (error) {
+    const err = toDataError(error)
+    throw err.code === 'offline' || err.code === 'rate-limited' ? err : new DataError('google-failed', undefined, error)
+  }
+  if (data.user) await loadAccountFor(data.user, generation)
+}
+
+/** The name to suggest when the account is completed: the one saved, else the one Google gave. */
+export async function suggestedDisplayName(): Promise<string> {
+  const a = getAuth()
+  const sb = await getSupabase()
+  const meta = (sb ? (await sb.auth.getSession()).data.session?.user.user_metadata : null) ?? {}
+  const fromProvider = String(meta.full_name ?? meta.name ?? '').trim()
+  const saved = (a.profile?.displayName ?? '').trim()
+  const emailName = (a.user?.email ?? '').split('@')[0] ?? ''
+  // The profile row starts with the part of the e-mail before the @ when nothing else was given.
+  if (fromProvider && (!saved || saved === emailName)) return fromProvider.slice(0, 80)
+  return saved
+}
+
+/** An account with no family or school yet (first time with Google): saves the adult's name and creates the organisation. */
+export async function completeAccount(input: { displayName: string; orgKind: OrgKind; orgName: string }): Promise<void> {
+  const { userId } = requireSignedIn()
+  const displayName = String(input.displayName ?? '').trim()
+  if (!displayName) throw new DataError('invalid', 'Escribe tu nombre.')
+  if (input.orgKind !== 'family' && input.orgKind !== 'school') throw new DataError('invalid')
+  if (!String(input.orgName ?? '').trim()) throw new DataError('invalid', input.orgKind === 'school' ? 'Escribe el nombre del colegio.' : 'Escribe un nombre para tu familia.')
+  if (getAuth().memberships.length) return
+  const sb = await backend()
+  // Ask the server, not the local copy: another tab, or a retry after a lost answer, may have created it already.
+  const { data: existing, error: me } = await sb.from('memberships').select('org_id').eq('user_id', userId).limit(1)
+  if (me) throw toDataError(me)
+  if (existing?.length) {
+    await reloadAccount()
+    return
+  }
+  const { error } = await sb.from('profiles').update({ display_name: displayName.slice(0, 80) }).eq('id', userId)
+  if (error) throw toDataError(error)
+  await createOrganization(input.orgKind, input.orgName)
 }
 
 /** Signs in with the code of the sign-in e-mail (`login`), or opens the new-password step with the code of the reset e-mail

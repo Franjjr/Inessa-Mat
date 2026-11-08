@@ -44,3 +44,9 @@
   .panel { padding: var(--sp-5); }
 }
 .linkButton { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; text-align: start; min-height: 44px; }
+
+/* «Continuar con Google» and the line that separates it from the e-mail ways. */
+.google { display: flex; flex-direction: column; gap: var(--sp-3); }
+.googleButton { display: flex; justify-content: center; min-height: 44px; width: 100%; }
+.divider { display: flex; align-items: center; gap: var(--sp-3); margin: 0; color: var(--c-ink-soft, inherit); font-size: 0.95rem; }
+.divider::before, .divider::after { content: ''; flex: 1; border-top: 2px solid var(--sticker-line, currentColor); opacity: 0.35; }
