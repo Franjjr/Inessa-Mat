@@ -63,11 +63,14 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
   const busy = useRef(false)
   const device = useRef(false)
   const firstTries = useRef(0)
+  /** A song is under way (preparing or playing): what hiding the app or leaving must stop. */
+  const active = useRef(false)
 
   const say = (text: string) => speech.say(text, { voice: 'lumi', force: true, deviceOnly: device.current })
 
   /** Stops the song for good: voice, song music (the previous music comes back) and any pending question. */
   const stop = () => {
+    active.current = false
     run.current?.abort()
     run.current = null
     answer.current = null
@@ -77,12 +80,20 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
   }
 
   const start = async () => {
-    if (phase !== 'ready') return
+    if (phase !== 'ready' || active.current) return
+    active.current = true
     setPhase('preparing')
     prevMusic.current = music.current()
     const gaps = songGaps(table, mastery, songLevel(stars))
     const ok = await speech.preload(songTexts(table), { voice: 'lumi', timeoutMs: PRELOAD_MS })
-    if (prevMusic.current === null) return // left while preparing
+    // Left, or the app was hidden, while preparing: the song does not start.
+    if (!active.current || document.visibilityState === 'hidden') {
+      if (active.current) {
+        stop()
+        setPhase('ready')
+      }
+      return
+    }
     device.current = !ok
     music.play('song', { force: true })
     firstTries.current = 0
@@ -104,6 +115,7 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
     const res = await r.done
     if (!res || run.current !== r) return
     run.current = null
+    active.current = false
     let total = stars
     if (res.allFirstTry && stars < 3) {
       total = stars + 1
@@ -153,7 +165,7 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
   // Leaving the screen, or hiding the app: the song stops (nothing keeps talking), back to the start button.
   useEffect(() => {
     const onVis = () => {
-      if (document.visibilityState !== 'hidden' || !run.current) return
+      if (document.visibilityState !== 'hidden' || !active.current) return
       stop()
       setAsking(null)
       setLineIdx(null)

@@ -145,6 +145,21 @@ describe('CancionScreen', () => {
     expect(await screen.findByRole('button', { name: /¡A cantar!/ })).toBeInTheDocument()
   })
 
+  it('hiding the tab while preparing: the song never starts', async () => {
+    let release!: (v: boolean) => void
+    audio.speech.preload.mockReturnValue(new Promise<boolean>((r) => { release = r }))
+    renderAt()
+    fireEvent.click(screen.getByRole('button', { name: /¡A cantar!/ }))
+    await screen.findByText('Preparando la canción…')
+    const hidden = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden')
+    act(() => { document.dispatchEvent(new Event('visibilitychange')) })
+    hidden.mockRestore()
+    await act(async () => { release(true) })
+    expect(audio.speech.say).not.toHaveBeenCalled()
+    expect(audio.music.play).not.toHaveBeenCalledWith('song', { force: true })
+    expect(await screen.findByRole('button', { name: /¡A cantar!/ })).toBeInTheDocument()
+  })
+
   it('an unknown table redirects to /play/free', async () => {
     renderAt('/play/cancion/13')
     expect(await screen.findByText('Jugar')).toBeInTheDocument()
