@@ -6,7 +6,8 @@ export type SfxName =
   | 'whoosh' | 'pop' | 'sparkle' | 'page' | 'dice' | 'step'
   | 'chest-open' | 'fanfare' | 'tick' | 'timeup' | 'coin'
 
-export type MusicTheme = 'map' | 'calm' | 'play' | 'guardian' | 'celebration' | 'none'
+/** 'song': the times-table songs (steady 100 bpm, with a bar clock: music.nextBarIn). */
+export type MusicTheme = 'map' | 'calm' | 'play' | 'guardian' | 'celebration' | 'song' | 'none'
 
 export interface SpeechOptions {
   /** 'lumi' slightly higher/brighter, 'companion' playful, 'narrator' neutral, 'english' a British voice for English words. */
@@ -15,4 +16,6 @@ export interface SpeechOptions {
   interrupt?: boolean
   /** An explicit press by the child («Escuchar»): speaks even when the automatic voice setting is off. */
   force?: boolean
+  /** Always the device voice, never the natural one (a song whose clips could not all be preloaded). */
+  deviceOnly?: boolean
 }

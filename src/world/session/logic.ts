@@ -92,3 +92,21 @@ export function summarizeRun(q: RunQueue<RunItem>, results: readonly { uid: stri
   const correct = graded.filter((r) => r.correct).length
   return { answered: results.length, correct, total: planned, finished }
 }
+
+/** The table whose song is offered at the end: each missed multiplication fact counts for both factors (when they are
+ *  among `tables`); the most counted wins, a tie goes to the larger table. null when no fact was missed. */
+export function missedTable(q: RunQueue<RunItem>, results: readonly { uid: string; correct: boolean }[], tables: number[]): number | null {
+  const byUid = new Map(q.slots.map((s) => [s.item.uid, s.item.item.exercise]))
+  const count = new Map<number, number>()
+  for (const r of results) {
+    if (r.correct) continue
+    const ex = byUid.get(r.uid)
+    if (!ex || ex.kind !== 'fact-mul') continue
+    for (const t of new Set([ex.a, ex.b])) if (tables.includes(t)) count.set(t, (count.get(t) ?? 0) + 1)
+  }
+  let best: number | null = null
+  for (const [t, c] of count) {
+    if (best === null || c > count.get(best)! || (c === count.get(best)! && t > best)) best = t
+  }
+  return best
+}

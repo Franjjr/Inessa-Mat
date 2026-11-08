@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt } from '@/art'
+import { songStars, songTables } from '@/world/cancion/logic'
 import { clearInkSamples, eraseChild, exportChildData, getChildSummary, getProgress, useChildren } from '@/data'
 import { season1, seasonOf } from '@/content'
 import { subjectOffered } from '@/engine'
@@ -84,6 +85,9 @@ export default function ChildReportScreen() {
   }
 
   const counts = countFactStates(summary.factGrid)
+  // The times-table songs sung (Jugar → Canciones): their stars are progress flags. Every table 2–10, not only the
+  // current grade's: a song sung before a change of grade still counts.
+  const sung = songTables(undefined).map((n) => ({ t: n, stars: songStars(progress.flags, n) })).filter((x) => x.stars > 0)
   const reading = readTables(summary.factGrid, child?.nickname ?? summary.nickname)
   const worldsTotal = season1.worlds.length
   const name = child?.nickname ?? summary.nickname
@@ -243,6 +247,11 @@ export default function ChildReportScreen() {
           </p>
           {reading.reviewFacts.length > 0 && (
             <p className={adult.hint}>Si una casilla aparece «Hay que repasarla», conviene jugar un rato con esas tablas, sin prisa.</p>
+          )}
+          {sung.length > 0 && (
+            <p className={adult.hint}>
+              <strong>Canciones de las tablas:</strong> {sung.map(({ t: n, stars }) => `Tabla del ${n} ${'★'.repeat(stars)}`).join(' · ')}
+            </p>
           )}
         </section>
 

@@ -10,6 +10,7 @@ import { StarIcon } from '@/art'
 import { useActiveChild, useMastery, useProgress } from '@/data'
 import { Button, Screen, Spinner, TopBar } from '@/ui'
 import type { ActivityConfig, ActivityResult } from '@/types'
+import { CancionesSection } from './CancionesSection'
 import { kindLabel, reachedClasses, tableDrill, unlockedGames, unlockedTables } from './logic'
 import s from './free.module.css'
 
@@ -100,6 +101,8 @@ export default function FreePlayScreen() {
             ))}
           </div>
         </section>}
+
+        <CancionesSection grade={child.grade} flags={progress.flags} />
 
         {games.length > 0 && <section className={s.section} aria-labelledby="free-games">
           <h2 id="free-games" className={s.heading}>Juegos</h2>

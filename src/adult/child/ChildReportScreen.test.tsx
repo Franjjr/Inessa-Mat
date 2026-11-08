@@ -98,6 +98,19 @@ describe('ChildReportScreen', () => {
     })))
   })
 
+  it('lists the times-table songs sung, with their stars; none sung, no line', async () => {
+    data.getProgress.mockResolvedValue({ ...PROGRESS, flags: { 'cancion:7:1': true, 'cancion:7:2': true, 'cancion:8:1': true } })
+    const first = renderReport()
+    const line = await screen.findByText(/Canciones de las tablas/)
+    expect(line.closest('p')).toHaveTextContent('Tabla del 7 ★★')
+    expect(line.closest('p')).toHaveTextContent('Tabla del 8 ★')
+    first.unmount()
+    data.getProgress.mockResolvedValue(PROGRESS)
+    renderReport()
+    await screen.findByRole('table', { name: /Mapa de las tablas/ })
+    expect(screen.queryByText(/Canciones de las tablas/)).toBeNull()
+  })
+
   it('renders the 10×10 times-table heatmap from the seeded summary', async () => {
     renderReport()
 

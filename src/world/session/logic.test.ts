@@ -3,7 +3,7 @@ import { planDailySession } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 import type { ChildProfile } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
-import { afterAnswer, flattenPlan, isTimeUp, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS, SUBJECT_LIMIT_SECONDS } from './logic'
+import { afterAnswer, flattenPlan, isTimeUp, missedTable, postpone, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, SESSION_LIMIT_SECONDS, SUBJECT_LIMIT_SECONDS } from './logic'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const child: ChildProfile = {
@@ -141,5 +141,27 @@ describe('summarizeRun: «Ahora dilo tú» is not counted', () => {
   it('a run with only speaking items is answered (done), with nothing graded', () => {
     const q = { slots: [slot('0:speak', 'eng-speak')], retried: [] }
     expect(summarizeRun(q as never, [{ uid: '0:speak', correct: true }], true)).toMatchObject({ answered: 1, correct: 0, total: 0 })
+  })
+})
+
+describe('missedTable: the song offered at the end', () => {
+  const mul = (uid: string, a: number, b: number) => ({
+    item: { uid, item: { exercise: { id: uid, kind: 'fact-mul', a, b, answer: a * b, skill: `mul:${a}x${b}` }, block: 'review', scaffold: false, isNew: false } as never },
+    retry: false,
+  })
+  const q = { slots: [mul('0', 7, 8), mul('1', 7, 6), mul('2', 6, 8), mul('3', 3, 4)], retried: [] }
+  const tables = [2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+  it('the table missed most', () => {
+    expect(missedTable(q as never, [{ uid: '0', correct: false }, { uid: '1', correct: false }, { uid: '3', correct: true }], tables)).toBe(7)
+  })
+  it('a tie goes to the larger table', () => {
+    expect(missedTable(q as never, [{ uid: '2', correct: false }], tables)).toBe(8)
+  })
+  it('none missed: null', () => {
+    expect(missedTable(q as never, [{ uid: '0', correct: true }], tables)).toBeNull()
+  })
+  it('a table outside the course does not count', () => {
+    expect(missedTable(q as never, [{ uid: '0', correct: false }], [2, 3, 4, 5, 10])).toBeNull()
   })
 })
