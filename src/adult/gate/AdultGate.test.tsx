@@ -226,4 +226,24 @@ describe('AdultGate', () => {
     await waitFor(() => expect(data.clearAdultPin).toHaveBeenCalled())
     expect(await screen.findByText('Crea tu PIN')).toBeInTheDocument()
   })
+
+  it('an account with no password (Google) gets a code by e-mail to make a new PIN', async () => {
+    data.hasAdultPin.mockResolvedValue(true)
+    const sendMagicLink = vi.fn().mockResolvedValue(undefined)
+    const verifyEmailCode = vi.fn().mockResolvedValue(undefined)
+    data.useAuth.mockReturnValue({
+      status: 'signed-in', user: { id: 'u1', email: 'madre@gmail.com' }, backendAvailable: true,
+      signInWithPassword: data.signInWithPassword, sendMagicLink, verifyEmailCode,
+    })
+    renderGate()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'He olvidado el PIN' }))
+    fireEvent.click(await screen.findByRole('button', { name: /No tengo contraseña/ }))
+    await waitFor(() => expect(sendMagicLink).toHaveBeenCalledWith('madre@gmail.com'))
+    fireEvent.change(await screen.findByLabelText('Código del correo'), { target: { value: '123456' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Continuar' }))
+    await waitFor(() => expect(verifyEmailCode).toHaveBeenCalledWith('madre@gmail.com', '123456', 'login'))
+    await waitFor(() => expect(data.clearAdultPin).toHaveBeenCalled())
+    expect(await screen.findByText('Crea tu PIN')).toBeInTheDocument()
+  })
 })

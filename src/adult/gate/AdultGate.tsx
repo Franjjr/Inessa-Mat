@@ -85,11 +85,12 @@ export function makeMathQuestion(random: () => number = Math.random): MathQuesti
   return { a, b, answer: a * b }
 }
 
-type Mode = 'enter' | 'setup' | 'confirm' | 'forgot-password' | 'forgot-maths'
+type Mode = 'enter' | 'setup' | 'confirm' | 'forgot-password' | 'forgot-code' | 'forgot-maths'
 type Tone = 'info' | 'error' | 'ok'
 
 export function AdultGate({ children }: { children: ReactNode }) {
-  const { status, user, backendAvailable, signInWithPassword } = useAuth()
+  const { status, user, backendAvailable, signInWithPassword, sendMagicLink, verifyEmailCode } = useAuth()
+  const [emailCode, setEmailCode] = useState('')
   const navigate = useNavigate()
   const [hasPin, setHasPin] = useState<boolean | null>(null)
   const [unlocked, setUnlocked] = useState<boolean>(() => isAdultAreaUnlocked())
@@ -319,8 +320,43 @@ export function AdultGate({ children }: { children: ReactNode }) {
     }
   }
 
+  /** For an account with no password (Google): a code to the account's e-mail proves it is the adult. */
+  const sendPinCode = async () => {
+    if (!user?.email) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      await sendMagicLink(user.email)
+      setEmailCode('')
+      setMode('forgot-code')
+      setMessage({ tone: 'ok', text: `Te hemos enviado un correo a ${user.email}. Escribe aquí el código que trae. Si no llega en unos minutos, revisa la carpeta de spam.` })
+    } catch (e) {
+      setMessage({ tone: 'error', text: errorMessage(e) })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const submitPinCode = async () => {
+    if (!user?.email) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      await verifyEmailCode(user.email, emailCode, 'login')
+      await clearAdultPin()
+      setEmailCode('')
+      setMode('setup')
+      setDigits('')
+      setMessage({ tone: 'ok', text: 'Confirmado. Crea un PIN nuevo.' })
+    } catch (e) {
+      setMessage({ tone: 'error', text: errorMessage(e) })
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const secondsLeft = Math.max(0, Math.ceil((lockedUntil - now) / 1000))
-  const title = mode === 'setup' || mode === 'confirm' ? 'Crea tu PIN' : mode === 'forgot-password' || mode === 'forgot-maths' ? 'Recuperar el PIN' : 'Zona de adultos'
+  const title = mode === 'setup' || mode === 'confirm' ? 'Crea tu PIN' : mode === 'forgot-password' || mode === 'forgot-code' || mode === 'forgot-maths' ? 'Recuperar el PIN' : 'Zona de adultos'
   const subtitle =
     mode === 'enter'
       ? 'Esta zona es para los adultos. Escribe el PIN para continuar.'
@@ -330,6 +366,8 @@ export function AdultGate({ children }: { children: ReactNode }) {
           ? 'Escríbelo otra vez para confirmarlo.'
           : mode === 'forgot-password'
             ? `Escribe la contraseña de ${user?.email ?? 'tu cuenta'} para crear un PIN nuevo.`
+            : mode === 'forgot-code'
+              ? 'Escribe el código del correo para crear un PIN nuevo.'
             : 'Para crear un PIN nuevo, responde a esta multiplicación.'
 
   return (
@@ -404,10 +442,38 @@ export function AdultGate({ children }: { children: ReactNode }) {
                 onChange={(e) => setPassword(e.target.value)}
               />
               <Button type="submit" block disabled={busy}>{busy ? 'Comprobando…' : 'Continuar'}</Button>
+              <button type="button" className={s.linkButton} onClick={() => void sendPinCode()} disabled={busy}>
+                No tengo contraseña (entro con Google): enviarme un código por correo
+              </button>
             </form>
           )}
 
-          {(mode === 'forgot-password' || mode === 'forgot-maths') && (
+          {mode === 'forgot-code' && (
+            <form
+              className={s.form}
+              onSubmit={(e) => {
+                e.preventDefault()
+                void submitPinCode()
+              }}
+            >
+              <label className={adult.label} htmlFor="gate-code">Código del correo</label>
+              <input
+                id="gate-code"
+                className={adult.input}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={12}
+                value={emailCode}
+                onChange={(e) => setEmailCode(e.target.value)}
+              />
+              <Button type="submit" block disabled={busy}>{busy ? 'Comprobando…' : 'Continuar'}</Button>
+              <button type="button" className={s.linkButton} onClick={() => void sendPinCode()} disabled={busy}>
+                Enviarme otro código
+              </button>
+            </form>
+          )}
+
+          {(mode === 'forgot-password' || mode === 'forgot-code' || mode === 'forgot-maths') && (
             <button
               type="button"
               className={s.linkButton}

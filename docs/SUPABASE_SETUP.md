@@ -85,12 +85,42 @@ confirmación de la cuenta ni el código para entrar. Se arregla con un servicio
 7. **Comprueba:** en la app, **Iniciar sesión → Entrar con un código por correo** con tu correo. Debe llegar en
    menos de un minuto (mira también en spam la primera vez). Si no llega, mira **Authentication → Logs**.
 
+## Paso 4c · Entrar con Google (opcional)
+
+Sin este paso la app funciona igual: el botón «Continuar con Google» simplemente no aparece.
+
+1. **Google Cloud.** Entra en https://console.cloud.google.com, crea un proyecto (por ejemplo «Repasitos») y abre
+   **Google Auth Platform**.
+   - **Branding:** nombre de la app «Repasitos», correo de soporte, logo, y en **Dominios autorizados** `repasitos.es`.
+     Pon la dirección de la política de privacidad: `https://repasitos.es/legal/privacidad`.
+   - **Audience:** tipo **External**. Mientras esté en «Testing» solo pueden entrar los correos que añadas como
+     usuarios de prueba; para abrirlo a todas las familias pulsa **Publish app** (Google puede tardar unos días en
+     verificar la marca).
+   - **Data Access:** deja solo `openid`, `.../auth/userinfo.email` y `.../auth/userinfo.profile`. No añadas nada más.
+   - **Clients → Create client**, tipo **Web application**:
+     - **Authorized JavaScript origins:** `https://repasitos.es` y `http://localhost:5173`.
+     - **Authorized redirect URIs:** `https://yronrdmbgtdcxhfvfjdx.supabase.co/auth/v1/callback`.
+     - Google no admite comodines: en las vistas previas de Vercel (`*.vercel.app`) el botón dará error. Para probar
+       una vista previa, añade su dirección exacta como origen o prueba en `localhost`.
+     - Copia el **Client ID** y el **Client secret**. El secret no lo pegues en ningún chat.
+2. **Supabase.** **Authentication → Sign In / Providers → Google**: actívalo y pega el **Client ID** y el
+   **Client secret**. Deja **Skip nonce check** desactivado (la app envía el nonce).
+3. **Vercel.** **Settings → Environment Variables**: añade `VITE_GOOGLE_CLIENT_ID` = el Client ID (es público; no es
+   el secret) en Production y Preview, y vuelve a desplegar. En local, ponlo en `.env.local`.
+4. **Comprueba** en la tablet, en la app instalada y en el navegador:
+   - Con un correo nuevo: **Continuar con Google** → sale «Completa tu cuenta» → después, la zona de familia.
+   - Con tu correo de siempre: entras en tu cuenta de siempre, con tu familia (Supabase une Google a la cuenta que
+     ya tiene ese correo confirmado; si alguien hubiera creado una cuenta sin confirmar con tu correo, Supabase quita
+     esa alta y la app te pide completar la cuenta de nuevo).
+   - Si en la app instalada el botón no abre la ventana de Google, avisa: el código por correo sigue funcionando.
+
 ## Paso 5 · Conectar Vercel (cuando el código esté en GitHub)
 
 1. En https://vercel.com/new pulsa **Import** junto al repositorio **Inessa-Mat**.
 2. Vercel detecta Vite solo. Antes de pulsar Deploy, abre **Environment Variables** y añade:
    - `VITE_SUPABASE_URL` = tu Project URL
    - `VITE_SUPABASE_ANON_KEY` = tu anon/publishable key
+   - `VITE_GOOGLE_CLIENT_ID` = el Client ID de Google (opcional, Paso 4c)
 3. Pulsa **Deploy**. En 1-2 minutos tendrás la dirección de la app.
 4. Vuelve al Paso 4 y pon esa dirección como Site URL.
 

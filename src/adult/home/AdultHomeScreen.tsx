@@ -11,6 +11,7 @@ import type { ChildSummary, ErrorType } from '@/types'
 import { BackButton, Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
+import { CompleteAccountPanel, useNeedsAccountSetup } from '../auth/CompleteAccountPanel'
 import { SyncBadge } from '../shared/SyncBadge'
 import { plural, formatPercent } from '../shared/format'
 import { errorMessage } from '../shared/messages'
@@ -29,6 +30,7 @@ export default function AdultHomeScreen() {
   const navigate = useNavigate()
   const isSchool = activeOrg?.kind === 'school'
   const signedIn = status === 'signed-in'
+  const needsSetup = useNeedsAccountSetup()
 
   const [pickedId, setPickedId] = useState<string | null>(null)
   const current = children.find((c) => c.id === pickedId) ?? children[0] ?? null
@@ -108,7 +110,8 @@ export default function AdultHomeScreen() {
         </div>
       )}
 
-      {signedIn && <ClaimLocalPanel onDone={() => toast('Perfiles guardados en tu cuenta')} />}
+      {needsSetup && <CompleteAccountPanel />}
+      {signedIn && !needsSetup && <ClaimLocalPanel onDone={() => toast('Perfiles guardados en tu cuenta')} />}
 
       {children.length === 0 ? (
         <section className={`${adult.card} ${adult.cardYellow}`} aria-label="Sin perfiles">

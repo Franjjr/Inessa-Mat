@@ -10,14 +10,11 @@ import { TextField } from '../shared/Field'
 import { errorMessage } from '../shared/messages'
 import { validateSignup, type SignupErrors, type SignupInput } from './validation'
 import { AfterSignIn } from './AfterSignIn'
+import { AccountSetupFields } from './AccountSetupFields'
+import { GoogleButton } from './GoogleButton'
 import { useInviteAcceptance } from './invite'
 import s from './auth.module.css'
 import adult from '../shared/adult.module.css'
-
-const ORG_OPTIONS: { kind: OrgKind; title: string; text: string }[] = [
-  { kind: 'family', title: 'Familia', text: 'Para tus hijos. Cada niño tiene su perfil y su aventura.' },
-  { kind: 'school', title: 'Colegio', text: 'Para profesores. Clases con código, asignaciones y progreso de la clase.' },
-]
 
 const EMPTY: SignupInput = {
   displayName: '', email: '', password: '', confirm: '', orgKind: null, orgName: '', acceptedPrivacy: false,
@@ -46,7 +43,7 @@ export default function SignupScreen() {
   if (status === 'signed-in') {
     if (invite && invited.status === 'working') return <AdultPage title="Crear cuenta" narrow><Spinner label="Aceptando la invitación…" /></AdultPage>
     return (
-      <AdultPage title="Cuenta creada" narrow>
+      <AdultPage title="Tu cuenta" narrow>
         <AfterSignIn next="/adult" />
       </AdultPage>
     )
@@ -101,15 +98,13 @@ export default function SignupScreen() {
       // lead to the sign-in with the address filled in.
       const taken = err instanceof Error && (err as { code?: string }).code === 'email-taken'
       const text = taken
-        ? 'Ya existe una cuenta con este correo. La contraseña que acabas de escribir no se ha guardado: entra con la tuya o, si no la recuerdas, pide un código para elegir otra.'
+        ? 'Ya existe una cuenta con este correo. La contraseña que acabas de escribir no se ha guardado: entra con la tuya (o con Google, si es tu correo de Google) o, si no la recuerdas, pide un código para elegir otra.'
         : errorMessage(err, 'No hemos podido crear la cuenta. Revisa la conexión e inténtalo de nuevo.')
       setFormError({ text, taken })
     } finally {
       setBusy(false)
     }
   }
-
-  const orgLabel = form.orgKind === 'school' ? 'Nombre del colegio' : 'Nombre de tu familia'
 
   return (
     <AdultPage title="Crear cuenta" back="/welcome" narrow>
@@ -119,6 +114,7 @@ export default function SignupScreen() {
         </div>
       )}
       <form className={`${adult.card} ${s.panel}`} onSubmit={submit} noValidate aria-label="Crear cuenta">
+        <GoogleButton context="signup" />
         <TextField
           id="signup-name" label="Tu nombre" autoComplete="name" value={form.displayName}
           onChange={(e) => set('displayName', e.target.value)} error={errors.displayName}
@@ -137,46 +133,7 @@ export default function SignupScreen() {
           value={form.confirm} onChange={(e) => set('confirm', e.target.value)} error={errors.confirm}
         />
 
-        <fieldset className={s.form} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }} aria-describedby={errors.orgKind ? 'signup-org-error' : undefined}>
-          <legend className={adult.label} style={{ marginBottom: 8 }}>¿Cómo usarás Repasitos?</legend>
-          <div className={s.orgChoices} role="radiogroup" aria-label="Tipo de cuenta">
-            {ORG_OPTIONS.map((o) => (
-              <button
-                key={o.kind}
-                type="button"
-                role="radio"
-                aria-checked={form.orgKind === o.kind}
-                className={adult.choiceCard}
-                onClick={() => set('orgKind', o.kind)}
-              >
-                <span className={adult.choiceTitle}>{o.title}</span>
-                <span className={adult.muted}>{o.text}</span>
-              </button>
-            ))}
-          </div>
-          {errors.orgKind && <p id="signup-org-error" className={adult.error}>{errors.orgKind}</p>}
-        </fieldset>
-
-        {form.orgKind && (
-          <TextField
-            id="signup-org" label={orgLabel} value={form.orgName} onChange={(e) => set('orgName', e.target.value)}
-            error={errors.orgName} hint={form.orgKind === 'school' ? 'Así lo verán las familias al unirse a una clase.' : 'Solo lo veis los adultos de la familia.'}
-          />
-        )}
-
-        <label className={s.checkRow}>
-          <input
-            type="checkbox"
-            checked={form.acceptedPrivacy}
-            onChange={(e) => set('acceptedPrivacy', e.target.checked)}
-            aria-invalid={errors.acceptedPrivacy ? true : undefined}
-          />
-          <span>
-            He leído y acepto la <Link to="/legal/privacidad" target="_blank" rel="noreferrer">política de privacidad</Link>.
-            Entiendo que los datos de los menores los gestiono yo como adulto responsable.
-          </span>
-        </label>
-        {errors.acceptedPrivacy && <p className={adult.error}>{errors.acceptedPrivacy}</p>}
+        <AccountSetupFields idPrefix="signup" value={form} errors={errors} set={(k, v) => set(k, v as SignupInput[typeof k])} />
 
         {formError && (
           <p className={adult.error} role="alert">

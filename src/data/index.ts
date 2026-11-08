@@ -63,7 +63,8 @@ export { DataError } from './errors'
 export type { DataErrorCode } from './errors'
 /** Auth extras: offline sign-in flag, password-recovery mode, set a new password, invite links, members. */
 export { useAuthExtras } from './auth'
-export { acceptInvite, createInviteLink, listOrgMembers, updatePassword } from './account'
+export { acceptInvite, completeAccount, createInviteLink, listOrgMembers, signInWithGoogle, suggestedDisplayName, updatePassword } from './account'
+export { googleClientId } from './supabase'
 /** School extras: classes of a child (family view), new join code. */
 export { listClassesForChild, regenerateJoinCode } from './schools'
 /** GDPR erasure (server + device) and removing the adult PIN. */

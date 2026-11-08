@@ -5,6 +5,20 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 const URL_ = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim() || ''
 const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim() || ''
 
+const GOOGLE_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || ''
+let googleOverride: string | null | undefined
+
+/** The Web client ID of «Continuar con Google», or null when the build has none (then the button is not shown). */
+export function googleClientId(): string | null {
+  if (googleOverride !== undefined) return googleOverride
+  return isBackendAvailable() && GOOGLE_ID ? GOOGLE_ID : null
+}
+
+/** Tests: a client ID, `null` for none, `undefined` to restore. */
+export function __setGoogleClientIdForTests(id: string | null | undefined): void {
+  googleOverride = id
+}
+
 /** Storage key of the persisted auth session (localStorage). */
 export const AUTH_STORAGE_KEY = 'numeria.auth'
 

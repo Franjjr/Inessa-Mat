@@ -15,6 +15,7 @@ export type DataErrorCode =
   | 'invalid'
   | 'invalid-code'
   | 'wrong-otp'        // the code sent by e-mail to sign in or reset the password is wrong or expired
+  | 'google-failed'    // Google answered, but the account could not be opened with it
   | 'conflict'
   | 'unknown'
 
@@ -33,6 +34,7 @@ export const MESSAGES: Record<DataErrorCode, string> = {
   invalid: 'Algún dato no es válido. Revísalo y vuelve a intentarlo.',
   'invalid-code': 'Ese código de clase no existe o ya no está activo. Revisa las letras con el profe.',
   'wrong-otp': 'Ese código no es correcto o ha caducado. Revisa los números o pide otro.',
+  'google-failed': 'No hemos podido entrar con Google. Vuelve a intentarlo o entra con un código por correo.',
   conflict: 'Otro usuario ha cambiado esto a la vez. Vuelve a intentarlo.',
   unknown: 'Algo no ha ido bien. Vuelve a intentarlo dentro de un momento.',
 }
