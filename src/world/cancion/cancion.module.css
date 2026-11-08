@@ -1,0 +1,57 @@
+/* La canción de una tabla: karaoke by verses, the companion bopping on the beat (100 bpm = 0.6 s), three big bubbles.
+   Fits a 360 × 740 phone without scrolling: five verses on screen at once. */
+.root { min-height: 100dvh; display: flex; flex-direction: column; }
+
+.header {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-3) var(--page-gutter);
+}
+.title { margin: 0; text-align: center; font-family: var(--font-display); font-size: var(--fs-xl); color: var(--c-ink); }
+.pill {
+  padding: 6px 14px; border-radius: var(--r-pill); background: var(--c-surface); font-weight: 700;
+  font-size: var(--fs-sm); box-shadow: var(--shadow-1); white-space: nowrap;
+}
+
+.stage {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-2) var(--page-gutter) var(--sp-5); width: 100%; max-width: 760px; margin: 0 auto; box-sizing: border-box;
+}
+
+.buddy { line-height: 0; }
+.buddy[data-playing] { animation: bop 0.6s ease-in-out infinite; }
+@keyframes bop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (prefers-reduced-motion: reduce) { .buddy[data-playing] { animation: none; } }
+
+.start { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); }
+.hint { margin: 0; font-family: var(--font-read); font-size: var(--fs-md); color: var(--c-ink-soft); text-align: center; }
+
+.lines { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 6px; }
+.line {
+  font-family: var(--font-display); font-size: var(--fs-md); color: var(--c-ink-mute);
+  padding: 6px 16px; border-radius: var(--r-md); transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+.line[data-state='done'] { color: var(--c-ink-soft); }
+.line[data-state='now'] {
+  background: var(--c-surface); color: var(--c-ink); font-weight: 800; font-size: var(--fs-lg);
+  box-shadow: var(--shadow-1); transform: scale(1.02);
+}
+.line[data-rhyme] { color: var(--c-magic); font-style: italic; }
+
+.ask { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+.askLead { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: var(--fs-xl); }
+.bubbles { display: flex; gap: var(--sp-4); justify-content: center; flex-wrap: wrap; }
+.bubble {
+  width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--c-magic); background: var(--c-surface);
+  font-family: var(--font-display); font-weight: 800; font-size: 30px; color: var(--c-ink); cursor: pointer;
+  box-shadow: var(--shadow-1); touch-action: manipulation;
+}
+.bubble:disabled { opacity: 0.3; cursor: default; }
+.bubble:focus-visible { outline: 3px solid var(--c-magic); outline-offset: 3px; }
+
+.resultWrap { display: flex; flex-direction: column; align-items: center; gap: var(--sp-4); padding: var(--sp-5) var(--page-gutter); }
+
+@media (max-width: 480px) {
+  .bubble { width: 72px; height: 72px; font-size: 26px; }
+  .line { font-size: var(--fs-sm); padding: 4px 12px; }
+  .line[data-state='now'] { font-size: var(--fs-md); }
+}

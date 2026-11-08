@@ -23,6 +23,7 @@ const ChestScreen = lazy(() => import('@/world/chest/ChestScreen'))
 const DiplomaScreen = lazy(() => import('@/world/diploma/DiplomaScreen'))
 const PrizesScreen = lazy(() => import('@/world/prizes/PrizesScreen'))
 const CaligrafiaScreen = lazy(() => import('@/world/caligrafia/CaligrafiaScreen'))
+const CancionScreen = lazy(() => import('@/world/cancion/CancionScreen'))
 const CaligrafiaTrialScreen = lazy(() => import('@/world/caligrafia/TrialScreen'))
 // adult
 const WelcomeScreen = lazy(() => import('@/adult/welcome/WelcomeScreen'))
@@ -79,6 +80,7 @@ export function AppRoutes() {
         <Route path="/play/w/:worldId" element={<RequireChild><WorldMapScreen /></RequireChild>} />
         <Route path="/play/w/:worldId/:nodeId" element={<RequireChild><NodeScreen /></RequireChild>} />
         <Route path="/play/free" element={<RequireChild><FreePlayScreen /></RequireChild>} />
+        <Route path="/play/cancion/:table" element={<RequireChild><CancionScreen /></RequireChild>} />
         <Route path="/play/review" element={<RequireChild><DailyReviewScreen /></RequireChild>} />
         <Route path="/play/sesion" element={<RequireChild><DailySessionScreen /></RequireChild>} />
         <Route path="/play/lengua" element={<RequireChild><DailySessionScreen subject="language" /></RequireChild>} />
