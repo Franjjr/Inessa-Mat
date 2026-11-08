@@ -181,6 +181,17 @@ describe('song theme', () => {
     expect(((a - b + 2.4) % 2.4)).toBeCloseTo(1, 1)
   })
 
+  it('after a stall the bar clock follows the new grid: the next step scheduled is a bar start', () => {
+    const ctx = ready()
+    music.play('song')
+    run(ctx, 1)
+    // The main thread stalls 5 s: the audio clock moves, the scheduler does not.
+    ctx.advance(5)
+    vi.advanceTimersByTime(50)
+    // The scheduler jumped ahead to now + 0.05 s: the bar starts there, not on the old grid.
+    expect(music.nextBarIn()!).toBeLessThan(0.1)
+  })
+
   it('force plays even when music is disabled', () => {
     ready()
     music.setEnabled(false)

@@ -224,7 +224,11 @@ export class ThemePlayer {
     const ctx = this.e.ctx
     const now = ctx.currentTime
     // After a stall (main thread busy, context resumed) jump ahead instead of firing a burst of late notes.
-    if (this.nextTime < now - 0.05) this.nextTime = now + 0.05
+    if (this.nextTime < now - 0.05) {
+      this.nextTime = now + 0.05
+      // Restart on a bar: the bar clock (nextBarIn) must follow the notes actually scheduled, not the old grid.
+      this.step += (STEPS_PER_BAR - (this.step % STEPS_PER_BAR)) % STEPS_PER_BAR
+    }
     while (this.nextTime < now + LOOKAHEAD) {
       if (this.step % STEPS_PER_BAR === 0) this.barAnchor = this.nextTime
       this.scheduleStep(this.step, this.nextTime)
