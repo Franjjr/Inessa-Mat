@@ -16,4 +16,6 @@ export interface SpeechOptions {
   interrupt?: boolean
   /** An explicit press by the child («Escuchar»): speaks even when the automatic voice setting is off. */
   force?: boolean
+  /** Always the device voice, never the natural one (a song whose clips could not all be preloaded). */
+  deviceOnly?: boolean
 }

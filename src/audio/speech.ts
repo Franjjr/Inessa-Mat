@@ -227,7 +227,7 @@ function speakChunk(job: Job): void {
   const character = job.opts.voice ?? 'lumi'
   // The adult's device voice is Spanish: it never speaks the English character.
   const adultVoice = langOf(character) === 'es' && !!preferredVoiceId()
-  if (adultVoice || !neuralAvailable()) {
+  if (adultVoice || job.opts.deviceOnly || !neuralAvailable()) {
     speakChunkOnDevice(job)
     return
   }
@@ -343,7 +343,22 @@ export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
   })
 }
 
+/** Fetches the natural-voice clips of every text before a song starts. True only when the natural voice will be used
+ *  (no device voice chosen by the adult, service available) and every chunk arrived within timeoutMs. Never throws. */
+function preload(texts: string[], opts: SpeechOptions & { timeoutMs: number }): Promise<boolean> {
+  const character = opts.voice ?? 'lumi'
+  const adultVoice = langOf(character) === 'es' && !!preferredVoiceId()
+  if (adultVoice || opts.deviceOnly || !neuralAvailable()) return Promise.resolve(false)
+  const chunks = texts.flatMap((t) => chunkForSpeech(toSpeakable(t, langOf(character))))
+  const all = Promise.all(chunks.map((c) => fetchClip(c, character)))
+    .then((urls) => urls.every((u) => !!u))
+    .catch(() => false)
+  const late = new Promise<boolean>((r) => setTimeout(() => r(false), opts.timeoutMs))
+  return Promise.race([all, late])
+}
+
 export const speech = {
+  preload,
   available(): boolean {
     wire()
     if (neuralAvailable()) return true
