@@ -289,3 +289,22 @@ describe('ExerciseStep «Ahora dilo tú» (eng-speak)', () => {
     expect(onContinue).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('ExerciseStep · a missed multiplication fact', () => {
+  it('ends with the fact to remember, not a generic phrase', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong({ retries: 1 })]
+    renderStep()
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    expect(await screen.findByText('¡Recuérdalo: 6 × 7 = 42!')).toBeInTheDocument()
+  })
+
+  it('with teach «none» (the check before a class) keeps the usual phrase', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong({ retries: 1 })]
+    renderStep({ teach: 'none' })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    expect(screen.queryByText(/Recuérdalo/)).toBeNull()
+  })
+})

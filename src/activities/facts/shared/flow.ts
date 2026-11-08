@@ -2,7 +2,8 @@
    - useAnswerFlow: one written answer per exercise (FactView, MissingFactorView, FactFamily blanks use slots).
    - useSlotFlow: a sequence of written answers (skip counting, doubling chains, fact-family blanks).
    Both keep the same rules: a correct answer finishes the exercise; a wrong one gives a gentle engine clue and one
-   more try; after MAX_TRIES wrong tries the answer is shown and the exercise finishes. Every finish calls
+   more try; after MAX_TRIES wrong tries the answer is shown and the exercise finishes (or, with copyOnReveal, the child
+   first writes the shown answer: the 'copy' phase, still graded as wrong). Every finish calls
    onAnswered exactly once with the outcome (check, ms, input mode, hints used, recognition fixes). */
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { haptics, sfx } from '@/audio'
@@ -25,6 +26,11 @@ export interface FlowOptions {
   allowHints?: boolean
   /** The child's favourite trick: the first hint names it when it applies to the fact, and the attempt records it. */
   tableMethod?: TableMethod | null
+  /** After the last wrong try, ask the child to write the shown answer before finishing (useAnswerFlow only). */
+  copyOnReveal?: boolean
+  /** The clue after a wrong try is shown to the child and names the trick: it counts as a hint used, so a right answer
+   *  after it is not taken as known by heart (useAnswerFlow only). */
+  clueCountsAsHint?: boolean
 }
 
 /** The trick used on this fact (the favourite, when it applies to a multiplication fact), for the attempt log. */
@@ -69,8 +75,17 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
     haptics.error()
   }, [learning])
 
-  /** Final outcome: happens once per exercise. */
-  const settle = useCallback((res: CheckResult) => {
+  /** The last wrong try before the copy step: same sound, recognitions kept in the count, but no retry counted. */
+  const miss = useCallback(() => {
+    fixes.current += learning.recognitionFixes()
+    learning.discard()
+    sfx.play('wrong')
+    haptics.error()
+  }, [learning])
+
+  /** Final outcome: happens once per exercise. endedAt: when the answer was given (a copy step after it does not count
+   *  in the time); quiet: no sound (the wrong one already played). */
+  const settle = useCallback((res: CheckResult, opts: { endedAt?: number; quiet?: boolean } = {}) => {
     if (done.current) return
     done.current = true
     const m = modeRef.current
@@ -83,12 +98,14 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
       celebrate('small')
     } else {
       learning.discard()
-      sfx.play('wrong')
-      haptics.error()
+      if (!opts.quiet) {
+        sfx.play('wrong')
+        haptics.error()
+      }
     }
     answeredRef.current({
       check: res,
-      ms: Math.round(now() - startedAt.current),
+      ms: Math.round((opts.endedAt ?? now()) - startedAt.current),
       inputMode: m,
       hintsUsed: hintsUsed.current,
       recognitionFixes: total,
@@ -108,6 +125,9 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
     canHint: allowHints && hintsShown < hints.length && !done.current,
     askHint,
     retry,
+    miss,
+    /** A hint the child saw without asking (the clue after a wrong try). */
+    countHint: () => { hintsUsed.current += 1 },
     settle,
     text,
     isDone: () => done.current,
@@ -115,7 +135,8 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
   }
 }
 
-export type FlowPhase = 'asking' | 'retry' | 'done'
+/** 'copy': the answer is shown after the last wrong try and the child writes it (copyOnReveal). */
+export type FlowPhase = 'asking' | 'retry' | 'copy' | 'done'
 
 export interface AnswerFlow {
   hints: Hint[]
@@ -142,10 +163,26 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
   const [clue, setClue] = useState<string | null>(null)
   const [last, setLast] = useState<CheckResult | null>(null)
   const [attemptKey, setAttemptKey] = useState(0)
+  /** The copy step: the graded (wrong) result, when it was given, and the misses while copying. */
+  const copy = useRef<{ res: CheckResult; at: number; misses: number } | null>(null)
 
   const submit = (answer: Answer) => {
     if (core.isDone() || core.held()) return
     const res = check(exercise, answer)
+    if (copy.current) {
+      const c = copy.current
+      // Copied right, or two misses (a hard-to-read digit must not trap the child): the exercise ends, graded wrong.
+      if (res.correct || ++c.misses >= MAX_TRIES) {
+        setPhase('done')
+        setClue(`La respuesta correcta es ${res.expected}. ¡Seguimos!`)
+        core.settle(c.res, { endedAt: c.at, quiet: res.correct })
+        return
+      }
+      setClue(`Es ${res.expected}. Escríbelo igual que está.`)
+      setAttemptKey((k) => k + 1)
+      core.miss()
+      return
+    }
     setLast(res)
     if (res.correct) {
       setPhase('done')
@@ -154,6 +191,14 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
       return
     }
     tries.current += 1
+    if (tries.current >= MAX_TRIES && opts.copyOnReveal) {
+      copy.current = { res, at: now(), misses: 0 }
+      setPhase('copy')
+      setClue(`Es ${res.expected}. ¡Escríbelo tú!`)
+      setAttemptKey((k) => k + 1)
+      core.miss()
+      return
+    }
     if (tries.current >= MAX_TRIES) {
       setPhase('done')
       setClue(`La respuesta correcta es ${res.expected}. ¡Seguimos!`)
@@ -162,6 +207,7 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
     }
     setPhase('retry')
     setClue(core.text(res.feedback, '¡Casi! Piénsalo otra vez.'))
+    if (opts.clueCountsAsHint) core.countHint()
     setAttemptKey((k) => k + 1)
     core.retry()
   }

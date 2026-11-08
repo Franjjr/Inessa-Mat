@@ -299,6 +299,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
               onSkip={onPostponed}
               allowRetry
               allowDontKnow={slot.item.item.block !== 'warmup'}
+              teach={slot.item.item.block === 'warmup' ? 'clue' : 'full'}
             />
           </div>
         ) : null}

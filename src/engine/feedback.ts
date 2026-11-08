@@ -60,8 +60,11 @@ export const FEEDBACK = {
   incomplete: '¡Te falta alguna casilla por rellenar! Complétalas todas y vuelve a probar.',
   empty: '¡Escribe tu respuesta! Tómate tu tiempo.',
   factWrong: (strategy: FactStrategy) => `¡Casi! Prueba el truco. ${strategy.text}`,
-  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy) =>
-    `¡Casi! ${given} es ${a} × ${b}, la de al lado. Prueba el truco. ${strategy.text}`,
+  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy, answer?: number) => {
+    const diff = answer === undefined ? 0 : answer - given
+    const off = diff > 0 ? `: te faltan ${diff}` : diff < 0 ? `: te sobran ${-diff}` : ''
+    return `¡Casi! ${given} es ${a} × ${b}, la de al lado${off}. Prueba el truco. ${strategy.text}`
+  },
   factAdded: (a: number, b: number) => `¡Ojo! Has sumado ${a} + ${b}. Multiplicar es hacer ${a} grupos de ${b}.`,
   divWrong: (dividend: number, divisor: number) =>
     `¡Casi! Piensa en la tabla del ${divisor}: ¿${divisor} por cuánto da ${dividend}?`,

@@ -13,6 +13,8 @@ import Necklace from '../necklace'
 import Pixel from '../pixel'
 import Race from '../race'
 import Wheel from '../wheel'
+import { makeFactMul } from '@/engine'
+import { ExerciseStep } from '@/world/review/ExerciseStep'
 
 const noop = () => {}
 const CRYSTAL = [
@@ -38,6 +40,12 @@ const W = 1180
 const H = 820
 
 const entries: GalleryEntry[] = [
+  {
+    // Answer 49, then 54: the trick, then the worked step and copying the 56 (the daily session's teaching).
+    title: 'sesión · 7 × 8 fallada (truco, dibujo y copiar)',
+    width: W, height: H, background: 'var(--c-bg)',
+    render: () => <ExerciseStep exercise={makeFactMul(7, 8)} allowHints okLabel="Siguiente" report={false} onContinue={noop} allowRetry allowDontKnow />,
+  },
   {
     title: 'facts · práctica tranquila (truco)',
     width: W, height: H, background: 'var(--c-bg)',
