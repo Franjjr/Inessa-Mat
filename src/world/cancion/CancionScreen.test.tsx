@@ -160,6 +160,19 @@ describe('CancionScreen', () => {
     expect(await screen.findByRole('button', { name: /¡A cantar!/ })).toBeInTheDocument()
   })
 
+  it('in «¡Tu turno!» the verses of the gaps hide their result until answered', async () => {
+    renderAt()
+    fireEvent.click(screen.getByRole('button', { name: /¡A cantar!/ }))
+    await untilBubbles()
+    const lead = screen.getByTestId('song-ask').textContent ?? ''
+    const [, a, b] = /(\d+) × (\d+)/.exec(lead)!
+    const verses = screen.getByRole('list', { name: /La canción del 7/ })
+    expect(verses).not.toHaveTextContent(`${a} × ${b} = ${Number(a) * Number(b)}`)
+    expect(verses).toHaveTextContent(`${a} × ${b} = ?`)
+    await act(async () => { fireEvent.click(rightBubble()) })
+    await waitFor(() => expect(screen.getByRole('list', { name: /La canción del 7/ })).toHaveTextContent(`${a} × ${b} = ${Number(a) * Number(b)}`))
+  })
+
   it('an unknown table redirects to /play/free', async () => {
     renderAt('/play/cancion/13')
     expect(await screen.findByText('Jugar')).toBeInTheDocument()

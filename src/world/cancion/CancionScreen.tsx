@@ -54,6 +54,9 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
   const [round, setRound] = useState<1 | 2>(1)
   const [lineIdx, setLineIdx] = useState<number | null>(null)
   const [asking, setAsking] = useState<Asking | null>(null)
+  // «¡Tu turno!»: the gaps keep their result hidden on screen until the child answers them.
+  const [gaps, setGaps] = useState<number[]>([])
+  const [answered, setAnswered] = useState<number[]>([])
   const [result, setResult] = useState<{ stars: number; right: number; total: number } | null>(null)
 
   const run = useRef<SongRun | null>(null)
@@ -85,6 +88,8 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
     setPhase('preparing')
     prevMusic.current = music.current()
     const gaps = songGaps(table, mastery, songLevel(stars))
+    setGaps(gaps)
+    setAnswered([])
     const ok = await speech.preload(songTexts(table), { voice: 'lumi', timeoutMs: PRELOAD_MS })
     // Left, or the app was hidden, while preparing: the song does not start.
     if (!active.current || document.visibilityState === 'hidden') {
@@ -144,6 +149,7 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
     })
     if (right) {
       if (misses.current === 0) firstTries.current += 1
+      setAnswered((xs) => [...xs, a.line.n])
       const res = answer.current
       answer.current = null
       setAsking(null)
@@ -194,6 +200,13 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
     )
   }
 
+  /** In round 2 a gap not answered yet shows «7 × 8 = ?», and the rhymes (which say the results) are hidden. */
+  const shown = (l: (typeof lines)[number]) => {
+    if (round !== 2) return l.show
+    if (l.kind === 'rhyme') return '♪ …'
+    return gaps.includes(l.n) && !answered.includes(l.n) ? `${table} × ${l.n} = ?` : l.show
+  }
+
   const from = lineIdx === null ? 0 : Math.max(0, Math.min(lines.length - WINDOW, lineIdx - 2))
   const visible = lines.slice(from, from + WINDOW)
 
@@ -226,7 +239,7 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
                 const state = i === lineIdx ? 'now' : lineIdx !== null && i < lineIdx ? 'done' : undefined
                 return (
                   <li key={i} className={s.line} data-state={state} data-rhyme={l.kind === 'rhyme' || undefined}>
-                    {l.show}
+                    {shown(l)}
                   </li>
                 )
               })}
