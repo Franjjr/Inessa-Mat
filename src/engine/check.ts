@@ -13,8 +13,8 @@ import { checkCheckCalc, checkErrorHunt } from './bugs'
 import { climbProducts, divisionParts } from './divParts'
 import { digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
-import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
-import { borrowMarks, compensationSteps, lineStops, subtrahendParts } from './subMethods'
+import { FEEDBACK, praise, praiseFact } from './feedback'
+import { lineStops, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
@@ -281,30 +281,15 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
 
-/* Subtraction methods: the written steps. Marks in the column (pedir prestado arriba, me llevo una abajo) are graded
-   only where the child writes them: an empty mark is not wrong, a written one must match the step the method needs. */
+/* Subtraction methods: the written steps. Por partes and saltos are graded step by step. The marks in the column
+   (pedir prestado arriba, me llevo una abajo) are scratch work and never graded: only the result counts. */
 const SUB_STEP_FEEDBACK = {
-  borrowMark: (col: number) => `¡Casi! Revisa la cifra que has tachado en las ${columnName(col)}: al prestar, la vecina se queda con una menos.`,
-  carryMark: (col: number) => `¡Casi! Revisa la cifra de abajo de las ${columnName(col)}: le sumas 1 cuando la columna de la derecha se lleva.`,
   partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
   partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
   lineWrong: (step: number, from: number, to: number) => `¡Casi! El salto ${step} va de ${from} hacia ${to}: cuenta hacia delante, sin pasarte.`,
   lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
   lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
 } as const
-
-/** Columns (units = 0) where a written subtraction mark does not match what the method needs at that point. */
-function markErrors(ex: ColumnSubExercise, answer: Extract<Answer, { type: 'digits' }>): number[] {
-  if (!answer.carries) return []
-  const expected = answer.method === 'carry' ? compensationSteps(ex.minuend, ex.subtrahend).marks : borrowMarks(ex.minuend, ex.subtrahend)
-  const wrong: number[] = []
-  for (let i = 1; i < expected.length; i++) {
-    const written = answer.carries[i]
-    if (!isNum(written)) continue
-    if (written !== expected[i]) wrong.push(i)
-  }
-  return wrong
-}
 
 function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckResult {
   const expected = String(ex.answer)
@@ -356,12 +341,10 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   const { empty, extra, value } = columnPrecheck(input, ex.answer, cols)
   if (empty.length === len && input.digits.every((x) => x === null || x === undefined)) return incomplete('?', expected)
   if (empty.length) return incomplete(given, expected, empty)
+  // A right result is always right. The small marks (borrow or carry) are optional scratch work and are never graded:
+  // a child may write the carried 1 itself, the raised digit, or anything else while thinking, and a correct answer
+  // must never be shown as wrong because of them.
   if (!extra && value === ex.answer) {
-    const marks = answer.type === 'digits' ? markErrors(ex, answer) : []
-    if (marks.length) {
-      const msg = answer.type === 'digits' && answer.method === 'carry' ? SUB_STEP_FEEDBACK.carryMark : SUB_STEP_FEEDBACK.borrowMark
-      return { correct: false, given, expected, errorType: 'borrow-forgot', wrongColumns: marks, feedback: msg(marks[0]) }
-    }
     return { correct: true, given, expected, feedback: FEEDBACK.subCorrect(ex.borrowed.filter(Boolean).length, ex.id) }
   }
   const d = diagnoseSub(ex.minuend, ex.subtrahend, input.digits)
