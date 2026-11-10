@@ -127,20 +127,37 @@ describe('grading: borrow and carry marks are checked where the child writes the
     expect(check(ex, digitsAnswer(225, 'borrow', [null, 4, null])).correct).toBe(true)
   })
 
-  it('borrow: an empty mark is not wrong, a wrong written mark is, at its column', () => {
+  it('borrow: an empty mark is not wrong', () => {
     expect(check(ex, digitsAnswer(225, 'borrow')).correct).toBe(true)
-    const r = check(ex, digitsAnswer(225, 'borrow', [null, 3, null]))
-    expect(r.correct).toBe(false)
-    expect(r.wrongColumns).toEqual([1])
-    expect(r.feedback).toContain('tachado')
   })
 
-  it('carry: the right +1 mark is correct, a wrong one is graded', () => {
+  it('carry: the raised digit (2 + 1 = 3) and the carried 1 itself are both correct', () => {
     expect(check(ex, digitsAnswer(225, 'carry', [null, 3, null])).correct).toBe(true)
-    const r = check(ex, digitsAnswer(225, 'carry', [null, 4, null]))
-    expect(r.correct).toBe(false)
-    expect(r.wrongColumns).toEqual([1])
-    expect(r.feedback).toContain('le sumas 1')
+    expect(check(ex, digitsAnswer(225, 'carry', [null, 1, null])).correct).toBe(true)
+  })
+
+  /* A right result is never graded wrong because of a small mark: the marks are optional scratch work and a child
+     who got the result right must not be told it is wrong (seen on a tablet: 996 − 377 = 619 with a 1 under the tens). */
+  it('a right result is right, whatever the marks say', () => {
+    const r = check(makeColumnSub(996, 377), digitsAnswer(619, 'carry', [null, 1, null]))
+    expect(r.correct).toBe(true)
+    expect(r.wrongColumns ?? []).toEqual([])
+    expect(check(ex, digitsAnswer(225, 'carry', [null, 4, null])).correct).toBe(true)
+    expect(check(ex, digitsAnswer(225, 'borrow', [null, 3, null])).correct).toBe(true)
+  })
+
+  it('every right result is right with any mark, for both column methods', () => {
+    for (let m = 100; m <= 999; m += 7) {
+      for (const s of [9, 48, 377, 99]) {
+        if (s >= m) continue
+        const e = makeColumnSub(m, s)
+        for (const method of ['borrow', 'carry'] as const) {
+          for (let d = 0; d <= 9; d++) {
+            expect(check(e, digitsAnswer(m - s, method, [null, d, d])).correct, `${m} − ${s} ${method} mark ${d}`).toBe(true)
+          }
+        }
+      }
+    }
   })
 
   it('a wrong result is still a wrong result, whatever the marks say', () => {

@@ -32,14 +32,23 @@ describe('column view by method', () => {
     expect(onAnswered.mock.calls[0][0].method).toBe('borrow')
   })
 
-  it('borrow: a wrong lender mark makes the answer wrong, even with the right result', () => {
+  it('borrow: an unexpected lender mark never turns a right result into a wrong one', () => {
     const onAnswered = vi.fn()
     render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="borrow" />)
     fireEvent.keyDown(cell(/marca de decenas \(opcional\)/), { key: '3' })
     expect(screen.queryByText('+10')).toBeNull()
     type(225, 'del resultado')
     act(() => { fireEvent.keyDown(cell(/unidades del resultado/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('carry: 996 − 377 with the carried 1 written under the tens is right (the tablet case)', () => {
+    const onAnswered = vi.fn()
+    render(<SubtractionView exercise={makeColumnSub(996, 377)} onAnswered={onAnswered} showFeedback={false} method="carry" />)
+    fireEvent.keyDown(cell(/compensación de decenas \(opcional\)/), { key: '1' })
+    type(619, 'del resultado')
+    act(() => { fireEvent.keyDown(cell(/unidades del resultado/), { key: 'Enter' }) })
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
   it('carry: the +1 goes under the subtrahend, and its place is named for the child', () => {

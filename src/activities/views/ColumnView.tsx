@@ -1,10 +1,10 @@
 /* Exercise view "column": column addition, column subtraction and 2-digit × 1-digit multiplication written in the
    Spanish column layout. The result is written UNITS FIRST (right to left, focus follows the order).
-   Addition and multiplication carries are never graded. Subtraction steps are graded where the child writes them:
+   Carries and marks are never graded: only the result counts. The subtraction marks the child may write:
    - 'borrow' (pedir prestado arriba): the lender's new top digit goes small above it; the +10 appears above the
      column that received the ten once that step is right.
    - 'carry' (me llevo una abajo): the +1 for the next column goes small under its subtrahend digit.
-   An empty step is never wrong; a written step must match what the method needs. */
+   A right result is right whatever the marks say (a child often writes the carried 1 itself). */
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Answer, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, ExerciseViewProps, SubMethod } from '@/types'
 import { analyzeSub, borrowMarks, compensationSteps, hintsFor, toDigits } from '@/engine'

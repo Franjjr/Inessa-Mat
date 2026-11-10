@@ -57,11 +57,10 @@ describe('check — correct answers are always accepted', () => {
     expect(check(ex, dig([5, 7, 3])).correct).toBe(true)
   })
 
-  it('a written subtraction step that does not match the method is graded, at its column', () => {
+  it('a written subtraction mark never turns a right result into a wrong one', () => {
     const ex = makeColumnSub(503, 128)
     const r = check(ex, dig([5, 7, 3], [1, 1, 0]))
-    expect(r.correct).toBe(false)
-    expect(r.wrongColumns).toEqual([1, 2])
+    expect(r.correct).toBe(true)
   })
 })
 
