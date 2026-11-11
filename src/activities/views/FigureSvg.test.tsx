@@ -1,10 +1,14 @@
 /* The drawings of fractions and solids (P3PE-05, H21): the coloured parts are told from the white ones at a glance, and
    the cylinder of «¿rueda?» lies on its side. */
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
 import { render } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { FigureSvg, PART_ON_TOKEN } from './FigureSvg'
+
+// Read as text from disk (a CSS import is empty under vitest). Node is imported dynamically: the app tsconfig has no @types/node.
+interface NodeFs { readFileSync(path: string, encoding: 'utf8'): string }
+const fs = (await import(/* @vite-ignore */ 'node:' + 'fs')) as NodeFs
+const ROOT = (globalThis as unknown as { process: { cwd(): string } }).process.cwd()
+const tokens = fs.readFileSync(`${ROOT}/src/styles/tokens.css`, 'utf8')
 
 /** WCAG relative luminance of a #rrggbb colour. */
 function luminance(hex: string): number {
@@ -19,7 +23,6 @@ const contrast = (a: string, b: string) => {
 
 describe('fraction parts (P3PE-05)', () => {
   it('the colour of a coloured part has a contrast of at least 3:1 against white', () => {
-    const tokens = readFileSync(resolve(__dirname, '../../styles/tokens.css'), 'utf8')
     const hex = tokens.match(new RegExp(`${PART_ON_TOKEN}:\\s*(#[0-9a-fA-F]{6})`))?.[1]
     expect(hex).toBeTruthy()
     expect(contrast(hex!, '#ffffff')).toBeGreaterThanOrEqual(3)
