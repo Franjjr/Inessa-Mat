@@ -338,7 +338,8 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
       const before = Array.from({ length: Math.min(ex.answer - 1, 9) }, (_, i) => known * (i + 1)).join(', ')
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
-        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
+        // The last chip is the product, drawn as a «?»: the drawing never shows the product, only the series before it.
+        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1, blank: 1 }),
         // The chip of the product is a «?» (blank): the drawing shows the same series as the text, never the product.
         ex.answer >= 2
           ? hint(3, `${before}… ¿Qué número sigue? ¿Cuántas veces has dicho ${known} hasta llegar a él?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1, blank: 1 })

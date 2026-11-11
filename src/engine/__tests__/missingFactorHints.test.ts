@@ -17,3 +17,12 @@ describe('missing factor · third hint', () => {
     expect(third.text).toBe('Piensa: ¿7 por cuánto da 7?')
   })
 })
+
+describe('missing factor · second hint', () => {
+  it('draws the series with the product as a «?» chip, so the drawing never shows the product', () => {
+    const ex = makeMissingFactor(6, 7, 'b') // 6 × ? = 42
+    const second = hintsFor(ex)[1]
+    expect(second.visual).toBe('skip-count')
+    expect(second.params).toMatchObject({ step: 6, count: 7, index: 6, blank: 1 })
+  })
+})
