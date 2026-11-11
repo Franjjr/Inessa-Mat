@@ -141,34 +141,49 @@ export function oneDigitSwaps(a: Answer, from: number, to: number): Answer[] {
   }
 }
 
-/** A handwritten digit as the misread check needs it. */
-export interface ReadDigit { key: string; digit: number; confidence: number; alternatives: number[] }
+/** A handwritten digit as the misread check needs it. altP: the probability of each alternative (same order). */
+export interface ReadDigit { key: string; digit: number; confidence: number; alternatives: number[]; altP?: number[] }
 
 /** Below this confidence a read is "doubtful" for the masking question (it never changes the grade). */
 export const MASK_CONFIDENCE = 0.9
 /** How often a doubtful read that does not change the grade is asked about anyway, so the question never gives the
  *  answer away (asked only when a digit fixes the answer, it would mean "you are wrong"). */
 export const MASK_RATE = 0.25
+/** An alternative this likely makes even a confident read worth a question. */
+export const ALT_MIN_P = 0.1
+
+/** The read was not clear: low confidence, or one alternative is not negligible. */
+function unclear(r: ReadDigit, alt?: number): boolean {
+  if (r.confidence < MASK_CONFIDENCE) return true
+  const p = r.altP ?? []
+  if (alt == null) return p.some((x) => x > ALT_MIN_P)
+  return (p[r.alternatives.indexOf(alt)] ?? 0) > ALT_MIN_P
+}
 
 /**
  * Which written digit to ask about before grading, or null to grade as it is.
- * - The answer is wrong and changing one digit to one of its alternatives makes it right: ask about that digit.
- * - Otherwise, a read below MASK_CONFIDENCE is asked about MASK_RATE of the time (random() is injectable).
- * Never changes a digit by itself: the child answers the question.
+ * - The answer is wrong, the read was not clear (below MASK_CONFIDENCE, or that alternative had a probability above
+ *   ALT_MIN_P) and changing the digit to that alternative makes it right: ask about that digit (alt: the fixing one).
+ * - Otherwise, a read below MASK_CONFIDENCE is asked about MASK_RATE of the time (random() is injectable), offering
+ *   its best alternative. Both questions look alike, so the question never means "you are wrong".
+ * A clear read is graded as it is. Never changes a digit by itself: the child answers the question.
  */
 export function misreadToAsk(
   a: Answer, correct: boolean, reads: readonly ReadDigit[], isRight: (a: Answer) => boolean, random: () => number,
-): { key: string; fixes: boolean } | null {
+): { key: string; fixes: boolean; alt?: number } | null {
   if (!reads.length) return null
   const byDoubt = [...reads].sort((x, y) => x.confidence - y.confidence)
   if (!correct) {
     for (const r of byDoubt) {
       for (const alt of r.alternatives) {
-        if (oneDigitSwaps(a, r.digit, alt).some(isRight)) return { key: r.key, fixes: true }
+        if (unclear(r, alt) && oneDigitSwaps(a, r.digit, alt).some(isRight)) return { key: r.key, fixes: true, alt }
       }
     }
   }
   const doubtful = byDoubt.filter((r) => r.confidence < MASK_CONFIDENCE)
-  if (doubtful.length && random() < MASK_RATE) return { key: doubtful[0].key, fixes: false }
+  if (doubtful.length && random() < MASK_RATE) {
+    const r = doubtful[0]
+    return { key: r.key, fixes: false, ...(r.alternatives.length ? { alt: r.alternatives[0] } : {}) }
+  }
   return null
 }

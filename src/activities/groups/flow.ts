@@ -9,14 +9,14 @@
        wrong answer right (and now and then about a doubtful read that changes nothing, so the question never gives
        the answer away). A right answer after the child said "No" is logged with errorType 'recognition'.
    - onAnswered fires exactly once: right away when feedback is off, otherwise when the child presses Siguiente. */
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Answer, CheckResult, Exercise, ExerciseOutcome, Hint } from '@/types'
 import { check, hintsFor } from '@/engine'
 import { useInkLearning, useInputMode } from '@/ink'
 import { useInkStore } from '@/ink/hooks'
-import { askMisread, askReversed, inkReadingOf } from '@/ink/questions'
+import { askMisread, askReversed, inkReadingOf, readDigitsOf, readsOnScreen } from '@/ink/questions'
 import { leaveInkReading, type InkReading } from '@/ink/readLog'
-import { answerKey, gradeFromSubmissions, misreadToAsk, oneDigitSwaps, reversedAnswer, shownAnswer, type ReadDigit, type Submitted } from '../shared/recognition'
+import { answerKey, gradeFromSubmissions, misreadToAsk, oneDigitSwaps, reversedAnswer, shownAnswer, type Submitted } from '../shared/recognition'
 
 export interface AnswerFlowOptions {
   onAnswered: (outcome: ExerciseOutcome) => void
@@ -61,6 +61,10 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const { mode } = useInputMode()
   const learning = useInkLearning()
   const store = useInkStore()
+  /** This flow, as the owner of its questions: they go when the exercise changes or the view unmounts (a «Sí» must
+   *  never grade an exercise that is no longer on screen). */
+  const owner = useRef({}).current
+  useEffect(() => () => store.closeQuestion(owner), [exercise, store, owner])
   const showFeedback = opts.showFeedback ?? true
   const allowHints = opts.allowHints ?? true
 
@@ -104,7 +108,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const submitRef = useRef<(answer: Answer) => CheckResult>(() => NOT_GRADED)
   const submit = useCallback((answer: Answer): CheckResult => {
     // A digit still in doubt (low-confidence read), unread ink or an open question: nothing is graded yet.
-    if (learning.requestConfirm()) return NOT_GRADED
+    if (store.requestConfirm(owner)) return NOT_GRADED
     const grade = (a: Answer) => check(exercise, a, { hintsUsed: hintsRef.current, method: opts.method })
     let c = grade(answer)
 
@@ -114,18 +118,18 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
         const rev = reversedAnswer(answer)
         if (rev && grade(rev).correct) {
           reversedAsked.current = true
-          askReversed(store, shownAnswer(rev) ?? c.expected)
+          askReversed(store, shownAnswer(rev) ?? c.expected, owner)
           return NOT_GRADED
         }
       }
       // A handwritten digit that may be misread: the child says what she wrote before anything is graded.
-      const reads: ReadDigit[] = store.liveReads().filter(({ read }) => !read.confirmed)
-        .map(({ key, read }) => ({ key, digit: read.digit, confidence: read.confidence, alternatives: read.alternatives }))
-      const ask = misreadToAsk(answer, c.correct, reads, (a) => grade(a).correct, store.random)
+      const ask = misreadToAsk(answer, c.correct, readDigitsOf(store), (a) => grade(a).correct, store.random)
       if (ask) {
         askMisread(store, {
           shown: shownAnswer(answer) ?? c.given,
           key: ask.key,
+          owner,
+          ...(ask.alt != null ? { alt: ask.alt } : {}),
           onYes: () => { submitRef.current(answer) },
           onNo: () => { misread.current = true },
         })
@@ -138,7 +142,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
     // Fixes are counted per submission: a discard after a wrong check forgets the pending recognitions.
     fixes.current += learning.recognitionFixes()
     if (!c.correct) {
-      const reads = store.liveReads()
+      const reads = readsOnScreen(store)
       const oneDigitFix = reads.some(({ read }) => read.alternatives.some((alt) =>
         oneDigitSwaps(answer, read.digit, alt).some((a) => grade(a).correct)))
       reading.current = inkReadingOf(store, {
@@ -164,7 +168,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
     setSubmitted(true)
     if (!showFeedback) report()
     return c
-  }, [exercise, learning, store, mode, report, showFeedback, opts.method])
+  }, [exercise, learning, store, owner, mode, report, showFeedback, opts.method])
   submitRef.current = submit
 
   const finish = useCallback(() => report(), [report])

@@ -37,18 +37,24 @@ describe('P2-02 · la pregunta también sale a veces cuando no cambia la nota', 
     for (let i = 0; i < 100; i++) {
       // 42 is right: no swap is needed; the question is only the mask.
       const q = misreadToAsk({ type: 'number', value: 42 }, true, reads, (a) => a.type === 'number' && a.value === 42, random)
-      if (q) { asked++; expect(q).toEqual({ key: 'a', fixes: false }) }
+      if (q) { asked++; expect(q).toEqual({ key: 'a', fixes: false, alt: 9 }) }
     }
     expect(MASK_RATE).toBe(0.25)
     expect(asked).toBeGreaterThanOrEqual(15)
     expect(asked).toBeLessThanOrEqual(35)
   })
 
-  it('una lectura segura que no cambia la nota nunca se pregunta; una cifra que arregla la respuesta, siempre', () => {
-    const sure: ReadDigit[] = [{ key: 'a', digit: 4, confidence: 0.97, alternatives: [] }, { key: 'b', digit: 7, confidence: 0.95, alternatives: [2] }]
+  it('una lectura segura nunca se pregunta; una cifra dudosa que arregla la respuesta, siempre', () => {
     const right = (a: { type: string; value?: number | null }) => a.type === 'number' && a.value === 42
-    expect(misreadToAsk({ type: 'number', value: 47 }, false, sure, right as never, () => 0.99)).toEqual({ key: 'b', fixes: true })
+    const sure: ReadDigit[] = [{ key: 'a', digit: 4, confidence: 0.97, alternatives: [] }, { key: 'b', digit: 7, confidence: 0.99, alternatives: [2], altP: [0.005] }]
+    // 47 read with 0.99 and a negligible alternative 2: graded as it is (the question must not mean «you are wrong»).
+    expect(misreadToAsk({ type: 'number', value: 47 }, false, sure, right as never, () => 0)).toBeNull()
     expect(misreadToAsk({ type: 'number', value: 42 }, true, sure, right as never, () => 0)).toBeNull()
+    // The same 7 with doubts (below 0.9), or with a likely alternative (0.2): always asked, offering the 2.
+    const unsure: ReadDigit[] = [sure[0], { ...sure[1], confidence: 0.85 }]
+    expect(misreadToAsk({ type: 'number', value: 47 }, false, unsure, right as never, () => 0.99)).toEqual({ key: 'b', fixes: true, alt: 2 })
+    const likely: ReadDigit[] = [sure[0], { ...sure[1], confidence: 0.92, altP: [0.2] }]
+    expect(misreadToAsk({ type: 'number', value: 47 }, false, likely, right as never, () => 0.99)).toEqual({ key: 'b', fixes: true, alt: 2 })
   })
 })
 

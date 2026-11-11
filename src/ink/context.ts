@@ -48,6 +48,10 @@ export interface InkRead {
   confidence: number
   /** The next most likely digits (without `digit`), best first, at most ALT_CHIPS. */
   alternatives: number[]
+  /** The probability of each alternative (same order). A read whose alternatives are all near 0 was clear. */
+  altP: number[]
+  /** A carry cell (the small one on top): not part of the number the child answers. */
+  carry?: boolean
   /** The read needed the child's confirmation (low confidence or a confusable pair). */
   doubtful: boolean
   /** The child confirmed it or picked it. */
@@ -64,12 +68,18 @@ export interface InkSurfaceApi {
   rewrite(readKey?: string): void
   /** Open the "¿Qué número es?" picker on the unread digit `readKey`. */
   pick(readKey?: string): void
+  /** The child says the digit `readKey` is `digit` (as if she had picked it in the alternatives). */
+  choose?(readKey: string | undefined, digit: number): void
 }
 
 /** A question the ink layer asks before grading (misread digit, reversed number, unread ink). */
 export interface InkQuestion {
   kind: 'misread' | 'reversed' | 'unknown'
   text: string
+  /** Who asked (an answer flow): when it moves on to another exercise or unmounts, its question goes. */
+  owner?: object
+  /** The digit (or surface) the question is about: when it leaves the screen, the question goes too. */
+  key?: string
   /** Spoken version (the voice says it without symbols). */
   speak?: string
   /** The number shown in print, big ("He leído 47"). */
@@ -77,9 +87,10 @@ export interface InkQuestion {
   actions: { label: string; primary?: boolean; run: () => void }[]
 }
 
-/** The alternatives of a recognition without the digit itself, best first. */
-function altsOf(rec: DigitRecognition, digit: number): number[] {
-  return rec.alternatives.map((a) => a.digit).filter((d) => d !== digit).slice(0, ALT_CHIPS)
+/** The alternatives of a recognition without the digit itself, best first, with their probabilities. */
+function altsOf(rec: DigitRecognition, digit: number): { digits: number[]; p: number[] } {
+  const alts = rec.alternatives.filter((a) => a.digit !== digit).slice(0, ALT_CHIPS)
+  return { digits: alts.map((a) => a.digit), p: alts.map((a) => a.p) }
 }
 
 /**
@@ -156,11 +167,13 @@ export class LearningStore {
   // ---------------------------------------------------------------------------------------- reads and surfaces
 
   /** A digit was read from ink (recorded also when the recogniser gives no embedding). */
-  noteRead(key: string, rec: DigitRecognition, doubtful: boolean): void {
+  noteRead(key: string, rec: DigitRecognition, doubtful: boolean, opts: { carry?: boolean } = {}): void {
     if (rec.digit == null) return
     this.known(key)
+    const alts = altsOf(rec, rec.digit)
     this.reads.set(key, {
-      digit: rec.digit, confidence: rec.confidence, alternatives: altsOf(rec, rec.digit), doubtful, confirmed: false,
+      digit: rec.digit, confidence: rec.confidence, alternatives: alts.digits, altP: alts.p, doubtful, confirmed: false,
+      ...(opts.carry ? { carry: true } : {}),
       ...(rec.image28 ? { image28: rec.image28 } : {}),
     })
   }
@@ -207,6 +220,9 @@ export class LearningStore {
     return () => {
       if (this.surfaces.get(uid) === api) this.surfaces.delete(uid)
       this.setBusy(uid, false)
+      // A question about ink that left the screen has nothing to point at any more.
+      const q = this.question
+      if (q && ((q.key && !this.isLive(q.key)) || (q.kind === 'unknown' && this.liveUnknowns().length === 0))) this.closeQuestion()
     }
   }
 
@@ -236,6 +252,12 @@ export class LearningStore {
   rewrite(key: string): void {
     const s = this.surfaces.get(key) ?? this.surfaces.get(key.split(':')[0])
     s?.rewrite(key.includes(':') ? key : undefined)
+  }
+
+  /** Sets the digit of a read to what the child says it is (a question's «No, el 7 es un 2»). */
+  choose(key: string, digit: number): void {
+    const s = this.surfaces.get(key) ?? this.surfaces.get(key.split(':')[0])
+    s?.choose?.(key.includes(':') ? key : undefined, digit)
   }
 
   // ---------------------------------------------------------------------------------------- typed input
@@ -287,8 +309,10 @@ export class LearningStore {
     return this.question
   }
 
-  closeQuestion(): void {
+  /** Closes the open question. With `owner`, only a question that owner asked (a flow leaving its exercise). */
+  closeQuestion(owner?: object): void {
     if (!this.question) return
+    if (owner && this.question.owner !== owner) return
     this.question = null
     this.changed()
   }
@@ -335,13 +359,15 @@ export class LearningStore {
    * Called when the child tries to grade while a digit is in doubt. Opens the "¿Has escrito…?" prompt and returns
    * true: the caller must not grade the answer.
    */
-  requestConfirm(): boolean {
+  requestConfirm(owner?: object): boolean {
     const unread = this.canAsk() ? this.liveUnknowns() : []
     if (unread.length) {
       // Ink that could not be read is never graded as an empty cell: the child says which digit it is.
       const key = unread[0]
       this.question = {
         kind: 'unknown',
+        key,
+        ...(owner ? { owner } : {}),
         text: this.unknownWhy.get(key) ?? 'No he entendido este número. Toca el que has escrito o escríbelo otra vez.',
         actions: [{ label: 'Lo escribo otra vez', run: () => { this.closeQuestion(); this.rewrite(key) } }],
       }

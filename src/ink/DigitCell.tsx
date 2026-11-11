@@ -238,7 +238,7 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     setRec(r)
     setPhase(unsure ? 'unsure' : 'recognized')
     ctx.learning.report(uid, r.digit, r)
-    ctx.learning.noteRead(uid, r, unsure)
+    ctx.learning.noteRead(uid, r, unsure, { carry: (latest.current.props.variant ?? 'result') === 'carry' })
     // A low-confidence read must be confirmed (or rewritten) before the answer is graded.
     if (unsure) ctx.learning.doubt(uid, r.digit)
     else ctx.learning.settle(uid)
@@ -246,8 +246,9 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     sfx.play('pop', { volume: 0.3 })
   }
 
-  const pick = (d: number) => {
-    const kind = popover
+  const pick = (d: number) => pickAs(popover, d)
+
+  const pickAs = (kind: typeof popover, d: number) => {
     setPopover(null)
     if (kind === 'pick' || (kind === 'fix' && !recRef.current)) {
       // No ink to learn from (keypad picker, or the model is not available): plain input.
@@ -404,8 +405,10 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
     recognizeNow()
     return true
   }
-  const apiRef = useRef({ input, clearAll, isEmpty, flush, assign })
-  useLayoutEffect(() => { apiRef.current = { input, clearAll, isEmpty, flush, assign } })
+  /** The child said which digit this is from a question («No, el 7 es un 2»): same as picking it in the alternatives. */
+  const choose = (d: number) => pickAs('fix', d)
+  const apiRef = useRef({ input, clearAll, isEmpty, flush, assign, choose })
+  useLayoutEffect(() => { apiRef.current = { input, clearAll, isEmpty, flush, assign, choose } })
 
   // Register with the ink store: grading flushes pending ink, a question can erase or open the picker on this cell.
   const store = ink.learning
@@ -415,6 +418,7 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
       flush: () => apiRef.current.flush(),
       rewrite: () => { apiRef.current.clearAll(); surfaceRef.current?.focus({ preventScroll: true }) },
       pick: () => setPopover('fix'),
+      choose: (_key, d) => apiRef.current.choose(d),
     })
   }, [store, uid, editable])
   const register = group?.register

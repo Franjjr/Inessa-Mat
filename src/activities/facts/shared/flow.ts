@@ -8,18 +8,19 @@
    The app grades what the child meant to write: before grading a handwritten answer it asks "He leído 47. ¿Es lo
    que has escrito?" when one digit read as one of its alternatives would make it right (and now and then about a
    doubtful read that changes nothing, so the question never gives the answer away). After a wrong try what she wrote
-   stays on screen with "Has escrito 47", and «No, yo he escrito otra cosa» takes the try back. */
-import { useCallback, useMemo, useRef, useState } from 'react'
+   stays on screen with "Has escrito 47", and «No, yo he escrito otra cosa» takes the try back: once per exercise, only
+   when a misread is believable, and the next answer must fix that one digit (otherwise the try counts again). */
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { haptics, sfx } from '@/audio'
 import { celebrate } from '@/fx'
 import { useInkLearning, useInputMode } from '@/ink'
 import { useInkStore } from '@/ink/hooks'
-import { askMisread, inkReadingOf } from '@/ink/questions'
+import { askMisread, inkReadingOf, readDigitsOf, readsOnScreen } from '@/ink/questions'
 import { leaveInkReading } from '@/ink/readLog'
 import { TABLE_METHODS, check, hintsFor } from '@/engine'
 import type { Answer, CheckResult, Exercise, ExerciseOutcome, Hint, InputMode, TableMethod } from '@/types'
 import { useActivityHost } from '../../host'
-import { misreadToAsk, oneDigitSwaps, type ReadDigit } from '../../shared/recognition'
+import { MASK_CONFIDENCE, misreadToAsk, oneDigitSwaps } from '../../shared/recognition'
 
 export const MAX_TRIES = 2
 export const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now())
@@ -54,6 +55,9 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
   const { mode } = useInputMode()
   const learning = useInkLearning()
   const store = useInkStore()
+  /** This flow, as the owner of the questions it asks: they go when it moves on to another exercise or unmounts. */
+  const owner = useRef({}).current
+  useEffect(() => () => store.closeQuestion(owner), [exercise, store, owner])
   /** The child said the app misread her writing: a right answer after it is a recognition slip. */
   const misread = useRef(false)
   const hints: Hint[] = useMemo(() => hintsFor(exercise, undefined, { tableMethod }), [exercise, tableMethod])
@@ -106,7 +110,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
     if (!res.correct && opts.answer) {
       // What the app read from her ink, for the grown-ups' review of the answers marked wrong.
       const answer = opts.answer
-      const oneDigitFix = store.liveReads().some(({ read }) => read.alternatives.some((alt) =>
+      const oneDigitFix = readsOnScreen(store).some(({ read }) => read.alternatives.some((alt) =>
         oneDigitSwaps(answer, read.digit, alt).some((a) => check(exercise, a).correct)))
       const reading = inkReadingOf(store, {
         kind: exercise.kind, given: res.given, recognitionFixes: fixes.current + learning.recognitionFixes(), oneDigitFix,
@@ -146,18 +150,18 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
    */
   const askAboutReads = useCallback((answer: Answer, correct: boolean, isRight: (a: Answer) => boolean, regrade: () => void): boolean => {
     if (!store.canAsk()) return false
-    const reads: ReadDigit[] = store.liveReads().filter(({ read }) => !read.confirmed)
-      .map(({ key, read }) => ({ key, digit: read.digit, confidence: read.confidence, alternatives: read.alternatives }))
-    const ask = misreadToAsk(answer, correct, reads, isRight, store.random)
+    const ask = misreadToAsk(answer, correct, readDigitsOf(store), isRight, store.random)
     if (!ask) return false
     askMisread(store, {
       shown: answer.type === 'number' && answer.value != null ? String(answer.value) : '?',
       key: ask.key,
+      owner,
+      ...(ask.alt != null ? { alt: ask.alt } : {}),
       onYes: regrade,
       onNo: () => { misread.current = true },
     })
     return true
-  }, [store])
+  }, [store, owner])
 
   /** «No, yo he escrito otra cosa»: the last wrong try is taken back (the app misread it). */
   const unretry = useCallback(() => {
@@ -165,14 +169,32 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
     misread.current = true
   }, [])
 
-  /** Something handwritten is on screen (the misread button makes sense). */
-  const hasInk = useCallback(() => store.liveReads().length > 0, [store])
+  /** After a dispute she wrote another answer, not a fix of the digit in dispute: the try taken back counts again. */
+  const reretry = useCallback(() => {
+    retried.current += 1
+    misread.current = false
+  }, [])
+
+  /**
+   * «No, yo he escrito otra cosa» is believable for this wrong answer: it was handwritten, she has not just said «Sí»
+   * to what was read, and either a read was doubtful or the number has as many digits as the right one and one
+   * digit read as one of its alternatives would make it right. A «5» for 42 is no misread.
+   */
+  const disputable = useCallback((answer: Answer, res: CheckResult): boolean => {
+    const reads = readDigitsOf(store)
+    if (!reads.length) return false
+    const doubtful = store.liveReads().some(({ read }) => !read.confirmed && !read.carry && read.doubtful)
+      || reads.some((r) => r.confidence < MASK_CONFIDENCE)
+    if (doubtful) return true
+    if (res.given.length !== res.expected.length) return false
+    return reads.some((r) => r.alternatives.some((alt) => oneDigitSwaps(answer, r.digit, alt).some((a) => check(exercise, a).correct)))
+  }, [store, exercise])
 
   const text = useCallback((s: string | undefined, fallback: string) => host.t(s ?? fallback), [host])
 
   return {
     /** True (and the "¿Has escrito…?" prompt opens) while a digit is still in doubt: the answer is not graded. */
-    held: () => learning.requestConfirm(),
+    held: () => store.requestConfirm(owner),
     hints,
     hintsShown,
     hintsUsed: hintsUsed.current,
@@ -185,7 +207,8 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
     settle,
     askAboutReads,
     unretry,
-    hasInk,
+    reretry,
+    disputable,
     text,
     isDone: () => done.current,
     mode,
@@ -225,6 +248,14 @@ export function revealText(given: string, expected: string): string {
   return given ? `Tú: ${given} · Solución: ${expected}. ¡Seguimos!` : `Solución: ${expected}. ¡Seguimos!`
 }
 
+/** `after` is `before` with exactly one digit changed (the fix of a misread digit). */
+export function fixesOneDigit(before: string, after: string): boolean {
+  if (before.length !== after.length) return false
+  let diff = 0
+  for (let i = 0; i < before.length; i++) if (before[i] !== after[i]) diff++
+  return diff === 1
+}
+
 const withWrote = (given: string, clue: string) => [wroteText(given), clue].filter(Boolean).join(' ')
 
 export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
@@ -236,9 +267,15 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
   const [last, setLast] = useState<CheckResult | null>(null)
   const [attemptKey, setAttemptKey] = useState(0)
   const [canDispute, setCanDispute] = useState(false)
+  /** «No, yo he escrito otra cosa» is offered once per exercise. */
+  const disputed = useRef(false)
+  /** The answer in dispute: the next one must fix one digit of it (picked or rewritten), or the try counts again. */
+  const inDispute = useRef<string | null>(null)
   /** The copy step: the graded (wrong) result, when it was given, and the misses while copying. */
   const copy = useRef<{ res: CheckResult; at: number; misses: number; answer: Answer } | null>(null)
 
+  /** What was read on the last wrong try. */
+  const lastGiven = useRef('')
   const submitRef = useRef<(answer: Answer) => void>(() => {})
   const submit = (answer: Answer) => {
     if (core.isDone() || core.held()) return
@@ -260,7 +297,15 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
     }
     // A handwritten digit that may be misread: she says what she wrote before anything is graded.
     if (core.askAboutReads(answer, res.correct, (a) => check(exercise, a).correct, () => submitRef.current(answer))) return
-    const handwritten = core.hasInk()
+    if (inDispute.current != null) {
+      const before = inDispute.current
+      inDispute.current = null
+      if (!fixesOneDigit(before, res.given)) {
+        // Not the digit in dispute: another answer. The try that was taken back counts again.
+        tries.current += 1
+        core.reretry()
+      }
+    }
     setLast(res)
     if (res.correct) {
       setPhase('done')
@@ -287,19 +332,22 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
     setClue(withWrote(res.given, core.text(res.feedback, '¡Casi! Piénsalo otra vez.')))
     if (opts.clueCountsAsHint) core.countHint()
     setAttemptKey((k) => k + 1)
-    setCanDispute(handwritten)
+    setCanDispute(!disputed.current && core.disputable(answer, res))
+    lastGiven.current = res.given
     core.retry()
   }
   submitRef.current = submit
 
   const dispute = () => {
-    if (phase !== 'retry' || core.isDone()) return
-    // The app misread her: the try does not count. She fixes the digit (tap it) or writes it again.
+    if (phase !== 'retry' || core.isDone() || disputed.current || !canDispute) return
+    // The app misread her: the try does not count. She fixes the digit (tap it) or writes it again. Once per exercise.
+    disputed.current = true
+    inDispute.current = lastGiven.current
     tries.current = Math.max(0, tries.current - 1)
     core.unretry()
     setCanDispute(false)
     setPhase('asking')
-    setClue('Vale. Toca la cifra que he leído mal y elige la buena, o escríbela otra vez.')
+    setClue('Vale. Toca la cifra que he leído mal y elige la buena, o escribe el número otra vez.')
   }
 
   return {

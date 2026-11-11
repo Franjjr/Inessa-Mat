@@ -104,8 +104,8 @@ describe('P2-01 · «Comprobar» justo después de escribir: la última cifra cu
 describe('P2-02 · una cifra que se pudo leer mal: se pregunta antes de calificar', () => {
   it('42 leído 47 (alternativa 2): «He leído 47» sin contar intento; «No» y reescribir bien → correcto, errorType recognition', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
-    // 4, then a 7 whose second choice is 2; after the rewrite, a clear 2.
-    const rec = withInk([{ digit: 4 }, { digit: 7, confidence: 0.92, alternatives: [7, 2, 1] }, { digit: 4 }, { digit: 4 }, { digit: 2 }],
+    // 4, then a 7 read with doubts (0.85) whose second choice is 2; after the rewrite, a clear 2.
+    const rec = withInk([{ digit: 4 }, { digit: 7, confidence: 0.85, alternatives: [7, 2, 1] }, { digit: 4 }, { digit: 4 }, { digit: 2 }],
       <FactView exercise={fact67} onAnswered={onAnswered} />)
     const pad = surfaceOf('Producto de 6 por 7')
     writeNumber(pad, '42')
@@ -128,12 +128,40 @@ describe('P2-02 · una cifra que se pudo leer mal: se pregunta antes de califica
 
   it('«Sí» califica lo leído tal cual (47 está mal)', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
-    withInk([{ digit: 4 }, { digit: 7, confidence: 0.92, alternatives: [7, 2, 1] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
+    withInk([{ digit: 4 }, { digit: 7, confidence: 0.85, alternatives: [7, 2, 1] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
     const pad = surfaceOf('Producto de 6 por 7')
     writeNumber(pad, '42')
     idle()
     fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
+    expect(screen.getByRole('status')).toHaveTextContent(/^Has escrito 47\./)
+    // She has just said the app read her well: «No, yo he escrito otra cosa» makes no sense now.
+    expect(screen.queryByRole('button', { name: 'No, yo he escrito otra cosa' })).toBeNull()
+  })
+
+  it('«No, el 7 es un 2» cambia esa cifra; al comprobar otra vez está bien (errorType recognition)', () => {
+    const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
+    withInk([{ digit: 4 }, { digit: 7, confidence: 0.85, alternatives: [7, 2, 1] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
+    const pad = surfaceOf('Producto de 6 por 7')
+    writeNumber(pad, '42')
+    idle()
+    fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'No, el 7 es un 2' }))
+    expect(screen.queryByTestId('ink-doubt-prompt')).toBeNull()
+    expect(pad.closest('[data-value]')).toHaveAttribute('data-value', '42')
+    expect(onAnswered).not.toHaveBeenCalled() // nothing is graded until she checks again
+    fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check).toMatchObject({ correct: true, errorType: 'recognition' })
+  })
+
+  it('47 leído con seguridad 0,99 (la alternativa 2 casi no cuenta): se califica sin preguntar', () => {
+    const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
+    withInk([{ digit: 4, confidence: 0.99 }, { digit: 7, confidence: 0.99, alternatives: [7, 2] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
+    writeNumber(surfaceOf('Producto de 6 por 7'), '42')
+    idle()
+    fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
+    expect(screen.queryByTestId('ink-doubt-prompt')).toBeNull()
     expect(screen.getByRole('status')).toHaveTextContent(/^Has escrito 47\./)
   })
 })
@@ -141,7 +169,8 @@ describe('P2-02 · una cifra que se pudo leer mal: se pregunta antes de califica
 describe('P2-03 · tras un fallo lo escrito se queda y el mensaje dice lo leído', () => {
   it('FactView: 42 leído 47 con seguridad → el campo conserva 47, «Has escrito 47»; al final «Tú: 47»', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
-    withInk([{ digit: 4 }, { digit: 7 }], <FactView exercise={fact67} onAnswered={onAnswered} />)
+    // A confident 7 whose second choice is the 2 (0.03): no question, but a misread is believable.
+    withInk([{ digit: 4 }, { digit: 7, alternatives: [7, 2] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
     const pad = surfaceOf('Producto de 6 por 7')
     writeNumber(pad, '42')
     idle()
@@ -160,22 +189,20 @@ describe('P2-03 · tras un fallo lo escrito se queda y el mensaje dice lo leído
     expect(onAnswered.mock.calls[0][0].check).toMatchObject({ correct: false, given: '47' })
   })
 
-  it('«No, yo he escrito otra cosa» deshace el intento: cambiar la cifra y acertar cuenta como acierto (recognition)', () => {
+  it('«No, yo he escrito otra cosa» deshace el intento: escribirlo otra vez y acertar cuenta como acierto (recognition)', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
-    withInk([{ digit: 4 }, { digit: 7, alternatives: [7, 2] }], <FactView exercise={fact67} onAnswered={onAnswered} />)
+    // A confident 7 (no question before grading); after the dispute she writes the number again.
+    withInk([{ digit: 4 }, { digit: 7, alternatives: [7, 2] }, { digit: 4 }, { digit: 2 }], <FactView exercise={fact67} onAnswered={onAnswered} />)
     const pad = surfaceOf('Producto de 6 por 7')
     writeNumber(pad, '42')
     idle()
-    store.random = () => 0.99
     fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
-    // conf 0.97 with an alternative that fixes it: the question comes first; she says «Sí», it is graded wrong.
-    fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
     fireEvent.click(screen.getByRole('button', { name: 'No, yo he escrito otra cosa' }))
     expect(screen.getByRole('status')).toHaveTextContent(/Toca la cifra/)
-    // She types the right answer (keyboard): the try that was taken back does not count.
-    fireEvent.keyDown(pad, { key: '4' })
-    fireEvent.keyDown(pad, { key: '2' })
-    fireEvent.keyDown(pad, { key: 'Enter' })
+    // She writes the number again: now it is read 42 (one digit changed, the one in dispute).
+    writeNumber(pad, '42', 40, 9)
+    idle()
+    fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
     const o = onAnswered.mock.calls[0][0]
     expect(o.check).toMatchObject({ correct: true, errorType: 'recognition' })
     expect(o.retries ?? 0).toBe(0)

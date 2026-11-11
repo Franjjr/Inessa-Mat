@@ -44,8 +44,8 @@ export function DoubtPrompt() {
     if (spoken) sayQuietly(spoken)
   }, [spoken])
 
-  // The doubtful digits glow while the question is open.
-  const keys = open ? learning.uncertainKeys().join('|') : ''
+  // The doubtful digits (or the digit a misread question is about) glow while the question is open.
+  const keys = question?.kind === 'misread' && question.key ? question.key : open ? learning.uncertainKeys().join('|') : ''
   useEffect(() => {
     if (!keys) return
     const els = keys.split('|').flatMap((k) => [...document.querySelectorAll<HTMLElement>(`[data-ink-key="${CSS.escape(k)}"]`)])
