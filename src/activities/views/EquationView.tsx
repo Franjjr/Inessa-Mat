@@ -53,7 +53,7 @@ function EqRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExe
   )
 
   return (
-    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} prompt={'Los dos lados del = tienen que valer lo mismo. ¿Qué número falta?'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} prompt="¿Qué número falta?" sub="Los dos lados del = tienen que valer lo mismo." actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, box)}</span>
         <span className={s.eqEq} aria-hidden>=</span>
@@ -80,7 +80,7 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
   }
 
   return (
-    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status} prompt={'¿Los dos lados valen lo mismo? Elige = o ≠.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status} prompt="¿Valen lo mismo los dos lados?" sub="Toca = si valen lo mismo, o ≠ si no." actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, null)}</span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>

@@ -4,7 +4,11 @@
    - 'borrow' (pedir prestado arriba): the lender's new top digit goes small above it; the +10 appears above the
      column that received the ten once that step is right.
    - 'carry' (me llevo una abajo): the +1 for the next column goes small under its subtrahend digit.
-   A right result is right whatever the marks say (a child often writes the carried 1 itself). */
+   A right result is right whatever the marks say (a child often writes the carried 1 itself).
+   Every screen explains itself (P3PE-13): the names of the columns are always on top («unidades», «decenas»,
+   «centenas», whole words), a caption says what the small boxes are for («aquí apunta la que te llevas, si hace
+   falta»), the statement says where to start and what to do when the top digit is smaller, and the box to write
+   next is marked (status 'active', drawn by the ink with its arrow). */
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Answer, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, ExerciseViewProps, SubMethod } from '@/types'
 import { analyzeSub, borrowMarks, compensationSteps, hintsFor, toDigits } from '@/engine'
@@ -48,6 +52,27 @@ function layoutOf(ex: ColEx): Layout {
   return { rows: [ex.top, ex.bottom], op: '×', cols: toDigits(ex.answer).length, auxKind: 'carry' }
 }
 
+/** The statement of a column calculation: where to start and what to do when the top digit is smaller (P3PE-13). */
+export function columnPrompt(kind: ColEx['kind'], subMethod: 'borrow' | 'carry'): string {
+  if (kind === 'column-add') return 'Suma en columna. Empieza por la derecha, por las unidades. Si una columna pasa de 9, me llevo una a la de al lado.'
+  if (kind === 'column-sub') {
+    return subMethod === 'carry'
+      ? 'Resta en columna. Empieza por la derecha, por las unidades. Si arriba hay menos que abajo, pon un 1 delante y me llevo una abajo.'
+      : 'Resta en columna. Empieza por la derecha, por las unidades. Si arriba hay menos que abajo, pide 1 a la vecina.'
+  }
+  return 'Multiplica en columna. Empieza por la derecha, por las unidades.'
+}
+
+/** What the small boxes are for, said beside them (P3PE-13). */
+export function columnAuxCaption(kind: ColEx['kind'], subMethod: 'borrow' | 'carry'): string {
+  if (kind === 'column-sub') {
+    return subMethod === 'carry'
+      ? 'Las casillas pequeñas de abajo: aquí apunta la que te llevas (si hace falta).'
+      : 'Las casillas pequeñas de arriba: aquí apunta lo que queda al pedir prestado (si hace falta).'
+  }
+  return 'Las casillas pequeñas de arriba: aquí apunta la que te llevas (si hace falta).'
+}
+
 export default function ColumnView(props: ColumnViewProps) {
   const { exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, proof, method } = props
   if (exercise.kind !== 'column-add' && exercise.kind !== 'column-sub' && exercise.kind !== 'column-mul') return null
@@ -77,7 +102,7 @@ interface RoundProps {
   method?: SubMethod
 }
 
-function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, proof, method }: RoundProps) {
+function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof, method }: RoundProps) {
   const host = useActivityHost()
   const layout = useMemo(() => layoutOf(ex), [ex])
   const subMethod: 'borrow' | 'carry' = ex.kind === 'column-sub' && method === 'carry' ? 'carry' : 'borrow'
@@ -121,7 +146,7 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const statusOf = (i: number) => {
     if (allRight) return 'correct' as const
     if (wrong.has(i)) return 'wrong' as const
-    if (guided && i === nextEmpty) return 'active' as const
+    if (i === nextEmpty) return 'active' as const
     return 'idle' as const
   }
 
@@ -177,7 +202,7 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     cells.push(...auxCells(row))
     row += 1
   }
-  if (guided) {
+  {
     for (let i = 0; i < cols; i++) {
       cells.push(
         <div key={`name${i}`} className={s.name} style={{ gridRow: row, gridColumn: colOf(i) }} aria-hidden>
@@ -231,13 +256,8 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     )
   }
 
-  const prompt = ex.kind === 'column-add'
-    ? 'Suma en columna. Escribe el resultado empezando por las unidades.'
-    : ex.kind === 'column-sub'
-      ? subMethod === 'carry'
-        ? 'Resta en columna con «me llevo una». Empieza por las unidades.'
-        : 'Resta en columna. Empieza por las unidades, la casa azul.'
-      : 'Multiplicación en columna. Empieza por las unidades.'
+  const prompt = columnPrompt(ex.kind, subMethod)
+  const auxCaption = hasAux ? columnAuxCaption(ex.kind, subMethod) : null
 
   const magic = proof && ex.kind === 'column-sub' && allRight
     ? host.t(`La prueba mágica: ${ex.subtrahend} + ${ex.answer} = ${ex.minuend}`)
@@ -251,6 +271,7 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
       prompt={host.t(prompt)}
       actions={<AnswerBar flow={flow} onCheck={check} canCheck={res.some((v) => v !== null)} />}
     >
+      {auxCaption && <p className={s.auxCaption} data-aux-caption="">{host.t(auxCaption)}</p>}
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
         <div className={s.grid} style={{ gridTemplateColumns: `minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}

@@ -50,6 +50,8 @@ export function trailingSpace(el: HTMLElement): number {
     for (let sib = e.nextElementSibling as HTMLElement | null; sib; sib = sib.nextElementSibling as HTMLElement | null) {
       const cs = getComputedStyle(sib)
       if (cs.display === 'none' || cs.position === 'absolute' || cs.position === 'fixed') continue
+      // The scroll assistant's spacer only exists while the page scrolls: counting it would shrink the game for nothing.
+      if (sib.hasAttribute('data-scroll-spacer')) continue
       total += sib.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0) + gap
     }
     if (parent === document.body) break

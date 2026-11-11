@@ -30,4 +30,33 @@ describe('ScrollAssist', () => {
     // Well under the 500 ms safety-net check: the observers react to the DOM change itself.
     await waitFor(() => expect(screen.getByRole('button', { name: DOWN })).toBeTruthy(), { timeout: 300 })
   })
+
+  it('P3PE-12: «Más abajo» never sits on a control: it takes the other corner when the bottom-left one is taken', async () => {
+    setPageHeight(2000)
+    const control = document.createElement('button')
+    control.textContent = 'Pista'
+    document.body.appendChild(control)
+    // Under the left half of the window there is a control; the right half is free.
+    const original = document.elementsFromPoint
+    document.elementsFromPoint = ((x: number) => (x < window.innerWidth / 2 ? [control] : [])) as typeof document.elementsFromPoint
+    try {
+      render(<ScrollAssist />)
+      await waitFor(() => expect(screen.getByRole('button', { name: DOWN }).className).toMatch(/atRight/))
+    } finally {
+      document.elementsFromPoint = original
+    }
+  })
+
+  it('P3PE-12: with nothing under it, «Más abajo» stays bottom left; a page that scrolls ends with a free space', async () => {
+    setPageHeight(2000)
+    const original = document.elementsFromPoint
+    document.elementsFromPoint = (() => []) as typeof document.elementsFromPoint
+    try {
+      const { container } = render(<ScrollAssist />)
+      await waitFor(() => expect(screen.getByRole('button', { name: DOWN }).className).toMatch(/atLeft/))
+      expect(container.querySelector('[data-scroll-spacer]')).toBeTruthy()
+    } finally {
+      document.elementsFromPoint = original
+    }
+  })
 })

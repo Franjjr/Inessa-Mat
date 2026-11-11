@@ -102,7 +102,7 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
         <div className={s.units}>
           <span className={s.card}><span className={s.cardNumber}>{unitLabel(u.amount, u.from)}</span></span>
           <span className={s.arrow} aria-hidden>→</span>
-          <span className={s.card}><span className={s.cardNumber}>¿? {u.to}</span></span>
+          <span className={s.card}><span className={s.cardNumber}>{howMany(u.to)}</span></span>
         </div>
       )}
       <div className={s.answerNumber}>
@@ -122,4 +122,9 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
       </div>
     </ExerciseLayout>
   )
+}
+
+/** «¿cuántos segundos?», «¿cuántas horas?»: the question on the card, never a bare «¿?» (P3PE-17). */
+export function howMany(unit: string): string {
+  return `¿${/as$/.test(unit) ? 'cuántas' : 'cuántos'} ${unit}?`
 }

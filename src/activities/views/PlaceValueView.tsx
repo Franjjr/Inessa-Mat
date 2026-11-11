@@ -1,7 +1,8 @@
 /* Numbers up to 9 999, one exercise (place-value): the blocks (millares, centenas, decenas, unidades) → the number,
    the expanded form (4 000 + 300 + 20 + 5) → one box per part, or the number written in words → the digits.
    Expanded form (p1n-03/04): the box of a 0 digit may stay empty (it shows a grey 0 and counts as 0), each box says
-   «valor de las centenas»…, and with the visual support (guided) a worked example sits on top.
+   «valor de las centenas»…, and with the visual support (guided) a worked example sits on top. Each box is as wide
+   as its part (the units one digit, the millares four), so five boxes fit on a tablet without one per line.
    Blocks (P6-14): the base-ten pieces of the classroom: millar a big cube, centena a 10 × 10 plate, decena a bar of
    ten, unidad a little cube. */
 import { Fragment, useState } from 'react'
@@ -129,7 +130,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
                     value={cells[i]}
                     onChange={(v) => setCells((prev) => prev.map((c, k) => (k === i ? v : c)))}
                     onSubmit={() => submitCells()}
-                    maxDigits={maxDigits}
+                    maxDigits={top - i + 1}
                     size="lg"
                     status={status}
                     ariaLabel={`Valor de ${placeName(top - i) === 'millares' ? 'los' : 'las'} ${placeName(top - i)}`}

@@ -1,7 +1,9 @@
 /* Exercise view "long-mul": multiplying in columns with partial rows (4.º, src/engine/longmul.ts). The top and the bottom
    are given. Each digit of the bottom gives one partial row, written right to left (units first) and shifted: its zeros
    are already written in grey. The total is the sum of the rows. Only the total is graded; the rows are the child's
-   working, so an empty row is never wrong. */
+   working, so an empty row is never wrong.
+   Each row says what it is (P3PE-13): «38 × 4 =», «38 × 70 =» on the left of the partial rows and «suma» on the
+   left of the total, and the names of the columns are on top. */
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Answer, ExerciseViewProps, LongMulExercise } from '@/types'
 import { hintsFor, toDigits } from '@/engine'
@@ -14,6 +16,11 @@ import { ExerciseLayout } from './ExerciseLayout'
 
 const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar', 'centenas de millar']
 const placeOf = (i: number) => (['u', 'd', 'c', 'um'] as const)[i] ?? null
+
+/** The name of a partial row: the top times the digit of the bottom with its place («38 × 70 =»). */
+export function partialLabel(top: number, digit: number, place: number): string {
+  return `${top} × ${digit * 10 ** place} =`
+}
 
 export default function LongMulView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'long-mul') return null
@@ -57,10 +64,15 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
     if (flow.submit(answer).correct) celebrate('small')
   }
 
-  // Grid: column 1 is the operator; the digit of place k sits in grid column cols - k + 1 (units at the right).
-  const colOf = (k: number) => cols - k + 1
+  // Grid: column 1 is the name of the row, column 2 the operator; the digit of place k sits in grid column cols - k + 2
+  // (units at the right).
+  const colOf = (k: number) => cols - k + 2
   const cells: ReactNode[] = []
   let row = 1
+  for (let k = 0; k < cols; k++) {
+    cells.push(<div key={`name${k}`} className={s.name} style={{ gridRow: row, gridColumn: colOf(k) }} aria-hidden>{PLACE_NAMES[k]}</div>)
+  }
+  row += 1
   topDigits.forEach((d, k) => {
     cells.push(
       <div key={`top${k}`} className={s.cellSlot} style={{ gridRow: row, gridColumn: colOf(k) }}>
@@ -69,7 +81,7 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
     )
   })
   row += 1
-  cells.push(<div key="times" className={s.op} style={{ gridRow: row, gridColumn: 1 }} aria-hidden>×</div>)
+  cells.push(<div key="times" className={s.op} style={{ gridRow: row, gridColumn: 2 }} aria-hidden>×</div>)
   bottomDigits.forEach((d, k) => {
     cells.push(
       <div key={`bottom${k}`} className={s.cellSlot} style={{ gridRow: row, gridColumn: colOf(k) }}>
@@ -78,9 +90,14 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
     )
   })
   row += 1
-  cells.push(<div key="line1" className={s.line} style={{ gridRow: row, gridColumn: `1 / ${cols + 2}` }} aria-hidden />)
+  cells.push(<div key="line1" className={s.line} style={{ gridRow: row, gridColumn: `2 / ${cols + 3}` }} aria-hidden />)
   row += 1
   ex.partials.forEach((_, j) => {
+    cells.push(
+      <div key={`label${j}`} className={s.rowLabel} style={{ gridRow: row, gridColumn: 1 }} data-row-label="">
+        {partialLabel(ex.top, bottomDigits[j] ?? 0, j)}
+      </div>,
+    )
     for (let k = 0; k < cols; k++) {
       if (k < j) {
         cells.push(
@@ -110,8 +127,9 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
     }
     row += 1
   })
-  cells.push(<div key="line2" className={s.line} style={{ gridRow: row, gridColumn: `1 / ${cols + 2}` }} aria-hidden />)
+  cells.push(<div key="line2" className={s.line} style={{ gridRow: row, gridColumn: `2 / ${cols + 3}` }} aria-hidden />)
   row += 1
+  cells.push(<div key="labelSum" className={s.rowLabel} style={{ gridRow: row, gridColumn: 1 }} data-row-label="">suma</div>)
   for (let k = 0; k < cols; k++) {
     cells.push(
       <div key={`t${k}`} className={s.cellSlot} style={{ gridRow: row, gridColumn: colOf(k) }}>
@@ -130,9 +148,9 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
   }
 
   return (
-    <ExerciseLayout workClassName={s.view} aria-label="Multiplicación en columna" data-kind="long-mul" data-status={status} prompt={'Escribe cada fila de derecha a izquierda y, al final, la suma de las filas.'} actions={<AnswerBar flow={flow} onCheck={check} canCheck={total.some((v) => v !== null)} />}>
+    <ExerciseLayout workClassName={s.view} aria-label="Multiplicación en columna" data-kind="long-mul" data-status={status} prompt="Multiplica en columna, fila a fila." sub="Cada fila se escribe de derecha a izquierda. Al final, suma las filas." actions={<AnswerBar flow={flow} onCheck={check} canCheck={total.some((v) => v !== null)} />}>
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
-        <div className={s.grid} style={{ gridTemplateColumns: `minmax(1.1em, auto) repeat(${cols}, auto)` }}>
+        <div className={s.grid} style={{ gridTemplateColumns: `auto minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}
         </div>
       </CellGroup>
