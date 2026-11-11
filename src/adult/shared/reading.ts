@@ -92,11 +92,6 @@ export function readTables(grid: number[][], name: string): TableReading {
   return { tables, mastered, dominated, toReview, reviewFacts, hasData, headline, support }
 }
 
-/** The times table with the most facts to review (ties: the smaller table), or null when none. */
-export function hardestTable(grid: number[][]): number | null {
-  return hardestTableAcross([grid])?.n ?? null
-}
-
 /**
  * The class's hardest table: the one where the most (child, fact) pairs are to review, summed over the children, so a
  * single pupil's fact does not decide it alone. `count` is that number of pairs (ties: the smaller table).

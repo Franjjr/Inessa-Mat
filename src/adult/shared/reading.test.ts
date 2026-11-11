@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hardestTable, hardestTableAcross, readTables, reviewSentence, struggleCount, tableNoun } from './reading'
+import { hardestTableAcross, readTables, reviewSentence, struggleCount, tableNoun } from './reading'
 
 /** Symmetric grid with every fact unseen (-1) except the ones set here. */
 function grid(set: [number, number, number][]): number[][] {
@@ -54,7 +54,7 @@ describe('readTables', () => {
   })
 })
 
-describe('tableNoun and hardestTable', () => {
+describe('tableNoun and hardestTableAcross', () => {
   it('uses singular and plural forms', () => {
     expect(tableNoun([7])).toBe('la tabla del 7')
     expect(tableNoun([2, 5])).toBe('las tablas del 2 y 5')
@@ -68,10 +68,10 @@ describe('tableNoun and hardestTable', () => {
     expect(hardestTableAcross([grid([])])).toBeNull()
   })
 
-  it('finds the table with most facts to review', () => {
+  it('finds the table with most facts to review for one child, the same as for a class of one', () => {
     const g = grid([[7, 1, 0], [7, 2, 0], [3, 3, 0]])
-    expect(hardestTable(g)).toBe(7)
-    expect(hardestTable(grid([]))).toBeNull()
+    expect(hardestTableAcross([g])).toEqual({ n: 7, count: 2 })
+    expect(hardestTableAcross([grid([])])).toBeNull()
     expect(struggleCount(g)).toBe(3)
   })
 })
