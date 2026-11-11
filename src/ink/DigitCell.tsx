@@ -1,13 +1,14 @@
 /* <DigitCell> — one handwritten digit (column operations, carries, short answers).
    Pen/finger ink → recognition after a short pause → typeset digit over the faded ink.
    Low confidence → subtle "?" and alternative chips on tap (a pick is a recognition fix + 'corrected' sample).
-   Clear: pen eraser, scribble-out, the small clear button, or a quick tap on a recognised cell to rewrite.
+   Clear: pen eraser, scribble-out, or the small clear button. A tap on a recognised cell only opens the alternatives.
    Keyboard: digits, Backspace, arrows/Tab (with CellGroup), Enter submits the group. */
 import clsx from 'clsx'
 import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode, type RefObject } from 'react'
 import type { DigitCellProps, DigitRecognition, InkStroke } from '@/types'
 import { sfx } from '@/audio'
-import { CONTINUE_MAX_HEIGHT, CONTINUE_MS, IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
+import { CONTINUE_MAX_HEIGHT, CONTINUE_MS, IDLE_MS, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
+import { isDoubtfulRead } from './confusable'
 import { useInk } from './context'
 import { useCellGroup } from './groupContext'
 import { isScribble, strokeBBox } from './geometry'
@@ -184,7 +185,7 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
       if (lastEmitted.current != null) emit(null, { confidence: 0, via })
       return
     }
-    const unsure = r.confidence < LOW_CONFIDENCE
+    const unsure = isDoubtfulRead(r)
     setRec(r)
     setPhase(unsure ? 'unsure' : 'recognized')
     ctx.learning.report(uid, r.digit, r)
@@ -292,7 +293,9 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
         if (info.role === 'tap') { fingerFallback(); return }
         // The pen (or a finger on a device without pen) tapped: close the picker, or rewrite a recognised digit.
         if (popover === 'pick') { setPopover(null); return }
-        if (p === 'recognized') clearAll()
+        // A tap never erases a recognised digit (a child may tap just to look): it opens the alternatives, which
+        // offer the rewrite. Erasing stays with the ✕ button, the pen eraser and the scribble-out.
+        if (p === 'recognized') { setPopover((v) => (v ? null : 'alts')); return }
       },
       onBlockedWrite() {
         fingerFallback()

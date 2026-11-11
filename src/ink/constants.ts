@@ -10,6 +10,12 @@ export const CONTINUE_MS = 1800
 export const CONTINUE_MAX_HEIGHT = 0.45
 /** Below this confidence the cell shows a subtle "?" and offers alternatives. */
 export const LOW_CONFIDENCE = 0.6
+/** Digit pairs that children's handwriting often blurs. A read whose two best candidates form one of these pairs is
+    doubtful when the margin between them is narrow (see confusable.ts). */
+export const CONFUSABLE_PAIRS: readonly (readonly [number, number])[] = [[1, 7], [4, 9], [0, 6], [5, 6], [3, 8]]
+/** Probability margin between the two best candidates under which a confusable pair must be confirmed. Not yet
+    calibrated with real handwriting: tune it with anonymised samples, never by guessing. */
+export const CONFUSABLE_MARGIN = 0.3
 /** A press shorter than this, that barely moves, is a tap (focus / alternatives / rewrite), not ink. */
 export const TAP_MS = 280
 /** Max movement (CSS px) of a tap, also scaled with the zone (see geometry.isTap). */

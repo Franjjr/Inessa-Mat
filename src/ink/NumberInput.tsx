@@ -6,7 +6,8 @@ import clsx from 'clsx'
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import type { DigitRecognition, InkStroke, NumberInputProps } from '@/types'
 import { sfx } from '@/audio'
-import { IDLE_MS, LOW_CONFIDENCE, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
+import { IDLE_MS, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
+import { isDoubtfulRead } from './confusable'
 import { useInk } from './context'
 import { isScribble, overlapFraction, segmentStrokes, segmentZone, spreadCentres, strokeBBox, strokesNear, type BBox } from './geometry'
 import { msSincePenContact, pointerRole, isPalmPress } from './policy'
@@ -41,6 +42,8 @@ interface SegView {
   key: string
   digit: number | null
   confidence: number
+  /** The read needs the child's confirmation (low confidence, or a narrow margin in a confusable pair). */
+  doubtful: boolean
   rec: DigitRecognition | null
   bbox: BBox
   strokes: InkStroke[]
@@ -143,14 +146,15 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       }
       const override = overrides.current.get(key)
       const digit = override ?? rec?.digit ?? null
-      return { key, digit, confidence: override != null ? 1 : rec?.confidence ?? 0, rec, bbox: seg.bbox, strokes: seg.strokes }
+      const doubtful = override == null && rec != null && isDoubtfulRead(rec)
+      return { key, digit, confidence: override != null ? 1 : rec?.confidence ?? 0, doubtful, rec, bbox: seg.bbox, strokes: seg.strokes }
     })
     const live = new Set(views.map((v) => v.key))
     for (const k of [...overrides.current.keys()]) if (!live.has(k)) overrides.current.delete(k)
     for (const v of views) if (v.digit != null && v.rec) ctx.learning.report(`${uid}:${v.key}`, v.digit, v.rec)
     // Low-confidence digits must be confirmed (or rewritten) before the answer is graded.
     for (const v of views) {
-      if (v.digit != null && v.confidence < LOW_CONFIDENCE) ctx.learning.doubt(`${uid}:${v.key}`, v.digit)
+      if (v.digit != null && v.doubtful) ctx.learning.doubt(`${uid}:${v.key}`, v.digit)
     }
     setSegs(views)
     setInkState('done')
@@ -275,7 +279,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
         const seg = segRef.current.find((x) => info.x >= x.bbox.minX - 12 && info.x <= x.bbox.maxX + 12)
         if (!seg && info.role === 'tap') { fingerFallback(); return }
         if (!seg || idle.current) return
-        if (seg.digit == null || seg.confidence < LOW_CONFIDENCE) { setPopover((p) => (p === seg.key ? null : seg.key)); return }
+        if (seg.digit == null || seg.doubtful) { setPopover((p) => (p === seg.key ? null : seg.key)); return }
         if (info.role === 'write') {
           removeStrokes(new Set(seg.strokes))
           recognizeAll()
@@ -393,7 +397,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
             </span>
           )}
           {showDigits && segments.map((seg, i) => {
-            const unsure = seg.digit == null || seg.confidence < LOW_CONFIDENCE
+            const unsure = seg.digit == null || seg.doubtful
             return (
               <span
                 key={seg.key}
