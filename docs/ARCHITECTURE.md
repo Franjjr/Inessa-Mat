@@ -74,8 +74,11 @@ persists attempts and updates mastery.
 - **Motion & sound**: `motion/react` for UI animation, CSS keyframes for idle art loops, always honour
   `prefers-reduced-motion`. Feedback is gentle: errors are clues, never harsh red screens or buzzers.
 - **Accessibility**: buttons have labels, everything keyboard-operable on desktop, colour never the only signal.
-- **Privacy**: children's data is minimal (nickname, gender for grammar, grade, companion). No third-party
-  requests at runtime except Supabase. No analytics SDKs.
+- **Privacy**: children's data is minimal (nickname, gender for grammar, grade, companion). The browser sends
+  requests only to our own origin, to Supabase, and to Google sign-in when it is configured. The voices are fetched
+  from our own functions (`/api/tts`, `/api/pronunciation`), which call Azure from the server with the key kept there;
+  the child's audio is not stored. No analytics SDKs, and nothing is sent about wrong answers: the local review log
+  (`src/data/review.ts`) stays on the device.
 - **Testing**: colocate `*.test.ts(x)`. Run only yours: `npx vitest run src/<your-folder>`. Type-check:
   `npm run typecheck 2>&1 | grep '<your-folder>'` (others may be mid-work; fix only your errors).
 - **Visual checks**: a dev server runs at http://localhost:5173 (do not start another on that port; if it is down,
@@ -92,6 +95,20 @@ child plays → ExerciseView/Activity → host.reportAttempt(attempt)
   → sync engine pushes outbox to Supabase when online & signed in (RLS-protected)
 node finished → content.applyNodeResult(progress) → data.updateProgress → RewardOverlay
 ```
+
+## Publicación y comprobaciones
+
+- **Vercel** publica con `npm run build` = `tsc -b && vite build`. Las pruebas unitarias (`vitest`) no están en ese
+  paso: un arreglo urgente para una familia no debe quedar bloqueado por una prueba lenta, y el build es el mismo en
+  local y en Vercel. Por eso las pruebas van en otro sitio.
+- **GitHub Actions** (`.github/workflows/ci.yml`) ejecuta en cada push y pull request `npm ci`, `npx tsc -b` y
+  `npx vitest run`. Las pruebas e2e de Playwright no están ahí: necesitan un servidor levantado aparte.
+  Para que una PR no se fusione con el check en rojo, el dueño del repositorio debe marcar «ci» como check obligatorio
+  en la protección de la rama `main` (Settings → Branches). Hasta entonces, el check informa pero no bloquea.
+- **Almacenamiento del dispositivo**: al arrancar se pide `navigator.storage.persist()` (`src/data/storage.ts`) para que
+  el navegador no borre el progreso de un niño sin cuenta. La respuesta queda en `meta` para la zona de adultos.
+- **Sincronización de cajas**: si una caja tiene un cambio local pendiente y la nube tiene una copia más nueva, se
+  fusionan (`mergeMastery`) y la entrada pendiente se conserva hasta que la nube tenga la fila fusionada.
 
 ## Backend (Supabase)
 
