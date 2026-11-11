@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { describeError } from '@/engine'
 import { classFactCounts } from '../shared/heatmap'
-import { classSummary, failsMostLine, practisedThisWeek, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
+import { classSummary, failsMostLine, missionLine, practisedThisWeek, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
 
 /** A 10×10 grid with every fact unseen (-1), then the boxes given as [a, b, box] (a × b, 1..10). */
 function gridWith(...facts: [number, number, number][]): number[][] {
@@ -88,5 +88,31 @@ describe('the week of the class: any subject counts as practice', () => {
     expect(pupilWeekLine(lenguaOnly)).toBe('Esta semana: Lengua 8 min')
     expect(pupilWeekLine(nothing)).toBe('Sin practicar esta semana')
     expect(pupilWeekLine({ minutesLast7Days: 7 })).toBe('7 min de matemáticas esta semana')
+  })
+})
+
+describe('missionLine: who has done a mission', () => {
+  const pupils = [
+    { childId: 'k1', nickname: 'Lía' }, { childId: 'k2', nickname: 'Dani' }, { childId: 'k3', nickname: 'Noa' },
+  ]
+
+  it('counts the pupils with enough answers and names who is missing', () => {
+    const progress = new Map([['k1', { attempts: 10 }], ['k2', { attempts: 9 }]])
+    expect(missionLine(progress, pupils, 10)).toBe('Hecha por 1 de 3 alumnos · Faltan: Dani y Noa')
+  })
+
+  it('celebrates when the whole class has done it', () => {
+    const progress = new Map(pupils.map((p) => [p.childId, { attempts: 12 }]))
+    expect(missionLine(progress, pupils, 10)).toBe('Hecha por 3 de 3 alumnos. ¡Toda la clase!')
+  })
+
+  it('names at most three missing pupils', () => {
+    const many = ['A', 'B', 'C', 'D', 'E'].map((n) => ({ childId: n, nickname: n }))
+    expect(missionLine(new Map(), many, 10)).toBe('Hecha por 0 de 5 alumnos · Faltan: A, B, C y 2 más')
+  })
+
+  it('shows nothing without tracking (server without 0006) or without pupils', () => {
+    expect(missionLine(null, pupils, 10)).toBeNull()
+    expect(missionLine(new Map(), [], 10)).toBeNull()
   })
 })

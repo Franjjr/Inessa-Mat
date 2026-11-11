@@ -67,8 +67,9 @@ export type { DataErrorCode } from './errors'
 export { useAuthExtras } from './auth'
 export { acceptInvite, completeAccount, createInviteLink, listOrgMembers, signInWithGoogle, suggestedDisplayName, updatePassword } from './account'
 export { googleClientId } from './supabase'
-/** School extras: classes of a child (family view), new join code. */
-export { listClassesForChild, regenerateJoinCode } from './schools'
+/** School extras: classes of a child (family view), new join code, what each pupil has done of a mission. */
+export { listClassesForChild, regenerateJoinCode, getMissionProgress, MISSION_DONE_ATTEMPTS } from './schools'
+export type { MissionProgress } from './schools'
 /** GDPR erasure (server + device) and removing the adult PIN. */
 export { eraseChild } from './dashboards'
 export { clearAdultPin } from './pin'

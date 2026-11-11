@@ -1,7 +1,8 @@
-/* The class overview reads the activity of every subject (rpc child_activity, migration 0006) and falls back to the
+/* Mission tracking (rpc assignment_progress, migration 0006) is null, never an error, while the server does not have it.
+   The class overview reads the activity of every subject (rpc child_activity, migration 0006) and falls back to the
    maths numbers of child_stats when the server does not have it yet. */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getClassOverview } from '@/data'
+import { getClassOverview, getMissionProgress } from '@/data'
 import { FakeSupabase } from './fakeSupabase'
 import { org, resetAll, signIn } from './helpers'
 
@@ -57,5 +58,24 @@ describe('class overview: activity of every subject', () => {
     expect(children).toHaveLength(3)
     for (const c of children) expect(c.weekBySubject).toBeUndefined()
     expect(byName(children, 'Dani').minutesLast7Days).toBe(10)
+  })
+})
+
+describe('mission progress', () => {
+  it('with migration 0006, gives the answers of each pupil on the mission', async () => {
+    fake.rpcs.assignment_progress = (args) => ({
+      data: args.p_assignment_id === 'as-1' ? [{ child_id: 'k1', attempts: 10, correct: 8 }, { child_id: 'k2', attempts: 0, correct: 0 }] : [],
+      error: null,
+    })
+    const progress = await getMissionProgress('as-1')
+    expect(progress?.get('k1')).toEqual({ attempts: 10, correct: 8 })
+    expect(progress?.get('k2')).toEqual({ attempts: 0, correct: 0 })
+  })
+
+  it('without migration 0006, or offline, there is no tracking (null) instead of a failure', async () => {
+    expect(await getMissionProgress('as-1')).toBeNull()
+    fake.rpcs.assignment_progress = () => ({ data: [], error: null })
+    fake.fail = () => ({ message: 'TypeError: Failed to fetch', code: '' })
+    expect(await getMissionProgress('as-1')).toBeNull()
   })
 })

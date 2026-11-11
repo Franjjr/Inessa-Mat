@@ -70,3 +70,24 @@ export function pupilWeekLine(c: WeekOf): string {
   })
   return parts.length ? `Esta semana: ${parts.join(' · ')}` : 'Sin practicar esta semana'
 }
+
+/** «Lía», «Lía y Noa», «Lía, Noa y Leo», «Lía, Noa, Leo y 2 más». */
+function names(list: readonly string[], max = 3): string {
+  if (list.length <= max) return list.length > 1 ? `${list.slice(0, -1).join(', ')} y ${list.at(-1)}` : (list[0] ?? '')
+  return `${list.slice(0, max).join(', ')} y ${list.length - max} más`
+}
+
+/** The tracking line of a mission: «Hecha por 2 de 3 alumnos · Faltan: Noa». A pupil has done it with `doneAt` graded
+    answers on its skills in its period. Null without tracking (a server without migration 0006) or without pupils. */
+export function missionLine(
+  progress: ReadonlyMap<string, { attempts: number }> | null | undefined,
+  pupils: readonly Pick<ChildSummary, 'childId' | 'nickname'>[],
+  doneAt: number,
+): string | null {
+  if (!progress || pupils.length === 0) return null
+  const missing = pupils.filter((p) => (progress.get(p.childId)?.attempts ?? 0) < doneAt).map((p) => p.nickname)
+  const done = pupils.length - missing.length
+  const head = `Hecha por ${done} de ${plural(pupils.length, 'alumno', 'alumnos')}`
+  if (missing.length === 0) return `${head}. ¡Toda la clase!`
+  return `${head} · Faltan: ${names(missing)}`
+}

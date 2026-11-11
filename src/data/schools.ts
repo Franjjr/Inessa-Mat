@@ -265,3 +265,33 @@ export async function listAssignmentsForChild(childId: string): Promise<Assignme
   }, [] as Assignment[])
   return all.filter((a) => isCurrent(a))
 }
+
+// ------------------------------------------------------------------------------------------------ mission progress
+
+/** Graded answers on a mission's skills (in its period) that make it «hecha»: one full run of the mission (10 rounds). */
+export const MISSION_DONE_ATTEMPTS = 10
+
+export interface MissionProgress {
+  attempts: number
+  correct: number
+}
+
+/**
+ * What each pupil has done of a mission (rpc assignment_progress, migration 0006), by child id. It is read from the
+ * attempts already synced: the mission's skills between its start and its due date, and what was played from the
+ * mission itself. Null when the server cannot say (no account, offline, or a server without 0006): the class screen then
+ * shows no tracking instead of a wrong one. Never throws.
+ */
+export async function getMissionProgress(assignmentId: string): Promise<Map<string, MissionProgress> | null> {
+  if (!canUseSchools()) return null
+  try {
+    const { sb } = await online()
+    const rows = await q<Row[]>(sb.rpc('assignment_progress', { p_assignment_id: assignmentId }))
+    const out = new Map<string, MissionProgress>()
+    for (const r of rows ?? []) out.set(String(r.child_id), { attempts: Number(r.attempts ?? 0), correct: Number(r.correct ?? 0) })
+    return out
+  } catch (e) {
+    console.warn('[numeria/schools] mission progress not available (migration 0006 not applied?):', e)
+    return null
+  }
+}

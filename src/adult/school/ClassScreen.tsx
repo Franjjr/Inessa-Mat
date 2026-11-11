@@ -1,7 +1,7 @@
 /* One class: the class heatmap, each pupil's progress, removing a pupil from the class, and assignments. */
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
-import { createAssignment, getClassOverview, listAssignments, removeEnrollment, useAuth } from '@/data'
+import { createAssignment, getClassOverview, getMissionProgress, listAssignments, MISSION_DONE_ATTEMPTS, removeEnrollment, useAuth, type MissionProgress } from '@/data'
 import { describeSkill } from '@/engine'
 import type { Assignment, ClassOverview } from '@/types'
 import { Button, toast } from '@/ui'
@@ -14,7 +14,7 @@ import { errorMessage } from '../shared/messages'
 import { formatDate, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
 import { ASSIGNMENT_PRESETS, presetSelector } from './presets'
-import { CLASS_CELL_NOTE, classSummary, failsMostLine, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
+import { CLASS_CELL_NOTE, classSummary, failsMostLine, missionLine, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
 import { TextField } from '../shared/Field'
 import s from './school.module.css'
 import adult from '../shared/adult.module.css'
@@ -24,6 +24,8 @@ export default function ClassScreen() {
   const { status } = useAuth()
   const [overview, setOverview] = useState<ClassOverview | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  /** What each pupil has done of each started mission (null: the server cannot say yet, see getMissionProgress). */
+  const [missionProgress, setMissionProgress] = useState<Record<string, Map<string, MissionProgress> | null>>({})
   const [loadError, setLoadError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<{ id: string; nickname: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -40,6 +42,10 @@ export default function ClassScreen() {
     const [ov, tasks] = await Promise.all([getClassOverview(classId), listAssignments(classId)])
     setOverview(ov)
     setAssignments(tasks)
+    // The tracking only adds detail: the newest started missions, read after the page is shown, never failing it.
+    const started = tasks.filter((t) => Date.parse(t.startsAt) <= Date.now()).slice(0, MISSIONS_TRACKED)
+    const progress = await Promise.all(started.map((t) => getMissionProgress(t.id)))
+    setMissionProgress(Object.fromEntries(started.map((t, i) => [t.id, progress[i]])))
   }, [classId])
 
   useEffect(() => {
@@ -229,7 +235,10 @@ export default function ClassScreen() {
       <section className={adult.card} aria-labelledby="assign-title">
         <div className={adult.stack} style={{ gap: 4 }}>
           <h2 id="assign-title" className={adult.subheading}>Misiones para la clase</h2>
-          <p className={adult.muted}>Se muestran a cada alumno como «la misión de tu profe». Puedes ponerles fecha límite.</p>
+          <p className={adult.muted}>
+            Cada alumno ve la misión vigente en su inicio, como «misión de tu profe». Puedes ponerles fecha límite. Una misión
+            está hecha cuando el alumno responde {MISSION_DONE_ATTEMPTS} ejercicios de esa práctica mientras dura.
+          </p>
         </div>
         {assignments.length === 0 ? (
           <p className={adult.muted}>Todavía no hay misiones.</p>
@@ -240,6 +249,10 @@ export default function ClassScreen() {
                 <div className={adult.stack} style={{ gap: 2, minWidth: 0 }}>
                   <span className={adult.strong}>{a.title}</span>
                   <span className={adult.muted}>{describeAssignment(a)}</span>
+                  {(() => {
+                    const line = missionLine(missionProgress[a.id], children, MISSION_DONE_ATTEMPTS)
+                    return line && <span className={adult.muted}>{line}</span>
+                  })()}
                 </div>
                 <span className={adult.muted}>{a.dueAt ? `Hasta el ${formatDate(a.dueAt)}` : 'Sin fecha límite'}</span>
               </div>
@@ -287,6 +300,9 @@ export default function ClassScreen() {
     </AdultPage>
   )
 }
+
+/** Missions whose tracking is read when the class opens (the newest ones). */
+const MISSIONS_TRACKED = 5
 
 function describeAssignment(a: Assignment): string {
   const skills = a.selector.skills ?? []
