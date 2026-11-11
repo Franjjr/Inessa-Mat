@@ -1,10 +1,12 @@
 /* Décimas y centésimas (4.º, decimal-op): a sum or a difference written in a column with the commas one under the other.
-   The result is written in cells: the whole part, then one box per decimal place. An empty centésimas box counts as 0.
-   One «Comprobar» for all the boxes. */
-import { useState } from 'react'
-import { NumberInput } from '@/ink'
+   P3PE-10: like the column calculation of the school, the result has ONE box per digit, right under each digit of the
+   numbers, and the comma is printed in its own column (the child never writes it). Written right to left, from the
+   last decimal. An empty centésimas box counts as 0; the boxes are empty (no «0» that looks written). One «Comprobar»
+   for all the boxes, beside the statement. */
+import { useMemo, useState, type ReactNode } from 'react'
+import { CellGroup, DigitCell } from '@/ink'
 import { celebrate } from '@/fx'
-import { fmtDecimal } from '@/engine'
+import { fmtDecimal, toDigits } from '@/engine'
 import type { DecimalOpExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
@@ -17,76 +19,116 @@ export default function DecimalOpView({ exercise, onAnswered, showFeedback = tru
   return <OpRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
 }
 
+const WHOLE_NAMES = ['unidades', 'decenas', 'centenas']
+const DEC_NAMES = ['décimas', 'centésimas']
+
+/** The whole part written in its boxes (units first): null while no box is written. */
+export function wholeFromDigits(digits: (number | null)[]): number | null {
+  if (digits.every((v) => v === null)) return null
+  return digits.reduce<number>((sum, v, k) => sum + (v ?? 0) * 10 ** k, 0)
+}
+
 function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpExercise } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
-  const [whole, setWhole] = useState<number | null>(null)
-  const [tenths, setTenths] = useState<number | null>(null)
-  const [hund, setHund] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const add = ex.op === 'add'
-  const sign = add ? '+' : '−'
+  const places = ex.places
+  const [lw, ld] = fmtDecimal(ex.left, places).split(',')
+  const [rw, rd] = fmtDecimal(ex.right, places).split(',')
+  const aw = fmtDecimal(ex.answer, places).split(',')[0]
+  // As many whole columns as the longest whole part (the numbers' or the result's): a sum may carry into a new one.
+  const wholeCols = Math.max(lw.length, rw.length, aw.length)
+  const [whole, setWhole] = useState<(number | null)[]>(() => Array.from({ length: wholeCols }, () => null))
+  const [decs, setDecs] = useState<(number | null)[]>(() => Array.from({ length: places }, () => null))
 
-  const submit = (w: number | null, t: number | null, h: number | null) => {
-    if (w === null || t === null) return
-    const c = flow.submit({ type: 'numbers', values: [w, t, ex.places === 2 ? h : null] })
+  const wholeValue = wholeFromDigits(whole)
+  const tenths = decs[0]
+  const canCheck = wholeValue !== null && tenths !== null
+  const submit = () => {
+    if (!canCheck) return
+    const c = flow.submit({ type: 'numbers', values: [wholeValue, tenths, places === 2 ? decs[1] : null] })
     if (c.correct) celebrate('small')
   }
-  const [lw, ld] = fmtDecimal(ex.left, ex.places).split(',')
-  const [rw, rd] = fmtDecimal(ex.right, ex.places).split(',')
+
+  // Writing order: right to left, from the last decimal to the highest whole column.
+  const order = useMemo(() => [
+    ...Array.from({ length: places }, (_, i) => `d${places - 1 - i}`),
+    ...Array.from({ length: wholeCols }, (_, k) => `w${k}`),
+  ], [places, wholeCols])
+
+  // Grid: column 1 the sign, then the whole columns (highest first), the comma, the decimal columns.
+  const colOfWhole = (k: number) => 1 + wholeCols - k
+  const commaCol = wholeCols + 2
+  const colOfDec = (i: number) => commaCol + 1 + i
+  const cells: ReactNode[] = []
+  const numberRow = (text: [string, string], row: number, key: string) => {
+    const wd = toDigits(Number(text[0]))
+    for (let k = 0; k < wholeCols; k++) {
+      cells.push(<span key={`${key}w${k}`} className={d.digit} style={{ gridRow: row, gridColumn: colOfWhole(k) }}>{k < text[0].length ? wd[k] : ''}</span>)
+    }
+    cells.push(<span key={`${key}c`} className={d.comma} style={{ gridRow: row, gridColumn: commaCol }} aria-hidden>,</span>)
+    text[1].split('').forEach((ch, i) => {
+      cells.push(<span key={`${key}d${i}`} className={d.digit} style={{ gridRow: row, gridColumn: colOfDec(i) }}>{ch}</span>)
+    })
+  }
+  for (let k = 0; k < wholeCols; k++) {
+    cells.push(<span key={`nw${k}`} className={d.colName} style={{ gridRow: 1, gridColumn: colOfWhole(k) }} aria-hidden>{WHOLE_NAMES[k]}</span>)
+  }
+  for (let i = 0; i < places; i++) {
+    cells.push(<span key={`nd${i}`} className={d.colName} style={{ gridRow: 1, gridColumn: colOfDec(i) }} aria-hidden>{DEC_NAMES[i]}</span>)
+  }
+  numberRow([lw, ld], 2, 'l')
+  cells.push(<span key="op" className={d.op} style={{ gridRow: 3, gridColumn: 1 }} aria-hidden>{add ? '+' : '−'}</span>)
+  numberRow([rw, rd], 3, 'r')
+  cells.push(<span key="rule" className={d.rule} style={{ gridRow: 4 }} aria-hidden />)
+  for (let k = 0; k < wholeCols; k++) {
+    cells.push(
+      <div key={`w${k}`} style={{ gridRow: 5, gridColumn: colOfWhole(k) }}>
+        <DigitCell
+          cellId={`w${k}`}
+          variant="result"
+          size="md"
+          value={whole[k]}
+          status={status}
+          onChange={(v) => setWhole((prev) => prev.map((x, j) => (j === k ? v : x)))}
+          ariaLabel={`${WHOLE_NAMES[k]} del resultado`}
+        />
+      </div>,
+    )
+  }
+  cells.push(<span key="rc" className={d.comma} style={{ gridRow: 5, gridColumn: commaCol }} aria-hidden>,</span>)
+  for (let i = 0; i < places; i++) {
+    cells.push(
+      <div key={`d${i}`} style={{ gridRow: 5, gridColumn: colOfDec(i) }}>
+        <DigitCell
+          cellId={`d${i}`}
+          variant="result"
+          size="md"
+          value={decs[i]}
+          status={status}
+          onChange={(v) => setDecs((prev) => prev.map((x, j) => (j === i ? v : x)))}
+          ariaLabel={`${DEC_NAMES[i]} del resultado`}
+          autoFocus={i === places - 1}
+        />
+      </div>,
+    )
+  }
 
   return (
-    <ExerciseLayout workClassName={s.view} aria-label={add ? 'Sumar decimales' : 'Restar decimales'} data-kind={ex.kind} data-status={status} prompt={add ? 'Suma. Pon las comas una debajo de otra.' : 'Resta. Pon las comas una debajo de otra.'} actions={<AnswerBar flow={flow} onCheck={() => submit(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />}>
-      <div className={d.column}>
-        <span />
-        <span className={d.whole}>{lw}</span>
-        <span className={d.comma} aria-hidden>,</span>
-        <span className={d.dec}>{ld}</span>
-        <span className={d.op} aria-hidden>{sign}</span>
-        <span className={d.whole}>{rw}</span>
-        <span className={d.comma} aria-hidden>,</span>
-        <span className={d.dec}>{rd}</span>
-        <span className={d.rule} aria-hidden />
-        <span />
-        <NumberInput
-          value={whole}
-          onChange={setWhole}
-          onSubmit={(v) => { setWhole(v); if (!flow.submitted) submit(v, tenths, hund) }}
-          maxDigits={2}
-          size="lg"
-          status={status}
-          ariaLabel="Parte entera del resultado"
-          checkButton={false}
-          placeholder="?"
-          autoFocus
-        />
-        <span className={d.comma} aria-hidden>,</span>
-        <div className={d.cells}>
-          <NumberInput
-            value={tenths}
-            onChange={setTenths}
-            onSubmit={(v) => { setTenths(v); if (!flow.submitted) submit(whole, v, hund) }}
-            maxDigits={1}
-            size="lg"
-            status={status}
-            ariaLabel="Décimas del resultado"
-            checkButton={false}
-            placeholder="?"
-          />
-          {ex.places === 2 && (
-            <NumberInput
-              value={hund}
-              onChange={setHund}
-              onSubmit={(v) => { setHund(v); if (!flow.submitted) submit(whole, tenths, v) }}
-              maxDigits={1}
-              size="lg"
-              status={status}
-              ariaLabel="Centésimas del resultado"
-              checkButton={false}
-              placeholder="0"
-            />
-          )}
+    <ExerciseLayout
+      workClassName={s.view}
+      aria-label={add ? 'Sumar decimales' : 'Restar decimales'}
+      data-kind={ex.kind}
+      data-status={status}
+      prompt={add ? 'Suma en columna, con las comas una debajo de otra.' : 'Resta en columna, con las comas una debajo de otra.'}
+      sub="Empieza por la derecha. Escribe una cifra en cada casilla: la coma ya está puesta."
+      actions={<AnswerBar flow={flow} onCheck={submit} canCheck={canCheck} />}
+    >
+      <CellGroup order={order} onSubmit={submit} keypadPosition="below" keypadToggle>
+        <div className={d.opGrid} style={{ gridTemplateColumns: `1.2em repeat(${wholeCols}, auto) auto repeat(${places}, auto)` }}>
+          {cells}
         </div>
-      </div>
+      </CellGroup>
     </ExerciseLayout>
   )
 }
