@@ -408,7 +408,7 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
 
 function Closing({ child, progress, subject, summary, missed, topicName, rule, finished, onDone, onGo, ctx }: {
   child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null
-  /** The rule of the topic's class («La regla: …»), when the topic has a class: the one sentence the child takes home. */
+  /** The closing step of the topic's class (it starts with «La regla: …»), when the topic has a class: what the child takes home. */
   rule: string | null; finished: boolean
   onDone: () => void; onGo: (worldId: string, nodeId: string) => void; ctx: ReturnType<typeof templateContext>
 }) {
