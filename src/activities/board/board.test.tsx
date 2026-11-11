@@ -65,12 +65,27 @@ describe('board: a wrong answer comes back', () => {
       ids.push(screen.getByTestId('question').getAttribute('data-id') ?? '')
       if (turn === 0) {
         fireEvent.click(screen.getByRole('button', { name: 'fallar' }))
-        expect(screen.getByText(/volverá a salir más adelante/)).toBeTruthy()
+        expect(screen.getByText(/puede volver a salir más adelante/)).toBeTruthy()
       } else {
         fireEvent.click(screen.getByRole('button', { name: 'acertar' }))
       }
     }
     expect(new Set(ids.slice(0, 3)).size).toBe(3)
     expect(ids[3]).toBe(ids[0])
+  })
+
+  it('on a short board the race can end before the question comes back, so the message never promises it', async () => {
+    // Three squares: the opponent reaches the castle before the re-ask, so the text must not promise a return.
+    const shortBoard: ActivityConfig = { ...config, count: 3, params: { squares: 3, opponent: 'lumi' } }
+    render(<BoardActivity config={shortBoard} onDone={() => {}} onExit={() => {}} />)
+    const wait = async (ms: number) => {
+      for (let t = 0; t < ms; t += 100) await act(() => vi.advanceTimersByTimeAsync(100))
+    }
+    await wait(3000)
+    fireEvent.click(screen.getByRole('button', { name: /dado/i }))
+    await wait(1000)
+    fireEvent.click(screen.getByRole('button', { name: 'fallar' }))
+    expect(screen.queryByText(/volverá a salir/)).toBeNull()
+    expect(screen.getByText(/puede volver a salir más adelante/)).toBeTruthy()
   })
 })

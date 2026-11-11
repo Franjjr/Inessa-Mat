@@ -177,9 +177,9 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
       setGoal(Math.min(squares, pos + steps))
       setPhase('walking')
     } else {
-      // The text only promises what happens: the question comes back only when the queue re-schedules it.
+      // The race can end (castle or opponent) before the re-ask comes up, so the text says it may come back.
       setMessage(host.t(requeued
-        ? 'Esta vez no avanzas. Esta pregunta volverá a salir más adelante.'
+        ? 'Esta vez no avanzas. Esta pregunta puede volver a salir más adelante.'
         : 'Esta vez no avanzas. ¡Sigue con la siguiente pregunta!'))
       setPhase('turnEnd')
     }
