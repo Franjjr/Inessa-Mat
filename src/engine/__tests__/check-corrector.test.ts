@@ -18,6 +18,11 @@ describe('multiplicación en columna: la llevada final escrita en su fila (3.1)'
   it('igual que en la suma: una llevada final que no se escribe en ningún sitio sigue olvidada', () => {
     expect(check(makeColumnMul(12, 9), dig([8, 0, null])).errorType).toBe('carry-forgot')
   })
+  it('99 × 9 = 891: la llevada final de la fila de llevadas vale también con dos llevadas seguidas', () => {
+    const ex = makeColumnMul(99, 9)
+    expect(check(ex, dig([1, 9, null], [null, 8, 8]))).toMatchObject({ correct: true, given: '891' })
+    expect(check(ex, dig([1, 9, null], [null, 8, null])).errorType).toBe('carry-forgot')
+  })
 })
 
 describe('resta en columna: el mensaje sigue al método que eligió el niño (3.9)', () => {
@@ -58,6 +63,19 @@ describe('resta por saltos: cualquier cadena creciente de paradas (3.10)', () =>
     expect(check(ex, line([130, null, 350])).errorType).toBe('incomplete')
     expect(check(ex, line([130, 300], null)).errorType).toBe('incomplete')
     expect(check(ex, line([130, 300], 226)).errorType).toBe('other')
+  })
+  it('el mensaje de un salto fuera de rango dice dónde tiene que caer, sin señalar un destino falso', () => {
+    expect(check(ex, line([300, 200])).feedback).toContain('El salto 2 tiene que caer después de 300 y antes de 352')
+    expect(check(ex, line([352])).feedback).toContain('El salto 1 tiene que caer después de 127 y antes de 352')
+    expect(check(ex, line([300, 200])).feedback).not.toMatch(/hacia 352/)
+  })
+  it('sin ningún salto escrito, un total equivocado no habla de saltos ya colocados', () => {
+    const r = check(ex, line([], 200))
+    expect(r.errorType).toBe('other')
+    expect(r.feedback).not.toMatch(/saltos/)
+  })
+  it('con saltos bien colocados, un total equivocado sí puede decir que los saltos están bien', () => {
+    expect(check(ex, line([130, 300, 350], 226)).feedback).toContain('bien colocados')
   })
 })
 

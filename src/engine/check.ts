@@ -294,8 +294,10 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
 const SUB_STEP_FEEDBACK = {
   partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
   partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
-  lineWrong: (step: number, from: number, to: number) => `¡Casi! El salto ${step} va de ${from} hacia ${to}: cuenta hacia delante, sin pasarte.`,
+  lineWrong: (step: number, after: number, before: number) =>
+    `¡Casi! El salto ${step} tiene que caer después de ${after} y antes de ${before}: cuenta hacia delante, sin pasarte.`,
   lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
+  lineTotalAlone: 'Suma cuánto has avanzado en total.',
   lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
 } as const
 
@@ -339,7 +341,11 @@ function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: n
     }
     at = v
   }
-  if (total !== ex.answer) return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineTotal }
+  // With no stops written, «los saltos ya están bien colocados» would be false: only the total is asked for then.
+  if (total !== ex.answer) {
+    const feedback = written.length ? SUB_STEP_FEEDBACK.lineTotal : SUB_STEP_FEEDBACK.lineTotalAlone
+    return { correct: false, given, expected, errorType: 'other', feedback }
+  }
   return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
 }
 
