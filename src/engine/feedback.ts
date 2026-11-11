@@ -42,16 +42,20 @@ const STRATEGY_PRAISE: Partial<Record<FactStrategy['id'], string>> = {
   'double-double': '¡Doble y doble! ¡Qué bien lo has pensado!',
   'double-double-double': '¡Doble, doble y doble, como el pulpo Octavio!',
   'five-plus-one': '¡El 5 y uno más funciona de maravilla!',
-  'even-six-rhyme': '¡Los pares que riman! ¡Qué oído tienes!',
+  'even-six-rhyme': '¡La mitad delante y el número detrás! ¡Qué bien!',
   'nine-trick': '¡El truco del 9 es pura magia!',
-  'square-rhyme': '¡Y el arcoíris llueve! ¡Muy bien!',
+  'square-rhyme': '¡Siete por cinco y siete por dos! ¡Muy bien!',
   'five-six-seven-eight': '¡5, 6, 7, 8! ¡Lo has clavado!',
   'weeks': '¡Tres semanas, veintiún días! ¡Genial!',
   'mirror': '¡El truco del espejo! ¡Muy bien pensado!',
+  'double-and-one': '¡El doble y uno más! ¡Muy bien!',
+  'ten-minus-two': '¡Diez veces menos dos veces! ¡Qué buena idea!',
 }
 
-export function praiseFact(seed: string, strategy: FactStrategy): string {
-  const s = STRATEGY_PRAISE[strategy.id]
+/** Praise for a right fact. A strategy is named only when the child asked for its trick (`usedTrick`): the praise must
+    not name a trick the child has not used. */
+export function praiseFact(seed: string, strategy: FactStrategy, usedTrick = false): string {
+  const s = usedTrick ? STRATEGY_PRAISE[strategy.id] : undefined
   if (s && hashString(`${seed}:s`) % 2 === 0) return s
   return praise(seed)
 }
@@ -60,10 +64,11 @@ export const FEEDBACK = {
   incomplete: '¡Te falta alguna casilla por rellenar! Complétalas todas y vuelve a probar.',
   empty: '¡Escribe tu respuesta! Tómate tu tiempo.',
   factWrong: (strategy: FactStrategy) => `¡Casi! Prueba el truco. ${strategy.text}`,
-  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy, answer?: number) => {
-    const diff = answer === undefined ? 0 : answer - given
-    const off = diff > 0 ? `: te faltan ${diff}` : diff < 0 ? `: te sobran ${-diff}` : ''
-    return `¡Casi! ${given} es ${a} × ${b}, la de al lado${off}. Prueba el truco. ${strategy.text}`
+  /** The child wrote the product of a neighbouring fact: it names that fact's table, then the trick of the asked fact
+      (which never gives its result). */
+  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy, _answer?: number) => {
+    const tables = a === b ? `la tabla del ${a}` : `la tabla del ${a} y del ${b}`
+    return `¡Casi! ${given} es ${a} × ${b}: ese resultado es de ${tables}. Prueba el truco: ${strategy.text}`
   },
   factAdded: (a: number, b: number) => `¡Ojo! Has sumado ${a} + ${b}. Multiplicar es hacer ${a} grupos de ${b}.`,
   divWrong: (dividend: number, divisor: number) =>
@@ -81,7 +86,7 @@ export const FEEDBACK = {
   familyFact: 'Revisa las cuentas: alguna no da el resultado correcto.',
   familyIncomplete: (a: number, b: number, p: number) =>
     `Con ${a}, ${b} y ${p} salen 4 operaciones: dos multiplicaciones y dos divisiones. ¡Te falta alguna!`,
-  familyRepeated: 'Has escrito dos veces la misma. Usa el espejo: si cambias el orden, sale otra.',
+  familyRepeated: 'Has escrito dos veces la misma. Usa el espejo: escribe la cuenta con los números al revés. El resultado es el mismo.',
   familyOther: (a: number, b: number, p: number) =>
     `Usa solo los números ${a}, ${b} y ${p}. En la división, el número grande va primero.`,
   carryForgot: (cols: number[]) =>
@@ -95,23 +100,25 @@ export const FEEDBACK = {
   misaligned: 'Coloca las cifras empezando por la derecha: unidades debajo de unidades, decenas debajo de decenas.',
   smallerFromLarger: 'Arriba hay un número más pequeño: ¡pide ayuda a la vecina!',
   borrowForgot: 'Si la vecina te presta una decena, ella se queda con una menos. ¡Táchala y réstale 1!',
-  zeroBorrow: '¡Cuidado con el cero! No tiene nada que prestar: primero pide a la casa de al lado y el 0 se convierte en 9.',
+  /** «Me llevo una» (the carry method): the ten goes to the top number and the 1 to the bottom of the next column. */
+  carryForgotSub: 'Te has olvidado de sumar 1 a la cifra de abajo de la casa de al lado. ¡Me llevo una!',
+  zeroBorrow: '¡Cuidado con el cero! No tiene nada que prestar: pide a la primera casa que no sea 0. Cada 0 que pases se convierte en 9.',
   subFact: (cols: number[]) => `¡Casi! Revisa la resta de ${columnList(cols)}. Puedes comprobarla sumando.`,
   subAdded: '¡Ojo! Es una resta: hay que quitar, no sumar.',
   mulFact: (cols: number[]) => `¡Casi! Revisa ${columnList(cols)}: multiplica cifra a cifra con calma.`,
-  remainderTooBig: (divisor: number) => `El resto tiene que ser más pequeño que ${divisor}. ¡Cabe una vez más!`,
+  remainderTooBig: (divisor: number) => `Lo que sobra (el resto) tiene que ser más pequeño que ${divisor}. ¡Cabe una vez más!`,
   quotientTooBig: (q: number, divisor: number, dividend: number) =>
     `¡Te has pasado! ${q} × ${divisor} = ${q * divisor}, y solo hay ${dividend}. Prueba con uno menos.`,
   quotientTooSmall: '¡Todavía cabe una vez más! Prueba con uno más en el cociente.',
-  remainderWrong: (dividend: number, used: number) => `¡El cociente está bien! Ahora revisa el resto: ${dividend} − ${used}.`,
+  remainderWrong: (dividend: number, used: number) => `¡Lo que sale en cada grupo está bien! Ahora revisa lo que sobra: ${dividend} − ${used}.`,
   bringDown: 'Lo que sobra en las decenas se junta con las unidades: ¡bájalo y sigue repartiendo!',
   divisionStopped: '¡No te pares! Después de las decenas, baja las unidades y sigue repartiendo. Si no cabe ninguna vez, escribe un 0.',
-  divisionReversed: '¡Casi! Las cifras del cociente van en orden: primero la de las decenas y, a su derecha, la de las unidades.',
+  divisionReversed: '¡Casi! Las cifras del resultado van en orden: primero la de las decenas y, a su derecha, la de las unidades.',
   divisionOperation: (dividend: number, divisor: number) => `¡Ojo! Aquí hay que dividir: repartir ${dividend} entre ${divisor}.`,
   divisionNear: (divisor: number, dividend: number) =>
     `¡Casi! Busca en la tabla del ${divisor} el número que más se acerca a ${dividend} sin pasarse.`,
   divisionFact: (divisor: number) => `¡Casi! Reparte cifra a cifra con la tabla del ${divisor}.`,
-  divisionOther: 'Comprueba tu división: cociente × divisor + resto tiene que dar el dividendo.',
+  divisionOther: 'Comprueba: multiplica lo que sale por el número por el que divides, y suma lo que sobra. Tiene que dar el número que has repartido.',
   wordOperation: {
     add: '¡Casi! Lee otra vez: aquí se juntan cosas. ¿Qué operación junta?',
     sub: '¡Casi! Lee otra vez: aquí se quitan o se comparan cosas. ¿Qué operación quita?',

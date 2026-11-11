@@ -291,7 +291,7 @@ describe('check — division (galera)', () => {
   it('remainder too big', () => {
     const r = check(ex, div(2, 7))
     expect(r.errorType).toBe('remainder-too-big')
-    expect(r.feedback).toBe('El resto tiene que ser más pequeño que 5. ¡Cabe una vez más!')
+    expect(r.feedback).toBe('Lo que sobra (el resto) tiene que ser más pequeño que 5. ¡Cabe una vez más!')
   })
   it('quotient off by one (too big / too small)', () => {
     const big = check(ex, div(4, 0))
