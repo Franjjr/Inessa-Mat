@@ -44,8 +44,22 @@ export function syllabusFor(subject: SubjectId, grade?: number): Syllabus {
 
 /** A skill counts as mastered at this Leitner box (two fluent answers). */
 export const MASTERED_BOX = 2
+/** A skill counts as learnt by heart at this Leitner box (answered fluently over several review dates). */
+export const MEMORISED_BOX = 4
 /** A topic counts as mastered when this share of its skills is mastered: one lapse on a big table does not reopen it. */
 export const MASTERED_SHARE = 0.8
+
+/** The one definition of how well a skill is known, for every screen (child, teacher and family reports):
+    'unseen' never practised; 'learning' below MASTERED_BOX; 'known' (lo sabe) from MASTERED_BOX; 'memorised'
+    (de memoria) from MEMORISED_BOX. A topic is mastered when MASTERED_SHARE of its skills is 'known' or better. */
+export type SkillLevel = 'unseen' | 'learning' | 'known' | 'memorised'
+
+export function skillLevel(box: number | null | undefined): SkillLevel {
+  if (box === null || box === undefined || box < 0) return 'unseen'
+  if (box >= MEMORISED_BOX) return 'memorised'
+  if (box >= MASTERED_BOX) return 'known'
+  return 'learning'
+}
 
 /** Every topic in block order (the adult report groups by block). */
 export function allTopics(syllabus: Syllabus): SyllabusTopic[] {
