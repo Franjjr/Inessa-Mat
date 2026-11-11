@@ -1,6 +1,8 @@
 /* Exercise view "error-hunt" (encuentra el error, PLAN_DOCENTE §5). A column calculation is written out with its
    result. The child decides: «Está bien» or «Hay un error». With an error, the child taps the column where it is and
-   writes the right result. Nothing is revealed: the calculation is shown exactly as the child would write it. */
+   writes the right result. Nothing is revealed: the calculation is shown exactly as the child would write it.
+   A sign above the calculation says whose it is and that it may be wrong on purpose (p1n-01): a child must never
+   take it for a model. It never says whether this one is wrong (some are right: «Está bien» is an answer). */
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import type { ErrorHuntExercise, ExerciseViewProps } from '@/types'
@@ -12,7 +14,11 @@ import { celebrate } from '@/fx'
 import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import s from './BugViews.module.css'
+
+/** The sign above a calculation made wrong on purpose (p1n-01). */
+export const HUNT_SIGN = 'Dani ha hecho esta cuenta. A veces se equivoca a propósito. ¿Está bien o tiene un fallo? ¿Lo encuentras?'
 
 const SIGN: Record<ErrorHuntExercise['op'], string> = { add: '+', sub: '−', mul: '×' }
 
@@ -53,8 +59,13 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
   }
 
   return (
-    <section className={clsx(s.view, compact && s.compact)} aria-label="Encuentra el error">
-      <p className={s.prompt}>{host.t('Mira esta cuenta. ¿Está bien el resultado?')}</p>
+    <ExerciseLayout
+      workClassName={clsx(s.view, compact && s.compact)}
+      aria-label="Encuentra el error"
+      prompt={host.t('Encuentra el error: ¿está bien el resultado?')}
+      actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />}
+    >
+      <p className={s.sign} data-cartel="">{host.t(HUNT_SIGN)}</p>
 
       <div className={s.calc} style={{ gridTemplateColumns: `repeat(${cols}, var(--bug-cell))` }} role="table" aria-label="Cuenta">
         {order.map((i) => (
@@ -129,8 +140,6 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
           </div>
         </div>
       )}
-
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />
-    </section>
+    </ExerciseLayout>
   )
 }
