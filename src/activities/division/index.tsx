@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { ActivityProps, DivisionExercise, Exercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import DivisionView from '../views/DivisionView'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
@@ -14,7 +15,7 @@ const isDivision = (e: Exercise): e is DivisionExercise => e.kind === 'division'
 export default function DivisionActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isDivision),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isDivision),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],

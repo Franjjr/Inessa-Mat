@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ActivityProps, ExerciseOutcome, GroupsExercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import { sfx } from '@/audio'
 import GroupsView from '../views/GroupsView'
@@ -13,7 +14,7 @@ import s from './groups.module.css'
 export default function GroupsActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 6, { rng: host.rng, mastery: host.mastery })
+    () => generate(adaptiveSelector(config.selector), config.count ?? 6, { rng: host.rng, mastery: host.mastery })
       .filter((e): e is GroupsExercise => e.kind === 'groups'),
     // Generated once per mount: the rounds of one run are fixed.
     // eslint-disable-next-line react-hooks/exhaustive-deps

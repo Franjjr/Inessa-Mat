@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { ActivityProps, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, Exercise, SubMethod } from '@/types'
 import { generate, normaliseSubMethod } from '@/engine'
+import { adaptiveSelector } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import SubtractionView from '../views/SubtractionView'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
@@ -23,7 +24,7 @@ function storyFor(ex: ColumnEx): string {
 export default function ColumnActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 6, { rng: host.rng, mastery: host.mastery }).filter(isColumn),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 6, { rng: host.rng, mastery: host.mastery }).filter(isColumn),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],

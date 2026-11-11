@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import type { ActivityProps, Exercise, WordProblemExercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import WordProblemView from '../views/WordProblemView'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
@@ -13,7 +14,7 @@ const isWord = (e: Exercise): e is WordProblemExercise => e.kind === 'word-probl
 export default function WordActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isWord),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isWord),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],
