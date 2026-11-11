@@ -180,7 +180,7 @@ export const ERROR_GROUPS: { id: ErrorGroupId; label: string; meaning: string; a
     id: 'posicion',
     label: 'Valor de posición',
     meaning: 'Coloca una cifra en una columna que no le toca (unidades, decenas, centenas).',
-    advice: 'Escribir números con su nombre de columna (U, D, C, UM) y contar con billetes de 1, 10 y 100.',
+    advice: 'Escribir números con su nombre de columna (U, D, C, M) y contar con billetes de 1, 10 y 100.',
   },
   {
     id: 'problemas',

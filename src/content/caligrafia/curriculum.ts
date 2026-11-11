@@ -1,4 +1,5 @@
-/* The Caligrafía curriculum (letra ligada): what is practised, in teaching order. Pure data, no I/O.
+/* The Caligrafía curriculum (lowercase in letra ligada; the capitals are PRINT capitals, as the stroke models have
+   no cursive capitals and the adult card says so): what is practised, in teaching order. Pure data, no I/O.
    Letters go by family of stroke (redondas, bucles, puentes, otras), then the two-letter links, the words, the
    capitals and, last, the sentences: a sentence starts with a capital, so the capitals come first (as in Lengua 3.º).
    Every text must be drawable by joinWord (src/ink/cursive/join.ts). */
