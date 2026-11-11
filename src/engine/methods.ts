@@ -1,30 +1,63 @@
-/* Registry of the methods a child can learn for each operation. Adding a method is one more entry here: the
-   preference (ChildSettings), the attempt log (context.method), the lessons and the adult report read this same
-   registry. The pattern is documented in docs/PEDAGOGY.md («Varios métodos por operación»).
-   Method ids are unique across operations, because the attempt log and the report key their tallies by id. */
+/* Registry of the methods for each operation. One method per operation, the one of the child's school, chosen by the
+   grown-up (never by the child): by default «pedir prestado» and «la galera con restas». The correct final answer is
+   always right, whatever the method. The preference (ChildSettings), the attempt log (context.method), the lessons and
+   the adult report read this same registry. The pattern is documented in docs/PEDAGOGY.md («Un método por operación»).
+   Method ids are unique across operations, because the attempt log and the report key their tallies by id.
+   Retired methods (resta por partes, saltos en la recta, repartir por partes, multiplicar hacia arriba) stay in the
+   SubMethod/DivMethod types so that old settings and old attempt logs still load: the normalisers turn them into the
+   default method, and RETIRED_METHODS lets the adult area tell the family once. */
 import type { DivMethod, SubMethod, TableMethod } from '@/types'
 
 export interface MethodInfo<Id extends string> {
   id: Id
   /** Child-facing name, as the lesson and the settings show it. */
   label: string
-  /** One line for the grown-ups (settings, report). */
+  /** One line for the grown-ups (settings, report), always visible next to the option. */
   summary: string
 }
 
-export const SUB_METHODS: readonly MethodInfo<SubMethod>[] = [
-  { id: 'borrow', label: 'Pedir prestado arriba', summary: 'Se tacha la cifra de arriba, se le quita uno y la de al lado pasa a ser +10.' },
-  { id: 'carry', label: 'Me llevo una abajo', summary: 'Se suma 10 arriba y 1 a la cifra de abajo de la columna siguiente.' },
-  { id: 'parts', label: 'Por partes', summary: 'El número de abajo se separa en centenas, decenas y unidades: 352 − 100 − 20 − 7.' },
-  { id: 'line', label: 'Saltos en la recta', summary: 'Desde el número de abajo se cuenta hasta el de arriba, con saltos que caen en números redondos.' },
+/** A school method with its notebook example: the settings show the sentence under a small drawing of it. */
+export interface SchoolMethodInfo<Id extends string> extends MethodInfo<Id> {
+  /** The worked example drawn in the settings (MethodSketch), e.g. «52 − 27». */
+  example: string
+  /** How the example looks in the notebook, in words (visible under the drawing, and its accessible name). */
+  notebook: string
+}
+
+export const SUB_METHODS: readonly SchoolMethodInfo<SubMethod>[] = [
+  { id: 'borrow', label: 'Pedir prestado arriba', summary: 'Se tacha la cifra de arriba, se le quita uno y la de al lado pasa a ser +10.',
+    example: '52 − 27', notebook: 'Se tacha el 5 y se pone 4; el 2 pasa a ser 12. 12 − 7 = 5 y 4 − 2 = 2: da 25.' },
+  { id: 'carry', label: 'Me llevo una abajo', summary: 'Se suma 10 arriba y 1 a la cifra de abajo de la columna siguiente.',
+    example: '52 − 27', notebook: 'El 2 pasa a ser 12 y se pone un 1 pequeño junto al 2 de abajo. 12 − 7 = 5 y 5 − 3 = 2: da 25.' },
 ] as const
 
-export const DIV_METHODS: readonly MethodInfo<DivMethod>[] = [
-  { id: 'galera', label: 'La galera con restas', summary: 'Se escriben las restas debajo de cada paso: cociente, producto, resto.' },
-  { id: 'galera-short', label: 'La galera sin restas', summary: 'Solo se escriben las cifras del cociente y el resto final: las restas se hacen de cabeza.' },
-  { id: 'div-parts', label: 'Repartir por partes', summary: 'El dividendo se parte en partes fáciles y se suman los cocientes: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4.' },
-  { id: 'climb', label: 'Multiplicar hacia arriba', summary: '«¿Qué número por el divisor da el dividendo?»: se sube fila a fila hasta llegar o pasarse.' },
+export const DIV_METHODS: readonly SchoolMethodInfo<DivMethod>[] = [
+  { id: 'galera', label: 'La galera con restas', summary: 'Se escriben las restas debajo de cada paso: cociente, producto, resto.',
+    example: '96 ÷ 4', notebook: 'Debajo del 9 se escribe −8 y sobra 1; se baja el 6: 16, se escribe −16 y sobra 0. El cociente es 24.' },
+  { id: 'galera-short', label: 'La galera sin restas', summary: 'Solo se escriben las cifras del cociente y lo que sobra: las restas se hacen de cabeza.',
+    example: '96 ÷ 4', notebook: 'Debajo del 9 solo se escribe lo que sobra, 1; se baja el 6: 16, y sobra 0. El cociente es 24.' },
 ] as const
+
+/** Methods the app no longer teaches, with the name the report shows for old attempts. Saved settings with them still
+    load and become the default method. */
+export const RETIRED_METHODS: { sub: readonly MethodInfo<SubMethod>[]; div: readonly MethodInfo<DivMethod>[] } = {
+  sub: [
+    { id: 'parts', label: 'Por partes', summary: 'Ya no se usa: ahora se resta en columna, como en el cole.' },
+    { id: 'line', label: 'Saltos en la recta', summary: 'Ya no se usa: ahora se resta en columna, como en el cole.' },
+  ],
+  div: [
+    { id: 'div-parts', label: 'Repartir por partes', summary: 'Ya no se usa: ahora se divide con la galera.' },
+    { id: 'climb', label: 'Multiplicar hacia arriba', summary: 'Ya no se usa: ahora se divide con la galera.' },
+  ],
+}
+
+/** Which operations of the saved settings name a retired method. Read the raw settings, before normalising them. */
+export function retiredMethodsIn(settings: { subMethod?: unknown; divMethod?: unknown } | null | undefined): { sub: boolean; div: boolean } {
+  return {
+    sub: RETIRED_METHODS.sub.some((m) => m.id === settings?.subMethod),
+    div: RETIRED_METHODS.div.some((m) => m.id === settings?.divMethod),
+  }
+}
 
 /** A trick for the tables (the Lumi tricks). `applies` says for which facts the trick is the natural one. */
 export interface TableTrick extends MethodInfo<TableMethod> {
@@ -68,7 +101,9 @@ export function methodsOf(op: MethodOp): readonly MethodInfo<string>[] {
 }
 
 export function methodLabel(op: MethodOp, id: string | undefined | null): string {
-  const found = methodsOf(op).find((m) => m.id === id)
+  // Old attempt logs may name a retired method: the report still shows its name.
+  const retired: readonly MethodInfo<string>[] = op === 'sub' ? RETIRED_METHODS.sub : op === 'div' ? RETIRED_METHODS.div : []
+  const found = methodsOf(op).find((m) => m.id === id) ?? retired.find((m) => m.id === id)
   return found ? found.label : id ?? ''
 }
 
@@ -91,6 +126,14 @@ export function normaliseSubMethod(value: unknown): SubMethod {
 
 export function normaliseDivMethod(value: unknown): DivMethod {
   return isDivMethod(value) ? value : DEFAULT_METHOD.div
+}
+
+/** The method of the child's school for an operation, as the exercises must use it: the one the grown-up saved, or
+    the default (pedir prestado, la galera con restas). Never a retired method, whatever old data says. */
+export function methodFor(op: 'sub', prefs: { subMethod?: unknown } | null | undefined): SubMethod
+export function methodFor(op: 'div', prefs: { divMethod?: unknown } | null | undefined): DivMethod
+export function methodFor(op: 'sub' | 'div', prefs: { subMethod?: unknown; divMethod?: unknown } | null | undefined): SubMethod | DivMethod {
+  return op === 'sub' ? normaliseSubMethod(prefs?.subMethod) : normaliseDivMethod(prefs?.divMethod)
 }
 
 /** No favourite yet is null (not a default trick): the hints keep the engine's own strategy. */

@@ -91,10 +91,10 @@ export { THEME_NAME } from './ingles/exercises'
 export { GRAMMAR_SKILLS, LENGUA_SKILLS } from './skills'
 /** Subtraction methods: the registry (labels, per operation) and the written steps each method expects. */
 export {
-  DEFAULT_METHOD, DIV_METHODS, isDivMethod, isSubMethod, isTableMethod, methodLabel, methodsOf, METHODS, normaliseDivMethod,
-  normaliseSubMethod, normaliseTableMethod, SUB_METHODS, TABLE_METHODS, tricksFor,
+  DEFAULT_METHOD, DIV_METHODS, isDivMethod, isSubMethod, isTableMethod, methodFor, methodLabel, methodsOf, METHODS, normaliseDivMethod,
+  normaliseSubMethod, normaliseTableMethod, RETIRED_METHODS, retiredMethodsIn, SUB_METHODS, TABLE_METHODS, tricksFor,
 } from './methods'
-export type { MethodInfo, MethodOp, TableTrick } from './methods'
+export type { MethodInfo, MethodOp, SchoolMethodInfo, TableTrick } from './methods'
 /** Fracciones and geometría (block E): generators, grading and hints (see fractions.ts and geometry.ts). */
 export { fractionName, fractionHints, genFractionAdd, genFractionCompare, genFractionEqual, genFractionName, genFractionOf, genFractionRead, genFractionShade, unequalWeights } from './fractions'
 export {
