@@ -130,7 +130,11 @@ function leaksIn(ex: Exercise, hints: Hint[]): { level: number; text: string; an
   for (const h of hints) {
     // A card of examples (Lengua) is read as well as the text: the answer must not be on it either.
     const words = h.params?.words
-    const texts: string[] = [h.text, ...(Array.isArray(words) ? words.map(String) : [])]
+    // «× 10» and «÷ 10» are the rungs of the unit ladder (the rule), not an answer.
+    const texts: string[] = [h.text, ...(Array.isArray(words) ? words.map(String) : [])].map((t) => (ex.kind === 'measure' ? t.replace(/[×÷] 10(?!\d)/g, '') : t))
+    // A rule that names every option (obtuso, agudo, recto…) ties each description to its name: it gives none away.
+    const opts = (ex as unknown as { options?: unknown }).options
+    if (Array.isArray(opts) && opts.length > 1 && opts.every((o) => typeof o === 'string' && h.text.toLowerCase().includes(o.toLowerCase()))) continue
     for (const a of answers) if (texts.some((t) => a.pattern.test(t))) found.push({ level: h.level, text: h.text, answer: a.label })
   }
   return found
