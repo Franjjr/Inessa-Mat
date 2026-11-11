@@ -13,6 +13,8 @@ import NodeScreen from './NodeScreen'
 // the host context and stubs for the two players, so the index is replaced here.
 // The activity's result is set by each test: a button «Terminar» ends the activity with it.
 const activityResult = vi.hoisted(() => ({ value: { correct: 6, total: 6, stars: 3, ms: 1000 } as { correct: number; total: number; stars: 0 | 1 | 2 | 3; ms: number } }))
+/** The result the review («Repaso mágico») hands over when its button is pressed. */
+const reviewResult = vi.hoisted(() => ({ value: { correct: 6, total: 6, stars: 3 } as { correct: number; total: number; stars: number } }))
 
 vi.mock('@/activities', async () => {
   const host = await import('@/activities/host')
@@ -53,13 +55,16 @@ vi.mock('@/world/guardian/GuardianChallenge', async () => {
 })
 vi.mock('@/world/review/DailyReview', async () => {
   const { createElement } = await import('react')
-  return { default: () => createElement('div', { 'data-testid': 'review' }, 'review') }
+  return {
+    default: ({ onDone }: { onDone: (r: unknown) => void }) =>
+      createElement('div', { 'data-testid': 'review' }, 'review', createElement('button', { type: 'button', onClick: () => onDone(reviewResult.value) }, 'Terminar repaso')),
+  }
 })
 vi.mock('@/world/rewards/RewardOverlay', async () => {
   const { createElement } = await import('react')
   return {
-    default: ({ stars, bestStars, improved }: { stars: number; bestStars?: number; improved?: boolean }) =>
-      createElement('div', { 'data-testid': 'reward' }, `esta vez ${stars} · mejor ${bestStars ?? '-'} · ${improved ? 'mejorado' : 'sin mejora'}`),
+    default: ({ stars, bestStars, improved, maxStars }: { stars: number; bestStars?: number; improved?: boolean; maxStars?: number }) =>
+      createElement('div', { 'data-testid': 'reward' }, `esta vez ${stars} · mejor ${bestStars ?? '-'} · ${improved ? 'mejorado' : 'sin mejora'} · de ${maxStars ?? 3}`),
   }
 })
 
@@ -221,6 +226,58 @@ describe('NodeScreen rewards and passing', () => {
     await renderNode('w1', 'arrival')
     await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' }))
     expect(await screen.findByTestId('reward')).toHaveTextContent('esta vez 1')
+  })
+
+  it('a reading is worth one star out of one: the reward shows no «de 3» and no best mark', async () => {
+    await renderNode('w1', 'arrival')
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' }))
+    expect(await screen.findByTestId('reward')).toHaveTextContent('esta vez 1 · mejor - · sin mejora · de 1')
+  })
+
+  it('an activity keeps the 3-star reward', async () => {
+    await renderNode('w1', 'groups', (id) => bestBefore(id, 'w1', 'groups', 1))
+    activityResult.value = { correct: 6, total: 6, stars: 3, ms: 900 }
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar actividad' }))
+    expect(await screen.findByTestId('reward')).toHaveTextContent('de 3')
+  })
+
+  it('a picture with nothing to ask (0 of 0) is passed and saved, not sent back to retry', async () => {
+    const { childId } = await renderNode('w1', 'groups', (id) => markWorldDone(id, 'w1'))
+    await updateProgress(childId, (p) => ({ ...p, worlds: { ...p.worlds, w1: { ...p.worlds.w1, nodes: { ...p.worlds.w1.nodes, groups: { done: false, stars: 0 } } } } }))
+    activityResult.value = { correct: 0, total: 0, stars: 0, ms: 0 }
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar actividad' }))
+    expect(await screen.findByTestId('reward')).toBeInTheDocument()
+    expect((await getProgress(childId)).worlds.w1.nodes.groups?.done).toBe(true)
+  })
+
+  it('a review below 80 % is not saved: it shows how many were right and the retry', async () => {
+    const { childId } = await renderNode('w7', 'review', (id) => markWorldDone(id, 'w7'))
+    reviewResult.value = { correct: 0, total: 6, stars: 0 }
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar repaso' }))
+
+    expect(await screen.findByText(/Has acertado 0 de 6/)).toBeInTheDocument()
+    expect(screen.queryByTestId('reward')).not.toBeInTheDocument()
+    expect((await getProgress(childId)).worlds.w7.nodes.review).toBeUndefined()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Volver a intentarlo' }))
+    expect(await screen.findByTestId('review')).toBeInTheDocument()
+  })
+
+  it('a review at 80 % or more is saved and gives the reward', async () => {
+    const { childId } = await renderNode('w7', 'review', (id) => markWorldDone(id, 'w7'))
+    reviewResult.value = { correct: 5, total: 6, stars: 2 }
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar repaso' }))
+    expect(await screen.findByTestId('reward')).toHaveTextContent('esta vez 2')
+    expect((await getProgress(childId)).worlds.w7.nodes.review).toMatchObject({ done: true, stars: 2 })
+  })
+
+  it('«Repasar con Lumi» goes to the nearest lesson before the node, not to the first lesson of the world', async () => {
+    // World 1: arrival, lesson-groups, groups, array, lesson-easy, necklace. Before «necklace» the nearest lesson is lesson-easy.
+    await renderNode('w1', 'necklace', (id) => markWorldDone(id, 'w1'))
+    activityResult.value = { correct: 4, total: 6, stars: 1, ms: 900 }
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar actividad' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Repasar con Lumi' }))
+    expect(await screen.findByTestId('lesson')).toHaveTextContent('w1-easy')
   })
 })
 

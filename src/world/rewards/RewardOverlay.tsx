@@ -23,7 +23,7 @@ function horn(progress: ProgressState | undefined): boolean[] {
   return progress ? crystalsOf(progress) : Array.from({ length: SLOTS }, () => false)
 }
 
-export default function RewardOverlay({ kind, stars, bestStars, improved = false, world, letter, newStickers = [], onContinue }: RewardOverlayProps) {
+export default function RewardOverlay({ kind, stars, bestStars, improved = false, maxStars = 3, world, letter, newStickers = [], onContinue }: RewardOverlayProps) {
   const { child } = useActiveChild()
   const progress = useProgress(child?.id)
   const reduced = useReducedMotion() ?? false
@@ -131,8 +131,14 @@ export default function RewardOverlay({ kind, stars, bestStars, improved = false
         {kind !== 'crystal' && kind !== 'season' && (
           <>
             {bestStars !== undefined && <p className={s.label}>{childText(child, 'Esta vez')}</p>}
-            <div className={s.stars} role="img" aria-label={childText(child, `Esta vez has conseguido ${stars} de 3 estrellas`)}>
-              {[0, 1, 2].map((i) => (
+            <div
+              className={s.stars}
+              role="img"
+              aria-label={maxStars > 1
+                ? childText(child, `Esta vez has conseguido ${stars} de ${maxStars} estrellas`)
+                : childText(child, '¡Una estrella para ti!')}
+            >
+              {Array.from({ length: maxStars }, (_, i) => (
                 <StarIcon key={i} size={72} filled={reduced ? i < stars : i < starsShown} />
               ))}
             </div>

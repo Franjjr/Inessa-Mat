@@ -7,12 +7,12 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ActivityRunner, LessonPlayer } from '@/activities'
 import {
   activityPassed, applyNodeResult, finaleStoryId, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
-  newStickers, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, TEACH_BACK_ACTIVITY, type ClassDef,
+  newStickers, passMark, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, TEACH_BACK_ACTIVITY, type ClassDef,
 } from '@/content'
 import { markClassToday, starsFor } from '@/engine'
 import { getProgress, updateProgress, useActiveChild, useProgress } from '@/data'
 import { Button, Card, Screen, Spinner, toast } from '@/ui'
-import type { ActivityResult, ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
+import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
 import GuardianChallenge from '@/world/guardian/GuardianChallenge'
 import RewardOverlay from '@/world/rewards/RewardOverlay'
 import DailyReview from '@/world/review/DailyReview'
@@ -35,8 +35,18 @@ interface RewardPayload {
   /** The best stars kept for the node, and whether this attempt raised them (only after an earlier best). */
   bestStars?: number
   improved?: boolean
+  /** A reading (story or lesson) is worth one star at most: the reward shows one star. */
+  maxStars?: number
   letter?: string
   stickers: string[]
+}
+
+/** What an activity or a review hands over when it ends. */
+interface Outcome {
+  correct: number
+  total: number
+  stars: number
+  ms?: number
 }
 
 /** Attempts below the pass mark during one visit before the child may move on anyway (no node is stuck for good). */
@@ -48,7 +58,7 @@ type Phase =
   | { name: 'story'; storyId: string; then: Phase }
   | { name: 'teach'; then: Phase }
   | { name: 'reward'; payload: RewardPayload }
-  | { name: 'retry'; result: ActivityResult }
+  | { name: 'retry'; result: Outcome }
 
 /** The best stars kept for the node after this attempt, and whether it raised a best that already existed. */
 function bestOf(before: ProgressState, after: ProgressState, worldId: string, nodeId: string) {
@@ -105,12 +115,14 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
         const done = applyNodeResult(p, world.id, node.id, result)
         return englishClass ? markClassToday(markClassDone(done, englishClass, 'lesson'), englishClass.topicId, new Date()) : done
       })
+      // A reading (story or lesson) is worth one star: no «de 3» and no best mark for it.
+      const reading = node.kind === 'story' || node.kind === 'lesson'
       setPhase({
         name: 'reward',
         payload: {
           kind,
           stars: result.stars,
-          ...bestOf(before, after, world.id, node.id),
+          ...(reading ? { maxStars: 1 } : bestOf(before, after, world.id, node.id)),
           letter: result.letter,
           stickers: newStickers(before, after),
         },
@@ -121,8 +133,8 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
     }
   }
 
-  /** An activity is passed with activityPassed (most of its items right); below that it shows the retry screen. */
-  const finishActivity = (r: ActivityResult, moveOn = false) => {
+  /** An activity or a review is passed with activityPassed (most of its items right); below that it shows the retry screen. */
+  const finishActivity = (r: Outcome, moveOn = false) => {
     if (moveOn || activityPassed(r.correct, r.total)) {
       void complete({ stars: r.stars, ms: r.ms, passed: true })
       return
@@ -179,6 +191,7 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
           stars={phase.payload.stars}
           bestStars={phase.payload.bestStars}
           improved={phase.payload.improved}
+          maxStars={phase.payload.maxStars}
           world={world}
           letter={phase.payload.letter}
           newStickers={phase.payload.stickers}
@@ -257,7 +270,7 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
         return (
           <GameHostProvider worldId={world.id} nodeId={node.id} activity="review">
             <DailyReview
-              onDone={(r) => void complete({ stars: r.stars, passed: r.total > 0 })}
+              onDone={(r) => finishActivity(r)}
               onExit={exit}
             />
             <CompanionBuddy />
@@ -295,7 +308,8 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
   }
 }
 
-/** The optional game of the finale: the child teaches Borrón. Nothing is saved; «Ahora no» skips it. */
+/** The optional game of the finale: the child teaches Borrón. Its answers are practice like any game (they count
+    for the tables' mastery), but it gives no stars and changes no progress of the node; «Ahora no» skips it. */
 function TeachBack({ world, node, onDone }: { world: WorldDef; node: NodeDef; onDone: () => void }) {
   const [playing, setPlaying] = useState(false)
   if (playing) {
@@ -320,11 +334,11 @@ function TeachBack({ world, node, onDone }: { world: WorldDef; node: NodeDef; on
   )
 }
 
-/** The lesson to review before this node: the nearest lesson stop of the world before it (else the world's first one). */
+/** The lesson to review before this node: the nearest lesson stop of the world before it (none when no lesson comes before). */
 function lessonBefore(world: WorldDef, nodeId: string): NodeDef | undefined {
   const i = world.nodes.findIndex((n) => n.id === nodeId)
   const before = world.nodes.slice(0, Math.max(i, 0)).filter((n) => n.kind === 'lesson')
-  return before[before.length - 1] ?? world.nodes.find((n) => n.kind === 'lesson')
+  return before[before.length - 1]
 }
 
 /** Below the pass mark: how many were right, what it takes to move on, and the ways forward. */
@@ -337,15 +351,13 @@ function NotYetPassed({ correct, total, canMoveOn, onRetry, onReview, onMoveOn, 
   onMoveOn: () => void
   onExit: () => void
 }) {
-  const need = Math.ceil((total * 4) / 5)
+  const need = passMark(total)
   return (
     <div className={s.missing}>
       <Card>
         <p className={s.missingText}>¡Casi lo tienes!</p>
         <p className={s.missingText}>
-          {total > 0
-            ? `Has acertado ${correct} de ${total}. Para seguir al siguiente paso hacen falta ${need}. Repasa lo que te ha costado y vuelve a intentarlo.`
-            : 'Vuelve a intentarlo cuando quieras.'}
+          {`Has acertado ${correct} de ${total}. Para seguir al siguiente paso hacen falta ${need}. Repasa lo que te ha costado y vuelve a intentarlo.`}
         </p>
         {onReview && <Button variant="secondary" onClick={onReview}>Repasar con Lumi</Button>}
         <Button onClick={onRetry}>Volver a intentarlo</Button>

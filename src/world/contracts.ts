@@ -22,6 +22,8 @@ export interface RewardOverlayProps {
   bestStars?: number
   /** True when this attempt raised the best stars of the node. */
   improved?: boolean
+  /** Most stars this reward can show: 3 for a practice, 1 for a reading (story or lesson). Default 3. */
+  maxStars?: number
   world: WorldDef
   letter?: string
   /** New stickers / accessories unlocked by this result. */
