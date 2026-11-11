@@ -3,7 +3,7 @@ import { check, createRng, generate, hintsFor, kindsForSkill, statementOf } from
 import { ENGLISH_SKILLS } from '@/engine/skills'
 import { ENGLISH_KINDS, ENGLISH_LISTENING_KINDS, hintsEnglish } from '../exercises'
 import { ENGLISH_WORDS } from '../words'
-import { PHRASES } from '../phrases'
+import { PHRASES, PHRASE_IDEAS } from '../phrases'
 import { numberToEnglish } from '../numbers'
 import { englishKindsFor, makableEnglish, teachableEnglishCourse } from '../teachable'
 import { INGLES3_SYLLABUS } from '@/content/syllabus/ingles3'
@@ -163,6 +163,21 @@ describe('English kinds: generation', () => {
     }
   })
 
+  it('the cues and the first hint of where-is and weather show a picture, never the Spanish word of the answer', () => {
+    const translations: Record<string, RegExp> = {
+      in: /\bdentro\b/i, on: /\bencima\b|\bsobre\b/i, under: /\bdebajo\b|\bbajo\b/i,
+      sunny: /\bsoleado\b|\bhace sol\b/i, cold: /\bfrío\b/i, rainy: /\blluvia\b|\bllueve\b|\blluvioso\b/i,
+      cloudy: /\bnublado\b/i, snowy: /\bnieve\b|\bnieva\b/i, hot: /\bcalor\b|\bcaliente\b/i,
+    }
+    for (const skill of ['eng:frase:where-is:in', 'eng:frase:where-is:on', 'eng:frase:where-is:under', 'eng:frase:weather']) {
+      expect(PHRASE_IDEAS[skill], skill).toBeTruthy()
+      expect(PHRASE_IDEAS[skill], skill).not.toMatch(/\b(dentro|encima|debajo|bajo|soleado|frío|lluvia|nieve|nublado|calor)\b/i)
+      for (const item of PHRASES[skill]) {
+        expect(item.es, item.sentence).not.toMatch(translations[item.answer])
+      }
+    }
+  })
+
   it('a generated phrase carries its cue', () => {
     const ex = one('eng-complete', 'eng:frase:where-is:on')
     expect(ex.kind === 'eng-complete' && ex.es).toBeTruthy()
@@ -242,10 +257,10 @@ describe('English word games: memory and scramble', () => {
     }
   })
 
-  it('memory is planned only on the themes with six pictures: saludos and dias have none', () => {
+  it('memory is planned only on the themes with six pictures: saludos has none, dias has its week numbers', () => {
     expect(kindsForSkill('eng:voc:animales')).toContain('eng-memory')
     expect(kindsForSkill('eng:voc:saludos')).not.toContain('eng-memory')
-    expect(kindsForSkill('eng:voc:dias')).not.toContain('eng-memory')
+    expect(kindsForSkill('eng:voc:dias')).toContain('eng-memory')
     for (const skill of ENGLISH_SKILLS.filter((s) => s.startsWith('eng:voc:'))) expect(kindsForSkill(skill), skill).toContain('eng-scramble')
   })
 

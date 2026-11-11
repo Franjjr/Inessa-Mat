@@ -34,3 +34,20 @@ describe('ENGLISH_WORDS', () => {
     }
   })
 })
+
+describe('each English word is in one theme, and the days of the week have a picture', () => {
+  it('no word is listed twice in the vocabulary (orange and star were in two themes)', () => {
+    const seen = new Map<string, string>()
+    for (const w of ENGLISH_WORDS) {
+      expect(seen.has(w.en), `${w.en} in ${seen.get(w.en)} and ${w.theme}`).toBe(false)
+      seen.set(w.en, w.theme)
+    }
+  })
+
+  it('every day of the week has its picture: 1 for Monday to 7 for Sunday', () => {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    days.forEach((en, i) => {
+      expect(ENGLISH_WORDS.find((x) => x.en === en)?.emoji, en).toBe(String(i + 1) + '\uFE0F\u20E3')
+    })
+  })
+})
