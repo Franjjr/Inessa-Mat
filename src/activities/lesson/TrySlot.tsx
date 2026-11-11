@@ -28,6 +28,8 @@ export const MIN_FIT_SCALE = 0.8
 export const MISSED_LINE = 'Casi. Fíjate en lo que te digo y corrígelo.'
 /** The line over the solution after the last miss (and when the child comes back to that step). */
 export const SOLVED_LINE = 'Así se hace. Lo vemos otra vez más adelante.'
+/** A wrong copy of the answer after the solution: said, never a silent wipe. */
+export const COPY_MISSED_LINE = 'No es igual. Mira la solución y escríbela otra vez.'
 
 /** idle: answering. missed: one miss, the message and «Inténtalo otra vez». gaveUp: the solution is shown (the child may
     write the answer again). copied: the answer was written again after the solution. correct: solved. */
@@ -115,6 +117,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   const [status, setStatus] = useState<Status>('idle')
   /** The corrector's message for the last miss (what went wrong in this exercise). */
   const [feedback, setFeedback] = useState('')
+  /** After the solution: idle (the view stays as it was), writing (the child asked to write it), missed (the copy was wrong). */
+  const [copy, setCopy] = useState<'idle' | 'writing' | 'missed'>('idle')
   const wrapRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const footerRef = useRef<HTMLDivElement>(null)
@@ -201,6 +205,9 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
         setStatus('copied')
         say('¡Eso es!')
       } else {
+        // A wrong copy is never a silent wipe: the child is told, and the same exercise comes back to write again.
+        setCopy('missed')
+        say(COPY_MISSED_LINE)
         setRound((r) => r + 1)
       }
       return
@@ -248,7 +255,10 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   }
 
   /** After the solution: the same exercise again, empty, to write the answer once more (optional: the step is settled). */
-  const copyAgain = () => setRound((r) => r + 1)
+  const copyAgain = () => {
+    setCopy('writing')
+    setRound((r) => r + 1)
+  }
 
   const firstHint = status === 'missed' ? hintsFor(exercise, method, { divMethod, tableMethod })[0]?.text : undefined
   const solvedShown = status === 'gaveUp' || status === 'copied'
@@ -286,12 +296,14 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
           <>
             <p className={s.hint}>{status === 'copied' ? '¡Eso es! Lo vemos otra vez más adelante.' : SOLVED_LINE}</p>
             <SolutionPanel exercise={exercise} opts={solutionOpts} />
-            {status === 'gaveUp' && exercise.kind !== 'fact-mul' && (
+            {status === 'gaveUp' && exercise.kind !== 'fact-mul' && copy === 'idle' && (
               <>
-                <p className={s.hint}>Si quieres, escribe tú la respuesta arriba para recordarla.</p>
+                <p className={s.hint}>Si quieres escribirla tú, pulsa «Escribirla otra vez».</p>
                 <Button variant="secondary" size="sm" onClick={copyAgain}>Escribirla otra vez</Button>
               </>
             )}
+            {status === 'gaveUp' && copy === 'writing' && <p className={s.hint}>Escribe la respuesta arriba, mirando la solución.</p>}
+            {status === 'gaveUp' && copy === 'missed' && <p className={s.feedback}>{COPY_MISSED_LINE}</p>}
           </>
         )}
       </div>

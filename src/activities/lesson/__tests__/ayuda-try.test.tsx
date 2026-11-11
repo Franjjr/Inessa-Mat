@@ -137,6 +137,29 @@ describe('TrySlot: giving up a division shows the result and what is left over',
   })
 })
 
+describe('TrySlot: writing the answer after the solution', () => {
+  it('says to press «Escribirla otra vez», and a wrong copy is told, never wiped in silence', () => {
+    const onSettled = vi.fn()
+    render(<TrySlot selector={{ skills: ['div:2x1:rem'] }} seedKey="div-copy" onSettled={onSettled} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
+    expect(onSettled).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('status')).toHaveTextContent('Si quieres escribirla tú, pulsa «Escribirla otra vez».')
+    expect(screen.queryByText(/escribe tú la respuesta arriba/)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Escribirla otra vez' }))
+    expect(screen.getByRole('status')).toHaveTextContent('Escribe la respuesta arriba, mirando la solución.')
+    expect(screen.queryByRole('button', { name: 'Escribirla otra vez' })).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
+    expect(screen.getByRole('status')).toHaveTextContent('No es igual. Mira la solución y escríbela otra vez.')
+    expect(screen.getByTestId('solution-panel')).toBeInTheDocument()
+    // Practice only: the step was settled once, at the give-up.
+    expect(onSettled).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('LessonPlayer: the voice', () => {
   const voiced: ActivityHost = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
   const lesson: LessonDef = {
