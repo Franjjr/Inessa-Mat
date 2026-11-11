@@ -17,9 +17,11 @@ export function wrongAnswerSkill(skill: string): string {
   return skill.startsWith('mul:') ? `Tabla ${text}` : text
 }
 
-/** One line per note, as an adult reads it: «Tabla 7 × 8 · escribió 54 · se esperaba 56 · a mano · 11 nov». */
+/** One line per note, as an adult reads it: «Tabla 7 × 8 · escribió 54 · se esperaba 56 · a mano · 11 nov».
+ *  A tapped option is «tocó», not «escribió». */
 export function formatWrongAnswer(note: WrongAnswerNote): string {
-  const given = note.given ? `escribió ${note.given}` : 'no respondió'
+  const verb = note.inputMode === 'tap' ? 'tocó' : 'escribió'
+  const given = note.given ? `${verb} ${note.given}` : 'no respondió'
   const expected = note.expected || '—'
   const when = new Date(note.at)
   const date = Number.isNaN(when.getTime()) ? '' : when.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
@@ -33,7 +35,7 @@ export function wrongAnswerExport(notes: WrongAnswerNote[], now: Date = new Date
   return JSON.stringify(
     {
       exportedAt: now.toISOString(),
-      note: 'Respuestas que Repasitos marcó como mal en este dispositivo. Si una estaba bien, avísanos.',
+      note: 'Respuestas que Repasitos marcó como mal en este dispositivo. Si una estaba bien, compártelo con quien mantiene la app.',
       count: notes.length,
       notes: notes.map(({ seq: _seq, ...rest }) => rest),
     },

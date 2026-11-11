@@ -27,10 +27,11 @@ beforeEach(() => {
 })
 
 describe('«Respuestas marcadas como mal» in the settings', () => {
-  it('says what the list is for, in one sentence', async () => {
+  it('says what the list is for, without promising a contact channel the app does not have', async () => {
     data.listWrongAnswerNotes.mockResolvedValue([])
     render(<ReviewNotesCard />)
-    expect(screen.getByText(/Si ves una respuesta que estaba bien y la app la marcó mal, avísanos/)).toBeInTheDocument()
+    expect(screen.getByText(/Si ves una respuesta que estaba bien y la app la marcó mal, descarga el archivo/)).toBeInTheDocument()
+    expect(screen.queryByText(/avísanos/)).not.toBeInTheDocument()
     await screen.findByText('Todavía no hay respuestas marcadas como mal en este dispositivo.')
   })
 
@@ -42,12 +43,30 @@ describe('«Respuestas marcadas como mal» in the settings', () => {
     expect(screen.getByText('2 respuestas, las más recientes primero.')).toBeInTheDocument()
   })
 
-  it('does not offer export or delete when there is nothing to export', async () => {
+  it('disables export and delete when there is nothing to export', async () => {
     data.listWrongAnswerNotes.mockResolvedValue([])
     render(<ReviewNotesCard />)
     await screen.findByText('Todavía no hay respuestas marcadas como mal en este dispositivo.')
     expect(screen.getByRole('button', { name: 'Descargar como archivo' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Borrar el registro' })).toBeDisabled()
+  })
+
+  it('asks for the right singular and plural before deleting', async () => {
+    data.listWrongAnswerNotes.mockResolvedValueOnce([note()]).mockResolvedValue([])
+    render(<ReviewNotesCard />)
+    await screen.findByText(/Tabla 7 × 8/)
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar el registro' }))
+    expect(await screen.findByText(/Se borrará 1 respuesta de este dispositivo/)).toBeInTheDocument()
+    expect(data.clearWrongAnswerNotes).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+  })
+
+  it('uses the plural in the confirmation when there are several notes', async () => {
+    data.listWrongAnswerNotes.mockResolvedValue([note({}, 2), note({}, 1)])
+    render(<ReviewNotesCard />)
+    await screen.findAllByText(/Tabla 7 × 8/)
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar el registro' }))
+    expect(await screen.findByText(/Se borrarán 2 respuestas de este dispositivo/)).toBeInTheDocument()
   })
 
   it('deletes only after the adult confirms', async () => {
@@ -56,7 +75,7 @@ describe('«Respuestas marcadas como mal» in the settings', () => {
     await screen.findByText(/Tabla 7 × 8/)
     fireEvent.click(screen.getByRole('button', { name: 'Borrar el registro' }))
     expect(data.clearWrongAnswerNotes).not.toHaveBeenCalled()
-    fireEvent.click(await screen.findByRole('button', { name: 'Sí, borrarlas' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Sí, borrar' }))
     await waitFor(() => expect(data.clearWrongAnswerNotes).toHaveBeenCalledTimes(1))
     await screen.findByText('Todavía no hay respuestas marcadas como mal en este dispositivo.')
   })

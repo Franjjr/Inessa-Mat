@@ -20,6 +20,13 @@ describe('the adult list of wrong answers', () => {
     expect(formatWrongAnswer(note())).toBe('Tabla 7 × 8 · escribió 54 · se esperaba 56 · a mano · 11 nov')
   })
 
+  it('says «tocó» for an option the child tapped, not «escribió»', () => {
+    expect(formatWrongAnswer(note({ inputMode: 'tap', given: '54' }))).toBe(
+      'Tabla 7 × 8 · tocó 54 · se esperaba 56 · tocando una opción · 11 nov',
+    )
+    expect(formatWrongAnswer(note({ inputMode: 'keypad', given: '54' }))).toContain('escribió 54')
+  })
+
   it('says when the child left the answer empty', () => {
     expect(formatWrongAnswer(note({ given: '' }))).toContain('no respondió')
   })

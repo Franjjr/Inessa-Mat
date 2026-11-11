@@ -69,7 +69,7 @@ export function ReviewNotesCard() {
     <section className={adult.card} aria-labelledby="review-notes-title">
       <h2 id="review-notes-title" className={adult.subheading}>Respuestas marcadas como mal</h2>
       <p className={adult.lead}>
-        Si ves una respuesta que estaba bien y la app la marcó mal, avísanos: así arreglamos fallos como el de la resta.
+        Si ves una respuesta que estaba bien y la app la marcó mal, descarga el archivo y compártelo con quien mantiene la app. Así podemos corregir las respuestas que la app marca mal.
       </p>
       <p className={adult.muted}>
         Se guardan solo en este dispositivo, sin nombres. Se borran al eliminar un perfil.
@@ -100,7 +100,7 @@ export function ReviewNotesCard() {
       <ConfirmModal
         open={confirmOpen}
         title="¿Borrar las respuestas marcadas como mal?"
-        confirmLabel="Sí, borrarlas"
+        confirmLabel="Sí, borrar"
         danger
         busy={busy}
         error={actionError}
@@ -108,7 +108,8 @@ export function ReviewNotesCard() {
         onCancel={() => setConfirmOpen(false)}
       >
         <p className={adult.lead}>
-          Se borrarán las {count} de este dispositivo. No se puede deshacer. Descárgalas antes si las quieres guardar.
+          {count === 1 ? 'Se borrará 1 respuesta' : `Se borrarán ${count} respuestas`} de este dispositivo.
+          No se puede deshacer. Descarga el archivo antes si quieres conservarlo.
         </p>
       </ConfirmModal>
     </section>
