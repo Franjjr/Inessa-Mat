@@ -10,7 +10,7 @@ import { ENGLISH_WORDS, ENGLISH_THEMES } from './ingles/words'
 import { attemptsOf, masteryOf } from './subjects'
 import { teachableCourse } from './lengua/teachable'
 import { teachableEnglishCourse } from './ingles/teachable'
-import { topicOfToday } from './topicOfToday'
+import { isStuckTopic, topicOfToday } from './topicOfToday'
 import { englishSkill } from './skills'
 import { fluencyThresholdMs } from './mastery'
 
@@ -27,6 +27,8 @@ export interface TopicReport {
   /** Share of the topic's skills mastered, 0..1. */
   progress: number
   current: boolean
+  /** Practised on 5 or more days without being mastered: «le cuesta». The session moved on; it comes back in the review. */
+  stuck?: true
 }
 
 export interface BlockReport {
@@ -77,7 +79,7 @@ export function syllabusReport(syllabus: Syllabus, allMastery: MasteryMap, subje
           stage: st ? { number: stages.indexOf(st) + 1, total: stages.length, term: st.term, ...(st.worldId ? { worldId: st.worldId } : {}) } : null,
         }
       }
-      return { id: t.id, name: t.name, state, progress: pending ? 0 : topicProgress(t, mastery), current: now?.id === t.id }
+      return { id: t.id, name: t.name, state, progress: pending ? 0 : topicProgress(t, mastery), current: now?.id === t.id, ...(!pending && isStuckTopic(t, mastery, today?.progress?.flags) ? { stuck: true as const } : {}) }
     })
     return {
       id: b.id,

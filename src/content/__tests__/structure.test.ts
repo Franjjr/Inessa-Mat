@@ -154,7 +154,7 @@ describe('season 1 structure', () => {
 
   it('w3 and w5 close their table games with a mixed-tables game, after the single-table ones', () => {
     for (const id of ['w3', 'w5']) {
-      const acts = getWorld(id).nodes.filter((n) => n.kind === 'activity').map((n) => n.activity!)
+      const acts = getWorld(id)!.nodes.filter((n) => n.kind === 'activity').map((n) => n.activity!)
       const mixAt = acts.findIndex((a) => (a.selector.tables?.length ?? 0) >= 2 && a.selector.kinds?.includes('fact-mul'))
       expect(mixAt, id).toBeGreaterThan(0)
       const single = acts.map((a, i) => ((a.selector.tables?.length ?? 0) === 1 ? i : -1)).filter((i) => i >= 0)

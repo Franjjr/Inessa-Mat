@@ -388,6 +388,7 @@ export function TemarioCard({ report, needs, childName, subject = 'math' }: {
                     <span className={`${s.topicState} ${s[`state-${t.state}`]}`}>
                       {STATE_TEXT[t.state]}
                       {t.state === 'trabajando' ? ` · ${formatPercent(t.progress)}` : ''}
+                      {t.stuck ? ' · le cuesta' : ''}
                     </span>
                     {needs[t.id] && (needs[t.id].dontKnow > 0 || needs[t.id].retried > 0) && (
                       <span className={s.topicNeeds}>

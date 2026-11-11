@@ -77,7 +77,7 @@ export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingle
 /** Inglés de 3.º: the 10-minute session and the placement test (src/engine/ingles/daily.ts, placement.ts). */
 export { planEnglishSession } from './ingles/daily'
 /** Today's topic of every subject: the topic of today's class stays until tomorrow (src/engine/topicOfToday.ts). */
-export { markClassToday, topicOfToday } from './topicOfToday'
+export { markClassToday, markTopicPracticeDay, isStuckTopic, topicPracticeDays, STUCK_TOPIC_DAYS, topicOfToday } from './topicOfToday'
 export type { EnglishPlanInput } from './ingles/daily'
 /** Inglés: «Ahora dilo tú» (src/engine/ingles/speaking.ts): the stars, the day's limits and the words hard to say. */
 export { SPEAK_DAILY_MAX, SPEAK_PER_SESSION_MAX, hardToSay, pronunciationStars, speakAttemptKey, speakAttemptsToday, speakOffKey, speakingAvailable } from './ingles/speaking'
