@@ -90,7 +90,8 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
         if (!fine(s.result, [a, b])) return null
         return {
           text: `{child} tenía ${a} canicas y en el recreo pierde ${b}. ¿Cuántas le quedan?`,
-          bar: [cell('start', 'Tenía', 0, 'segment', a), cell('change', 'Pierde', 0, 'segment', b), cell('end', 'Le quedan', 0, 'total', null)],
+          // What she had is the whole bar; what she loses and what is left are its two pieces.
+          bar: [cell('change', 'Pierde', 0, 'segment', b), cell('end', 'Le quedan', 0, 'segment', null), cell('start', 'Tenía', 0, 'total', a)],
           steps: [s], unit: 'canicas',
         }
       }),
@@ -228,7 +229,7 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
           text: `En la tienda hay ${n} bolsas con ${p} caramelos en cada una. Se reparten por igual entre ${k} niños y, después, a cada niño le dan ${q} más. ¿Cuántos caramelos tiene cada niño ahora?`,
           bar: [
             cell('bags', 'Bolsas', 0, 'count', n), cell('each', 'Cada bolsa', 0, 'segment', p), cell('all', 'Caramelos', 0, 'total', null),
-            cell('kids', 'Niños', 1, 'count', k), cell('share', 'Cada niño', 1, 'segment', null), cell('shared', 'Lo reparten', 1, 'total', null),
+            cell('kids', 'Niños', 1, 'count', k), cell('share', 'Cada niño', 1, 'segment', null), cell('shared', 'Los reparten', 1, 'total', null),
             cell('share2', 'Cada niño', 2, 'segment', null), cell('extra', 'Le dan', 2, 'segment', q), cell('final', 'Ahora', 2, 'total', null),
           ],
           steps: [s1, s2, s3], unit: 'caramelos',
@@ -292,10 +293,10 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
         const s2 = stepOf('div', total, n)
         if (!fine(s2.result, [a, b, n, total])) return null
         return {
-          text: `{child} tiene ${a} cromos y su amiga le da ${b}. Lo reparte entre ${n} amigos, todos con la misma cantidad. ¿Cuántos cromos le tocan a cada amigo?`,
+          text: `{child} tiene ${a} cromos y su amiga le da ${b}. Los reparte entre ${n} amigos, todos con la misma cantidad. ¿Cuántos cromos le tocan a cada amigo?`,
           bar: [
             cell('has', 'Tiene', 0, 'segment', a), cell('gives', 'Le da', 0, 'segment', b), cell('now', 'Ahora tiene', 0, 'total', null),
-            cell('friends', 'Amigos', 1, 'count', n), cell('share', 'Cada uno', 1, 'segment', null), cell('shared', 'Lo reparte', 1, 'total', null),
+            cell('friends', 'Amigos', 1, 'count', n), cell('share', 'Cada uno', 1, 'segment', null), cell('shared', 'Los reparte', 1, 'total', null),
           ],
           steps: [s1, s2], unit: 'cromos',
         }
@@ -359,15 +360,22 @@ const STRATEGY: Record<BarProblemKind, string> = {
   'multi-step': 'Hazlo por pasos: una barra por cada parte de la historia, y cada resultado es el punto de partida de la siguiente.',
 }
 
+/** Equal groups (groups-total): the whole bar is the total and it is made of equal pieces, nothing is shared out. */
+const groupsStrategy = (n: number, p: number) => `Dibuja una barra con ${n} trozos iguales de ${p}: la barra entera es el total.`
+
 /** Hints for a bar problem: strategy → the drawing → the operation of the first step (the numbers, not the result). */
 export function barHints(ex: BarProblemExercise): Hint[] {
   const first = ex.steps[0]
-  const l2 = ex.withBar
-    ? 'Pon cada número en la parte de la barra que le toca. El ? es lo que tienes que averiguar.'
-    : 'Imagina la barra: cada número es una parte, y el ? el total o la parte que falta.'
+  const groups = ex.steps.length === 1 && first.op === 'mul'
+  const l1 = groups ? groupsStrategy(first.a, first.b) : STRATEGY[ex.problem]
+  const l2 = groups
+    ? `La barra entera es el total (?); cada trozo vale ${first.b}; hay ${first.a} trozos.`
+    : ex.withBar
+      ? 'Pon cada número en la parte de la barra que le toca. El ? es lo que tienes que averiguar.'
+      : 'Imagina la barra: cada número es una parte, y el ? el total o la parte que falta.'
   const l3 = `Lo que hay que hacer es ${OP_NAME[first.op]}: calcula ${first.a} ${SYMBOL[first.op]} ${first.b} = ?`
   return [
-    { level: 1, text: STRATEGY[ex.problem], visual: 'none' },
+    { level: 1, text: l1, visual: 'none' },
     { level: 2, text: l2, visual: 'none' },
     { level: 3, text: l3, visual: 'none' },
   ]
@@ -392,41 +400,101 @@ export const BAR_OPERATION_FEEDBACK: Record<BarOp, string> = {
 
 const shapeWrong = (expected: string): CheckResult => ({ correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' })
 
-/** Grades a bar problem: placement (when drawn), the operation of each step, then each result. */
+const apply = (op: BarOp, a: number, b: number): number | null =>
+  op === 'add' ? a + b : op === 'sub' ? a - b : op === 'mul' ? a * b : b !== 0 && a % b === 0 ? a / b : null
+
+/** How the child filled the drawing: every known number on its piece, some still in the pool, or some on another piece. */
+function placementOf(ex: BarProblemExercise, answer: Answer & { type: 'bar' }): { state: 'ok' | 'incomplete' | 'wrong'; wrong: number[] } {
+  const empty = (i: number) => answer.placed[i] === null || answer.placed[i] === undefined
+  const known = ex.bar.map((_, i) => i).filter((i) => ex.bar[i].value !== null)
+  const unknownUsed = ex.bar.map((_, i) => i).filter((i) => ex.bar[i].value === null && !empty(i))
+  const wrong = known.filter((i) => !empty(i) && answer.placed[i] !== ex.bar[i].value)
+  if (wrong.length || unknownUsed.length) return { state: 'wrong', wrong: [...wrong, ...unknownUsed].sort((x, y) => x - y) }
+  if (known.some(empty)) return { state: 'incomplete', wrong: [] }
+  return { state: 'ok', wrong: [] }
+}
+
+/**
+ * A misplaced number that does not change the story: two pieces of the same row that are not the whole (the two
+ * addends of a sum, the groups and the size of a product). Swapping the whole with a piece, or the rows of a
+ * comparison, does change it.
+ */
+function harmlessSwap(ex: BarProblemExercise, answer: Answer & { type: 'bar' }, wrong: number[]): boolean {
+  return wrong.every((i) => {
+    const slot = ex.bar[i]
+    if (slot.value === null || slot.kind === 'total') return false
+    const from = ex.bar.findIndex((b, j) => j !== i && b.value === answer.placed[i])
+    if (from < 0) return false
+    const other = ex.bar[from]
+    if (other.row !== slot.row || other.kind === 'total') return false
+    const op = ex.steps[Math.min(slot.row, ex.steps.length - 1)].op
+    return op === 'add' || op === 'mul'
+  })
+}
+
+/** «El paso 2 no sale: 28 − 19 son 9, no 10.» Only for an intermediate step: the final result is never given away. */
+const stepFeedback = (k: number, step: BarStep, wrote: number) =>
+  `El paso ${k + 1} no sale: ${step.a} ${SYMBOL[step.op]} ${step.b} son ${step.result}, no ${wrote}.`
+
+/**
+ * Grades a bar problem. The final result decides (P1): when it is the answer, the problem is right, whatever order the
+ * child chose for the steps or the pieces (a gentle note points to a piece of the drawing that tells another story).
+ * Only when the final result is wrong do the drawing, the operations and the steps say where to look.
+ */
 export function checkBar(ex: BarProblemExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
   if (answer.type !== 'bar') return shapeWrong(expected)
   const given = answer.results.map((r) => (r === null ? '?' : String(r))).join(' · ')
   const lastStep = ex.steps.length - 1
+  const placement = ex.withBar ? placementOf(ex, answer) : { state: 'ok' as const, wrong: [] as number[] }
 
-  if (ex.withBar) {
-    const given2 = ex.bar.map((_, i) => i).filter((i) => ex.bar[i].value !== null)
-    const unknownUsed = ex.bar.map((_, i) => i).filter((i) => ex.bar[i].value === null && answer.placed[i] !== null && answer.placed[i] !== undefined)
-    if (given2.some((i) => answer.placed[i] === null || answer.placed[i] === undefined)) {
-      return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
+  if (answer.results[lastStep] === ex.answer) {
+    if (placement.state === 'wrong' && !harmlessSwap(ex, answer, placement.wrong)) {
+      const slot = ex.bar[placement.wrong[0]]
+      const where = slot.value !== null
+        ? `el ${slot.value} va en «${slot.name}»`
+        : `«${slot.name}» es lo que hay que averiguar (el ?)`
+      return { correct: true, given, expected, feedback: `¡Muy bien, son ${ex.answer} ${ex.unit}! Fíjate en la barra: ${where}.` }
     }
-    const wrong = given2.filter((i) => answer.placed[i] !== ex.bar[i].value)
-    if (wrong.length || unknownUsed.length) {
-      return { correct: false, given, expected, errorType: 'bar-placement', wrongColumns: [...wrong, ...unknownUsed].sort((a, b) => a - b), feedback: BAR_FEEDBACK.placement }
-    }
+    return { correct: true, given, expected, feedback: ex.withBar ? BAR_FEEDBACK.correct : BAR_FEEDBACK.correctNoBar }
   }
 
-  const opsMissing = ex.steps.some((_, k) => !answer.ops[k])
-  if (opsMissing) return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
-  const opWrong = ex.steps.findIndex((s, k) => answer.ops[k] !== s.op)
-  if (opWrong >= 0) {
-    return { correct: false, given, expected, errorType: 'operation', feedback: BAR_OPERATION_FEEDBACK[ex.steps[opWrong].op] }
+  if (placement.state === 'incomplete') return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
+  if (placement.state === 'wrong') {
+    return { correct: false, given, expected, errorType: 'bar-placement', wrongColumns: placement.wrong, feedback: BAR_FEEDBACK.placement }
   }
 
-  const resultsMissing = ex.steps.some((_, k) => answer.results[k] === null || answer.results[k] === undefined)
-  if (resultsMissing) return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
+  const missing = ex.steps.some((_, k) => !answer.ops[k] || answer.results[k] === null || answer.results[k] === undefined)
+  if (missing) return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
+
+  // Walk the child's chain: each step may use the numbers of the story or her earlier results, in any order.
+  const results = new Set(ex.steps.map((st) => st.result))
+  const pool: number[] = []
+  for (const st of ex.steps) for (const v of [st.a, st.b]) if (!results.has(v)) pool.push(v)
+  let onTrack = true // every step so far is the expected one
   for (let k = 0; k < ex.steps.length; k++) {
-    if (answer.results[k] !== ex.steps[k].result) {
-      if (k < lastStep) return { correct: false, given, expected, errorType: 'step', wrongColumns: [k], feedback: BAR_FEEDBACK.step }
-      return { correct: false, given, expected, errorType: 'fact', feedback: BAR_FEEDBACK.result }
+    const op = answer.ops[k] as BarOp
+    const r = answer.results[k] as number
+    const want = ex.steps[k]
+    if (onTrack && op === want.op && r === want.result) { pool.push(r); continue }
+    // Another valid step (other numbers of the story, in another order) keeps the chain going. The expected operation
+    // with a result close to the expected one is a slip in that step, not another way.
+    const slip = onTrack && op === want.op && Math.abs(r - want.result) <= 10
+    const coherent = !slip && pool.some((x, i) => pool.some((y, j) => i !== j && apply(op, x, y) === r))
+    if (coherent && k < lastStep) { onTrack = false; pool.push(r); continue }
+    if (onTrack && op !== want.op) {
+      return { correct: false, given, expected, errorType: 'operation', feedback: BAR_OPERATION_FEEDBACK[want.op] }
+    }
+    if (k < lastStep) {
+      const feedback = onTrack ? stepFeedback(k, want, r) : `El paso ${k + 1} no sale: revisa esa cuenta con calma.`
+      return { correct: false, given, expected, errorType: 'step', wrongColumns: [k], feedback }
     }
   }
-  return { correct: true, given, expected, feedback: ex.withBar ? BAR_FEEDBACK.correct : BAR_FEEDBACK.correctNoBar }
+  if (onTrack && ex.steps.some((st, k) => answer.ops[k] !== st.op)) {
+    const k = ex.steps.findIndex((st, j) => answer.ops[j] !== st.op)
+    return { correct: false, given, expected, errorType: 'operation', feedback: BAR_OPERATION_FEEDBACK[ex.steps[k].op] }
+  }
+  return { correct: false, given, expected, errorType: 'fact', feedback: BAR_FEEDBACK.result }
 }
 
 /** The chips to place: the given numbers, in a stable shuffled order (the same for the same exercise). */
