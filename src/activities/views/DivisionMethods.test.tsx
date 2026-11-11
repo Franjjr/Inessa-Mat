@@ -25,9 +25,19 @@ describe('división por partes con resto vacío', () => {
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
-  it('the text guide says to write 0 when nothing is left over', () => {
+  it('the text guide says that 0 or an empty box is right when nothing is left over', () => {
     render(<DivisionPartsView exercise={makeDivision(84, 4)} onAnswered={() => {}} showFeedback={false} />)
-    expect(screen.getByText('Escribe 0 si no sobra nada.')).toBeTruthy()
+    expect(screen.getByText('Si no sobra nada, deja 0 o déjalo vacío.')).toBeTruthy()
+  })
+
+  it('85 ÷ 4 con el resto vacío no es correcto: sobra 1 y la casilla está incompleta', () => {
+    const onAnswered = vi.fn()
+    render(<DivisionPartsView exercise={makeDivision(85, 4)} onAnswered={onAnswered} showFeedback={false} />)
+    type(/cociente de la parte 1/, 20)
+    type(/cociente de la parte 2/, 1)
+    type(/cociente total/, 21)
+    act(() => { fireEvent.keyDown(screen.getByRole('textbox', { name: /cociente total/ }), { key: 'Enter' }) })
+    expect(onAnswered.mock.calls[0][0].check).toMatchObject({ correct: false, errorType: 'incomplete' })
   })
 })
 

@@ -88,7 +88,7 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Resto:')}</span>
           <NumberInput value={rest} onChange={setRest} onSubmit={() => submit()} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" />
-          <span className={s.guide}>{host.t('Escribe 0 si no sobra nada.')}</span>
+          <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />
@@ -151,7 +151,7 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Sobra:')}</span>
           <NumberInput value={rest} onChange={setRest} onSubmit={(v) => { setRest(v); submit(v) }} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" autoFocus />
-          <span className={s.guide}>{host.t('Escribe 0 si no sobra nada.')}</span>
+          <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       )}
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />
