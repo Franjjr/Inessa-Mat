@@ -354,3 +354,18 @@ export async function devFlag(page: Page, key: string, value = true): Promise<vo
     await data.updateProgress(child.id, (p) => ({ ...p, flags: { ...p.flags, [k]: v } }))
   }, [key, value] as const)
 }
+
+/** Opens the maths session intro. The maths session sends the child to the class of today's topic first («¡Empezar la clase!»);
+    when that class is pending it is marked as done (like a child who already took it), so the intro shows «¡Empezar!». */
+export async function openSession(page: Page): Promise<void> {
+  await page.goto('/play/sesion')
+  const classButton = page.getByRole('button', { name: '¡Empezar la clase!' })
+  await classButton.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined)
+  if (await classButton.count()) {
+    await classButton.click()
+    await page.waitForURL(/\/play\/clase\/[^/]+$/)
+    const topic = page.url().split('/').pop()!
+    await devFlag(page, `clase:${topic}`)
+    await page.goto('/play/sesion')
+  }
+}

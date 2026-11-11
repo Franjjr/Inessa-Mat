@@ -92,6 +92,8 @@ describe('planDailySession', () => {
     // A child with no history has a shorter session: the mix never fills up with what was not taught.
     const first = planDailySession({ child, mastery: {}, attempts: [], syllabus: GRADE3_SYLLABUS, now })
     expect(first.practiceSeconds / 60).toBeLessThanOrEqual(DAILY_MINUTES)
+    // ...but not an empty one: the first day still has a reasonable amount of practice.
+    expect(first.practiceSeconds / 60).toBeGreaterThanOrEqual(4)
     const plan = planDailySession({ child, mastery: midYearMastery(), attempts: [], syllabus: GRADE3_SYLLABUS, now })
     expect(plan.practiceSeconds / 60).toBeGreaterThanOrEqual(DAILY_MINUTES - 3)
     expect(plan.practiceSeconds / 60).toBeLessThanOrEqual(DAILY_MINUTES)
