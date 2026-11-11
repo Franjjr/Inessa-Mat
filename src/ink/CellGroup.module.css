@@ -44,3 +44,14 @@
   .nudge { animation: none; }
   .toggle { transition: none; }
 }
+
+/* column order: the reminder above the keypad (units first) */
+.columnTip {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink);
+}
+.below .side:has(.columnTip) { flex-wrap: wrap; justify-content: center; }

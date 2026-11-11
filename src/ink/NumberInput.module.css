@@ -229,3 +229,19 @@
   .typedDigit, .st_wrong .pad, .nudge { animation: none; }
   .pad, .canvas, .check, .tool { transition: none; }
 }
+
+/* a short note under the pad: too many digits, or how to change a digit after a wrong try */
+.note {
+  margin: calc(var(--sp-2) * -1) 0 0;
+  max-width: var(--padW);
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  line-height: 1.25;
+  color: var(--c-ink);
+}
+/* a digit the doubt prompt asks about */
+.digit[data-doubt="true"] {
+  color: var(--c-gold);
+  text-shadow: 0 0 0.12em color-mix(in srgb, var(--c-gold) 50%, transparent);
+}

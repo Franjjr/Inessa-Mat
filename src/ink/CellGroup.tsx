@@ -17,6 +17,15 @@ export interface CellGroupProps {
   children: ReactNode
   /** Focus/typing order. Column operations: 'rtl-columns' or an explicit list of DigitCell `cellId`s. */
   order?: CellOrder
+  /**
+   * How typed digits (keyboard, on-screen keypad) fill a number. 'ltr' (default): the cells of a number (DigitCells
+   * with the same `numberId`) work like a calculator — a digit typed in the units cell (where the cursor waits) enters
+   * at the units and pushes the others to the left, so «172» typed as read gives 172; a cell tapped on purpose takes
+   * the digit typed in it. 'column': the result of a column operation, units first along
+   * `order`, with an arrow over the cell that is typed next and the reminder to start with the units.
+   * Cells without a `numberId` always follow `order`.
+   */
+  typingOrder?: 'ltr' | 'column'
   /** Enter key or the keypad's ✓. */
   onSubmit?: () => void
   /** Move to the next cell after a typed digit (default true). */
@@ -33,7 +42,7 @@ export interface CellGroupProps {
 
 export function CellGroup({
   children, order = 'dom', onSubmit, autoAdvance = true, keypad = 'auto', keypadToggle = true,
-  keypadPosition = 'below', keypadLayout, className, style,
+  keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr',
 }: CellGroupProps) {
   const { mode } = useInk()
   const entries = useRef(new Map<string, CellEntry>())
@@ -44,8 +53,8 @@ export function CellGroup({
   const [nudging, nudge] = useNudge()
   const keypadVisible = keypad === 'show' || (keypad === 'auto' && (mode === 'keypad' || toggled))
 
-  const latest = useRef({ order, onSubmit, autoAdvance })
-  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance } })
+  const latest = useRef({ order, onSubmit, autoAdvance, typingOrder })
+  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance, typingOrder } })
   const orderKey = typeof order === 'string' ? order : order.join('|')
 
   const items = useCallback((): OrderItem[] => {
@@ -59,7 +68,7 @@ export function CellGroup({
 
   const orderNow = useCallback(() => computeOrder(items(), latest.current.order), [items])
   /** The order for typing (auto-advance, Backspace back): optional cells are skipped, except the one `uid` is in. */
-  const typingOrder = useCallback(
+  const advanceOrder = useCallback(
     (uid: string) => orderNow().filter((id) => id === uid || !entries.current.get(id)?.optional),
     [orderNow],
   )
@@ -91,9 +100,9 @@ export function CellGroup({
   }, [])
   const afterInput = useCallback((uid: string) => {
     if (!latest.current.autoAdvance) return
-    const next = step(typingOrder(uid), uid, 1)
+    const next = step(advanceOrder(uid), uid, 1)
     if (next) focusCell(next)
-  }, [typingOrder, focusCell])
+  }, [advanceOrder, focusCell])
   const move = useCallback((uid: string, dir: Direction) => focusCell(neighbor(items(), uid, dir)), [items, focusCell])
   const tab = useCallback((uid: string, backward: boolean) => {
     const next = step(orderNow(), uid, backward ? -1 : 1)
@@ -102,11 +111,11 @@ export function CellGroup({
     return true
   }, [orderNow, focusCell])
   const back = useCallback((uid: string) => {
-    const prev = step(typingOrder(uid), uid, -1)
+    const prev = step(advanceOrder(uid), uid, -1)
     if (!prev) return
     focusCell(prev)
     entries.current.get(prev)?.clear()
-  }, [typingOrder, focusCell])
+  }, [advanceOrder, focusCell])
   const submit = useCallback(() => {
     let flushed = false
     for (const e of entries.current.values()) flushed = e.flush() || flushed
@@ -115,13 +124,66 @@ export function CellGroup({
     else latest.current.onSubmit?.()
   }, [])
 
+  /** The cells of a number, left to right as drawn. */
+  const numberCells = useCallback((numberId: string): [string, CellEntry][] => {
+    const list = [...entries.current.entries()].filter(([, e]) => e.numberId === numberId)
+    list.sort(([, a], [, b]) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+    return list
+  }, [])
+
+  /** Writes the digits of a number right-aligned (units in the last cell), empty cells on the left. */
+  const fillNumber = (cells: [string, CellEntry][], digits: string, via: 'keyboard' | 'keypad') => {
+    const pad = cells.length - digits.length
+    cells.forEach(([, e], i) => e.assign(i < pad ? null : Number(digits[i - pad]), via))
+  }
+  const digitsOf = (cells: [string, CellEntry][]) => cells.map(([, e]) => e.value()).filter((v) => v != null).join('')
+
+  const typeInNumber = useCallback((uid: string, d: number, via: 'keyboard' | 'keypad') => {
+    if (latest.current.typingOrder !== 'ltr') return false
+    const e = entries.current.get(uid)
+    if (!e?.numberId) return false
+    const cells = numberCells(e.numberId)
+    const units = cells[cells.length - 1][0]
+    // Only the units cell (where the cursor waits) types like a calculator; a cell she taps on purpose takes the digit.
+    if (uid !== units) return false
+    const before = digitsOf(cells)
+    // A full number starts again: the child is writing a new one over it.
+    const digits = before.length >= cells.length ? String(d) : before + String(d)
+    fillNumber(cells, digits, via)
+    if (digits.length >= cells.length && latest.current.autoAdvance) {
+      // The number is complete: go on to the first cell after it (the next number) in the typing order.
+      const own = new Set(cells.map(([id]) => id))
+      const list = advanceOrder(uid)
+      const last = list.reduce((acc, id, i) => (own.has(id) ? i : acc), -1)
+      const next = list.slice(last + 1).find((id) => !own.has(id))
+      focusCell(next ?? units)
+    } else focusCell(units)
+    return true
+  }, [numberCells, advanceOrder, focusCell])
+
+  const deleteInNumber = useCallback((uid: string) => {
+    if (latest.current.typingOrder !== 'ltr') return false
+    const e = entries.current.get(uid)
+    if (!e?.numberId) return false
+    const cells = numberCells(e.numberId)
+    if (uid !== cells[cells.length - 1][0]) return false
+    const before = digitsOf(cells)
+    if (!before) return false
+    fillNumber(cells, before.slice(0, -1), 'keypad')
+    focusCell(cells[cells.length - 1][0])
+    return true
+  }, [numberCells, focusCell])
+
   const showToggle = keypadToggle && keypad === 'auto' && mode !== 'keypad'
   const canNudge = showToggle && !keypadVisible
   const nudgeKeypad = useCallback(() => { if (canNudge) nudge() }, [canNudge, nudge])
 
   const api = useMemo<CellGroupApi>(
-    () => ({ register, currentId, setCurrent: setCurrentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad }),
-    [register, currentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad],
+    () => ({
+      register, currentId, setCurrent: setCurrentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad,
+      typingOrder, typeInNumber, deleteInNumber,
+    }),
+    [register, currentId, afterInput, move, tab, back, submit, keypadVisible, nudgeKeypad, typingOrder, typeInNumber, deleteInNumber],
   )
 
   const target = () => {
@@ -132,6 +194,7 @@ export function CellGroup({
   const onDelete = () => {
     const t = target()
     if (!t) return
+    if (api.deleteInNumber(t[0])) return
     if (!t[1].isEmpty()) { t[1].clear(); t[1].focus() } else api.back(t[0])
   }
 
@@ -141,6 +204,9 @@ export function CellGroup({
         <div className={s.cells}>{children}</div>
         {(keypadVisible || showToggle) && (
           <div className={s.side}>
+            {keypadVisible && typingOrder === 'column' && (
+              <p className={s.columnTip} role="note">Empieza por las unidades, la casilla que brilla.</p>
+            )}
             {keypadVisible && (
               <Keypad
                 onDigit={onDigit}
