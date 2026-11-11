@@ -26,6 +26,11 @@ const GAPS: Record<Group, GapItem[]> = {
     { word: 'máquina', from: 2, to: 4, options: ['qu', 'c'] },
     { word: 'cuchara', from: 0, to: 1, options: ['c', 'qu'] },
     { word: 'química', from: 0, to: 2, options: ['qu', 'c'] },
+    { word: 'quince', from: 0, to: 2, options: ['qu', 'c'] },
+    { word: 'boca', from: 2, to: 3, options: ['c', 'qu'] },
+    { word: 'saco', from: 2, to: 3, options: ['c', 'qu'] },
+    { word: 'chocolate', from: 3, to: 4, options: ['c', 'qu'] },
+    { word: 'chaqueta', from: 3, to: 5, options: ['qu', 'c'] },
   ],
   'g-gu': [
     { word: 'guitarra', from: 0, to: 2, options: ['gu', 'g'] },
@@ -38,6 +43,10 @@ const GAPS: Record<Group, GapItem[]> = {
     { word: 'vergüenza', from: 3, to: 5, options: ['gü', 'gu'] },
     { word: 'gente', from: 0, to: 1, options: ['g', 'gu'] },
     { word: 'guisante', from: 0, to: 2, options: ['gu', 'g'] },
+    { word: 'guante', from: 0, to: 2, options: ['gu', 'g'] },
+    { word: 'gusano', from: 0, to: 2, options: ['gu', 'g'] },
+    { word: 'gallina', from: 0, to: 1, options: ['g', 'gu'] },
+    { word: 'agua', from: 1, to: 3, options: ['gu', 'g'] },
   ],
   'r-rr': [
     { word: 'carretera', from: 2, to: 4, options: ['rr', 'r'] },
@@ -48,6 +57,10 @@ const GAPS: Record<Group, GapItem[]> = {
     { word: 'ahorro', from: 3, to: 5, options: ['rr', 'r'] },
     { word: 'ratón', from: 0, to: 1, options: ['r', 'rr'] },
     { word: 'carretilla', from: 2, to: 4, options: ['rr', 'r'] },
+    { word: 'arroz', from: 1, to: 3, options: ['rr', 'r'] },
+    { word: 'arroyo', from: 1, to: 3, options: ['rr', 'r'] },
+    { word: 'reloj', from: 0, to: 1, options: ['r', 'rr'] },
+    { word: 'rueda', from: 0, to: 1, options: ['r', 'rr'] },
   ],
   'mp-mb': [
     { word: 'lámpara', from: 2, to: 4, options: ['mp', 'mb'] },
@@ -58,6 +71,10 @@ const GAPS: Record<Group, GapItem[]> = {
     { word: 'empanada', from: 1, to: 3, options: ['mp', 'mb'] },
     { word: 'hombro', from: 2, to: 4, options: ['mb', 'mp'] },
     { word: 'imprenta', from: 1, to: 3, options: ['mp', 'mb'] },
+    { word: 'sombra', from: 2, to: 4, options: ['mb', 'mp'] },
+    { word: 'siempre', from: 3, to: 5, options: ['mp', 'mb'] },
+    { word: 'ambulancia', from: 1, to: 3, options: ['mb', 'mp'] },
+    { word: 'ombligo', from: 1, to: 3, options: ['mb', 'mp'] },
   ],
   // The capital of a name or a place: the lowercase form is not a word.
   mayusculas: [
@@ -69,6 +86,10 @@ const GAPS: Record<Group, GapItem[]> = {
     { word: 'Julia', from: 0, to: 1, options: ['J', 'j'] },
     { word: 'Sara', from: 0, to: 1, options: ['S', 's'] },
     { word: 'Madrid', from: 0, to: 1, options: ['M', 'm'] },
+    { word: 'Carlos', from: 0, to: 1, options: ['C', 'c'] },
+    { word: 'Andrés', from: 0, to: 1, options: ['A', 'a'] },
+    { word: 'Sevilla', from: 0, to: 1, options: ['S', 's'] },
+    { word: 'Bilbao', from: 0, to: 1, options: ['B', 'b'] },
   ],
 }
 
@@ -107,6 +128,10 @@ export const PUNCTUATION_SENTENCES: string[] = [
   '¿Te gusta la sopa?', '¡Ya llegó el tren!', 'Los niños juegan en el patio.', 'Elena, ¿dónde vives?',
   'Mi perro se llama Canela.', '¡Muy bien, lo has conseguido!', 'Compramos naranjas, peras y uvas.',
   '¿Vienes conmigo al mercado?', 'La luna brilla por la noche.',
+  '¿Has visto mi mochila azul?', '¡Qué rico está el pastel!', 'Compro pan, queso y leche en la tienda.',
+  'Cuando llueve, me pongo las botas.', '¡Vamos a la playa esta tarde!', 'Juan, Pedro y Ana juegan al fútbol.',
+  '¿De qué color es tu bicicleta?', 'El sol, la luna y las estrellas brillan en el cielo.',
+  '¿Dónde dejaste tus zapatos?', 'Mi tía vive en Sevilla, cerca del río.',
 ]
 
 const MARK_OF_SKILL: Record<string, RegExp> = {
@@ -133,6 +158,7 @@ export const DICTATION_WORDS: string[] = [
   'lobo', 'burro', 'bonito', 'vestido', 'hielo', 'hormiga', 'gigante', 'jirafa', 'cocina', 'zapato', 'cereza', 'caballo',
   'escoba', 'lluvia', 'árbol', 'lápiz', 'ventana', 'camión', 'abeja', 'murciélago', 'pingüino', 'guitarra', 'cigarra',
   'carretera', 'lámpara', 'sombrero', 'corazón', 'cebolla', 'gallina', 'elefante', 'jabón', 'mariposa', 'ratón',
+  'hueso', 'helado', 'yogur', 'llave', 'zorro', 'zanahoria', 'jamón', 'jardín', 'taxi', 'bombero', 'cuchillo', 'volcán',
 ]
 
 /** Sentences for dictation: capitals and the final mark are part of what is written. */
@@ -142,6 +168,10 @@ export const DICTATION_SENTENCES: string[] = [
   'Mario tiene una bicicleta roja.', 'Los niños juegan en el parque.', 'El gato duerme en el sofá.',
   'Mañana vamos al zoo con la clase.', '¿Quieres jugar conmigo?', '¡Cuidado con el perro!',
   'Lucía lee un libro de aventuras.', 'La abeja vuela entre las flores.',
+  'Mi hermano juega al fútbol en el colegio.', 'El zorro corre por el bosque.', 'Llueve y hace mucho frío.',
+  'En el jardín hay muchas flores.', '¡Hoy es mi cumpleaños!', 'Hay una nube gris en el cielo.',
+  'Los pájaros cantan en las ramas de los árboles.', '¿Puedes ayudarme con los deberes?',
+  'Mi abuelo cocina una sopa muy rica.', 'La vaca da leche fresca.',
 ]
 
 export function buildDictation(skill: SkillKey, rng: Rng, box: number): LngDictationExercise {
@@ -186,6 +216,9 @@ function checkMissing(ex: LngMissingLetterExercise, answer: Answer): CheckResult
 }
 
 const stripMarks = (s: string) => s.replace(/[.,¿?¡!]/g, '')
+const lower = (s: string) => s.toLocaleLowerCase('es')
+/** A dictated sentence has spaces; a dictated word does not. */
+const sentence = (answer: string) => /\s/.test(answer)
 
 function checkPunctuation(ex: LngPunctuationExercise, answer: Answer): CheckResult {
   if (answer.type !== 'text') return { correct: false, given: '', expected: ex.answer, errorType: 'other', feedback: 'Escribe la frase.' }
@@ -207,6 +240,16 @@ function checkDictation(ex: LngDictationExercise, answer: Answer): CheckResult {
   const r = compareText(value, ex.answer, dictationRule(ex.answer))
   if (r.correct) return { correct: true, given: value, expected: ex.answer, feedback: CHILD }
   if (r.caseOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'capital', feedback: 'Revisa la mayúscula.' }
+  // Same letters, only the marks (or a capital with them) differ: the sounds are right, so do not ask to listen again.
+  if (sentence(ex.answer) && stripMarks(value) !== stripMarks(ex.answer) && lower(stripMarks(value)) === lower(stripMarks(ex.answer))) {
+    return { correct: false, given: value, expected: ex.answer, errorType: 'punctuation', feedback: 'Revisa las mayúsculas y los signos: ¿falta alguno o sobra?' }
+  }
+  if (sentence(ex.answer) && stripMarks(value) === stripMarks(ex.answer)) {
+    return { correct: false, given: value, expected: ex.answer, errorType: 'punctuation', feedback: 'Las letras están bien. Revisa los signos: ¿falta alguno o sobra?' }
+  }
+  if (!sentence(ex.answer) && stripMarks(value) === ex.answer) {
+    return { correct: false, given: value, expected: ex.answer, errorType: 'punctuation', feedback: 'Esta palabra no lleva signos. Escríbela sin ellos.' }
+  }
   if (r.accentOnly) return { correct: false, given: value, expected: ex.answer, errorType: 'dictation', feedback: accentFeedback(value, ex.answer) }
   return { correct: false, given: value, expected: ex.answer, errorType: 'dictation', feedback: 'Escucha otra vez y piensa en cómo se escribe cada sonido.' }
 }
@@ -228,7 +271,7 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none', p
 const GAP_TEXT: Record<Group, [string, string]> = {
   'c-qu': [
     'Este sonido «k» se puede escribir de dos formas. Di la palabra despacio y mira la vocal que viene justo después del hueco.',
-    'Escribe la palabra con cada una de las formas y di en voz alta. ¿Cuál suena como la que conoces?',
+    'Delante de e o de i se escribe qu (que, qui). Delante de a, o, u se escribe c (ca, co, cu). ¿Qué vocal viene después del hueco?',
   ],
   'g-gu': [
     'Esta letra puede sonar fuerte o suave según la vocal que venga después. Fíjate si la u se oye o no se oye.',
@@ -239,8 +282,8 @@ const GAP_TEXT: Record<Group, [string, string]> = {
     'Piensa dónde está el hueco: ¿entre dos vocales, o al principio de la palabra? ¿Qué suena allí, fuerte o suave?',
   ],
   'mp-mb': [
-    'Di la palabra despacio y escucha la letra que va justo antes de la p o de la b.',
-    'Antes de la p o de la b, ¿qué letra de la nasal suena? ¿Cuál de las dos opciones escribirías?',
+    'Di la palabra despacio y fíjate en la consonante que suena dentro del hueco: ¿es p o es b?',
+    'Antes de p y de b se escribe siempre m, nunca n. Di la palabra despacio y comprueba qué consonante suena después.',
   ],
   mayusculas: [
     'Las palabras que nombran a una persona o a un lugar empiezan con mayúscula. ¿La que falta es una de ellas?',
@@ -271,7 +314,7 @@ export function hintsSpelling(ex: LngMissingLetterExercise | LngPunctuationExerc
       const sentence = /\s/.test(ex.answer)
       return sentence
         ? [
-          hint(1, 'Escucha la frase entera y repite cada palabra en voz baja antes de escribirla.'),
+          hint(1, 'Escucha la frase entera y repite cada palabra en voz baja antes de escribirla. Los signos no se oyen como las letras: piensa en ellos al escribir.'),
           hint(2, 'Piensa en las letras que dudan y en los signos del principio y del final.', 'words', { words: ['b o v', 'h', 'g o j', 'c o z', '¿ ?', '¡ !'] }),
           hint(3, 'Escribe despacio y revisa cada palabra. ¿Has puesto la mayúscula al empezar y el signo al final?'),
         ]

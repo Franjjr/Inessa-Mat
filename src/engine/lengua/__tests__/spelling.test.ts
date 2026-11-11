@@ -119,6 +119,39 @@ describe('dictation: what the voice says', () => {
   })
 })
 
+describe('a dictation that misses its marks says so, and does not ask to listen again', () => {
+  const sentenceEx = { id: 'd1', kind: 'lng-dictation', skill: 'lng:escr:dictado', difficulty: 3, answer: '¿Dónde está mi gorro azul?' } as LngDictationExercise
+
+  it('the letters right and a mark missing: the feedback is about the marks', () => {
+    for (const value of ['Dónde está mi gorro azul?', '¿Dónde está mi gorro azul', 'Dónde está mi gorro azul']) {
+      const r = check(sentenceEx, { type: 'text', value })
+      expect(r.correct, value).toBe(false)
+      expect(r.errorType, value).toBe('punctuation')
+      expect(r.feedback, value).toMatch(/signos/)
+      expect(r.feedback, value).not.toMatch(/Escucha otra vez/)
+    }
+  })
+
+  it('the letters right, a capital and a mark wrong: the feedback names both', () => {
+    const r = check(sentenceEx, { type: 'text', value: 'dónde está mi gorro azul' })
+    expect(r.correct).toBe(false)
+    expect(r.feedback).toMatch(/mayúsculas y los signos/)
+  })
+
+  it('a word has no marks: an extra mark is not asked for, and a wrong letter still says to listen again', () => {
+    const word = { id: 'd2', kind: 'lng-dictation', skill: 'lng:escr:dictado', difficulty: 2, answer: 'lobo' } as LngDictationExercise
+    expect(check(word, { type: 'text', value: 'lobo.' }).feedback).toMatch(/no lleva signos/)
+    expect(check(word, { type: 'text', value: 'lobo.' }).correct).toBe(false)
+    expect(check(word, { type: 'text', value: 'lovo' }).feedback).toMatch(/Escucha otra vez/)
+  })
+
+  it('a sentence with the wrong letters still says to listen again', () => {
+    const r = check(sentenceEx, { type: 'text', value: '¿Dónde está mi jorro azul?' })
+    expect(r.errorType).toBe('dictation')
+    expect(r.feedback).toMatch(/Escucha otra vez/)
+  })
+})
+
 describe('accent feedback names the right sign', () => {
   it('a missing ü is a diéresis, a missing accent is a tilde', () => {
     const ex = { id: 'x', kind: 'lng-dictation', skill: 'lng:escr:dictado', difficulty: 2, answer: 'pingüino' } as LngDictationExercise
@@ -127,6 +160,27 @@ describe('accent feedback names the right sign', () => {
     const pair = { ...ex, id: 'y', kind: 'lng-missing-letter', skill: 'lng:orto:g-gu', mode: 'type', word: 'pingüino', shown: 'pin__ino', options: [], answer: 'pingüino' } as LngMissingLetterExercise
     expect(check(pair, { type: 'text', value: 'pinguino' }).feedback).toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
     expect(check(pair, { type: 'text', value: 'pinguíno' }).feedback, 'the ü is missing: the diéresis is named').toBe('¡Casi! Mira la diéresis: las dos puntos de la ü.')
+  })
+})
+
+describe('the hints teach the rule, and do not ask the child to hear a letter that is not heard', () => {
+  it('mp/mb: level 1 says which sound to watch, and level 3 teaches the rule (before p and b, m)', () => {
+    const ex = sample('lng:orto:mp-mb', 'lng-missing-letter', 0)[0] as LngMissingLetterExercise
+    const [l1, , l3] = hintsFor(ex)
+    expect(l1.text).not.toMatch(/escucha la letra/i)
+    expect(l3.text).toMatch(/antes de p y de b se escribe siempre m, nunca n/i)
+  })
+
+  it('c/qu: level 3 teaches which letters go before e and i, and before a, o, u', () => {
+    const ex = sample('lng:orto:c-qu', 'lng-missing-letter', 0)[0] as LngMissingLetterExercise
+    const l3 = hintsFor(ex)[2]
+    expect(l3.text).toMatch(/que, qui/)
+    expect(l3.text).toMatch(/ca, co, cu/)
+  })
+
+  it('a dictated sentence level 1 says the marks are not heard', () => {
+    const ex = sample('lng:escr:dictado', 'lng-dictation', 2)[0] as LngDictationExercise
+    expect(hintsFor(ex)[0].text).toMatch(/signos no se oyen/)
   })
 })
 
