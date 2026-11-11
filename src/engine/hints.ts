@@ -336,11 +336,11 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'missing-factor': {
       const known = ex.missing === 'a' ? ex.b : ex.a
       // Only the first two jumps are drawn and said, never the series up to the product: how many numbers the child
-      // counts is the answer. The jumps stop before one that would equal the answer, so no drawn number is the answer
-      // (the known factor is on the statement already, so it may be drawn).
+      // counts is the answer. The jumps stop before one that equals the answer, so no drawn number is the answer, not even
+      // when the known factor is the answer too (3 × ? = 9 draws nothing: the first jump would be the 3 itself).
       let drawn = 0
       for (let i = 1; i <= Math.min(2, ex.answer - 1); i++) {
-        if (known * i === ex.answer && known !== ex.answer) break
+        if (known * i === ex.answer) break
         drawn = i
       }
       const first = Array.from({ length: drawn }, (_, i) => known * (i + 1))
