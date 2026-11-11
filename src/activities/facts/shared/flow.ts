@@ -88,7 +88,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
 
   /** Final outcome: happens once per exercise. endedAt: when the answer was given (a copy step after it does not count
    *  in the time); quiet: no sound (the wrong one already played). */
-  const settle = useCallback((res: CheckResult, opts: { endedAt?: number; quiet?: boolean } = {}) => {
+  const settle = useCallback((res: CheckResult, opts: { endedAt?: number; quiet?: boolean; revealed?: boolean } = {}) => {
     if (done.current) return
     done.current = true
     const m = modeRef.current
@@ -114,6 +114,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
       recognitionFixes: total,
       ...(retried.current ? { retries: retried.current } : {}),
       ...(trick ? { method: trick } : {}),
+      ...(opts.revealed ? { revealed: true } : {}),
     })
   }, [learning, exercise, tableMethod])
 
@@ -178,7 +179,7 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
       if (res.correct || ++c.misses >= MAX_TRIES) {
         setPhase('done')
         setClue(`La respuesta correcta es ${res.expected}. ¡Seguimos!`)
-        core.settle(c.res, { endedAt: c.at, quiet: res.correct })
+        core.settle(c.res, { endedAt: c.at, quiet: res.correct, revealed: true })
         return
       }
       setClue(`Es ${res.expected}. Escríbelo igual que está.`)

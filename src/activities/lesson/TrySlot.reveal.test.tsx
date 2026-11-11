@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
 import type { ExerciseViewProps, SkillSelector } from '@/types'
-import TrySlot from './TrySlot'
+import TrySlot, { shownAnswerOf } from './TrySlot'
 
 const seen: { teach?: string; guided?: boolean }[] = []
 
@@ -19,12 +19,46 @@ vi.mock('@/activities', async () => {
       createElement('button', {
         type: 'button',
         onClick: () => props.onAnswered({ check: { correct: false, given: '1', expected: String(exercise.answer) }, ms: 1, inputMode: 'keyboard', hintsUsed: 0, recognitionFixes: 0 }),
-      }, 'Responder mal'))
+      }, 'Responder mal'),
+      // The copy step ended well: the answer was shown and written right (revealed, graded wrong).
+      createElement('button', {
+        type: 'button',
+        onClick: () => props.onAnswered({ check: { correct: false, given: '1', expected: String(exercise.answer) }, ms: 1, inputMode: 'keyboard', hintsUsed: 0, recognitionFixes: 0, revealed: true }),
+      }, 'Copia bien'))
   }
   return { ExerciseView, useActivityHost: host.useActivityHost }
 })
 
 const selector: SkillSelector = { kinds: ['fact-mul'], tables: [6], factorRange: [6, 7] }
+
+describe('TrySlot: the copy step is not a new miss', () => {
+  it('a copy written right gives up the step at once: no «¡Casi!» and no second try', () => {
+    const onSettled = vi.fn()
+    render(
+      <ActivityHostProvider value={defaultActivityHost}>
+        <TrySlot selector={selector} seedKey="reveal-copy" onSettled={onSettled} />
+      </ActivityHostProvider>,
+    )
+    // With teach full the view only ends an exercise at its copy step, so this outcome is the first one of the step.
+    fireEvent.click(screen.getByRole('button', { name: 'Copia bien' }))
+    const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
+    expect(onSettled).toHaveBeenCalledTimes(1)
+    expect(onSettled).toHaveBeenLastCalledWith(false)
+    expect(screen.queryByText(/Casi/)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Inténtalo otra vez' })).toBeNull()
+    expect(screen.getByText(`La respuesta es ${answer}.`)).toBeTruthy()
+  })
+})
+
+describe('TrySlot: the answer line only shows a plain number answer', () => {
+  it('shows a counted answer', () => {
+    expect(shownAnswerOf({ kind: 'fact-mul', a: 6, b: 7, answer: 42 } as never)).toBe(42)
+  })
+
+  it('shows no bare number for a time problem, whose number is minutes', () => {
+    expect(shownAnswerOf({ kind: 'time-duration', answer: 45 } as never)).toBeNull()
+  })
+})
 
 describe('TrySlot: teaching after the misses', () => {
   it('asks the exercise with teach full, so a miss ends in the copy step', () => {

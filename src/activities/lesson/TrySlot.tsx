@@ -1,6 +1,7 @@
 /* A "try it" step: one mini exercise generated from the step's selector. The child answers through ExerciseView;
    a correct answer unlocks "Siguiente". The slot owns the feedback (showFeedback off), so the child never sees two
-   "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. */
+   "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. A multiplication
+   fact (teach 'full') ends at its copy step instead: the view already gave two tries, so the step moves on at once. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { ExerciseView, useActivityHost } from '@/activities'
@@ -9,7 +10,7 @@ import type { DivMethod, ExerciseOutcome, SkillSelector, SubMethod } from '@/typ
 import { Button } from '@/ui'
 import s from './TrySlot.module.css'
 
-/** Misses allowed before the lesson continues on its own. */
+/** Misses allowed before the lesson continues on its own (exercises that end at their first wrong answer). */
 export const MAX_MISSES = 2
 
 /** Smallest scale the exercise is shrunk to; below this the answer controls would be too small to tap (56px rule). */
@@ -45,6 +46,13 @@ function seedOf(text: string): number {
     h = Math.imul(h, 0x01000193)
   }
   return h >>> 0
+}
+
+/** The right answer for the fixed line after giving up: only a plain number answer (a count, a product...). Times are
+    shown in minutes or in clock form, so a bare number would be ambiguous for a child: they show no line. */
+export function shownAnswerOf(exercise: { kind: string; answer?: unknown }): number | null {
+  if (exercise.kind.startsWith('time-') || exercise.kind.startsWith('calendar')) return null
+  return typeof exercise.answer === 'number' ? exercise.answer : null
 }
 
 /** Scale that fits the exercise (natural height) into the space left next to the footer. Never above 1. */
@@ -144,8 +152,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
 
   if (!exercise) return <div className={s.wrap} />
 
-  // The right answer, for the fixed line after giving up (only exercises with one number as answer).
-  const shownAnswer = 'answer' in exercise && typeof exercise.answer === 'number' ? exercise.answer : null
+  // The right answer, for the fixed line after giving up (see shownAnswerOf).
+  const shownAnswer = shownAnswerOf(exercise)
 
   const answered = (outcome: ExerciseOutcome) => {
     const { check } = outcome
@@ -162,6 +170,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       ...(attempt > 0 ? { retries: attempt, graded: false } : {}),
       ...(attempt > 0 && check.correct ? { solvedOnRetry: true } : {}),
     })
+    // The view ended at its copy step: the answer is on screen and was written, so the step ends here without a new miss.
+    if (outcome.revealed) {
+      setStatus('gaveUp')
+      onSettled(false)
+      return
+    }
     if (check.correct) {
       host.react('correct')
       setStatus('correct')
