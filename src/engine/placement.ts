@@ -163,10 +163,11 @@ export interface PlacementAnswer {
 export const PLACEMENT_CLEAR_MIN = 2
 
 /**
- * Topics of `course` the placement shows the child already knows, to be confirmed later: the topic shares skills with a
- * block whose items were all answered right (at least PLACEMENT_CLEAR_MIN of them), and those right skills are at least
- * half of the topic's skills (one fact does not make a whole table known). Nothing is mastered by this: the topics only
- * wait after the others (topicOfToday) and a wrong answer brings them back.
+ * Topics of `course` the placement shows the child already knows, to be confirmed later: every skill of the topic was
+ * asked in a block whose items were all answered right (at least PLACEMENT_CLEAR_MIN of them). A topic with a skill the
+ * test never asked is not set aside (one fact does not make a whole table known, and the blocks do not make the place
+ * value with blocks known). Nothing is mastered by this: the topics only wait after the others (topicOfToday), their
+ * skills come back in the spaced review, and a wrong answer brings them back.
  */
 export function placementKnownTopics(course: Syllabus, answers: readonly PlacementAnswer[]): string[] {
   const byBlock = new Map<string, PlacementAnswer[]>()
@@ -178,8 +179,7 @@ export function placementKnownTopics(course: Syllabus, answers: readonly Placeme
   return allTopics(course)
     .filter((t) => {
       const skills = [...new Set(t.skills)]
-      const right = skills.filter((s) => known.has(s)).length
-      return right > 0 && right * 2 >= skills.length
+      return skills.length > 0 && skills.every((s) => known.has(s))
     })
     .map((t) => t.id)
 }

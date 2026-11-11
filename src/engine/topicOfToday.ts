@@ -5,9 +5,11 @@
    One path for the child: in a temario whose stages go with the worlds of the adventure (2.º and 3.º maths), today's topic is
    taken from the stage of the world the map sends the child to (nextNode), so «Hoy» and «Mi aventura» point to the same
    place. Only when that stage has nothing left to learn does the topic come from the rest of the temario, in teaching order.
-   Topics the placement test showed the child already knows (placementKnownKey) wait after the others of their stage, until a
-   wrong answer on one of their skills brings them back. Pure: no React, no I/O. */
-import { availableTopics, behindTopics, isTopicMastered, type Syllabus, type SyllabusStage, type SyllabusTopic } from '@/content/syllabus'
+   Topics the latest placement test showed the child already knows (placedTopicIds) wait until the other topics are mastered
+   (after the others of the stage, and outside a stage after the rest of the temario), until a wrong answer on one of their
+   skills brings them back. Only a topic whose every skill was answered clearly right is set aside (placementKnownTopics), so
+   nothing the test did not ask is skipped. Pure: no React, no I/O. */
+import { availableTopics, behindTopics, isTopicMastered, subjectOfTopic, type Syllabus, type SyllabusStage, type SyllabusTopic } from '@/content/syllabus'
 import { nextNode } from '@/content/progression'
 import { getSeason, seasonIdForGrade } from '@/content/season'
 import type { MasteryMap, ProgressState } from '@/types'
@@ -19,23 +21,59 @@ const classTodayKey = (topicId: string, now: Date) => `clase-hoy:${dayKey(now)}:
 /** The same flag as the first English release wrote it (English classes only); still read so today's mark is kept. */
 const legacyEnglishKey = (topicId: string, now: Date) => `ingles-clase-hoy:${dayKey(now)}:${topicId}`
 
-/** The flag of a topic the placement test showed the child already knows, to be confirmed (ProgressState.flags). */
+/* The placement flags (ProgressState.flags). Flags merge with OR across devices, so a flag of an older run cannot be
+   removed for good: every run writes its own keys instead, and only the subject's latest run counts.
+   - prueba-ronda:<subject>:<runId>  a run of the subject's test was finished (runId: the time in ms, as text)
+   - prueba-sabe:<runId>:<topicId>   that run showed the topic as known, to be confirmed */
+const PLACEMENT_RUN_PREFIX = 'prueba-ronda:'
 export const PLACEMENT_KNOWN_PREFIX = 'prueba-sabe:'
-export const placementKnownKey = (topicId: string) => `${PLACEMENT_KNOWN_PREFIX}${topicId}`
+export const placementRunKey = (subject: string, runId: string) => `${PLACEMENT_RUN_PREFIX}${subject}:${runId}`
+export const placementKnownKey = (runId: string, topicId: string) => `${PLACEMENT_KNOWN_PREFIX}${runId}:${topicId}`
+
+/** The flags a finished run of the subject's test adds: its run mark and its known topics. Nothing older is removed. */
+export function placementRunFlags(subject: string, runId: string, knownTopicIds: readonly string[]): Record<string, true> {
+  return Object.fromEntries([placementRunKey(subject, runId), ...knownTopicIds.map((id) => placementKnownKey(runId, id))].map((k) => [k, true]))
+}
+
+/** The topics the latest run of each subject's test showed as known (whatever has been answered since). */
+export function placedTopicIds(progress: ProgressState | undefined): Set<string> {
+  const flags = progress?.flags ?? {}
+  const latest = new Map<string, string>()
+  for (const [key, on] of Object.entries(flags)) {
+    if (!on || !key.startsWith(PLACEMENT_RUN_PREFIX)) continue
+    const [subject, runId] = key.slice(PLACEMENT_RUN_PREFIX.length).split(':')
+    if (!subject || !runId) continue
+    const best = latest.get(subject)
+    if (best === undefined || Number(runId) > Number(best)) latest.set(subject, runId)
+  }
+  const out = new Set<string>()
+  for (const [key, on] of Object.entries(flags)) {
+    if (!on || !key.startsWith(PLACEMENT_KNOWN_PREFIX)) continue
+    const [runId, topicId] = key.slice(PLACEMENT_KNOWN_PREFIX.length).split(':')
+    if (runId && topicId && latest.get(subjectOfTopic(topicId)) === runId) out.add(topicId)
+  }
+  return out
+}
+
+/** None of the topic's skills has been answered wrong (or «No lo sé»): correct still equals attempts. One wrong answer
+    brings a placed topic back to normal practice. Known limit: two devices playing offline merge each count to its
+    larger value (mergeMastery), so a wrong answer on one device can be hidden by more right answers on the other; the
+    topic then stays set aside, its skills still come back in the spaced review, and it is taught after the others. */
+const neverWrong = (topic: SyllabusTopic, mastery: MasteryMap) =>
+  topic.skills.every((s) => {
+    const m = mastery[s]
+    return !m || m.correct >= m.attempts
+  })
 
 /** Records that the class of a topic was finished today (with the class flag, see markClassDone). */
 export function markClassToday(progress: ProgressState, topicId: string, now: Date): ProgressState {
   return { ...progress, flags: { ...progress.flags, [classTodayKey(topicId, now)]: true } }
 }
 
-/** A topic the placement marked as known that is still waiting to be confirmed: flagged, and none of its skills has been
-    answered wrong (or «No lo sé») since the child started. One wrong answer brings it back to normal practice for good. */
+/** A topic the latest placement showed as known that is still waiting to be confirmed: none of its skills has been
+    answered wrong since. */
 export function isPlacedTopic(topic: SyllabusTopic, mastery: MasteryMap, progress: ProgressState | undefined): boolean {
-  if (!progress?.flags?.[placementKnownKey(topic.id)]) return false
-  return topic.skills.every((s) => {
-    const m = mastery[s]
-    return !m || m.correct >= m.attempts
-  })
+  return placedTopicIds(progress).has(topic.id) && neverWrong(topic, mastery)
 }
 
 /** The stage of the temario that goes with the world the map sends the child to (nextNode). None when the temario has no
@@ -59,9 +97,10 @@ function topicToLearn(course: Syllabus, mastery: MasteryMap, progress: ProgressS
   const open = availableTopics(course, term).filter((t) => !isTopicMastered(t, mastery))
   if (open.length === 0) return null
   const behind = new Set(behindTopics(course, mastery, term).map((t) => t.id))
+  const placed = placedTopicIds(progress)
   const stage = stageOfCurrentWorld(course, progress)
   const rank = (t: SyllabusTopic) =>
-    (stage && !stage.topics.includes(t.id) ? 2 : 0) + (behind.has(t.id) || isPlacedTopic(t, mastery, progress) ? 1 : 0)
+    (stage && !stage.topics.includes(t.id) ? 2 : 0) + (behind.has(t.id) || (placed.has(t.id) && neverWrong(t, mastery)) ? 1 : 0)
   return open.reduce((best, t) => (rank(t) < rank(best) ? t : best))
 }
 

@@ -3,7 +3,7 @@ import type { AttemptRecord } from '@/types'
 import { GRADE2_SYLLABUS, GRADE3_SYLLABUS } from '@/content/syllabus'
 import { initialProgress } from '@/content'
 import { PLACEMENT_ACTIVITY, PLACEMENT_CLEAR_MIN, PLACEMENT_COUNT, buildPlacement, placementBlockOf, placementKnownTopics, summarizePlacement } from '../placement'
-import { placementKnownKey, topicOfToday } from '../topicOfToday'
+import { placementRunFlags, topicOfToday } from '../topicOfToday'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 
@@ -103,14 +103,21 @@ describe('placementKnownTopics (the test places the child)', () => {
   const answersOf = (grade: number | undefined, right: (block: string, skill: string) => boolean) =>
     buildPlacement(`child-${grade}|2026-11-11`, now, grade).map((i) => ({ block: i.block, skill: i.exercise.skill, correct: right(i.block, i.exercise.skill) }))
 
-  it('all right in 3.º: some topics of etapa 1 are known, never a whole table from one fact, and the session starts elsewhere', () => {
+  it('all right in 3.º: only the topics whose every skill was asked are known, never a table from one fact', () => {
     const known = placementKnownTopics(GRADE3_SYLLABUS, answersOf(3, () => true))
-    expect(known).toEqual(expect.arrayContaining(['descomponer-9999', 'comparar-ordenar-9999', 'suma-3d-sin-llevar', 'resta-3d-sin-llevar']))
+    expect(known).toEqual(expect.arrayContaining(['suma-3d-sin-llevar', 'resta-3d-sin-llevar']))
+    // The test never asks the place value with blocks (num:place:blocks): descomponer is still taught as usual.
+    expect(known).not.toContain('descomponer-9999')
     expect(known.some((id) => id.startsWith('tabla-'))).toBe(false)
-    const progress = { ...initialProgress('c', now), flags: Object.fromEntries(known.map((id) => [placementKnownKey(id), true])) }
-    const first = topicOfToday(GRADE3_SYLLABUS, {}, progress, now)
-    expect(first?.id).not.toBe('descomponer-9999')
-    expect(known).not.toContain(first?.id)
+    const progress = { ...initialProgress('c', now), flags: placementRunFlags('math', '1', known) }
+    expect(topicOfToday(GRADE3_SYLLABUS, {}, progress, now)?.id).toBe('descomponer-9999')
+  })
+
+  it('a topic with one skill the test did not ask is not set aside', () => {
+    // suma-3d-llevando has add:3d:c1, add:3d:c2 and add:3d:c3: two of them right is not enough.
+    const right = (skill: string) => ({ block: 'sumas-restas', skill, correct: true })
+    expect(placementKnownTopics(GRADE3_SYLLABUS, [right('add:3d:c1'), right('add:3d:c2')])).not.toContain('suma-3d-llevando')
+    expect(placementKnownTopics(GRADE3_SYLLABUS, [right('add:3d:c1'), right('add:3d:c2'), right('add:3d:c3')])).toContain('suma-3d-llevando')
   })
 
   it('«No lo sé» and wrong answers never count as known', () => {
@@ -135,5 +142,10 @@ describe('placementKnownTopics (the test places the child)', () => {
     const known = placementKnownTopics(GRADE2_SYLLABUS, answersOf(2, () => true))
     expect(known.length).toBeGreaterThan(0)
     expect(known.every((id) => GRADE2_SYLLABUS.blocks.some((b) => b.topics.some((t) => t.id === id)))).toBe(true)
+    // The session starts with what the child does not know yet.
+    const progress = { ...initialProgress('c', now), flags: placementRunFlags('math', '1', known) }
+    const first = topicOfToday(GRADE2_SYLLABUS, {}, progress, now)
+    expect(first).not.toBeNull()
+    expect(known).not.toContain(first?.id)
   })
 })

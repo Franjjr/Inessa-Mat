@@ -13,10 +13,10 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import {
   buildEnglishPlacement, buildLenguaPlacement, buildPlacement, ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_ACTIVITY,
-  LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_KNOWN_PREFIX, placementFlags, placementKnownKey,
-  placementKnownTopics, type LessonSubject, type PlacementAnswer,
+  LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, placementFlags, placementKnownTopics, placementRunFlags,
+  type LessonSubject, type PlacementAnswer,
 } from '@/engine'
-import { subjectOfTopic, syllabusFor } from '@/content/syllabus'
+import { syllabusFor } from '@/content/syllabus'
 import { updateProgress, useActiveChild, useProgress } from '@/data'
 import { useInputMode } from '@/ink'
 import { BackButton, Button, Screen, Spinner } from '@/ui'
@@ -193,19 +193,18 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
   )
 }
 
-/** Marks the test done and replaces the subject's «known, to confirm» topics with this run's. Returns false when nothing is
-    saved (a test done again without the adult asking for it: its answers still count, but it changes no flag). */
+/** Marks the test done and saves this run's «known, to confirm» topics under a new run, which replaces the subject's
+    older runs (placedTopicIds reads the latest one only, so an older run synced back from another device does not count).
+    Returns false when nothing is saved (a test done again without the adult asking for it: its answers still count, but
+    it changes no flag). */
 async function markDone(childId: string, progress: ProgressState, subject: LessonSubject, known: string[]): Promise<boolean> {
   const flags = placementFlags(subject)
   if (progress.flags?.[flags.done] && !progress.flags?.[flags.requested]) return false
-  await updateProgress(childId, (p) => {
-    const kept = Object.fromEntries(Object.entries(p.flags ?? {})
-      .filter(([key]) => !key.startsWith(PLACEMENT_KNOWN_PREFIX) || subjectOfTopic(key.slice(PLACEMENT_KNOWN_PREFIX.length)) !== subject))
-    return {
-      ...p,
-      flags: { ...kept, ...Object.fromEntries(known.map((id) => [placementKnownKey(id), true])), [flags.done]: true, [flags.requested]: false },
-      updatedAt: new Date().toISOString(),
-    }
-  })
+  const runId = String(Date.now())
+  await updateProgress(childId, (p) => ({
+    ...p,
+    flags: { ...p.flags, ...placementRunFlags(subject, runId, known), [flags.done]: true, [flags.requested]: false },
+    updatedAt: new Date().toISOString(),
+  }))
   return true
 }

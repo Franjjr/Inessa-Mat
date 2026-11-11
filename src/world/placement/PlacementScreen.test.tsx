@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { initialProgress } from '@/content'
 import { updateProgress } from '@/data'
-import { placementKnownKey } from '@/engine'
+import { placedTopicIds, placementRunFlags } from '@/engine'
 import type { ProgressState } from '@/types'
 import { CHILD_ID, makeChild } from '@/world/rewards/testing'
 import PlacementScreen from './PlacementScreen'
@@ -72,7 +72,9 @@ describe('PlacementScreen (the test places the child)', () => {
     const [, update] = vi.mocked(updateProgress).mock.calls[0]
     const after = update(state.progress!)
     expect(after.flags.placement).toBe(true)
-    expect(after.flags[placementKnownKey('descomponer-9999')]).toBe(true)
+    expect(placedTopicIds(after).has('suma-3d-sin-llevar')).toBe(true)
+    // A topic with a skill the test does not ask is never set aside.
+    expect(placedTopicIds(after).has('descomponer-9999')).toBe(false)
     expect(after.stars).toBe(state.progress!.stars)
     expect(Object.values(after.worlds).some((w) => w.crystal)).toBe(false)
   })
@@ -81,21 +83,29 @@ describe('PlacementScreen (the test places the child)', () => {
     await runToEnd('No lo sé')
     expect(await screen.findByText(/Ya sabemos lo que te toca aprender/)).toBeInTheDocument()
     const [, update] = vi.mocked(updateProgress).mock.calls[0]
-    expect(Object.keys(update(state.progress!).flags).some((k) => k.startsWith('prueba-sabe:'))).toBe(false)
+    expect(placedTopicIds(update(state.progress!)).size).toBe(0)
   })
 
   it('a new test asked by the adult replaces the old known topics of the subject (and keeps the other subjects\')', async () => {
     state.progress = {
       ...initialProgress(CHILD_ID),
-      flags: { placement: true, placementRequested: true, [placementKnownKey('tabla-2')]: true, [placementKnownKey('lng-articulo')]: true },
+      flags: { placement: true, placementRequested: true, ...placementRunFlags('math', '1000', ['tabla-2']), ...placementRunFlags('language', '1000', ['lng-articulo']) },
     }
     state.right = false
     await runToEnd('Responder')
     await screen.findByText(/Ya sabemos lo que te toca aprender/)
     const [, update] = vi.mocked(updateProgress).mock.calls[0]
-    const flags = update(state.progress!).flags
-    expect(flags[placementKnownKey('tabla-2')]).toBeUndefined()
-    expect(flags[placementKnownKey('lng-articulo')]).toBe(true)
-    expect(flags.placementRequested).toBe(false)
+    const after = update(state.progress!)
+    expect(placedTopicIds(after).has('tabla-2')).toBe(false)
+    expect(placedTopicIds(after).has('lng-articulo')).toBe(true)
+    expect(after.flags.placementRequested).toBe(false)
+  })
+
+  it('a test done again without the adult asking changes no flag', async () => {
+    state.progress = { ...initialProgress(CHILD_ID), flags: { placement: true, ...placementRunFlags('math', '1000', ['tabla-2']) } }
+    state.right = false
+    await runToEnd('Responder')
+    await screen.findByText(/Ya sabemos lo que te toca aprender/)
+    expect(updateProgress).not.toHaveBeenCalled()
   })
 })

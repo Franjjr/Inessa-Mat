@@ -3,7 +3,8 @@ import type { MasteryMap, ProgressState, SkillMastery } from '@/types'
 import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, GRADE4_SYLLABUS, currentTopic, stageOfTopic, teachingOrder, type Syllabus } from '@/content/syllabus'
 import { initialProgress, nextNode, switchSeason } from '@/content'
 import { newMastery } from '../mastery'
-import { isPlacedTopic, markClassToday, placementKnownKey, stageOfCurrentWorld, topicOfToday } from '../topicOfToday'
+import { mergeProgress } from '@/data/merge'
+import { isPlacedTopic, markClassToday, placedTopicIds, placementRunFlags, stageOfCurrentWorld, topicOfToday } from '../topicOfToday'
 
 const now = new Date('2026-11-11T10:00:00.000Z')
 
@@ -108,7 +109,7 @@ describe('one path in 2.º and the courses without worlds', () => {
 describe('topics the placement showed as known', () => {
   const p = (ids: string[]) => {
     const base = initialProgress('c', now)
-    return { ...base, flags: Object.fromEntries(ids.map((id) => [placementKnownKey(id), true])) }
+    return { ...base, flags: placementRunFlags('math', '1000', ids) }
   }
 
   it('wait after the other topics of the stage: the session starts with the first one not known', () => {
@@ -130,6 +131,24 @@ describe('topics the placement showed as known', () => {
     const wrong: MasteryMap = { [topic.skills[0]]: known(topic.skills[0], 1, 3, 2) }
     expect(isPlacedTopic(topic, wrong, p([first]))).toBe(false)
     expect(topicOfToday(GRADE3_SYLLABUS, wrong, p([first]), now)?.id).toBe(first)
+  })
+
+  it('only the latest run of the subject counts, also after merging with a device that kept an older run', () => {
+    const [first, second] = stageTopics(GRADE3_SYLLABUS, 'etapa-1')
+    const base = initialProgress('c', now)
+    const older = { ...base, flags: { ...placementRunFlags('math', '1000', [first]), ...placementRunFlags('english', '1000', ['eng-saludos']) } }
+    // The test done again (asked by the adult) on this device: nothing of the first run is removed, a new run is added.
+    const newer = { ...older, flags: { ...older.flags, ...placementRunFlags('math', '2000', [second]) }, updatedAt: new Date(now.getTime() + 1000).toISOString() }
+    for (const merged of [mergeProgress(older, newer), mergeProgress(newer, older), mergeProgress(newer, base)]) {
+      const placed = placedTopicIds(merged)
+      expect(placed.has(first)).toBe(false)
+      expect(placed.has(second)).toBe(true)
+      // Another subject's run is its own.
+      expect(placed.has('eng-saludos')).toBe(true)
+    }
+    // A new run that found nothing sets nothing aside.
+    const none = { ...newer, flags: { ...newer.flags, ...placementRunFlags('math', '3000', []) } }
+    expect(placedTopicIds(mergeProgress(none, older)).has(second)).toBe(false)
   })
 
   it('a flag alone never masters a topic', () => {
