@@ -69,6 +69,15 @@ describe('adaptive by default when the child history is given', () => {
       expect(generate(sel, 6, { rng: createRng(seed) })).toEqual(generate({ ...sel, adaptive: false }, 6, { rng: createRng(seed) }))
     }
   })
+
+  it('an empty history (a new child) changes nothing: the plan stays uniform', () => {
+    const now = new Date('2026-06-01T00:00:00Z')
+    for (let seed = 1; seed <= 40; seed++) {
+      const withEmpty = generate({ kinds: ['fact-mul'], factorRange: [2, 9] }, 10, { rng: createRng(seed), mastery: {}, now })
+      const without = generate({ kinds: ['fact-mul'], factorRange: [2, 9] }, 10, { rng: createRng(seed), now })
+      expect(withEmpty, `seed ${seed}`).toEqual(without)
+    }
+  })
 })
 
 describe('division with 3 and 4 digits in the generic selector', () => {
@@ -89,6 +98,25 @@ describe('division with 3 and 4 digits in the generic selector', () => {
         expect(ex.skill, ex.id).toMatch(/^div:4x1:(exact|rem)$/)
         expect(ex.dividend >= 1000 && ex.dividend <= 9999, ex.id).toBe(true)
         expect(ex.quotient * ex.divisor + ex.remainder, ex.id).toBe(ex.dividend)
+      }
+    }
+  })
+
+  it('digits 3 with a table asked: 3-digit dividends whose divisor is the table', () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      for (const ex of generate({ kinds: ['division'], digits: 3, tables: [6] }, 5, { rng: createRng(seed) }) as DivisionExercise[]) {
+        expect(ex.skill, ex.id).toMatch(/^div:3x1:(exact|rem)$/)
+        expect(ex.dividend >= 100 && ex.dividend <= 999, ex.id).toBe(true)
+        expect(ex.divisor, ex.id).toBe(6)
+        expect(ex.quotient * ex.divisor + ex.remainder, ex.id).toBe(ex.dividend)
+      }
+    }
+  })
+
+  it('divisionVariants long alone with 3 digits: there is no 3-digit long division yet, so exact and remainder', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      for (const ex of generate({ kinds: ['division'], digits: 3, divisionVariants: ['long'] }, 4, { rng: createRng(seed) }) as DivisionExercise[]) {
+        expect(ex.skill, ex.id).toMatch(/^div:3x1:(exact|rem)$/)
       }
     }
   })
@@ -167,6 +195,36 @@ describe('"¿tiene sentido?" problems: the wrong answers are never the true resu
 })
 
 describe('property: every item of the main generators has one correct answer and respects its level', () => {
+  it('the stated answer is the arithmetic of the operands, and the division has one quotient and a remainder under the divisor', () => {
+    const sels: Parameters<typeof generate>[0][] = [
+      { kinds: ['fact-mul', 'fact-div', 'missing-factor'] },
+      { kinds: ['column-add', 'column-sub', 'column-mul'], digits: 3 },
+      { kinds: ['division'], digits: 2 },
+      { kinds: ['division'], digits: 4 },
+      { kinds: ['word-problem'] },
+    ]
+    let checked = 0
+    for (const sel of sels) {
+      for (let seed = 1; seed <= 60; seed++) {
+        for (const e of generate(sel, 8, { rng: createRng(seed) })) {
+          checked++
+          const id = `${e.id} seed ${seed}`
+          if (e.kind === 'fact-mul') expect(e.a * e.b, id).toBe(e.answer)
+          if (e.kind === 'fact-div') expect(e.dividend / e.divisor, id).toBe(e.answer)
+          if (e.kind === 'column-add') expect(e.operands.reduce((s, x) => s + x, 0), id).toBe(e.answer)
+          if (e.kind === 'column-sub') expect(e.minuend - e.subtrahend, id).toBe(e.answer)
+          if (e.kind === 'column-mul') expect(e.top * e.bottom, id).toBe(e.answer)
+          if (e.kind === 'division') {
+            expect(e.quotient * e.divisor + e.remainder, id).toBe(e.dividend)
+            expect(e.remainder >= 0 && e.remainder < e.divisor, id).toBe(true)
+          }
+          if (e.kind === 'word-problem') expect(e.answer, id).toBeGreaterThan(0)
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(1000)
+  })
+
   it('a sample of the generic kinds with explicit levels gives exactly the asked digits', () => {
     const cases: [Parameters<typeof generate>[0], (e: Exercise) => boolean][] = [
       [{ kinds: ['column-add'], digits: 2 }, (e) => e.kind === 'column-add' && e.operands.every((o) => digitsOf(o) <= 2)],

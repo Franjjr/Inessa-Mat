@@ -222,9 +222,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       if (ctx.regroup !== 'none') addItem(map, mul2x1Skill(true), kind, 1)
       break
     case 'division': {
-      // 3 or 4 digits asked (3.º, 4.º): the one-digit divisor with a bigger dividend. The tables do not apply to these
-      // (their generators pick any divisor 2..9), so with a table asked the 2-digit division stays.
-      if ((ctx.digits === 3 || ctx.digits === 4) && !ctx.tables) {
+      // 3 or 4 digits asked (3.º, 4.º): the one-digit divisor with a bigger dividend (with a table asked, the table is the
+      // divisor). There is no 3- or 4-digit long division yet: 'long' alone falls back to exact and remainder.
+      if (ctx.digits === 3 || ctx.digits === 4) {
         const variants = ctx.variantsExplicit ? ctx.variants.filter((v) => v !== 'long') : ['exact', 'rem']
         for (const v of variants.length ? variants : ['exact', 'rem']) {
           addItem(map, ctx.digits === 3 ? div3x1Skill(v as 'exact' | 'rem') : `div:4x1:${v}`, kind, 1)
@@ -399,6 +399,11 @@ function planUniform(rng: Rng, items: UniverseItem[], n: number): UniverseItem[]
     out.push(items[weightedIndex(rng, weights)])
   }
   return out
+}
+
+/** Whether the child has any history: a mastery map with at least one skill in it. */
+function hasHistory(mastery: MasteryMap | undefined): boolean {
+  return mastery !== undefined && Object.keys(mastery).length > 0
 }
 
 /** Per call: how many brand-new hard facts may still be introduced, and which ones were introduced by any kind. */
@@ -641,10 +646,12 @@ function buildBar(op: BarSkillOp, skill: SkillKey, ctx: Ctx, rng: Rng, small = f
   return genBarProblem(op, rng, withBar, small)
 }
 
-/** A 3-digit dividend (100..999) by a 1-digit divisor: exact (no remainder) or with a remainder. */
-export function genDivision3(rng: Rng, withRemainder: boolean): [number, number] {
+/** A 3-digit dividend (100..999) by a 1-digit divisor: exact (no remainder) or with a remainder. The divisor is one of
+    `divisors` when given (the table asked), else any of 2..9. */
+export function genDivision3(rng: Rng, withRemainder: boolean, divisors?: number[]): [number, number] {
   for (let attempt = 0; attempt < 200; attempt++) {
-    const d = randInt(rng, 2, 9)
+    // Without divisors the draw is the same as before (randInt 2..9), so the seeded items do not change.
+    const d = divisors && divisors.length ? pick(rng, divisors) : randInt(rng, 2, 9)
     const r = withRemainder ? randInt(rng, 1, d - 1) : 0
     const qMin = Math.ceil((100 - r) / d)
     const qMax = Math.floor((999 - r) / d)
@@ -777,7 +784,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
   if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
-  if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem'), used, rng)!
+  if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem', TABLES_2_9(ctx)), used, rng)!
   if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem', p.variant === 'round'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'mulCol') return retry(() => genLongMul(rng, p.top, p.bottom), used, rng)!
@@ -786,7 +793,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'decimal-op') return retry(() => genDecimalOp(rng, p.op, p.places), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {
-      const [dd, dv] = genDivision3(rng, p.variant === 'rem')
+      const [dd, dv] = genDivision3(rng, p.variant === 'rem', TABLES_2_9(ctx))
       return makeDivision3(dd, dv)
     }, used, rng)!
   }
@@ -852,8 +859,9 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
     const fresh = g.items.filter((it) => !isFullyAvoided(it, avoid))
     const items = fresh.length ? fresh : g.items
     // With the child's history given, the plan is adaptive unless the selector says otherwise: the operation games pass
-    // their mastery and need the weak skills first without asking for it.
-    const adaptive = selector.adaptive ?? opts.mastery !== undefined
+    // their mastery and need the weak skills first without asking for it. An empty history (a new child) is no history:
+    // the plan stays uniform.
+    const adaptive = selector.adaptive ?? hasHistory(opts.mastery)
     const chosen = adaptive && opts.mastery
       ? planAdaptive(rng, items, share, opts.mastery, now, budget)
       : planUniform(rng, items, share).map((item) => ({ item, isNew: false }))
