@@ -1,6 +1,8 @@
-/* OnboardingScreen (/kids/new): one question per screen, built for a child who taps or writes. Lumi asks, the child
-   answers with big buttons, the companion is chosen and named, handwriting calibration is offered (skippable),
-   then the prologue story plays and the child lands on the home screen. The profile is created on "¡Vamos!". */
+/* OnboardingScreen (/kids/new): few, big screens for a child who taps or writes. Lumi asks the name (and how to
+   address the child), the grade, which companion; the companion's name, colour and gender share one screen (colour
+   and gender have defaults but nothing else in the app changes them, so they cannot be dropped). Handwriting
+   calibration is offered (skippable), then the prologue story plays and the child lands on the home screen. The
+   profile is created on "¡Vamos!". */
 import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AnimatePresence, MotionConfig, motion } from 'motion/react'
@@ -18,20 +20,16 @@ import { COMPANION_SPECIES } from '@/types'
 import StoryPlayer from '@/world/story/StoryPlayer'
 import s from './OnboardingScreen.module.css'
 
-type Step =
-  | 'name' | 'gender' | 'grade' | 'species' | 'colorway'
-  | 'companionName' | 'companionGender' | 'review' | 'calibration' | 'prologue'
+type Step = 'name' | 'grade' | 'species' | 'companion' | 'review' | 'calibration' | 'prologue'
 
-const STEPS: Step[] = [
-  'name', 'gender', 'grade', 'species', 'colorway', 'companionName', 'companionGender', 'review',
-  'calibration', 'prologue',
-]
+const STEPS: Step[] = ['name', 'grade', 'species', 'companion', 'review', 'calibration', 'prologue']
 /** Steps shown as progress dots (the prologue is a story, not a question). */
 const QUESTION_STEPS = STEPS.filter((x) => x !== 'prologue' && x !== 'calibration')
 
 interface Draft {
   name: string
-  gender: GrammaticalGender
+  /** How the stories address the child: no default, the child (or adult) must pick one. */
+  gender?: GrammaticalGender
   grade?: number
   species?: CompanionSpecies
   colorway: string
@@ -39,7 +37,7 @@ interface Draft {
   petGender: GrammaticalGender
 }
 
-const EMPTY_DRAFT: Draft = { name: '', gender: 'm', colorway: 'default', petName: '', petGender: 'm' }
+const EMPTY_DRAFT: Draft = { name: '', colorway: 'default', petName: '', petGender: 'm' }
 
 const COLORWAY_LABEL: Record<string, string> = {
   default: 'Original',
@@ -53,7 +51,7 @@ const GRADES = [1, 2, 3, 4, 5, 6]
 function contextOf(d: Draft): TemplateContext {
   return {
     childName: d.name.trim() || 'amigo',
-    childGender: d.gender,
+    childGender: d.gender ?? 'm',
     petName: d.petName.trim() || (d.species ? capitalize(speciesNoun(d.species, d.petGender).noun) : 'Tu compañero'),
     petGender: d.petGender,
     petSpecies: d.species ?? 'cat',
@@ -86,7 +84,7 @@ export default function OnboardingScreen() {
   const back = () => setStepIndex((i) => Math.max(i - 1, 0))
 
   const create = async () => {
-    if (creatingRef.current || !draft.species) return
+    if (creatingRef.current || !draft.species || !draft.gender) return
     creatingRef.current = true
     setBusy(true)
     try {
@@ -95,7 +93,7 @@ export default function OnboardingScreen() {
       if (!id) {
         const child = await createChild({
           nickname: draft.name.trim(),
-          gender: draft.gender,
+          gender: draft.gender ?? 'm',
           grade: draft.grade,
           companion: {
             species: draft.species,
@@ -134,6 +132,7 @@ export default function OnboardingScreen() {
   const leave = () => navigate('/play', { replace: true })
 
   const species = draft.species
+  const ready = draft.name.trim().length > 0 && draft.gender !== undefined
   const companionName = draft.petName.trim() || ctx.petName
 
   return (
@@ -176,7 +175,7 @@ export default function OnboardingScreen() {
               <Question lumi={t('¡Hola! Soy Lumi. ¿Cómo te llamas?')}>
                 <form
                   className={s.form}
-                  onSubmit={(e) => { e.preventDefault(); if (draft.name.trim()) next() }}
+                  onSubmit={(e) => { e.preventDefault(); if (draft.name.trim() && draft.gender) next() }}
                 >
                   <label className={s.label} htmlFor="ob-name">Tu nombre</label>
                   <input
@@ -189,18 +188,14 @@ export default function OnboardingScreen() {
                     placeholder="Escribe tu nombre"
                     onChange={(e) => update({ name: e.target.value })}
                   />
-                  <Button type="submit" size="lg" className={s.next} disabled={!draft.name.trim()} aria-describedby={draft.name.trim() ? undefined : 'ob-name-hint'}>Siguiente ›</Button>
-                  {!draft.name.trim() && <p id="ob-name-hint" className={s.hint}>Escribe tu nombre para seguir</p>}
+                  <span className={s.label} id="ob-gender-label">¿Cómo te hablamos en la historia?</span>
+                  <div className={s.suggestions} role="group" aria-labelledby="ob-gender-label">
+                    <button type="button" className={clsx(s.chip, draft.gender === 'f' && s.selected)} aria-pressed={draft.gender === 'f'} onClick={() => update({ gender: 'f' })}>Como a una niña</button>
+                    <button type="button" className={clsx(s.chip, draft.gender === 'm' && s.selected)} aria-pressed={draft.gender === 'm'} onClick={() => update({ gender: 'm' })}>Como a un niño</button>
+                  </div>
+                  <Button type="submit" size="lg" className={s.next} disabled={!ready} aria-describedby={ready ? undefined : 'ob-name-hint'}>Siguiente ›</Button>
+                  {!ready && <p id="ob-name-hint" className={s.hint}>{draft.name.trim() ? 'Elige cómo te hablamos para seguir' : 'Escribe tu nombre para seguir'}</p>}
                 </form>
-              </Question>
-            )}
-
-            {step === 'gender' && (
-              <Question lumi={t('Encantada de conocerte, {child}. ¿Cómo te gusta que te hablemos en la historia?')}>
-                <Choices>
-                  <ChoiceButton label="Como a una niña" selected={draft.gender === 'f'} onClick={() => { update({ gender: 'f' }); next() }} />
-                  <ChoiceButton label="Como a un niño" selected={draft.gender === 'm'} onClick={() => { update({ gender: 'm' }); next() }} />
-                </Choices>
               </Question>
             )}
 
@@ -239,29 +234,8 @@ export default function OnboardingScreen() {
               </Question>
             )}
 
-            {step === 'colorway' && species && (
-              <Question lumi={t('¿De qué color quieres que sea {el_pet_species}?')}>
-                <div className={s.colorways} role="group" aria-label="Colores">
-                  {COMPANION_COLORWAYS.map((cw) => (
-                    <button
-                      key={cw}
-                      type="button"
-                      className={clsx(s.colorCard, draft.colorway === cw && s.selected)}
-                      aria-pressed={draft.colorway === cw}
-                      onClick={() => { update({ colorway: cw }); next() }}
-                    >
-                      <CompanionArt species={species} colorway={cw} size={124} />
-                      <span className={s.speciesName}>{COLORWAY_LABEL[cw]}</span>
-                    </button>
-                  ))}
-                </div>
-                {/* optional: the default colour stays (nothing in the app changes it later) */}
-                <Button variant="ghost" onClick={next}>Dejarlo así</Button>
-              </Question>
-            )}
-
-            {step === 'companionName' && species && (
-              <Question lumi={t('¿Cómo se llama {pet}? Elige un nombre o escribe el tuyo.')} petSpecies={species} colorway={draft.colorway}>
+            {step === 'companion' && species && (
+              <Question lumi={t('¿Cómo se llama {pet}? Elige un nombre o escribe el tuyo.')}>
                 <form
                   className={s.form}
                   onSubmit={(e) => { e.preventDefault(); if (draft.petName.trim()) next() }}
@@ -289,20 +263,28 @@ export default function OnboardingScreen() {
                     placeholder="Escribe un nombre"
                     onChange={(e) => update({ petName: e.target.value })}
                   />
+                  <span className={s.label}>Su color</span>
+                  <div className={s.colorways} role="group" aria-label="Colores">
+                    {COMPANION_COLORWAYS.map((cw) => (
+                      <button
+                        key={cw}
+                        type="button"
+                        className={clsx(s.colorCard, draft.colorway === cw && s.selected)}
+                        aria-pressed={draft.colorway === cw}
+                        onClick={() => update({ colorway: cw })}
+                      >
+                        <CompanionArt species={species} colorway={cw} size={72} />
+                        <span className={s.speciesName}>{COLORWAY_LABEL[cw]}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className={s.suggestions} role="group" aria-label="Es niña o niño">
+                    <button type="button" className={clsx(s.chip, draft.petGender === 'f' && s.selected)} aria-pressed={draft.petGender === 'f'} onClick={() => update({ petGender: 'f' })}>Es una niña</button>
+                    <button type="button" className={clsx(s.chip, draft.petGender === 'm' && s.selected)} aria-pressed={draft.petGender === 'm'} onClick={() => update({ petGender: 'm' })}>Es un niño</button>
+                  </div>
                   <Button type="submit" size="lg" className={s.next} disabled={!draft.petName.trim()} aria-describedby={draft.petName.trim() ? undefined : 'ob-pet-hint'}>Siguiente ›</Button>
                   {!draft.petName.trim() && <p id="ob-pet-hint" className={s.hint}>Escribe un nombre para seguir</p>}
                 </form>
-              </Question>
-            )}
-
-            {step === 'companionGender' && (
-              <Question lumi={t('¿{pet} es niña o niño?')}>
-                <Choices>
-                  <ChoiceButton label="Es una niña" selected={draft.petGender === 'f'} onClick={() => { update({ petGender: 'f' }); next() }} />
-                  <ChoiceButton label="Es un niño" selected={draft.petGender === 'm'} onClick={() => { update({ petGender: 'm' }); next() }} />
-                </Choices>
-                {/* optional: the default stays (nothing in the app changes it later) */}
-                <Button variant="ghost" onClick={next}>Dejarlo así</Button>
               </Question>
             )}
 

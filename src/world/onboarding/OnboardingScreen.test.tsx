@@ -50,14 +50,14 @@ describe('OnboardingScreen', () => {
     )
 
     await user.type(await screen.findByLabelText('Tu nombre'), 'Inessa')
+    await user.click(screen.getByRole('button', { name: 'Como a una niña' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a una niña' }))
     await user.click(await screen.findByRole('button', { name: '3º de Primaria' }))
     await user.click(await screen.findByRole('button', { name: /Gatito/ }))
-    await user.click(await screen.findByRole('button', { name: /Original/ }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Bigotes')
+    await user.click(screen.getByRole('button', { name: /Original/ }))
+    await user.click(screen.getByRole('button', { name: 'Es una niña' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Es una niña' }))
     await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
     await user.click(await screen.findByRole('button', { name: 'Calibración simulada' }))
     await user.click(await screen.findByRole('button', { name: 'Saltar' }))
@@ -81,14 +81,14 @@ describe('OnboardingScreen', () => {
       </MemoryRouter>,
     )
     await user.type(await screen.findByLabelText('Tu nombre'), 'Lia')
+    await user.click(screen.getByRole('button', { name: 'Como a un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
     await user.click(await screen.findByRole('button', { name: 'No lo sé' }))
     await user.click(await screen.findByRole('button', { name: /Zorrito/ }))
-    await user.click(await screen.findByRole('button', { name: /Dorado/ }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Canela')
+    await user.click(screen.getByRole('button', { name: /Dorado/ }))
+    await user.click(screen.getByRole('button', { name: 'Es un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Es un niño' }))
     await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
     await user.click(await screen.findByRole('button', { name: 'Ahora no' }))
     await user.click(await screen.findByRole('button', { name: 'Saltar' }))
@@ -110,21 +110,21 @@ describe('OnboardingScreen', () => {
       </MemoryRouter>,
     )
     await user.type(await screen.findByLabelText('Tu nombre'), 'Teo')
+    await user.click(screen.getByRole('button', { name: 'Como a un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
     await user.click(await screen.findByRole('button', { name: 'No lo sé' }))
     await user.click(await screen.findByRole('button', { name: /Zorrito/ }))
-    await user.click(await screen.findByRole('button', { name: /Dorado/ }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Canela')
+    await user.click(screen.getByRole('button', { name: /Dorado/ }))
+    await user.click(screen.getByRole('button', { name: 'Es un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Es un niño' }))
     await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
     expect(await screen.findByRole('button', { name: 'Saltar' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Ahora no' })).toBeNull()
     input.mode = 'touch'
   })
 
-  it('the optional questions (colour, companion gender) can be skipped with «Dejarlo así»: the defaults stay', async () => {
+  it('colour and companion gender have defaults: the child only has to name the companion', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter initialEntries={['/kids/new']}>
@@ -135,14 +135,12 @@ describe('OnboardingScreen', () => {
       </MemoryRouter>,
     )
     await user.type(await screen.findByLabelText('Tu nombre'), 'Lucas')
+    await user.click(screen.getByRole('button', { name: 'Como a un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
     await user.click(await screen.findByRole('button', { name: '2º de Primaria' }))
     await user.click(await screen.findByRole('button', { name: /Gatito/ }))
-    await user.click(await screen.findByRole('button', { name: 'Dejarlo así' }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Bigotes')
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Dejarlo así' }))
     await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
     await user.click(await screen.findByRole('button', { name: 'Calibración simulada' }))
     await user.click(await screen.findByRole('button', { name: 'Saltar' }))
@@ -150,6 +148,20 @@ describe('OnboardingScreen', () => {
 
     const created = (await listChildren()).filter((c) => c.nickname === 'Lucas').at(-1)
     expect(created!.companion).toMatchObject({ species: 'cat', name: 'Bigotes', gender: 'm', colorway: 'default' })
+  })
+
+  it('does not let the child go on without choosing how to be addressed', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/kids/new']}>
+        <Routes><Route path="/kids/new" element={<OnboardingScreen />} /></Routes>
+      </MemoryRouter>,
+    )
+    await user.type(await screen.findByLabelText('Tu nombre'), 'Ana')
+    expect(screen.getByRole('button', { name: 'Siguiente ›' })).toBeDisabled()
+    expect(screen.getByText('Elige cómo te hablamos para seguir')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Como a una niña' }))
+    expect(screen.getByRole('button', { name: 'Siguiente ›' })).toBeEnabled()
   })
 
   it('reads the review question without a gendered adjective (girl and female companion)', async () => {
@@ -163,14 +175,13 @@ describe('OnboardingScreen', () => {
       </MemoryRouter>,
     )
     await user.type(await screen.findByLabelText('Tu nombre'), 'Inessa')
+    await user.click(screen.getByRole('button', { name: 'Como a una niña' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a una niña' }))
     await user.click(await screen.findByRole('button', { name: '3º de Primaria' }))
     await user.click(await screen.findByRole('button', { name: /Gatito/ }))
-    await user.click(await screen.findByRole('button', { name: /Original/ }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Lola')
+    await user.click(screen.getByRole('button', { name: 'Es una niña' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Es una niña' }))
     expect(await screen.findByText(/Todo listo, Inessa y Lola/)).toBeInTheDocument()
     expect(screen.queryByText(/ya están listos/)).not.toBeInTheDocument()
   })
@@ -186,14 +197,12 @@ describe('OnboardingScreen', () => {
       </MemoryRouter>,
     )
     await user.type(await screen.findByLabelText('Tu nombre'), 'Doble')
+    await user.click(screen.getByRole('button', { name: 'Como a un niño' }))
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
     await user.click(await screen.findByRole('button', { name: 'No lo sé' }))
     await user.click(await screen.findByRole('button', { name: /Gatito/ }))
-    await user.click(await screen.findByRole('button', { name: /Original/ }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Nube')
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Es un niño' }))
     const go = await screen.findByRole('button', { name: '¡Vamos!' })
     fireEvent.click(go)
     fireEvent.click(go)

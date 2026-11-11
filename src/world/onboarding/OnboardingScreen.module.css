@@ -150,8 +150,13 @@
 }
 .chip:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 3px; }
 
+/* Inside the companion form the four colours stay in one row (small cards), on phones too. */
+.form .colorways { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2); }
+.form .colorCard { padding: var(--sp-2); }
+
 @media (max-width: 640px) {
-  .species, .colorways { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .species { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form .colorways { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .dot, .choice, .speciesCard, .colorCard { transition: none; }

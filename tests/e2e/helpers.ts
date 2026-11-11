@@ -25,14 +25,14 @@ export async function seedDemo(page: Page, route = '/kids'): Promise<void> {
 export async function createChildThroughOnboarding(page: Page, name = CHILD_NAME, grade?: number): Promise<void> {
   await page.goto('/kids/new')
   await page.getByRole('textbox', { name: 'Tu nombre' }).fill(name)
-  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: 'Como a una niña' }).click()
+  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: grade ? `${grade}º de Primaria` : 'No lo sé' }).click()
   await page.getByRole('group', { name: 'Compañeros' }).getByRole('button').first().click()
-  await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
   await page.getByRole('textbox', { name: 'Nombre del compañero' }).fill(PET_NAME)
-  await page.getByRole('button', { name: 'Siguiente ›' }).click()
+  await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
   await page.getByRole('button', { name: 'Es una niña' }).click()
+  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: '¡Vamos!' }).click()
   // Handwriting calibration is only offered where the child writes (touch or pen), not with the keypad.
   const skip = page.getByRole('button', { name: 'Ahora no' })
