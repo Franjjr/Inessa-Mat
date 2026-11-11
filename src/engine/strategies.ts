@@ -27,12 +27,11 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
   const hi = Math.max(a, b)
   // ---- easy tables first (×1, ×10, ×2, ×5)
   if (lo === 1) {
-    const n = a === 1 ? b : a
     return {
       strategy: { id: 'easy-one', text: EASY_ONE, visual: 'groups' },
       visualParams: { groups: a, perGroup: b },
       visualText: a === 1 ? `Mira: solo hay 1 grupo de ${b}.` : `Mira: ${a} grupos de 1.`,
-      workedText: `${a} × ${b}: el ${n} se queda igual. ${a} × ${b} = ?`,
+      workedText: `Por 1, el número se queda igual: ${a} × ${b} = ?`,
       workedVisual: 'groups',
     }
   }
@@ -60,7 +59,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
   // ---- special tricks of the 7 table, and the 3 × 3 and 8 × 8 tricks
   if (lo === 7 && hi === 7) {
     return {
-      strategy: { id: 'square-rhyme', text: 'Siete por siete: piensa en 7 × 5 y en 7 × 2, y súmalos.', visual: 'array' },
+      strategy: { id: 'square-rhyme', text: 'Piensa en 7 × 5 y en 7 × 2, y súmalos.', visual: 'array' },
       visualParams: { rows: 7, cols: 7 },
       visualText: 'Mira el cuadrado: 7 filas de 7.',
       workedText: '7 × 7 = 7 × 5 + 7 × 2 = 35 + 14 = ?',
@@ -69,7 +68,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
   }
   if (lo === 7 && hi === 8) {
     return {
-      strategy: { id: 'five-six-seven-eight', text: '7 × 8: ¿qué dos de estos números forman el resultado: 5, 6, 7, 8?', visual: 'array' },
+      strategy: { id: 'five-six-seven-eight', text: 'Fíjate en los números 5, 6, 7, 8: ¿cuáles dos forman el resultado de 7 × 8?', visual: 'array' },
       visualParams: { rows: 7, cols: 8 },
       visualText: 'Mira los números en orden: 5, 6, 7, 8. Dos de ellos, juntos, dan el resultado.',
       workedText: '7 × 8 = 7 × 5 + 7 × 3 = 35 + 21 = ?',
@@ -87,7 +86,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
   }
   if (lo === 3 && hi === 3) {
     return {
-      strategy: { id: 'double-and-one', text: 'Truco del 3: el doble de 3, y otro 3 más.', visual: 'groups' },
+      strategy: { id: 'double-and-one', text: 'El doble de 3, y otro 3 más.', visual: 'groups' },
       visualParams: { groups: 3, perGroup: 3 },
       visualText: 'Mira: 3 grupos de 3.',
       workedText: 'El doble de 3 es 3 + 3 = 6. Y 6 + 3 = ?',
@@ -113,7 +112,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
       strategy: { id: 'five', text: `La del 5 acaba en 0 o en 5: calcula ${n} × 10 = ${n * 10} y toma la mitad.`, visual: 'skip-count' },
       // One chip less than the jumps: the last one is the answer, and it is not drawn.
       visualParams: { step: 5, count: n - 1 },
-      visualText: `Cuenta de 5 en 5: cada salto son 5.`,
+      visualText: `Cuenta de 5 en 5: cada salto vale 5.`,
       workedText: `Cuenta ${n} saltos de 5: ${seq} → ?`,
       workedVisual: 'skip-count',
     }
@@ -121,7 +120,7 @@ function detail(a: number, b: number, allowMirror = true): StrategyDetail {
   if (a === 9 || b === 9) {
     const n = a === 9 ? b : a
     return {
-      strategy: { id: 'nine-trick', text: `Truco del 9: empieza por uno menos que ${n} (el ${n - 1}) y las dos cifras suman 9.`, visual: 'nine-trick' },
+      strategy: { id: 'nine-trick', text: `Empieza por uno menos que ${n} (el ${n - 1}) y las dos cifras suman 9.`, visual: 'nine-trick' },
       visualParams: { a: n },
       visualText: `Con los dedos: baja el dedo número ${n}. Los dedos de la izquierda son las decenas y los de la derecha, las unidades.`,
       workedText: `${n} × 9 = ${n} × 10 − ${n} = ${n * 10} − ${n} = ?`,
@@ -179,7 +178,7 @@ function evenSix(n: number): StrategyDetail {
   return {
     strategy: {
       id: 'even-six-rhyme',
-      text: `Truco del 6 con un número par: la mitad de ${n} va delante y el ${n} detrás.`,
+      text: `Con el 6 y un número par: la mitad de ${n} va delante y el ${n} detrás.`,
       visual: 'dots-five-plus-one',
     },
     visualParams: { a: 6, b: n },

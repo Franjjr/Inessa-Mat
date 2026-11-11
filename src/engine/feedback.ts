@@ -49,7 +49,7 @@ const STRATEGY_PRAISE: Partial<Record<FactStrategy['id'], string>> = {
   'weeks': '¡Tres semanas, veintiún días! ¡Genial!',
   'mirror': '¡El truco del espejo! ¡Muy bien pensado!',
   'double-and-one': '¡El doble y uno más! ¡Muy bien!',
-  'ten-minus-two': '¡Diez veces menos dos veces! ¡Qué buena idea!',
+  'ten-minus-two': '¡Diez veces el 8 menos dos veces el 8! ¡Qué buena idea!',
 }
 
 /** Praise for a right fact. A strategy is named only when the child asked for its trick (`usedTrick`): the praise must
@@ -66,9 +66,9 @@ export const FEEDBACK = {
   factWrong: (strategy: FactStrategy) => `¡Casi! Prueba el truco. ${strategy.text}`,
   /** The child wrote the product of a neighbouring fact: it names that fact's table, then the trick of the asked fact
       (which never gives its result). */
-  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy, _answer?: number) => {
+  factNeighbour: (given: number, a: number, b: number, strategy: FactStrategy) => {
     const tables = a === b ? `la tabla del ${a}` : `la tabla del ${a} y del ${b}`
-    return `¡Casi! ${given} es ${a} × ${b}: ese resultado es de ${tables}. Prueba el truco: ${strategy.text}`
+    return `¡Casi! ${given} es ${a} × ${b}: ese resultado es de ${tables}. Prueba el truco. ${strategy.text}`
   },
   factAdded: (a: number, b: number) => `¡Ojo! Has sumado ${a} + ${b}. Multiplicar es hacer ${a} grupos de ${b}.`,
   divWrong: (dividend: number, divisor: number) =>
@@ -109,7 +109,7 @@ export const FEEDBACK = {
   remainderTooBig: (divisor: number) => `Lo que sobra (el resto) tiene que ser más pequeño que ${divisor}. ¡Cabe una vez más!`,
   quotientTooBig: (q: number, divisor: number, dividend: number) =>
     `¡Te has pasado! ${q} × ${divisor} = ${q * divisor}, y solo hay ${dividend}. Prueba con uno menos.`,
-  quotientTooSmall: '¡Todavía cabe una vez más! Prueba con uno más en el cociente.',
+  quotientTooSmall: '¡Todavía cabe una vez más! Prueba con uno más en lo que sale en cada grupo.',
   remainderWrong: (dividend: number, used: number) => `¡Lo que sale en cada grupo está bien! Ahora revisa lo que sobra: ${dividend} − ${used}.`,
   bringDown: 'Lo que sobra en las decenas se junta con las unidades: ¡bájalo y sigue repartiendo!',
   divisionStopped: '¡No te pares! Después de las decenas, baja las unidades y sigue repartiendo. Si no cabe ninguna vez, escribe un 0.',

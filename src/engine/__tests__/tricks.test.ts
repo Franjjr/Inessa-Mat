@@ -4,11 +4,14 @@
    Facts with a factor 1 are left out of the product checks: «por 1, el número se queda igual» names the product only as
    the other factor, which the child reads in the question. */
 import { describe, expect, it } from 'vitest'
-import { TABLE_METHODS, check, createRng, generate, hintsFor, makeFactMul, makeMissingFactor, strategyDetail, strategyForFact } from '@/engine'
+import { TABLE_METHODS, check, createRng, generate, hintsFor, makeColumnSub, makeFactMul, makeMissingFactor, strategyDetail, strategyForFact, toDigits } from '@/engine'
 import { FEEDBACK, praise, praiseFact } from '../feedback'
 import type { Answer } from '@/types'
 
 const num = (value: number | null): Answer => ({ type: 'number', value })
+
+/** The neutral praises (feedback.ts PRAISE): a trick's praise is only named when the child used that trick. */
+const PRAISE_OPTIONS = ['¡Bien hecho, {child}!', '¡Toma ya!', '¡Lo has clavado!', '¡Genial, {child}!', '¡Eso es!', '¡Fenomenal!', '¡Perfecto!']
 
 /** Whole number as a token: 49 is in «49 es 7 × 7», but not in «149» or «4,9». */
 const hasNumber = (text: string, n: number) => new RegExp(`(?<![\\d.,])${n}(?![\\d.,])`).test(text)
@@ -50,7 +53,7 @@ describe('tricks: the wrong-answer messages never give the result of their fact'
     // question («¿qué dos de estos números forman el resultado: 5, 6, 7, 8?»), never 56.
     const r = check(makeFactMul(7, 8), num(49))
     expect(r.feedback).toContain('49 es 7 × 7: ese resultado es de la tabla del 7')
-    expect(r.feedback).toContain('Prueba el truco: 7 × 8')
+    expect(r.feedback).toContain('Prueba el truco. Fíjate en los números 5, 6, 7, 8')
     expect(r.feedback).not.toMatch(/\b56\b/)
     // Both factors differ: the message names both tables (48 = 6 × 8, a neighbour of 7 × 8).
     expect(check(makeFactMul(7, 8), num(48)).feedback).toContain('48 es 6 × 8: ese resultado es de la tabla del 6 y del 8')
@@ -66,6 +69,16 @@ describe('tricks: the worked step ends where the child writes the answer', () =>
     expect(filled).toMatch(new RegExp(`(= |→ )${a * b}$`))
   })
 
+  it('a factor 1 never writes its product in the worked step, only the expression with «= ?»', () => {
+    for (let b = 2; b <= 10; b++) {
+      for (const [x, y] of [[1, b], [b, 1]]) {
+        const worked = strategyDetail(x, y).workedText.replace(`${x} × ${y} = ?`, '')
+        expect(hasNumber(worked, x * y), `${x} × ${y}: «${strategyDetail(x, y).workedText}»`).toBe(false)
+      }
+    }
+    expect(strategyDetail(1, 7).workedText).toBe('Por 1, el número se queda igual: 1 × 7 = ?')
+  })
+
   it('the 6 table and the doubling chains show the product only as the answer', () => {
     expect(strategyDetail(6, 8).workedText).toBe('La mitad de 8 es 4. Pon el 4 delante del 8 → ?')
     expect(strategyDetail(8, 3).workedText).toBe('3 → 6 → 12 → ?')
@@ -75,6 +88,10 @@ describe('tricks: the worked step ends where the child writes the answer', () =>
 })
 
 describe('tricks: the visuals never draw the answer', () => {
+  it('the 5 table says what each jump is worth, in the singular', () => {
+    expect(strategyDetail(5, 7).visualText).toBe('Cuenta de 5 en 5: cada salto vale 5.')
+  })
+
   it('the doubling chains stop one doubling before the product, and the 5 table draws one jump less', () => {
     expect(hintsFor(makeFactMul(4, 7))[1].params).toEqual({ start: 7, steps: 1 })
     expect(hintsFor(makeFactMul(8, 3))[1].params).toEqual({ start: 3, steps: 2 })
@@ -84,14 +101,14 @@ describe('tricks: the visuals never draw the answer', () => {
 
 describe('tricks: the rewritten tricks', () => {
   it('the 6 with an even number says the half and the number, not the result', () => {
-    expect(strategyForFact(6, 8).text).toBe('Truco del 6 con un número par: la mitad de 8 va delante y el 8 detrás.')
+    expect(strategyForFact(6, 8).text).toBe('Con el 6 y un número par: la mitad de 8 va delante y el 8 detrás.')
   })
   it('7 × 7 and 7 × 8 ask a question instead of giving the rhyme', () => {
-    expect(strategyForFact(7, 7).text).toBe('Siete por siete: piensa en 7 × 5 y en 7 × 2, y súmalos.')
-    expect(strategyForFact(7, 8).text).toBe('7 × 8: ¿qué dos de estos números forman el resultado: 5, 6, 7, 8?')
+    expect(strategyForFact(7, 7).text).toBe('Piensa en 7 × 5 y en 7 × 2, y súmalos.')
+    expect(strategyForFact(7, 8).text).toBe('Fíjate en los números 5, 6, 7, 8: ¿cuáles dos forman el resultado de 7 × 8?')
   })
   it('3 × 3 and 8 × 8 have their own trick', () => {
-    expect(strategyForFact(3, 3).text).toBe('Truco del 3: el doble de 3, y otro 3 más.')
+    expect(strategyForFact(3, 3).text).toBe('El doble de 3, y otro 3 más.')
     expect(strategyForFact(8, 8).text).toBe('Diez veces el 8, y quita dos veces el 8.')
     expect(strategyDetail(8, 8).workedText).toBe('8 × 10 = 80, y 8 × 2 = 16. 80 − 16 = ?')
   })
@@ -114,8 +131,38 @@ describe('messages: praise, the mirror, the zero, carrying and the division', ()
         expect(praiseFact(seed, strategyForFact(a, b))).toBe(praise(seed))
       }
     }
-    // Once the trick was asked, its praise may name it.
-    expect([praise('fact-1'), '¡El 5 y uno más funciona de maravilla!']).toContain(praiseFact('fact-1', strategyForFact(6, 7), true))
+    // Once the trick was asked, its praise may name it: every praise is a neutral one or the trick's own, and the trick's
+    // own praise does come out for some seeds.
+    const seeds = Array.from({ length: 20 }, (_, i) => `fact-${i}`)
+    const trick = '¡El 5 y uno más funciona de maravilla!'
+    const outs = seeds.map((seed) => praiseFact(seed, strategyForFact(6, 7), true))
+    for (const out of outs) expect([...PRAISE_OPTIONS, trick]).toContain(out)
+    expect(outs).toContain(trick)
+    const trick88 = '¡Diez veces el 8 menos dos veces el 8! ¡Qué buena idea!'
+    const outs88 = seeds.map((seed) => praiseFact(seed, strategyForFact(8, 8), true))
+    for (const out of outs88) expect([...PRAISE_OPTIONS, trick88]).toContain(out)
+    expect(outs88).toContain(trick88)
+  })
+
+  it('the praise names the trick only after a hint showed it (check passes hintsUsed)', () => {
+    const seeds = Array.from({ length: 20 }, (_, i) => `fact-${i}`)
+    const trick = '¡El 5 y uno más funciona de maravilla!'
+    // Without a hint the child never hears the trick's praise.
+    for (const seed of seeds) {
+      const ex = { ...makeFactMul(6, 7), id: seed }
+      expect(PRAISE_OPTIONS).toContain(check(ex, num(42), { hintsUsed: 0 }).feedback)
+    }
+    // With a hint it may: the trick's own praise comes out for some seeds.
+    const withHint = seeds.map((seed) => check({ ...makeFactMul(6, 7), id: seed }, num(42), { hintsUsed: 1 }).feedback)
+    expect(withHint).toContain(trick)
+  })
+
+  it('the carry method says «me llevo una» for the forgotten carry, and the borrow method keeps the borrow message', () => {
+    // 734 − 459: the child writes 385 (the borrow not paid back, see check.test).
+    const ex = makeColumnSub(734, 459)
+    const answer: Answer = { type: 'digits', digits: toDigits(385) }
+    expect(check(ex, answer, { method: 'carry' })).toMatchObject({ errorType: 'borrow-forgot', feedback: FEEDBACK.carryForgotSub })
+    expect(check(ex, answer, { method: 'borrow' })).toMatchObject({ errorType: 'borrow-forgot', feedback: FEEDBACK.borrowForgot })
   })
 
   it('the mirror message says that the result stays the same', () => {
@@ -133,11 +180,19 @@ describe('messages: praise, the mirror, the zero, carrying and the division', ()
     expect(FEEDBACK.carryForgotSub).not.toContain('Táchala')
   })
 
+  it('the wrong-answer messages say the trick after «Prueba el truco.» with no label in front of it', () => {
+    expect(FEEDBACK.factWrong(strategyForFact(3, 3))).toBe('¡Casi! Prueba el truco. El doble de 3, y otro 3 más.')
+    expect(FEEDBACK.factNeighbour(49, 7, 7, strategyForFact(7, 8))).not.toMatch(/: [^ ]+: /)
+    expect(FEEDBACK.factNeighbour(49, 7, 7, strategyForFact(7, 8))).toContain('de la tabla del 7. Prueba el truco. Fíjate en los números 5, 6, 7, 8')
+  })
+
   it('the division messages explain «el resto» and do not use «cociente» unexplained', () => {
     expect(FEEDBACK.remainderTooBig(5)).toBe('Lo que sobra (el resto) tiene que ser más pequeño que 5. ¡Cabe una vez más!')
     expect(FEEDBACK.divisionOther).not.toMatch(/cociente|divisor/)
     expect(FEEDBACK.remainderWrong(17, 15)).not.toMatch(/cociente/)
     expect(FEEDBACK.divisionReversed).not.toMatch(/cociente/)
+    expect(FEEDBACK.quotientTooSmall).not.toMatch(/cociente/)
+    expect(FEEDBACK.quotientTooSmall).toBe('¡Todavía cabe una vez más! Prueba con uno más en lo que sale en cada grupo.')
   })
 })
 
@@ -161,15 +216,13 @@ describe('hints: the word problems and the missing factor', () => {
       const known = missing === 'a' ? b : a
       const answer = missing === 'a' ? a : b
       const [, drawn, worked] = hintsFor(ex)
-      // The chips drawn are at most two, and none of them is the answer (the count of jumps), unless it is the known factor.
+      // The chips drawn are at most two, and none of them is the answer (the count of jumps), even when the known factor is the answer.
       const count = drawn.params?.count as number
       expect(count).toBeLessThanOrEqual(2)
-      for (let i = 1; i <= count; i++) {
-        if (known !== answer) expect(known * i, `${a} × ${b}, falta ${missing}`).not.toBe(answer)
-      }
+      for (let i = 1; i <= count; i++) expect(known * i, `${a} × ${b}, falta ${missing}`).not.toBe(answer)
       // The worked step says at most two multiples, and then asks how many numbers the child says.
       expect(worked.text).toMatch(/¿Cuántos números dices\?$/)
-      // The answer is not written in the hints unless it is the known factor, which the child reads in the question.
+      // The answer is not written in the hints, not even when it is the known factor (2 × ? = 4 would name the 2 as the answer).
       if (answer !== known) expect(hasNumber(worked.text, answer), worked.text).toBe(false)
     }
   })
