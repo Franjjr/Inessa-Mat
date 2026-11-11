@@ -7,6 +7,7 @@ import { celebrate } from '@/fx'
 import type { ExerciseViewProps, ShapeChoiceExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
 
@@ -27,8 +28,14 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
   }
 
   return (
-    <section className={s.view} aria-label="Elegir la respuesta" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>{ex.question}</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      aria-label="Elegir la respuesta"
+      data-kind={ex.kind}
+      data-status={status}
+      prompt={ex.question}
+      actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}
+    >
       {ex.figures.length > 0 && (
         <div className={s.figureRow}>
           {ex.figures.map((f, i) => (
@@ -51,7 +58,6 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

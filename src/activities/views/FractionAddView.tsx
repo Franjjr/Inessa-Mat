@@ -9,6 +9,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function FractionAddView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'fraction-add') return null
@@ -40,8 +41,7 @@ function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAd
   }
 
   return (
-    <section className={s.view} aria-label={add ? 'Sumar fracciones' : 'Restar fracciones'} data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>{add ? 'Suma las fracciones' : 'Resta las fracciones'}</p>
+    <ExerciseLayout workClassName={s.view} aria-label={add ? 'Sumar fracciones' : 'Restar fracciones'} data-kind={ex.kind} data-status={status} prompt={add ? 'Suma las fracciones' : 'Resta las fracciones'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />}>
       {ex.figures.length > 0 && (
         <div className={s.figureRow}>
           <FigureSvg figure={ex.figures[0]} label={`Barra con ${ex.a} partes de color`} className={`${s.figure} ${s.figureSmall}`} />
@@ -84,7 +84,6 @@ function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAd
           />
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

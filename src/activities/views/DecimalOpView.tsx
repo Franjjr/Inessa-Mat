@@ -10,6 +10,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
 import d from './DecimalViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function DecimalOpView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'decimal-op') return null
@@ -34,8 +35,7 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
   const [rw, rd] = fmtDecimal(ex.right, ex.places).split(',')
 
   return (
-    <section className={s.view} aria-label={add ? 'Sumar decimales' : 'Restar decimales'} data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>{add ? 'Suma. Pon las comas una debajo de otra.' : 'Resta. Pon las comas una debajo de otra.'}</p>
+    <ExerciseLayout workClassName={s.view} aria-label={add ? 'Sumar decimales' : 'Restar decimales'} data-kind={ex.kind} data-status={status} prompt={add ? 'Suma. Pon las comas una debajo de otra.' : 'Resta. Pon las comas una debajo de otra.'} actions={<AnswerBar flow={flow} onCheck={() => submit(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />}>
       <div className={d.column}>
         <span />
         <span className={d.whole}>{lw}</span>
@@ -87,7 +87,6 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
           )}
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

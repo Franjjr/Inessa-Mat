@@ -10,6 +10,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { TimeFields, capitalize } from './Clock'
 import s from './clock.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function TimeConvertView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'time-convert') return null
@@ -36,8 +37,7 @@ function ConvertRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeCo
 
   if (ex.direction === 'to-phrase') {
     return (
-      <section className={s.view} aria-label="Hora digital y frase" data-kind={ex.kind} data-direction={ex.direction} data-status={status}>
-        <p className={s.instructions}>¿Qué frase dice esta hora?</p>
+      <ExerciseLayout workClassName={s.view} aria-label="Hora digital y frase" data-kind={ex.kind} data-direction={ex.direction} data-status={status} prompt={'¿Qué frase dice esta hora?'} actions={<AnswerBar flow={flow} onCheck={submitChoice} canCheck={choice !== null} />}>
         <div className={s.row}>
           <div className={s.card}>
             <span className={s.digital} aria-label={`Hora digital ${digital(ex.answer.hour, ex.answer.minute)}`}>{digital(ex.answer.hour, ex.answer.minute)}</span>
@@ -56,14 +56,12 @@ function ConvertRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeCo
             </button>
           ))}
         </div>
-        <AnswerBar flow={flow} onCheck={submitChoice} canCheck={choice !== null} />
-      </section>
+      </ExerciseLayout>
     )
   }
 
   return (
-    <section className={s.view} aria-label="Escribir la hora digital" data-kind={ex.kind} data-direction={ex.direction} data-status={status}>
-      <p className={s.instructions}>Escribe esta hora con números, como en un reloj digital de 24 horas.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Escribir la hora digital" data-kind={ex.kind} data-direction={ex.direction} data-status={status} prompt={'Escribe esta hora con números, como en un reloj digital de 24 horas.'} actions={<AnswerBar flow={flow} onCheck={() => submitTime()} canCheck={hour !== null && minute !== null} />}>
       <div className={s.row}>
         <div className={s.card}>
           <span className={s.target}>{capitalize(ex.phrase)}</span>
@@ -78,7 +76,6 @@ function ConvertRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeCo
         onSubmit={(h, m) => { setMinute(m); if (!flow.submitted) submitTime(h, m) }}
         autoFocus
       />
-      <AnswerBar flow={flow} onCheck={() => submitTime()} canCheck={hour !== null && minute !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

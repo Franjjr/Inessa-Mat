@@ -11,6 +11,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { TimeFields, capitalize } from './Clock'
 import s from './clock.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function TimeDurationView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'time-duration') return null
@@ -65,10 +66,7 @@ function DurationRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeD
 
   if (ex.ask === 'end') {
     return (
-      <section className={s.view} aria-label="Duración: ¿a qué hora acaba?" data-kind={ex.kind} data-ask={ex.ask} data-status={status}>
-        <p className={s.instructions}>
-          La película empieza a {startText} y dura {durationWords(ex.duration)}. ¿A qué hora acaba?
-        </p>
+      <ExerciseLayout workClassName={s.view} aria-label="Duración: ¿a qué hora acaba?" data-kind={ex.kind} data-ask={ex.ask} data-status={status} prompt={`La película empieza a ${startText} y dura ${durationWords(ex.duration)}. ¿A qué hora acaba?`} actions={<AnswerBar flow={flow} onCheck={() => submitTime()} canCheck={hour !== null && minute !== null} />}>
         <TimeLine start={ex.start} minutes={ex.duration} />
         <TimeFields
           hour={hour}
@@ -79,18 +77,14 @@ function DurationRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeD
           onSubmit={(h, m) => { setMinute(m); if (!flow.submitted) submitTime(h, m) }}
           autoFocus
         />
-        <AnswerBar flow={flow} onCheck={() => submitTime()} canCheck={hour !== null && minute !== null} />
-      </section>
+      </ExerciseLayout>
     )
   }
 
   const end = { hour: ex.end.hour, minute: ex.end.minute }
   const elapsed = minutesFace(ex.start, end)
   return (
-    <section className={s.view} aria-label="Duración: cuántos minutos pasan" data-kind={ex.kind} data-ask={ex.ask} data-status={status} data-elapsed={elapsed}>
-      <p className={s.instructions}>
-        {capitalize(`¿Cuántos minutos pasan de ${startText} a ${clockPhrase(end.hour, end.minute)}?`)}
-      </p>
+    <ExerciseLayout workClassName={s.view} aria-label="Duración: cuántos minutos pasan" data-kind={ex.kind} data-ask={ex.ask} data-status={status} data-elapsed={elapsed} prompt={capitalize(`¿Cuántos minutos pasan de ${startText} a ${clockPhrase(end.hour, end.minute)}?`)} actions={<AnswerBar flow={flow} onCheck={() => submitMinutes()} canCheck={minutes !== null} />}>
       <TimeLine start={ex.start} minutes={ex.duration} end={end} />
       <div className={s.answerNumber}>
         <span className={s.fieldLabel}>Minutos</span>
@@ -107,7 +101,6 @@ function DurationRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeD
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submitMinutes()} canCheck={minutes !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

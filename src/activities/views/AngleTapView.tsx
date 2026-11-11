@@ -6,6 +6,7 @@ import { useAnswerFlow } from '../groups/flow'
 import { celebrate } from '@/fx'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function AngleTapView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'angle-tap') return null
@@ -28,9 +29,7 @@ function TapRound({ ex, onAnswered, showFeedback, allowHints }: { ex: AngleTapEx
   }
 
   return (
-    <section className={s.view} aria-label="Ángulos rectos" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>Toca las esquinas que son ángulos rectos.</p>
-      <p className={s.instructions}>Un ángulo recto encaja justo en la esquina de una hoja de papel.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Ángulos rectos" data-kind={ex.kind} data-status={status} prompt={'Toca las esquinas que son ángulos rectos.'} sub={'Un ángulo recto encaja justo en la esquina de una hoja de papel.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck />}>
       <div className={s.figureBox}>
         <FigureSvg
           figure={ex.figure}
@@ -39,7 +38,6 @@ function TapRound({ ex, onAnswered, showFeedback, allowHints }: { ex: AngleTapEx
           className={s.figure}
         />
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck />
-    </section>
+    </ExerciseLayout>
   )
 }

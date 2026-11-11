@@ -1,0 +1,94 @@
+/* One look for every exercise screen (P3PE-01, P3PE-06). Used through <ExerciseLayout> (src/activities/views/ExerciseLayout.tsx).
+
+   - .ex-prompt: the statement. Bold, on top of everything, ≥ 20 px ON SCREEN: inside a shrunk game (FitToScreen sets
+     --fit-scale on its inner box) its size is divided by the scale, so the statement never shrinks with the rest.
+   - .ex-prompt-sub: the optional second line, ≥ 16 px on screen.
+   - .ex-layout: statement, then the work (the sum, the boxes, the drawing), then the answer bar (Pista, Comprobar).
+     On a short screen in landscape (a 1000 × 490 tablet with its browser bars) the statement and the answer bar go
+     to the left and the work to the right, so «Comprobar» stays in view whatever the height of the work. */
+
+:root {
+  --fs-prompt: clamp(21px, 1.2vmin + 16px, 26px);
+  --fs-prompt-sub: clamp(17px, 0.6vmin + 14px, 20px);
+}
+
+.ex-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'head'
+    'work'
+    'actions';
+  gap: var(--sp-4);
+  width: 100%;
+  min-width: 0;
+  align-items: start;
+}
+
+.ex-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  text-align: center;
+}
+
+.ex-work {
+  grid-area: work;
+  min-width: 0;
+}
+
+.ex-actions {
+  grid-area: actions;
+  min-width: 0;
+}
+
+.ex-prompt {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(var(--fs-prompt) / var(--fit-scale, 1));
+  line-height: 1.25;
+  color: var(--c-ink);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.ex-prompt-sub {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: calc(var(--fs-prompt-sub) / var(--fit-scale, 1));
+  line-height: 1.35;
+  color: var(--c-ink-soft);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .ex-layout {
+    grid-template-columns: minmax(220px, 34%) minmax(0, 1fr);
+    /* The last row is flexible: a tall work column does not stretch the statement's and the answer bar's rows. */
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas:
+      'head work'
+      'actions work'
+      '. work';
+    column-gap: var(--sp-5);
+  }
+
+  .ex-head { text-align: left; }
+
+  /* The answer bar (src/activities/groups/AnswerBar.tsx, role=group «Respuesta») in the narrow left column: its parts
+     one under the other, «Comprobar» first, and no room kept for the companion (it is not on this side). */
+  .ex-actions > [role='group'][aria-label='Respuesta'] {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+  }
+  .ex-actions > [role='group'][aria-label='Respuesta'] > :last-child {
+    order: -1;
+    margin-right: 0;
+    justify-content: flex-start;
+  }
+  .ex-actions > [role='group'][aria-label='Respuesta'] > :first-child { justify-content: flex-start; }
+}

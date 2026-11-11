@@ -9,8 +9,13 @@
    the same sizes); it is drawn smaller with transform: scale from its top centre, and the outer box takes the
    shrunk height. Never below minScreenFit() (taps and text stay comfortable); if even that does not fit, the page
    scrolls as before. Things inside must not rely on position: fixed (use a portal): a transformed ancestor would
-   make it relative to the box. Ink capture divides by the on-screen scale (src/ink/capture.ts). */
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+   make it relative to the box. Ink capture divides by the on-screen scale (src/ink/capture.ts).
+
+   The statement is never shrunk (P3PE-01/06): the inner box carries --fit-scale and the shared statement style
+   (.ex-prompt, src/styles/exercise.css) divides its size by it, so it keeps its size on screen while the rest shrinks.
+   That makes the box a little taller, so the scale settles over a few measures; changes under SCALE_STEP are ignored,
+   which ends the loop (BOTTOM_GAP absorbs the difference). */
+import { useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 
 /** Smallest scale with a finger (tablets): a 56 px button stays ≥ 39 px, 18 px text ≥ 12.6 px. */
 export const MIN_SCREEN_FIT_TOUCH = 0.7
@@ -24,6 +29,13 @@ export function minScreenFit(): number {
 }
 /** Space kept free under the body (CSS px), besides what follows it on the page. */
 const BOTTOM_GAP = 8
+/** A new scale closer than this to the current one is not applied (see the statement above). */
+export const SCALE_STEP = 0.01
+
+/** The scale to apply: the new one, unless it is within SCALE_STEP of the current one. */
+export function settleScale(current: number, next: number): number {
+  return Math.abs(next - current) < SCALE_STEP && next !== 1 ? current : next
+}
 
 /** Height of what the page still lays out under `el`: the bottom padding, border and gap of every ancestor, and the
     in-flow boxes that come after it (absolute and fixed boxes, like the companion buddy, take no room). */
@@ -76,8 +88,11 @@ export function FitToScreen({ children, className, innerClassName, min: minProp 
       const natural = inner.offsetHeight
       const top = outer.getBoundingClientRect().top + window.scrollY
       const available = window.innerHeight - top - trailingSpace(outer) - BOTTOM_GAP
-      const scale = screenFitScale(available, natural, minProp ?? minScreenFit())
-      setFit((f) => (f.scale === scale && f.natural === natural ? f : { scale, natural }))
+      const raw = screenFitScale(available, natural, minProp ?? minScreenFit())
+      setFit((f) => {
+        const scale = settleScale(f.scale, raw)
+        return f.scale === scale && f.natural === natural ? f : { scale, natural }
+      })
     }
     const schedule = () => { if (!frame) frame = requestAnimationFrame(measure) }
     measure()
@@ -112,7 +127,10 @@ export function FitToScreen({ children, className, innerClassName, min: minProp 
       <div
         ref={innerRef}
         className={innerClassName}
-        style={shrunk ? { transform: `scale(${fit.scale})`, transformOrigin: 'top center' } : undefined}
+        data-fit-inner=""
+        style={shrunk
+          ? ({ transform: `scale(${fit.scale})`, transformOrigin: 'top center', '--fit-scale': fit.scale } as CSSProperties)
+          : undefined}
       >
         {children}
       </div>

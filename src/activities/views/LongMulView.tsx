@@ -10,6 +10,7 @@ import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './LongMulView.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar', 'centenas de millar']
 const placeOf = (i: number) => (['u', 'd', 'c', 'um'] as const)[i] ?? null
@@ -129,14 +130,12 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
   }
 
   return (
-    <section className={s.view} aria-label="Multiplicación en columna" data-kind="long-mul" data-status={status}>
-      <p className={s.prompt}>Escribe cada fila de derecha a izquierda y, al final, la suma de las filas.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Multiplicación en columna" data-kind="long-mul" data-status={status} prompt={'Escribe cada fila de derecha a izquierda y, al final, la suma de las filas.'} actions={<AnswerBar flow={flow} onCheck={check} canCheck={total.some((v) => v !== null)} />}>
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
         <div className={s.grid} style={{ gridTemplateColumns: `minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}
         </div>
       </CellGroup>
-      <AnswerBar flow={flow} onCheck={check} canCheck={total.some((v) => v !== null)} />
-    </section>
+    </ExerciseLayout>
   )
 }

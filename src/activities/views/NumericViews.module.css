@@ -152,37 +152,61 @@
   max-width: 220px;
 }
 
+/* The base-ten pieces of the classroom, to one scale (a cubito is 4 px): the unidad a little cube, the decena a bar of
+   ten cubitos, the centena a 10 × 10 plate, the millar a big cube (a plate with depth drawn behind it). */
 .mil {
-  width: 52px;
-  height: 52px;
-  border-radius: 6px;
+  width: 44px;
+  height: 44px;
+  margin: 8px 8px 0 0;
+  border-radius: 2px;
   background-color: var(--pv-um-soft);
   border: 2px solid var(--pv-um);
   background-image: linear-gradient(var(--pv-um) 1px, transparent 1px), linear-gradient(90deg, var(--pv-um) 1px, transparent 1px);
-  background-size: 13px 13px;
+  background-size: 4px 4px;
+  box-shadow: 3px -3px 0 -1px var(--pv-um-soft), 3px -3px 0 0 var(--pv-um), 6px -6px 0 -1px var(--pv-um-soft), 6px -6px 0 0 var(--pv-um), 8px -8px 0 -1px var(--pv-um-soft), 8px -8px 0 0 var(--pv-um);
 }
 
 .cent {
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
-  background: var(--pv-c-soft);
+  width: 44px;
+  height: 44px;
+  border-radius: 2px;
+  background-color: var(--pv-c-soft);
   border: 2px solid var(--pv-c);
+  background-image: linear-gradient(var(--pv-c) 1px, transparent 1px), linear-gradient(90deg, var(--pv-c) 1px, transparent 1px);
+  background-size: 4px 4px;
 }
 
 .dec {
   width: 8px;
-  height: 22px;
+  height: 44px;
   border-radius: 2px;
-  background: var(--pv-d);
+  background-color: var(--pv-d);
+  background-image: linear-gradient(rgba(255, 255, 255, .7) 1px, transparent 1px);
+  background-size: 8px 4.2px;
 }
 
 .uni {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
   background: var(--pv-u);
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, .2);
 }
+
+/* The worked example above the expanded form (guided). */
+.example {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-primary-soft);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.exampleLabel { color: var(--c-primary-strong); font-weight: 800; }
 
 /* Decenas de millar: a pile of ten blocks of mil. */
 .pile {
@@ -248,6 +272,51 @@
   white-space: nowrap;
 }
 
+/* The empty mark: a «?» badge where its number would go. */
+.tickBlank {
+  display: inline-grid;
+  place-items: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--sp-2);
+  border: 3px dashed var(--c-primary);
+  border-radius: var(--r-pill);
+  background: var(--c-primary-soft);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--c-primary-strong);
+}
+
+/* Under the line, one cell per mark (the same columns as the marks): the box sits under the empty one, with an arrow
+   pointing up to it. Nothing here overlaps a label of the line. */
+.lineAnswer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  min-width: 0;
+}
+.lineAnswerCell {
+  display: flex;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.lineAnswerBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.lineArrow {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--c-primary);
+}
+
 .start {
   width: 22px;
   height: 22px;
@@ -299,6 +368,7 @@
   .signBtn { min-width: 72px; min-height: 72px; font-size: 2.2rem; }
   .card { padding: var(--sp-3) var(--sp-4); }
   .line { gap: 2px; padding-left: 0; padding-right: 0; }
+  .lineAnswer { gap: 2px; padding: 0; }
   .tickLabel { font-size: var(--fs-xs); }
   .eq { font-size: var(--fs-lg); }
 }

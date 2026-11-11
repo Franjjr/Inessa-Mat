@@ -7,6 +7,7 @@ import type { ExerciseViewProps, OrderExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function OrderView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'order') return null
@@ -26,8 +27,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
   }
 
   return (
-    <section className={s.view} aria-label="Ordenar números" data-kind={ex.kind} data-direction={ex.direction}>
-      <p className={s.instructions}>{asc ? 'Escribe los números de menor a mayor.' : 'Escribe los números de mayor a menor.'}</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Ordenar números" data-kind={ex.kind} data-direction={ex.direction} prompt={asc ? 'Escribe los números de menor a mayor.' : 'Escribe los números de mayor a menor.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={cells.every((c) => c !== null)} />}>
       <div className={s.row} aria-label="Números para ordenar">
         {ex.values.map((v) => (
           <span key={v} className={s.card}><span className={s.cardNumber}>{fmt(v)}</span></span>
@@ -51,7 +51,6 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
           </span>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={cells.every((c) => c !== null)} />
-    </section>
+    </ExerciseLayout>
   )
 }

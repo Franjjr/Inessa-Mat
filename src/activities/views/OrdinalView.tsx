@@ -9,6 +9,7 @@ import { ordinalPrompt } from '@/engine'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './OrdinalView.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function OrdinalView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'ordinal') return null
@@ -29,8 +30,7 @@ function OrdinalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Ordina
   const choose = (i: number) => { if (!flow.result?.correct) setPicked(i) }
 
   return (
-    <section className={s.view} aria-label="Ordinales" data-kind={ex.kind} data-mode={ex.mode} data-status={status}>
-      <p className={s.prompt}>{ordinalPrompt(ex)}</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Ordinales" data-kind={ex.kind} data-mode={ex.mode} data-status={status} prompt={ordinalPrompt(ex)} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       {ex.mode === 'row' ? (
         <div className={s.row} role="group" aria-label="Fila">
           <span className={s.exit} aria-hidden="true">Salida →</span>
@@ -62,7 +62,6 @@ function OrdinalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Ordina
           ))}
         </div>
       )}
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

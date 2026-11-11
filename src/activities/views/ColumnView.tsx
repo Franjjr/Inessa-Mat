@@ -13,6 +13,7 @@ import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import s from './ColumnView.module.css'
 
 type ColEx = ColumnAddExercise | ColumnSubExercise | ColumnMulExercise
@@ -243,15 +244,19 @@ function ColumnRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     : null
 
   return (
-    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Operación en columna">
-      <p className={s.prompt}>{host.t(prompt)}</p>
+    <ExerciseLayout
+      className={compact ? s.compact : undefined}
+      workClassName={s.view}
+      aria-label="Operación en columna"
+      prompt={host.t(prompt)}
+      actions={<AnswerBar flow={flow} onCheck={check} canCheck={res.some((v) => v !== null)} />}
+    >
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
         <div className={s.grid} style={{ gridTemplateColumns: `minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}
         </div>
       </CellGroup>
       {magic && <p className={s.magic}>{magic}</p>}
-      <AnswerBar flow={flow} onCheck={check} canCheck={res.some((v) => v !== null)} />
-    </section>
+    </ExerciseLayout>
   )
 }

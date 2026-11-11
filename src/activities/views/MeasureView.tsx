@@ -17,6 +17,7 @@ import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
 import m from './MoneyViews.module.css'
 import r from './MeasureView.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 type MeasureEx = MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
 
@@ -54,8 +55,7 @@ function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) 
   const [picked, setPicked] = useState<string | null>(null)
   const locked = !!flow.result?.correct
   return (
-    <>
-      <p className={s.instructions}>¿Qué unidad usarías para medir {DIMENSION_NAME[ex.dimension]} de {ex.object}?</p>
+    <ExerciseLayout workClassName={s.view} prompt={<>¿Qué unidad usarías para medir {DIMENSION_NAME[ex.dimension]} de {ex.object}?</>} actions={<AnswerBar flow={flow} onCheck={() => picked && celebrateIfRight(flow, { type: 'option', value: picked })} canCheck={picked !== null} />}>
       <div className={m.stage}>
         <span className={r.objectEmoji} aria-hidden>{ex.emoji}</span>
         <span className={r.objectName}>{ex.object}</span>
@@ -73,8 +73,7 @@ function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) 
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={() => picked && celebrateIfRight(flow, { type: 'option', value: picked })} canCheck={picked !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -85,8 +84,7 @@ function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFl
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
-    <>
-      <p className={s.instructions}>{ex.toBig ? 'Pasa a la unidad grande.' : 'Pasa a la unidad pequeña.'}</p>
+    <ExerciseLayout workClassName={s.view} prompt={ex.toBig ? 'Pasa a la unidad grande.' : 'Pasa a la unidad pequeña.'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={r.equation}>
         <span className={r.given}>{ex.given.charAt(0).toUpperCase() + ex.given.slice(1)}</span>
         {/* The unit goes before the box: after it would sit beside the pad's own ✓ button. */}
@@ -103,8 +101,7 @@ function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFl
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -132,12 +129,12 @@ function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
-    <>
-      <p className={s.instructions}>
-        {ex.start === 0
-          ? 'Mira dónde acaba el objeto en la regla. ¿Cuántos centímetros mide?'
-          : `El objeto empieza en ${ex.start}. Mira dónde acaba. ¿Cuántos centímetros mide?`}
-      </p>
+    <ExerciseLayout
+      workClassName={s.view}
+      prompt="¿Cuántos centímetros mide?"
+      sub={ex.start === 0 ? 'Mira dónde acaba el objeto en la regla.' : `El objeto empieza en ${ex.start}. Mira dónde acaba.`}
+      actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}
+    >
       <Ruler max={ex.max} start={ex.start} end={ex.end} />
       <div className={m.row}>
         <span className={r.unit}>En cm:</span>
@@ -153,8 +150,7 @@ function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -167,8 +163,7 @@ function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
-    <>
-      <p className={m.storyText}>{text}</p>
+    <ExerciseLayout workClassName={s.view} prompt={text} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={m.row}>
         <span className={r.unit}>En {ex.unit}:</span>
         <NumberInput
@@ -183,8 +178,7 @@ function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -194,8 +188,7 @@ function EstimateRound({ ex, flow }: { ex: MeasureEstimateExercise; flow: Answer
   const [ok, setOk] = useState<boolean | null>(null)
   const locked = !!flow.result?.correct
   return (
-    <>
-      <p className={s.instructions}>¿Es razonable lo que dice?</p>
+    <ExerciseLayout workClassName={s.view} prompt={'¿Es razonable lo que dice?'} actions={<AnswerBar flow={flow} onCheck={() => ok !== null && celebrateIfRight(flow, { type: 'verdict', ok, value: null })} canCheck={ok !== null} />}>
       <div className={m.stage}>
         <span className={r.objectEmoji} aria-hidden>{ex.emoji}</span>
         <span className={r.claim}>{ex.claim}</span>
@@ -208,7 +201,6 @@ function EstimateRound({ ex, flow }: { ex: MeasureEstimateExercise; flow: Answer
           No, no es razonable
         </button>
       </div>
-      <AnswerBar flow={flow} onCheck={() => ok !== null && celebrateIfRight(flow, { type: 'verdict', ok, value: null })} canCheck={ok !== null} />
-    </>
+    </ExerciseLayout>
   )
 }

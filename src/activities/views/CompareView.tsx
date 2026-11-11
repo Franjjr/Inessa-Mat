@@ -7,6 +7,7 @@ import type { CompareExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 type Sign = '<' | '>' | '='
 
@@ -33,8 +34,7 @@ function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Compar
   }
 
   return (
-    <section className={s.view} aria-label="Comparar números" data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>¿Qué signo va entre los dos números?</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Comparar números" data-kind={ex.kind} data-status={status} prompt={'¿Qué signo va entre los dos números?'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.row}>
         <span className={s.card}><span className={s.cardNumber}>{fmt(ex.left)}</span></span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>
@@ -54,7 +54,6 @@ function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Compar
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

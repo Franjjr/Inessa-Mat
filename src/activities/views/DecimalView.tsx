@@ -13,6 +13,7 @@ import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
 import m from './MoneyViews.module.css'
 import d from './DecimalViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 type Sign = '<' | '>' | '='
 
@@ -58,8 +59,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
     if (c.correct) celebrate('small')
   }
   return (
-    <>
-      <p className={s.instructions}>{INSTRUCTION[ex.mode as 'shade' | 'read' | 'money']}</p>
+    <ExerciseLayout workClassName={s.view} prompt={INSTRUCTION[ex.mode as 'shade' | 'read' | 'money']} actions={<AnswerBar flow={flow} onCheck={() => check(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />}>
       {ex.mode === 'shade' && <Shade ex={ex} />}
       {ex.mode === 'read' && <p className={d.words}>{decimalWords(ex)}</p>}
       {money && (
@@ -80,7 +80,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                 status={status}
                 ariaLabel={money ? 'Euros' : 'Parte entera'}
                 checkButton={false}
-                placeholder={money ? '€' : '0'}
+                placeholder=""
                 autoFocus
               />
               {money && <span className={m.unit}>euros</span>}
@@ -98,7 +98,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                 status={status}
                 ariaLabel={money ? 'Céntimos' : 'Décimas'}
                 checkButton={false}
-                placeholder={money ? '00' : '0'}
+                placeholder=""
               />
               {money && <span className={m.unit}>céntimos</span>}
             </div>
@@ -113,15 +113,14 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                   status={status}
                   ariaLabel="Centésimas"
                   checkButton={false}
-                  placeholder="0"
+                  placeholder=""
                 />
               </div>
             )}
           </div>
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => check(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -154,8 +153,7 @@ function Compare({ ex, flow }: { ex: DecimalExercise; flow: AnswerFlow }) {
     if (c.correct) celebrate('small')
   }
   return (
-    <>
-      <p className={s.instructions}>¿Qué signo va entre los dos números?</p>
+    <ExerciseLayout workClassName={s.view} prompt={'¿Qué signo va entre los dos números?'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.row}>
         <span className={s.card}><span className={s.cardNumber}>{fmtDecimal(ex.value, ex.places)}</span></span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>
@@ -175,7 +173,6 @@ function Compare({ ex, flow }: { ex: DecimalExercise; flow: AnswerFlow }) {
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </>
+    </ExerciseLayout>
   )
 }

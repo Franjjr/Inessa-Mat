@@ -292,10 +292,19 @@
   box-sizing: border-box;
 }
 
+/* The cards the child taps keep the raised sticker look of every button, with the button colour on the edge (P3PE-15);
+   the cards that only show a price (.cardStatic) look like a label: dashed edge, no shadow. */
 .cardButton {
   cursor: pointer;
   touch-action: manipulation;
   min-height: 150px;
+  border-color: var(--c-primary);
+}
+
+.cardStatic {
+  border-style: dashed;
+  box-shadow: none;
+  background: var(--c-surface-2);
 }
 
 .cardButton:focus-visible {

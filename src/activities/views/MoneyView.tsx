@@ -3,7 +3,7 @@
    ¿qué compra cabe?). The tray never shows a total: the child counts.
    Amounts with céntimos are typed in two boxes (euros and céntimos); a whole number of céntimos in one box. */
 import clsx from 'clsx'
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
@@ -18,6 +18,7 @@ import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import { MoneyPiece } from './MoneyPiece'
 import s from './NumericViews.module.css'
 import m from './MoneyViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 /** The pieces in the purse: the coins and the notes up to 50 €. */
 const PURSE = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000]
@@ -69,8 +70,17 @@ function Recognise({ ex, flow }: { ex: MoneyRecogniseExercise; flow: AnswerFlow 
   const [picked, setPicked] = useState<number | null>(null)
   const locked = !!flow.result?.correct
   return (
-    <>
-      <p className={s.instructions}>¿Cuánto vale esta moneda o este billete?</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      prompt="¿Cuánto vale esta moneda o este billete?"
+      actions={(
+        <AnswerBar
+          flow={flow}
+          onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: String(picked) }) }}
+          canCheck={picked !== null}
+        />
+      )}
+    >
       <div className={m.stage}>
         <MoneyPiece value={ex.piece} size="lg" label />
       </div>
@@ -87,12 +97,7 @@ function Recognise({ ex, flow }: { ex: MoneyRecogniseExercise; flow: AnswerFlow 
           </button>
         ))}
       </div>
-      <AnswerBar
-        flow={flow}
-        onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: String(picked) }) }}
-        canCheck={picked !== null}
-      />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -148,8 +153,18 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
   }
 
   return (
-    <>
-      <p className={s.instructions}>Paga justo. Toca las monedas y billetes o arrástralos a la bandeja.</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      prompt="Paga justo."
+      sub="Toca las monedas y billetes o arrástralos a la bandeja."
+      actions={(
+        <AnswerBar
+          flow={flow}
+          onCheck={() => { if (tray.length > 0) submitWith(flow, { type: 'pieces', pieces: tray }) }}
+          canCheck={tray.length > 0}
+        />
+      )}
+    >
       <div className={m.price} aria-label={`Precio: ${euros(ex.price)}`}>
         <span className={m.priceLabel}>Precio</span>
         <span className={m.priceValue}>{euros(ex.price)}</span>
@@ -195,12 +210,7 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
         </div>,
         document.body,
       )}
-      <AnswerBar
-        flow={flow}
-        onCheck={() => { if (tray.length > 0) submitWith(flow, { type: 'pieces', pieces: tray }) }}
-        canCheck={tray.length > 0}
-      />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -209,14 +219,15 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
 function Change({ ex, flow }: { ex: MoneyChangeExercise; flow: AnswerFlow }) {
   const host = useActivityHost()
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
+  // One question only: the story's own («¿Cuánto le devuelven?»), never a second one in other words (P3PE-15).
+  const amount = useAmountAnswer(flow)
   return (
-    <>
+    <ExerciseLayout workClassName={s.view} prompt={text} actions={amount.bar}>
       <div className={m.story}>
         <div className={m.storyNote}><MoneyPiece value={ex.paid} size="md" /></div>
-        <p className={m.storyText}>{text}</p>
       </div>
-      <AmountAnswer flow={flow} ask="¿Cuánto cambio te dan?" />
-    </>
+      {amount.fields}
+    </ExerciseLayout>
   )
 }
 
@@ -225,18 +236,13 @@ function Change({ ex, flow }: { ex: MoneyChangeExercise; flow: AnswerFlow }) {
 function Add({ ex, flow }: { ex: MoneyAddExercise; flow: AnswerFlow }) {
   const host = useActivityHost()
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
+  // The statement already asks the question: no second one under it.
+  const amount = useAmountAnswer(flow, ex.whole)
   return (
-    <>
-      {ex.story ? (
-        <p className={m.storyText}>{text}</p>
-      ) : (
-        <>
-          <p className={s.instructions}>{text}</p>
-          <PriceCards items={ex.items} />
-        </>
-      )}
-      <AmountAnswer flow={flow} ask="¿Cuánto cuestan todos?" whole={ex.whole} />
-    </>
+    <ExerciseLayout workClassName={s.view} prompt={text} actions={amount.bar}>
+      {!ex.story && <PriceCards items={ex.items} />}
+      {amount.fields}
+    </ExerciseLayout>
   )
 }
 
@@ -244,7 +250,7 @@ function PriceCards({ items }: { items: MoneyItem[] }) {
   return (
     <div className={m.cards} role="list" aria-label="Precios">
       {items.map((it) => (
-        <div key={it.name} className={m.card} role="listitem">
+        <div key={it.name} className={clsx(m.card, m.cardStatic)} role="listitem">
           <span className={m.cardEmoji} aria-hidden>{it.emoji}</span>
           <span className={m.cardName}>{it.name}</span>
           <span className={m.tag}>{euros(it.price)}</span>
@@ -260,8 +266,17 @@ function Compare({ ex, flow }: { ex: MoneyCompareExercise; flow: AnswerFlow }) {
   const [picked, setPicked] = useState<string | null>(null)
   const locked = !!flow.result?.correct
   return (
-    <>
-      <p className={s.instructions}>{ex.question === 'more' ? '¿Qué cuesta más?' : '¿Qué cuesta menos?'}</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      prompt={ex.question === 'more' ? '¿Qué cuesta más? Tócalo.' : '¿Qué cuesta menos? Tócalo.'}
+      actions={(
+        <AnswerBar
+          flow={flow}
+          onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: picked }) }}
+          canCheck={picked !== null}
+        />
+      )}
+    >
       <div className={m.cards} role="group" aria-label="Elige">
         {ex.items.map((it) => (
           <button
@@ -277,12 +292,7 @@ function Compare({ ex, flow }: { ex: MoneyCompareExercise; flow: AnswerFlow }) {
           </button>
         ))}
       </div>
-      <AnswerBar
-        flow={flow}
-        onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: picked }) }}
-        canCheck={picked !== null}
-      />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -292,8 +302,7 @@ function ConvertToCents({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
   const [value, setValue] = useState<number | null>(null)
   const submit = (v: number | null) => { if (v !== null) submitWith(flow, { type: 'number', value: v }) }
   return (
-    <>
-      <p className={s.instructions}>Un euro tiene cien céntimos. Escribe cuántos céntimos son.</p>
+    <ExerciseLayout workClassName={s.view} prompt={'Un euro tiene cien céntimos. Escribe cuántos céntimos son.'} actions={<AnswerBar flow={flow} onCheck={() => submit(value)} canCheck={value !== null} />}>
       <div className={m.stage}>
         <span className={m.bigAmount}>{euros(ex.amount)}</span>
         <span className={m.equals}>son</span>
@@ -312,21 +321,20 @@ function ConvertToCents({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFl
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit(value)} canCheck={value !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
 function ConvertToEuros({ ex, flow }: { ex: MoneyConvertExercise; flow: AnswerFlow }) {
+  const amount = useAmountAnswer(flow)
   return (
-    <>
-      <p className={s.instructions}>Cada cien céntimos son un euro. ¿Cuántos euros y céntimos son?</p>
+    <ExerciseLayout workClassName={s.view} prompt="¿Cuántos euros y céntimos son?" sub="Cada cien céntimos son un euro." actions={amount.bar}>
       <div className={m.stage}>
         <span className={m.bigAmount}>{ex.amount} céntimos</span>
         <span className={m.equals}>son</span>
       </div>
-      <AmountAnswer flow={flow} ask="" />
-    </>
+      {amount.fields}
+    </ExerciseLayout>
   )
 }
 
@@ -336,9 +344,23 @@ function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
   const [picked, setPicked] = useState<string | null>(null)
   const locked = !!flow.result?.correct
   const ask = ex.ask
+  const amount = useAmountAnswer(flow)
+  const choose = ask === 'enough' || ask === 'afford'
   return (
-    <>
-      <p className={s.instructions}>{ex.text}</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      prompt={ex.question}
+      sub={ex.text}
+      actions={choose
+        ? (
+          <AnswerBar
+            flow={flow}
+            onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: picked }) }}
+            canCheck={picked !== null}
+          />
+        )
+        : amount.bar}
+    >
       <div className={m.stage}>
         <span className={m.bigAmount}>{euros(ex.budget)}</span>
       </div>
@@ -361,9 +383,8 @@ function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
       ) : (
         <PriceCards items={ex.items} />
       )}
-      {ask === 'enough' || ask === 'afford' ? (
+      {choose ? (
         <>
-          <p className={s.instructions}>{ex.question}</p>
           {ask === 'enough' && (
             <div className={m.choices} role="group" aria-label="Respuesta">
               {['Sí', 'No'].map((v) => (
@@ -379,36 +400,37 @@ function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
               ))}
             </div>
           )}
-          <AnswerBar
-            flow={flow}
-            onCheck={() => { if (picked !== null) submitWith(flow, { type: 'option', value: picked }) }}
-            canCheck={picked !== null}
-          />
         </>
       ) : (
-        <AmountAnswer flow={flow} ask={ex.question} />
+        amount.fields
       )}
-    </>
+    </ExerciseLayout>
   )
 }
 
 // ---------------------------------------------------------------- the euros and céntimos boxes
 
 interface Amount { e: number | null; c: number | null }
-const amountReady = (a: Amount) => a.e !== null && a.c !== null
+/** An amount can be checked once either box is written: an empty box is 0 (2 € is «2» and nothing in the céntimos,
+    50 céntimos is nothing in the euros and «50»), as the child writes it on paper (P3PE-15). */
+export const amountReady = (a: Amount) => a.e !== null || a.c !== null
+/** The amount sent to the check: an empty box counts as 0. */
+export const amountValues = (a: Amount): [number, number] => [a.e ?? 0, a.c ?? 0]
 
-/** Two writing pads (euros, a decimal comma, céntimos) and the check. Both boxes are needed. `whole`: only the euros. */
-function AmountAnswer({ flow, ask, whole = false }: { flow: AnswerFlow; ask: string; whole?: boolean }) {
+/** Two writing pads (euros, a decimal comma, céntimos) and the answer bar, for the view's own layout (the boxes in the
+    work, the bar beside the statement). `whole`: only the euros. */
+function useAmountAnswer(flow: AnswerFlow, whole = false): { fields: ReactNode; bar: ReactNode } {
   const [amount, setAmount] = useState<Amount>({ e: null, c: whole ? 0 : null })
   const check = (a: Amount) => {
-    if (amountReady(a)) submitWith(flow, { type: 'numbers', values: [a.e, a.c] })
+    if (amountReady(a)) submitWith(flow, { type: 'numbers', values: amountValues(a) })
   }
   const status = statusOf(flow)
+  const bar = <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount)} />
   if (whole) {
-    return (
-      <>
+    return {
+      bar,
+      fields: (
         <div className={m.amountWrap}>
-          {ask && <p className={m.ask}>{ask}</p>}
           <div className={m.amountRow}>
             <div className={m.amountCol}>
               <NumberInput
@@ -426,14 +448,13 @@ function AmountAnswer({ flow, ask, whole = false }: { flow: AnswerFlow; ask: str
             </div>
           </div>
         </div>
-        <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount)} />
-      </>
-    )
+      ),
+    }
   }
-  return (
-    <>
+  return {
+    bar,
+    fields: (
       <div className={m.amountWrap}>
-        {ask && <p className={m.ask}>{ask}</p>}
         <div className={m.amountRow} role="group" aria-label="Cantidad en euros y céntimos">
           {/* The comma stays with the euros when a phone puts the céntimos on the next line. */}
           <div className={m.amountLead}>
@@ -470,7 +491,6 @@ function AmountAnswer({ flow, ask, whole = false }: { flow: AnswerFlow; ask: str
           </div>
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount)} />
-    </>
-  )
+    ),
+  }
 }

@@ -8,6 +8,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function FigureNumberView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'perimeter' && exercise.kind !== 'shape-count' && exercise.kind !== 'area') return null
@@ -19,7 +20,6 @@ function NumberRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Perimet
   const [value, setValue] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const isPerimeter = ex.kind === 'perimeter'
-  const story = isPerimeter && ex.mode === 'story'
 
   const submit = (v: number | null = value) => {
     if (v === null) return
@@ -34,8 +34,7 @@ function NumberRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Perimet
       : (ex.ask === 'sides' ? '¿Cuántos lados tiene la figura?' : '¿Cuántas esquinas tiene la figura?')
 
   return (
-    <section className={s.view} aria-label={isPerimeter ? 'Perímetro' : isArea ? 'Área' : 'Contar lados'} data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt} style={story ? { fontSize: 'var(--fs-lg)', textAlign: 'left' } : undefined}>{prompt}</p>
+    <ExerciseLayout workClassName={s.view} aria-label={isPerimeter ? 'Perímetro' : isArea ? 'Área' : 'Contar lados'} data-kind={ex.kind} data-status={status} prompt={prompt} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={s.figureBox}>
         <FigureSvg
           figure={ex.kind === 'area' ? ex.figure : { ...ex.figure, labels: isPerimeter && ex.mode === 'drawing' ? ex.figure.labels : undefined }}
@@ -58,7 +57,6 @@ function NumberRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Perimet
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }
