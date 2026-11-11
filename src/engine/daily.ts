@@ -254,7 +254,7 @@ function interleavedPick(skills: SkillKey[], n: number, exclude: Set<SkillKey>):
 }
 
 /** The final answer of an exercise as the child would write it, for the worked example (null when it has no single one). */
-function workedAnswer(ex: Exercise): string | null {
+export function workedAnswer(ex: Exercise): string | null {
   switch (ex.kind) {
     case 'fact-mul': case 'fact-div': case 'missing-factor': case 'column-add': case 'column-sub': case 'column-mul':
     case 'long-mul': case 'round': case 'mental': case 'groups': case 'array': case 'number-line':

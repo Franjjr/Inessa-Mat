@@ -175,7 +175,10 @@ const restarCeros = clase({
     show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
     show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. Cuando no alcanza, hay que pedir prestado arriba. ¡Ojo con el cero!', 'ladybug'),
   ],
-  ejemplo: w4Zero.steps.slice(0, 4),
+  ejemplo: [
+    ...w4Zero.steps.slice(0, 4),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Con cuatro cifras se hace igual. 6 003 − 2 178: el 3 no puede con el 8, y las dos vecinas son ceros. Se pide al 6: el 6 pasa a 5 y los dos ceros se vuelven 9. ¡6 003 − 2 178 = 3 825!'),
+  ],
   guiada: [
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Te toca! Cuidado con la trampa del cero.', { skills: ['sub:3d:z'] }),
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Otra! Si la vecina es un cero, mira más lejos.', { skills: ['sub:3d:z'] }),
