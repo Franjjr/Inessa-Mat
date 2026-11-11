@@ -43,13 +43,13 @@ test.describe('on a phone', () => {
     expect(scrollsSideways).toBe(false)
 
     // The whole part, then the tenths and the hundredths of 3,45 + 1,80 = 5,25: a tap on each box moves the keypad.
-    await page.getByRole('textbox', { name: 'Parte entera del resultado' }).click()
+    await page.getByRole('textbox', { name: 'unidades del resultado' }).click()
     await pad.getByRole('button', { name: '5', exact: true }).click()
-    await page.getByRole('textbox', { name: 'Décimas del resultado' }).click()
+    await page.getByRole('textbox', { name: 'décimas del resultado' }).click()
     await pad.getByRole('button', { name: '2', exact: true }).click()
-    await page.getByRole('textbox', { name: 'Centésimas del resultado' }).click()
+    await page.getByRole('textbox', { name: 'centésimas del resultado' }).click()
     await pad.getByRole('button', { name: '5', exact: true }).click()
-    await expect(page.getByRole('textbox', { name: 'Décimas del resultado' })).toHaveText(/2/)
+    await expect(page.getByRole('textbox', { name: 'décimas del resultado' })).toHaveText(/2/)
 
     // The keypad's check grades the column.
     await pad.getByRole('button', { name: 'Comprobar', exact: true }).click()
