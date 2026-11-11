@@ -17,7 +17,7 @@ const NUM = String.raw`\d{1,3}(?:[ \u00a0\u202f]\d{3})+(?!\d)|\d+(?:,\d+)?`
     right after a number is a label: «28: 14 + 14»), «/» never (fractions). */
 const OP = String.raw`\s*[+−×÷]\s*|\s+-\s+|\s+:\s+`
 const TERM = String.raw`(?:${NUM})(?:(?:${OP})(?:${NUM}))*`
-const EQUALITY = new RegExp(String.raw`(?<![\p{L}\d.,/:¼½¾])${TERM}(?:\s*=\s*${TERM})+(?![\d/,]|\s*[×+÷])`, 'gu')
+const EQUALITY = new RegExp(String.raw`(?<![\p{L}\d.,/:¼½¾])${TERM}(?:\s*=\s*${TERM})+(?!\d|[/,]\d|\s*[×+÷])`, 'gu')
 
 const toNumber = (s: string) => Number(s.replace(/[ \u00a0\u202f]/g, '').replace(',', '.'))
 
@@ -43,14 +43,28 @@ function evaluate(term: string): number {
   return sums.slice(1).reduce((acc, x, i) => (signs[i] === '+' ? acc + x : acc - x), sums[0])
 }
 
-/** «El doble de 15 = 10 + 10 + 5 + 5», «¼ de 20 = 20 ÷ 4»: the left side is a phrase, not the number alone. A division
-    followed by «y sobra(n)» or «resto» states the whole quotient (17 ÷ 5 = 3 y sobran 2). */
-function qualified(text: string, start: number, end: number, sides: string[]): boolean {
+const HAS_OP = /[+−×÷]|\s-\s|\s:\s/
+
+/** «El doble de 15 = 10 + 10 + 5 + 5», «¼ de 20 = 20 ÷ 4»: after «de» a lone number is the end of a phrase, not the
+    left side. With an operation there («El resultado de 23 × 4 = 93») the equality is still checked. */
+function qualified(text: string, start: number, sides: string[]): boolean {
   const before = text.slice(Math.max(0, start - 12), start)
-  if (/\b(de|del)\s*$/i.test(before)) return true
-  const after = text.slice(end, end + 16)
-  if (sides.some((s) => /÷|\s:\s/.test(s)) && /^\s*(y\s+sobra|,?\s*resto|\s*r\s*\d|\s*\(resto)/i.test(after)) return true
-  return false
+  return /\b(de|del)\s*$/i.test(before) && !HAS_OP.test(sides[0])
+}
+
+/** A division followed by what is left over («17 ÷ 5 = 3 y sobran 2», «= 3, resto 2», «= 3 r 2», «= 3 (resto 2)»):
+    the remainder written, or undefined when there is none. */
+function remainderAfter(text: string, end: number): number | undefined {
+  const m = /^\s*(?:y\s+sobran?|,?\s*resto|r|\(resto)\s*(\d+)/i.exec(text.slice(end, end + 24))
+  return m ? Number(m[1]) : undefined
+}
+
+/** «a ÷ b = q» with remainder r is true when q · b + r = a and r < b. Undefined when the sides are not that shape. */
+function divisionWithRemainder(sides: string[], r: number): boolean | undefined {
+  const m = /^\s*(\d+)\s*(?:÷|\s:\s)\s*(\d+)\s*$/.exec(sides[0])
+  if (sides.length !== 2 || !m || HAS_OP.test(sides[1])) return undefined
+  const [a, b, q] = [Number(m[1]), Number(m[2]), toNumber(sides[1])]
+  return q * b + r === a && r < b
 }
 
 /** The false equalities of a text, as written. */
@@ -58,8 +72,15 @@ export function falseEqualities(text: string): string[] {
   const bad: string[] = []
   for (const m of text.matchAll(EQUALITY)) {
     const sides = m[0].split(/\s*=\s*/)
-    if (sides.every((s) => !/[+−×÷]|\s-\s|\s:\s/.test(s))) continue
-    if (qualified(text, m.index ?? 0, (m.index ?? 0) + m[0].length, sides)) continue
+    if (sides.every((s) => !HAS_OP.test(s))) continue
+    const start = m.index ?? 0
+    if (qualified(text, start, sides)) continue
+    const rest = sides.some((s) => /÷|\s:\s/.test(s)) ? remainderAfter(text, start + m[0].length) : undefined
+    if (rest !== undefined) {
+      // A division with what is left over: checked as q · b + r = a; another shape with a remainder is not judged.
+      if (divisionWithRemainder(sides, rest) === false) bad.push(`${m[0]} y sobran ${rest}`)
+      continue
+    }
     const values = sides.map(evaluate)
     if (values.some((x) => Number.isNaN(x))) continue
     if (values.some((x) => Math.abs(x - values[0]) > 1e-9)) bad.push(m[0])
@@ -77,14 +98,23 @@ const SOURCES = Object.entries({
   .filter(([path]) => !/__tests__|\.test\.|gallery/.test(path))
   .map(([path, text]) => ({ file: path.replace(/^\//, ''), text }))
 
-/** The text a child may read: every string literal, with template holes (`${…}`) cut out. */
-function literals(source: string): { line: number; text: string }[] {
+/** The text a child may read: every string literal, with template holes (`${…}`) cut out. Quotes are read line by line
+    (an apostrophe in a comment spoils one line at most); a template string that spans several lines is read whole,
+    its line breaks as spaces, so an equality cut across two lines is still checked. */
+export function literals(source: string): { line: number; text: string }[] {
   const out: { line: number; text: string }[] = []
+  const push = (line: number, body: string) => {
+    for (const piece of body.split(/\$\{[^}]*\}/)) out.push({ line, text: piece })
+  }
   source.split('\n').forEach((l, i) => {
-    for (const m of l.matchAll(/(['"`])((?:\\.|(?!\1).)*)\1/g)) {
-      for (const piece of m[2].split(/\$\{[^}]*\}/)) out.push({ line: i + 1, text: piece })
-    }
+    for (const m of l.matchAll(/(['"`])((?:\\.|(?!\1).)*)\1/g)) push(i + 1, m[2])
   })
+  // Comments out (block and whole-line ones), keeping the line count, before looking for multi-line templates.
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' ')).replace(/^\s*\/\/.*$/gm, '')
+  for (const m of code.matchAll(/`((?:\\.|\$\{[^}]*\}|[^`\\])*)`/g)) {
+    if (!m[1].includes('\n')) continue
+    push(code.slice(0, m.index).split('\n').length, m[1].replace(/\s*\n\s*/g, ' '))
+  }
   return out
 }
 
@@ -150,10 +180,24 @@ describe('el detector de igualdades', () => {
     expect(falseEqualities(fixture)).toEqual(['7 × 8 = 54'])
     expect(falseEqualities('Primero 23 × 4 = 92, después 23 × 10 = 230 y 92 + 230 = 323.')).toEqual(['92 + 230 = 323'])
   })
+  it('tras «de» solo se salta un número solo: «El resultado de 23 × 4 = 93» se marca', () => {
+    expect(falseEqualities('El resultado de 23 × 4 = 93.')).toEqual(['23 × 4 = 93'])
+    expect(falseEqualities('El resultado de 23 × 4 = 92.')).toEqual([])
+  })
+  it('las divisiones con resto se comprueban: cociente por divisor más resto es el dividendo', () => {
+    expect(falseEqualities('17 ÷ 5 = 3 y sobran 3')).toEqual(['17 ÷ 5 = 3 y sobran 3'])
+    expect(falseEqualities('17 ÷ 5 = 2 y sobran 7')).toEqual(['17 ÷ 5 = 2 y sobran 7'])
+    expect(falseEqualities('29 : 4 = 7, resto 1')).toEqual([])
+  })
+  it('lee las plantillas de varias líneas: una igualdad partida en dos líneas se comprueba', () => {
+    const source = 'const t = `Primero 23 × 4 =\n    93, y ya está.`\n// it\'s a comment\nconst u = \'7 × 8 = 56\'\n'
+    const bad = literals(source).flatMap(({ text }) => falseEqualities(text))
+    expect(bad).toEqual(['23 × 4 = 93'])
+  })
   it('no confunde etiquetas, horas, fracciones, separadores ni divisiones con resto', () => {
     for (const ok of [
       '28: 14 + 14 = 28', 'Son las 7:30 = siete y media', '1/2 = 2/4', '12 + 8 = 20 · 20 − 5 = 15', 'El doble de 15 = 10 + 10 + 5 + 5',
-      '¼ de 20 = 20 ÷ 4', '17 ÷ 5 = 3 y sobran 2', 'Unidades: 5 × 8 = 40. Escribe 0 y me llevo 4.', '11 − 4 = ?',
+      '¼ de 20 = 20 ÷ 4', '17 ÷ 5 = 3 y sobran 2', '17 : 5 = 3, resto 2', '29 ÷ 4 = 7 (resto 1)', 'Unidades: 5 × 8 = 40. Escribe 0 y me llevo 4.', '11 − 4 = ?',
     ]) expect(falseEqualities(ok), ok).toEqual([])
   })
 })
