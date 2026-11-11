@@ -126,6 +126,33 @@ describe('GuardianChallenge', () => {
     expect(onFail).toHaveBeenCalledTimes(1)
   })
 
+  it('after the spell is lost, a retry asks only the spell again (the rounds were passed)', async () => {
+    const user = userEvent.setup()
+    const { onPass, onFail } = renderChallenge()
+    const rounds = owl().rounds.reduce((n, r) => n + r.count, 0)
+    hooks.decide = (index) => index < rounds
+    await user.click(screen.getByRole('button', { name: '¡Acepto el desafío!' }))
+    for (let i = 0; i < rounds; i++) {
+      await user.click(await screen.findByRole('button', { name: 'Responder' }))
+      await user.click(await screen.findByRole('button', { name: i + 1 < rounds ? 'Siguiente' : 'Ver el hechizo' }))
+    }
+    // The spell: wrong twice.
+    hooks.decide = () => false
+    await user.click(await screen.findByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: 'Probar otra vez' }))
+    await user.click(await screen.findByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: 'Seguir' }))
+    expect(onFail).toHaveBeenCalledTimes(1)
+
+    hooks.decide = () => true
+    await user.click(await screen.findByRole('button', { name: 'Intentarlo otra vez' }))
+    // Straight to the spell, not to the first round.
+    expect(await screen.findByText('El Hechizo del Cristal')).toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: '¡Cristal conseguido!' }))
+    expect(onPass).toHaveBeenCalledTimes(1)
+  })
+
   it('leaves through the exit button', async () => {
     const user = userEvent.setup()
     const { onExit } = renderChallenge()

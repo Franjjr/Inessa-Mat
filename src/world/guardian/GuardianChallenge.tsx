@@ -31,6 +31,8 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
   /** Items answered wrong in this attempt, asked again in the review after a loss. */
   const [missed, setMissed] = useState<Exercise[]>([])
   const [reviewIndex, setReviewIndex] = useState(0)
+  /** The rounds were passed and only the spell was lost: the retry asks the spell again, not the rounds. */
+  const [spellLost, setSpellLost] = useState(false)
 
   useEffect(() => {
     music.play('guardian')
@@ -41,7 +43,20 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
   const character = guardianCharacter(guardian.character)
   const color = worldHex(world.id)
 
+  /** A retry: the whole challenge again, or only the spell when that is all that was lost. */
+  const retry = () => {
+    if (spellLost && spell) {
+      setSpellTry(0)
+      setLostNote('')
+      setSpellLost(false)
+      setStage('spell')
+      return
+    }
+    start()
+  }
+
   const start = () => {
+    setSpellLost(false)
     setExercises(buildRounds(guardian, host.rng))
     setIndex(0)
     setCorrect(0)
@@ -96,6 +111,7 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
       return
     }
     if (spell) setMissed((m) => [...m, spell])
+    setSpellLost(true)
     fail(guardian.retryText, spellCorrect, of)
   }
 
@@ -240,7 +256,7 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
                 {host.t('Repasar lo que fallaste')}
               </Button>
             )}
-            <Button size="lg" variant="magic" onClick={start}>{host.t('Intentarlo otra vez')}</Button>
+            <Button size="lg" variant="magic" onClick={retry}>{host.t('Intentarlo otra vez')}</Button>
             <Button size="lg" variant="secondary" onClick={onExit}>{host.t('Volver al mapa')}</Button>
           </div>
         </div>
