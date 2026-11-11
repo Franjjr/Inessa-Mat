@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { NodeProgress, ProgressState, WorldProgress } from '@/types'
-import { lww, mergeProgress, mergeReward, normalizeProgress } from '../merge'
+import { lww, mergeMastery, mergeProgress, mergeReward, normalizeProgress } from '../merge'
 import type { RewardRow } from '../types'
 import { deepEqual } from '../util'
 import { rng } from './helpers'
@@ -277,5 +277,37 @@ describe('rewards (sync-4)', () => {
     const b = reward({ title: 'Otra', updatedAt: '2026-03-02T10:00:00.000Z' })
     expect(mergeReward(a, b)).toEqual(mergeReward(b, a))
     expect(mergeReward(mergeReward(a, b), b)).toEqual(mergeReward(a, b))
+  })
+})
+
+describe('mergeMastery (a pending local change against a server copy)', () => {
+  const base = { skill: 'mul:6x7', box: 2 as const, attempts: 6, correct: 5, streak: 1, avgMs: 3000, lastSeenAt: '2026-03-02T10:00:00.000Z', dueAt: null, updatedAt: '2026-03-02T10:00:00.000Z' }
+  const server = { ...base, box: 3 as const, attempts: 5, correct: 4, streak: 2, avgMs: 2500, lastSeenAt: '2026-03-03T10:00:00.000Z', updatedAt: '2026-03-03T10:00:00.000Z' }
+
+  it('keeps the larger counts and the later dates, and takes the rest from the side with more evidence', () => {
+    const m = mergeMastery(base, server)
+    expect(m.attempts).toBe(6)
+    expect(m.correct).toBe(5)
+    expect(m.lastSeenAt).toBe('2026-03-03T10:00:00.000Z')
+    expect(m.updatedAt).toBe('2026-03-03T10:00:00.000Z') // accepted by the server's last-writer-wins guard
+    expect(m.box).toBe(2)
+    expect(m.streak).toBe(1)
+  })
+
+  it('is commutative and idempotent', () => {
+    expect(mergeMastery(base, server)).toEqual(mergeMastery(server, base))
+    expect(mergeMastery(mergeMastery(base, server), server)).toEqual(mergeMastery(base, server))
+  })
+
+  it('on equal evidence, the newer updatedAt decides the rest and the result does not depend on the order', () => {
+    const tie = { ...server, attempts: 6, correct: 6, box: 1 as const }
+    expect(mergeMastery(base, tie)).toEqual(mergeMastery(tie, base))
+    expect(mergeMastery(base, tie).box).toBe(1)
+  })
+
+  it('never lowers a count, whichever side comes first', () => {
+    const m = mergeMastery(server, base)
+    expect(m.attempts).toBe(6)
+    expect(m.correct).toBe(5)
   })
 })

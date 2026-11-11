@@ -269,6 +269,46 @@ describe('pull', () => {
     expect((await db.children.get(c.id))?.nickname).toBe('Ine')
   })
 
+  it('mastery: a local change still waiting to be pushed survives a newer server copy and is merged, not dropped', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await runSync({ pull: false }) // the child is on the server
+    const t1 = '2026-01-03T10:00:00.000Z'
+    // Local: 6 answers (one more than the server knows about), still waiting to be pushed.
+    await saveMastery(c.id, [{ skill: 'mul:6x7', box: 2, attempts: 6, correct: 5, streak: 1, avgMs: null, lastSeenAt: t1, dueAt: null, updatedAt: t1 }])
+    // The push is backing off, so the local change is still pending while the pull runs.
+    await db.outbox.where('table').equals('mastery').modify({ nextTryAt: Date.now() + 3_600_000 })
+    // Another device wrote a newer row with fewer answers.
+    fake.rows('skill_mastery').push({
+      child_id: c.id, skill: 'mul:6x7',
+      data: { skill: 'mul:6x7', box: 3, attempts: 5, correct: 4, streak: 2, avgMs: 2500, lastSeenAt: '2026-01-04T10:00:00.000Z', dueAt: null, updatedAt: '2026-01-04T10:00:00.000Z' },
+      updated_at: '2026-01-04T10:00:00+00:00', synced_at: fake.serverNow(),
+    })
+    await runSync({ pull: true })
+    const local = await db.mastery.get([c.id, 'mul:6x7'])
+    expect(local?.attempts).toBe(6) // the larger count survives
+    expect(local?.correct).toBe(5)
+    expect(local?.box).toBe(2) // the side with more evidence decides the box
+    expect(local?.lastSeenAt).toBe('2026-01-04T10:00:00.000Z')
+    expect(await db.outbox.where('table').equals('mastery').count()).toBe(1) // still waiting to be pushed
+    // Once the push runs, the merged row reaches the server and the entry is gone.
+    await db.outbox.where('table').equals('mastery').modify({ nextTryAt: 0 })
+    await runSync({ pull: false })
+    expect(await db.outbox.where('table').equals('mastery').count()).toBe(0)
+    expect((fake.rows('skill_mastery')[0].data as Row).attempts).toBe(6)
+  })
+
+  it('mastery: a server copy identical to the pending change clears the outbox entry', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await runSync({ pull: false })
+    const t = '2026-01-03T10:00:00.000Z'
+    await saveMastery(c.id, [{ skill: 'mul:6x7', box: 2, attempts: 2, correct: 2, streak: 2, avgMs: 3000, lastSeenAt: t, dueAt: null, updatedAt: t }])
+    await db.outbox.where('table').equals('mastery').modify({ nextTryAt: Date.now() + 3_600_000 })
+    const local = await db.mastery.get([c.id, 'mul:6x7'])
+    fake.rows('skill_mastery').push({ child_id: c.id, skill: 'mul:6x7', data: { ...local }, updated_at: t, synced_at: fake.serverNow() })
+    await runSync({ pull: true })
+    expect(await db.outbox.where('table').equals('mastery').count()).toBe(0)
+  })
+
   it('pages through large histories and stores a cursor', async () => {
     const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
     await runSync({ pull: true })
