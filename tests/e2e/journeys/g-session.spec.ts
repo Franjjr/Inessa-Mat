@@ -1,7 +1,7 @@
 /* Mi sesión de hoy and the prueba inicial: a short walk through the real screens with the demo child Lía.
    Only visible Spanish text and roles are used. */
 import { expect, test } from '@playwright/test'
-import { CHILD_NAME, seedDemo, settle } from '../helpers'
+import { CHILD_NAME, devEditProgress, seedDemo, settle } from '../helpers'
 
 test.describe('Mi sesión de hoy', () => {
   // The home's «Hoy» opens today's class first (every topic has one, see n-hoy); the session is its own screen.
@@ -17,6 +17,8 @@ test.describe('Mi sesión de hoy', () => {
 
   test('the new topic (numbers up to 9 999) shows its worked example, then blocks the child counts and writes', async ({ page }) => {
     await seedDemo(page)
+    // «Lo nuevo» teaches the stage of the world the map is on: with the map not started, descomponer (w1).
+    await devEditProgress(page, { kind: 'mapNotStarted' })
     await page.goto('/play/sesion')
     await expect(page.getByText(/Hoy aprendemos/)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
@@ -187,6 +189,8 @@ test.describe('a short landscape tablet (Android with its bars)', () => {
 
   test('the page scrolls down to «Siguiente» when the exercise is taller than the screen', async ({ page }) => {
     await seedDemo(page)
+    // The blocks of descomponer (w1) are the tall exercise: the map not started keeps «Lo nuevo» on it.
+    await devEditProgress(page, { kind: 'mapNotStarted' })
     await page.goto('/play/sesion')
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const example = page.getByRole('button', { name: /Entendido/ })

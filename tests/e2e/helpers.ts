@@ -100,6 +100,8 @@ export async function tapStoryUntilButton(page: Page, name: string | RegExp, max
 export type DevProgressEdit =
   | { kind: 'stars'; amount: number }
   | { kind: 'worldDoneBeforeGuardian'; worldId: string }
+  /** The map as a new child has it (only w1 open, nothing played): «Hoy» then teaches the stage of w1. */
+  | { kind: 'mapNotStarted' }
 
 /** Dev-only shortcut: edits the active child's progress through the app's own data and content modules (the
  *  dynamic imports resolve to the same module instances the page uses). Used to reach late nodes quickly; the
@@ -115,6 +117,10 @@ export async function devEditProgress(page: Page, edit: DevProgressEdit): Promis
     if (!child) throw new Error('no child on this device')
     if (e.kind === 'stars') {
       await data.updateProgress(child.id, (p) => ({ ...p, stars: p.stars + e.amount }))
+      return
+    }
+    if (e.kind === 'mapNotStarted') {
+      await data.updateProgress(child.id, (p) => ({ ...p, worlds: content.initialProgress(child.id).worlds, lastNode: undefined }))
       return
     }
     const world = content.getWorld(e.worldId)
