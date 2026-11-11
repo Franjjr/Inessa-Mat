@@ -15,10 +15,10 @@ const sumar2d = clase({
     show('place-value', { n: 34 }, 'El 34 son 3 decenas y 4 unidades. Mi amiga Dani trae 25 más: sumamos 34 + 25.', 'ladybug'),
   ],
   ejemplo: [
-    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades, como siempre.'),
-    show('carry', { a: 34, b: 25 }, '4 + 5 = 9. Escribo el 9 en las unidades.'),
+    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades: 4 + 5 = 9. Escribo el 9.'),
     show('carry', { a: 34, b: 25 }, 'Decenas: 3 + 2 = 5. ¡34 + 25 = 59!'),
     show('carry', { a: 38, b: 25 }, 'Ahora una con llevada: 38 + 25. Empezamos por las unidades.'),
+    show('groups', { groups: 1, perGroup: 10, emoji: '🔵' }, '¿Por qué nos llevamos 1? Diez unidades juntas forman una decena: ya no son unidades sueltas, son 1 decena.', 'owl'),
     show('carry', { a: 38, b: 25 }, '8 + 5 = 13. Escribo el 3 y me llevo 1 decena.'),
     show('carry', { a: 38, b: 25 }, 'Decenas: 3 + 2 + 1 = 6. ¡38 + 25 = 63!'),
   ],
@@ -364,6 +364,8 @@ const dividirRepartir = clase({
     show('share', GEMAS, 'Vamos a repartir 12 gemas en 3 cofres. Las pongo de una en una, sin saltarme ningún cofre.'),
     show('share', GEMAS, 'Ya están repartidas: a cada cofre le ha tocado lo mismo.'),
     show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres es cuatro»: cada cofre tiene 4 gemas.'),
+    show('groups', { groups: 3, perGroup: 4, emoji: '💎' }, 'Dividir también es agrupar: ¿cuántos cofres de 4 gemas se llenan con 12? Vamos llenando cofres de 4.', 'owl'),
+    show('big-text', { text: '12 ÷ 4 = 3', sub: '3 cofres llenos' }, 'Los dos caminos dan lo mismo: repartir 12 en 3 cofres da 4 a cada uno, y llenar cofres de 4 da 3 cofres.', 'owl'),
   ],
   guiada: [
     tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos les toca lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
@@ -374,7 +376,7 @@ const dividirRepartir = clase({
     tryIt('share', GEMAS, '¡Tu turno! Ahora con cofres de más gemas.', { kinds: ['fact-div'], tables: [7, 8, 9], factorRange: [6, 9] }),
     tryIt('share', GEMAS, '¡Tu turno! Sin pistas: ¿qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [8, 9, 10], factorRange: [6, 10] }),
   ],
-  cierre: show('share', GEMAS, 'Dividir es repartir en partes iguales: el total se reparte entre los grupos y lo que sale es lo que toca a cada uno.'),
+  cierre: show('share', GEMAS, 'Dividir es repartir en partes iguales, o agrupar en grupos iguales. Son dos maneras de mirar la misma división.'),
 })
 
 const dividirExacta = clase({

@@ -22,11 +22,11 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
   const lastHint = flow.hintsShown > 0 ? flow.hints[flow.hintsShown - 1] : null
   // With feedback off (guardian, daily review) the host shows its own result and forward button.
   const hostOwnsResult = !flow.showFeedback && flow.submitted
-  const message = r && !hostOwnsResult
+  // The feedback and the revealed hint are separate panels: a check never hides a hint the child asked for.
+  const feedback = r && !hostOwnsResult
     ? { tone: r.correct ? 'ok' : 'clue', text: host.t(r.feedback ?? (r.correct ? '¡Muy bien, {child}!' : 'Revisa tu respuesta.')) }
-    : lastHint
-      ? { tone: 'hint', text: host.t(lastHint.text) }
-      : null
+    : null
+  const hint = lastHint ? { tone: 'hint', text: host.t(lastHint.text) } : null
   const hasHint = flow.allowHints && flow.hints.length > 0 && flow.hintsShown < flow.hints.length
 
   return (
@@ -39,8 +39,11 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
         )}
       </div>
       <div className={s.message} aria-live="polite">
-        {message && (
-          <p className={clsx(s.bubble, s[message.tone])}>{message.text}</p>
+        {feedback && (
+          <p className={clsx(s.bubble, s[feedback.tone])}>{feedback.text}</p>
+        )}
+        {hint && (
+          <p className={clsx(s.bubble, s[hint.tone])} role="note">{hint.text}</p>
         )}
       </div>
       <div className={s.side}>

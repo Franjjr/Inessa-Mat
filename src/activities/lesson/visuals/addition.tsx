@@ -5,13 +5,15 @@ import type { VisualProps } from './types'
 import { FINAL, GLIDE, POP, digitsLE, motionT, numParam, padLE, stateOf } from './types'
 import s from './visuals.module.css'
 
-const HOUSE_NAMES = ['U', 'D', 'C', 'UM'] // from the right
-const HOUSE_LONG = ['unidades', 'decenas', 'centenas', 'unidades de mil']
+// From the right. Same names as the classes of 3.º: M = millares, DM = decenas de millar (never «UM»).
+const HOUSE_NAMES = ['U', 'D', 'C', 'M', 'DM']
+const HOUSE_LONG = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar']
 const HOUSE_COLOR: Record<string, { c: string; soft: string }> = {
   U: { c: 'var(--pv-u)', soft: 'var(--pv-u-soft)' },
   D: { c: 'var(--pv-d)', soft: 'var(--pv-d-soft)' },
   C: { c: 'var(--pv-c)', soft: 'var(--pv-c-soft)' },
-  UM: { c: 'var(--pv-um)', soft: 'var(--pv-um-soft)' },
+  M: { c: 'var(--pv-um)', soft: 'var(--pv-um-soft)' },
+  DM: { c: 'var(--pv-um)', soft: 'var(--pv-um-soft)' },
 }
 
 /** The number written in its houses: digits drop in from the right, then the house names, then the values. */
@@ -22,15 +24,15 @@ export function PlaceValueVisual({ params, phase, runLength, reduced }: VisualPr
   const count = digits.length
   const houses = Array.from({ length: count }, (_, p) => {
     const k = count - 1 - p // column from the right
-    const name = HOUSE_NAMES[k] ?? 'UM'
-    return { k, name, digit: digits[k], value: digits[k] * 10 ** k, long: HOUSE_LONG[k] ?? 'miles' }
+    const name = HOUSE_NAMES[k] ?? 'DM'
+    return { k, name, digit: digits[k], value: digits[k] * 10 ** k, long: HOUSE_LONG[k] ?? 'decenas de millar' }
   })
   const showValues = st >= 2
   return (
     <div className={s.stage}>
       <div className={s.row} style={{ alignItems: 'flex-end', gap: 'clamp(8px, 2cqi, 20px)' }} data-testid="houses">
         {houses.map((h) => {
-          const color = HOUSE_COLOR[h.name] ?? HOUSE_COLOR.UM
+          const color = HOUSE_COLOR[h.name] ?? HOUSE_COLOR.M
           const isUnits = h.k === 0
           const highlight = isUnits && st >= 1
           return (

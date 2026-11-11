@@ -59,6 +59,9 @@ export interface ExerciseOutcome {
   retries?: number
   /** Method used (see AttemptInput.method). */
   method?: string
+  /** The view ended at its copy step (teach 'full'): the answer was shown and the child wrote it. The check stays the
+   *  graded wrong try; the screen around it must not count it as a new miss or offer another try. */
+  revealed?: boolean
 }
 
 /** Companion / Lumi reactions an activity can request. */
