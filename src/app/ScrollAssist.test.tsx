@@ -15,8 +15,7 @@ describe('ScrollAssist', () => {
     document.body.innerHTML = ''
   })
 
-  it('shows «Más abajo» when the page grows without a scroll or a resize, and does not poll the layout', async () => {
-    const intervalSpy = vi.spyOn(window, 'setInterval')
+  it('shows «Más abajo» when the page grows without a scroll or a resize, at once (the observers), before the safety-net check', async () => {
     setPageHeight(500) // fits: no button yet
     render(<ScrollAssist />)
     expect(screen.queryByRole('button', { name: DOWN })).toBeNull()
@@ -28,7 +27,7 @@ describe('ScrollAssist', () => {
       extra.textContent = 'Nueva ronda'
       document.body.appendChild(extra)
     })
+    // Well under the 500 ms safety-net check: the observers react to the DOM change itself.
     await waitFor(() => expect(screen.getByRole('button', { name: DOWN })).toBeTruthy(), { timeout: 300 })
-    expect(intervalSpy).not.toHaveBeenCalledWith(expect.any(Function), 500)
   })
 })

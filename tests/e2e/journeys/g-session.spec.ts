@@ -48,7 +48,7 @@ test.describe('Mi sesión de hoy', () => {
     await settle(page, 300)
   })
 
-  test('«Ahora no» sends the first item to the end, and it comes back later; the count does not advance', async ({ page }) => {
+  test('«Ahora no» sends the item to the end without advancing the count, at most three times per session', async ({ page }) => {
     await seedDemo(page)
     await page.goto('/play/sesion')
     await page.getByRole('button', { name: '¡Empezar!' }).click()
@@ -65,13 +65,13 @@ test.describe('Mi sesión de hoy', () => {
     await expect.poll(shown).not.toBe(first)
     await expect(bar).toHaveAttribute('aria-label', count!)
     await expect(page.getByRole('button', { name: 'Ahora no' })).toBeVisible()
-    // The postponed item is still in the run: each «Ahora no» sends the current one to the end, so the first item comes
-    // back to the front after the others (no limit, so the loop only stops when it is back). A new skill opens with an
+    // «Ahora no» has a limit: three per session (MAX_POSTPONES in src/world/session/logic.ts), so a child cannot close
+    // the session without practising. After the third one the button is no longer offered. A new skill opens with an
     // example card («¡Entendido, a por ello!») that has no «Ahora no»: the loop takes it and goes on.
     const ahoraNo = page.getByRole('button', { name: 'Ahora no' })
     const entendido = page.getByRole('button', { name: '¡Entendido, a por ello!' })
-    let back = false
-    for (let i = 0; i < 80 && !back; i++) {
+    let used = 1
+    for (let i = 0; i < 20 && used < 3; i++) {
       await expect(ahoraNo.or(entendido)).toBeVisible()
       if (await entendido.isVisible()) {
         await entendido.click()
@@ -81,9 +81,12 @@ test.describe('Mi sesión de hoy', () => {
       await ahoraNo.click()
       await expect.poll(shown).not.toBe(before)
       await expect(bar).toHaveAttribute('aria-label', count!)
-      back = (await shown()) === first
+      used++
     }
-    expect(back, 'the postponed item comes back to the front').toBe(true)
+    expect(used, 'three «Ahora no» in the run').toBe(3)
+    if (await entendido.isVisible()) await entendido.click()
+    await expect(page.getByRole('textbox').first().or(page.getByRole('button', { name: 'No lo sé' }))).toBeVisible()
+    await expect(ahoraNo, 'after three, «Ahora no» is not offered').toHaveCount(0)
     await settle(page, 300)
   })
 
