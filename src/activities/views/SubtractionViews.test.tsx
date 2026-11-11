@@ -11,7 +11,7 @@ vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
 const cell = (name: RegExp | string) => screen.getByRole('textbox', { name })
 
 /** Types the digits of n (units first) into the cells named `${place} ${tail}`, e.g. tail "de salto 1". */
-function type(n: number, tail: string, places = ['unidades', 'decenas', 'centenas', 'unidades de mil']) {
+function type(n: number, tail: string, places = ['unidades', 'decenas', 'centenas', 'millares']) {
   const digits = String(n).split('').reverse()
   digits.forEach((d, i) => {
     fireEvent.keyDown(cell(new RegExp(`^${places[i]} ${tail}`)), { key: d })

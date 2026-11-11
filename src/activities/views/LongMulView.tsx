@@ -11,7 +11,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './LongMulView.module.css'
 
-const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'unidades de mil', 'decenas de mil', 'centenas de mil']
+const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar', 'centenas de millar']
 const placeOf = (i: number) => (['u', 'd', 'c', 'um'] as const)[i] ?? null
 
 export default function LongMulView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {

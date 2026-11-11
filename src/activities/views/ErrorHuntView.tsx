@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import type { ErrorHuntExercise, ExerciseViewProps } from '@/types'
 import { digitAt, digitCount } from '@/engine'
-import { columnName } from '@/engine'
+import { columnWithArticle } from '@/engine'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
@@ -70,7 +70,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
           const picked = verdict === 'error' && column === i
           // A difference never has more digits than the top number: the spare column is only for sums and products.
           const selectable = verdict === 'error' && (ex.op !== 'sub' || i < digitCount(ex.top))
-          const label = `columna de las ${columnName(i)}`
+          const label = `columna de ${columnWithArticle(i)}`
           return selectable ? (
             <button
               key={`r${i}`}
@@ -111,7 +111,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
       {verdict === 'error' && (
         <div className={s.fix}>
           <p className={s.hint}>
-            {column === null ? host.t('Toca la columna donde está el error.') : host.t(`Error en las ${columnName(column)}. ¿Cuál es el resultado bien escrito?`)}
+            {column === null ? host.t('Toca la columna donde está el error.') : host.t(`Error en ${columnWithArticle(column)}. ¿Cuál es el resultado bien escrito?`)}
           </p>
           <div className={s.answer}>
             <span className={s.answerLabel}>{host.t('Resultado bien:')}</span>
