@@ -66,11 +66,11 @@ const sum = (ex: MentalExercise) => ex.prompt.replace(/ = \?$/, '')
 const mentions = (text: string, n: number) => new RegExp(`(^|[^\\d])${String(n).split('').join('\\s?')}(?!\\d)`).test(text)
 
 describe('cálculo mental de 4.º: the answer follows the order of operations', () => {
-  it('combinadas: left to right, the sum up to 1 000 and never negative', () => {
+  it('combinadas: left to right, «de cabeza» (numbers of two digits at most) and never negative', () => {
     for (const ex of mentalItems('combinadas')) {
       expect(evaluate(sum(ex)), ex.prompt).toBe(ex.answer)
       expect(ex.answer).toBeGreaterThanOrEqual(0)
-      expect(ex.a + ex.b).toBeLessThanOrEqual(1000)
+      expect(Math.max(ex.a, ex.b, ex.c ?? 0)).toBeLessThanOrEqual(99)
     }
   })
 
@@ -100,9 +100,9 @@ describe('cálculo mental de 4.º: the answer follows the order of operations', 
     }
   })
 
-  it('distributiva: a × b = a × t + __, and the blank is the second partial product a × u, never negative', () => {
+  it('distributiva: «a × b es a × t más a × u. ¿Cuánto es a × u?», the second partial product, never negative', () => {
     for (const ex of mentalItems('distributiva')) {
-      const m = ex.prompt.match(/^(\d+) × (\d+) = (\d+) × (\d+) \+ __$/)
+      const m = ex.prompt.match(/^(\d+) × (\d+) es (\d+) × (\d+) más \d+ × \d+\. ¿Cuánto es \d+ × \d+\?$/)
       expect(m, ex.prompt).not.toBeNull()
       const [, a, b, a2, t] = m!.map(Number)
       expect(a2).toBe(a)
@@ -115,9 +115,10 @@ describe('cálculo mental de 4.º: the answer follows the order of operations', 
 
   it('estimar: the answer is the estimate of the two numbers rounded to the stated place, never negative', () => {
     for (const ex of mentalItems('estimar')) {
-      const m = ex.prompt.match(/^Estima redondeando a las (decenas|centenas): (\d[\d ]*) ([+−]) (\d[\d ]*) = \?$/)
+      const m = ex.prompt.match(/^Redondea cada número a la (decena|centena) y (suma|resta): (\d[\d ]*) ([+−]) (\d[\d ]*) = \?$/)
       expect(m, ex.prompt).not.toBeNull()
-      const place = m![1] === 'decenas' ? 10 : 100
+      m!.splice(2, 1)
+      const place = m![1] === 'decena' ? 10 : 100
       const x = Number(m![2].replace(/\s/g, ''))
       const y = Number(m![4].replace(/\s/g, ''))
       const rx = Math.round(x / place) * place

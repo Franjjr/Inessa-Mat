@@ -30,7 +30,7 @@ export function ordinalNumeral(n: number): string {
 
 /** What the child is asked, as the view and the daily plan say it. */
 export function ordinalPrompt(ex: OrdinalExercise): string {
-  if (ex.mode === 'row') return `Toca el ${ordinalWord(ex.n)}`
+  if (ex.mode === 'row') return `Toca el ${ordinalWord(ex.n)}, contando desde la salida.`
   if (ex.mode === 'read') return `¿Cómo se dice el ${ordinalNumeral(ex.n)}?`
   return `¿Qué número es «${ordinalWord(ex.n)}»?`
 }
@@ -76,7 +76,7 @@ export function checkOrdinal(ex: OrdinalExercise, answer: Answer): CheckResult {
   if (ex.mode === 'row') {
     const given = ordinalNumeral(answer.index + 1)
     if (answer.index === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Has contado desde el principio.' }
-    return { correct: false, given, expected, errorType: 'other', feedback: `¡Casi! Has tocado el ${given}. Cuenta desde el principio de la fila.` }
+    return { correct: false, given, expected, errorType: 'other', feedback: `¡Casi! Has tocado el ${given}. Cuenta desde la salida, uno a uno.` }
   }
   const given = ex.options[answer.index] ?? '?'
   if (answer.index === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Ese es el número del ordinal.' }
@@ -92,7 +92,7 @@ export function hintsOrdinal(ex: OrdinalExercise): Hint[] {
   if (ex.mode === 'row') {
     const e = otherNumber(ex.n, [4, 2])
     return [
-      hint(1, 'Cuenta desde el principio de la fila, uno a uno, sin saltarte ninguno.'),
+      hint(1, 'Cuenta desde la salida, uno a uno, sin saltarte ninguno.'),
       hint(2, 'Señala cada objeto con el dedo mientras cuentas en voz alta, sin saltarte ninguno, y para en el lugar que pide la pregunta.'),
       hint(3, `Ejemplo con otra fila: el ${ordinalWord(e)} es el que tiene delante ${e - 1} ${e - 1 === 1 ? 'objeto' : 'objetos'}.`),
     ]
