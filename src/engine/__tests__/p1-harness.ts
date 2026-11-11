@@ -292,9 +292,28 @@ export function finalCorrectVariants(ex: Exercise, method?: string): Variant[] {
       return ex.remainder
         ? [v('cociente y resto', { type: 'division', quotient: ex.answer, remainder: ex.remainder })]
         : [v('número', { type: 'number', value: ex.answer }), v('en casillas', { type: 'digits', digits: digitsOf(ex.answer) })]
+    case 'mental':
+      return [v('número', { type: 'number', value: ex.answer })]
+    case 'equation':
+      return [v('respuesta', ex.answer === '=' || ex.answer === '≠' ? { type: 'sign', sign: ex.answer } : { type: 'number', value: ex.answer })]
+    case 'chart':
+      return ex.ask === 'most' || ex.ask === 'least'
+        ? [v('opción', { type: 'choice', index: ex.answer })]
+        : [v('número', { type: 'number', value: ex.answer }), v('lista de uno', { type: 'numbers', values: [ex.answer] })]
+    case 'pattern':
+      return ex.mode === 'shapes'
+        ? [v('figura', { type: 'choice', index: ex.answer })]
+        : [v('número', { type: 'number', value: ex.answer }), v('lista de uno', { type: 'numbers', values: [ex.answer] })]
+    case 'chance': case 'position': case 'ordinal':
+      return [v('opción', { type: 'choice', index: ex.answer })]
     default:
       return [v('respuesta de referencia', correctAnswer(ex))]
   }
+}
+
+/** The other choices of a tap-to-answer exercise (in the ordinal «row» mode, the other places of the queue). */
+function otherChoices(count: number, right: number): number[] {
+  return Array.from({ length: count }, (_, i) => i).filter((i) => i !== right)
 }
 
 /** The wrong finals: ±1, ±10, +100 and one digit more (a 1 in front), never negative. */
@@ -358,6 +377,27 @@ export function finalWrongVariants(ex: Exercise, method?: string): Variant[] {
       each(ex.answer, (w) => (ex.remainder ? { type: 'division', quotient: w, remainder: ex.remainder } : { type: 'number', value: w }))
       if (ex.remainder) each(ex.remainder, (w) => ({ type: 'division', quotient: ex.answer, remainder: w }))
       break
+    case 'mental':
+      each(ex.answer, (w) => ({ type: 'number', value: w }))
+      break
+    case 'equation':
+      if (ex.answer === '=' || ex.answer === '≠') out.push(v('el otro signo', { type: 'sign', sign: ex.answer === '=' ? '≠' : '=' }))
+      else each(ex.answer, (w) => ({ type: 'number', value: w }))
+      break
+    case 'chart': case 'pattern': {
+      const choice = ex.kind === 'chart' ? ex.ask === 'most' || ex.ask === 'least' : ex.mode === 'shapes'
+      if (choice) for (const i of otherChoices(ex.options.length, ex.answer)) out.push(v(`opción ${i}`, { type: 'choice', index: i }))
+      else each(ex.answer, (w) => ({ type: 'number', value: w }))
+      break
+    }
+    case 'chance': case 'position':
+      for (const i of otherChoices(ex.options.length, ex.answer)) out.push(v(`opción ${i}`, { type: 'choice', index: i }))
+      break
+    case 'ordinal': {
+      const count = ex.mode === 'row' ? ex.items.length : ex.options.length
+      for (const i of otherChoices(count, ex.answer)) out.push(v(`opción ${i}`, { type: 'choice', index: i }))
+      break
+    }
     default:
       break
   }

@@ -69,6 +69,36 @@ describe('P1 (2): un final equivocado nunca es correcto', () => {
   })
 })
 
+/* The kinds graded outside check.ts that no other property file takes (calc, data, patterns, position, ordinals):
+   the reference answer built from the exercise is correct, and every other choice or a number ±1, ±10, +100 or with
+   one digit more is not. */
+const OTHER_KINDS: ExerciseKind[] = ['mental', 'equation', 'chart', 'chance', 'pattern', 'position', 'ordinal']
+const OTHER_CASES = SKILL_CASES.filter((c) => OTHER_KINDS.includes(c.kind))
+
+describe('P1 en cálculo mental, igualdades, gráficos, azar, series, posición y ordinales', () => {
+  it('están todos en el registro', () => {
+    expect([...new Set(OTHER_CASES.map((c) => c.kind))].sort()).toEqual([...OTHER_KINDS].sort())
+  })
+  it.each(OTHER_CASES.map((c) => [c.name, c] as const))('%s: la respuesta de referencia es correcta y las otras no', (_name, c) => {
+    const misses: Miss[] = []
+    let wrongs = 0
+    const covered = forEachSkill((x) => x === c, SEEDS, (ex) => {
+      for (const variant of finalCorrectVariants(ex)) {
+        const result = check(ex, variant.answer)
+        if (!result.correct || PRAISE_ONLY.test(result.feedback ?? '')) misses.push({ ex: ex.id, label: variant.label, result })
+      }
+      for (const variant of finalWrongVariants(ex)) {
+        wrongs++
+        const result = check(ex, variant.answer)
+        if (result.correct) misses.push({ ex: ex.id, label: variant.label, result })
+      }
+    }).get(c.name) ?? 0
+    expect(covered).toBeGreaterThanOrEqual(SEEDS)
+    expect(wrongs).toBeGreaterThan(0)
+    expect(misses.length, misses.slice(0, 5).map(show).join('\n')).toBe(0)
+  })
+})
+
 describe('P1: cada método se prueba con al menos 60 semillas', () => {
   it.each([
     'column-sub:borrow', 'column-sub:carry', 'column-sub:parts', 'column-sub:line',
@@ -144,6 +174,12 @@ describe('resta por partes: el último número escrito es la respuesta', () => {
     expect(r.correct).toBe(false)
     expect(r.feedback).toBe('¡Casi! Revisa el paso 3: a 232 hay que quitarle 7.')
   })
+  it('[225, null, 999]: el resultado ya estaba en el paso 1; se nombra el último paso, no el 1', () => {
+    const r = check(ex, parts([225, null, 999]), { method: 'parts' })
+    expect(r.correct).toBe(false)
+    expect(r.feedback).toBe('¡Ya tenías el resultado en el paso 1: 225! El último número que escribes es la respuesta: revisa el paso 3.')
+    expect(r.feedback).not.toContain('Revisa el paso 1')
+  })
 })
 
 describe('multiplicar por partes: el total decide', () => {
@@ -201,6 +237,16 @@ describe('repartir por partes: el cociente y el resto deciden', () => {
     expect(r).toMatchObject({ correct: false, errorType: 'fact' })
     expect(r.feedback).toContain('paso 1')
   })
+  it('84 ÷ 4 [2, 1] y cociente 3 (sumó las decenas tal cual): dice cuánto vale el 2 y la suma que falta', () => {
+    const r = check(makeDivision(84, 4), dp([2, 1], 3))
+    expect(r).toMatchObject({ correct: false, errorType: 'other' })
+    expect(r.feedback).toBe('Tu 2 son 2 decenas, es decir, 20. Ahora suma: 20 + 1 = ?')
+    expect(r.feedback).not.toContain('Ya tienes bien las partes')
+    expect(check(makeDivision(84, 4), dp([2, 1], null))).toMatchObject({ correct: false, errorType: 'incomplete', feedback: 'Tu 2 son 2 decenas, es decir, 20. Ahora suma: 20 + 1 = ?' })
+  })
+  it('con las partes de libro y el cociente mal, el mensaje es «súmalas»', () => {
+    expect(check(makeDivision(84, 4), dp([20, 1], 22)).feedback).toBe('Ya tienes bien las partes. Ahora súmalas: eso es el cociente (lo que le toca a cada uno).')
+  })
 })
 
 describe('multiplicar hacia arriba: el cociente y el resto deciden', () => {
@@ -222,6 +268,15 @@ describe('multiplicar hacia arriba: el cociente y el resto deciden', () => {
   })
   it('un cociente escrito equivocado no se da por bueno', () => {
     expect(check(makeDivision(29, 4), climb([null], 1, 6)).correct).toBe(false)
+  })
+  it('29 ÷ 4 con las filas bien hasta 32 y el cociente 8: error de cociente, nunca «Sigue subiendo»', () => {
+    const products = climbProducts(29, 4)
+    expect(products[products.length - 1]).toBe(32)
+    for (const rows of [products, products.map(() => null)]) {
+      const r = check(makeDivision(29, 4), climb(rows, 1, 8))
+      expect(r).toMatchObject({ correct: false, errorType: 'fact' })
+      expect(r.feedback).toBe('Revisa el cociente (lo que le toca a cada uno): cuenta las filas que no pasan de 29.')
+    }
   })
 })
 
