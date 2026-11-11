@@ -281,6 +281,44 @@ describe('NumberInput · keypad mode: the keypad follows the box the child taps'
   })
 })
 
+describe('NumberInput · writing over a doubtful digit', () => {
+  // 1 read at 0.6 with 7 as a close second: a confusable pair with a narrow margin, so the digit is in doubt.
+  const doubtful1 = { digit: 1, confidence: 0.6, alternatives: [1, 7] }
+
+  it('a tap on a doubtful digit opens the alternatives and does not erase it, pen or finger', () => {
+    const { onChange, pad } = setup([doubtful1])
+    write(pad, '1')
+    idle()
+    act(() => tap(pad, 90, 60))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(onChange).toHaveBeenLastCalledWith(1)
+    act(() => tap(pad, 90, 60, 'touch'))
+    expect(onChange).toHaveBeenLastCalledWith(1)
+  })
+
+  it('«Escribirlo otra vez» in the alternatives erases the doubtful digit so it can be written again', () => {
+    const { onChange, pad } = setup([doubtful1])
+    write(pad, '1')
+    idle()
+    act(() => tap(pad, 90, 60))
+    fireEvent.click(screen.getByRole('button', { name: 'Escribirlo otra vez' }))
+    expect(onChange).toHaveBeenLastCalledWith(null)
+    expect(within(pad).queryByText('1')).toBeNull()
+  })
+
+  it('a new stroke written over a doubtful digit replaces it: only the new ink is recognised', () => {
+    const { rec, onChange, pad } = setup([doubtful1, { digit: 7 }])
+    write(pad, '1')
+    idle()
+    const over = handwriteNumber('7', { x: 40, y: 0, w: 100, h: H }, { seed: 5 })
+    act(() => replayStrokes(pad, over))
+    idle()
+    const last = rec.calls[rec.calls.length - 1]
+    expect(last.strokes).toHaveLength(over.length)
+    expect(onChange).toHaveBeenLastCalledWith(7)
+  })
+})
+
 describe('NumberInput · a low-confidence digit is in doubt until confirmed', () => {
   it('a doubtful digit is held for confirmation; a confident one is not', () => {
     const { pad } = setup([{ digit: 4, confidence: 0.95 }, { digit: 7, confidence: 0.4 }])

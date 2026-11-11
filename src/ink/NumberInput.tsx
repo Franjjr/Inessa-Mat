@@ -266,6 +266,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           setTimeout(recognizeAll, 0)
           return false
         }
+        // Ink written over a doubtful digit is its rewrite: the old digit's strokes go, so only the new ink is read.
+        const sb = strokeBBox(stroke)
+        const doubtful = segRef.current.filter((x) => x.doubtful && x.digit != null && overlapFraction(x.bbox, sb, 6) > 0.35)
+        if (doubtful.length) removeStrokes(new Set(doubtful.flatMap((x) => x.strokes)))
         setInkState('writing')
         idle.current = setTimeout(recognizeAll, IDLE_MS)
         return true
@@ -279,12 +283,9 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
         const seg = segRef.current.find((x) => info.x >= x.bbox.minX - 12 && info.x <= x.bbox.maxX + 12)
         if (!seg && info.role === 'tap') { fingerFallback(); return }
         if (!seg || idle.current) return
-        if (seg.digit == null || seg.doubtful) { setPopover((p) => (p === seg.key ? null : seg.key)); return }
-        if (info.role === 'write') {
-          removeStrokes(new Set(seg.strokes))
-          recognizeAll()
-          sfx.play('erase', { volume: 0.4 })
-        }
+        // A tap never erases a digit (a child may tap just to look, and a finger on a device without pen counts as
+        // writing): it opens the alternatives, which offer the rewrite. Same rule as DigitCell.
+        setPopover((p) => (p === seg.key ? null : seg.key))
       },
       onBlockedWrite() {
         fingerFallback()
