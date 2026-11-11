@@ -174,6 +174,10 @@ describe('English kinds: generation', () => {
       expect(PHRASE_IDEAS[skill], skill).not.toMatch(/\b(dentro|encima|debajo|bajo|soleado|frío|lluvia|nieve|nublado|calor)\b/i)
       for (const item of PHRASES[skill]) {
         expect(item.es, item.sentence).not.toMatch(translations[item.answer])
+        // A cue of where-is is only a scene: no Spanish word that says the place (interior, abajo, apoyado, suelo).
+        if (skill.startsWith('eng:frase:where-is:')) {
+          expect(item.es, item.sentence).not.toMatch(/\b(interior|abajo|apoyad[oa]s?|suelo|sobre|dentro|debajo|encima|bajo)\b/i)
+        }
       }
     }
   })
