@@ -125,3 +125,16 @@ describe('planCaligrafia', () => {
     }
   })
 })
+
+describe('the curriculum teaches each capital before the sentences that start with it', () => {
+  it('every capital of a sentence is an earlier item of the curriculum', () => {
+    const capitalAt = (letter: string) => CAL_CURRICULUM.findIndex((i) => i.kind === 'mayus' && i.text === letter)
+    for (const frase of CAL_CURRICULUM.filter((i) => i.kind === 'frase')) {
+      const sentenceAt = CAL_CURRICULUM.indexOf(frase)
+      for (const capital of frase.text.match(/\p{Lu}/gu) ?? []) {
+        expect(capitalAt(capital), `${frase.text}: ${capital}`).toBeGreaterThanOrEqual(0)
+        expect(capitalAt(capital), `${frase.text}: ${capital}`).toBeLessThan(sentenceAt)
+      }
+    }
+  })
+})
