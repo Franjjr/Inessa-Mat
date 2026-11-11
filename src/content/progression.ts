@@ -27,9 +27,15 @@ export const COMPLETION_STARS = 1
 /** Share of right answers an activity needs to count as done and open the next stop of the world. */
 export const NODE_PASS_RATIO = 0.8
 
-/** Whether an activity of `total` items with `correct` right is passed (at least NODE_PASS_RATIO; never with no items). */
+/** Right answers an activity of `total` items needs to be passed (NODE_PASS_RATIO, rounded up: 4 of 5, 5 of 6). */
+export function passMark(total: number): number {
+  return Math.ceil((total * 4) / 5)
+}
+
+/** Whether an activity of `total` items with `correct` right is passed (at least NODE_PASS_RATIO). An activity with
+    nothing to ask (total 0, e.g. a picture without usable facts) has nothing to get wrong, so it is passed. */
 export function activityPassed(correct: number, total: number): boolean {
-  return total > 0 && correct / total >= NODE_PASS_RATIO
+  return total === 0 || correct / total >= NODE_PASS_RATIO
 }
 /** How many personal race records are kept per node (fastest first). */
 export const MAX_RECORDS = 5

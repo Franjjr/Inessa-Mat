@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ProgressState } from '@/types'
 import {
-  ACCESSORY_IDS, applyNodeResult, buyAccessory, canBuyAccessory, COMPLETION_STARS, crystalsOf, getAccessory, initialProgress,
-  getSticker, isNodeUnlocked, isWorldUnlocked, lettersOf, localDay, newStickers, nextNode, season1, spendableStars,
-  startingWorldForGrade, unlockThroughWorld,
+  ACCESSORY_IDS, activityPassed, applyNodeResult, buyAccessory, canBuyAccessory, COMPLETION_STARS, crystalsOf, getAccessory,
+  initialProgress, getSticker, isNodeUnlocked, isWorldUnlocked, lettersOf, localDay, newStickers, nextNode, NODE_PASS_RATIO,
+  passMark, season1, spendableStars, startingWorldForGrade, unlockThroughWorld,
 } from '@/content'
 
 const T0 = new Date(2026, 9, 1, 17, 0, 0) // local time: 1 Oct 2026, 17:00
@@ -211,6 +211,43 @@ describe('applyNodeResult', () => {
     expect(p.stickers).not.toContain('dias-3')
     p = finish(p, 'w1', 'arrival', 3, day(5))
     expect(p.stickers).toContain('dias-3')
+  })
+})
+
+describe('activity pass mark (80 %)', () => {
+  it('the pass ratio is 80 %', () => {
+    expect(NODE_PASS_RATIO).toBe(0.8)
+  })
+
+  it('passes from 80 % of right answers: 4 of 5 and 5 of 6 pass, 4 of 6 does not, 3 of 4 does not', () => {
+    expect(activityPassed(4, 5)).toBe(true)
+    expect(activityPassed(5, 6)).toBe(true)
+    expect(activityPassed(4, 6)).toBe(false)
+    expect(activityPassed(3, 4)).toBe(false)
+    expect(activityPassed(4, 4)).toBe(true)
+  })
+
+  it('an activity with nothing to ask (0 of 0) counts as passed, so a picture without usable facts never blocks the child', () => {
+    expect(activityPassed(0, 0)).toBe(true)
+  })
+
+  it('a review with nothing right is not passed', () => {
+    expect(activityPassed(0, 6)).toBe(false)
+  })
+
+  it('passMark is the number of right answers needed: 4 of 5, 5 of 6, 4 of 4, 0 of 0', () => {
+    expect(passMark(5)).toBe(4)
+    expect(passMark(6)).toBe(5)
+    expect(passMark(4)).toBe(4)
+    expect(passMark(0)).toBe(0)
+  })
+
+  it('passMark and activityPassed agree for every count up to 30', () => {
+    for (let total = 1; total <= 30; total++) {
+      for (let correct = 0; correct <= total; correct++) {
+        expect(activityPassed(correct, total)).toBe(correct >= passMark(total))
+      }
+    }
   })
 })
 

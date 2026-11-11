@@ -94,7 +94,7 @@ phases of one animation** (e.g. carry: units → tens → hundreds): keep the vi
 
 ## Progression (`applyNodeResult`)
 
-- story/lesson → done; `COMPLETION_STARS` (1) when read, no star when skipped (`stars: 0`). activity/review → done when `stars ≥ 1` or `passed: true`; NodeScreen passes an activity only from `NODE_PASS_RATIO` (80 %) of right answers (`activityPassed`).
+- story/lesson → done; `COMPLETION_STARS` (1) when read, no star when skipped (`stars: 0`). activity/review → done when `stars ≥ 1` or `passed: true`; NodeScreen passes an activity or a review only from `NODE_PASS_RATIO` (80 %) of right answers (`activityPassed`; `passMark(total)` is the number needed, and an activity with 0 items counts as passed). Below the mark nothing is saved. The reward of a reading (story or lesson) shows one star and no «de 3» (`maxStars: 1`). The optional teach-back game («Enséñale a Borrón») counts as practice for the tables' mastery, but gives no stars and changes no progress of the node.
   guardian → done only when passed (`passed: true`, or a `letter` with `passed` omitted — stars alone never pass).
 - Best stars kept; the star currency grows only by the improvement → replays never farm stars.
 - Crystal + letter (from content) + world `completedAt` + next world unlocked on guardian pass;
