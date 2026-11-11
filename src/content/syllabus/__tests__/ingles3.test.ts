@@ -1,5 +1,5 @@
 /* The English temario of 3.º: its skill keys are valid engine skills of the english subject, its ids are its own, and it is
-   taught in stages over three terms. The maths and Lengua temarios do not change (snapshot). */
+   taught in stages over three terms. The maths and Lengua temarios change only on purpose (snapshot). */
 import { describe, expect, it } from 'vitest'
 import { isValidSkill, parseSkill, subjectOfSkill } from '@/engine'
 import { allTopics, GRADE2_SYLLABUS, GRADE3_SYLLABUS, GRADE4_SYLLABUS, INGLES3_STAGES, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, SYLLABUS_RUNGS, subjectOfTopic, syllabusFor, teachingOrder } from '@/content/syllabus'
@@ -84,7 +84,7 @@ describe('temario de Inglés de 3.º', () => {
     }
   })
 
-  it('the maths and Lengua temarios are unchanged', () => {
+  it('the maths and Lengua temarios keep their content and order (a snapshot: update it on purpose)', () => {
     expect({ math2: GRADE2_SYLLABUS, math3: GRADE3_SYLLABUS, math4: GRADE4_SYLLABUS, lengua3: LENGUA3_SYLLABUS }).toMatchSnapshot()
   })
 })

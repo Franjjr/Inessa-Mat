@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`temario de Inglés de 3.º > the maths and Lengua temarios are unchanged 1`] = `
+exports[`temario de Inglés de 3.º > the maths and Lengua temarios keep their content and order (a snapshot: update it on purpose) 1`] = `
 {
   "lengua3": {
     "blocks": [
