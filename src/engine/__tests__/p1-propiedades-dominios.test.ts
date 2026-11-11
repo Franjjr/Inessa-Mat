@@ -10,6 +10,8 @@ import { makeWordProblem } from '@/engine/make'
 import { explainHunt } from '@/engine/bugs'
 import { fractionName, genFractionOf } from '@/engine/fractions'
 import { SHOP } from '@/engine/money'
+import { parseClockPhrase } from '@/engine/time'
+import { hourFromAngle } from '@/activities/views/Clock'
 import type {
   Answer, BarProblemExercise, CheckCalcExercise, CheckResult, ErrorHuntExercise, Exercise, MoneyBudgetExercise, MoneyChangeExercise,
   SkillKey,
@@ -59,6 +61,11 @@ function moneyAnswer(ex: Extract<Exercise, { kind: 'money' }>): Answer {
 function bookAnswer(ex: Exercise): Answer {
   if (ex.kind === 'money') return moneyAnswer(ex)
   if (ex.kind === 'fraction-add') return { type: 'fraction', numerator: ex.answer, denominator: ex.denominator }
+  if (ex.kind === 'clock-read') return ex.mode === 'write' ? { type: 'time', ...ex.answer } : { type: 'choice', index: ex.correct }
+  if (ex.kind === 'clock-set') return { type: 'time', ...ex.answer }
+  if (ex.kind === 'time-convert') return ex.direction === 'to-digital' ? { type: 'time', ...ex.answer } : { type: 'choice', index: ex.correct }
+  if (ex.kind === 'time-duration') return ex.ask === 'end' ? { type: 'time', ...ex.end } : { type: 'number', value: ex.duration }
+  if (ex.kind === 'calendar') return ex.topic === 'weekday' ? { type: 'choice', index: ex.answer } : { type: 'number', value: ex.answer }
   return correctAnswer(ex)
 }
 
@@ -513,5 +520,110 @@ describe('dinero (auditoría p1-medida-problemas H6, H11, H13, H14)', () => {
     report('enunciados con «presupuesto» o «¿Te llega?»', bad.map((e) => text(e.id)), money.length)
     const budgets = money.filter((e): e is MoneyBudgetExercise => e.mode === 'budget' && e.ask !== 'afford')
     report('presupuesto sin decir que se compra todo', budgets.filter((e) => !/todo/.test(e.question)).map((e) => text(e.question)), budgets.length)
+  })
+})
+
+// ---------------------------------------------------------------- reloj y tiempo
+
+const CLOCK_SKILLS: SkillKey[] = ['clock:read:30', 'clock:read:15', 'clock:read:5', 'clock:set:30', 'clock:set:5', 'clock:convert:day', 'time:end', 'time:elapsed',
+  'cal:units', 'cal:weekday', 'cal:month', 'time:seconds']
+
+describe('reloj y tiempo (auditoría p1-medida-problemas H7, H18; P4-13)', () => {
+  const clocks = sample(CLOCK_SKILLS, 30, 8)
+
+  it('los 5 tipos: libro correcto, otra hora o minutos nunca', () => {
+    const kinds = new Set(clocks.map((e) => e.kind))
+    for (const k of ['clock-read', 'clock-set', 'time-convert', 'time-duration', 'calendar'] as const) expect(kinds.has(k), k).toBe(true)
+    const misses: Miss[] = []
+    for (const ex of clocks) {
+      const book = bookAnswer(ex)
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      for (const bad of wrongAnswers(ex)) if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: `${ex.id}: acepta una mala` })
+    }
+    report('reloj: libro o malas', misses, clocks.length)
+  })
+
+  it('«¿a qué hora acaba?»: 13:00 en lugar de 1:00 se acepta', () => {
+    const exs = of(sample('time:end', 60), 'time-duration')
+    const misses: Miss[] = []
+    let total = 0
+    for (const ex of exs) {
+      const startMin = (ex.start.hour % 12) * 60 + ex.start.minute
+      if (startMin + ex.duration < 12 * 60 || ex.end.hour === 12) continue
+      const a: Answer = { type: 'time', hour: ex.end.hour + 12, minute: ex.end.minute }
+      total++
+      const r = check(ex, a)
+      if (!r.correct) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    expect(total).toBeGreaterThanOrEqual(8)
+    report('hora de final en 24 h dada por mala', misses, total)
+  })
+
+  it('leer el reloj escribiendo: las 12 y las 0 son la misma aguja (0:45 por 12:45)', () => {
+    const exs = of(sample(['clock:read:30', 'clock:read:15', 'clock:read:5'], 60), 'clock-read').filter((e) => e.answer.hour === 12)
+    expect(exs.length).toBeGreaterThanOrEqual(12)
+    const misses: Miss[] = []
+    for (const ex of exs) {
+      const a: Answer = { type: 'time', hour: 0, minute: ex.answer.minute }
+      const r = check({ ...ex, mode: 'write' }, a)
+      if (!r.correct) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    report('0:xx por 12:xx dado por malo', misses, exs.length)
+  })
+
+  it('24 horas: «las doce de la noche» admite 24:00 además de 00:00, con la nota de la medianoche', () => {
+    const exs = of(sample('clock:convert:day', 200), 'time-convert').filter((e) => e.direction === 'to-digital' && e.answer.hour === 0)
+    expect(exs.length).toBeGreaterThanOrEqual(11)
+    const misses: Miss[] = []
+    for (const ex of exs) {
+      const a: Answer = { type: 'time', hour: 24, minute: ex.answer.minute }
+      const r = check(ex, a)
+      if (!r.correct || !r.feedback?.includes('A medianoche se escribe 00:00')) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    report('24:xx por 00:xx dado por malo', misses, exs.length)
+  })
+
+  it('una duración mal: el mensaje habla del tiempo que pasa, no de agujas', () => {
+    for (const ex of of(clocks, 'time-duration')) {
+      const bad = wrongAnswers(ex)[0]
+      const r = check(ex, bad)
+      expect(r.feedback, ex.id).toBe('¡Casi! Cuenta cuánto tiempo pasa desde que empieza: suma las horas y luego los minutos.')
+    }
+  })
+
+  it('la frase equivocada recibe el mensaje de lo que está mal: 5:30 con «las seis menos cuarto» → minutos', () => {
+    const ex = of(clocks, 'clock-read').find((e) => e.mode === 'phrase')!
+    const at = { ...ex, hour: 5, minute: 30, answer: { hour: 5, minute: 30 }, options: ['las cinco y media', 'las seis menos cuarto', 'las seis y media'], correct: 0 }
+    const r = check(at, { type: 'choice', index: 1 })
+    expect(r.errorType).toBe('clock-minute')
+    expect(r.feedback).toContain('Cuenta los minutos')
+    const h = check(at, { type: 'choice', index: 2 })
+    expect(h.errorType).toBe('clock-hour')
+    expect(h.feedback).toContain('aguja corta')
+  })
+
+  it('de 1:00 a 5:59 se dice «de la madrugada»', () => {
+    const exs = of(sample('clock:convert:day', 120), 'time-convert').filter((e) => e.answer.hour >= 1 && e.answer.hour <= 5)
+    expect(exs.length).toBeGreaterThanOrEqual(77)
+    const bad = exs.filter((e) => !/ de la madrugada$/.test(e.phrase) || e.options.some((o) => / de la noche$/.test(o) && parseClockPhrase(o)!.hour24 >= 1 && parseClockPhrase(o)!.hour24 <= 5))
+    report('horas de madrugada dichas «de la noche»', bad.map((e) => text(`${e.phrase} → ${e.answer.hour}:${e.answer.minute}`)), exs.length)
+  })
+
+  // hourFromAngle lives in src/activities/views/Clock.tsx (group pantallas-ejercicio): enable when it is fixed there.
+  it.skip('poner el reloj: colocar primero la aguja corta en el número que dice la frase no cambia la hora', () => {
+    // «las cuatro menos cuarto» (3:45): the hands start at the opposite minutes; the child drags the short hand to the 4
+    // and then the long hand. hourFromAngle (src/activities/views/Clock.tsx) reads the hour with the minutes it has then.
+    const misses: Miss[] = []
+    let total = 0
+    for (let h = 1; h <= 12; h++) {
+      for (const minute of [35, 40, 45, 50, 55]) {
+        const startMinute = (minute + 30) % 60
+        const nextHour = (h % 12) + 1
+        const setHour = hourFromAngle((nextHour % 12) * 30, startMinute)
+        total++
+        if (setHour !== h) misses.push(text(`«las ${nextHour} menos ${60 - minute}»: la hora queda en ${setHour}`))
+      }
+    }
+    report('hora mal leída por el orden en que se mueven las agujas', misses, total)
   })
 })
