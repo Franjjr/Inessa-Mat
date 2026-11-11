@@ -1,6 +1,7 @@
 /* Vocabulario de 3.º de Inglés (src/engine/ingles/). Palabras originales en inglés británico (colour, trousers, mum).
    Los glosarios van en español de España. Los temas con dibujo llevan un emoji en cada palabra (Unicode ≤ 13); si no
-   hay un emoji claro para una palabra, se elige otra palabra. `saludos` y `dias` no llevan emoji. */
+   hay un emoji claro para una palabra, se elige otra palabra. `saludos` no lleva emoji; los días de la semana llevan un
+   número en keycap (1 = lunes, 7 = domingo), que dice el orden de la semana. Cada palabra está en un solo tema. */
 
 import type { EnglishTheme } from '@/types'
 
@@ -43,7 +44,6 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'circle', es: 'círculo', emoji: '⭕', theme: 'colores' },
   { en: 'square', es: 'cuadrado', emoji: '🔲', theme: 'colores' },
   { en: 'triangle', es: 'triángulo', emoji: '🔺', theme: 'colores' },
-  { en: 'star', es: 'estrella', emoji: '⭐', theme: 'colores' },
   { en: 'heart', es: 'corazón', emoji: '❤️', theme: 'colores' },
 
   // animales
@@ -81,7 +81,6 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   // comida
   { en: 'apple', es: 'manzana', emoji: '🍎', theme: 'comida' },
   { en: 'banana', es: 'plátano', emoji: '🍌', theme: 'comida' },
-  { en: 'orange', es: 'naranja', emoji: '🍊', theme: 'comida' },
   { en: 'strawberry', es: 'fresa', emoji: '🍓', theme: 'comida' },
   { en: 'carrot', es: 'zanahoria', emoji: '🥕', theme: 'comida' },
   { en: 'bread', es: 'pan', emoji: '🍞', theme: 'comida' },
@@ -159,14 +158,14 @@ export const ENGLISH_WORDS: EnglishWord[] = [
   { en: 'autumn', es: 'otoño', emoji: '🍂', theme: 'tiempo' },
   { en: 'winter', es: 'invierno', emoji: '⛄', theme: 'tiempo' },
 
-  // dias: días de la semana y meses
-  { en: 'Monday', es: 'lunes', theme: 'dias' },
-  { en: 'Tuesday', es: 'martes', theme: 'dias' },
-  { en: 'Wednesday', es: 'miércoles', theme: 'dias' },
-  { en: 'Thursday', es: 'jueves', theme: 'dias' },
-  { en: 'Friday', es: 'viernes', theme: 'dias' },
-  { en: 'Saturday', es: 'sábado', theme: 'dias' },
-  { en: 'Sunday', es: 'domingo', theme: 'dias' },
+  // dias: días de la semana (con su número) y meses
+  { en: 'Monday', es: 'lunes', emoji: '1️⃣', theme: 'dias' },
+  { en: 'Tuesday', es: 'martes', emoji: '2️⃣', theme: 'dias' },
+  { en: 'Wednesday', es: 'miércoles', emoji: '3️⃣', theme: 'dias' },
+  { en: 'Thursday', es: 'jueves', emoji: '4️⃣', theme: 'dias' },
+  { en: 'Friday', es: 'viernes', emoji: '5️⃣', theme: 'dias' },
+  { en: 'Saturday', es: 'sábado', emoji: '6️⃣', theme: 'dias' },
+  { en: 'Sunday', es: 'domingo', emoji: '7️⃣', theme: 'dias' },
   { en: 'January', es: 'enero', theme: 'dias' },
   { en: 'February', es: 'febrero', theme: 'dias' },
   { en: 'March', es: 'marzo', theme: 'dias' },

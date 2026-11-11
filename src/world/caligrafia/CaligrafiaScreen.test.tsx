@@ -5,7 +5,7 @@ import { InkProvider } from '@/ink/InkProvider'
 import { scriptedRecognizer } from '@/ink/dev/scripted'
 import { replayStrokes } from '@/ink/dev/autoplay'
 import { fixedElementSize, mockCanvas } from '@/ink/dev/testing'
-import { exactStrokes, scaledStrokes, toInk } from '@/ink/cursive/fixtures'
+import { exactStrokes, scaledStrokes, toInk, widenedStrokes } from '@/ink/cursive/fixtures'
 import { joinWord } from '@/ink/cursive/join'
 import { fitPauta } from '@/ink/cursive/score'
 import { planCaligrafia } from '@/engine/caligrafia/plan'
@@ -64,13 +64,13 @@ function renderScreen() {
 }
 
 /** Runs the whole plan of the day: every item written exactly (or scaled for the first one when `firstScaled`). */
-async function runPlan(firstScaled = false) {
+async function runPlan(firstStrokes?: (text: string) => ReturnType<typeof exactStrokes>) {
   const items = planCaligrafia({ childId: CHILD.id, mastery: {}, now: new Date() })
   for (const [i, item] of items.entries()) {
     fireEvent.click(await screen.findByRole('button', { name: '¡A repasar!' }))
     fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
     const fit = fitPauta(W, H, joinWord(item.text).width)
-    const strokes = i === 0 && firstScaled ? scaledStrokes(item.text, 1.4) : exactStrokes(item.text)
+    const strokes = i === 0 && firstStrokes ? firstStrokes(item.text) : exactStrokes(item.text)
     act(() => replayStrokes(screen.getByRole('img', { name: /escribir/i }), toInk(strokes, fit)))
     fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
@@ -115,14 +115,24 @@ describe('CaligrafiaScreen', () => {
     expect(progress.stars).toBe(starsAfterFirst)
   })
 
+  it('a two-star letter (a slight size fault) is recorded as right: two stars are not a fault for the review', async () => {
+    renderScreen()
+    await runPlan((text) => scaledStrokes(text, 1.1))
+    await screen.findByText('¡Terminado!')
+    const first = recordAttempt.mock.calls[0][0] as { correct: boolean; errorType: unknown; context: { stars: number } }
+    expect(first.context.stars).toBe(2)
+    expect(first.correct).toBe(true)
+    await waitFor(() => expect(recordAttempt).toHaveBeenCalled())
+  })
+
   it('a near miss is recorded as wrong with its calig- error type and the stars in the context', async () => {
     renderScreen()
-    await runPlan(true)
+    await runPlan((text) => widenedStrokes(exactStrokes(text), 1.2))
     await screen.findByText('¡Terminado!')
     const first = recordAttempt.mock.calls[0][0] as { correct: boolean; errorType: string; context: { stars: number } }
     expect(first.correct).toBe(false)
     expect(first.errorType).toMatch(/^calig-/)
-    expect(first.context.stars).toBeLessThanOrEqual(2)
+    expect(first.context.stars).toBe(1)
     await waitFor(() => expect(recordAttempt).toHaveBeenCalled())
   })
 })

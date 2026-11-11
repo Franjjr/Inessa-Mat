@@ -1,5 +1,5 @@
 /* Route /play/caligrafia: «Caligrafía con lápiz», the day's plan of letra ligada (2 or 3 items, about five minutes). Each
-   item runs TraceCursive; every item is recorded as one attempt (skill calig:…, correct = 3 stars) and moves its mastery.
+   item runs TraceCursive; every item is recorded as one attempt (skill calig:…, correct = 2 or 3 stars) and moves its mastery.
    The day's stars come once, on the first finish, on their own key. «Salir» leaves at any time. */
 import { useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
@@ -44,7 +44,8 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
 
   const record = (item: CalItem, score: CursiveScore, tries: number, ms: number) => {
     const now = new Date()
-    const correct = score.stars === 3
+    // Two stars is a letter that is right with one slight fault: it counts as right for the review (only one star is wrong).
+    const correct = score.stars >= 2
     const errorType = score.worst ? ERROR_OF[score.worst] : null
     const attempt: AttemptRecord = {
       id: crypto.randomUUID(),

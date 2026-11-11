@@ -263,7 +263,8 @@ export function scoreCursive(target: { strokes: ModelStroke[]; width: number }, 
   const failedList = CRITERIA.filter((c) => !passed[c])
   const worst = failedList.length ? failedList.reduce((w, c) => (ratio[c] > ratio[w] ? c : w)) : null
   const failed = failedList.length
-  const stars: 1 | 2 | 3 = failed <= T.stars.threeMaxFailed ? 3 : failed <= T.stars.twoMaxFailed && passed.shape ? 2 : 1
+  // Two stars: one criterion off, and the shape is at least close (a slight shape fault is still a good letter).
+  const stars: 1 | 2 | 3 = failed <= T.stars.threeMaxFailed ? 3 : failed <= T.stars.twoMaxFailed && shapeRatio <= T.stars.shapeSlight ? 2 : 1
 
   return {
     shape,

@@ -250,13 +250,13 @@ Segunda asignatura, con su temario, sus clases, su sesión y su prueba inicial. 
 
 Práctica opcional de letra ligada con el lápiz, de 5 minutos, después de la sesión de Lengua. Solo se ofrece donde se usa el lápiz (un dispositivo donde nunca se ha escrito con él no la ve) y si el ajuste de escritura a mano del niño no está apagado.
 
-**Qué se practica** (73 elementos, en orden de enseñanza; cada uno es una habilidad `calig:…`):
+**Qué se practica** (en orden de enseñanza; cada uno es una habilidad `calig:…`):
 
 - **Letras** (27): redondas (a o d g q c), bucles (l b h k f), puentes (m n ñ v w) y otras (e i j p r s t u x y z).
 - **Enlaces** (8): br, bl, os, ar, la, el, mo, ca.
-- **Palabras** (8): sol, mamá, casa, gato, libro, perro, árbol, mariposa.
-- **Frases** (3): «Mi gato come.», «La luna sale.», «Me gusta leer.».
-- **Mayúsculas** (27): A–Z y Ñ.
+- **Palabras** (14): sol, mamá, casa, gato, libro, perro, árbol, mariposa, pato, mesa, niño, pelota, jirafa, escuela.
+- **Mayúsculas** (27): A–Z y Ñ. Van antes de las frases, porque cada frase empieza con mayúscula.
+- **Frases** (6): «Mi gato come.», «La luna sale.», «Me gusta leer.», «El niño juega.», «Mi mamá canta.», «Juan lee un libro.».
 
 El plan del día lo elige el planificador (`src/engine/caligrafia/plan.ts`): de 2 a 3 elementos, primero los que tocan según la memoria del niño. Cada elemento tiene su intento y su dominio como cualquier otra habilidad; estas habilidades nunca cuentan en Matemáticas ni en Lengua.
 
@@ -264,12 +264,12 @@ El plan del día lo elige el planificador (`src/engine/caligrafia/plan.ts`): de 
 
 **Cómo se mide** (`src/ink/cursive/score.ts`, todo en unidades del modelo):
 
-- **Forma:** distancia media entre el trazo del niño y el modelo, en alturas de x (x-height); además, no más de un 1 % de puntos fuera de la línea y la anchura dentro del 15 %.
+- **Forma:** distancia media entre el trazo del niño y el modelo, en alturas de x (x-height); además, no más de un 1 % de puntos fuera de la línea, ningún punto a más de 4,5 unidades del modelo y, solo en una letra suelta, la anchura dentro de 0,04 alturas de x.
 - **Línea:** desviación media de los puntos de la línea de base, en alturas de x.
-- **Tamaño:** altura del cuerpo de la letra frente a la del modelo, entre 0,92 y 1,08.
+- **Tamaño:** altura del cuerpo de la letra frente a la del modelo, entre 0,93 y 1,07.
 - **Inicio:** error del punto de inicio y de la dirección con que arranca el trazo.
 
-Las estrellas son estrictas: **3** si pasan los cuatro criterios; **2** si falla uno solo (y pasa la forma); **1** en el resto. Cada resultado da un único consejo en español sobre el criterio que más falla.
+Las estrellas son estrictas: **3** si pasan los cuatro criterios; **2** si falla uno solo y la forma no se aleja más de un 25 % de su límite (un fallo leve); **1** en el resto. Para el repaso, **2 y 3 estrellas cuentan como letra bien hecha**; solo 1 estrella cuenta como fallo. Cada resultado da un único consejo en español sobre el criterio que más falla.
 
 **Dónde está el ajuste:** todos los límites están en `src/ink/cursive/thresholds.ts` (`CURSIVE_THRESHOLDS`). Son los únicos números que se tocan; ni la pantalla ni el scorer los repiten.
 
@@ -277,7 +277,7 @@ Las estrellas son estrictas: **3** si pasan los cuatro criterios; **2** si falla
 
 1. Entrar en la zona de adultos (PIN) y abrir `/adult/caligrafia-ensayo`.
 2. Elegir la letra o la palabra y escribirla como en la práctica. Cada intento muestra sus cuatro valores, su límite, si pasa y las estrellas. Nada se guarda: ni intentos, ni dominio, ni estrellas.
-3. Si una nota parece injusta, mirar el criterio que falla. Si la niña lo escribe bien y el valor queda justo por encima del límite, subir ese límite un poco (por ejemplo, de 0,04 a 0,045 en la forma). Si un trazo claramente mal sale como bueno, bajarlo.
+3. Si una nota parece injusta, mirar el criterio que falla. Si la niña lo escribe bien y el valor queda justo por encima del límite, subir ese límite un poco, cambiando solo la clave que falla en `CURSIVE_THRESHOLDS` (por ejemplo, `shape`, de 0,04 a 0,045). Si un trazo claramente mal sale como bueno, bajarlo.
 4. Después de cambiar un límite, correr `npx vitest run src/ink/cursive`: los tests comprueban que el modelo exacto de cada elemento saca 3 estrellas y que los trazos mal hechos no pasan.
 5. Anotar el cambio y el porqué en el historial del repositorio, en el mismo commit.
 

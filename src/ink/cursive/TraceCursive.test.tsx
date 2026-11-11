@@ -200,7 +200,8 @@ describe('TraceCursive', () => {
       expect(screen.getByRole('status'), item.text).toHaveTextContent('Repasa la línea gris con el lápiz')
       unmount()
     }
-  })
+    // Every item of the curriculum is rendered: slow on a loaded machine, so it gets more than the default 5 s.
+  }, 30000)
 
   it('a letter has two tries: the best one is reported with the tries used', () => {
     const { onDone, writeOnce, toWrite } = setup()
