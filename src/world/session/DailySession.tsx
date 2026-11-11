@@ -14,7 +14,7 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { classForTopic, getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
-import { syllabusFor, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { syllabusFor, syllabusForGrade, topicTitle, type SyllabusTopic } from '@/content/syllabus'
 import { markTopicPracticeDay, DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
@@ -203,6 +203,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   // Lengua: the class of the topic comes before «Lo nuevo» when the child has not done it yet.
   const pendingClass = setup.classFirst ? plan.classTopicId ?? null : null
   const summary: RunSummary = summarizeRun(queue ?? { slots: [], retried: [] }, results, !endedByTime)
+  // Answers to the items of «Lo nuevo»: only these make the day a day of practice of the topic.
+  const newAnswered = results.filter((r) => queue?.slots.find((sl) => sl.item.uid === r.uid)?.item.item.block === 'new').length
   // A maths session with a missed times-table fact ends offering the song of that table.
   const missed = subject === 'math' ? missedTable(queue ?? { slots: [], retried: [] }, results, songTables(child.grade)) : null
   const ctx = templateContext(child)
@@ -262,7 +264,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
         summary={summary}
         missed={missed}
         topicName={topic ? topicName : null}
-        topicId={topic?.id ?? null}
+        practisedTopic={topic && newAnswered > 0 ? topic : null}
         rule={topicClass ? renderTemplate(topicClass.lesson.steps[topicClass.lesson.steps.length - 1].text, ctx) : null}
         finished={!endedByTime}
         onDone={onDone}
@@ -411,12 +413,15 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
   )
 }
 
-function Closing({ child, progress, subject, summary, missed, topicName, topicId, rule, finished, onDone, onGo, ctx }: {
-  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null; topicId: string | null
+function Closing({ child, progress, subject, summary, missed, topicName, practisedTopic, rule, finished, onDone, onGo, ctx }: {
+  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null
+  /** Today's topic when the child answered at least one item of «Lo nuevo»: the day counts as a day of practice of it. */
+  practisedTopic: SyllabusTopic | null
   /** The closing step of the topic's class (it starts with «La regla: …»), when the topic has a class: what the child takes home. */
   rule: string | null; finished: boolean
   onDone: () => void; onGo: (worldId: string, nodeId: string) => void; ctx: ReturnType<typeof templateContext>
 }) {
+  const mastery = useMastery(child.id) ?? {}
   const key = sessionRewardKey(new Date(), subject)
   const alreadyToday = !!progress.flags?.[key]
   const [awarded, setAwarded] = useState(false)
@@ -429,11 +434,12 @@ function Closing({ child, progress, subject, summary, missed, topicName, topicId
     marked.current = true
     const doneKey = sessionDoneKey(new Date(), subject)
     void updateProgress(child.id, (p) => {
-      // The day also counts as a day of practice of today's topic (a topic stuck for 5 days makes way for the next one).
-      const withTopic = topicId ? markTopicPracticeDay(p, topicId, new Date()) : p
+      // The day also counts as a day of practice of today's topic (a topic with no progress for 5 days makes way for another).
+      const withTopic = practisedTopic ? markTopicPracticeDay(p, practisedTopic, mastery, new Date()) : p
       return p.flags?.[doneKey] ? withTopic : { ...withTopic, flags: { ...withTopic.flags, [doneKey]: true }, updatedAt: new Date().toISOString() }
     }).catch(() => undefined)
-  }, [summary.answered, subject, child.id, topicId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per closing; later mastery changes must not re-mark
+  }, [summary.answered, subject, child.id, practisedTopic])
 
   // The stars are for practice (half of the planned items answered), finished or cut by the time; a skipped run gets none.
   const earns = earnsStars(summary)

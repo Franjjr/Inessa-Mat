@@ -3,8 +3,8 @@
 import { readTables, type TableState } from '@/adult/shared/reading'
 import { isNodeUnlocked, seasonOf } from '@/content'
 import { classForTopic, isClassDone, type ClassDef } from '@/content/classes'
-import { allTopics, currentTopic, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { factGrid } from '@/engine'
+import { allTopics, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { factGrid, topicOfToday } from '@/engine'
 import type { ActivityConfig, ActivityKind, MasteryMap, ProgressState, WorldDef, NodeDef } from '@/types'
 
 /** The child's words for one times table: never the errors («en camino» covers the tables still being learnt). */
@@ -32,7 +32,7 @@ export interface FreeClass {
     whose class is already done. Only what the child has reached; nothing here changes progress. */
 export function reachedClasses({ grade, mastery, progress }: { grade?: number; mastery: MasteryMap; progress: ProgressState }): FreeClass[] {
   const course = syllabusForGrade(grade)
-  const current = currentTopic(course, mastery)?.id
+  const current = topicOfToday(course, mastery, progress, new Date())?.id
   return allTopics(course).flatMap((topic) => {
     const cls = classForTopic(topic.id, grade)
     if (!cls) return []

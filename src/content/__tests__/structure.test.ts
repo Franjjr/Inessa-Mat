@@ -158,7 +158,9 @@ describe('season 1 structure', () => {
       const mixAt = acts.findIndex((a) => (a.selector.tables?.length ?? 0) >= 2 && a.selector.kinds?.includes('fact-mul'))
       expect(mixAt, id).toBeGreaterThan(0)
       const single = acts.map((a, i) => ((a.selector.tables?.length ?? 0) === 1 ? i : -1)).filter((i) => i >= 0)
-      expect(Math.max(...single.filter((i) => i < mixAt)), id).toBeLessThan(mixAt)
+      expect(single.some((i) => i < mixAt && acts[i].selector.kinds?.includes('fact-mul')), `${id}: a single-table game before the mix`).toBe(true)
+      const worldTable = acts[mixAt].selector.tables!
+      expect(single.some((i) => i < mixAt && worldTable.includes(acts[i].selector.tables![0])), `${id}: the mix has a table practised before`).toBe(true)
       expect(single.some((i) => i > mixAt && acts[i].selector.kinds?.includes('fact-mul')), `${id}: no single-table game after the mix`).toBe(false)
     }
   })

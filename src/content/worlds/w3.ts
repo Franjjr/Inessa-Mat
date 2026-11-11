@@ -54,9 +54,9 @@ export const w3 = world({
     // Mixed review after the 6 table is practised on its own: first mastery, then interleaving with older tables.
     activityNode('bubbles', {
       kind: 'bubbles',
-      title: 'Mezcla del 4, del 5 y del 6',
+      title: 'Mezcla del 5 y del 6',
       instructions: 'Explota la burbuja que tiene el resultado correcto.',
-      selector: { kinds: ['fact-mul'], tables: [4, 5, 6], factorRange: [3, 9] },
+      selector: { kinds: ['fact-mul'], tables: [5, 6], factorRange: [3, 9] },
       count: 10,
       params: { choices: 4 },
     }),
