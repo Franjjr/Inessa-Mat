@@ -1,7 +1,7 @@
-/* Local review log of wrong answers. Its purpose: an adult can later look at the answers the app marked wrong and check
+/* Local review log of wrong answers. Its purpose: an adult can look at the answers the app marked wrong and check
    whether a right answer was judged wrong (a false negative). It stays on this device: nothing is sent anywhere, and
-   no child or family id is stored. It is bounded: only the newest REVIEW_LIMIT notes are kept. Showing or exporting it
-   is an adult-area feature that does not exist yet. */
+   no child or family id is stored. It is bounded: only the newest REVIEW_LIMIT notes are kept. The adult sees it,
+   exports it and deletes it in Ajustes («Respuestas marcadas como mal», src/adult/settings/ReviewNotesCard.tsx). */
 import type { AttemptRecord, ErrorType, InputMode, ISODate } from '@/types'
 import { db } from './db'
 

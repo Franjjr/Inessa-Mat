@@ -332,7 +332,8 @@ export default function ChildReportScreen() {
       >
         <p className={adult.lead}>
           Se borrarán su progreso, sus resultados, sus premios y sus muestras de escritura de este dispositivo
-          {child?.orgId ? ' y de la nube' : ''}. Si quieres conservar una copia, descárgala antes.
+          {child?.orgId ? ' y de la nube' : ''}. También se borrará el registro de respuestas marcadas como mal de este
+          dispositivo, que no distingue entre niños. Si quieres conservar una copia, descárgala antes.
         </p>
       </ConfirmModal>
     </AdultPage>
