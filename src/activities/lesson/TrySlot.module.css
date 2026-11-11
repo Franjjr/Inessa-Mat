@@ -50,6 +50,15 @@
   color: var(--c-success);
 }
 
+/* The right answer of a step given up: neutral ink, not the green of a success. */
+.answer {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+}
+
 .hint {
   margin: 0;
   font-family: var(--font-read);

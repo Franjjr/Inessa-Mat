@@ -3,7 +3,7 @@
 import { DigitCell } from '@/ink'
 import s from './SubStepViews.module.css'
 
-const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'unidades de mil', 'decenas de mil']
+const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar']
 const placeOf = (i: number) => (['u', 'd', 'c', 'um'] as const)[i] ?? null
 
 /** The number written in the cells (units first). null while empty; a gap between digits makes it unreadable (null). */

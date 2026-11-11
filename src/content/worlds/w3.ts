@@ -51,6 +51,15 @@ export const w3 = world({
       selector: { kinds: ['missing-factor'], tables: [6], factorRange: [2, 9] },
       count: 6,
     }),
+    // Mixed review after the 6 table is practised on its own: first mastery, then interleaving with older tables.
+    activityNode('bubbles', {
+      kind: 'bubbles',
+      title: 'Mezcla del 5 y del 6',
+      instructions: 'Explota la burbuja que tiene el resultado correcto.',
+      selector: { kinds: ['fact-mul'], tables: [5, 6], factorRange: [3, 9] },
+      count: 10,
+      params: { choices: 4 },
+    }),
     activityNode('review-river', {
       kind: 'column',
       title: 'Repaso del río',

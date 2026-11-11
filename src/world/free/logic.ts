@@ -1,9 +1,26 @@
 /* Free play rules (pure): which times tables and which minigames the child has unlocked, and the config of a
    table drill. Only what the child has reached is offered; nothing here changes progress. */
+import { readTables, type TableState } from '@/adult/shared/reading'
 import { isNodeUnlocked, seasonOf } from '@/content'
 import { classForTopic, isClassDone, type ClassDef } from '@/content/classes'
-import { allTopics, currentTopic, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { allTopics, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { factGrid, topicOfToday } from '@/engine'
 import type { ActivityConfig, ActivityKind, MasteryMap, ProgressState, WorldDef, NodeDef } from '@/types'
+
+/** The child's words for one times table: never the errors («en camino» covers the tables still being learnt). */
+export type TableStatus = 'dominada' | 'en-camino' | 'por-aprender'
+export const TABLE_STATUS_LABEL: Record<TableStatus, string> = {
+  dominada: 'Dominada',
+  'en-camino': 'En camino',
+  'por-aprender': 'Por aprender',
+}
+
+/** The status of every times table 1..10, read from the child's mastery of the facts (the engine's grid). */
+export function tableStatuses(mastery: MasteryMap | undefined): Record<number, TableStatus> {
+  const { tables } = readTables(factGrid(mastery ?? {}), '')
+  const status = (state: TableState): TableStatus => (state === 'mastered' ? 'dominada' : state === 'unseen' ? 'por-aprender' : 'en-camino')
+  return Object.fromEntries(tables.map((t) => [t.n, status(t.state)]))
+}
 
 export interface FreeClass {
   topicId: string
@@ -12,10 +29,11 @@ export interface FreeClass {
 }
 
 /** The classes «Jugar» offers to repeat: those of the child's grade whose topic is mastered, is the topic of today, or
-    whose class is already done. Only what the child has reached; nothing here changes progress. */
-export function reachedClasses({ grade, mastery, progress }: { grade?: number; mastery: MasteryMap; progress: ProgressState }): FreeClass[] {
+    whose class is already done. Today's topic is the one «Hoy» teaches (topicOfToday). Only what the child has reached;
+    nothing here changes progress. */
+export function reachedClasses({ grade, mastery, progress, now = new Date() }: { grade?: number; mastery: MasteryMap; progress: ProgressState; now?: Date }): FreeClass[] {
   const course = syllabusForGrade(grade)
-  const current = currentTopic(course, mastery)?.id
+  const current = topicOfToday(course, mastery, progress, now)?.id
   return allTopics(course).flatMap((topic) => {
     const cls = classForTopic(topic.id, grade)
     if (!cls) return []

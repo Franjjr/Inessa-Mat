@@ -33,13 +33,22 @@ export function ScrollAssist() {
     update()
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
-    // Content grows and shrinks without a scroll or a resize (feedback, a new round): check twice a second.
+    // Content grows and shrinks without a scroll or a resize (feedback, a new round, a picture that loads). The observers
+    // react at once, but they miss layouts whose <html>/<body> keep their size while the content overflows (seen in the
+    // e2e: «No lo sé» out of reach at 1000 × 490 without «Más abajo»), so the twice-a-second check stays as the safety net.
     const timer = window.setInterval(schedule, 500)
+    const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null
+    resizeObserver?.observe(document.documentElement)
+    resizeObserver?.observe(document.body)
+    const mutationObserver = typeof MutationObserver === 'function' ? new MutationObserver(schedule) : null
+    mutationObserver?.observe(document.body, { childList: true, subtree: true, characterData: true })
     return () => {
       if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
       window.clearInterval(timer)
+      resizeObserver?.disconnect()
+      mutationObserver?.disconnect()
     }
   }, [])
 

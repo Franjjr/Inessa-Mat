@@ -254,10 +254,16 @@ function exampleFor(skill: SkillKey, rng: Rng, now: Date): DailyPlan['example'] 
   return { exercise: ex, statement: statementOf(ex), steps: hintsFor(ex).map((h) => h.text) }
 }
 
+/** The operations from the simplest to the most advanced. */
+const OP_LEVEL: readonly WordOp[] = ['add', 'sub', 'mul', 'div']
+
+/** The operation of a word problem: the one the topic teaches; a topic without one (clock, money, shapes) gets the most
+    advanced operation the child practises, so a child with no practice gets an addition. */
 function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
   const first = topic?.skills[0] ? parseSkill(topic.skills[0]) : null
   if (first) {
     if (first.type === 'word') return first.op
+    if (first.type === 'bar' && (first.op === 'add' || first.op === 'sub' || first.op === 'mul' || first.op === 'div')) return first.op
     if (first.type === 'add') return 'add'
     if (first.type === 'sub') return 'sub'
     if (first.type === 'mul' || first.type === 'mul2x1' || first.type === 'mul3x1' || first.type === 'mulParts') return 'mul'
@@ -272,7 +278,8 @@ function wordOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): WordOp {
     if (p.type === 'mul' || p.type === 'mul2x1') count.mul += m.box
     if (p.type === 'div' || p.type === 'div2x1') count.div += m.box
   }
-  return (Object.keys(count) as WordOp[]).sort((a, b) => count[b] - count[a] || a.localeCompare(b))[0]
+  const practised = OP_LEVEL.filter((op) => count[op] > 0)
+  return practised[practised.length - 1] ?? 'add'
 }
 
 /** The operation of the problem block: the two-step topic asks two-step bars, the others the operation of the topic. */

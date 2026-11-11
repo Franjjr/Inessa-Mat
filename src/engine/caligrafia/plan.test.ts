@@ -125,3 +125,33 @@ describe('planCaligrafia', () => {
     }
   })
 })
+
+describe('the plan opens the sentences only after the capitals', () => {
+  it('with every earlier stage learnt but one capital missing, no sentence is offered', () => {
+    const before = CAL_CURRICULUM.filter((i) => i.kind !== 'frase' && i.text !== 'M')
+    const mastery = masteryWith(before.map((i) => row(i.skill, 1, FUTURE)))
+    const plan = planCaligrafia({ childId: CHILD, mastery, now: NOW })
+    expect(plan.some((i) => i.kind === 'frase')).toBe(false)
+    expect(plan.map((i) => i.skill)).toContain('calig:mayus:M')
+  })
+
+  it('once every capital is learnt, the first sentence opens', () => {
+    const before = CAL_CURRICULUM.filter((i) => i.kind !== 'frase')
+    const mastery = masteryWith(before.map((i) => row(i.skill, 1, FUTURE)))
+    const plan = planCaligrafia({ childId: CHILD, mastery, now: NOW })
+    expect(plan.some((i) => i.kind === 'frase')).toBe(true)
+  })
+})
+
+describe('the curriculum teaches each capital before the sentences that start with it', () => {
+  it('every capital of a sentence is an earlier item of the curriculum', () => {
+    const capitalAt = (letter: string) => CAL_CURRICULUM.findIndex((i) => i.kind === 'mayus' && i.text === letter)
+    for (const frase of CAL_CURRICULUM.filter((i) => i.kind === 'frase')) {
+      const sentenceAt = CAL_CURRICULUM.indexOf(frase)
+      for (const capital of frase.text.match(/\p{Lu}/gu) ?? []) {
+        expect(capitalAt(capital), `${frase.text}: ${capital}`).toBeGreaterThanOrEqual(0)
+        expect(capitalAt(capital), `${frase.text}: ${capital}`).toBeLessThan(sentenceAt)
+      }
+    }
+  })
+})

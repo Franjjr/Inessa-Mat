@@ -69,6 +69,9 @@ describe('cnn', () => {
     const img = decodeSparseImage(fixture.cases[0].reference.image!)
     const ms = benchMs(() => model.run(img))
     console.info(`[ml] CNN inference: ${ms.toFixed(3)} ms/digit`)
-    expect(ms).toBeLessThan(5)
+    // A shared CI runner is several times slower than a laptop (5.6 ms seen on GitHub Actions): there the test only guards
+    // against an order-of-magnitude regression.
+    const ci = Boolean((globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.CI)
+    expect(ms).toBeLessThan(ci ? 25 : 5)
   })
 })

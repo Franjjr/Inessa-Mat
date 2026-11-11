@@ -1,6 +1,8 @@
-/* The Caligrafía curriculum (letra ligada): what is practised, in teaching order. Pure data, no I/O.
+/* The Caligrafía curriculum (lowercase in letra ligada; the capitals are PRINT capitals, as the stroke models have
+   no cursive capitals and the adult card says so): what is practised, in teaching order. Pure data, no I/O.
    Letters go by family of stroke (redondas, bucles, puentes, otras), then the two-letter links, the words, the
-   sentences and, last, the capitals. Every text must be drawable by joinWord (src/ink/cursive/join.ts). */
+   capitals and, last, the sentences: a sentence starts with a capital, so the capitals come first (as in Lengua 3.º).
+   Every text must be drawable by joinWord (src/ink/cursive/join.ts). */
 import type { SkillKey } from '@/types'
 
 export type CalKind = 'letra' | 'mayus' | 'enlace' | 'palabra' | 'frase'
@@ -25,7 +27,7 @@ const ENLACES: CalItem[] = ['br', 'bl', 'os', 'ar', 'la', 'el', 'mo', 'ca'].map(
   skill: `calig:enlace:${t}`, text: t, kind: 'enlace',
 }))
 
-const PALABRAS: CalItem[] = ['sol', 'mamá', 'casa', 'gato', 'libro', 'perro', 'árbol', 'mariposa'].map((t) => ({
+const PALABRAS: CalItem[] = ['sol', 'mamá', 'casa', 'gato', 'libro', 'perro', 'árbol', 'mariposa', 'pato', 'mesa', 'niño', 'pelota', 'jirafa', 'escuela'].map((t) => ({
   skill: `calig:palabra:${t}`, text: t, kind: 'palabra',
 }))
 
@@ -33,6 +35,9 @@ const FRASES: CalItem[] = [
   { id: 'mi-gato-come', text: 'Mi gato come.' },
   { id: 'la-luna-sale', text: 'La luna sale.' },
   { id: 'me-gusta-leer', text: 'Me gusta leer.' },
+  { id: 'el-nino-juega', text: 'El niño juega.' },
+  { id: 'mi-mama-canta', text: 'Mi mamá canta.' },
+  { id: 'juan-lee-un-libro', text: 'Juan lee un libro.' },
 ].map((f) => ({ skill: `calig:frase:${f.id}`, text: f.text, kind: 'frase' }))
 
 const MAYUSCULAS: CalItem[] = [...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'].map((c) => ({
@@ -41,7 +46,7 @@ const MAYUSCULAS: CalItem[] = [...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'].map((c) => ({
 
 /** The whole curriculum in teaching order. */
 export const CAL_CURRICULUM: CalItem[] = [
-  ...REDONDAS, ...BUCLES, ...PUENTES, ...OTRAS, ...ENLACES, ...PALABRAS, ...FRASES, ...MAYUSCULAS,
+  ...REDONDAS, ...BUCLES, ...PUENTES, ...OTRAS, ...ENLACES, ...PALABRAS, ...MAYUSCULAS, ...FRASES,
 ]
 
 /** The skill keys of the curriculum (a Set for membership checks). */

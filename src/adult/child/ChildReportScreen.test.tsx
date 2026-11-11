@@ -19,6 +19,7 @@ const data = vi.hoisted(() => ({
   markRewardClaimed: vi.fn(),
   getMastery: vi.fn(),
   listAttempts: vi.fn(),
+  listPlacementAttempts: vi.fn(),
   listSessions: vi.fn(),
   updateProgress: vi.fn(),
 }))
@@ -47,8 +48,8 @@ function seededGrid(): number[][] {
     grid[b - 1][a - 1] = box
   }
   set(2, 3, 5) // mastered
-  set(7, 7, 1) // struggling
-  set(6, 8, 3) // learning
+  set(7, 7, 0) // struggling: failed, not yet learnt
+  set(6, 8, 1) // learning: answered right once, not yet dominated (box 2 or more)
   return grid
 }
 
@@ -91,6 +92,7 @@ describe('ChildReportScreen', () => {
     data.getRewards.mockResolvedValue([])
     data.getMastery.mockResolvedValue({})
     data.listSessions.mockResolvedValue([])
+    data.listPlacementAttempts.mockResolvedValue([])
     // Four wrong times-table answers in the last days.
     data.listAttempts.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({
       id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',
@@ -134,6 +136,20 @@ describe('ChildReportScreen', () => {
     expect(screen.getByText('42 min')).toBeInTheDocument()
     expect(screen.getByText('80 %')).toBeInTheDocument()
     expect(screen.getByText('1 de 8')).toBeInTheDocument()
+    // Without the activity of every subject, the minutes are said to be of maths.
+    expect(screen.getByText('de matemáticas en los últimos 7 días')).toBeInTheDocument()
+    expect(screen.getByText('de aciertos en matemáticas (7 días)')).toBeInTheDocument()
+  })
+
+  it('counts the minutes of every subject: a child who only played Inglés and Lengua did play', async () => {
+    data.getChildSummary.mockResolvedValue({
+      ...SUMMARY,
+      minutesLast7Days: 0,
+      weekBySubject: { english: { minutes: 9, attempts: 20 }, language: { minutes: 6, attempts: 10 } },
+    })
+    renderReport()
+    const label = await screen.findByText('jugando en los últimos 7 días')
+    expect(label.parentElement).toHaveTextContent('15 min')
   })
 
   it('shows the real prize setup when there is no reward yet', async () => {

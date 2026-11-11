@@ -10,9 +10,10 @@
    of taking the max of two partial totals. The stored totals stay as a floor for content that is no longer known.
    mergeProgress is commutative, associative and idempotent on its output (property-tested in merge.test.ts).
    Rewards: claimedAt / unlockedAt → earliest non-null (never reverted); other fields → last-writer-wins (mergeReward).
+   Mastery rows: a pending local change is merged with the server copy (mergeMastery): evidence counts take the larger value.
    Other synced rows use last-writer-wins on updatedAt (lww). */
 import { MAX_RECORDS as CONTENT_MAX_RECORDS, getAccessory } from '@/content'
-import type { NodeProgress, ProgressState, WorldProgress } from '@/types'
+import type { NodeProgress, ProgressState, SkillMastery, WorldProgress } from '@/types'
 import type { RewardRow } from './types'
 import { stableStringify } from './util'
 
@@ -186,4 +187,20 @@ export function lww<T extends { updatedAt: string }>(a: T | undefined, b: T | un
   const tb = Date.parse(b.updatedAt)
   if (ta === tb) return smallerByJson(a, b) === a ? b : a
   return ta > tb ? a : b
+}
+
+/** Two copies of one skill's mastery: a local change that has not reached the server yet, and a copy from the server.
+ *  The copy with more evidence (more attempts) decides box, streak, average time and due date; the counts keep the
+ *  larger value; lastSeenAt keeps the later date; updatedAt keeps the later stamp, so the server's last-writer-wins
+ *  guard accepts the merged row when it is pushed. Commutative: swapping the arguments gives the same row. */
+export function mergeMastery<T extends SkillMastery>(a: T, b: T): T {
+  const evidence = a.attempts !== b.attempts ? (a.attempts > b.attempts ? a : b) : (lww(a, b) as T)
+  const lastSeenAt = a.lastSeenAt && b.lastSeenAt ? (Date.parse(a.lastSeenAt) >= Date.parse(b.lastSeenAt) ? a.lastSeenAt : b.lastSeenAt) : (a.lastSeenAt ?? b.lastSeenAt)
+  return {
+    ...evidence,
+    attempts: Math.max(a.attempts, b.attempts),
+    correct: Math.max(a.correct, b.correct),
+    lastSeenAt,
+    updatedAt: latest(a.updatedAt, b.updatedAt),
+  }
 }

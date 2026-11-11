@@ -13,15 +13,14 @@ test.describe('A · alta del primer perfil', () => {
     await expect(page).toHaveURL(/\/kids\/new$/)
 
     await page.getByRole('textbox', { name: 'Tu nombre' }).fill(CHILD_NAME)
-    await page.getByRole('button', { name: 'Siguiente ›' }).click()
-    await expect(page.getByText('Encantada de conocerte')).toBeVisible()
     await page.getByRole('button', { name: 'Como a una niña' }).click()
+    await page.getByRole('button', { name: 'Siguiente ›' }).click()
     await page.getByRole('button', { name: 'No lo sé' }).click()
     await page.getByRole('group', { name: 'Compañeros' }).getByRole('button').first().click()
-    await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
     await page.getByRole('textbox', { name: 'Nombre del compañero' }).fill('Luna')
-    await page.getByRole('button', { name: 'Siguiente ›' }).click()
+    await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
     await page.getByRole('button', { name: 'Es una niña' }).click()
+    await page.getByRole('button', { name: 'Siguiente ›' }).click()
     await expect(page.getByRole('button', { name: '¡Vamos!' })).toBeVisible()
     await page.getByRole('button', { name: '¡Vamos!' }).click()
 

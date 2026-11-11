@@ -60,6 +60,19 @@ describe('ChestScreen', () => {
     expect(data.updateProgress).not.toHaveBeenCalled()
   })
 
+  it('tells the child a prize is waiting and how many crystals are missing, without revealing it', async () => {
+    renderChest()
+    expect(await screen.findByText(/Tu familia te guarda un premio! Te faltan 5 cristales/)).toBeInTheDocument()
+    expect(screen.queryByText('Una tarde de cine contigo')).not.toBeInTheDocument()
+  })
+
+  it('says nothing about a prize when the adult set none', async () => {
+    state.rewards = []
+    renderChest()
+    expect(await screen.findByText(/Cada cristal te da una letra/)).toBeInTheDocument()
+    expect(screen.queryByTestId('chest-prize-waiting')).toBeNull()
+  })
+
   it('opens with 8 crystals: shows the adult prize and the secret word, and records the opening once', async () => {
     state.progress = progressWithCrystals(['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8'])
     renderChest()

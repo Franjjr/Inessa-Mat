@@ -64,3 +64,8 @@
   font-weight: 600;
   min-width: 9ch;
 }
+.guide {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-mute);
+}

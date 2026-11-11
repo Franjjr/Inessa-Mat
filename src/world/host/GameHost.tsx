@@ -6,9 +6,9 @@
    Activities never import this file; they use useActivityHost() from @/activities. */
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
-import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
+import { FALLBACK_CHILD_NAME, ISLAND_ID, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
+import { createRng, isChoiceExercise, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
@@ -92,7 +92,9 @@ function reportError(where: string, e: unknown) {
   if (import.meta.env.DEV) console.warn(`[game-host] ${where}`, e)
 }
 
-export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', children }: GameHostProviderProps) {
+export function GameHostProvider({ worldId, nodeId, activity, subject: subjectProp, assignmentId, children }: GameHostProviderProps) {
+  // The island's stops are English: without its mark, an island session would count as maths minutes.
+  const subject = subjectProp ?? (worldId === ISLAND_ID ? 'english' : 'math')
   const { child } = useActiveChild()
   const childId = child?.id ?? null
 
@@ -142,10 +144,11 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
           return
         }
         session.id = s.id
+        // Active time (activity.ts): each touch adds the time since the previous one, at most 10 min, and a hidden
+        // screen is not touched, so a game left open in the background does not write hours of play.
         timer = setInterval(() => {
-          if (!session.id) return
-          const minutes = Math.max(0, Math.round((Date.now() - session.startedAt) / 60_000))
-          void touchSession(session.id, { minutes }).catch((e) => reportError('touchSession', e))
+          if (!session.id || document.visibilityState === 'hidden') return
+          void touchSession(session.id, {}).catch((e) => reportError('touchSession', e))
         }, SESSION_TOUCH_MS)
       })
       .catch((e) => reportError('startSession', e))
@@ -155,18 +158,18 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       const id = session.id
       session.id = null
       if (id) {
-        const minutes = Math.max(0, Math.round((Date.now() - session.startedAt) / 60_000))
+        // endSession adds the active time since the last touch (no wall-clock minutes).
         void endSession(id, {
           attempts: session.attempts,
           correct: session.correct,
           starsEarned: 0,
           nodesCompleted: [],
           ...(subject === 'math' ? {} : { subject }),
+          ...(assignmentId ? { assignmentId } : {}),
         }).catch((e) => reportError('endSession', e))
-        void touchSession(id, { minutes }).catch(() => undefined)
       }
     }
-  }, [childId, subject])
+  }, [childId, subject, assignmentId])
 
   const host = useMemo<ActivityHost>(() => {
     const ctx = contextOf(child)
@@ -185,7 +188,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       // A completion-only text (escritura guiada) is not graded, but finishing it counts as done: its mastery moves.
       const next = graded || isCompletionOnly(exercise.kind) ? updateMastery(
         masteryRef.current[skill],
-        { skill, correct: check.correct, ms, inputMode, hintsUsed, errorType: check.errorType ?? null },
+        { skill, correct: check.correct, ms, inputMode, hintsUsed, retries, errorType: check.errorType ?? null, choice: isChoiceExercise(exercise) },
         now,
       ) : null
       if (next) masteryRef.current = { ...masteryRef.current, [skill]: next }
@@ -219,6 +222,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
           ...(activity ? { activity } : {}),
           ...(worldId ? {} : { free: true }),
           ...(method ? { method } : {}),
+          ...(assignmentId ? { assignmentId } : {}),
         },
         createdAt: now.toISOString(),
       }
@@ -256,7 +260,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       setPreference,
     }
     // The child's name and genders feed t(); the ids decide persistence and seeds.
-  }, [childId, worldId, nodeId, activity, child?.nickname, child?.gender, child?.companion?.name,
+  }, [childId, worldId, nodeId, activity, assignmentId, child?.nickname, child?.gender, child?.companion?.name,
     child?.companion?.gender, child?.companion?.species, child?.settings?.timedActivities,
     child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness, child?.settings?.subMethod, child?.settings?.divMethod, child?.settings?.tableMethod])
 

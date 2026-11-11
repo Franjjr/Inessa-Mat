@@ -56,6 +56,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const [index, setIndex] = useState(0)
   /** How each try step was settled: true when solved, false when given up. Going back keeps that outcome. */
   const [settled, setSettled] = useState<ReadonlyMap<number, boolean>>(() => new Map())
+  /** The right answer a given-up try showed, so that going back to that step shows it again. */
+  const [shownAnswers, setShownAnswers] = useState<ReadonlyMap<number, number>>(() => new Map())
   const current = Math.min(Math.max(index, 0), Math.max(total - 1, 0))
   const step = steps[current]
   const run = runs[current]
@@ -105,8 +107,9 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   }, [current, goTo])
 
   // A try step is settled when solved or given up after the last allowed miss: the lesson then goes on.
-  const settle = useCallback((solvedNow: boolean) => {
+  const settle = useCallback((solvedNow: boolean, shown?: number | null) => {
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
+    if (typeof shown === 'number') setShownAnswers((prev) => (prev.has(current) ? prev : new Map(prev).set(current, shown)))
   }, [current])
 
   const onTryOverflow = useCallback(() => setOverflowAt(current), [current])
@@ -188,7 +191,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} givenUpAnswer={shownAnswers.get(current)} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>

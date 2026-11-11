@@ -147,8 +147,16 @@
   color: var(--c-ink-mute);
 }
 
+.need {
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
 .cardFoot {
   display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   align-items: center;
   min-height: 36px;
 }

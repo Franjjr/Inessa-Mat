@@ -9,6 +9,8 @@ export const META = {
   /** Failed adult-gate attempts and lock (mirrors the localStorage copy). */
   adultGateLock: 'adultGate.lock',
   lastSyncedAt: 'sync.lastSyncedAt',
+  /** Answer of the browser to the persistent-storage request (src/data/storage.ts). */
+  persistence: 'storage.persistence',
   lastUserId: 'auth.lastUserId',
   activeOrg: (userId: string) => `auth.activeOrg:${userId}`,
   authCache: (userId: string) => `auth.cache:${userId}`,

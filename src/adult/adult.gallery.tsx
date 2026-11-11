@@ -1,10 +1,10 @@
 /* Gallery entries for the grown-ups' area. Pure components render with fixed fake data; the full screens
    are captured on their real routes (see docs/handoff: tools/shot.mjs --seed). */
 import type { GalleryEntry } from '@/dev/Gallery'
-import { FactHeatmap, FactLegend } from './shared/FactHeatmap'
+import { ClassFactHeatmap, FactHeatmap, FactLegend } from './shared/FactHeatmap'
 import { NumberPad, PinDots } from './shared/NumberPad'
 import { SwitchRow } from './child/SwitchRow'
-import { averageGrid } from './shared/heatmap'
+import { classFactCounts } from './shared/heatmap'
 import { MistakesCard, TemarioCard, TestsCard } from './child/LearningCards'
 import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, teachingOrder } from '@/content/syllabus'
 import { errorReport, newMastery, placementRuns, syllabusReport, PLACEMENT_ACTIVITY, PLACEMENT_COUNT } from '@/engine'
@@ -95,10 +95,10 @@ const entries: GalleryEntry[] = [
     ),
   },
   {
-    title: 'FactHeatmap · class average (compact)',
+    title: 'ClassFactHeatmap · counts per fact',
     width: 300,
     background: 'var(--c-surface)',
-    render: () => <FactHeatmap compact grid={averageGrid([sampleGrid(0), sampleGrid(1), sampleGrid(2)])} label="Media de la clase" />,
+    render: () => <ClassFactHeatmap counts={classFactCounts([sampleGrid(0), sampleGrid(1), sampleGrid(2)])} label="Dominadas por alumno en la clase" />,
   },
   {
     title: 'NumberPad with PIN dots',

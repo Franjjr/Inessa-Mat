@@ -4,7 +4,7 @@ import { lesson, show, tryIt } from './dsl'
 export const w6Seven = lesson('w6-seven', 'La tabla del 7: ¡ya sabes casi toda!', [
   show('known-facts', { table: 7 }, '¿La tabla del 7 da miedo? Mira bien… ¡ya te sabes casi toda!'),
   show('known-facts', { table: 7 }, '7 × 6 es el espejo de 6 × 7, de la Cueva. Y 7 × 8 es del Lago.'),
-  show('known-facts', { table: 7 }, 'Solo hay 3 nuevas: 7 × 3, 7 × 7 y 7 × 9.'),
+  show('known-facts', { table: 7 }, 'Solo hay 2 nuevas: 7 × 3 y 7 × 7. La del 9 la veremos en su tabla.'),
   show('groups', { groups: 3, perGroup: 7, emoji: '📅' }, '7 × 3: tres semanas de 7 días son 21 días.', 'fairy'),
   show('square-rhyme', undefined, '«Siete por siete, cuarenta y nueve… ¡y el arcoíris llueve!»', 'fairy'),
   tryIt('square-rhyme', undefined, '¡Te toca! Usa la semana o la rima.', { kinds: ['fact-mul'], skills: ['mul:3x7', 'mul:7x7'] }),

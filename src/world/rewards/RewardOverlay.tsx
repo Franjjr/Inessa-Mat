@@ -23,7 +23,7 @@ function horn(progress: ProgressState | undefined): boolean[] {
   return progress ? crystalsOf(progress) : Array.from({ length: SLOTS }, () => false)
 }
 
-export default function RewardOverlay({ kind, stars, world, letter, newStickers = [], onContinue }: RewardOverlayProps) {
+export default function RewardOverlay({ kind, stars, bestStars, improved = false, maxStars = 3, world, letter, newStickers = [], onContinue }: RewardOverlayProps) {
   const { child } = useActiveChild()
   const progress = useProgress(child?.id)
   const reduced = useReducedMotion() ?? false
@@ -129,11 +129,28 @@ export default function RewardOverlay({ kind, stars, world, letter, newStickers 
         <p className={s.subtitle}>{subtitle}</p>
 
         {kind !== 'crystal' && kind !== 'season' && (
-          <div className={s.stars} role="img" aria-label={childText(child, `Has conseguido ${stars} de 3 estrellas`)}>
-            {[0, 1, 2].map((i) => (
-              <StarIcon key={i} size={72} filled={reduced ? i < stars : i < starsShown} />
-            ))}
-          </div>
+          <>
+            {bestStars !== undefined && <p className={s.label}>{childText(child, 'Esta vez')}</p>}
+            <div
+              className={s.stars}
+              role="img"
+              aria-label={maxStars > 1
+                ? childText(child, `Esta vez has conseguido ${stars} de ${maxStars} estrellas`)
+                : childText(child, '¡Una estrella para ti!')}
+            >
+              {Array.from({ length: maxStars }, (_, i) => (
+                <StarIcon key={i} size={72} filled={reduced ? i < stars : i < starsShown} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {kind === 'node' && bestStars !== undefined && bestStars > 0 && (
+          <p className={s.best}>
+            {improved
+              ? childText(child, `¡Has mejorado tu marca! Tu mejor ahora son ${bestStars} de 3 estrellas.`)
+              : childText(child, `Tu mejor marca: ${bestStars} de 3 estrellas.`)}
+          </p>
         )}
 
         {(kind === 'crystal' || kind === 'season') && (

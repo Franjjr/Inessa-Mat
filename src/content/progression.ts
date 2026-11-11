@@ -4,8 +4,10 @@
    - Inside a world nodes are sequential: a node opens when the previous one is done. Done nodes stay open for
      replays, and once the crystal is won every node of that world is open.
    - Finishing a node:
-       story / lesson  → done, worth COMPLETION_STARS (reading and listening count!)
-       activity/review → done when stars ≥ 1 (or when the host passes `passed: true`, e.g. "let them continue")
+       story / lesson  → done; worth COMPLETION_STARS (1) when read or played, nothing when skipped (stars: 0). Stars are
+                         earned by practising, not by reading
+       activity/review → done when stars ≥ 1 (or when the host passes `passed: true`, e.g. "let them continue");
+                         NodeScreen passes activities only from NODE_PASS_RATIO (80 %) of right answers
        guardian        → done only when passed (`passed: true`, or a `letter` with `passed` omitted; stars alone never
                          pass): crystal + the world's letter (from content, never trusted from the caller), next
                          world unlocked; the caller plays the rescue story.
@@ -20,8 +22,21 @@ import { ISLAND_ID } from './ingles/island'
 import { getNode, getSeason, getWorld, guardianForWorld, nextWorldId } from './season'
 import { stickerRuleMet, stickers } from './stickers'
 
-/** Stars recorded for finishing a story or a lesson node. */
-export const COMPLETION_STARS = 3
+/** Stars recorded for reading a story or doing a lesson node (a «visto»: practice is what earns the stars). */
+export const COMPLETION_STARS = 1
+/** Share of right answers an activity needs to count as done and open the next stop of the world. */
+export const NODE_PASS_RATIO = 0.8
+
+/** Right answers an activity of `total` items needs to be passed (NODE_PASS_RATIO, rounded up: 4 of 5, 5 of 6). */
+export function passMark(total: number): number {
+  return Math.ceil((total * 4) / 5)
+}
+
+/** Whether an activity of `total` items with `correct` right is passed (at least NODE_PASS_RATIO). An activity with
+    nothing to ask (total 0, e.g. a picture without usable facts) has nothing to get wrong, so it is passed. */
+export function activityPassed(correct: number, total: number): boolean {
+  return total === 0 || correct / total >= NODE_PASS_RATIO
+}
 /** How many personal race records are kept per node (fastest first). */
 export const MAX_RECORDS = 5
 
@@ -102,8 +117,9 @@ export function applyNodeResult(
   switch (node.kind) {
     case 'story':
     case 'lesson':
+      // Skipping a reading (stars 0) still opens the next stop, but gives no star.
       passed = result.passed !== false
-      earned = COMPLETION_STARS
+      earned = stars > 0 ? COMPLETION_STARS : 0
       break
     case 'guardian':
       // Stars alone never pass a guardian (a failed challenge can still score 1–2 stars): only an explicit pass

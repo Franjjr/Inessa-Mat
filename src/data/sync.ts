@@ -18,9 +18,9 @@ import {
   rewardToRow, sessionFromRow, sessionToRow,
 } from './mappers'
 import { eraseLocalChild, isErasedChild } from './erasure'
-import { mergeProgress, mergeReward } from './merge'
+import { mergeMastery, mergeProgress, mergeReward } from './merge'
 import { META, getMeta, setMeta } from './meta'
-import { ackEntry, enqueue, failEntry, onEnqueued, parseMasteryKey } from './outbox'
+import { ackEntry, enqueue, failEntry, masteryKey, onEnqueued, parseMasteryKey } from './outbox'
 import { PAGE_SIZE, casProgress, fetchErasedChildIds, fetchProgress, insertProgress, selectChanged, upsertRows, type Row } from './remote'
 import { getAuth, memberOrgIds, scopeOrgId, subscribeAuth, type AuthSnapshot } from './store'
 import { getSupabase, isBackendAvailable } from './supabase'
@@ -330,14 +330,28 @@ async function applyProgressRows(rows: Row[]): Promise<void> {
   }
 }
 
+/** A pending local change is never replaced by the server copy: the two are merged (mergeMastery) and the entry stays
+ *  until the server holds the merged row. Without a pending change, the newer copy simply wins. */
 async function applyMasteryRows(rows: Row[]): Promise<void> {
   await db.transaction('rw', [db.mastery, db.outbox], async () => {
     for (const r of rows) {
       const remote = masteryFromRow(r)
+      const key = masteryKey(remote.childId, remote.skill)
       const local = await db.mastery.get([remote.childId, remote.skill])
-      if (local && !isAfter(remote.updatedAt, local.updatedAt)) continue
-      await db.mastery.put(remote)
-      await db.outbox.where('[table+key]').equals(['mastery', `${remote.childId}|${remote.skill}`]).delete()
+      if (!local) {
+        await db.mastery.put(remote)
+        await db.outbox.where('[table+key]').equals(['mastery', key]).delete()
+        continue
+      }
+      const pending = await db.outbox.where('[table+key]').equals(['mastery', key]).first()
+      if (!pending) {
+        if (isAfter(remote.updatedAt, local.updatedAt)) await db.mastery.put(remote)
+        continue
+      }
+      const merged = mergeMastery(local, remote)
+      if (!deepEqual(merged, local)) await db.mastery.put(merged)
+      // The push reads the local row when it runs: if the merge already equals the server copy, nothing is left to send.
+      if (deepEqual(merged, remote)) await db.outbox.where('[table+key]').equals(['mastery', key]).delete()
     }
   })
 }

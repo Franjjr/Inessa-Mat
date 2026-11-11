@@ -5,7 +5,7 @@ import type {
   SubMethod, TableMethod, WordProblemExercise,
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
-import { columnName } from './feedback'
+import { columnName, columnWithArticle } from './feedback'
 import { strategyDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 import { hintsCalc } from './calc'
@@ -55,9 +55,9 @@ function columnAddHints(ex: ColumnAddExercise): Hint[] {
     const parts = ops.map((n) => String(digitAt(n, i)))
     if ((ex.carries[i] ?? 0) > 0) parts.unshift(String(ex.carries[i]))
     const next = i + 1 < cols
-      ? `Ahora suma las ${columnName(i + 1)} sin olvidar la llevada: ¿cuánto da?`
+      ? `Ahora suma ${columnWithArticle(i + 1)} sin olvidar la llevada: ¿cuánto da?`
       : `Como ya no quedan más cifras, ese ${Math.floor(sum / 10)} baja directo al resultado. ¿Qué número sale?`
-    worked = `${cap(columnName(i))}: ${parts.join(' + ')} = ${sum}. Escribe ${sum % 10} y me llevo ${Math.floor(sum / 10)} a las ${columnName(i + 1)}. ${next}`
+    worked = `${cap(columnName(i))}: ${parts.join(' + ')} = ${sum}. Escribe ${sum % 10} y me llevo ${Math.floor(sum / 10)} a ${columnWithArticle(i + 1)}. ${next}`
   } else {
     const u = ops.map((n) => String(digitAt(n, 0))).join(' + ')
     const t = ops.map((n) => String(digitAt(n, 1))).join(' + ')
@@ -87,9 +87,9 @@ function columnSubHints(ex: ColumnSubExercise): Hint[] {
   let worked: string
   if (zero) {
     const lender = zero[zero.length - 1]
-    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}, y la vecina es un 0. Pide a las ${columnName(lender)}: el ${digitAt(m, lender)} se queda en ${digitAt(m, lender) - 1}, cada 0 se convierte en 9 y tus ${columnName(i)} son ${top + 10}. ${top + 10} − ${digitAt(s, i)} = ?`
+    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}, y la vecina es un 0. Pide a ${columnWithArticle(lender)}: el ${digitAt(m, lender)} se queda en ${digitAt(m, lender) - 1}, cada 0 se convierte en 9 y tus ${columnName(i)} son ${top + 10}. ${top + 10} − ${digitAt(s, i)} = ?`
   } else {
-    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}. La vecina de las ${columnName(i + 1)} te presta 1 y su ${digitAt(m, i + 1)} se queda en ${digitAt(m, i + 1) - 1}. Ahora tienes ${top + 10}: ${top + 10} − ${digitAt(s, i)} = ?`
+    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}. La vecina de ${columnWithArticle(i + 1)} te presta 1 y su ${digitAt(m, i + 1)} se queda en ${digitAt(m, i + 1) - 1}. Ahora tienes ${top + 10}: ${top + 10} − ${digitAt(s, i)} = ?`
   }
   return [
     hint(1, 'Empieza por las unidades. Si arriba hay menos que abajo, ¡pide prestado a la vecina!', 'none'),
@@ -119,7 +119,7 @@ function carrySubHints(ex: ColumnSubExercise): Hint[] {
   return [
     hint(1, 'Si arriba hay menos que abajo: ¡me llevo una! Súmale 10 al de arriba, y a la cifra de abajo de la casa de al lado súmale 1.', 'none'),
     hint(2, `Cuando la cifra de arriba es menor, no te quedes parado: ${columnName(i)} arriba suman 10 y la casa de al lado de abajo cuenta 1 más.`, 'borrow', { ...params, column: i }),
-    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en las ${columnName(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
+    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en ${columnWithArticle(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
   ]
 }
 
@@ -206,7 +206,7 @@ function climbDivisionHints(ex: DivisionExercise): Hint[] {
   ]
 }
 
-const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo el cociente.'
+const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo lo que sale en cada paso.'
 
 /* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
 function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
@@ -272,9 +272,10 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const carries = analyzeAdd([a, b]).carries
       const first = carries.findIndex((c, i) => i > 0 && c > 0)
       const params = { operands: [a, b], a, b, digits }
+      // Level 2 asks what the story does, without naming the operation: the child decides it. Level 3 writes it.
       return [
         hint(1, l1, 'none'),
-        hint(2, 'Se juntan dos cantidades: hay que sumar.', 'place-value', params),
+        hint(2, '¿Hay que juntar cantidades para saber cuántas hay en total?', 'place-value', params),
         hint(3, `Piénsalo en columna: ${a} + ${b} = ?`, 'carry', { ...params, column: Math.max(0, first - 1), carry: first > 0 ? carries[first] : 0 }),
       ]
     }
@@ -282,7 +283,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const params = { a, b, digits: digitCount(a), column: Math.max(0, analyzeSub(a, b).borrowed.findIndex(Boolean)) }
       return [
         hint(1, l1, 'none'),
-        hint(2, 'Se quita una cantidad (o se comparan dos): hay que restar.', 'borrow', params),
+        hint(2, '¿Se van cosas, o hay que comparar cuánto más tiene uno que otro?', 'borrow', params),
         hint(3, `Piénsalo en columna: ${a} − ${b} = ?`, 'borrow', params),
       ]
     }
@@ -292,13 +293,13 @@ function wordHints(ex: WordProblemExercise): Hint[] {
         const params = { top: b, bottom: a, tens: Math.floor(b / 10) * 10, units: b % 10 }
         return [
           hint(1, l1, 'none'),
-          hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar. Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
+          hint(2, `¿Hay ${a} grupos iguales, con ${b} en cada uno? Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
           hint(3, `Piénsalo con el ${b} arriba: ${b} × ${a} = ?`, 'carry', { ...params, column: 1, carry: Math.floor(((b % 10) * a) / 10) }),
         ]
       }
       return [
         hint(1, l1, 'none'),
-        hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar.`, 'groups', { groups: a, perGroup: b }),
+        hint(2, `¿Hay ${a} grupos iguales, con ${b} en cada uno?`, 'groups', { groups: a, perGroup: b }),
         hint(3, `Piensa la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b }),
       ]
     }
@@ -306,7 +307,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const params = { total: a, groups: b, dividend: a, divisor: b }
       return [
         hint(1, l1, 'none'),
-        hint(2, `Hay que repartir ${a} en partes iguales: hay que dividir entre ${b}.`, 'share', params),
+        hint(2, `¿Hay que repartir ${a} en partes iguales, y saber cuánto toca a cada una?`, 'share', params),
         hint(3, `Piensa la operación: ${a} ÷ ${b} = ?`, 'share', params),
       ]
     }
@@ -334,11 +335,20 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     }
     case 'missing-factor': {
       const known = ex.missing === 'a' ? ex.b : ex.a
-      const seq = Array.from({ length: Math.min(ex.answer, 10) }, (_, i) => known * (i + 1)).join(', ')
+      // Only the first two jumps are drawn and said, never the series up to the product: how many numbers the child
+      // counts is the answer. The jumps stop before one that equals the answer, so no drawn number is the answer, not even
+      // when the known factor is the answer too (3 × ? = 9 draws nothing: the first jump would be the 3 itself).
+      let drawn = 0
+      for (let i = 1; i <= Math.min(2, ex.answer - 1); i++) {
+        if (known * i === ex.answer) break
+        drawn = i
+      }
+      const first = Array.from({ length: drawn }, (_, i) => known * (i + 1))
+      const start = first.length ? `${first.join(', ')}… ` : ''
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
-        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
-        hint(3, `${seq}. ¿Cuántos números has dicho?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1 }),
+        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: drawn }),
+        hint(3, `${start}Sigue contando de ${known} en ${known} hasta llegar a ${ex.product}. ¿Cuántos números dices?`, 'skip-count', { step: known, count: drawn }),
       ]
     }
     case 'skip-count': return skipHints(ex)

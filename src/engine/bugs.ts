@@ -11,7 +11,7 @@ import type {
   Answer, CheckCalcExercise, CheckResult, ErrorHuntExercise, ErrorType, Hint, Rng,
 } from '@/types'
 import { digitAt, digitCount, fromDigits } from './arith'
-import { columnName } from './feedback'
+import { columnWithArticle } from './feedback'
 import { genAddOperands, genMul2x1, genSubPair } from './numbers'
 import { pick, randInt, shuffle } from './rng'
 import { checkSkill, huntSkill, type CheckOp, type HuntOp } from './skills'
@@ -254,10 +254,10 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
 
 /** Child-facing comment for each kind of mistake (shown after a wrong verdict). */
 const MISSED: Record<ErrorType, string> = {
-  'calig-shape': 'La forma de la letra ligada no es la del modelo. Sigue el dibujo de la pauta.',
-  'calig-line': 'La letra ligada tiene que apoyarse en la línea de abajo.',
-  'calig-size': 'La letra ligada tiene que llegar hasta la línea de arriba, ni más ni menos.',
-  'calig-start': 'Empieza la letra ligada por el punto verde y sigue la flecha.',
+  'calig-shape': 'La forma de la letra no es la del modelo. Sigue el dibujo de la pauta.',
+  'calig-line': 'La letra tiene que apoyarse en la línea de abajo.',
+  'calig-size': 'La letra tiene que llegar hasta la línea de arriba, ni más ni menos.',
+  'calig-start': 'Empieza la letra por el punto verde y sigue la flecha.',
   'carry-forgot': '¡Ojo con la mochila! Hay una llevada que no se ha sumado en esa cuenta.',
   'borrow-forgot': 'Cuando la vecina presta una decena, se queda con una menos. ¡Mira esa resta!',
   fact: 'Hay una cuenta de una sola cifra que no sale. Mira la cuenta columna a columna.',
@@ -410,7 +410,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
 export function huntHints(ex: ErrorHuntExercise): Hint[] {
-  const where = ex.wrongColumn !== null ? ` Mira bien las ${columnName(ex.wrongColumn)}.` : ' Si todas las columnas salen bien, la cuenta está bien.'
+  const where = ex.wrongColumn !== null ? ` Mira bien ${columnWithArticle(ex.wrongColumn)}.` : ' Si todas las columnas salen bien, la cuenta está bien.'
   const params = { a: ex.top, b: ex.bottom, digits: Math.max(digitCount(ex.top), digitCount(ex.bottom), digitCount(ex.shown)) }
   return [
     { level: 1, text: 'Repasa la cuenta desde las unidades, columna a columna. Puede haber un solo error.', visual: 'none' },

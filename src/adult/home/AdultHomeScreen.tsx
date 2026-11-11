@@ -13,10 +13,12 @@ import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
 import { CompleteAccountPanel, useNeedsAccountSetup } from '../auth/CompleteAccountPanel'
 import { SyncBadge } from '../shared/SyncBadge'
+import { PersistenceNotice } from '../shared/PersistenceNotice'
 import { plural, formatPercent } from '../shared/format'
 import { errorMessage } from '../shared/messages'
 import { lockAdultArea } from '../gate/AdultGate'
 import { readTables, TABLE_STATE_LABEL, type TableState } from '../shared/reading'
+import { pupilWeekLine } from '../school/classView'
 import s from './home.module.css'
 import adult from '../shared/adult.module.css'
 
@@ -61,7 +63,8 @@ export default function AdultHomeScreen() {
   }
 
   const reading = current && summary ? readTables(summary.factGrid, current.nickname) : null
-  const topError = summary?.topErrors[0] ?? null
+  // «No lo sé» is a casilla still to learn: the most frequent mistake is a real one.
+  const topError = summary?.topErrors.find((e) => e.errorType !== 'dont-know') ?? null
 
   return (
     <AdultPage title="Zona de adultos" back="/kids" actions={<BackButton variant="exit" onClick={leave} />}>
@@ -109,6 +112,8 @@ export default function AdultHomeScreen() {
           )}
         </div>
       )}
+
+      <PersistenceNotice />
 
       {needsSetup && <CompleteAccountPanel />}
       {signedIn && !needsSetup && <ClaimLocalPanel onDone={() => toast('Perfiles guardados en tu cuenta')} />}
@@ -216,7 +221,8 @@ export default function AdultHomeScreen() {
                         <span className={adult.muted}>
                           {c.grade ? `${c.grade}.º de Primaria` : 'Curso sin elegir'} · Compañero: {c.companion.name}
                         </span>
-                        {selected && summary && <span className={adult.muted}>Aciertos de la semana: {formatPercent(summary.accuracyLast7Days)}</span>}
+                        {selected && summary && <span className={adult.muted}>{pupilWeekLine(summary)}</span>}
+                        {selected && summary && <span className={adult.muted}>Aciertos de la semana en matemáticas: {formatPercent(summary.accuracyLast7Days)}</span>}
                       </span>
                     </button>
                     <Button variant="secondary" size="sm" onClick={() => navigate(`/adult/child/${c.id}`)}>Ver informe</Button>

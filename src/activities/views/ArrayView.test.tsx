@@ -32,4 +32,22 @@ describe('ArrayView accessibility', () => {
     expect(screen.getByRole('button', { name: '🍎, fila 1, columna 1' })).toBe(first)
     expect(screen.queryByRole('button', { name: /contado/ })).toBeNull()
   })
+
+  it('a guided array counts its guide as a hint used: a right answer is not taken as known by heart', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    render(<ArrayView exercise={exercise} onAnswered={onAnswered} showFeedback={false} guided />)
+    await user.type(screen.getByRole('textbox', { name: 'Resultado de 2 × 3' }), '6{Enter}')
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+    expect(onAnswered.mock.calls[0][0].hintsUsed).toBe(1)
+  })
+
+  it('an unguided array right answer uses no hint', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    render(<ArrayView exercise={exercise} onAnswered={onAnswered} showFeedback={false} />)
+    await user.type(screen.getByRole('textbox', { name: 'Resultado de 2 × 3' }), '6{Enter}')
+    expect(onAnswered.mock.calls[0][0].hintsUsed).toBe(0)
+  })
 })

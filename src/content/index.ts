@@ -85,8 +85,8 @@ export function startingWorldForGrade(grade?: number): string { return progressi
 
 /** Progression helpers: world unlocks, stickers diff, crystals/letters for LumiHorn, shop purchase rules. */
 export {
-  buyAccessory, canBuyAccessory, COMPLETION_STARS, crystalsOf, isWorldUnlocked, lettersOf, localDay, MAX_RECORDS,
-  newStickers, spendableStars, switchSeason, unlockThroughWorld,
+  activityPassed, buyAccessory, canBuyAccessory, COMPLETION_STARS, crystalsOf, isWorldUnlocked, lettersOf, localDay, MAX_RECORDS,
+  NODE_PASS_RATIO, newStickers, passMark, spendableStars, switchSeason, unlockThroughWorld,
 } from './progression'
 export type { BuyCheck } from './progression'
 /** Lookups beyond the contract. */

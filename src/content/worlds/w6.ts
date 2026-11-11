@@ -24,7 +24,7 @@ export const w6 = world({
   crystalName: 'rosa',
   predicament: 'fog',
   hook: '¡La niebla le ha robado los colores a {pet}!',
-  skillsSummary: 'La tabla del 7 y mezcla de las tablas del 6, 7 y 8; fracciones (mitades, tercios, cuartos), precios y cuerpos redondos',
+  skillsSummary: 'La tabla del 7 y mezcla de las tablas del 6, 7, 8 y 9; fracciones (mitades, tercios, cuartos), precios y cuerpos redondos',
   path: [[0.12, 0.84], [0.17, 0.56], [0.32, 0.32], [0.52, 0.18], [0.71, 0.24], [0.86, 0.44], [0.84, 0.72], [0.64, 0.85], [0.45, 0.74], [0.47, 0.5]],
   nodes: [
     storyNode('arrival', 'Un jardín sin colores', 'w6-arrival'),
@@ -66,7 +66,8 @@ export const w6 = world({
       kind: 'memory',
       title: 'Parejas del arcoíris',
       instructions: 'Busca las parejas: cada multiplicación con su resultado.',
-      selector: { kinds: ['fact-mul'], tables: [6, 7, 8], factorRange: [3, 9] },
+      // The 9 table (its trick is the lesson above) gets its games here, so «Jugar libre» offers it.
+      selector: { kinds: ['fact-mul'], tables: [6, 7, 8, 9], factorRange: [3, 9] },
       count: 6,
     }),
     activityNode('race', {
@@ -74,7 +75,7 @@ export const w6 = world({
       title: 'Carrera contra tu récord',
       instructions: 'Solo compites contra ti. ¡Intenta mejorar tu tiempo y tus aciertos!',
       selector: { kinds: ['fact-mul'], tables: [6, 7, 8], factorRange: [2, 9] },
-      count: 20,
+      count: 12,
     }),
     activityNode('garden-fractions', {
       kind: 'exercises',

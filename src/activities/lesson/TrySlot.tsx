@@ -1,6 +1,7 @@
 /* A "try it" step: one mini exercise generated from the step's selector. The child answers through ExerciseView;
    a correct answer unlocks "Siguiente". The slot owns the feedback (showFeedback off), so the child never sees two
-   "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. */
+   "Siguiente" buttons. After a second miss the lesson moves on anyway: errors are clues, never a wall. A multiplication
+   fact (teach 'full') ends at its copy step instead: the view already gave two tries, so the step moves on at once. */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { ExerciseView, useActivityHost } from '@/activities'
@@ -9,7 +10,7 @@ import type { DivMethod, ExerciseOutcome, SkillSelector, SubMethod } from '@/typ
 import { Button } from '@/ui'
 import s from './TrySlot.module.css'
 
-/** Misses allowed before the lesson continues on its own. */
+/** Misses allowed before the lesson continues on its own (exercises that end at their first wrong answer). */
 export const MAX_MISSES = 2
 
 /** Smallest scale the exercise is shrunk to; below this the answer controls would be too small to tap (56px rule). */
@@ -21,10 +22,13 @@ interface Props {
   selector: SkillSelector
   /** Stable text that seeds the generated exercise (lesson id + step index). */
   seedKey: string
-  /** Called once when the step is settled: solved, or given up after MAX_MISSES misses. */
-  onSettled: (solved: boolean) => void
+  /** Called once when the step is settled: solved, or given up after MAX_MISSES misses. A given-up step passes the
+      right answer shown on its fixed line (null when there is none), so the lesson can show it again later. */
+  onSettled: (solved: boolean, shownAnswer?: number | null) => void
   /** Set when the step was already settled (the child came back to it): shows the outcome, offers no exercise. */
   settled?: boolean
+  /** The right answer of a step given up, as passed to onSettled: shown again when the child comes back to the step. */
+  givenUpAnswer?: number | null
   /** Subtraction method the exercise is solved with (a lesson step that teaches one method). */
   method?: SubMethod
   /** Division method the exercise is solved with (the division methods lesson). */
@@ -45,6 +49,13 @@ function seedOf(text: string): number {
     h = Math.imul(h, 0x01000193)
   }
   return h >>> 0
+}
+
+/** The right answer for the fixed line after giving up: only a plain number answer (a count, a product...). Times are
+    shown in minutes or in clock form, so a bare number would be ambiguous for a child: they show no line. */
+export function shownAnswerOf(exercise: { kind: string; answer?: unknown }): number | null {
+  if (exercise.kind.startsWith('time-') || exercise.kind.startsWith('calendar')) return null
+  return typeof exercise.answer === 'number' ? exercise.answer : null
 }
 
 /** Scale that fits the exercise (natural height) into the space left next to the footer. Never above 1. */
@@ -80,7 +91,7 @@ function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLEl
   return lowest <= visibleBottom - 1
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
+export default function TrySlot({ selector, seedKey, onSettled, settled, givenUpAnswer, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -134,15 +145,23 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     return (
       <div className={s.wrap} data-status={settled ? 'correct' : 'gaveUp'}>
         <div className={s.footer} role="status">
-          {settled
-            ? <p className={s.good}>{host.t('¡Muy bien, {child}!')}</p>
-            : <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>}
+          {settled ? (
+            <p className={s.good}>{host.t('¡Muy bien, {child}!')}</p>
+          ) : (
+            <>
+              {givenUpAnswer != null && <p className={s.answer}>{`La respuesta es ${givenUpAnswer}.`}</p>}
+              <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
+            </>
+          )}
         </div>
       </div>
     )
   }
 
   if (!exercise) return <div className={s.wrap} />
+
+  // The right answer, for the fixed line after giving up (see shownAnswerOf).
+  const shownAnswer = shownAnswerOf(exercise)
 
   const answered = (outcome: ExerciseOutcome) => {
     const { check } = outcome
@@ -159,6 +178,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       ...(attempt > 0 ? { retries: attempt, graded: false } : {}),
       ...(attempt > 0 && check.correct ? { solvedOnRetry: true } : {}),
     })
+    // The view ended at its copy step: the answer is on screen and was written, so the step ends here without a new miss.
+    if (outcome.revealed) {
+      setStatus('gaveUp')
+      onSettled(false, shownAnswer)
+      return
+    }
     if (check.correct) {
       host.react('correct')
       setStatus('correct')
@@ -170,7 +195,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     setMisses(nextMisses)
     if (nextMisses >= MAX_MISSES) {
       setStatus('gaveUp')
-      onSettled(false)
+      onSettled(false, shownAnswer)
     } else {
       setStatus('missed')
     }
@@ -185,7 +210,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     <div ref={wrapRef} className={clsx(s.wrap, grown && s.wrapGrown)} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
-          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} method={method} divMethod={divMethod} />
+          {/* teach full: after the second miss the view shows the worked step and the child copies the answer before the lesson goes on. */}
+          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided={allowHints} allowHints={allowHints} showFeedback={false} teach="full" method={method} divMethod={divMethod} />
         </div>
       </div>
       <div ref={footerRef} className={s.footer} role="status" aria-live="polite">
@@ -196,7 +222,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
             <Button variant="secondary" onClick={retry}>Inténtalo otra vez</Button>
           </div>
         )}
-        {status === 'gaveUp' && <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>}
+        {status === 'gaveUp' && (
+          <>
+            {shownAnswer !== null && <p className={s.answer}>{`La respuesta es ${shownAnswer}.`}</p>}
+            <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
+          </>
+        )}
       </div>
     </div>
   )

@@ -38,6 +38,14 @@ export function joinList(items: string[]): string {
   return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`
 }
 
+/** " Para repasar: 7 × 8, 6 × 9 y 5 × 5 (y 2 más).", or the sentence that there is nothing to review. Shows three facts at most. */
+export function reviewSentence(facts: string[]): string {
+  if (facts.length === 0) return ' No hay multiplicaciones para repasar ahora.'
+  const shown = facts.slice(0, 3)
+  const more = facts.length - shown.length
+  return ` Para repasar: ${joinList(shown)}${more > 0 ? ` (y ${more} más)` : ''}.`
+}
+
 /** "la tabla del 7", "las tablas del 2 y 5", or "4 tablas" when there are many. */
 export function tableNoun(ns: number[]): string {
   if (ns.length === 1) return `la tabla del ${ns[0]}`
@@ -79,26 +87,22 @@ export function readTables(grid: number[][], name: string): TableReading {
 
   let support: string
   if (!hasData) support = 'Cuando juegue, aquí verás qué tablas domina y cuáles conviene repasar.'
-  else {
-    const shown = reviewFacts.slice(0, 3)
-    const more = reviewFacts.length - shown.length
-    const review = reviewFacts.length
-      ? ` Para repasar: ${joinList(shown)}${more > 0 ? ` (y ${more} más)` : ''}.`
-      : ' No hay multiplicaciones para repasar ahora.'
-    support = `Dominadas ${mastered} de ${FACT_COUNT} multiplicaciones.${review}`
-  }
+  else support = `Dominadas ${mastered} de ${FACT_COUNT} multiplicaciones.${reviewSentence(reviewFacts)}`
 
   return { tables, mastered, dominated, toReview, reviewFacts, hasData, headline, support }
 }
 
-/** The times table with the most facts to review (ties: the smaller table), or null when none. */
-export function hardestTable(grid: number[][]): number | null {
+/**
+ * The class's hardest table: the one where the most (child, fact) pairs are to review, summed over the children, so a
+ * single pupil's fact does not decide it alone. `count` is that number of pairs (ties: the smaller table).
+ */
+export function hardestTableAcross(grids: number[][][]): { n: number; count: number } | null {
   let best: { n: number; count: number } | null = null
   for (let n = 1; n <= 10; n++) {
-    const count = factsOf(grid, n).filter((s) => s === 'struggling').length
+    const count = grids.reduce((sum, grid) => sum + factsOf(grid, n).filter((s) => s === 'struggling').length, 0)
     if (count > 0 && (!best || count > best.count)) best = { n, count }
   }
-  return best?.n ?? null
+  return best
 }
 
 /** How many facts a grid has to review (a ≤ b, 55 facts). */

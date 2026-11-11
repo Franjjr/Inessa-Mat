@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AttemptRecord } from '@/types'
 import { createChild, eraseChild, exportChildData, listChildren, recordAttempt, startSession, updateChild, updateProgress } from '@/data'
 import { db } from '../db'
+import { eraseLocalChild } from '../erasure'
 import { META, getMeta } from '../meta'
 import { runSync } from '../sync'
 import { FakeSupabase } from './fakeSupabase'
@@ -104,6 +105,16 @@ describe('GDPR erasure on another family device (security-2, sync-3)', () => {
     expect(await db.progress.get(c.id)).toBeUndefined()
     expect(await db.sessions.where('childId').equals(c.id).count()).toBe(0)
     expect(await db.outbox.count()).toBe(0)
+  })
+})
+
+describe('erasure leaves no wrong-answer notes behind', () => {
+  it('erasing a child empties the local review log, because its notes cannot be tied to one child', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await recordAttempt(attempt(c.id, { correct: false, given: '48', expected: '42' }))
+    expect(await db.reviewNotes.count()).toBe(1)
+    await eraseLocalChild(c.id)
+    expect(await db.reviewNotes.count()).toBe(0)
   })
 })
 

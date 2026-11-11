@@ -3,7 +3,17 @@ import { initialProgress, season1 } from '@/content'
 import { allTopics, syllabusForGrade } from '@/content/syllabus'
 import type { MasteryMap, SkillMastery } from '@/types'
 import { progressWithCrystals } from '@/world/rewards/testing'
-import { reachedClasses, tableDrill, unlockedGames, unlockedTables } from './logic'
+import { reachedClasses, tableDrill, tableStatuses, unlockedGames, unlockedTables } from './logic'
+
+/** Mastery of every fact of a times table (a × n for all a), at the given box. */
+function tableMastery(table: number, box: number): MasteryMap {
+  const map: MasteryMap = {}
+  for (let other = 1; other <= 10; other++) {
+    const [a, b] = [Math.min(table, other), Math.max(table, other)]
+    map[`mul:${a}x${b}`] = { skill: `mul:${a}x${b}`, box, attempts: 3, correct: 3, streak: 2, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: '2026-10-01T10:00:00.000Z' } as SkillMastery
+  }
+  return map
+}
 
 const topicIds = (list: ReturnType<typeof reachedClasses>) => list.map((c) => c.topicId)
 
@@ -66,10 +76,32 @@ describe('free play', () => {
     expect(reachedClasses({ grade: 2, mastery: masteredTopic('suma-2d'), progress: done })).toEqual([])
   })
 
+  it('today\'s class is the topic of «Hoy» (the stage of the world the map is on), not only the temario order', () => {
+    const fresh = initialProgress('c')
+    const onW2 = { ...fresh, worlds: { ...fresh.worlds, w1: { unlocked: true, nodes: {}, crystal: true }, w2: { unlocked: true, nodes: {}, crystal: false } } }
+    const ids = topicIds(reachedClasses({ grade: 3, mastery: {}, progress: onW2 }))
+    expect(ids).toContain('suma-2d')
+    expect(ids).not.toContain('descomponer-9999')
+  })
+
   it('each reached class carries its topic title and the class definition', () => {
     const list = reachedClasses({ grade: 3, mastery: masteredTopic('suma-2d'), progress: initialProgress('c') })
     const item = list.find((c) => c.topicId === 'suma-2d')
     expect(item?.title).toBe('Suma de 2 cifras')
     expect(item?.cls.topicId).toBe('suma-2d')
+  })
+})
+
+describe('tableStatuses (what the child sees on each table)', () => {
+  it('a table with every fact mastered is dominada', () => {
+    expect(tableStatuses(tableMastery(7, 5))[7]).toBe('dominada')
+  })
+
+  it('a table with some facts seen is en camino, and an untouched one is por aprender', () => {
+    const one: MasteryMap = { 'mul:2x3': { skill: 'mul:2x3', box: 2, attempts: 3, correct: 2, streak: 1, avgMs: null, lastSeenAt: null, dueAt: null, updatedAt: '2026-10-01T10:00:00.000Z' } as SkillMastery }
+    const statuses = tableStatuses(one)
+    expect(statuses[3]).toBe('en-camino')
+    expect(statuses[9]).toBe('por-aprender')
+    expect(tableStatuses(undefined)[7]).toBe('por-aprender')
   })
 })

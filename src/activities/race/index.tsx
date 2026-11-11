@@ -6,7 +6,8 @@ import type { ActivityProps, ExerciseOutcome } from '@/types'
 import { useActivityHost } from '../host'
 import FactView from '../views/FactView'
 import { ActivityFrame, ResultCard } from '../facts/shared/ActivityFrame'
-import { formatClock, itemCount, useItems } from '../facts/shared/items'
+import { parseSkill } from '@/engine'
+import { formatClock, itemCount, KNOWN_BOX, useItems } from '../facts/shared/items'
 import { useSession } from '../facts/shared/session'
 import { requeueWrong, startQueue } from '../shared/requeue'
 import shared from '../facts/shared/shared.module.css'
@@ -23,11 +24,23 @@ function recordsFrom(params: Record<string, unknown> | undefined): number[] {
 
 export default function RaceActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
-  const timed = host.prefs.timedActivities
   const records = recordsFrom(config.params)
   const best = records[0]
   const total = itemCount(config, 10)
   const items = useItems(config, total, host)
+  // The clock only presses on facts already practised: if any fact of the run is still being learnt, the whole run
+  // is untimed (no clock, no ghost, no record), so time is never held against the child on a new fact.
+  // Decided once on mount (like the items): mastery changes after each answer and must not flip the clock mid-run.
+  // The review fact that interleaving swaps in from another table does not count: only the race's own table does.
+  const [timed] = useState(() => {
+    const own = config.selector.tables?.length === 1 ? config.selector.tables[0] : null
+    const counts = (it: (typeof items)[number]) => {
+      if (own === null) return true
+      const p = parseSkill(it.skill)
+      return p?.type !== 'mul' || p.a === own || p.b === own
+    }
+    return host.prefs.timedActivities && items.filter(counts).every((it) => (host.mastery[it.skill]?.box ?? -1) >= KNOWN_BOX)
+  })
   const session = useSession({ total: items.length, thresholds: config.starThresholds })
   // Wrong answers come back 2–4 items later in the same run (PEDAGOGY 4); re-asks are not reported or scored.
   const [run, setRun] = useState(() => startQueue(items))
@@ -43,7 +56,7 @@ export default function RaceActivity({ config, onDone, onExit }: ActivityProps) 
   }, [timed, session.result])
 
   if (session.result) {
-    const result = { ...session.result, recordMs: session.result.ms }
+    const result = timed ? { ...session.result, recordMs: session.result.ms } : session.result
     const beat = best !== undefined && result.ms < best && result.correct === result.total
     return (
       <div className={s.center}>

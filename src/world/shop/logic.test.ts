@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { accessories, buyAccessory, getAccessory } from '@/content'
 import { makeChild, progressWithCrystals } from '@/world/rewards/testing'
-import { accessoryStatus, equipAccessory, lockedReason, previewEquipped, unequipAccessory } from './logic'
+import { accessoryStatus, equipAccessory, hasEverything, lockedReason, missingStarsText, previewEquipped, unequipAccessory } from './logic'
+
+describe('shop texts', () => {
+  it('says how many stars are missing, in singular and plural', () => {
+    expect(missingStarsText(10, 9)).toBe('Te falta 1 estrella')
+    expect(missingStarsText(10, 4)).toBe('Te faltan 6 estrellas')
+  })
+
+  it('has everything only when every accessory is owned or worn', () => {
+    expect(hasEverything(['owned', 'equipped'])).toBe(true)
+    expect(hasEverything(['owned', 'stars'])).toBe(false)
+    expect(hasEverything([])).toBe(false)
+  })
+})
 
 describe('shop rules', () => {
   it('a new child can buy the cheap starter accessories and sees the rest as locked', () => {

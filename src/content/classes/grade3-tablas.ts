@@ -19,6 +19,9 @@ const facts = (t: number, from: number, to: number): SkillSelector => {
   return { kinds: ['fact-mul'], skills }
 }
 
+/** Las multiplicaciones de la tabla `t` con los factores de la lista (para saltar uno ya de otra clase). */
+const factsIn = (t: number, factors: number[]): SkillSelector => ({ kinds: ['fact-mul'], skills: factors.map((n) => mulSkill(t, n)) })
+
 /** La tabla del 2: el doble, y contar de 2 en 2. */
 const tabla2 = clase({
   id: 'c3-tabla-2',
@@ -205,8 +208,8 @@ const tabla7 = clase({
   ],
   sola: [
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Ahora con números más grandes.', facts(7, 6, 8)),
-    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(7, 6, 10)),
-    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(7, 8, 10)),
+    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', factsIn(7, [6, 8, 10])),
+    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! La última, sin ayudas.', factsIn(7, [8, 10])),
   ],
   cierre: show('square-rhyme', undefined, 'La regla: la tabla del 7 tiene pocas multiplicaciones nuevas. Si ya sabes 6 × 7, también sabes 7 × 6.'),
 })

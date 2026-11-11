@@ -1,8 +1,30 @@
 # Numeria · Supabase backend
 
-Migrations run in order: `migrations/0001_init.sql` (the schema), then `migrations/0002_erasure_tombstones_rewards.sql`
-(GDPR erasure tombstones and monotonic reward claims), then `migrations/0003_ungraded_retries.sql` (`child_stats` leaves out
-retry rows that do not grade: `context.graded = false`). Each one is idempotent and must be applied on top of the previous.
+Migrations run in order, each on top of the previous one. Each is idempotent:
+
+1. `migrations/0001_init.sql`: the schema, RLS, the last-writer-wins guard and the progress version.
+2. `migrations/0002_erasure_tombstones_rewards.sql`: GDPR erasure tombstones (`erased_children`) and monotonic reward claims.
+3. `migrations/0003_ungraded_retries.sql`: `child_stats` leaves out retry rows that do not grade (`context.graded = false`).
+4. `migrations/0004_caligrafia_stats.sql`: `child_stats` leaves out handwriting attempts (`calig:…`) from the maths aggregates.
+5. `migrations/0005_ingles_stats.sql`: `child_stats` leaves out English attempts (`eng:…`) and English sessions from the
+   maths aggregates.
+6. `migrations/0006_actividad_todas_asignaturas.sql`: «que se apunte todo en todas las asignaturas».
+   - `child_stats` (same signature and columns, still the maths aggregates): «No lo sé» (`dont-know`) is no longer a
+     top error, and Caligrafía sessions (`summary.subject = 'handwriting'`) are not maths minutes.
+   - New `child_activity(p_child_ids, p_since)`: graded attempts and minutes per subject (`math`, `language`,
+     `english`, `handwriting`). The class screen uses it for «no ha practicado esta semana» and the minutes per subject.
+   - New `assignment_progress(p_assignment_id)`: per pupil of the mission's class, the graded attempts and right answers
+     on the mission's skills between its start and its due date (or played from the mission). The class screen shows
+     «hecha por X de Y». Nothing new is stored: it reads the attempts already synced.
+
+Migrations 0004 to 0006 only replace the body of `child_stats` (same signature, grants and search path); 0006 adds two
+functions and changes no table, column or policy.
+
+**Order with the app: first 0006, then the app.** Apply 0006 *before* publishing the app version that uses it. The app
+does not break without it (an older app never calls the new functions, and the new app falls back to the maths numbers
+and says «matemáticas» in its sentences), but the new app now logs Caligrafía visits as sessions marked `handwriting`,
+and the `child_stats` of 0005 (and the `subjectOfSession` of older apps on other devices) counts those minutes as
+maths minutes. With 0006 applied first, that never happens on the server.
 
 ## Apply it to a project
 
@@ -44,8 +66,13 @@ Nobody sees other organizations. `anon` has no access to anything.
 - `join_class(p_code, p_child_id)` → class or `null` for an unknown code (20 failures/hour rate limit). This is the
   parent's consent step.
 - `regenerate_join_code(p_class_id)`, `erase_child(p_child_id)` (GDPR hard delete, owner/admin).
-- `child_stats(p_child_ids, p_since, p_errors_since)` — dashboard aggregates; `SECURITY INVOKER`, so RLS decides
-  which children are returned. Accuracy ignores `recognition` errors.
+- `child_stats(p_child_ids, p_since, p_errors_since)` — dashboard aggregates (maths); `SECURITY INVOKER`, so RLS
+  decides which children are returned. Accuracy ignores `recognition` errors; top errors ignore `dont-know` (0006).
+- `child_activity(p_child_ids, p_since)` — one row per child and subject with activity: `subject`, `attempts` (graded),
+  `minutes`; `SECURITY INVOKER` (0006).
+- `assignment_progress(p_assignment_id)` — one row per pupil of the mission's class the caller may see: `attempts`,
+  `correct`; `SECURITY INVOKER` (0006). A `recognition` answer (a misread digit) counts as an answer given, so a full
+  round is a done mission for the teacher too.
 
 ### Sync conventions (see `src/data/sync.ts`)
 
@@ -54,6 +81,9 @@ Nobody sees other organizations. `anon` has no access to anything.
   clocks are clamped to now + 10 min). `synced_at` is the server change time (`clock_timestamp()`) used as the pull
   cursor.
 - `progress` is merged monotonically on the client and written with compare-and-swap on `version`.
+- `skill_mastery` is a whole-row write, last-writer-wins. Note: a row written with an `updated_at` older than the stored
+  one is skipped without an error. The client therefore merges a pending local change with the newer server copy
+  (`mergeMastery`, which keeps the later `updated_at`) before pushing it.
 - `attempts` are inserted with `on conflict do nothing` (idempotent re-sends).
 
 ## Verify it locally (automated RLS suite)
@@ -75,6 +105,11 @@ monotonic sessions; progress versions; a school with two teachers (each sees onl
 cannot edit them, cannot assign work to a colleague's class); join codes (case-insensitive, idempotent, archived
 classes, unknown codes); teacher access ends when the class is archived, the parent withdraws consent or the teacher
 leaves the school; membership management (last owner, admins vs owners); GDPR erasure cascades; anonymous access.
+
+`tests/11_erasure_and_rewards.sql` covers 0002 (tombstones, reward claims). `tests/12_actividad_y_misiones.sql` covers
+0006: «No lo sé» out of the top errors, Caligrafía out of the maths minutes, the activity of every subject, mission
+progress (period, skills, retries, the mission id, a general mission), RLS for strangers and the family, and the
+SECURITY INVOKER / search path / grants of the three functions.
 
 Each scenario impersonates a user like PostgREST does (`request.jwt.claims` + `set role authenticated`), see
 `tests/01_test_helpers.sql`. To add a check, append a `begin; select tests.login('…'); … commit;` block.

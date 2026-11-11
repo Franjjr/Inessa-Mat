@@ -42,8 +42,9 @@ const probRestar = clase({
   ejemplo: [
     show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan.'),
     show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta.'),
-    show('bar-model', { a: 9, b: 4, total: 13 }, 'Comparar también es quitar. Pepa tiene 13 cromos y Dani tiene 4. ¿Cuántos más tiene Pepa? Quitamos los de Dani a los de Pepa: 13 − 4 = 9. Pepa tiene 9 más.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'le quedan 9 cromos' }, 'Solución: 13 − 4 = 9. A Dani le quedan 9 cromos.'),
+    show('bar-model', { a: 9, b: 4, total: 13 }, 'Comparar también se puede restar. Pepa tiene 13 cromos y Dani tiene 4. ¿Cuántos más tiene Pepa? Restamos: 13 − 4 = 9. Pepa tiene 9 cromos más que Dani.'),
+    show('big-text', { text: '13 − 4 = 9', sub: 'Pepa tiene 9 cromos más' }, 'Solución: 13 − 4 = 9. Pepa tiene 9 cromos más que Dani.'),
   ],
   guiada: [
     tryIt('bar-model', { a: 9, b: 4, total: 13 }, '¡Te toca! ¿Qué parte se quita de la barra?', { skills: ['bar:sub'] }),

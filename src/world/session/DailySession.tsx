@@ -8,13 +8,14 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useActivityHost } from '@/activities'
 import { speech } from '@/audio'
+import { SoundSwitch } from '@/audio/SoundSwitch'
 import { StarIcon } from '@/art'
 import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { classForTopic, getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
-import { syllabusFor, syllabusForGrade, topicTitle } from '@/content/syllabus'
-import { DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
+import { syllabusFor, syllabusForGrade, topicTitle, type SyllabusTopic } from '@/content/syllabus'
+import { markTopicPracticeDay, DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
@@ -23,7 +24,7 @@ import { CancionOffer } from './CancionOffer'
 import { songTables } from '@/world/cancion/logic'
 import { CaligrafiaOffer, useCaligrafiaOffered } from './CaligrafiaOffer'
 import { showCaligrafiaAtEnd } from '@/engine/caligrafia/offer'
-import { afterAnswer, missedTable, postpone, SESSION_STARS, SUBJECT_LIMIT_SECONDS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
+import { afterAnswer, blockTimeText, canPostpone, earnsStars, missedTable, postpone, SESSION_STARS, SUBJECT_LIMIT_SECONDS, sessionDoneKey, sessionRewardKey, startRun, summarizeRun, isTimeUp, type RunItem, type RunSummary } from './logic'
 import s from './session.module.css'
 
 export interface DailySessionProps {
@@ -105,6 +106,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   const [paused, setPaused] = useState(false)
   const [finishing, setFinishing] = useState(false)
   const [endedByTime, setEndedByTime] = useState(false)
+  /** «Ahora no» presses in this run (see canPostpone). */
+  const [postpones, setPostpones] = useState(0)
 
   const running = phase === 'play' && !paused
   const seconds = useActiveSeconds(running)
@@ -159,6 +162,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
     setQueue(q)
     setPos(0)
     setResults([])
+    setPostpones(0)
     setPhase('play')
   }
 
@@ -169,8 +173,9 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
 
   // «Ahora no»: nothing is reported. The next item slides into this position; the run closes when none is left.
   const onPostponed = () => {
-    if (!queue) return
+    if (!queue || !canPostpone(queue, pos, postpones)) return
     const q = postpone(queue, pos)
+    setPostpones((n) => n + 1)
     setQueue(q)
     if (finishing) return close(false)
     if (pos < q.slots.length) return
@@ -198,6 +203,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   // Lengua: the class of the topic comes before «Lo nuevo» when the child has not done it yet.
   const pendingClass = setup.classFirst ? plan.classTopicId ?? null : null
   const summary: RunSummary = summarizeRun(queue ?? { slots: [], retried: [] }, results, !endedByTime)
+  // Answers to the items of «Lo nuevo»: only these make the day a day of practice of the topic.
+  const newAnswered = results.filter((r) => queue?.slots.find((sl) => sl.item.uid === r.uid)?.item.item.block === 'new').length
   // A maths session with a missed times-table fact ends offering the song of that table.
   const missed = subject === 'math' ? missedTable(queue ?? { slots: [], retried: [] }, results, songTables(child.grade)) : null
   const ctx = templateContext(child)
@@ -235,7 +242,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
             <h2 className={s.title}>{childText(child, '¡Vamos, {child}!')}</h2>
             {topic && <p className={s.topicChip}>Hoy aprendemos: <strong>{topicName}</strong></p>}
             <ol className={s.blocks}>
-              {setup.blocks.map(([name, time]) => <li key={name}><span>{name}</span><small>{time}</small></li>)}
+              {setup.blocks.map(([name, time]) => <li key={name}><span>{name}</span><small>{blockTimeText(plan, name, time)}</small></li>)}
             </ol>
             {pendingClass ? (
               <Button size="lg" variant="success" onClick={() => navigate(`/play/clase/${pendingClass}`)}>¡Empezar la clase!</Button>
@@ -257,6 +264,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
         summary={summary}
         missed={missed}
         topicName={topic ? topicName : null}
+        practisedTopic={topic && newAnswered > 0 ? topic : null}
+        rule={topicClass ? renderTemplate(topicClass.lesson.steps[topicClass.lesson.steps.length - 1].text, ctx) : null}
         finished={!endedByTime}
         onDone={onDone}
         onGo={(worldId, nodeId) => navigate(`/play/w/${worldId}/${nodeId}`)}
@@ -301,10 +310,13 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
               okLabel={pos + 1 < slots.length && !finishing ? 'Siguiente' : 'Ver mi resultado'}
               report={!slot.retry}
               onContinue={(o) => onAnswered(o.check.correct, slot.retry)}
-              onSkip={onPostponed}
+              onSkip={queue && canPostpone(queue, pos, postpones) ? onPostponed : undefined}
               allowRetry
               allowDontKnow={slot.item.item.block !== 'warmup'}
               teach={slot.item.item.block === 'warmup' ? 'clue' : 'full'}
+              // The visual support of a fact the child failed twice (its scaffold: arrays, the division galera, the first hint)
+              // is on screen from the start.
+              guided={slot.item.item.scaffold}
             />
           </div>
         ) : null}
@@ -393,7 +405,7 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
         {soundOn ? (
           <Button variant="secondary" size="lg" onClick={listen}>{speaking ? '🔊 Escuchando…' : '🔊 Escuchar'}</Button>
         ) : (
-          <p className={s.text}>Activa el sonido para escuchar el texto</p>
+          <><p className={s.text}>Activa el sonido para escuchar el texto</p><SoundSwitch /></>
         )}
         <Button size="lg" variant="success" onClick={onNext}>¡Ahora las preguntas!</Button>
       </div>
@@ -401,10 +413,15 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
   )
 }
 
-function Closing({ child, progress, subject, summary, missed, topicName, finished, onDone, onGo, ctx }: {
-  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null; finished: boolean
+function Closing({ child, progress, subject, summary, missed, topicName, practisedTopic, rule, finished, onDone, onGo, ctx }: {
+  child: ChildProfile; progress: ProgressState; subject: LessonSubject; summary: RunSummary; missed: number | null; topicName: string | null
+  /** Today's topic when the child answered at least one item of «Lo nuevo»: the day counts as a day of practice of it. */
+  practisedTopic: SyllabusTopic | null
+  /** The closing step of the topic's class (it starts with «La regla: …»), when the topic has a class: what the child takes home. */
+  rule: string | null; finished: boolean
   onDone: () => void; onGo: (worldId: string, nodeId: string) => void; ctx: ReturnType<typeof templateContext>
 }) {
+  const mastery = useMastery(child.id) ?? {}
   const key = sessionRewardKey(new Date(), subject)
   const alreadyToday = !!progress.flags?.[key]
   const [awarded, setAwarded] = useState(false)
@@ -416,20 +433,25 @@ function Closing({ child, progress, subject, summary, missed, topicName, finishe
     if (marked.current || summary.answered === 0) return
     marked.current = true
     const doneKey = sessionDoneKey(new Date(), subject)
-    void updateProgress(child.id, (p) => (p.flags?.[doneKey] ? p : {
-      ...p, flags: { ...p.flags, [doneKey]: true }, updatedAt: new Date().toISOString(),
-    })).catch(() => undefined)
-  }, [summary.answered, subject, child.id])
+    void updateProgress(child.id, (p) => {
+      // The day also counts as a day of practice of today's topic (a topic with no progress for 5 days makes way for another).
+      const withTopic = practisedTopic ? markTopicPracticeDay(p, practisedTopic, mastery, new Date()) : p
+      return p.flags?.[doneKey] ? withTopic : { ...withTopic, flags: { ...withTopic.flags, [doneKey]: true }, updatedAt: new Date().toISOString() }
+    }).catch(() => undefined)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once per closing; later mastery changes must not re-mark
+  }, [summary.answered, subject, child.id, practisedTopic])
 
+  // The stars are for practice (half of the planned items answered), finished or cut by the time; a skipped run gets none.
+  const earns = earnsStars(summary)
   useEffect(() => {
-    if (started.current || alreadyToday || !finished || summary.answered === 0) return
+    if (started.current || alreadyToday || !earns) return
     started.current = true
     updateProgress(child.id, (p) => (p.flags?.[key] ? p : {
       ...p, stars: p.stars + SESSION_STARS, flags: { ...p.flags, [key]: true }, updatedAt: new Date().toISOString(),
     }))
       .then(() => setAwarded(true))
       .catch(() => toast('Tus estrellas se guardarán en cuanto haya conexión.'))
-  }, [alreadyToday, finished, summary.answered, child.id, key])
+  }, [alreadyToday, earns, child.id, key])
 
   // The Lengua end offers the handwriting practice (pen only, after an answered Lengua run); otherwise the end is as before.
   const offered = useCaligrafiaOffered(child)
@@ -450,7 +472,7 @@ function Closing({ child, progress, subject, summary, missed, topicName, finishe
       <div className={s.stage}>
         <div className={`${s.card} ${s.calm}`}>
           <div className={s.stars} aria-label={`${SESSION_STARS} estrellas`}>
-            {[0, 1, 2].map((i) => <StarIcon key={i} size={56} filled={finished && i < SESSION_STARS} />)}
+            {[0, 1, 2].map((i) => <StarIcon key={i} size={56} filled={earns && i < SESSION_STARS} />)}
           </div>
           <h2 className={s.title}>
             {finished ? childText(child, '¡Lo has conseguido, {child}!') : childText(child, '¡Buen trabajo, {child}!')}
@@ -459,9 +481,10 @@ function Closing({ child, progress, subject, summary, missed, topicName, finishe
             {summary.answered === 0
               ? 'Hoy no has llegado a contestar ninguno.'
               : summary.total > 0 ? `Has acertado ${summary.correct} de ${summary.total} ejercicios.` : 'Hoy has hablado en inglés.'}
-            {' '}{finished ? 'Descansa y vuelve mañana.' : 'Hemos llegado al tiempo de hoy: lo que has hecho cuenta.'}
+            {' '}{finished ? 'Descansa y vuelve mañana.' : summary.answered > 0 && `Hoy has trabajado ${summary.answered} ${summary.answered === 1 ? 'ejercicio' : 'ejercicios'}. Mañana sigues desde aquí.`}
           </p>
           {topicName && <p className={s.topicChip}>Hoy has trabajado: <strong>{topicName}</strong></p>}
+          {rule && <p className={s.text}>{rule}</p>}
           {awarded && <p className={s.reward}>+{SESSION_STARS} estrellas para tu cuerno</p>}
           {alreadyToday && <p className={s.text}>Ya tienes las estrellas de hoy.</p>}
           {hook && <p className={s.story}>Tu aventura: {hook}</p>}

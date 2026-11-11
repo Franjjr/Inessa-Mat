@@ -33,7 +33,7 @@ describe('facts answer flow · teaching', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
     const { result } = renderHook(() => useAnswerFlow({ exercise: ex, onAnswered, clueCountsAsHint: true }))
     act(() => result.current.submit(num(49)))
-    expect(result.current.clue).toMatch(/49 es 7 × 7, la de al lado: te faltan 7/)
+    expect(result.current.clue).toMatch(/49 es 7 × 7: ese resultado es de la tabla del 7\. Prueba el truco\. Fíjate en los números 5, 6, 7, 8/)
     act(() => result.current.submit(num(56)))
     const o = onAnswered.mock.calls[0][0]
     expect(o.check.correct).toBe(true)

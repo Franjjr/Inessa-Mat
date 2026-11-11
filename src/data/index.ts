@@ -24,7 +24,9 @@ export { useProgress, getProgress, updateProgress, useMastery, getMastery, saveM
 
 // ---------------------------------------------------------------- attempts & sessions
 /** listAttempts / listSessions return newest first. touchSession is idempotent; minutes only grow. */
-export { recordAttempt, listAttempts, startSession, touchSession, endSession, listSessions } from './activity'
+export { recordAttempt, listAttempts, listPlacementAttempts, startSession, touchSession, endSession, listSessions } from './activity'
+/** A play session for a screen outside GameHostProvider (Caligrafía): started on mount, ended on unmount. */
+export { usePlaySession } from './playSession'
 
 // ---------------------------------------------------------------- rewards (parent-defined real-world prize)
 export { getRewards, setChestReward, markRewardUnlocked, markRewardClaimed } from './rewards'
@@ -65,13 +67,20 @@ export type { DataErrorCode } from './errors'
 export { useAuthExtras } from './auth'
 export { acceptInvite, completeAccount, createInviteLink, listOrgMembers, signInWithGoogle, suggestedDisplayName, updatePassword } from './account'
 export { googleClientId } from './supabase'
-/** School extras: classes of a child (family view), new join code. */
-export { listClassesForChild, regenerateJoinCode } from './schools'
+/** School extras: classes of a child (family view), new join code, what each pupil has done of a mission. */
+export { listClassesForChild, regenerateJoinCode, getMissionProgress, MISSION_DONE_ATTEMPTS } from './schools'
+export type { MissionProgress } from './schools'
 /** GDPR erasure (server + device) and removing the adult PIN. */
 export { eraseChild } from './dashboards'
 export { clearAdultPin } from './pin'
 /** Sync state outside React. */
 export { getSyncStatus, subscribeSyncStatus } from './sync'
+/** Review log of wrong answers (this device only, bounded; no screen yet): see src/data/review.ts. */
+export { listWrongAnswerNotes, clearWrongAnswerNotes } from './review'
+export type { WrongAnswerNote } from './review'
+/** Persistent storage: asked once at startup so the browser does not evict a device-only child's data. */
+export { requestPersistentStorage, getPersistenceState } from './storage'
+export type { PersistenceState } from './storage'
 /** Monotonic progress merge (exposed for tests/tools). */
 export { mergeProgress } from './merge'
 

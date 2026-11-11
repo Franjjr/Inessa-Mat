@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { ActivityConfig } from '@/types'
 import ShareActivity from './index'
@@ -47,5 +48,30 @@ describe('share activity', () => {
     const item = firstBin.querySelector('[role="presentation"]') as HTMLElement
     fireEvent.click(item)
     expect(screen.getAllByRole('button', { name: /^Amiga \d+:/ })[0].getAttribute('aria-label')).toMatch(/: 0/)
+  })
+})
+
+describe('share activity · guiding highlight', () => {
+  it('keeps the highlight on the friend who is next, also after the sharing can be skipped', async () => {
+    const user = userEvent.setup()
+    render(<ShareActivity config={{ ...config, count: 5 }} onDone={() => {}} onExit={() => {}} />)
+    for (let round = 0; round < 3; round++) {
+      // Hand out every object, always to the friend with the fewest.
+      while (screen.queryAllByRole('button', { name: /^Amiga \d+:/ }).length > 0) {
+        const bins = screen.getAllByRole('button', { name: /^Amiga \d+:/ })
+        const counts = bins.map((b) => Number(/: (\d+)/.exec(b.getAttribute('aria-label') ?? '')?.[1]))
+        fireEvent.click(bins[counts.indexOf(Math.min(...counts))])
+      }
+      const equation = /(\d+) ÷ (\d+) = \?/.exec(screen.getByText(/÷/).textContent ?? '')
+      expect(equation).not.toBeNull()
+      await user.click(screen.getByRole('textbox', { name: 'Cuántos le tocan a cada amiga' }))
+      await user.keyboard(String(Number(equation?.[1]) / Number(equation?.[2])))
+      await user.click(screen.getByRole('button', { name: '✓ Comprobar' }))
+      await user.click(screen.getByRole('button', { name: 'Siguiente →' }))
+    }
+    // Three rounds right: the skip button appears, and the friend who is next keeps its highlight.
+    expect(screen.getByRole('button', { name: 'Ya lo sé, ¿cuántos le tocan?' })).toBeTruthy()
+    const bins = screen.getAllByRole('button', { name: /^Amiga \d+:/ })
+    expect(bins[0].className).toMatch(/next/)
   })
 })

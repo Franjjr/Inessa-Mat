@@ -217,6 +217,8 @@ describe('LessonPlayer: going back to a settled try step', () => {
     await user.click(nextButton())
     await user.click(screen.getByRole('button', { name: '‹ Atrás' }))
     expect(screen.queryByRole('button', { name: 'Responder bien' })).toBeNull()
+    // The right answer is shown again through LessonPlayer's shownAnswers, not only the closing line.
+    expect(screen.getByText(/La respuesta es \d+\./)).toBeInTheDocument()
     expect(screen.getByText(/Seguimos con la lección/)).toBeInTheDocument()
     expect(nextButton()).toBeEnabled()
   })

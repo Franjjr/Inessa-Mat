@@ -65,9 +65,10 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
   const current = states.find((x) => !x.locked && !x.done)?.node.id
   const path = useMemo(() => world.nodes.map((n) => n.pos), [world])
   const trainable = states.filter((x) => x.node.kind !== 'guardian')
-  const doneTrainable = trainable.filter((x) => x.done).length
-  // Rescue 0..1: how much of the companion's trouble has loosened (full once the crystal is won).
-  const rescue = crystal ? 1 : trainable.length ? Math.min(1, doneTrainable / trainable.length) : 0
+  // Rescue 0..1: how much of the companion's trouble has loosened, from the stars of the stops (3 for a full
+  // practice): finishing a reading does not free the companion as much as practising (full once the crystal is won).
+  const starsTrainable = trainable.reduce((sum, x) => sum + Math.min(3, x.stars), 0)
+  const rescue = crystal ? 1 : trainable.length ? Math.min(1, starsTrainable / (3 * trainable.length)) : 0
   const vividness = crystal ? 1 : 0.3 + 0.6 * rescue
   const hook = renderTemplate(world.hook, ctx)
   const next = nextNode(progress)

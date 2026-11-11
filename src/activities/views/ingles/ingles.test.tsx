@@ -92,6 +92,8 @@ describe('ListenPickView', () => {
     render(<ListenPickView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
     expect(screen.queryByRole('button', { name: /Otra vez/ })).toBeNull()
     expect(screen.getByText(/Activa el sonido/)).toBeTruthy()
+    // The notice comes with the switch that turns the sound on, right where the child is looking.
+    expect(screen.getByRole('button', { name: 'Activar el sonido' })).toBeTruthy()
     expect(pageText()).not.toContain(ex.word)
   })
 

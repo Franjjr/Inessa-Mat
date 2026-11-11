@@ -6,6 +6,7 @@ import { useActivityHost } from '@/activities/host'
 import { NumberInput } from '@/ink'
 import { sfx } from '@/audio'
 import { celebrate } from '@/fx'
+import { guidedOutcome } from '../shared/guided'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './ArrayView.module.css'
@@ -38,7 +39,8 @@ interface RoundProps extends Omit<ArrayViewProps, 'exercise'> {
 
 function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = true, compact, mirror }: RoundProps) {
   const host = useActivityHost()
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
+  // The guide («Cuenta por filas») is on screen from the start: a right answer under it is not taken as known by heart.
+  const flow = useAnswerFlow(ex, { onAnswered: guided ? (o) => onAnswered(guidedOutcome(o)) : onAnswered, showFeedback, allowHints })
   const [value, setValue] = useState<number | null>(null)
   const [counted, setCounted] = useState<Set<number>>(() => new Set())
   const [turned, setTurned] = useState(false)

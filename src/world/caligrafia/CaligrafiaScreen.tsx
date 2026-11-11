@@ -1,6 +1,7 @@
 /* Route /play/caligrafia: «Caligrafía con lápiz», the day's plan of letra ligada (2 or 3 items, about five minutes). Each
-   item runs TraceCursive; every item is recorded as one attempt (skill calig:…, correct = 3 stars) and moves its mastery.
-   The day's stars come once, on the first finish, on their own key. «Salir» leaves at any time. */
+   item runs TraceCursive; every item is recorded as one attempt (skill calig:…, correct = 2 or 3 stars) and moves its mastery.
+   The day's stars come once, on the first finish, on their own key. «Salir» leaves at any time. The visit is a play
+   session marked 'handwriting' (usePlaySession), so its minutes are written down like those of the other subjects. */
 import { useRef, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { TraceCursive } from '@/ink/cursive/TraceCursive'
@@ -10,7 +11,7 @@ import { useInputMode } from '@/ink'
 import { planCaligrafia } from '@/engine/caligrafia/plan'
 import { updateMastery } from '@/engine'
 import type { CalItem } from '@/content/caligrafia/curriculum'
-import { recordAttempt, saveMastery, updateProgress, useActiveChild, useMastery } from '@/data'
+import { recordAttempt, saveMastery, updateProgress, useActiveChild, useMastery, usePlaySession } from '@/data'
 import type { AttemptRecord, ChildProfile, ErrorType, MasteryMap } from '@/types'
 import { Button, Screen, Spinner, toast } from '@/ui'
 import { caligrafiaRewardKey, CALIG_STARS } from '@/world/session/logic'
@@ -41,15 +42,19 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
   const [finished, setFinished] = useState(false)
   const [reward, setReward] = useState<'new' | 'already' | null>(null)
   const masteryNow = useRef(mastery)
+  const session = usePlaySession(child.id, 'handwriting')
 
   const record = (item: CalItem, score: CursiveScore, tries: number, ms: number) => {
     const now = new Date()
-    const correct = score.stars === 3
+    // Two stars is a letter that is right with one slight fault: it counts as right for the review (only one star is wrong).
+    const correct = score.stars >= 2
     const errorType = score.worst ? ERROR_OF[score.worst] : null
+    session.current.attempts += 1
+    if (correct) session.current.correct += 1
     const attempt: AttemptRecord = {
       id: crypto.randomUUID(),
       childId: child.id,
-      sessionId: null,
+      sessionId: session.current.id,
       skill: item.skill,
       kind: 'cursive',
       correct,
@@ -108,7 +113,7 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
       <Screen className={s.root} background="var(--c-bg)">
         <div className={s.card}>
           <h2 className={s.title}>¡Terminado!</h2>
-          <p className={s.text}>Has practicado {plan.length} {plan.length === 1 ? 'cosa' : 'cosas'} de letra ligada.</p>
+          <p className={s.text}>Has practicado {plan.length} {plan.length === 1 ? 'cosa' : 'cosas'} de caligrafía.</p>
           {reward === 'new' && <p className={s.reward}>+{CALIG_STARS} estrellas para tu cuerno</p>}
           {reward === 'already' && <p className={s.text}>Ya tienes las estrellas de hoy.</p>}
           <Button size="lg" variant="success" onClick={leave}>Volver al inicio</Button>

@@ -438,7 +438,7 @@ function checkPlaceValue(ex: PlaceValueExercise, answer: Answer): CheckResult {
   if (sameDigits) return res(false, given, expected, { errorType: 'misaligned', feedback: '¡Casi! Tienes las mismas cifras: revisa en qué lugar va cada una.' })
   const five = ex.value >= 10000
   const feedback = ex.mode === 'words'
-    ? `¡Casi! Lee despacio: primero ${five ? 'las decenas de millar y los miles' : 'los miles'}, luego las centenas, las decenas y las unidades.`
+    ? `¡Casi! Lee despacio: primero ${five ? 'las decenas de millar y los millares' : 'los millares'}, luego las centenas, las decenas y las unidades.`
     : `¡Casi! Cuenta cada clase de bloque: ${blockClasses(five)}.`
   return res(false, given, expected, { errorType: 'other', feedback })
 }
@@ -481,13 +481,13 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
         return [
           hint(1, 'Cada cifra vale según el lugar donde está: la misma cifra vale distinto en las decenas que en las centenas.', 'place-value', params),
           hint(2, `Cuenta las casillas del número, de la más grande a la más pequeña: ${[...ex.parts].map((_, i) => placeName(top - i)).join(', ')}.`, 'place-value', params),
-          hint(3, `Mira la primera cifra del número: ¿cuánto vale en las ${placeName(top)}?`, 'place-value', params),
+          hint(3, `Mira la primera cifra del número: ¿cuánto vale en ${PLACE_WITH_ARTICLE[top]}?`, 'place-value', params),
         ]
       }
       return [
-        hint(1, 'Lee de izquierda a derecha: primero los miles (si hay «mil»), luego las centenas, las decenas y las unidades.', 'place-value', params),
-        hint(2, 'La palabra «mil» marca los miles: lo que va delante de «mil» dice cuántos miles hay.', 'place-value', params),
-        hint(3, ex.value >= 1000 ? 'Escribe primero las cifras de los miles y luego las del resto, sin olvidar los ceros.' : 'Sin la palabra «mil» el número tiene 3 cifras o menos: lee las centenas primero.', 'place-value', params),
+        hint(1, 'Lee de izquierda a derecha: primero los millares (si hay «mil»), luego las centenas, las decenas y las unidades.', 'place-value', params),
+        hint(2, 'La palabra «mil» marca los millares: lo que va delante de «mil» dice cuántos millares hay.', 'place-value', params),
+        hint(3, ex.value >= 1000 ? 'Escribe primero las cifras de los millares y luego las del resto, sin olvidar los ceros.' : 'Sin la palabra «mil» el número tiene 3 cifras o menos: lee las centenas primero.', 'place-value', params),
       ]
     }
     case 'compare': {

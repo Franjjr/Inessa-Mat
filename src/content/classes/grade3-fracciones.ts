@@ -85,7 +85,7 @@ const compararFracciones = clase({
     tryIt('fraction-shape', { parts: 6, shaded: 4, shape: 'bar' }, '¡Tu turno! Si las barras están partidas en partes distintas, compara cuánto ocupa una parte.', { skills: ['frac:compare'] }),
     tryIt('fraction-shape', { parts: 8, shaded: 4, shape: 'bar' }, '¡Tu turno! Mira con calma las dos barras y compara lo que ocupa cada una.', { skills: ['frac:compare'] }),
   ],
-  cierre: show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'La regla: si los números de abajo son iguales, gana la que tiene más partes de color; si no, mira cuánto ocupa una parte, y si ocupan lo mismo, son iguales.'),
+  cierre: show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'La regla: si los números de abajo son iguales, gana la que tiene más partes de color. Si no, mira cuánto ocupa una parte: 1/2 es más que 1/3, porque la mitad de una tarta es más que un tercio. Si ocupan lo mismo, son iguales.'),
 })
 
 /* Fracciones de 5, 6, 8, 10 y 12 partes: la misma regla de siempre, con más partes y otros nombres. */

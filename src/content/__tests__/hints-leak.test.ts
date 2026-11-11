@@ -2,16 +2,13 @@
    any written form: «3000», «3 000», decimals with comma) or the text of the right option of a choice exercise. Whole
    numbers only: a one-digit answer does not match inside another number, a time, a fraction or a thousands group. */
 import { describe, expect, it } from 'vitest'
-import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf, strategyForFact } from '@/engine'
+import { TABLE_METHODS, createRng, generate, hintsFor, kindsForSkill, makeFactDiv, statementOf } from '@/engine'
 import type { DivMethod, EnglishExercise, Exercise, Hint, LenguaExercise, SubMethod, TableMethod } from '@/types'
 import { GRADE3_SYLLABUS, GRADE4_SYLLABUS, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, availableSkills } from '@/content/syllabus'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 const PER_SKILL = 30
 const SPACE = '[\\s\\u00a0\\u202f]'
-
-/** Facts whose strategy is a rhyme that IS the fact («siete por siete, cuarenta y nueve»): the workbook's memory trick. */
-const RHYME_STRATEGIES = new Set(['square-rhyme', 'five-six-seven-eight', 'weeks', 'easy-one', 'even-six-rhyme'])
 
 /** A whole number as a regex: plain, or with thousands grouped by a normal space (U+0020), a no-break space (U+00A0)
     or a thin space (U+202F). */
@@ -162,7 +159,6 @@ function exampleLeaks(ex: Exercise, hints: Hint[]): { level: number; text: strin
 }
 
 function leaks(ex: Exercise): { level: number; text: string; answer: string }[] {
-  if (ex.kind === 'fact-mul' && RHYME_STRATEGIES.has(strategyForFact(ex.a, ex.b).id)) return []
   const found: { level: number; text: string; answer: string }[] = []
   for (const o of optionsOf(ex)) {
     const hints = o.tableMethod !== undefined
@@ -214,7 +210,8 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
       }
     }
     expect([...new Set(found)]).toEqual([])
-  })
+    // Generates every skill of two temarios: slower than vitest's default 5 s on a loaded machine.
+  }, 60_000)
   it('no English hint gives the answer away, for every English kind of its skills', () => {
     const found: string[] = []
     for (const skill of english) {

@@ -20,7 +20,7 @@ export const isHandwritten = (m: InputMode): boolean => m === 'pen' || m === 'to
 export interface FlowOptions {
   exercise: Exercise
   onAnswered: (outcome: ExerciseOutcome) => void
-  /** Show the first hint straight away (guided mode). Not counted as a hint used. */
+  /** Show the first hint straight away (guided mode). It counts as a hint used, when hints are on. */
   guided?: boolean
   /** Offer the "Pista" button (default true). */
   allowHints?: boolean
@@ -46,8 +46,11 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
   const { mode } = useInputMode()
   const learning = useInkLearning()
   const hints: Hint[] = useMemo(() => hintsFor(exercise, undefined, { tableMethod }), [exercise, tableMethod])
-  const [hintsShown, setHintsShown] = useState(guided ? 1 : 0)
-  const hintsUsed = useRef(0)
+  // A guided exercise with hints on starts with its first hint on screen: that hint is already used, so a quick right
+  // answer under it is not taken as known by heart. Without hints nothing is shown.
+  const guidedHint = guided && allowHints && hints.length > 0
+  const [hintsShown, setHintsShown] = useState(guidedHint ? 1 : 0)
+  const hintsUsed = useRef(guidedHint ? 1 : 0)
   const fixes = useRef(0)
   /** Wrong tries that were followed by another try (the outcome's retries). */
   const retried = useRef(0)
@@ -85,7 +88,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
 
   /** Final outcome: happens once per exercise. endedAt: when the answer was given (a copy step after it does not count
    *  in the time); quiet: no sound (the wrong one already played). */
-  const settle = useCallback((res: CheckResult, opts: { endedAt?: number; quiet?: boolean } = {}) => {
+  const settle = useCallback((res: CheckResult, opts: { endedAt?: number; quiet?: boolean; revealed?: boolean } = {}) => {
     if (done.current) return
     done.current = true
     const m = modeRef.current
@@ -111,6 +114,7 @@ function useCore({ exercise, onAnswered, guided = false, allowHints = true, tabl
       recognitionFixes: total,
       ...(retried.current ? { retries: retried.current } : {}),
       ...(trick ? { method: trick } : {}),
+      ...(opts.revealed ? { revealed: true } : {}),
     })
   }, [learning, exercise, tableMethod])
 
@@ -175,7 +179,7 @@ export function useAnswerFlow(opts: FlowOptions): AnswerFlow {
       if (res.correct || ++c.misses >= MAX_TRIES) {
         setPhase('done')
         setClue(`La respuesta correcta es ${res.expected}. ¡Seguimos!`)
-        core.settle(c.res, { endedAt: c.at, quiet: res.correct })
+        core.settle(c.res, { endedAt: c.at, quiet: res.correct, revealed: true })
         return
       }
       setClue(`Es ${res.expected}. Escríbelo igual que está.`)

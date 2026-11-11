@@ -56,4 +56,15 @@ describe('clases de las tablas (3.º)', () => {
       'tabla-9': 'w6-nine',
     })
   })
+
+  it('the class of the 7 does not ask 7 × 9 (that fact belongs to the class of the 9)', () => {
+    const seven = TABLAS_CLASSES.find((c) => c.topicId === 'tabla-7')!
+    const tries = seven.lesson.steps.filter((s) => s.interaction === 'try')
+    expect(tries.length).toBeGreaterThan(0)
+    for (const step of tries) {
+      const skills = step.trySelector?.skills ?? []
+      expect(skills, seven.lesson.id).not.toContain('mul:7x9')
+      expect(skills, seven.lesson.id).not.toContain('mul:9x7')
+    }
+  })
 })

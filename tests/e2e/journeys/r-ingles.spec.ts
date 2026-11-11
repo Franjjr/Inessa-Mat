@@ -160,7 +160,7 @@ test.describe('Inglés de 3.º', () => {
         expect(await noSidewaysScroll(page), `placement at ${size}: no sideways scroll`).toBe(true)
       }
       await expect(page.getByText(/¡Gracias, Lía!/)).toBeVisible()
-      await expect(page.getByText(/Ya sabemos por dónde empezar en Inglés/)).toBeVisible()
+      await expect(page.getByText(/Ya sabemos lo que te toca aprender en Inglés/)).toBeVisible()
       await tapReachable(page, page.getByRole('button', { name: 'Volver al inicio' }), '«Volver al inicio»')
       await expect(page).toHaveURL(/\/play$/)
       await expect(page.getByRole('button', { name: /Haz la prueba de Inglés/ })).toHaveCount(0)

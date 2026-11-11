@@ -22,6 +22,7 @@ export function factDifficulty(a: number, b: number): number {
   if (lo === 1 || hi === 10 || lo === 10) return 1
   if (lo === 2 || lo === 5 || hi === 5 || hi === 2) return 2
   if (HARD_FACTS.has(`${lo}x${hi}`)) return 5
+  if (lo === 9 && hi === 9) return 4 // like 6 × 6: the 9s are not a trick, but the square is not an easy fact
   if ([6, 7, 8].includes(lo) || [6, 7, 8].includes(hi)) return lo <= 4 ? 3 : 4
   return 3
 }

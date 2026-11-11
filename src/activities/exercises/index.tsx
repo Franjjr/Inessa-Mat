@@ -4,6 +4,8 @@
 import { useMemo } from 'react'
 import type { ActivityProps, Exercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector } from '../facts/shared/items'
+import { guidedOutcome } from '../shared/guided'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
 import { useOpsRun } from '../groups/useOpsRun'
@@ -11,7 +13,7 @@ import { useOpsRun } from '../groups/useOpsRun'
 export default function ExercisesActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 5, { rng: host.rng, mastery: host.mastery }),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 5, { rng: host.rng, mastery: host.mastery }),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],
@@ -27,7 +29,8 @@ export default function ExercisesActivity({ config, onDone, onExit }: ActivityPr
         <ExerciseView
           key={`${ex.id}-${run.index}`}
           exercise={ex}
-          onAnswered={run.record}
+          // A guided round shows its help from the start: that help is a hint used (mastery does not climb on it).
+          onAnswered={(o) => run.record(guided ? guidedOutcome(o) : o)}
           guided={guided}
           allowHints
           showFeedback

@@ -16,7 +16,11 @@ export interface AttemptForMastery {
   ms: number
   inputMode: InputMode
   hintsUsed: number
+  /** Wrong tries before this answer (the facts views allow one more try): a right answer after one is not fluent. */
+  retries?: number
   errorType?: ErrorType | null
+  /** The exercise is answered by picking from options (isChoiceExercise): its right answers cannot climb past CHOICE_MAX_BOX. */
+  choice?: boolean
 }
 
 export interface SessionPlan {

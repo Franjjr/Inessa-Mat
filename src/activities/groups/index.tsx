@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { ActivityProps, ExerciseOutcome, GroupsExercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector, BUILD_SKIP_AFTER } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import { sfx } from '@/audio'
 import GroupsView from '../views/GroupsView'
@@ -13,7 +14,7 @@ import s from './groups.module.css'
 export default function GroupsActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 6, { rng: host.rng, mastery: host.mastery })
+    () => generate(adaptiveSelector(config.selector), config.count ?? 6, { rng: host.rng, mastery: host.mastery })
       .filter((e): e is GroupsExercise => e.kind === 'groups'),
     // Generated once per mount: the rounds of one run are fixed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -25,28 +26,37 @@ export default function GroupsActivity({ config, onDone, onExit }: ActivityProps
   if (!ex || ex.kind !== 'groups') return null
   return (
     <OpsShell title={config.title} index={run.index} total={run.total} onExit={onExit}>
-      <GroupsRound key={`${ex.id}-${run.index}`} ex={ex} onAnswered={run.record} guided={run.index === 0} />
+      <GroupsRound key={`${ex.id}-${run.index}`} ex={ex} onAnswered={run.record} guided={run.index === 0} skippable={run.correct >= BUILD_SKIP_AFTER} />
     </OpsShell>
   )
 }
 
-function GroupsRound({ ex, onAnswered, guided }: { ex: GroupsExercise; onAnswered: (o: ExerciseOutcome) => void; guided: boolean }) {
+interface RoundProps {
+  ex: GroupsExercise
+  onAnswered: (o: ExerciseOutcome) => void
+  guided: boolean
+  /** After several right rounds the child may skip building the baskets and go straight to the question. */
+  skippable: boolean
+}
+
+function GroupsRound({ ex, onAnswered, guided, skippable }: RoundProps) {
   const host = useActivityHost()
   const [built, setBuilt] = useState(false)
   if (built) {
     return <GroupsView exercise={ex} onAnswered={onAnswered} guided={guided} showFeedback allowHints />
   }
-  return <BuildGroups ex={ex} onBuilt={() => setBuilt(true)} t={host.t} />
+  return <BuildGroups ex={ex} onBuilt={() => setBuilt(true)} t={host.t} skippable={skippable} />
 }
 
 interface BuildProps {
   ex: GroupsExercise
   onBuilt: () => void
   t: (text: string) => string
+  skippable: boolean
 }
 
 /** Tap objects from the tray: each one goes into the open basket, until every basket is full. */
-function BuildGroups({ ex, onBuilt, t }: BuildProps) {
+function BuildGroups({ ex, onBuilt, t, skippable }: BuildProps) {
   const total = ex.groups * ex.perGroup
   const [tray, setTray] = useState<number[]>(() => Array.from({ length: total }, (_, i) => i))
   const [baskets, setBaskets] = useState<number[][]>(() => Array.from({ length: ex.groups }, () => []))
@@ -105,6 +115,11 @@ function BuildGroups({ ex, onBuilt, t }: BuildProps) {
       {ready && (
         <button type="button" className={`${s.ready} ${s.go}`} onClick={onBuilt}>
           {t('¡Ya están! ¿Cuántos hay?')}
+        </button>
+      )}
+      {skippable && !ready && (
+        <button type="button" className={s.skip} onClick={onBuilt}>
+          {t('Ya lo sé, ¿cuántos hay?')}
         </button>
       )}
     </section>

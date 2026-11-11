@@ -5,7 +5,7 @@ import { InkProvider } from '@/ink/InkProvider'
 import { scriptedRecognizer } from '@/ink/dev/scripted'
 import { replayStrokes } from '@/ink/dev/autoplay'
 import { fixedElementSize, mockCanvas } from '@/ink/dev/testing'
-import { exactStrokes, scaledStrokes, toInk } from '@/ink/cursive/fixtures'
+import { exactStrokes, scaledStrokes, toInk, widenedStrokes } from '@/ink/cursive/fixtures'
 import { joinWord } from '@/ink/cursive/join'
 import { fitPauta } from '@/ink/cursive/score'
 import { planCaligrafia } from '@/engine/caligrafia/plan'
@@ -20,6 +20,8 @@ const updateProgress = vi.fn(async (_id: string, fn: (p: typeof progress) => typ
   progress = fn(progress)
   return progress
 })
+const sessionTally = { current: { id: 'sess-1' as string | null, startedAt: 0, attempts: 0, correct: 0 } }
+const usePlaySession = vi.fn((_childId: string, _subject: string) => sessionTally)
 const CHILD = { id: 'c1', name: 'Lucía', grade: 3, settings: { handwriting: true } } as unknown as ChildProfile
 
 vi.mock('@/data', () => ({
@@ -31,6 +33,7 @@ vi.mock('@/data', () => ({
   recordAttempt: (a: unknown) => recordAttempt(a),
   saveMastery: (id: string, items: unknown[]) => saveMastery(id, items),
   updateProgress: (id: string, fn: (p: typeof progress) => typeof progress) => updateProgress(id, fn),
+  usePlaySession: (childId: string, subject: string) => usePlaySession(childId, subject),
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn(), stopCelebrations: vi.fn() }))
@@ -48,6 +51,8 @@ beforeEach(() => {
   recordAttempt.mockClear()
   saveMastery.mockClear()
   updateProgress.mockClear()
+  usePlaySession.mockClear()
+  sessionTally.current = { id: 'sess-1', startedAt: 0, attempts: 0, correct: 0 }
 })
 
 function renderScreen() {
@@ -64,13 +69,13 @@ function renderScreen() {
 }
 
 /** Runs the whole plan of the day: every item written exactly (or scaled for the first one when `firstScaled`). */
-async function runPlan(firstScaled = false) {
+async function runPlan(firstStrokes?: (text: string) => ReturnType<typeof exactStrokes>) {
   const items = planCaligrafia({ childId: CHILD.id, mastery: {}, now: new Date() })
   for (const [i, item] of items.entries()) {
     fireEvent.click(await screen.findByRole('button', { name: '¡A repasar!' }))
     fireEvent.click(screen.getByRole('button', { name: '¡A escribir!' }))
     const fit = fitPauta(W, H, joinWord(item.text).width)
-    const strokes = i === 0 && firstScaled ? scaledStrokes(item.text, 1.4) : exactStrokes(item.text)
+    const strokes = i === 0 && firstStrokes ? firstStrokes(item.text) : exactStrokes(item.text)
     act(() => replayStrokes(screen.getByRole('img', { name: /escribir/i }), toInk(strokes, fit)))
     fireEvent.click(screen.getByRole('button', { name: '¡Listo!' }))
     fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }))
@@ -94,8 +99,12 @@ describe('CaligrafiaScreen', () => {
       expect(a.errorType).toBeNull()
       expect(a.context.stars).toBe(3)
       expect(a.childId).toBe(CHILD.id)
+      expect((a as { sessionId?: string }).sessionId).toBe('sess-1')
     })
     expect(saveMastery).toHaveBeenCalledTimes(items.length)
+    // The visit is a Caligrafía play session: its minutes are written down, and it counts the graded letters.
+    expect(usePlaySession).toHaveBeenCalledWith(CHILD.id, 'handwriting')
+    expect(sessionTally.current).toMatchObject({ attempts: items.length, correct: items.length })
 
     const key = caligrafiaRewardKey(new Date())
     expect(progress.stars).toBe(5 + CALIG_STARS)
@@ -115,14 +124,24 @@ describe('CaligrafiaScreen', () => {
     expect(progress.stars).toBe(starsAfterFirst)
   })
 
+  it('a two-star letter (a slight size fault) is recorded as right: two stars are not a fault for the review', async () => {
+    renderScreen()
+    await runPlan((text) => scaledStrokes(text, 1.1))
+    await screen.findByText('¡Terminado!')
+    const first = recordAttempt.mock.calls[0][0] as { correct: boolean; errorType: unknown; context: { stars: number } }
+    expect(first.context.stars).toBe(2)
+    expect(first.correct).toBe(true)
+    await waitFor(() => expect(recordAttempt).toHaveBeenCalled())
+  })
+
   it('a near miss is recorded as wrong with its calig- error type and the stars in the context', async () => {
     renderScreen()
-    await runPlan(true)
+    await runPlan((text) => widenedStrokes(exactStrokes(text), 1.2))
     await screen.findByText('¡Terminado!')
     const first = recordAttempt.mock.calls[0][0] as { correct: boolean; errorType: string; context: { stars: number } }
     expect(first.correct).toBe(false)
     expect(first.errorType).toMatch(/^calig-/)
-    expect(first.context.stars).toBeLessThanOrEqual(2)
+    expect(first.context.stars).toBe(1)
     await waitFor(() => expect(recordAttempt).toHaveBeenCalled())
   })
 })

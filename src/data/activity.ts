@@ -1,11 +1,12 @@
 /* Attempts (append-only log of answered exercises) and play sessions. */
 import Dexie from 'dexie'
-import type { AttemptRecord, SessionRecord, SubjectId } from '@/types'
+import type { AttemptRecord, SessionRecord, SessionSubject } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
 import { isErasedChild } from './erasure'
 import { publicSession } from './mappers'
 import { enqueue } from './outbox'
+import { noteWrongAnswer } from './review'
 import { updateProgress } from './progress'
 import type { SessionRow } from './types'
 import { localDay, nextTimestamp, nowIso, uuid } from './util'
@@ -15,10 +16,11 @@ import { localDay, nextTimestamp, nowIso, uuid } from './util'
 export async function recordAttempt(attempt: AttemptRecord): Promise<void> {
   if (!attempt?.childId) throw new DataError('invalid', 'recordAttempt: childId is required')
   const row: AttemptRecord = { ...attempt, id: attempt.id || uuid(), createdAt: attempt.createdAt || nowIso() }
-  await db.transaction('rw', [db.attempts, db.children, db.outbox, db.meta], async () => {
+  await db.transaction('rw', [db.attempts, db.children, db.outbox, db.meta, db.reviewNotes], async () => {
     if (await isErasedChild(row.childId)) return // erased child: nothing is kept on this device
     await db.attempts.put(row)
     await enqueue('attempts', row.id, row.childId)
+    await noteWrongAnswer(row)
   })
 }
 
@@ -33,6 +35,21 @@ export async function listAttempts(childId: string, opts: { since?: string; limi
   if (opts.skipHandwriting) coll = coll.filter((a) => !a.skill.startsWith('calig:'))
   if (opts.limit && opts.limit > 0) coll = coll.limit(opts.limit)
   return coll.toArray()
+}
+
+/**
+ * The attempts made in the given placement tests (context.activity), newest first and with no limit: a prueba inicial
+ * is read whole even when the recent window of `listAttempts` has moved past it.
+ */
+export async function listPlacementAttempts(childId: string, activities: readonly string[]): Promise<AttemptRecord[]> {
+  if (activities.length === 0) return []
+  const wanted = new Set(activities)
+  return db.attempts
+    .where('[childId+createdAt]')
+    .between([childId, Dexie.minKey], [childId, Dexie.maxKey], true, true)
+    .reverse()
+    .filter((a) => wanted.has(a.context?.activity ?? ''))
+    .toArray()
 }
 
 // ------------------------------------------------------------------------------------------------ sessions
@@ -60,8 +77,9 @@ function activeMinutes(row: SessionRow, explicit: number | undefined): number {
   return Math.round((row.minutes + gain / 60_000) * 100) / 100
 }
 
-/** A Lengua or English session is marked from its start (its summary carries the subject), so an unfinished one counts as that subject too. */
-export async function startSession(childId: string, subject: SubjectId = 'math'): Promise<SessionRecord> {
+/** A Lengua, English or Caligrafía session is marked from its start (its summary carries the subject), so an unfinished
+    one counts as that subject too. */
+export async function startSession(childId: string, subject: SessionSubject = 'math'): Promise<SessionRecord> {
   const now = nowIso()
   const mark = subject === 'math' ? null : { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject }
   const row: SessionRow = { id: uuid(), childId, startedAt: now, endedAt: null, minutes: 0, summary: mark, updatedAt: now }

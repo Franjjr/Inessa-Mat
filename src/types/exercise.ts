@@ -915,7 +915,9 @@ export type ErrorType =
   | 'quotient-off'         // quotient off by one with consistent remainder logic
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
-  | 'recognition'          // child said the handwriting was misread (not a maths error!)
+  | 'recognition'          // the handwriting was misread (not a maths error!). No code path assigns it yet: engine check() does not, and
+                            // the ink layer (src/ink/context.ts) only collects the digit recognitions. Consumers ignore it in accuracy and
+                            // mastery (src/engine/mastery.ts); it stays in the union for attempts already stored and for dev data (src/data/dev.ts)
   | 'calig-shape'          // Caligrafía: the letter's form is off (worst criterion of a cursive try)
   | 'calig-line'           // Caligrafía: the letter does not sit on the baseline
   | 'calig-size'           // Caligrafía: the letter is too big or too small
@@ -979,7 +981,8 @@ export interface Hint {
 /** Mental strategy (the "tricks" of the workbook) for a multiplication fact. */
 export interface FactStrategy {
   id: 'easy-one' | 'double' | 'five' | 'ten' | 'mirror' | 'five-plus-one' | 'even-six-rhyme' | 'double-double'
-     | 'double-double-double' | 'nine-trick' | 'square-rhyme' | 'five-six-seven-eight' | 'weeks' | 'known'
+     | 'double-double-double' | 'nine-trick' | 'square-rhyme' | 'five-six-seven-eight' | 'weeks' | 'double-and-one'
+     | 'ten-minus-two' | 'known'
   text: string
   visual: HintVisual
 }

@@ -170,3 +170,20 @@
 @media (prefers-reduced-motion: reduce) {
   .backdrop { backdrop-filter: none; }
 }
+
+/* «Esta vez» above this attempt's stars, and the best kept for the node below them. */
+.label {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+}
+
+.best {
+  margin: var(--sp-2) 0 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}

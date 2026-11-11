@@ -133,13 +133,36 @@ describe('DigitCell · handwriting', () => {
     expect(rec.calls[2].strokes).toHaveLength(1)
   })
 
-  it('a quick tap on a recognised cell lets the child rewrite it', () => {
-    const { onChange, surface, cell } = setup([{ digit: 6 }])
+  it('a tap on a recognised cell never erases the digit; it opens the alternatives, where the child can rewrite it', () => {
+    const { onChange, surface, cell } = setup([{ digit: 6, alternatives: [6, 5] }])
     write(surface, 6)
     idle()
     act(() => tap(surface, 40, 40))
+    expect(onChange).not.toHaveBeenCalledWith(null, expect.anything())
+    expect(cell).toHaveAttribute('data-phase', 'recognized')
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getAllByRole('button').map((b) => b.getAttribute('aria-label'))).toEqual(['Es un 6', 'Es un 5', 'Escribirlo otra vez'])
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Escribirlo otra vez' }))
     expect(onChange).toHaveBeenLastCalledWith(null, expect.anything())
     expect(cell).toHaveAttribute('data-phase', 'empty')
+  })
+
+  it('a 7 read as 1 with a narrow margin asks the child to confirm before grading, even with a confident top read', () => {
+    const { onChange, surface, cell } = setup([{ digit: 1, confidence: 0.62, alternatives: [1, 7] }])
+    write(surface, 7)
+    idle()
+    expect(cell).toHaveAttribute('data-phase', 'unsure')
+    expect(within(cell).getByText('?')).toBeInTheDocument()
+    expect(learning.uncertain()).toBe(1)
+    expect(onChange).toHaveBeenLastCalledWith(1, expect.objectContaining({ confidence: 0.62 }))
+  })
+
+  it('a clear digit with a wide margin inside a confusable pair is not asked again', () => {
+    const { surface, cell } = setup([{ digit: 1, confidence: 0.95, alternatives: [1, 7] }])
+    write(surface, 1)
+    idle()
+    expect(cell).toHaveAttribute('data-phase', 'recognized')
+    expect(learning.uncertain()).toBe(0)
   })
 
   it('the pen eraser clears the cell', () => {

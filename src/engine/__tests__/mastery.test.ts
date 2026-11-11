@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  dueSkills, factGrid, fluencyThresholdMs, intervalMs, LEITNER_INTERVAL_DAYS, newMastery, starsFor, updateMastery,
+  CHOICE_MAX_BOX, dueSkills, factGrid, fluencyThresholdMs, intervalMs, isChoiceExercise, LEITNER_INTERVAL_DAYS, newMastery,
+  starsFor, updateMastery,
 } from '@/engine'
 import type { AttemptForMastery } from '@/engine'
-import type { MasteryMap, SkillMastery } from '@/types'
+import type { Exercise, MasteryMap, SkillMastery } from '@/types'
 
 const now = new Date('2026-10-21T10:00:00.000Z')
 const DAY = 86400000
@@ -24,17 +25,49 @@ describe('Leitner transitions', () => {
     })
   })
 
-  it('correct + fluent → box + 1 with the documented intervals', () => {
+  it('correct + fluent + due → box + 1 with the documented intervals (one climb per review date)', () => {
     expect(LEITNER_INTERVAL_DAYS).toEqual([0, 1, 2, 4, 8, 16])
     let m: SkillMastery | undefined
+    let when = now
     const boxes: number[] = []
     for (let i = 0; i < 7; i++) {
-      m = updateMastery(m, attempt(), now)
+      m = updateMastery(m, attempt(), when)
       boxes.push(m.box)
-      expect(m.dueAt).toBe(new Date(now.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY).toISOString())
+      expect(m.dueAt).toBe(new Date(when.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY).toISOString())
+      if (i < 6) when = new Date(when.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY)
     }
     expect(boxes).toEqual([1, 2, 3, 4, 5, 5, 5])
-    expect(m).toMatchObject({ attempts: 7, correct: 7, streak: 7, lastSeenAt: now.toISOString(), updatedAt: now.toISOString() })
+    expect(m).toMatchObject({ attempts: 7, correct: 7, streak: 7, lastSeenAt: when.toISOString(), updatedAt: when.toISOString() })
+  })
+
+  it('a fluent right answer before the review date does not climb (no mastery in one sitting)', () => {
+    const first = updateMastery(undefined, attempt(), now)
+    expect(first.box).toBe(1)
+    const again = updateMastery(first, attempt(), at(0.1))
+    expect(again.box).toBe(1)
+    expect(again.dueAt).toBe(first.dueAt)
+    expect(again.correct).toBe(2)
+    // The box 2 (mastered) needs the review date to come: the next day.
+    const tomorrow = updateMastery(again, attempt(), at(1))
+    expect(tomorrow.box).toBe(2)
+    expect(updateMastery(tomorrow, attempt(), at(1.1)).box).toBe(2)
+  })
+
+  it('a right answer after a wrong try is not fluent: the box stays', () => {
+    expect(updateMastery(withBox(2), attempt({ retries: 1 }), now).box).toBe(2)
+    expect(updateMastery(withBox(0), attempt({ retries: 1 }), now).box).toBe(1)
+    expect(updateMastery(withBox(2), attempt({ retries: 0 }), now).box).toBe(3)
+  })
+
+  it('a right answer long after the review date drops one box before counting', () => {
+    // Box 4 has an 8-day interval: answered 30 days after its date, it goes 4 → 3 and the fluent answer climbs back to 4.
+    const late: SkillMastery = { ...withBox(4), dueAt: at(-30).toISOString() }
+    expect(updateMastery(late, attempt(), now).box).toBe(4)
+    // Only one box down, even after months away.
+    const veryLate: SkillMastery = { ...withBox(5), dueAt: at(-300).toISOString() }
+    expect(updateMastery(veryLate, attempt(), now).box).toBe(5)
+    // A slow answer after a long gap is one box down and no climb.
+    expect(updateMastery(late, attempt({ ms: 9000 }), now).box).toBe(3)
   })
 
   it('correct but slow, or with hints → stays (box 0 → 1)', () => {
@@ -155,5 +188,58 @@ describe('starsFor and factGrid', () => {
     expect(grid[9][8]).toBe(0)
     expect(grid[2][3]).toBe(-1)
     for (let a = 0; a < 10; a++) for (let b = 0; b < 10; b++) expect(grid[a][b]).toBe(grid[b][a])
+  })
+})
+
+describe('choice exercises cannot climb past CHOICE_MAX_BOX by guessing', () => {
+  const choice = (over: Partial<AttemptForMastery> = {}) => attempt({ choice: true, skill: 'word:sense:add', ...over })
+  const write = (over: Partial<AttemptForMastery> = {}) => attempt({ skill: 'word:sense:add', ...over })
+
+  it('a fluent, due right answer to a choice exercise stops at the mastered box', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    const next = updateMastery(mastered, choice(), at(1))
+    expect(next.box).toBe(CHOICE_MAX_BOX)
+    // Still a right answer: it counts, and the review date moves on.
+    expect(next.correct).toBe(mastered.correct + 1)
+    expect(next.streak).toBe(mastered.streak + 1)
+  })
+
+  it('two fluent right choice answers on different days still reach the mastered box (the accepted guess case)', () => {
+    const once = updateMastery(withBox(0, 'word:sense:add'), choice(), now)
+    expect(once.box).toBe(1)
+    const twice = updateMastery(once, choice(), at(2))
+    expect(twice.box).toBe(CHOICE_MAX_BOX)
+    // Mastered by choice alone, the next box needs a written answer.
+    expect(updateMastery(twice, choice(), at(4)).box).toBe(CHOICE_MAX_BOX)
+  })
+
+  it('the same answer written (not a choice) climbs past the cap as before', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    expect(updateMastery(mastered, write(), at(1)).box).toBe(CHOICE_MAX_BOX + 1)
+  })
+
+  it('a choice exercise still climbs from the boxes below the cap', () => {
+    expect(updateMastery(withBox(0, 'word:sense:add'), choice(), now).box).toBe(1)
+    expect(updateMastery(withBox(1, 'word:sense:add'), choice(), at(1)).box).toBe(CHOICE_MAX_BOX)
+  })
+
+  it('a wrong choice answer still lowers the box', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    expect(updateMastery(mastered, choice({ correct: false, errorType: 'word-class' }), now).box).toBe(0)
+  })
+
+  it('isChoiceExercise marks the pick-from-options kinds and leaves the written ones alone', () => {
+    const shape = { id: 's', kind: 'shape-choice', skill: 'word:sense:add', difficulty: 2 } as unknown as Exercise
+    const fact = { id: 'f', kind: 'fact-mul', skill: 'mul:6x7', difficulty: 2 } as unknown as Exercise
+    const eqSame = { id: 'e', kind: 'equation', mode: 'same', skill: 'eq:same', difficulty: 2 } as unknown as Exercise
+    const eqFill = { id: 'e2', kind: 'equation', mode: 'fill', skill: 'eq:flex', difficulty: 2 } as unknown as Exercise
+    const clockWrite = { id: 'c', kind: 'clock-read', mode: 'write', skill: 'clock:read:5', difficulty: 2 } as unknown as Exercise
+    const clockPhrase = { id: 'c2', kind: 'clock-read', mode: 'phrase', skill: 'clock:read:5', difficulty: 2 } as unknown as Exercise
+    expect(isChoiceExercise(shape)).toBe(true)
+    expect(isChoiceExercise(eqSame)).toBe(true)
+    expect(isChoiceExercise(clockPhrase)).toBe(true)
+    expect(isChoiceExercise(fact)).toBe(false)
+    expect(isChoiceExercise(eqFill)).toBe(false)
+    expect(isChoiceExercise(clockWrite)).toBe(false)
   })
 })

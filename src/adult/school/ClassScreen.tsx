@@ -1,19 +1,20 @@
 /* One class: the class heatmap, each pupil's progress, removing a pupil from the class, and assignments. */
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
-import { createAssignment, getClassOverview, listAssignments, removeEnrollment, useAuth } from '@/data'
+import { createAssignment, getClassOverview, getMissionProgress, listAssignments, MISSION_DONE_ATTEMPTS, removeEnrollment, useAuth, type MissionProgress } from '@/data'
 import { describeSkill } from '@/engine'
 import type { Assignment, ClassOverview } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
-import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { averageGrid, countFactStates } from '../shared/heatmap'
-import { hardestTable, struggleCount } from '../shared/reading'
+import { ClassFactHeatmap, FactHeatmap, FactLegend } from '../shared/FactHeatmap'
+import { classFactCounts, countFactStates, FACT_STATE_NOTE } from '../shared/heatmap'
+import { hardestTableAcross, struggleCount } from '../shared/reading'
 import { errorMessage } from '../shared/messages'
-import { formatDate, formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
+import { formatDate, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
 import { ASSIGNMENT_PRESETS, presetSelector } from './presets'
+import { CLASS_CELL_NOTE, classSummary, failsMostLine, missionLine, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
 import { TextField } from '../shared/Field'
 import s from './school.module.css'
 import adult from '../shared/adult.module.css'
@@ -23,6 +24,8 @@ export default function ClassScreen() {
   const { status } = useAuth()
   const [overview, setOverview] = useState<ClassOverview | null>(null)
   const [assignments, setAssignments] = useState<Assignment[]>([])
+  /** What each pupil has done of each started mission (null: the server cannot say yet, see getMissionProgress). */
+  const [missionProgress, setMissionProgress] = useState<Record<string, Map<string, MissionProgress> | null>>({})
   const [loadError, setLoadError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<{ id: string; nickname: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -39,6 +42,10 @@ export default function ClassScreen() {
     const [ov, tasks] = await Promise.all([getClassOverview(classId), listAssignments(classId)])
     setOverview(ov)
     setAssignments(tasks)
+    // The tracking only adds detail: the newest started missions, read after the page is shown, never failing it.
+    const started = tasks.filter((t) => Date.parse(t.startsAt) <= Date.now()).slice(0, MISSIONS_TRACKED)
+    const progress = await Promise.all(started.map((t) => getMissionProgress(t.id)))
+    setMissionProgress(Object.fromEntries(started.map((t, i) => [t.id, progress[i]])))
   }, [classId])
 
   useEffect(() => {
@@ -73,15 +80,17 @@ export default function ClassScreen() {
   }
 
   const { classRoom: room, children } = overview
-  const classGrid = averageGrid(children.map((c) => c.factGrid))
-  const classCounts = countFactStates(classGrid)
-  const notThisWeek = children.filter((c) => c.minutesLast7Days === 0).length
-  const hard = hardestTable(classGrid)
+  const grids = children.map((c) => c.factGrid)
+  const counts = classFactCounts(grids)
+  const byClass = classSummary(counts)
+  const hard = hardestTableAcross(grids)
+  // Any subject counts as practice when the server sends the activity of every subject (migration 0006); before that
+  // only the maths minutes are known, and the sentence says «matemáticas».
   const synthesis = [
-    notThisWeek === 0
-      ? 'Todos han practicado esta semana.'
-      : `Esta semana, ${plural(notThisWeek, 'alumno', 'alumnos')} ${notThisWeek === 1 ? 'no ha' : 'no han'} practicado.`,
-    hard ? `La tabla del ${hard} es la que más les cuesta.` : 'Ahora mismo no hay tablas para repasar en la clase.',
+    weekSentence(children),
+    hard
+      ? `La tabla del ${hard.n} es la que más les cuesta: ${plural(hard.count, 'casilla', 'casillas')} por repasar entre todos los alumnos.`
+      : 'Ahora mismo no hay tablas para repasar en la clase.',
   ].join(' ')
   // Pupils who need the most review come first; "arrival" keeps the order the server returns.
   const pupils = order === 'need'
@@ -162,17 +171,19 @@ export default function ClassScreen() {
         <div className={adult.stack} style={{ gap: 4 }}>
           <h2 id="class-heat-title" className={adult.subheading}>Tablas de la clase</h2>
           <p className={adult.muted}>
-            Media de {plural(children.length, 'alumno', 'alumnos')}. Cada casilla muestra el estado medio de esa multiplicación.
+            Cada casilla muestra cuántos de los {plural(children.length, 'alumno', 'alumnos')} dominan esa multiplicación. El color sigue a la mitad de la clase.
           </p>
         </div>
         {children.length === 0 ? (
           <p className={adult.lead}>Todavía no hay alumnos en esta clase. Comparte el código {room.joinCode} con las familias.</p>
         ) : (
           <>
-            <FactLegend />
-            <FactHeatmap triangle grid={classGrid} label={`Mapa de las tablas de la clase ${room.name}`} />
+            <FactLegend forClass />
+            <ClassFactHeatmap counts={counts} label={`Mapa de las tablas de la clase ${room.name}`} />
+            <p className={adult.hint}>{FACT_STATE_NOTE}</p>
+            <p className={adult.hint}>{CLASS_CELL_NOTE}</p>
             <p className={adult.hint}>
-              Dominadas en la clase: {classCounts.mastered} de 55 · Para repasar: {classCounts.struggling} · Sin practicar: {classCounts.unseen}
+              Dominadas por la mitad de la clase o más: {byClass.mastered} de 55 · Para repasar por la mitad o más: {byClass.struggling} · Sin practicar por nadie: {byClass.unseen}
             </p>
           </>
         )}
@@ -193,16 +204,20 @@ export default function ClassScreen() {
           <ul className={s.childList} aria-label="Alumnos de la clase">
             {pupils.map((c) => {
               const mastered = countFactStates(c.factGrid).mastered
+              const fails = failsMostLine(c.topErrors)
+              const review = pupilReviewLine(c.factGrid, c.nickname)
               return (
                 <li key={c.childId} className={s.childRow}>
                   <div className={adult.stack} style={{ gap: 4, minWidth: 0 }}>
                     <span className={s.childName}>{c.nickname}</span>
                     <div className={s.kpis}>
                       <span>{mastered} de 55 dominadas</span>
-                      <span>{formatMinutes(c.minutesLast7Days)} esta semana</span>
-                      <span>{formatPercent(c.accuracyLast7Days)} de aciertos</span>
+                      <span>{pupilWeekLine(c)}</span>
+                      <span>{formatPercent(c.accuracyLast7Days)} de aciertos en matemáticas</span>
                       <span>{formatRelative(c.lastPlayedAt)}</span>
                     </div>
+                    {fails && <span className={adult.muted}>{fails}</span>}
+                    <span className={adult.muted}>{review}</span>
                   </div>
                   <div className={s.mini}>
                     <FactHeatmap compact triangle grid={c.factGrid} label={`Tablas de ${c.nickname}`} />
@@ -220,7 +235,10 @@ export default function ClassScreen() {
       <section className={adult.card} aria-labelledby="assign-title">
         <div className={adult.stack} style={{ gap: 4 }}>
           <h2 id="assign-title" className={adult.subheading}>Misiones para la clase</h2>
-          <p className={adult.muted}>Se muestran a cada alumno como «la misión de tu profe». Puedes ponerles fecha límite.</p>
+          <p className={adult.muted}>
+            Cada alumno ve la misión vigente en su inicio, como «misión de tu profe». Puedes ponerles fecha límite. Una misión
+            está hecha cuando el alumno responde {MISSION_DONE_ATTEMPTS} ejercicios de esa práctica mientras dura.
+          </p>
         </div>
         {assignments.length === 0 ? (
           <p className={adult.muted}>Todavía no hay misiones.</p>
@@ -231,6 +249,10 @@ export default function ClassScreen() {
                 <div className={adult.stack} style={{ gap: 2, minWidth: 0 }}>
                   <span className={adult.strong}>{a.title}</span>
                   <span className={adult.muted}>{describeAssignment(a)}</span>
+                  {(() => {
+                    const line = missionLine(missionProgress[a.id], children, MISSION_DONE_ATTEMPTS)
+                    return line && <span className={adult.muted}>{line}</span>
+                  })()}
                 </div>
                 <span className={adult.muted}>{a.dueAt ? `Hasta el ${formatDate(a.dueAt)}` : 'Sin fecha límite'}</span>
               </div>
@@ -278,6 +300,9 @@ export default function ClassScreen() {
     </AdultPage>
   )
 }
+
+/** Missions whose tracking is read when the class opens (the newest ones). */
+const MISSIONS_TRACKED = 5
 
 function describeAssignment(a: Assignment): string {
   const skills = a.selector.skills ?? []

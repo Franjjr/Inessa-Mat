@@ -15,7 +15,7 @@ import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { countFactStates } from '../shared/heatmap'
+import { countFactStates, FACT_STATE_NOTE } from '../shared/heatmap'
 import { readTables } from '../shared/reading'
 import { downloadBlob, slug } from '../shared/download'
 import { errorMessage } from '../shared/messages'
@@ -91,6 +91,10 @@ export default function ChildReportScreen() {
   const reading = readTables(summary.factGrid, child?.nickname ?? summary.nickname)
   const worldsTotal = season1.worlds.length
   const name = child?.nickname ?? summary.nickname
+  // Minutes of every subject when they are known (weekBySubject); otherwise only maths is known and the label says so.
+  const weekMinutes = summary.weekBySubject
+    ? Object.values(summary.weekBySubject).reduce((sum, a) => sum + (a?.minutes ?? 0), 0)
+    : summary.minutesLast7Days
 
   const calibrate = async () => {
     setBusy(true)
@@ -194,12 +198,12 @@ export default function ChildReportScreen() {
 
       <section className={s.stats} aria-label="Cifras de los últimos 7 días y en total">
         <div className={s.stat}>
-          <span className={s.statValue}>{formatMinutes(summary.minutesLast7Days)}</span>
-          <span className={s.statLabel}>jugando en los últimos 7 días</span>
+          <span className={s.statValue}>{formatMinutes(weekMinutes)}</span>
+          <span className={s.statLabel}>{summary.weekBySubject ? 'jugando en los últimos 7 días' : 'de matemáticas en los últimos 7 días'}</span>
         </div>
         <div className={s.stat}>
           <span className={s.statValue}>{formatPercent(summary.accuracyLast7Days)}</span>
-          <span className={s.statLabel}>de aciertos en los últimos 7 días</span>
+          <span className={s.statLabel}>de aciertos en matemáticas (7 días)</span>
         </div>
         <div className={s.stat}>
           <span className={s.statValue}>{counts.mastered} de 55</span>
@@ -245,6 +249,7 @@ export default function ChildReportScreen() {
           <p className={adult.hint}>
             Dominadas: {counts.mastered} · En camino: {counts.learning} · Para repasar: {counts.struggling} · Sin practicar: {counts.unseen}
           </p>
+          <p className={adult.hint}>{FACT_STATE_NOTE}</p>
           {reading.reviewFacts.length > 0 && (
             <p className={adult.hint}>Si una casilla aparece «Hay que repasarla», conviene jugar un rato con esas tablas, sin prisa.</p>
           )}
@@ -331,7 +336,8 @@ export default function ChildReportScreen() {
       >
         <p className={adult.lead}>
           Se borrarán su progreso, sus resultados, sus premios y sus muestras de escritura de este dispositivo
-          {child?.orgId ? ' y de la nube' : ''}. Si quieres conservar una copia, descárgala antes.
+          {child?.orgId ? ' y de la nube' : ''}. También se borrará el registro de respuestas marcadas como mal de este
+          dispositivo, que no distingue entre niños. Si quieres conservar una copia, descárgala antes.
         </p>
       </ConfirmModal>
     </AdultPage>

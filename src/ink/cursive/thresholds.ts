@@ -21,8 +21,9 @@ export const CURSIVE_THRESHOLDS = {
   size: { min: 0.93, max: 1.07 },
   /** Start: max of the start-point error (x-heights) and the direction error (1 − cos of the set-off chord). */
   start: 0.15,
-  /** Stars: how many criteria may fail for 3 stars (0 = all pass), and for 2 stars (shape must pass too). */
-  stars: { threeMaxFailed: 0, twoMaxFailed: 1 },
+  /** Stars: how many criteria may fail for 3 stars (0 = all pass), and for 2 stars. For 2 stars the shape ratio (1 = its
+   limit) may be up to shapeSlight: a slight shape fault is a 2-star letter, a big one is not. */
+  stars: { threeMaxFailed: 0, twoMaxFailed: 1, shapeSlight: 1.25 },
   /** Model units off the model path before the live «Te has salido» mark (used while tracing). */
   liveOffPath: 6,
 } as const

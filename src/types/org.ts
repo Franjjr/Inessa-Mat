@@ -73,6 +73,15 @@ export interface Assignment {
   createdBy: ID
 }
 
+/** What a child's activity is counted under: the subjects with their own sessions, and Caligrafía con lápiz. */
+export type ActivitySubject = 'math' | 'language' | 'english' | 'handwriting'
+
+/** One subject over a period: minutes of play (sessions) and graded answers (attempts). */
+export interface SubjectActivity {
+  minutes: number
+  attempts: number
+}
+
 /** Aggregated view for dashboards. */
 export interface ChildSummary {
   childId: ID
@@ -80,8 +89,12 @@ export interface ChildSummary {
   companionSpecies: string
   worldsCompleted: number
   currentWorld: string | null
+  /** Maths minutes of the last 7 days (the other subjects are in weekBySubject). */
   minutesLast7Days: number
   accuracyLast7Days: number | null
+  /** Last 7 days per subject (only the subjects with some activity are listed). Undefined when only the maths numbers
+      are known: a server without migration 0006, whose child_stats counts maths only. */
+  weekBySubject?: Partial<Record<ActivitySubject, SubjectActivity>>
   /** 10×10 matrix: mastery box 0..5 per multiplication fact (index [a-1][b-1]), -1 = never seen. */
   factGrid: number[][]
   topErrors: { errorType: string; count: number }[]

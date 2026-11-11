@@ -16,7 +16,14 @@ export interface GuardianChallengeProps {
 /** world-meta → src/world/rewards/RewardOverlay.tsx (default export). Shown after any node completes. */
 export interface RewardOverlayProps {
   kind: 'node' | 'crystal' | 'season'
+  /** Stars of this attempt («Esta vez»). */
   stars: number
+  /** The best stars kept for the node («Tu mejor»), when it is known. */
+  bestStars?: number
+  /** True when this attempt raised the best stars of the node. */
+  improved?: boolean
+  /** Most stars this reward can show: 3 for a practice, 1 for a reading (story or lesson). Default 3. */
+  maxStars?: number
   world: WorldDef
   letter?: string
   /** New stickers / accessories unlocked by this result. */
@@ -28,6 +35,8 @@ export interface RewardOverlayProps {
 export interface StoryPlayerProps {
   story: StoryDef
   onDone: () => void
+  /** «Saltar»: when given, it is called instead of onDone (the story was not read). */
+  onSkip?: () => void
   onExit?: () => void
 }
 
@@ -43,8 +52,10 @@ export interface GameHostProviderProps {
   worldId?: string
   nodeId?: string
   activity?: string
-  /** The subject the play session is marked with (maths when missing). */
+  /** The subject the play session is marked with (when missing: English on the Isla de Inglés, maths elsewhere). */
   subject?: SubjectId
+  /** The teacher's mission this play comes from: its id goes into each attempt's context and the session summary. */
+  assignmentId?: string
   children: React.ReactNode
 }
 

@@ -9,10 +9,10 @@ export async function isErasedChild(childId: string): Promise<boolean> {
   return (await db.meta.get(META.erased(childId)))?.value === true
 }
 
-/** Deletes every local trace of the child (profile, learning data, handwriting, unsent changes) and sets the marker.
+/** Deletes every local trace of the child (profile, learning data, handwriting, unsent changes, the local wrong-answer log) and sets the marker.
  *  Idempotent. The caller decides whether the server must be told (eraseChild does it through the RPC first). */
 export async function eraseLocalChild(childId: string): Promise<void> {
-  await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta], async () => {
+  await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta, db.reviewNotes], async () => {
     await Promise.all([
       db.children.delete(childId),
       db.progress.delete(childId),
@@ -26,6 +26,8 @@ export async function eraseLocalChild(childId: string): Promise<void> {
       db.meta.delete(META.assignmentsCache(childId)),
       db.meta.delete(META.speaking(childId)),
     ])
+    // Wrong-answer notes carry no child id, so they cannot be picked out one child at a time: all of them go.
+    await db.reviewNotes.clear()
     const active = await db.meta.get(META.activeChildId)
     if (active?.value === childId) await db.meta.delete(META.activeChildId)
     await db.meta.put({ key: META.erased(childId), value: true })

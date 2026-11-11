@@ -133,6 +133,16 @@ export const LENGUA_SKILL_TEXT: Record<string, string> = {
   'lng:lit:trabalenguas': 'Trabalenguas',
 }
 
+/**
+ * The short name of a skill, for sentences that list several of them (the advice, the examples): Lengua and English drop
+ * the explanation in brackets, «Oración: encontrar el sujeto (quién hace la acción)» → «Oración: encontrar el sujeto».
+ * Maths keeps its full text, so «(exactas)» and the like stay.
+ */
+export function describeSkillShort(skill: SkillKey): string {
+  const text = describeSkill(skill)
+  return /^(lng|eng):/.test(skill) ? text.replace(/\s*\([^)]*\)$/, '') : text
+}
+
 /** Human description of a skill for adults (Spanish): 'mul:6x7' → '6 × 7', 'sub:4d:z' → 'Restas de 4 cifras con ceros'. */
 export function describeSkill(skill: SkillKey): string {
   const p = parseSkill(skill)
@@ -300,10 +310,10 @@ export const ERROR_TEXT: Record<ErrorType, string> = {
   'operation': 'Elige la operación equivocada',
   'incomplete': 'Deja casillas sin completar',
   'recognition': 'La letra se reconoció mal (no es un error de cálculo)',
-  'calig-shape': 'La forma de la letra ligada no es la del modelo',
-  'calig-line': 'La letra ligada no se apoya en la línea de abajo',
-  'calig-size': 'El tamaño de la letra ligada no es el de la pauta',
-  'calig-start': 'Empieza la letra ligada en otro sitio o con otra dirección',
+  'calig-shape': 'La forma de la letra no es la del modelo',
+  'calig-line': 'La letra no se apoya en la línea de abajo',
+  'calig-size': 'El tamaño de la letra no es el de la pauta',
+  'calig-start': 'Empieza la letra en otro sitio o con otra dirección',
   'dont-know': 'Dice que todavía no lo sabe',
   'eng-spelling': 'Escribe mal una palabra en inglés: le falta, le sobra o cambia una letra',
   'eng-near-miss': 'Escribe una palabra en inglés a una letra de la correcta («¡Casi!»)',

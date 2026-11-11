@@ -6,6 +6,7 @@
    A sentence is compared with 'exact' (capitals and marks count); a single word ignores its capital (see dictationRule). */
 import { useEffect, useState } from 'react'
 import { speech } from '@/audio'
+import { SoundSwitch } from '@/audio/SoundSwitch'
 import { celebrate } from '@/fx'
 import { useActiveChild } from '@/data'
 import { TextInput } from '@/ink/TextInput'
@@ -54,7 +55,11 @@ function DictationRound({ ex, onAnswered, showFeedback, allowHints }: {
         {soundOn ? (
           <Button variant="secondary" size="lg" onClick={say}>🔊 Escuchar</Button>
         ) : (
-          <p className={s.prompt}>{child?.settings.sound === false ? 'Activa el sonido para hacer el dictado' : 'Este aparato no tiene voz: pide a alguien que lea la frase en voz alta'}</p>
+          child?.settings.sound === false ? (
+            <><p className={s.prompt}>Activa el sonido para hacer el dictado</p><SoundSwitch /></>
+          ) : (
+            <p className={s.prompt}>Este aparato no tiene voz: pide a alguien que lea la frase en voz alta</p>
+          )
         )}
       </div>
       <div className={s.typedFrame}>

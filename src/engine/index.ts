@@ -17,9 +17,9 @@ export { hintsFor } from './hints'
 /** The workbook "trick" for a multiplication fact (6×7 → five-plus-one, 8×n → double-double-double, ...). */
 export { strategyForFact } from './strategies'
 /** Leitner mastery: newMastery, updateMastery (fluency-aware), dueSkills, fluencyThresholdMs, starsFor, factGrid. */
-export { dueSkills, factGrid, fluencyThresholdMs, newMastery, starsFor, updateMastery } from './mastery'
+export { CHOICE_MAX_BOX, dueSkills, factGrid, fluencyThresholdMs, isChoiceExercise, newMastery, starsFor, updateMastery } from './mastery'
 /** Spanish descriptions for adult dashboards. */
-export { describeError, describeSkill, ENGLISH_SKILL_TEXT } from './describe'
+export { describeError, describeSkill, describeSkillShort, ENGLISH_SKILL_TEXT } from './describe'
 /** Review plan and selectors (daily review), and the 15-minute daily session plan (blocks, scaffolding). */
 export { planSession, selectorForSkills } from './session'
 export {
@@ -34,8 +34,8 @@ export { buildLenguaPlacement, lenguaPlacementBlockOf, LENGUA_PLACEMENT_ACTIVITY
 export type { LenguaPlacementBlockId } from './lengua/placement'
 export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 /** Prueba inicial: items, block mapping and the summary for the adult report. */
-export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
-export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
+export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_CLEAR_MIN, PLACEMENT_COUNT, buildPlacement, placementBlockOf, placementKnownTopics, summarizePlacement } from './placement'
+export type { PlacementAnswer, PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 /** Adult report: temario progress, mistakes by kind, tests (placement runs and recall). */
 export { englishWordsReport, ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
 export type {
@@ -61,12 +61,12 @@ export {
 export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitAt, digitCount, fromDigits, toDigits } from './arith'
 /** Fact-family parsing ("6 × 7 = 42", "42 : 6 = 7"...). */
 export { parseFact } from './check'
-export { strategyDetail } from './strategies'
+export { songRhyme, strategyDetail } from './strategies'
 export type { StrategyDetail } from './strategies'
 export { intervalMs, LEITNER_INTERVAL_DAYS } from './mastery'
 export { WORD_TEMPLATES } from './wordProblems'
 export type { WordTemplate } from './wordProblems'
-export { columnName } from './feedback'
+export { columnName, columnWithArticle } from './feedback'
 /** Lengua de 3.º, gramática: the exercises, their prompts, check and hints (src/engine/lengua). */
 export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
 export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'
@@ -77,7 +77,7 @@ export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingle
 /** Inglés de 3.º: the 10-minute session and the placement test (src/engine/ingles/daily.ts, placement.ts). */
 export { planEnglishSession } from './ingles/daily'
 /** Today's topic of every subject: the topic of today's class stays until tomorrow (src/engine/topicOfToday.ts). */
-export { markClassToday, topicOfToday } from './topicOfToday'
+export { isPlacedTopic, isStuckTopic, markClassToday, markTopicPracticeDay, PLACEMENT_KNOWN_PREFIX, placedTopicIds, placementKnownKey, placementRunFlags, placementRunKey, stageOfCurrentWorld, STUCK_TOPIC_DAYS, topicOfToday, topicPracticeDays } from './topicOfToday'
 export type { EnglishPlanInput } from './ingles/daily'
 /** Inglés: «Ahora dilo tú» (src/engine/ingles/speaking.ts): the stars, the day's limits and the words hard to say. */
 export { SPEAK_DAILY_MAX, SPEAK_PER_SESSION_MAX, hardToSay, pronunciationStars, speakAttemptKey, speakAttemptsToday, speakOffKey, speakingAvailable } from './ingles/speaking'

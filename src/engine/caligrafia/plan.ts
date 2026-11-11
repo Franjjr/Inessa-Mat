@@ -1,7 +1,7 @@
 /* The Caligrafía day plan («Caligrafía con lápiz», about 5 minutes after the Lengua session). Pure: no React, no I/O.
      Repaso      learnt items that are due (dueAt null or past), the weakest first (lowest box, then the soonest due)
      Lo nuevo    the next unlearnt items in curriculum order. A stage (a family of letters, the links, the words, the
-                 sentences, the capitals) opens only when every item of the earlier stages has box >= 1.
+                 capitals, the sentences) opens only when every item of the earlier stages has box >= 1.
      Relleno     when the plan still has fewer than 2 items: learnt items not due, the weakest then the soonest due.
    2 or 3 items; stop adding once the plan has 2 items and about 4 minutes; never more than one sentence and never
    more than 6 minutes. The same child, day and mastery give the same plan (the default rng is seeded from child and day). */

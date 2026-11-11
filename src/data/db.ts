@@ -2,6 +2,7 @@
    Versions are append-only: never edit a published version, add a new one with an upgrade function. */
 import Dexie, { type EntityTable, type Table, type Transaction } from 'dexie'
 import { DEFAULT_CHILD_SETTINGS, type AttemptRecord, type ChildProfile, type InkSample, type ProgressState } from '@/types'
+import type { WrongAnswerNote } from './review'
 import type { MasteryRow, MetaRow, OutboxEntry, RewardRow, SessionRow } from './types'
 
 export const DB_NAME = 'numeria'
@@ -42,6 +43,13 @@ export const SCHEMA_VERSIONS: SchemaVersion[] = [
       })
     },
   },
+  {
+    // v3: bounded local log of wrong answers for review (src/data/review.ts). Not synced, no child id.
+    version: 3,
+    stores: {
+      reviewNotes: '++seq, at',
+    },
+  },
 ]
 
 export class NumeriaDB extends Dexie {
@@ -54,6 +62,7 @@ export class NumeriaDB extends Dexie {
   declare inkSamples: EntityTable<InkSample, 'id'>
   declare outbox: EntityTable<OutboxEntry, 'seq'>
   declare meta: EntityTable<MetaRow, 'key'>
+  declare reviewNotes: EntityTable<WrongAnswerNote, 'seq'>
 
   constructor(name = DB_NAME, versions: SchemaVersion[] = SCHEMA_VERSIONS) {
     super(name)

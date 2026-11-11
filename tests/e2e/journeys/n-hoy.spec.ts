@@ -3,14 +3,16 @@
    («Ya lo sé» answered with the e2e solvers) the home offers the session. «Repasar» only with something due; «Jugar» and
    «Mis premios» are there, «Repaso del día» and «Juego libre» are gone. On a phone the «Hoy» card fits without scrolling. */
 import { devices, expect, test } from '@playwright/test'
-import { CHILD_NAME, devMasterUntilTopic, driveExercises, seedDemo } from '../helpers'
+import { CHILD_NAME, devEditProgress, devMasterUntilTopic, driveExercises, seedDemo } from '../helpers'
 
 const CLASS_TOPIC = 'div-con-tablas'
 
 test.describe('Hoy and the menu', () => {
-  // Since every topic has a class (Oct 2026), the demo child's topic (descomponer) opens its class first.
+  // Since every topic has a class (Oct 2026), today's topic opens its class first. «Hoy» teaches the stage of the world the
+  // map is on (the demo Lía is in w2, so suma-2d): with the map not started, it is the first topic of w1 (descomponer).
   test('«Hoy» opens the class of Lía\'s topic (descomponer) before the session', async ({ page }) => {
     await seedDemo(page)
+    await devEditProgress(page, { kind: 'mapNotStarted' })
     await page.goto('/play')
     await expect(page.getByRole('heading', { name: new RegExp(`¡Hola, ${CHILD_NAME}!`) })).toBeVisible()
     const hoy = page.getByRole('button', { name: /Hoy aprendemos/ })

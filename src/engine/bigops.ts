@@ -4,7 +4,7 @@
 import type { Answer, CheckResult, ColumnMulExercise, DivisionExercise, ErrorType, Hint, MulPartsExercise, Rng } from '@/types'
 import { makeColumnMul } from './make'
 import { fmt } from './numeric'
-import { randInt } from './rng'
+import { pick, randInt } from './rng'
 import { galeraShowsAnswer } from './divParts'
 
 /** 3-digit × 1-digit: c0 = no column carries; c1 = at least one carry. */
@@ -21,9 +21,11 @@ export function genMul3x1(rng: Rng, carry: boolean): ColumnMulExercise {
 }
 
 /** A 4-digit dividend (1000..9999) by a 1-digit divisor, exact or with a remainder. */
-export function genDivision4(rng: Rng, withRemainder: boolean): DivisionExercise {
+/** `divisors` (optional): the one-digit divisors to pick from (the table asked); any of 2..9 when not given. */
+export function genDivision4(rng: Rng, withRemainder: boolean, divisors?: number[]): DivisionExercise {
   for (let attempt = 0; attempt < 200; attempt++) {
-    const d = randInt(rng, 2, 9)
+    // Without divisors the draw is the same as before (randInt 2..9), so the seeded items do not change.
+    const d = divisors && divisors.length ? pick(rng, divisors) : randInt(rng, 2, 9)
     const r = withRemainder ? randInt(rng, 1, d - 1) : 0
     const q = randInt(rng, Math.ceil((1000 - r) / d), Math.floor((9999 - r) / d))
     const dividend = d * q + r

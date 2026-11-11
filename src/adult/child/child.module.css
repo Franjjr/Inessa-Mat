@@ -53,6 +53,8 @@
 .mistakeTitle { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: var(--fs-md); color: var(--c-ink); }
 .advice { margin: 0; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); background: var(--c-green-soft); font-size: var(--fs-sm); line-height: 1.45; color: var(--c-ink); }
 .subsection { padding-top: var(--sp-4); border-top: 2px solid var(--c-surface-2); }
+/* The wrong answers an example list shows under a kind of mistake: what was asked, what was written, the right answer. */
+.examples { margin: 0; padding: 0 0 0 var(--sp-4); display: grid; gap: 2px; font-size: var(--fs-sm); color: var(--c-ink-soft); }
 
 /* The link under the handwriting switch to the trial page (the grown-up tries the grading). */
 .trialLink {

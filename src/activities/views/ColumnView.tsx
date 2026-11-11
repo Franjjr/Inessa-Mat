@@ -22,7 +22,7 @@ export interface ColumnViewProps extends ExerciseViewProps {
   proof?: boolean
 }
 
-const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'unidades de mil', 'decenas de mil']
+const PLACE_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar']
 const placeOf = (i: number) => (['u', 'd', 'c', 'um'] as const)[i] ?? null
 
 interface Layout {

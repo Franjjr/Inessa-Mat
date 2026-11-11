@@ -25,14 +25,14 @@ export async function seedDemo(page: Page, route = '/kids'): Promise<void> {
 export async function createChildThroughOnboarding(page: Page, name = CHILD_NAME, grade?: number): Promise<void> {
   await page.goto('/kids/new')
   await page.getByRole('textbox', { name: 'Tu nombre' }).fill(name)
-  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: 'Como a una niña' }).click()
+  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: grade ? `${grade}º de Primaria` : 'No lo sé' }).click()
   await page.getByRole('group', { name: 'Compañeros' }).getByRole('button').first().click()
-  await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
   await page.getByRole('textbox', { name: 'Nombre del compañero' }).fill(PET_NAME)
-  await page.getByRole('button', { name: 'Siguiente ›' }).click()
+  await page.getByRole('group', { name: 'Colores' }).getByRole('button').first().click()
   await page.getByRole('button', { name: 'Es una niña' }).click()
+  await page.getByRole('button', { name: 'Siguiente ›' }).click()
   await page.getByRole('button', { name: '¡Vamos!' }).click()
   // Handwriting calibration is only offered where the child writes (touch or pen), not with the keypad.
   const skip = page.getByRole('button', { name: 'Ahora no' })
@@ -100,6 +100,8 @@ export async function tapStoryUntilButton(page: Page, name: string | RegExp, max
 export type DevProgressEdit =
   | { kind: 'stars'; amount: number }
   | { kind: 'worldDoneBeforeGuardian'; worldId: string }
+  /** The map as a new child has it (only w1 open, nothing played): «Hoy» then teaches the stage of w1. */
+  | { kind: 'mapNotStarted' }
 
 /** Dev-only shortcut: edits the active child's progress through the app's own data and content modules (the
  *  dynamic imports resolve to the same module instances the page uses). Used to reach late nodes quickly; the
@@ -115,6 +117,10 @@ export async function devEditProgress(page: Page, edit: DevProgressEdit): Promis
     if (!child) throw new Error('no child on this device')
     if (e.kind === 'stars') {
       await data.updateProgress(child.id, (p) => ({ ...p, stars: p.stars + e.amount }))
+      return
+    }
+    if (e.kind === 'mapNotStarted') {
+      await data.updateProgress(child.id, (p) => ({ ...p, worlds: content.initialProgress(child.id).worlds, lastNode: undefined }))
       return
     }
     const world = content.getWorld(e.worldId)

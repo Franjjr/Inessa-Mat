@@ -7,13 +7,13 @@ import { ExerciseStep } from './ExerciseStep'
 
 // The exercise view is covered by the activities module. Here a stub answers on click with the next scripted outcome
 // (a correct one when the script is empty), so only the step is tested.
-const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0 }))
+const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0, guidedSeen: [] as unknown[] }))
 
 vi.mock('@/activities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/activities')>()
   const React = await import('react')
-  function ExerciseView({ onAnswered }: { onAnswered: (o: unknown) => void }) {
-    React.useEffect(() => { script.mounts += 1 }, [])
+  function ExerciseView({ onAnswered, guided }: { onAnswered: (o: unknown) => void; guided?: boolean }) {
+    React.useEffect(() => { script.mounts += 1; script.guidedSeen.push(guided === true) }, [])
     return React.createElement('div', null,
       React.createElement('input', { 'aria-label': 'Respuesta' }),
       React.createElement('button', {
@@ -34,6 +34,7 @@ const exercise = { id: 'fact-mul:6x7', kind: 'fact-mul', a: 6, b: 7, answer: 42,
 beforeEach(() => {
   script.outcomes = []
   script.mounts = 0
+  script.guidedSeen = []
 })
 
 function renderStep(props: Partial<React.ComponentProps<typeof ExerciseStep>> = {}, reportAttempt = vi.fn()) {
@@ -306,5 +307,33 @@ describe('ExerciseStep · a missed multiplication fact', () => {
     await user.click(screen.getByRole('button', { name: 'Responder' }))
     await screen.findByRole('button', { name: 'Siguiente' })
     expect(screen.queryByText(/Recuérdalo/)).toBeNull()
+  })
+})
+
+describe('ExerciseStep · a guided step (a visual support on screen from the start)', () => {
+  it('reports a right first answer with one hint used', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    renderStep({ guided: true }, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ check: { correct: true }, hintsUsed: 1 })
+  })
+
+  it('passes the guided flag down to the exercise view', () => {
+    renderStep({ guided: true })
+    expect(script.guidedSeen).toEqual([true])
+  })
+
+  it('an unguided right answer reports no hint', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    renderStep({}, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ hintsUsed: 0 })
   })
 })
