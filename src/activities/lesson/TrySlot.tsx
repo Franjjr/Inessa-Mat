@@ -144,6 +144,9 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
 
   if (!exercise) return <div className={s.wrap} />
 
+  // The right answer, for the fixed line after giving up (only exercises with one number as answer).
+  const shownAnswer = 'answer' in exercise && typeof exercise.answer === 'number' ? exercise.answer : null
+
   const answered = (outcome: ExerciseOutcome) => {
     const { check } = outcome
     // Each «Inténtalo otra vez» is a new exercise of the same step: the attempt records how many tries came before it.
@@ -185,7 +188,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     <div ref={wrapRef} className={clsx(s.wrap, grown && s.wrapGrown)} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
-          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} method={method} divMethod={divMethod} />
+          {/* teach full: after the second miss the view shows the worked step and the child copies the answer before the lesson goes on. */}
+          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} teach="full" method={method} divMethod={divMethod} />
         </div>
       </div>
       <div ref={footerRef} className={s.footer} role="status" aria-live="polite">
@@ -196,7 +200,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
             <Button variant="secondary" onClick={retry}>Inténtalo otra vez</Button>
           </div>
         )}
-        {status === 'gaveUp' && <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>}
+        {status === 'gaveUp' && (
+          <>
+            {shownAnswer !== null && <p className={s.good}>{`La respuesta es ${shownAnswer}.`}</p>}
+            <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
+          </>
+        )}
       </div>
     </div>
   )
