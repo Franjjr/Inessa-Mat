@@ -9,7 +9,7 @@ import { allActivities, allCopy, allSelectors, wordCount } from './helpers'
 
 /** Node cap per world: 10 planned nodes, plus the method content (w3, w4, w8) and the stops of each world's stage
     of the temario (money, clock, measure, fractions, shapes). */
-const MAX_NODES: Record<string, number> = { w1: 12, w2: 12, w3: 12, w4: 13, w5: 12, w6: 12, w7: 12, w8: 12 }
+const MAX_NODES: Record<string, number> = { w1: 12, w2: 12, w3: 13, w4: 13, w5: 12, w6: 12, w7: 12, w8: 12 }
 const EXERCISE_KINDS: ExerciseKind[] = [
   'fact-mul', 'fact-div', 'missing-factor', 'skip-count', 'groups', 'array', 'double-chain', 'fact-family',
   'column-add', 'column-sub', 'column-mul', 'division', 'word-problem', 'bar-problem', 'error-hunt', 'check-calc',
@@ -149,6 +149,17 @@ describe('season 1 structure', () => {
       expect(acts.length, w.id).toBeGreaterThanOrEqual(3)
       expect(acts.length, w.id).toBeLessThanOrEqual(7)
       expect(new Set(acts.map((n) => n.activity!.kind)).size, `${w.id} varied kinds`).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('w3 and w5 close their table games with a mixed-tables game, after the single-table ones', () => {
+    for (const id of ['w3', 'w5']) {
+      const acts = getWorld(id).nodes.filter((n) => n.kind === 'activity').map((n) => n.activity!)
+      const mixAt = acts.findIndex((a) => (a.selector.tables?.length ?? 0) >= 2 && a.selector.kinds?.includes('fact-mul'))
+      expect(mixAt, id).toBeGreaterThan(0)
+      const single = acts.map((a, i) => ((a.selector.tables?.length ?? 0) === 1 ? i : -1)).filter((i) => i >= 0)
+      expect(Math.max(...single.filter((i) => i < mixAt)), id).toBeLessThan(mixAt)
+      expect(single.some((i) => i > mixAt && acts[i].selector.kinds?.includes('fact-mul')), `${id}: no single-table game after the mix`).toBe(false)
     }
   })
 
