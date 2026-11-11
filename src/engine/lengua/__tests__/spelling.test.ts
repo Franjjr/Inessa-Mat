@@ -171,6 +171,14 @@ describe('the hints teach the rule, and do not ask the child to hear a letter th
     expect(l3.text).toMatch(/antes de p y de b se escribe siempre m, nunca n/i)
   })
 
+  it('mp/mb: level 3 asks about the sound right after the m, which is the letter in the gap', () => {
+    for (const ex of sample('lng:orto:mp-mb', 'lng-missing-letter') as LngMissingLetterExercise[]) {
+      const l3 = hintsFor(ex)[2]
+      expect(l3.text, ex.id).toMatch(/justo después de la m/)
+      expect(l3.text, ex.id).not.toMatch(/después del hueco/)
+    }
+  })
+
   it('c/qu: level 3 teaches which letters go before e and i, and before a, o, u', () => {
     const ex = sample('lng:orto:c-qu', 'lng-missing-letter', 0)[0] as LngMissingLetterExercise
     const l3 = hintsFor(ex)[2]
