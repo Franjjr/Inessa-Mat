@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { errorReport } from '@/engine'
 import type { AttemptRecord } from '@/types'
-import { MistakesCard, SpeedCard, TestDueNote, WeeklyTrendCard } from './LearningCards'
+import { MistakesCard, SpeedCard, TestDueNote, TestsCard, WeeklyTrendCard } from './LearningCards'
 import { weeklyTrend } from './trend'
 
 const now = new Date(2026, 9, 22, 12)
@@ -67,6 +67,26 @@ describe('TestDueNote: the reminder of the prueba inicial', () => {
     const ago = new Date(now.getTime() - 5 * DAY).toISOString()
     render(<TestDueNote lastStartedAt={ago} now={now} />)
     expect(screen.getByText(/Próxima prueba sugerida:/)).toBeInTheDocument()
+  })
+})
+
+describe('TestsCard: the reminder comes from the last prueba inicial that was finished', () => {
+  const run = (daysAgo: number, complete: boolean) => ({
+    startedAt: new Date(Date.now() - daysAgo * DAY).toISOString(), answered: complete ? 30 : 12, correct: 10, complete, blocks: [],
+  })
+  const offer = { requested: false, busy: false, onOffer: () => {} }
+
+  it('does not suggest a date from a test left half done', () => {
+    render(<TestsCard runs={[run(25, true), run(1, false)]} count={30} childName="Lía" offer={offer} />)
+    expect(screen.getByText('Quedó a medias (12 de 30).')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Hace 3 semanas que no se hace')
+    expect(screen.queryByText(/Próxima prueba sugerida/)).not.toBeInTheDocument()
+  })
+
+  it('shows nothing of the reminder when the only test was left half done', () => {
+    render(<TestsCard runs={[run(1, false)]} count={30} childName="Lía" offer={offer} />)
+    expect(screen.queryByText(/Próxima prueba sugerida/)).not.toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })
 

@@ -495,6 +495,8 @@ export function TestsCard({ runs, count, subject = 'math', recall, childName, er
   offer: { requested: boolean; busy: boolean; onOffer: () => void }
 }) {
   const latest = runs[runs.length - 1] ?? null
+  // The reminder counts from the last test that was finished: one left half done does not set the next date.
+  const lastFinished = [...runs].reverse().find((r) => r.complete) ?? null
   const first = runs.length > 1 ? runs[0] : null
   const blocks = latest ? latest.blocks.filter((b) => b.total > 0) : []
   const intro = TESTS_INTRO[subject](count)
@@ -518,7 +520,7 @@ export function TestsCard({ runs, count, subject = 'math', recall, childName, er
             {first ? `. La primera, el ${formatDate(first.startedAt)}: ${first.correct} de ${first.answered}.` : '.'}
           </p>
           {!latest.complete && <p className={adult.hint}>Quedó a medias ({latest.answered} de {count}).</p>}
-          <TestDueNote lastStartedAt={latest.startedAt} />
+          {lastFinished && <TestDueNote lastStartedAt={lastFinished.startedAt} />}
           <ul className={s.worldList} aria-label="Resultado por bloque">
             {blocks.map((b) => {
               const before = first?.blocks.find((x) => x.id === b.id)
