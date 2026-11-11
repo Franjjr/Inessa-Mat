@@ -124,14 +124,15 @@ const SENSE_OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido'] as const
 const SENSE_HINTS: [string, string, string] = [
   'Antes de calcular, piensa si la respuesta tiene un tamaño razonable para lo que cuenta el cuento.',
   'Redondea los números del cuento a decenas o a centenas, haz la cuenta de cabeza y mira si la respuesta que dan está cerca de ese resultado o muy lejos.',
-  'Ejemplo con otros números: doscientas más trescientas son unas quinientas; cinco mil sería demasiado. Compara igual la respuesta con esa cuenta redondeada.',
+  'Ejemplo con otros números: dos mil más tres mil son unos cinco mil; diez mil sería demasiado. Compara igual la respuesta con esa cuenta redondeada.',
 ]
 
-/** The hints of a close proposal (a forgotten carry, a digit slip): rounding cannot tell it apart, so the method is the full calculation. */
+/** The hints of a close proposal (a forgotten carry, a digit slip): rounding cannot tell it apart, so the method is the full calculation.
+    The worked examples use thousands only, which no story gives (a story's result is under 2 000), so they never spell out an answer. */
 const SENSE_HINTS_CLOSE: [string, string, string] = [
   'Antes de calcular, piensa si la respuesta tiene un tamaño razonable para lo que cuenta el cuento.',
-  'Haz la cuenta completa, columna a columna y sin redondear, y compara con la respuesta. Fíjate sobre todo en las decenas y en las llevadas.',
-  'Ejemplo con otros números: treinta y ocho más cuarenta y siete son ochenta y cinco. La estimación solo sirve para ver el tamaño; la cuenta completa da el resultado.',
+  'Haz la cuenta completa, columna a columna y sin redondear, y compara con la respuesta. Fíjate sobre todo en las cifras donde más se suele fallar.',
+  'Ejemplo con otros números: dos mil más dos mil son cuatro mil. La estimación solo sirve para ver el tamaño; la cuenta completa da el resultado.',
 ]
 
 /** A wrong answer for the story, and whether it is close to the right result. Absurd ones: off by an order of magnitude

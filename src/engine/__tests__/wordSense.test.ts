@@ -8,17 +8,44 @@ import { buildSense, genWordSense } from '@/engine/wordProblems'
 const SAMPLES = 400
 const OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido']
 
-/** Is the proposal absurd for the story, or an order of magnitude away from the true result? */
-function plausibleWrong(p: { op: string; a: number; b: number; right: number; shown: number }): boolean {
-  const { op, a, b, right, shown } = p
+/** Is the proposal absurd for the story, or an order of magnitude away from the true result? A close proposal (near) is
+    a step off the right result: by one under 10, by ten under 100, by ten or a hundred above that. */
+function plausibleWrong(p: { op: string; a: number; b: number; right: number; shown: number; near: boolean }): boolean {
+  const { op, a, b, right, shown, near } = p
+  if (near) {
+    const step = Math.abs(shown - right)
+    if (right < 10) return step === 1
+    if (right < 100) return step === 10
+    return step === 10 || step === 100
+  }
   if (shown === right * 10) return true
   if (right % 10 === 0 && right >= 20 && shown === right / 10) return true
-  // A close proposal: the right result a step off (a forgotten carry, a digit slip), by one, ten or a hundred.
-  if (Math.abs(shown - right) === 1 || Math.abs(shown - right) === 10 || Math.abs(shown - right) === 100) return true
   if (op === 'add') return shown < Math.max(a, b)
   if (op === 'sub') return shown > a
   if (op === 'mul') return shown < b
   return shown > a
+}
+
+/** The number in words (Spanish, masculine forms, up to 1 999), to check that a hint does not spell the answer out. */
+function inWords(n: number): string {
+  const units = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve']
+  const teens = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve']
+  const twenties = ['veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve']
+  const tens = ['', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa']
+  const hundreds = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos']
+  const parts: string[] = []
+  const thousands = Math.floor(n / 1000)
+  const h = Math.floor(n / 100) % 10
+  const rest = n % 100
+  if (thousands) parts.push(thousands === 1 ? 'mil' : `${units[thousands]} mil`)
+  if (h) parts.push(h === 1 && rest === 0 ? 'cien' : hundreds[h])
+  if (rest) {
+    if (rest < 10) parts.push(units[rest])
+    else if (rest < 20) parts.push(teens[rest - 10])
+    else if (rest < 30) parts.push(twenties[rest - 20])
+    else parts.push(rest % 10 ? `${tens[Math.floor(rest / 10)]} y ${units[rest % 10]}` : tens[Math.floor(rest / 10)])
+  }
+  return parts.join(' ')
 }
 
 describe('word:sense: skill key', () => {
@@ -90,6 +117,19 @@ describe('word:sense: grading and hints', () => {
       expect(check(ex, right).correct, ex.id).toBe(true)
       expect(check(ex, { type: 'choice', index: wrongIndex }).correct, ex.id).toBe(false)
       expect(check(ex, { type: 'choice', index: null }).errorType).toBe('incomplete')
+    }
+  })
+
+  it('hints never spell the true result out in words either (the examples use numbers no story can give)', () => {
+    const rng = createRng(506)
+    for (let i = 0; i < 2 * SAMPLES; i++) {
+      const p = buildSense(rng)
+      // Results of a thousand or more are not checked: their words start with «mil», which the examples also use.
+      if (p.right >= 1000) continue
+      const word = inWords(p.right)
+      // «tres mil» is a thousands group in an example, not the answer «tres».
+      const spelled = new RegExp(`(?<![\\p{L}])${word}(?![\\p{L}])(?! mil)`, 'iu')
+      for (const h of hintsFor(p.exercise)) expect(spelled.test(h.text), `${p.right} «${word}»: ${h.text}`).toBe(false)
     }
   })
 
