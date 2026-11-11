@@ -210,7 +210,7 @@ describe('season 1 structure', () => {
     for (const id of sIds) expect(refs.has(id) || rescue.has(id) || id === PROLOGUE_STORY_ID || id === FINALE_STORY_ID, `story ${id} unused`).toBe(true)
   })
 
-  it('map positions lie inside the map, along a non-crossing path, and never overlap on tablets', () => {
+  it('map positions lie inside the map, along a non-crossing path', () => {
     const cross = (a: { x: number; y: number }, b: { x: number; y: number }, c: { x: number; y: number }, d: { x: number; y: number }) => {
       const o = (p: typeof a, q: typeof a, r: typeof a) => Math.sign((q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x))
       return o(a, b, c) !== o(a, b, d) && o(c, d, a) !== o(c, d, b)
@@ -223,14 +223,7 @@ describe('season 1 structure', () => {
         expect(p.y, w.id).toBeGreaterThanOrEqual(0.1)
         expect(p.y, w.id).toBeLessThanOrEqual(0.9)
       }
-      for (const [W, H, min] of [[1180, 820, 120], [820, 1180, 100], [1280, 800, 120]] as const) {
-        for (let i = 0; i < pts.length; i++) {
-          for (let j = i + 1; j < pts.length; j++) {
-            const d = Math.hypot((pts[i].x - pts[j].x) * W, (pts[i].y - pts[j].y) * H)
-            expect(d, `${w.id} nodes ${i}-${j} at ${W}x${H}`).toBeGreaterThanOrEqual(min)
-          }
-        }
-      }
+      // Name tags and icons colliding is checked in pixel boxes by map-labels.test.ts.
       for (let i = 0; i < pts.length - 1; i++) {
         for (let j = i + 2; j < pts.length - 1; j++) {
           expect(cross(pts[i], pts[i + 1], pts[j], pts[j + 1]), `${w.id} segments ${i} and ${j} cross`).toBe(false)
