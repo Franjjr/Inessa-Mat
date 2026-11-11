@@ -72,7 +72,8 @@ export function statsFromLocal(attempts7All: AttemptRecord[], attempts30All: Att
   const counted = graded7.filter((a) => a.errorType !== 'recognition')
   const errors = new Map<string, number>()
   for (const a of attempts30) {
-    if (a.graded === false || a.correct || !a.errorType || a.errorType === 'recognition') continue
+    // «No lo sé» is a casilla still to learn, not a mistake the child made: it is left out of the most frequent errors.
+    if (a.graded === false || a.correct || !a.errorType || a.errorType === 'recognition' || a.errorType === 'dont-know') continue
     errors.set(a.errorType, (errors.get(a.errorType) ?? 0) + 1)
   }
   const topErrors = [...errors.entries()]
