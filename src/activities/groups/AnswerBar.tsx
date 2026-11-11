@@ -1,9 +1,17 @@
-/* Bottom answer bar shared by the ops views: hint, friendly feedback, Comprobar and Siguiente. */
+/* Bottom answer bar shared by the ops views: hint, friendly feedback, Comprobar and Siguiente.
+   The one «Comprobar» of the screen: while the bar is mounted, the writing pads hide their own ✓. A tap on Comprobar
+   right after writing first reads the pending ink, shows it for a moment («Leyendo…») and only then grades it, so the
+   last digit written always counts. */
 import clsx from 'clsx'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Button } from '@/ui'
 import { useActivityHost } from '@/activities/host'
+import { useInkStoreState } from '@/ink/hooks'
 import type { AnswerFlow } from './flow'
 import s from './AnswerBar.module.css'
+
+/** How long the freshly read digits stay on screen before they are graded. */
+export const READ_PAUSE_MS = 400
 
 export interface AnswerBarProps {
   flow: AnswerFlow
@@ -18,6 +26,29 @@ export interface AnswerBarProps {
 
 export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = false }: AnswerBarProps) {
   const host = useActivityHost()
+  const store = useInkStoreState()
+  useEffect(() => store.mountBar(), [store])
+  const [reading, setReading] = useState(false)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
+  // The view's check of the latest render: after reading the ink, the digits just read are in its state.
+  const checkRef = useRef(onCheck)
+  useLayoutEffect(() => { checkRef.current = onCheck })
+
+  const busy = store.isBusy()
+  const runCheck = () => {
+    if (reading) return
+    if (!store.flushInk()) { onCheck(); return }
+    setReading(true)
+    timer.current = setTimeout(() => {
+      timer.current = null
+      setReading(false)
+      checkRef.current()
+    }, READ_PAUSE_MS)
+  }
+  // Pending ink counts as an answer: the button reads it before grading.
+  const checkable = canCheck || busy
+
   const r = flow.result
   const lastHint = flow.hintsShown > 0 ? flow.hints[flow.hintsShown - 1] : null
   // With feedback off (guardian, daily review) the host shows its own result and forward button.
@@ -28,6 +59,7 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
     : null
   const hint = lastHint ? { tone: 'hint', text: host.t(lastHint.text) } : null
   const hasHint = flow.allowHints && flow.hints.length > 0 && flow.hintsShown < flow.hints.length
+  const checkLabel = reading || busy ? 'Leyendo…' : '✓ Comprobar'
 
   return (
     <div className={s.bar} role="group" aria-label="Respuesta">
@@ -48,15 +80,18 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
       </div>
       <div className={s.side}>
         {!flow.submitted && !selfChecking && (
-          <Button variant="success" size="lg" onClick={onCheck} disabled={!canCheck}>
-            ✓ Comprobar
+          <Button
+            variant="success" size="lg" onClick={runCheck} disabled={!checkable || reading}
+            aria-busy={reading || busy || undefined}
+          >
+            {checkLabel}
           </Button>
         )}
         {flow.submitted && !hostOwnsResult && (
           <>
             {!r?.correct && !selfChecking && (
-              <Button variant="secondary" size="md" onClick={onCheck} disabled={!canCheck}>
-                Revisar
+              <Button variant="secondary" size="md" onClick={runCheck} disabled={!checkable || reading}>
+                {reading ? 'Leyendo…' : 'Revisar'}
               </Button>
             )}
             <Button variant="magic" size="lg" onClick={flow.finish}>
