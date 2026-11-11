@@ -116,7 +116,7 @@ export function genFractionName(rng: Rng, d: number): ShapeChoiceExercise {
 
 const COMPARE_HINTS = {
   unit: [
-    'Cuanto más partes tiene el todo, más pequeña es cada parte.',
+    'Cuantas más partes tiene el todo, más pequeña es cada parte.',
     'Mira el número de abajo de cada barra: ¿en cuántas partes está partida?',
     'Compara cuánto ocupa una sola parte en cada barra.',
   ],
@@ -189,9 +189,10 @@ const STORY_NOUN: Record<string, { plural: string; feminine: boolean }> = {
 
 function storyFor(rng: Rng, n: number, d: number, total: number, emoji: string): string {
   const noun = STORY_NOUN[emoji] ?? { plural: 'objetos', feminine: false }
-  const frac = fractionName(n, d)
+  // «la mitad» (never «un medio de ellas»); the verb agrees with the things: «Un cuarto de ellas son rojas».
+  const frac = d === 2 ? 'la mitad' : fractionName(n, d)
   const Frac = frac.charAt(0).toUpperCase() + frac.slice(1)
-  const verb = n === 1 ? 'es' : 'son'
+  const verb = 'son'
   if (noun.feminine) {
     return pick(rng, [
       `En el jardín hay ${total} ${noun.plural}. ${Frac} de ellas ${verb} rojas. ¿Cuántas son rojas?`,
@@ -285,6 +286,10 @@ export function checkFractionRead(ex: FractionReadExercise, answer: Answer): Che
   if (n === null || d === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
   const given = `${n}/${d}`
   if (n === ex.numerator && d === ex.denominator) return { correct: true, given, expected, feedback: FB.right }
+  // The same amount written with other numbers (1/2 for 2 of 4): right, and the drawing tells which parts it counts.
+  if (d > 0 && n * ex.denominator === ex.numerator * d) {
+    return { correct: true, given, expected, feedback: `¡Bien! ${n}/${d} vale lo mismo que ${expected}; aquí contamos las ${ex.denominator} partes: ${expected}.` }
+  }
   if (n === ex.denominator && d === ex.numerator) return { correct: false, given, expected, errorType: 'fraction-count', feedback: FB.reversed }
   if (d !== ex.denominator) return { correct: false, given, expected, errorType: 'fraction-count', feedback: FB.under }
   return { correct: false, given, expected, errorType: 'fraction-count', feedback: FB.above }
@@ -323,6 +328,8 @@ export function checkFractionAdd(ex: FractionAddExercise, answer: Answer): Check
   if (n === ex.answer && dd === d) {
     return { correct: true, given, expected, feedback: n === d ? `¡Muy bien! ${d}/${d} es la unidad entera: todas las partes.` : FB.right }
   }
+  // An equivalent fraction (4/5 for 8/10, 1/1 for 4/4) is the same result.
+  if (dd > 0 && n * d === ex.answer * dd) return { correct: true, given, expected, feedback: `¡Bien! ${given} vale lo mismo que ${expected}.` }
   if (dd !== d) {
     const combined = ex.op === 'add' ? dd === 2 * d : dd === 0
     return { correct: false, given, expected, errorType: 'fraction-count', feedback: combined ? (ex.op === 'add' ? FB.addBottom : FB.subBottom) : FB.sameBottom }
@@ -333,6 +340,14 @@ export function checkFractionAdd(ex: FractionAddExercise, answer: Answer): Check
 // ---------------------------------------------------------------- hints
 
 const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
+
+/** How to count the parts of each figure, for the last hint of «lee la fracción». */
+const SHAPE_COUNT: Record<FractionFigure['shape'], string> = {
+  circle: 'Recorre el círculo con el dedo, como las agujas del reloj, y cuenta cada trozo.',
+  rect: 'Cuenta los trozos del rectángulo de uno en uno, sin saltarte ninguno.',
+  bar: 'Cuenta los trozos de la barra de izquierda a derecha.',
+}
+const SHAPE_NAME: Record<FractionFigure['shape'], string> = { circle: 'un círculo', rect: 'un rectángulo', bar: 'una barra' }
 
 /** Hints of the fraction exercises: the strategy first, then the step, never the answer. */
 export function fractionHints(ex: FractionShadeExercise | FractionReadExercise | FractionOfExercise | FractionEqualExercise | FractionAddExercise): Hint[] {
@@ -350,19 +365,19 @@ export function fractionHints(ex: FractionShadeExercise | FractionReadExercise |
       return [
         hint(1, 'El número de abajo dice en cuántas partes iguales se parte la figura. Cuéntalas.'),
         hint(2, 'El número de arriba dice cuántas partes se colorean. Toca una parte cada vez y cuenta en voz baja.'),
-        hint(3, `Cada parte es ${fractionName(1, ex.denominator)} de la figura: colorea tantas como diga el número de arriba.`),
+        hint(3, `Cada parte es ${ex.denominator === 2 ? 'la mitad' : fractionName(1, ex.denominator)} de la figura: colorea tantas como diga el número de arriba.`),
       ]
     case 'fraction-read':
       return [
         hint(1, 'Primero cuenta todas las partes iguales de la figura: ese número va abajo.'),
         hint(2, 'Ahora cuenta solo las partes de color: ese número va arriba.'),
-        hint(3, 'Arriba, las partes de color. Abajo, todas las partes. Escribe los dos números en la barra.'),
+        hint(3, `${SHAPE_COUNT[ex.figure.shape]} Arriba, las partes de color; abajo, todas las partes.`),
       ]
     case 'fraction-equal':
       return [
         hint(1, 'Mira si todas las partes de cada figura son del mismo tamaño.'),
         hint(2, 'Compara la parte más grande con la más pequeña de la misma figura.'),
-        hint(3, 'Si una parte se ve más grande que otra, la figura no está partida en partes iguales.'),
+        hint(3, `Hay ${ex.figures.length} figuras: ${ex.figures.map((f, i) => `la ${i + 1}, ${SHAPE_NAME[f.shape]}`).join('; ')}. En cada una, si una parte se ve más grande que otra, no está partida en partes iguales.`),
       ]
     case 'fraction-of': {
       if (ex.mode === 'drawing') {

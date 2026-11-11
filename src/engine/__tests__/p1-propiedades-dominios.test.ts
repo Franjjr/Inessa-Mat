@@ -8,9 +8,13 @@ import { describe, expect, it } from 'vitest'
 import { check, createRng, generate, hintsFor } from '@/engine'
 import { makeWordProblem } from '@/engine/make'
 import { explainHunt } from '@/engine/bugs'
+import { fractionName, genFractionOf } from '@/engine/fractions'
+import { SHOP } from '@/engine/money'
 import type {
-  Answer, BarProblemExercise, CheckCalcExercise, CheckResult, ErrorHuntExercise, Exercise, SkillKey,
+  Answer, BarProblemExercise, CheckCalcExercise, CheckResult, ErrorHuntExercise, Exercise, MoneyBudgetExercise, MoneyChangeExercise,
+  SkillKey,
 } from '@/types'
+import { correctAnswer } from './helpers'
 
 // ---------------------------------------------------------------- the minimal harness
 
@@ -36,6 +40,62 @@ function report(title: string, misses: Miss[], total: number) {
   expect(misses.length, `${title}: ${misses.length} de ${total}`).toBe(0)
 }
 const text = (s: string): Miss => ({ id: s, note: s })
+
+/** The book answer of a money exercise, in the shape MoneyView sends. */
+function moneyAnswer(ex: Extract<Exercise, { kind: 'money' }>): Answer {
+  switch (ex.mode) {
+    case 'recognise': return { type: 'option', value: String(ex.answer) }
+    case 'pay': return { type: 'pieces', pieces: [ex.price] }
+    case 'compare': return { type: 'option', value: ex.answer }
+    case 'convert': return ex.direction === 'to-cents' ? { type: 'number', value: ex.answer as number } : { type: 'numbers', values: [...(ex.answer as number[])] }
+    case 'budget': return ex.ask === 'short' || ex.ask === 'left'
+      ? { type: 'numbers', values: [Math.floor((ex.answer as number) / 100), (ex.answer as number) % 100] }
+      : { type: 'option', value: String(ex.answer) }
+    default: return { type: 'numbers', values: [Math.floor(ex.answer / 100), ex.answer % 100] }
+  }
+}
+
+/** The book answer of any exercise of this family. */
+function bookAnswer(ex: Exercise): Answer {
+  if (ex.kind === 'money') return moneyAnswer(ex)
+  if (ex.kind === 'fraction-add') return { type: 'fraction', numerator: ex.answer, denominator: ex.denominator }
+  return correctAnswer(ex)
+}
+
+/** Wrong final answers built from the book one (one more, another option, another sign…): none can be right. */
+function wrongAnswers(ex: Exercise): Answer[] {
+  const a = bookAnswer(ex)
+  const bump = (v: number) => (v % 10 === 9 ? v - 1 : v + 1)
+  switch (a.type) {
+    case 'number': return a.value === null ? [] : [{ type: 'number', value: a.value + 1 }, { type: 'number', value: a.value + 10 }]
+    case 'numbers': {
+      const k = a.values.map((v, i) => (v === null ? -1 : i)).filter((i) => i >= 0).pop()
+      if (k === undefined) return []
+      const vs = [...a.values]
+      vs[k] = bump(vs[k] as number)
+      return [{ type: 'numbers', values: vs }]
+    }
+    case 'fraction': return [{ type: 'fraction', numerator: (a.numerator as number) + 1, denominator: a.denominator }]
+    case 'shade': return ex.kind === 'fraction-shade' && a.chosen.length < ex.denominator ? [{ type: 'shade', chosen: [...a.chosen, a.chosen.length] }] : []
+    case 'marks': return [{ type: 'marks', marked: a.marked.length ? a.marked.slice(1) : [0] }]
+    case 'choice': {
+      const n = 'options' in ex && Array.isArray(ex.options) ? ex.options.length : 0
+      return n > 1 ? [{ type: 'choice', index: ((a.index as number) + 1) % n }] : []
+    }
+    case 'option': {
+      const opts = ex.kind === 'money' && ex.mode === 'recognise' ? ex.options.map(String)
+        : ex.kind === 'money' && ex.mode === 'compare' ? ex.items.map((it) => it.name)
+          : ex.kind === 'money' && ex.mode === 'budget' && ex.ask === 'afford' ? ex.items.map((it) => it.name)
+            : ex.kind === 'money' && ex.mode === 'budget' ? ['Sí', 'No']
+              : ex.kind === 'measure' && ex.mode === 'unit' ? ex.options.map((o) => o.unit) : []
+      return opts.filter((o) => o !== a.value).slice(0, 1).map((o) => ({ type: 'option', value: o }))
+    }
+    case 'sign': return (['<', '>', '='] as const).filter((s) => s !== a.sign).map((s) => ({ type: 'sign', sign: s }))
+    case 'time': return [{ type: 'time', hour: a.hour, minute: ((a.minute as number) + 5) % 60 }]
+    case 'pieces': return [{ type: 'pieces', pieces: [...a.pieces, 1] }]
+    default: return []
+  }
+}
 
 // ---------------------------------------------------------------- problemas con barras
 
@@ -261,5 +321,197 @@ describe('comprobar (auditoría p1-numeros p1n-02, p1n-07; P4-21)', () => {
   it('la pista 1 de comprobar una división habla del número que reparte y de lo que sobra', () => {
     const ex = checks.find((e) => e.op === 'div')!
     expect(hintsFor(ex)[0].text).toBe('Multiplica el resultado por el número que reparte y suma lo que sobra: ¿te sale el número del principio?')
+  })
+})
+
+// ---------------------------------------------------------------- fracciones
+
+const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+const FRAC_SKILLS: SkillKey[] = [
+  ...[2, 3, 4, 5, 6, 8, 10, 12].flatMap((d) => [`frac:shade:${d}`, `frac:read:${d}`, `frac:name:${d}`, `frac:of:${d}`]),
+  'frac:equal', 'frac:compare', 'frac:add', 'frac:sub',
+]
+
+describe('fracciones (auditoría p1-medida-problemas H4, H15, H16)', () => {
+  const all = sample(FRAC_SKILLS, 20, 6)
+
+  it('los 8 tipos: la respuesta de libro es correcta y una mala nunca', () => {
+    const kinds = new Set(all.map((e) => e.kind))
+    for (const k of ['fraction-shade', 'fraction-read', 'fraction-of', 'fraction-equal', 'fraction-add', 'shape-choice'] as const) expect(kinds.has(k), k).toBe(true)
+    const misses: Miss[] = []
+    for (const ex of all) {
+      const book = bookAnswer(ex)
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      for (const bad of wrongAnswers(ex)) if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: `${ex.id}: acepta una mala` })
+    }
+    report('fracciones: libro o malas', misses, all.length)
+  })
+
+  it('suma y resta: el resultado simplificado (2/4 → 1/2, 4/4 → 1/1) se acepta, con nota', () => {
+    const exs = of(sample(['frac:add', 'frac:sub']), 'fraction-add')
+    const misses: Miss[] = []
+    let total = 0
+    for (const ex of exs) {
+      const g = gcd(ex.answer, ex.denominator)
+      if (g === 1) continue
+      const a: Answer = { type: 'fraction', numerator: ex.answer / g, denominator: ex.denominator / g }
+      total++
+      const r = check(ex, a)
+      if (!r.correct || !r.feedback?.includes('vale lo mismo')) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    expect(total).toBeGreaterThan(100)
+    report('fracción equivalente simplificada dada por mala', misses, total)
+    const ex = { ...exs[0], op: 'add' as const, a: 5, b: 3, denominator: 10, answer: 8 }
+    const r = check(ex, { type: 'fraction', numerator: 4, denominator: 5 })
+    expect(r.correct).toBe(true)
+    expect(r.feedback).toBe('¡Bien! 4/5 vale lo mismo que 8/10.')
+  })
+
+  it('leer la fracción coloreada: una equivalente (2 de 4 → 1/2) se acepta y la nota dice qué contamos', () => {
+    const exs = of(sample([4, 6, 8, 10, 12].map((d) => `frac:read:${d}`)), 'fraction-read')
+    const misses: Miss[] = []
+    let total = 0
+    for (const ex of exs) {
+      const g = gcd(ex.numerator, ex.denominator)
+      if (g === 1) continue
+      const a: Answer = { type: 'fraction', numerator: ex.numerator / g, denominator: ex.denominator / g }
+      total++
+      const r = check(ex, a)
+      if (!r.correct || !r.feedback?.includes(`aquí contamos las ${ex.denominator} partes`)) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    expect(total).toBeGreaterThan(100)
+    report('fracción leída equivalente dada por mala', misses, total)
+  })
+
+  it('nombrar la fracción: ninguna opción falsa vale lo mismo que la buena', () => {
+    const exs = of(sample([2, 3, 4, 5, 6, 8, 10, 12].map((d) => `frac:name:${d}`)), 'shape-choice')
+    const names = new Map<string, number>()
+    for (const d of [2, 3, 4, 5, 6, 8, 10, 12]) for (let n = 1; n <= 11; n++) names.set(fractionName(n, d), n / d)
+    const misses: Miss[] = []
+    for (const ex of exs) {
+      const v = names.get(ex.options[ex.answer])
+      const twin = ex.options.findIndex((o, i) => i !== ex.answer && names.get(o) !== undefined && Math.abs((names.get(o) as number) - (v as number)) < 1e-9)
+      if (twin >= 0) misses.push({ id: ex.id, note: `buena «${ex.options[ex.answer]}», también vale «${ex.options[twin]}»` })
+    }
+    report('opción equivalente marcada como mala', misses, exs.length)
+  })
+
+  it('cuentos: «la mitad» y no «un medio de»; el verbo concuerda («Un cuarto de ellas son rojas»)', () => {
+    const bad: Miss[] = []
+    let total = 0
+    for (let seed = 1; seed <= 400; seed++) {
+      for (const d of [2, 3, 4, 5, 6, 8, 10, 12]) {
+        const ex = genFractionOf(createRng(seed * 31 + d), d, 'numbers', seed % 2 ? '🌸' : '🍬')
+        if (!ex.story) continue
+        total++
+        if (/ es (rojas|amarillas|de fresa)/.test(ex.story) || /un medio de/i.test(ex.story)) bad.push(text(ex.story))
+      }
+    }
+    expect(total).toBeGreaterThan(500)
+    report('cuentos de fracciones con «es rojas» o «un medio de»', [...new Map(bad.map((b) => [b.note, b])).values()], total)
+  })
+})
+
+// ---------------------------------------------------------------- decimales y dinero
+
+describe('decimales (auditoría p1-medida-problemas H5, H14)', () => {
+  const decs = sample(['dec:shade:1', 'dec:shade:2', 'dec:read:1', 'dec:read:2', 'dec:compare', 'dec:money', 'dec:add:1', 'dec:add:2', 'dec:sub:1', 'dec:sub:2'], 20, 8)
+
+  it('decimal y decimal-op: libro correcto, ±1 centésima o décima nunca', () => {
+    expect(new Set(decs.map((e) => e.kind))).toEqual(new Set(['decimal', 'decimal-op']))
+    const misses: Miss[] = []
+    for (const ex of decs) {
+      if (!check(ex, bookAnswer(ex)).correct) misses.push({ id: ex.id, answer: bookAnswer(ex) })
+      for (const bad of wrongAnswers(ex)) if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: 'acepta una mala' })
+    }
+    report('decimales: libro o malas', misses, decs.length)
+  })
+
+  it('dos cifras en la casilla de las décimas (0,54 escrito «0» y «54») no se califica como otro número', () => {
+    const exs = [...of(sample(['dec:read:2', 'dec:shade:2']), 'decimal'), ...of(sample(['dec:add:2', 'dec:sub:2']), 'decimal-op')]
+    const misses: Miss[] = []
+    let total = 0
+    for (const ex of exs) {
+      const v = ex.kind === 'decimal' ? ex.value : ex.answer
+      if (v % 100 < 10) continue
+      const a: Answer = { type: 'numbers', values: [Math.floor(v / 100), v % 100, null] }
+      total++
+      const r = check(ex, a)
+      if (r.correct || r.errorType !== 'incomplete' || !/una cifra en cada casilla/.test(r.feedback ?? '')) misses.push({ id: ex.id, answer: a, result: r })
+    }
+    expect(total).toBeGreaterThan(300)
+    report('dos cifras en una casilla decimal calificadas', misses, total)
+    const read = of(decs, 'decimal').find((e) => e.mode === 'read' && e.places === 2)!
+    const r = check({ ...read, value: 54, answer: 54 }, { type: 'numbers', values: [0, 54, null] })
+    expect(r.errorType).toBe('incomplete')
+    expect(r.feedback).toBe('Pon una cifra en cada casilla: 0 , 5 4.')
+  })
+})
+
+describe('dinero (auditoría p1-medida-problemas H6, H11, H13, H14)', () => {
+  const money = of(sample(['money:recognise', 'money:pay', 'money:change', 'money:add', 'money:compare', 'money:convert', 'money:budget'], 30, 8), 'money')
+
+  it('los 7 modos: libro correcto, una cantidad mala nunca', () => {
+    expect(new Set(money.map((e) => e.mode)).size).toBe(7)
+    const misses: Miss[] = []
+    for (const ex of money) {
+      const book = moneyAnswer(ex)
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      for (const bad of wrongAnswers(ex)) if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: 'acepta una mala' })
+    }
+    report('dinero: libro o malas', misses, money.length)
+  })
+
+  it('38 € y 150 céntimos para 39,50 €: no es correcto, ni un error de cuenta, y explica «son 1 €»', () => {
+    const base = money.find((e) => e.mode === 'add')!
+    const ex = { ...base, answer: 3950 }
+    const r = check(ex, { type: 'numbers', values: [38, 150] })
+    expect(r.correct).toBe(false)
+    expect(r.errorType).not.toBe('fact')
+    expect(r.errorType).not.toBe('other')
+    expect(r.feedback).toBe('150 céntimos son 1 € y 50 céntimos: escribe 39 € y 50 céntimos.')
+    let accepted = 0
+    for (const e of money.filter((x): x is MoneyChangeExercise => x.mode === 'change' && x.answer >= 100)) {
+      if (check(e, { type: 'numbers', values: [Math.floor(e.answer / 100) - 1, (e.answer % 100) + 100] }).correct) accepted++
+    }
+    expect(accepted).toBe(0)
+    const dec = of(sample('dec:money'), 'decimal')[0]
+    const rd = check(dec, { type: 'numbers', values: [Math.floor(dec.value / 100) - 1, (dec.value % 100) + 100] })
+    expect(rd.correct).toBe(false)
+    expect(rd.feedback).toContain('son 1 €')
+  })
+
+  it('el cambio: el precio es el de la cosa (o la suma de las cosas) del catálogo, pagado con el billete más pequeño que llega', () => {
+    const exs = of(sample('money:change', 80, 10), 'money').filter((e): e is MoneyChangeExercise => e.mode === 'change')
+    expect(exs.length).toBeGreaterThan(150)
+    const misses: Miss[] = []
+    for (const ex of exs) {
+      const named = SHOP.filter((it) => ex.text.includes(it.name))
+      const sum = named.reduce((s, it) => s + it.price, 0)
+      if (named.length === 0 || sum !== ex.price) misses.push(text(`${ex.text} (precio ${ex.price})`))
+      const smallest = [500, 1000, 2000, 5000].find((n) => n - ex.price >= 10)
+      if (ex.paid !== smallest) misses.push(text(`${ex.text}: paga con ${ex.paid}`))
+    }
+    report('cambio con un precio que no es el del catálogo', misses, exs.length)
+  })
+
+  it('«¿cuánto te sobra?»: el mensaje dice «el dinero que tienes menos lo que cuesta todo»', () => {
+    const exs = money.filter((e): e is MoneyBudgetExercise => e.mode === 'budget' && e.ask === 'left')
+    expect(exs.length).toBeGreaterThan(20)
+    for (const ex of exs) {
+      const wrong = (ex.answer as number) + 10
+      const r = check(ex, { type: 'numbers', values: [Math.floor(wrong / 100), wrong % 100] })
+      expect(r.feedback, ex.id).toContain('el dinero que tienes menos lo que cuesta todo')
+    }
+  })
+
+  it('ningún enunciado de dinero dice «presupuesto» ni «¿Te llega?» a secas', () => {
+    const bad = money.filter((e) => {
+      const t = e.mode === 'budget' ? `${e.text} ${e.question}` : e.mode === 'change' || e.mode === 'add' ? e.text : ''
+      return /presupuesto/i.test(t) || /¿Te llega\?/.test(t)
+    })
+    report('enunciados con «presupuesto» o «¿Te llega?»', bad.map((e) => text(e.id)), money.length)
+    const budgets = money.filter((e): e is MoneyBudgetExercise => e.mode === 'budget' && e.ask !== 'afford')
+    report('presupuesto sin decir que se compra todo', budgets.filter((e) => !/todo/.test(e.question)).map((e) => text(e.question)), budgets.length)
   })
 })

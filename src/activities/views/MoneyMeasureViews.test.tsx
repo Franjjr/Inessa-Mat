@@ -123,7 +123,7 @@ describe('MoneyView', () => {
     const onAnswered = vi.fn()
     // 2,50 € + 1,35 € = 3,85 €, with 5 € it is enough.
     render(<MoneyView exercise={makeBudget('enough', 500, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText('¿Te llega?')).toBeTruthy()
+    expect(screen.getByText('¿Te llega para comprar todo?')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
@@ -141,7 +141,7 @@ describe('MoneyView', () => {
     const onAnswered = vi.fn()
     // 2,50 € + 1,35 € = 3,85 €; with 2 € we are short by 1,85 €.
     render(<MoneyView exercise={makeBudget('short', 200, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText('¿Cuánto te falta?')).toBeTruthy()
+    expect(screen.getByText('¿Cuánto te falta para comprarlo todo?')).toBeTruthy()
     fireEvent.change(box('Euros'), { target: { value: '1' } })
     fireEvent.change(box('Céntimos'), { target: { value: '85' } })
     fireEvent.click(comprobar())
