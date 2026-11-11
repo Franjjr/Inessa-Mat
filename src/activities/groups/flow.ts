@@ -32,6 +32,8 @@ export interface AnswerFlow {
   hintsShown: number
   /** Reveal the next hint. Returns it, or null when none is left. */
   showNextHint: () => Hint | null
+  /** A clue the child took that is not a hint button (a wrong operation in a word problem): it counts as a hint used. */
+  countClue: () => void
   submit: (answer: Answer) => CheckResult
   /** Child pressed Siguiente: reports the graded outcome exactly once. */
   finish: () => void
@@ -52,6 +54,8 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const startedAt = useRef(now())
   const hints = useMemo(() => opts.hints ?? hintsFor(exercise), [exercise, opts.hints])
   const hintsRef = useRef(0)
+  /** Clues taken without the hint button (countClue): counted as hints used, never shown as hints. */
+  const cluesRef = useRef(0)
   const [hintsShown, setHintsShown] = useState(0)
   const [result, setResult] = useState<CheckResult | null>(null)
   const [submitted, setSubmitted] = useState(false)
@@ -76,6 +80,8 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
     return next
   }, [hints])
 
+  const countClue = useCallback(() => { cluesRef.current += 1 }, [])
+
   const submit = useCallback((answer: Answer): CheckResult => {
     // A digit still in doubt (low-confidence read): the child confirms or rewrites it first. Nothing is graded.
     if (learning.requestConfirm()) return NOT_GRADED
@@ -92,7 +98,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
         check: g.check,
         ms: Math.round(now() - startedAt.current),
         inputMode: mode,
-        hintsUsed: hintsRef.current,
+        hintsUsed: hintsRef.current + cluesRef.current,
         recognitionFixes: fixes.current,
         ...(opts.method ? { method: opts.method } : {}),
       }
@@ -104,5 +110,5 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
 
   const finish = useCallback(() => report(), [report])
 
-  return { result, graded: graded.current, submitted, hints, hintsShown, showNextHint, submit, finish, showFeedback, allowHints }
+  return { result, graded: graded.current, submitted, hints, hintsShown, showNextHint, countClue, submit, finish, showFeedback, allowHints }
 }
