@@ -90,6 +90,38 @@ export function HintVisual({ hint }: { hint: Hint }) {
         </div>
       )
     }
+    case 'dots-five-plus-one': {
+      // «El 5 y uno más»: 5 rows of b dots, then the extra rows (one for a 6, two for a 7) in the highlight colour.
+      const a = num(p.a)
+      const b = num(p.b)
+      if (a < 6 || b <= 0 || a * b > 80) return null
+      return (
+        <div className={s.hintVisual} aria-hidden>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }} data-testid="dots-five-plus-one">
+            {Array.from({ length: a }, (_, r) => (
+              // The extra rows take another colour through the dots' --accent (shared.module.css).
+              <span key={r} data-extra={r >= 5 ? 'true' : undefined} style={{ display: 'flex', gap: 6, ...(r >= 5 ? { ['--accent' as string]: 'var(--c-gold)' } : {}) }}>
+                <Dots count={b} />
+              </span>
+            ))}
+          </div>
+        </div>
+      )
+    }
+    case 'nine-trick': {
+      // «El truco del 9»: the first digit is one less than the factor, and the two digits add up to 9.
+      const a = num(p.a)
+      if (a < 2 || a > 10) return null
+      return (
+        <div className={s.hintVisual} aria-hidden>
+          <span className={s.chip}>{a - 1}</span>
+          <span className={s.arrow}>+</span>
+          <span className={`${s.chip} ${s.chipHot}`}>?</span>
+          <span className={s.arrow}>=</span>
+          <span className={s.chip}>9</span>
+        </div>
+      )
+    }
     case 'words': {
       // Lengua: a card of examples or questions (words, never the answer of the exercise; see src/engine/lengua/grammar.ts).
       const words = Array.isArray(p.words) ? p.words : []

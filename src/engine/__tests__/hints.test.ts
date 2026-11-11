@@ -53,7 +53,7 @@ describe('strategyForFact — all 100 facts', () => {
     expect(strategyForFact(7, 7).text).toContain('7 × 5 y en 7 × 2')
     expect(strategyForFact(7, 6).text).toContain('6 × 7')
     expect(strategyForFact(9, 7).text).toContain('el 6')
-    expect(strategyForFact(8, 7).text).toContain('5, 6, 7, 8')
+    expect(strategyForFact(8, 7).text).toContain('7 × 5 y en 7 × 3')
   })
 
   it('out-of-range factors fall back gracefully', () => {
@@ -97,11 +97,13 @@ describe('hintsFor', () => {
     expect(hs[0].text).toBe(strategyForFact(6, 7).text)
     expect(hs[1]).toMatchObject({ visual: 'dots-five-plus-one', params: { a: 6, b: 7 } })
     expect(hs[2].text).toBe('5 × 7 = 35. Y una fila más: 35 + 7 = ?')
+    // 7 × 8 splits the 8 in 5 and 3: the drawing is the array of 7 rows of 8 (one trick for the three hints).
     expect(hintsFor(makeFactMul(8, 7))[1].visual).toBe('array')
     // The drawn chain stops one doubling before the product (3 × 8 = 24 is not drawn): it shows 3 → 6 → 12, not 24.
     expect(hintsFor(makeFactMul(8, 3))[1]).toMatchObject({ visual: 'double-chain', params: { start: 3, steps: 2 } })
-    expect(hintsFor(makeFactMul(9, 7))[2].visual).toBe('times-ten-minus')
-    expect(hintsFor(makeFactMul(7, 6))[1].visual).toBe('mirror')
+    expect(hintsFor(makeFactMul(9, 7))[2].visual).toBe('nine-trick')
+    // The mirror turns 7 × 6 into 6 × 7 and draws the trick of 6 × 7 (the 5 and one more).
+    expect(hintsFor(makeFactMul(7, 6))[1].visual).toBe('dots-five-plus-one')
   })
 
   it('column hints work the first carry / borrow column', () => {
@@ -119,7 +121,7 @@ describe('hintsFor', () => {
     expect(zero[2].text).toContain('Pide a las centenas')
     expect(hintsFor(makeColumnSub(586, 243))[2].text).toContain('6 − 3 = 3')
     expect(hintsFor(makeColumnMul(47, 6))[2].text).toContain('me llevo 4')
-    expect(hintsFor(makeColumnMul(23, 3))[2].text).toBe('Unidades: 3 × 3 = 9. Decenas: 2 × 3 = ?')
+    expect(hintsFor(makeColumnMul(23, 3))[2].text).toBe('Unidades: 3 × 3 = 9, escribo 9. Decenas: 2 × 3 = ?')
   })
 
   it('division hints adapt to the variant', () => {
@@ -128,20 +130,20 @@ describe('hintsFor', () => {
     expect(hintsFor(makeDivision(17, 5))[2].text).toContain('Cuenta de 5 en 5')
     expect(hintsFor(makeDivision(17, 5))[2].text).not.toContain('15')
     // Level 3 names the next step (the tens and the question), never the partial quotient or the remainder.
-    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 8? Escríbelo arriba y resta. Después baja la cifra siguiente.')
-    expect(hintsFor(makeDivision(72, 3))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 3 en el 7? Escríbelo arriba y resta. Lo que sobre, júntalo con el 2.')
+    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.')
+    expect(hintsFor(makeDivision(72, 3))[2].text).toContain('¿cuántas veces cabe el 3 en el 7?')
     // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
     expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
     expect(hintsFor(makeFactDiv(42, 6))[2].text).not.toMatch(/(^|\D)7(\D|$)/)
     // The share visual draws one group of the divisor: the number of groups (the quotient) is never in its params.
-    expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 1, perGroup: 6 })
+    expect(hintsFor(makeFactDiv(42, 6))[1].params).toMatchObject({ groups: 6, perGroup: 1 })
     // The skip count of a ten-fact stops one jump before the product, the last chip is blank.
     expect(hintsFor(makeFactMul(3, 10))[1].params).toMatchObject({ count: 3, index: 2, blank: 1 })
   })
 
-  it('an exact division of three digits starts with the tens and does not state a partial quotient', () => {
-    // 584 ÷ 4: the first question is how many 4 fit in 58; the answer (14) is the child's to find.
-    expect(hintsFor(makeDivision3(584, 4))[2].text).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 58? Escríbelo arriba y resta. Después baja la cifra siguiente.')
+  it('an exact division of three digits starts with the first number the galera takes', () => {
+    // 584 : 4: the 4 fits in the 5, so the galera starts with the 5 (not with 58, which would be two steps at once).
+    expect(hintsFor(makeDivision3(584, 4))[2].text).toContain('¿cuántas veces cabe el 4 en el 5?')
   })
 
   it('the worked division of the level-3 hint never shows the child\'s own dividend, divisor or answer', () => {
