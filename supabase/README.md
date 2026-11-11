@@ -20,10 +20,11 @@ Migrations run in order, each on top of the previous one. Each is idempotent:
 Migrations 0004 to 0006 only replace the body of `child_stats` (same signature, grants and search path); 0006 adds two
 functions and changes no table, column or policy.
 
-**Order with the app.** Every app version works with or without 0006: an older app never calls the new functions, and
-the new app falls back to the maths numbers (and says «matemáticas» in its sentences) while they do not exist. Apply 0006
-before or right after publishing the app that uses it; the only thing that waits for it is the per-subject activity and
-the mission tracking on the class screen.
+**Order with the app: first 0006, then the app.** Apply 0006 *before* publishing the app version that uses it. The app
+does not break without it (an older app never calls the new functions, and the new app falls back to the maths numbers
+and says «matemáticas» in its sentences), but the new app now logs Caligrafía visits as sessions marked `handwriting`,
+and the `child_stats` of 0005 (and the `subjectOfSession` of older apps on other devices) counts those minutes as
+maths minutes. With 0006 applied first, that never happens on the server.
 
 ## Apply it to a project
 
@@ -70,7 +71,8 @@ Nobody sees other organizations. `anon` has no access to anything.
 - `child_activity(p_child_ids, p_since)` — one row per child and subject with activity: `subject`, `attempts` (graded),
   `minutes`; `SECURITY INVOKER` (0006).
 - `assignment_progress(p_assignment_id)` — one row per pupil of the mission's class the caller may see: `attempts`,
-  `correct`; `SECURITY INVOKER` (0006).
+  `correct`; `SECURITY INVOKER` (0006). A `recognition` answer (a misread digit) counts as an answer given, so a full
+  round is a done mission for the teacher too.
 
 ### Sync conventions (see `src/data/sync.ts`)
 

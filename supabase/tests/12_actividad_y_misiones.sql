@@ -158,6 +158,21 @@ select tests.login('fe');
 select tests.eq((select count(*) from public.assignment_progress(tests.id('missionT'))), 3::bigint, 'the family of the pupils reads their own progress');
 commit;
 
+begin;  -- a misread digit (recognition) in a mission round is still an answer given: the child did finish the round
+select tests.login('fe');
+insert into public.attempts (id, child_id, skill, kind, correct, given, expected, ms, input_mode, error_type, context, created_at)
+  values (gen_random_uuid(), tests.id('f2'), 'mul:7x7', 'fact-mul', false, '4', '49', 2000, 'pen', 'recognition',
+          jsonb_build_object('activity', 'mission', 'assignmentId', tests.get('missionT')), now());
+commit;
+
+begin;
+select tests.login('tito');
+select tests.eq((select attempts || '/' || correct from public.assignment_progress(tests.id('missionT')) where child_id = tests.id('f2')),
+  '6/2', 'a recognition answer counts for the mission (as given, not as right)');
+select tests.eq((select attempts || '/' || correct from public.child_stats(array[tests.id('f2')], now() - interval '1 day')),
+  '6/2', 'child_stats still leaves recognition out of the maths accuracy');
+commit;
+
 -- =====================================================================================================================
 -- 5. the functions keep the rigour of 0001: SECURITY INVOKER, empty search_path, signed-in users only
 -- =====================================================================================================================

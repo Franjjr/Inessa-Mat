@@ -168,7 +168,8 @@ $$;
 -- ---------------------------------------------------------------------------------------------------------------------
 
 -- One row per pupil of the mission's class that the caller may see (zero attempts included). Unknown or hidden mission:
--- no rows. Recognition errors (a misread digit) are not counted, as in child_stats.
+-- no rows. A recognition error (the app misread a digit) still counts as an answer given, unlike in child_stats: the
+-- child did play the round, and the child's screen says «¡Misión hecha!» after it.
 create or replace function public.assignment_progress(p_assignment_id uuid)
 returns table (
   child_id uuid,
@@ -198,7 +199,6 @@ as $$
    and t.created_at >= m.starts_at
    and (m.due_at is null or t.created_at <= m.due_at)
    and (t.context->>'graded') is distinct from 'false'
-   and coalesce(t.error_type, '') <> 'recognition'
    and (
      t.context->>'assignmentId' = m.id::text
      or (cardinality(m.skills) > 0 and t.skill = any (m.skills))
