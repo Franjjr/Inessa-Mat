@@ -1,4 +1,4 @@
-/* The session never asks what has not been taught (audit p3-clases H1, H2, H3): a girl who gets everything right, forty days. */
+/* The session never asks what has not been taught (audit p3-clases H1, H2, H3): a girl who gets everything right, 200 days. */
 import { describe, expect, it } from 'vitest'
 import type { ChildProfile, MasteryMap, ProgressState } from '@/types'
 import { DEFAULT_CHILD_SETTINGS } from '@/types'
@@ -26,7 +26,7 @@ const HUNT_OP_TOPIC = { add: 'suma-3d-llevando', sub: 'resta-3d-prestando', mul:
 
 interface Day { d: number; plan: DailyPlan; classesDone: Set<string>; todayIdx: number }
 
-/** Forty days of a girl who answers everything right; she does the class of the topic whenever the plan asks for it first. */
+/** 200 days of a girl who answers everything right; she does the class of the topic whenever the plan asks for it first. */
 function simulate(days = 200): Day[] {
   let mastery: MasteryMap = {}
   let progress: ProgressState = initialProgress(child.id, start, seasonIdForGrade(3))
@@ -112,5 +112,16 @@ describe('daily-orden: statementOf', () => {
       }
     }
     expect([...new Set(bad)]).toEqual([])
+  })
+
+  it('an older child with practice but no class marks still gets the problem block (a bar problem of an operation she practised)', () => {
+    const now = new Date(start.getTime() + 20 * DAY)
+    let mastery: MasteryMap = {}
+    for (const sk of ['bar:add', 'add:3d:c1']) {
+      mastery = { ...mastery, [sk]: updateMastery(undefined, { skill: sk, correct: true, ms: 2000, hintsUsed: 0, inputMode: 'keypad' } as never, new Date(now.getTime() - 3 * DAY)) }
+    }
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now, progress: newProgress() })
+    const bar = plan.blocks.flatMap((b) => b.items).filter((it) => it.exercise.skill.startsWith('bar:'))
+    expect(bar.length).toBeGreaterThan(0)
   })
 })

@@ -325,7 +325,7 @@ const mulPor10 = clase({
 const mul2x2Partes = clase({
   id: 'c3-mul-2x2-partes',
   topicId: 'mul-2-cifras-intro',
-  title: 'Multiplicar por dos cifras, por partes',
+  title: 'Multiplicar por dos cifras, en columna',
   para: [
     show('place-value', { n: 23 }, 'En la frutería hay 23 cajas de naranjas.', 'owl'),
     show('place-value', { n: 14 }, 'Cada caja tiene 14 naranjas. ¿Cuántas son? Calculemos 23 × 14: partimos el 14 en 4 y 10, y empezamos por el 4.', 'owl'),
@@ -337,6 +337,9 @@ const mul2x2Partes = clase({
     show('big-text', { text: '23 × 34', sub: '23 × 4 = 92' }, 'Otra: 23 × 34. Primero 23 × 4 = 92.'),
     show('big-text', { text: '23 × 30 = 690', sub: '23 × 3 = 69, y un 0 detrás' }, 'Después 23 × 30: 23 × 3 = 69 y le pongo un 0 detrás: 690.'),
     show('carry', { a: 690, b: 92 }, '690 + 92 = 782. ¡23 × 34 = 782!'),
+    show('column-mul', { top: 47, bottom: 6 }, 'Ahora una con llevada también en la segunda fila: 47 × 36. Primero 47 × 6: 7 por 6, 42: escribo el 2 y me llevo 4. 4 por 6, 24, y 4 que llevaba, 28. ¡282!'),
+    show('big-text', { text: '47 × 30 = 1 410', sub: '47 × 3 = 141, y un 0 detrás' }, 'Después 47 × 30: 47 × 3 = 141 (7 por 3, 21: escribo 1 y me llevo 2; 4 por 3, 12, y 2, 14) y un 0 detrás: 1 410.'),
+    show('carry', { a: 1410, b: 282 }, '1 410 + 282 = 1 692. ¡47 × 36 = 1 692!'),
   ],
   guiada: [
     tryIt('column-mul', { top: 23, bottom: 14 }, '¡Te toca! Multiplica por las unidades de abajo y, debajo, por las decenas.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
@@ -344,7 +347,7 @@ const mul2x2Partes = clase({
   ],
   sola: [
     tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Primero por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: pon un cero detrás.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto, escribe 23 × 1 delante de él.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
     tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Sin pistas: las dos filas y su suma.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
   ],
   cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras: primero por las unidades de abajo, debajo por las decenas con un 0 detrás, y sumo las dos filas.'),

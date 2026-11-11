@@ -4,12 +4,17 @@
 import { describe, expect, it } from 'vitest'
 import { CLASSES } from '@/content/classes'
 import type { ClassDef } from '@/content/classes'
+import { GRADE3_SYLLABUS } from '@/content/syllabus/grade3'
+import { allTopics } from '@/content/syllabus'
+import { generate, createRng } from '@/engine'
 
 /** Digits of the biggest number the practice of a skill can use (add:4d, sub:3d, mul:3x1, div:3x1…), or 0. */
 function digitsOfSkill(skill: string): number {
   let m = skill.match(/^(?:add|sub):(\d)d(?::|$)/)
   if (m) return Number(m[1])
   m = skill.match(/^(?:mul|div):(\d)x1(?::|$)/)
+  if (m) return Number(m[1])
+  m = skill.match(/^mul:col:(\d)x\d$/)
   return m ? Number(m[1]) : 0
 }
 
@@ -74,5 +79,14 @@ describe('clases-cobertura', () => {
   it('the 2 × 2 class practises the column (long-mul)', () => {
     const cls = CLASSES.find((c) => c.lesson.id === 'c3-mul-2x2-partes')!
     for (const step of cls.lesson.steps.filter((s) => s.interaction === 'try')) expect(step.trySelector?.kinds).toEqual(['long-mul'])
+  })
+
+  it('after the 2 × 2 class, the session asks the same thing the class taught (same skill, same kind)', () => {
+    const cls = CLASSES.find((c) => c.lesson.id === 'c3-mul-2x2-partes')!
+    const practised = cls.lesson.steps.filter((s) => s.interaction === 'try')
+    const skills = new Set(practised.flatMap((s) => s.trySelector?.skills ?? []))
+    const topicSkills = allTopics(GRADE3_SYLLABUS).find((t) => t.id === 'mul-2-cifras-intro')!.skills
+    expect([...skills]).toEqual(topicSkills)
+    for (const ex of generate({ skills: topicSkills }, 6, { rng: createRng(7) })) expect(ex.kind).toBe('long-mul')
   })
 })

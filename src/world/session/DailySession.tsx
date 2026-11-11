@@ -287,7 +287,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
       <div className={s.stage}>
         {needsExample && plan.example ? (
           <ExampleCard
-            statement={plan.example.statement}
+            statement={host.t(plan.example.statement)}
             steps={plan.example.steps.map((t) => host.t(t))}
             topicName={topicName}
             onNext={() => { setExampleSeen(true) }}

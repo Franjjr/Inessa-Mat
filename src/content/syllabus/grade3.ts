@@ -83,7 +83,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1-llevando', name: 'Multiplicar 2 cifras por 1 (con llevada)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { dibujo: 'Llevadas de las unidades', numeros: 'La cuenta en columna con llevada', uso: 'Problemas de grupos' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: 'Descomponer 213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de grupos grandes' } },
         { id: 'mul-10-100', name: 'Multiplicar por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven a la izquierda en la tabla de valor posicional', numeros: '37 × 100 = 3 700: dos ceros a la derecha' } },
-        { id: 'mul-2-cifras-intro', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d'], status: 'disponible', rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10' } },
+        { id: 'mul-2-cifras-intro', name: 'Multiplicar por un número de 2 cifras (en columna)', skills: ['mul:col:2x2'], status: 'disponible', rungs: { dibujo: 'Dos filas: por las unidades y por las decenas', numeros: '23 × 14: 23 × 4 = 92, 23 × 10 = 230 y se suman' } },
       ],
     },
     {

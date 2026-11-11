@@ -10,8 +10,9 @@
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { availableSkills, behindTopics, isTopicMastered, teachingOrder, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { classForTopic, isClassDone } from '@/content/classes'
-import { topicOfToday } from './topicOfToday'
+import { placedTopicIds, topicOfToday } from './topicOfToday'
 import { makeArray } from './make'
+import { toDigits } from './arith'
 import { statementClock } from './clock'
 import { generate } from './generate'
 import { lenguaStatement } from './lengua/exercises'
@@ -265,18 +266,94 @@ export function workedAnswer(ex: Exercise): string | null {
       return Array.isArray(ex.answer) ? ex.parts.filter((p) => p !== 0).map(fmt).join(' + ') : fmt(ex.answer)
     case 'skip-count': return ex.answer.map(fmt).join(', ')
     case 'double-chain': return ex.answer.map(fmt).join(', ')
-    case 'compare': return ex.answer
+    case 'compare': {
+      // Words, never the sign: it is read aloud and a child of 7 does not read «<» as a sentence.
+      const l = fmt(ex.left); const r = fmt(ex.right)
+      return ex.answer === '=' ? `${l} y ${r} son iguales` : ex.answer === '>' ? `${l} es mayor que ${r}` : `${l} es menor que ${r}`
+    }
     default: return null
   }
 }
 
-/** Worked example for the new topic: a fresh exercise of the skill (its own seed), with the hints as steps and, last, the
-    answer, so the child sees the whole cuenta finished and never a «= ?» left open. */
+const PLACE = ['las unidades', 'las decenas', 'las centenas', 'las unidades de millar', 'las decenas de millar']
+
+/** The whole subtraction, column by column, with the borrow said where it happens (nothing left open). */
+export function subtractionSteps(minuend: number, subtrahend: number): string[] {
+  const m = toDigits(minuend)
+  const sd = toDigits(subtrahend)
+  const steps: string[] = []
+  let lent = 0
+  for (let i = 0; i < m.length; i++) {
+    const name = PLACE[i] ?? 'la siguiente casa'
+    const b = sd[i] ?? 0
+    const here = m[i] - lent
+    const pre = lent ? `En ${name}, el ${m[i]} de arriba prestó 1 y ahora es ${here}: ` : `En ${name}: `
+    if (i >= sd.length && !lent) { steps.push(`En ${name} no hay nada que restar: bajo el ${m[i]}.`); continue }
+    if (here >= b) {
+      steps.push(`${pre}${here} − ${b} = ${here - b}.`)
+      lent = 0
+    } else {
+      const top = here + 10
+      const lead = here < 0
+        ? `En ${name} el 0 de arriba ya prestó, así que pido 10 a la casa de al lado: 10 − 1 = ${top}.`
+        : `${pre}${here} − ${b} no se puede. Pido 10 a la casa de al lado: ${here} + 10 = ${top}.`
+      steps.push(`${lead} Ahora ${top} − ${b} = ${top - b}.`)
+      lent = 1
+    }
+  }
+  return steps
+}
+
+/** The whole addition in columns, with every carry said. */
+export function additionSteps(operands: number[]): string[] {
+  const rows = operands.map(toDigits)
+  const width = Math.max(...rows.map((r) => r.length))
+  const steps: string[] = []
+  let carry = 0
+  for (let i = 0; i < width; i++) {
+    const name = PLACE[i] ?? 'la siguiente casa'
+    const col = rows.map((r) => r[i] ?? 0)
+    const sum = col.reduce((a, b) => a + b, 0) + carry
+    const terms = col.join(' + ') + (carry ? ` + ${carry} que llevaba` : '')
+    steps.push(sum >= 10 && i < width - 1 ? `En ${name}: ${terms} = ${sum}. Escribo ${sum % 10} y me llevo ${Math.floor(sum / 10)}.` : `En ${name}: ${terms} = ${sum}.`)
+    carry = Math.floor(sum / 10)
+  }
+  return steps
+}
+
+/** The whole multiplication by one digit, with every carry said. */
+export function multiplicationSteps(top: number, bottom: number): string[] {
+  const t = toDigits(top)
+  const steps: string[] = []
+  let carry = 0
+  t.forEach((d, i) => {
+    const name = PLACE[i] ?? 'la siguiente casa'
+    const prod = d * bottom + carry
+    const terms = `${d} × ${bottom}${carry ? ` + ${carry} que llevaba` : ''} = ${prod}`
+    steps.push(prod >= 10 && i < t.length - 1 ? `En ${name}: ${terms}. Escribo ${prod % 10} y me llevo ${Math.floor(prod / 10)}.` : `En ${name}: ${terms}.`)
+    carry = Math.floor(prod / 10)
+  })
+  return steps
+}
+
+/** Steps with a sum left to the child («… = ?») cannot be in a worked example: that sentence is dropped. */
+function closeSteps(texts: string[]): string[] {
+  return texts
+    .map((t) => t.split(/(?<=[.!])\s+/).filter((sentence) => !/=\s*\?/.test(sentence)).join(' ').trim())
+    .filter((t) => t.length > 0)
+}
+
+/** Worked example for the new topic: a fresh exercise of the skill (its own seed). Columns are solved in full, one step
+    per column; the other kinds use their hints without any open «= ?»; the last step is always the answer. */
 function exampleFor(skill: SkillKey, rng: Rng, now: Date): DailyPlan['example'] {
   const [ex] = generate({ skills: [skill] }, 1, { rng: createRng(hashString(`example:${skill}:${rng()}`)), now })
   if (!ex) return null
   const answer = workedAnswer(ex)
-  const steps = hintsFor(ex).map((h) => h.text)
+  let steps: string[]
+  if (ex.kind === 'column-sub') steps = subtractionSteps(ex.minuend, ex.subtrahend)
+  else if (ex.kind === 'column-add') steps = additionSteps(ex.operands)
+  else if (ex.kind === 'column-mul' && ex.bottom < 10) steps = multiplicationSteps(ex.top, ex.bottom)
+  else steps = closeSteps(hintsFor(ex).map((h) => h.text))
   if (answer) steps.push(`Resultado: ${answer}.`)
   return { exercise: ex, statement: statementOf(ex).replace(/ = \?$/, ''), steps, answer }
 }
@@ -369,7 +446,12 @@ export function planDailySession(input: PlanInput): DailyPlan {
     if (!cls) return true
     if (progressNow && isClassDone(progressNow, cls)) return true
     const t = order.find((x) => x.id === id)
-    return !!t && isTopicMastered(t, mastery)
+    if (!t) return false
+    if (isTopicMastered(t, mastery)) return true
+    // A child with older progress: the topic was set aside by the placement test, or she already practised it (a class
+    // is offered only for today's topic, so without this she could go weeks with no problem block).
+    if (progressNow && placedTopicIds(progressNow).has(id)) return true
+    return t.skills.some((sk) => (mastery[sk]?.attempts ?? 0) > 0)
   }
 
   // 1. Calentamiento: learnt cálculo mental and facts not seen today, the most urgent first. Never introduces a skill.
