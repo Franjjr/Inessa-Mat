@@ -2,6 +2,7 @@
 import clsx from 'clsx'
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
+import { useInkLearning } from '@/ink/hooks'
 import type { ExerciseViewProps, MissingFactorExercise } from '@/types'
 import { useActivityHost } from '../host'
 import { useAnswerFlow } from '../facts/shared/flow'
@@ -13,6 +14,7 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
   const ex = exercise as MissingFactorExercise
   const host = useActivityHost()
   const flow = useAnswerFlow({ exercise, onAnswered, guided, allowHints })
+  const learning = useInkLearning()
   const [draft, setDraft] = useState<number | null>(null)
   const done = flow.phase === 'done'
   const correct = done && !!flow.last?.correct
@@ -20,16 +22,18 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
   const missingFirst = ex.missing === 'a'
 
   const submit = (v: number | null) => {
-    if (v === null || done) return
+    if (done) return
+    // Ink that could not be read («?»): the child is asked which number it is, nothing is graded.
+    if (v === null) { learning.requestConfirm(); return }
+    // What she wrote stays on the pad after a wrong try (clearKey), so she sees what the app read.
     flow.submit({ type: 'number', value: v })
-    setDraft(null)
   }
 
   const blank = done ? (
     <span className={clsx(s.answer, !correct && s.answerRevealed)} aria-label={`Número que falta: ${ex.answer}`}>{ex.answer}</span>
   ) : (
     <NumberInput
-      key={flow.attemptKey}
+      clearKey={flow.attemptKey}
       value={draft}
       onChange={setDraft}
       onSubmit={submit}
@@ -64,6 +68,11 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
           <p className={clsx(shared.clue, correct && shared.clueOk, done && !correct && shared.clueReveal)} role="status">
             {flow.clue}
           </p>
+        )}
+        {showFeedback && flow.canDispute && (
+          <button type="button" className={shared.hintBtn} onClick={flow.dispute}>
+            No, yo he escrito otra cosa
+          </button>
         )}
       </div>
     </div>

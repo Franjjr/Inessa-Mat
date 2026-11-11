@@ -1,6 +1,8 @@
-/* Doubling chain (double-chain): 3 → 6 → 12 → 24. The child writes each doubling as the links appear. */
+/* Doubling chain (double-chain): 3 → 6 → 12 → 24. The child writes each doubling as the links appear.
+   Above the chain, the multiplication it solves («8 × 3 = ?»: doubling three times is multiplying by 8); at the end,
+   the same line with the result («8 × 3 = 24»). */
 import clsx from 'clsx'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NumberInput } from '@/ink'
 import type { DoubleChainExercise, ExerciseViewProps } from '@/types'
 import { useActivityHost } from '../host'
@@ -29,6 +31,10 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
   const done = flow.phase === 'done'
   const allCorrect = done && !!flow.last?.correct
   const current = flow.current
+  // Doubling n times multiplies by 2, 4, 8…: the table this chain practises.
+  const times = 2 ** ex.answer.length
+  const last = ex.answer[ex.answer.length - 1]
+  const goal = `${times} × ${ex.start} = ${done ? last : '?'}`
 
   // Link 0 is the given start; link i+1 is slot i.
   const cells: SequenceCell[] = [
@@ -41,21 +47,27 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
     }),
   ]
 
+  // A new slot starts with an empty pad; after a wrong try what she wrote stays (clearKey).
+  useEffect(() => { setDraft(null) }, [current])
+
   const submit = (v: number | null) => {
     if (v === null || done) return
     flow.submit(v)
-    setDraft(null)
   }
 
   return (
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
+      <p className={shared.instructions} data-testid="double-goal" aria-label={done ? `${times} por ${ex.start} es ${last}` : `${times} por ${ex.start}, ¿cuánto es?`}>
+        {goal}
+      </p>
       <SequenceBoard cells={cells} variant="chain" label={`Cadena de dobles desde ${ex.start}`} />
 
       {!done ? (
         <div className={s.inputRow}>
           <p className={shared.instructions}>¿Cuánto es el doble del último eslabón?</p>
           <NumberInput
-            key={`${current}-${flow.attemptKey}`}
+            key={current}
+            clearKey={flow.attemptKey}
             value={draft}
             onChange={setDraft}
             onSubmit={submit}
