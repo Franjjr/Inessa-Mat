@@ -63,10 +63,9 @@ describe('clases de geometría (3.º)', () => {
     const cls = GEOMETRIA_CLASSES.find((c) => c.topicId === 'recorridos')!
     const [first, second] = cls.lesson.steps
     expect(first.text).toMatch(/casilla dorada/)
-    expect(second.text).toMatch(/→/)
-    expect(second.text).toMatch(/←/)
-    expect(second.text).toMatch(/↑/)
-    expect(second.text).toMatch(/↓/)
+    // The arrows are on the drawing; the sentence says them in words.
+    for (const word of [/derecha/, /izquierda/, /arriba/, /abajo/]) expect(second.text).toMatch(word)
+    expect(cls.lesson.steps.map((st) => st.text).join(' ')).not.toMatch(/[→←↑↓]/)
     expect(JSON.stringify(cls.lesson.steps)).not.toMatch(/estrella/)
     for (const st of cls.lesson.steps.filter((x) => x.visual === 'grid-route')) {
       let r = 0

@@ -57,7 +57,7 @@ const tabla5 = clase({
   ],
   ejemplo: [
     w1Easy.steps[3],
-    show('big-text', { text: '5 × 4 = 20', sub: 'cuatro por cinco, veinte' }, 'Una mano tiene 5 dedos. Cuatro manos tienen 20 dedos: 5 × 4 = 20.'),
+    show('big-text', { text: '5 × 4 = 20', sub: 'cinco por cuatro, veinte' }, 'Una mano tiene 5 dedos. Cuatro manos tienen 20 dedos: 5 × 4 = 20.'),
     show('big-text', { text: '5 · 10 · 15 · 20 · 25', sub: 'de 5 en 5' }, 'Por eso la tabla del 5 cuenta de 5 en 5 y acaba siempre en 0 o en 5.'),
   ],
   guiada: [
@@ -131,9 +131,9 @@ const tabla4 = clase({
     show('big-text', { text: '4 × 3', sub: 'cuatro por tres' }, 'Hoy aprendemos la tabla del 4. Hay un truco: dobla dos veces.', 'owl'),
   ],
   ejemplo: [
-    show('double-chain', { start: 3, steps: 2 }, '4 × 3: 3 → 6 → 12. El doble de 3 es 6, y el doble de 6 es 12.'),
-    show('double-chain', { start: 5, steps: 2 }, '4 × 5: 5 → 10 → 20. Otra vez, doble y doble.'),
-    show('double-chain', { start: 6, steps: 2 }, '4 × 6: 6 → 12 → 24. ¡Doble y doble!'),
+    show('double-chain', { start: 3, steps: 2 }, '4 × 3: el doble de 3 es 6, y el doble de 6 es 12.'),
+    show('double-chain', { start: 5, steps: 2 }, '4 × 5: el doble de 5 es 10, y el doble de 10 es 20. Otra vez, doble y doble.'),
+    show('double-chain', { start: 6, steps: 2 }, '4 × 6: el doble de 6 es 12, y el doble de 12 es 24. ¡Doble y doble!'),
     show('big-text', { text: '4 · 8 · 12 · 16 · 20', sub: 'de 4 en 4' }, 'Contar de 4 en 4 también sirve: 4, 8, 12, 16, 20…'),
   ],
   guiada: [
@@ -145,7 +145,7 @@ const tabla4 = clase({
     tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Doble y doble otra vez.', facts(4, 6, 10)),
     tryIt('big-text', { text: 'Tabla del 4' }, '¡Tu turno! Sin ayudas: calcula tú.', facts(4, 8, 10)),
   ],
-  cierre: show('double-chain', { start: 7, steps: 2 }, 'La regla: para multiplicar por 4, dobla dos veces. 4 × 7: 7 → 14 → 28.'),
+  cierre: show('double-chain', { start: 7, steps: 2 }, 'La regla: para multiplicar por 4, dobla dos veces. 4 × 7: el doble de 7 es 14, y el doble de 14 es 28.'),
 })
 
 /** La tabla del 6: el 5 y uno más (lección del mapa «Truco 1»). */
@@ -155,7 +155,7 @@ const tabla6 = clase({
   mapLessonId: 'w3-five',
   title: 'La tabla del 6',
   para: [
-    show('known-facts', { table: 6 }, 'Hoy aprendemos la tabla del 6. ¡Ya sabes varias!', 'frog'),
+    show('known-facts', { table: 6 }, '¡Ya sabes 6 × 1, 6 × 2, 6 × 3, 6 × 4, 6 × 5 y 6 × 10! Solo te quedan 6 × 6, 6 × 7, 6 × 8 y 6 × 9.', 'frog'),
   ],
   ejemplo: w3Five.steps.slice(0, 5),
   guiada: [
@@ -177,9 +177,12 @@ const tabla8 = clase({
   mapLessonId: 'w5-pattern',
   title: 'La tabla del 8',
   para: [
-    show('known-facts', { table: 8 }, 'Hoy aprendemos la tabla del 8. ¡Tiene un secreto!', 'octopus'),
+    show('known-facts', { table: 8 }, '¡Ya sabes 8 × 1, 8 × 2, 8 × 3, 8 × 4, 8 × 5, 8 × 6 y 8 × 10! Solo te quedan 8 × 7, 8 × 8 y 8 × 9.', 'octopus'),
   ],
-  ejemplo: w5Pattern.steps.slice(0, 4),
+  ejemplo: [
+    ...w5Pattern.steps.slice(0, 4),
+    show('double-chain', { start: 3, steps: 3 }, '8 es doble, doble y doble: el doble de 3 es 6, el de 6 es 12, el de 12 es 24. Así que 8 × 3 = 24.'),
+  ],
   guiada: [
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Te toca! Dobla tres veces.', facts(8, 1, 5)),
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Otra! Mira cómo cambian las unidades al pasar de un resultado al siguiente.', facts(8, 1, 5)),
@@ -199,7 +202,7 @@ const tabla7 = clase({
   mapLessonId: 'w6-seven',
   title: 'La tabla del 7',
   para: [
-    show('known-facts', { table: 7 }, 'Hoy aprendemos la tabla del 7. ¿Da miedo? ¡Vamos a verlo!', 'fairy'),
+    show('known-facts', { table: 7 }, 'Ya sabes casi toda. Solo te quedan 7 × 7 y 7 × 9; la del 9 la verás en su tabla.', 'fairy'),
   ],
   ejemplo: [w6Seven.steps[0], w6Seven.steps[2], w6Seven.steps[3], w6Seven.steps[4]],
   guiada: [

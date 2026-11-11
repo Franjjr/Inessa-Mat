@@ -1966,7 +1966,7 @@ exports[`temario de Inglés de 3.º > the maths and Lengua temarios keep their c
             "id": "div-resto",
             "name": "División con resto",
             "rungs": {
-              "numeros": "La prueba: divisor × cociente + resto",
+              "numeros": "La prueba: divisor por cociente, más el resto, da el dividendo",
               "uso": "Problemas de repartir con sobrante",
             },
             "skills": [
@@ -1993,7 +1993,7 @@ exports[`temario de Inglés de 3.º > the maths and Lengua temarios keep their c
             "name": "Dividir 3 cifras entre 1",
             "rungs": {
               "numeros": "La galera con tres cifras: bajar una cifra cada vez",
-              "uso": "Comprobar con la prueba: divisor × cociente + resto",
+              "uso": "Comprobar con la prueba: divisor por cociente, más el resto, da el dividendo",
             },
             "skills": [
               "div:3x1:exact",
@@ -2231,7 +2231,7 @@ exports[`temario de Inglés de 3.º > the maths and Lengua temarios keep their c
             "rungs": {
               "concreto": "20 objetos en grupos iguales",
               "dibujo": "Contar los objetos de un grupo",
-              "numeros": "¼ de 20 = 20 ÷ 4",
+              "numeros": "¼ de 20 = 20 : 4",
               "uso": "Problemas: reparto de caramelos o flores",
             },
             "skills": [

@@ -16,9 +16,10 @@ const unidadesLongitud = clase({
     show('big-text', { text: 'Un kilómetro es una distancia grande: de tu casa al colegio, por ejemplo.' }, 'Para distancias largas usamos kilómetros. Para cosas de la clase, metros o centímetros.', 'ladybug'),
   ],
   ejemplo: [
-    show('big-text', { text: '1 m = 100 cm' }, 'Un metro tiene 100 centímetros. Si tienes 3 metros, son 3 × 100 = 300 centímetros.'),
-    show('big-text', { text: '1 km = 1 000 m' }, 'Un kilómetro tiene 1 000 metros. Si tienes 5 kilómetros, son 5 × 1 000 = 5 000 metros.'),
-    show('big-text', { text: '400 cm = 4 m' }, 'Al revés: 400 centímetros son 4 metros, porque 100 centímetros hacen un metro: 400 ÷ 100 = 4.'),
+    show('big-text', { text: '1 m = 100 cm', sub: '3 m = 100 + 100 + 100 = 300 cm' }, '1 m son 100 cm. 3 m son 100 + 100 + 100 = 300 cm.'),
+    show('big-text', { text: '1 km = 1 000 m', sub: '5 km = 5 000 m' }, 'Un kilómetro tiene 1 000 metros. 5 kilómetros son cinco veces 1 000: 5 000 metros.'),
+    show('big-text', { text: '400 cm = 4 m', sub: '4 grupos de 100' }, '400 cm: ¿cuántos grupos de 100 caben? 4. Son 4 m.'),
+    show('big-text', { text: '1/2 m = 50 cm', sub: 'la mitad de 100' }, 'Medio metro es la mitad de 100 cm: 50 cm.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'cm · m · km' }, '¡Te toca! Piensa en el tamaño real de lo que mides, no en el número. Imagínalo antes de elegir.', { skills: ['measure:unit:length'] }),
@@ -70,9 +71,9 @@ const unidadesMasaCapacidad = clase({
     show('units', { kind: 'capacity' }, 'Para cantidades pequeñas de líquido usamos mililitros. Para botellas y cubos, litros.', 'ladybug'),
   ],
   ejemplo: [
-    show('big-text', { text: '1 kg = 1 000 g' }, 'Un kilo tiene 1 000 gramos. Medio kilo son 500 gramos.'),
+    show('big-text', { text: '1 kg = 1 000 g', sub: '1/4 kg = 250 g' }, 'Un kilo tiene 1 000 gramos. Medio kilo son 500 gramos. Un cuarto de kilo: 1 000 g en 4 partes iguales, 250 g.'),
     show('big-text', { text: '1 l = 1 000 ml' }, 'Un litro tiene 1 000 mililitros. Un vaso de agua tiene unos 200 mililitros: menos de un litro.'),
-    show('big-text', { text: '2 000 ml = 2 l' }, 'Al revés: 2 000 mililitros son 2 litros, porque 1 000 mililitros hacen un litro: 2 000 ÷ 1 000 = 2.'),
+    show('big-text', { text: '2 000 ml = 2 l' }, '2 000 ml son dos grupos de 1 000: 2 litros.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'g · kg' }, '¡Te toca! Piensa en el peso real de lo que te preguntan, no en el número.', { skills: ['measure:unit:mass'] }),
