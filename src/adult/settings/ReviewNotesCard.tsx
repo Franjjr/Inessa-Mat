@@ -1,7 +1,9 @@
 /* The answers the app marked wrong on this device, newest first, for a grown-up to check. A right answer marked
-   wrong is a bug in the app: the adult can export the list (a JSON file) and send it, or delete it. */
+   wrong is a bug in the app: the adult can export the list (a JSON file) and send it, or delete it.
+   A handwritten answer shows the child's ink, digit by digit, next to «la app leyó 47»: a misread is easy to spot. */
 import { useEffect, useState } from 'react'
 import { clearWrongAnswerNotes, listWrongAnswerNotes, type WrongAnswerNote } from '@/data'
+import { decodeImage28 } from '@/ink/readLog'
 import { Button, toast } from '@/ui'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { downloadBlob } from '../shared/download'
@@ -10,6 +12,44 @@ import { plural } from '../shared/format'
 import { formatWrongAnswer, wrongAnswerExport } from './reviewNotes'
 import s from './settings.module.css'
 import adult from '../shared/adult.module.css'
+import inkCss from './ReviewNotesInk.module.css'
+
+/** One digit as the recogniser saw it (28×28, dark ink on a light square). */
+function InkThumb({ image, label }: { image: string; label: string }) {
+  const px = decodeImage28(image)
+  if (px.length !== 784) return null
+  const cells = []
+  for (let i = 0; i < 784; i++) {
+    const v = px[i]
+    if (v > 0.08) cells.push(<rect key={i} x={i % 28} y={Math.floor(i / 28)} width={1} height={1} fillOpacity={Math.min(1, v)} />)
+  }
+  return (
+    <svg className={inkCss.thumb} viewBox="0 0 28 28" width={28} height={28} role="img" aria-label={label}>
+      <rect width={28} height={28} className={inkCss.thumbBg} />
+      <g className={inkCss.thumbInk}>{cells}</g>
+    </svg>
+  )
+}
+
+/** «la app leyó 47» with the ink of each digit, and whether one digit would have made it right. */
+function InkReadingLine({ note }: { note: WrongAnswerNote }) {
+  const ink = note.ink
+  if (!ink?.digits.length) return null
+  const read = ink.digits.map((d) => d.digit).join('')
+  return (
+    <span className={inkCss.line}>
+      <span className={inkCss.thumbs}>
+        {ink.digits.map((d, i) =>
+          d.image28 ? <InkThumb key={i} image={d.image28} label={`Trazo de la cifra ${i + 1}, leída como ${d.digit}`} /> : null)}
+      </span>
+      <span>
+        la app leyó {read}
+        {ink.digits.some((d) => d.doubtful && !d.confirmed) ? ' (con dudas)' : ''}
+        {ink.oneDigitFix ? ' · cambiando una cifra estaría bien' : ''}
+      </span>
+    </span>
+  )
+}
 
 export function ReviewNotesCard() {
   const [notes, setNotes] = useState<WrongAnswerNote[] | null>(null)
@@ -86,7 +126,10 @@ export function ReviewNotesCard() {
           <p className={adult.muted}>{plural(count, 'respuesta', 'respuestas')}, las más recientes primero.</p>
           <ol className={s.reviewList} aria-label="Respuestas marcadas como mal">
             {notes.map((n) => (
-              <li key={n.seq ?? `${n.at}-${n.given}`} className={s.reviewItem}>{formatWrongAnswer(n)}</li>
+              <li key={n.seq ?? `${n.at}-${n.given}`} className={s.reviewItem}>
+                {formatWrongAnswer(n)}
+                <InkReadingLine note={n} />
+              </li>
             ))}
           </ol>
         </>
