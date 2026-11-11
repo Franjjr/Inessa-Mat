@@ -554,8 +554,11 @@ function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb
   const filled = written.map((v, k) => (v === null ? -1 : k)).filter((k) => k >= 0)
   const given = written.filter((v) => v !== null).join(' · ')
   const rest = remainderWritten(ex, isNum(answer.remainder) ? answer.remainder : null)
-  const fits = filled.filter((k) => written[k] === ex.divisor * (k + 1) && (written[k] ?? 0) <= ex.dividend)
-  const q = isNum(sent) ? sent : fits.length ? fits[fits.length - 1] + 1 : null
+  // Row k is «divisor × (k + 1)»: the last row written that still fits gives the quotient when that row is right (the
+  // remainder is worked out from it), even if a number on the way was slipped.
+  const fits = filled.filter((k) => ex.divisor * (k + 1) <= ex.dividend)
+  const top = fits.length ? fits[fits.length - 1] : -1
+  const q = isNum(sent) ? sent : top >= 0 && written[top] === ex.divisor * (top + 1) ? top + 1 : null
   // Rows past the first one that reaches the dividend make the quotient unclear (28 ÷ 4 written up to 32): that is
   // not a right answer unless the view sends the quotient itself.
   const past = !isNum(sent) && filled.some((k) => k > stop)
