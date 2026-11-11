@@ -9,11 +9,11 @@ export const c2Tens = lesson('c2-w1-tens', 'Grupos de diez', [
   show('groups', { groups: 3, perGroup: 10, emoji: '🍄' }, 'Un grupo de 10 unidades es una decena. Y diez decenas son una centena: ¡cien!', 'owl'),
   // blocks: 1 draws the base-ten blocks in every house (a big square, a bar, a small cube).
   show('place-value', { n: 345, blocks: 1 }, 'El número 345 vive en 3 casas: centenas, decenas y unidades.'),
-  show('place-value', { n: 345, blocks: 1 }, 'Las centenas se dibujan como un cuadrado grande, las decenas como una barra y las unidades como un cubito. 3 cuadrados, 4 barras y 5 cubitos son 345.'),
+  show('place-value', { n: 345, blocks: 1 }, 'Centenas: cuadrado grande. Decenas: barra. Unidades: cubito. 3 cuadrados, 4 barras y 5 cubitos son 345.'),
   show('place-value', { n: 345, blocks: 1 }, 'El 3 vale 300, el 4 vale 40 y el 5 vale 5. 300 + 40 + 5 = 345.'),
   tryIt('place-value', { n: 345, blocks: 1 }, '¡Te toca! Cuenta los bloques y escribe el número.', { skills: ['num:place:blocks:999'] }),
-  show('place-value', { n: 207, blocks: 1 }, 'Descomponer es decir cuánto vale cada cifra: 207 son 200 más 7.'),
   show('place-value', { n: 207, blocks: 1 }, 'Si una casa está vacía, se escribe un 0: dos centenas y siete unidades son 207.', 'owl'),
+  show('place-value', { n: 207, blocks: 1 }, 'Descomponer es decir cuánto vale cada cifra: 207 son 200 más 7.'),
   tryIt('place-value', { n: 207, blocks: 1 }, '¡Otra! Descompón el número en sus casas.', { skills: ['num:place:expanded:999'] }),
 ])
 
@@ -36,20 +36,20 @@ export const c2Carry = lesson('c2-w2-carry', '¡Me llevo una!', [
 
 export const c2Borrow = lesson('c2-w4-borrow', 'Pedir ayuda a la vecina', [
   // One step to set the numbers and one step per column (units first).
-  show('borrow', { a: 52, b: 27 }, 'El número grande va arriba. Empezamos por las unidades: 2 − 7… ¡no se puede!', 'polarbear'),
-  show('borrow', { a: 52, b: 27 }, '¡Pide ayuda a la vecina! Las decenas te prestan 1 decena, que son 10 unidades. El 5 se convierte en 4 y el 2 en 12. Ahora sí: 12 − 7 = 5.', 'polarbear'),
-  show('borrow', { a: 52, b: 27 }, 'Decenas: 4 − 2 = 2. ¡52 − 27 = 25!'),
+  show('borrow', { a: 52, b: 27, byColumn: 1 }, 'El número grande va arriba. Empezamos por las unidades: 2 − 7… ¡no se puede!', 'polarbear'),
+  show('borrow', { a: 52, b: 27, byColumn: 1 }, '¡Pide ayuda a la vecina! Las decenas prestan 1 decena: 10 unidades. El 5 pasa a 4 y el 2 a 12. 12 − 7 = 5.', 'polarbear'),
+  show('borrow', { a: 52, b: 27, byColumn: 1 }, 'Decenas: 4 − 2 = 2. ¡52 − 27 = 25!'),
   tryIt('borrow', { a: 52, b: 27 }, '¡Te toca! Si arriba hay un número más pequeño, pide ayuda a la vecina.', { kinds: ['column-sub'], digits: 2, regroup: 'one' }),
   show('sub-check', { a: 52, b: 27 }, 'Ahora, la prueba mágica. ¿Cómo sabemos que una resta está bien hecha?'),
-  show('sub-check', { a: 52, b: 27 }, 'Para saber si está bien, sumamos el resultado y el número de abajo: 25 más 27 son 52, que es el de arriba. ¡Está bien!'),
+  show('sub-check', { a: 52, b: 27 }, 'Sumamos el resultado y el número de abajo: 25 más 27 son 52, el de arriba. ¡Está bien!'),
 ])
 
 export const c2Double = lesson('c2-w5-double', 'Dobles y mitades', [
   show('big-text', { text: '4 + 4 = 8' }, 'Octavio tiene 4 brazos a un lado y 4 al otro. 4 más 4 son 8. El doble de 4 es 8.', 'octopus'),
   show('big-text', { text: '6 + 6 = 12' }, 'El doble es sumar un número consigo mismo: el doble de 6 es 6 más 6, 12.'),
   show('big-text', { text: '12 = 6 + 6' }, 'La mitad es repartir en dos montones iguales: 12 en dos montones son 6 y 6. La mitad de 12 es 6.'),
-  show('big-text', { text: '40 + 6 = 46' }, 'Con dos cifras, el doble se hace por partes: 23 son 20 y 3. El doble de 20 es 40 y el doble de 3 es 6. 40 más 6 son 46.'),
-  show('big-text', { text: '5 + 2 = 7' }, 'La mitad también por partes: 14 son 10 y 4. La mitad de 10 es 5 y la mitad de 4 es 2. 5 más 2 son 7.'),
+  show('big-text', { text: '40 + 6 = 46' }, 'Con dos cifras, por partes: 23 son 20 y 3. El doble de 20 es 40 y el de 3 es 6. 40 más 6 son 46.'),
+  show('big-text', { text: '5 + 2 = 7' }, 'La mitad, por partes: 14 son 10 y 4. La mitad de 10 es 5 y la de 4 es 2. 5 más 2 son 7.'),
   tryIt('big-text', { text: 'Doble y mitad' }, '¡Te toca! Calcula el doble o la mitad, por partes.', { skills: ['mental:dobles', 'mental:mitades'] }),
 ])
 
@@ -57,7 +57,7 @@ export const c2Towers = lesson('c2-w8-towers', 'Torres de 3 y de 4', [
   show('groups', { groups: 4, perGroup: 3, emoji: '🧱' }, 'Cada torre del castillo tiene 3 pisos. 4 torres son 3 + 3 + 3 + 3 = 12 pisos.', 'queen'),
   show('groups', { groups: 4, perGroup: 3, emoji: '🧱' }, 'Más rápido: 4 × 3 = 12. ¡La tabla del 3 va de tres en tres!'),
   tryIt('groups', { groups: 4, perGroup: 3, emoji: '🧱' }, '¡Te toca! Usa la tabla del 3.', { kinds: ['fact-mul'], tables: [3], factorRange: [2, 9] }),
-  show('groups', { groups: 3, perGroup: 4, emoji: '🧱' }, 'Las torres altas tienen 4 pisos. La tabla del 4 es el doble de la del 2: 3 × 2 son 6, y el doble de 6 es 12. Así que 3 × 4 son 12.'),
+  show('groups', { groups: 3, perGroup: 4, emoji: '🧱' }, 'Torres de 4 pisos. El 4 es el doble de 2: 3 × 2 son 6, y el doble es 12. Así, 3 × 4 = 12.'),
   show('groups', { groups: 4, perGroup: 3, emoji: '🧱' }, 'Más rápido: 4 torres de 3 pisos es 4 × 3, que son 12.'),
   tryIt('groups', { groups: 3, perGroup: 4, emoji: '🧱' }, '¡Otra! Ahora con la tabla del 4.', { kinds: ['fact-mul'], tables: [4], factorRange: [2, 9] }),
 ])

@@ -64,8 +64,9 @@ function BorrowColumns({ params, phase, runLength, reduced, borrowFrom }: Borrow
   const st = stateOf({ phase, runLength })
   const width = plan.width
   // «Column by column» run: one intro step and then one step per column (units first), so the step k draws column k − 1
-  // with the borrowing it needed. The other runs follow the older script: rule, "no se puede", borrowing, results.
-  const byColumn = borrowFrom === 2 && runLength === width + 1
+  // with the borrowing it needed. It only runs when the steps ask for it (byColumn: 1), so an older script of the same
+  // length never changes meaning. The other runs follow the older script: rule, "no se puede", borrowing, results.
+  const byColumn = borrowFrom === 2 && numParam(params, 'byColumn', 0) === 1 && runLength === width + 1
   const colsDone = st === FINAL ? width : phase
   const snapIndex = byColumn
     ? plan.snapshotColumn.filter((c) => c < colsDone).length - 1

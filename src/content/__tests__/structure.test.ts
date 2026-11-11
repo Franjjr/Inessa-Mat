@@ -75,7 +75,7 @@ const VISUAL_PARAMS: Record<LessonVisualId, string[]> = {
 
 /** Params a lesson step may add to the documented ones (the visual draws a variant): the written galera, the table facts
     of the adventure map (not of the classes) and the base-ten blocks of the houses. */
-const OPTIONAL_PARAMS: Partial<Record<LessonVisualId, string[]>> = { galera: ['written'], 'known-facts': ['map'], 'place-value': ['blocks'] }
+const OPTIONAL_PARAMS: Partial<Record<LessonVisualId, string[]>> = { galera: ['written'], 'known-facts': ['map'], 'place-value': ['blocks'], 'nine-trick': ['only'], borrow: ['byColumn'] }
 
 function checkSelector(where: string, sel: SkillSelector) {
   const ctx = `${where}: ${JSON.stringify(sel)}`
@@ -492,10 +492,10 @@ describe('stories', () => {
 })
 
 describe('copy for early readers', () => {
-  it('story lines are short (≤ 20 words) and lesson steps too (≤ 40: a worked example needs a few short sentences)', () => {
+  it('story lines are short (≤ 20 words) and lesson steps too (≤ 30 tokens: a worked example needs a few short sentences, and the bubble of Lumi must hold them)', () => {
     for (const c of allCopy()) {
       if (c.type === 'line') expect(wordCount(c.text), `${c.where}: "${c.text}"`).toBeLessThanOrEqual(20)
-      if (c.type === 'step') expect(wordCount(c.text), `${c.where}: "${c.text}"`).toBeLessThanOrEqual(40)
+      if (c.type === 'step') expect(wordCount(c.text), `${c.where}: "${c.text}"`).toBeLessThanOrEqual(30)
     }
   })
 

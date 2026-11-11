@@ -59,4 +59,11 @@ describe('texts of the lessons', () => {
       expect(s.text, s.where).not.toMatch(/ {2}/)
     }
   })
+
+  it('every step fits the bubble of Lumi on a 1000 × 490 tablet: at most 120 characters and 28 words', () => {
+    for (const s of steps) {
+      expect(s.text.length, `${s.where} (${s.text.length} characters): "${s.text}"`).toBeLessThanOrEqual(120)
+      expect(s.text.split(/\s+/).length, `${s.where}: "${s.text}"`).toBeLessThanOrEqual(28)
+    }
+  })
 })

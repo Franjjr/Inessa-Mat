@@ -10,7 +10,7 @@ export const w2PlaceValue = lesson('w2-placevalue', 'Cada número en su casa', [
   show('place-value', { n: 2486 }, 'Empezando por la derecha: unidades, decenas, centenas y millares.'),
   show('place-value', { n: 2486 }, 'El 6 vale 6, el 8 vale 80, el 4 vale 400 y el 2 vale 2000.'),
   // A worked example of the addition before the child writes one: step 0 sets the numbers, then one column per step.
-  show('carry', add243, 'Para sumar 243 más 125, escribimos un número debajo del otro: unidades debajo de unidades, decenas debajo de decenas.', 'frog'),
+  show('carry', add243, 'Para sumar 243 más 125, ponemos un número debajo del otro: cada casa debajo de su casa.', 'frog'),
   show('carry', add243, 'Empezamos siempre por la derecha, por las unidades: 3 más 5 son 8. Escribimos el 8 abajo.', 'frog'),
   show('carry', add243, 'Ahora las decenas: 4 más 2 son 6.'),
   show('carry', add243, 'Y las centenas: 2 más 1 son 3. 243 más 125 son 368.'),
@@ -19,7 +19,7 @@ export const w2PlaceValue = lesson('w2-placevalue', 'Cada número en su casa', [
 
 export const w2Carry = lesson('w2-carry', '¡Me llevo una!', [
   show('carry', carry368, 'A veces una casa suma 10 o más. Pero en cada casa solo cabe una cifra. ¿Qué hacemos?', 'frog'),
-  show('carry', carry368, 'Unidades: 8 más 7 son 15. En la casa solo cabe una cifra: escribo el 5 y la decena que sobra me la llevo. La escribo pequeñita arriba, en las decenas.'),
+  show('carry', carry368, 'Unidades: 8 más 7 son 15. Solo cabe una cifra: escribo el 5 y me llevo la decena, pequeñita arriba.'),
   show('carry', carry368, 'Decenas: 6 más 5 son 11, y 1 que me llevaba, 12. Escribo el 2 y me llevo 1 a las centenas.'),
   show('carry', carry368, 'Centenas: 3 más 2 son 5, y 1 que me llevaba, 6. 368 más 257 son 625.'),
   show('carry', carry368, 'La llevada es como una mochila: escríbela pequeñita arriba. ¡Y no te olvides de sumarla!'),

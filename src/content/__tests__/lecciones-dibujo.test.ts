@@ -10,11 +10,14 @@ import { FINAL, stateOf } from '@/activities/lesson/visuals/types'
 import { computeRuns } from '@/activities/lesson/navigation'
 import type { LessonDef, LessonVisualId } from '@/types'
 import { c2Lessons } from '../c2/lessons'
+import { CLASSES } from '../classes'
 import { lessons } from '../lessons'
 
 afterEach(cleanup)
 
 const ALL: LessonDef[] = [...lessons, ...c2Lessons]
+/** The lessons of the classes are drawn with the same visuals, so they follow the same rules. */
+const WITH_CLASSES: LessonDef[] = [...ALL, ...CLASSES.map((c) => c.lesson)]
 
 function draw(visual: LessonVisualId, params: Record<string, number | string>, phase: number, runLength: number) {
   const Visual = LESSON_VISUALS[visual]
@@ -45,7 +48,7 @@ describe('stateOf: the last step of a run is the whole picture', () => {
 describe('the last step of every column run shows all the digits of the result', () => {
   it('carry, borrow, zero-borrow, sub-carry and column-mul: result complete, no empty box left', () => {
     let checked = 0
-    for (const l of ALL) {
+    for (const l of WITH_CLASSES) {
       for (const run of runsOf(l)) {
         const p = run.step.params as Record<string, number>
         const v = run.step.visual
@@ -85,7 +88,7 @@ describe('the last step of every column run shows all the digits of the result',
 
 describe('subtraction by columns, one column per step', () => {
   it('4352 − 1728: the intro shows no result and each step adds its column with the borrowing it needed', () => {
-    const params = { a: 4352, b: 1728 }
+    const params = { a: 4352, b: 1728, byColumn: 1 }
     const at = (phase: number) => draw('borrow', params, phase, 5)
     const digitsAt = [0, 1, 2, 3, 4].map((ph) => {
       const r = at(ph)
@@ -316,5 +319,54 @@ describe('the double chain and the division pictures', () => {
     const parts = draw('div-parts', { dividend: 84, divisor: 4 }, 3, 5)
     expect(parts.container.textContent).not.toContain('÷')
     parts.unmount()
+  })
+})
+
+describe('every galera of the lessons and the classes', () => {
+  it('no label writes a : b = c with a remainder and no «sobra», and none uses «÷»', () => {
+    let checked = 0
+    for (const l of WITH_CLASSES) {
+      for (const run of runsOf(l)) {
+        if (run.step.visual !== 'galera') continue
+        const r = draw('galera', run.step.params ?? {}, run.length - 1, run.length)
+        const work = r.queryByTestId('galera-work')
+        const labels = work ? [...work.children].map((n) => n.textContent ?? '') : []
+        for (const label of labels) {
+          expect(label, `${l.id}`).not.toContain('÷')
+          const m = label.match(/(\d+) : (\d+) = (\d+)(.*)/)
+          if (m && Number(m[1]) !== Number(m[2]) * Number(m[3])) expect(m[4], `${l.id}: ${label}`).toContain('sobra')
+        }
+        r.unmount()
+        checked++
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe('«Los trucos de Lumi»: the 9 shows ten times minus one, not the digits trick of world 6', () => {
+  it('the nine-trick step of w3-tricks draws 70 − 7 = 63 and never «6 + 3 = 9»', () => {
+    const step = lessons.find((x) => x.id === 'w3-tricks')!.steps.find((x) => x.visual === 'nine-trick')!
+    const r = draw('nine-trick', step.params ?? {}, 0, 1)
+    expect(r.container.textContent).toContain('70 − 7 = 63')
+    expect(r.container.textContent).not.toContain('6 + 3 = 9')
+    expect(r.container.textContent).not.toMatch(/\b6\b.*\b3\b.*6 \+ 3/)
+    r.unmount()
+    // the lesson of world 6 does teach the digits trick
+    const full = draw('nine-trick', { a: 7 }, 0, 1)
+    expect(full.container.textContent).toContain('6 + 3 = 9')
+    full.unmount()
+  })
+})
+
+describe('the column script of the subtraction is explicit', () => {
+  it('a run of width + 1 steps without byColumn keeps the older script (no column-by-column drawing)', () => {
+    const withFlag = draw('borrow', { a: 52, b: 27, byColumn: 1 }, 1, 3)
+    const without = draw('borrow', { a: 52, b: 27 }, 1, 3)
+    // step 1 of the column script already shows the units result (5); the older script does not yet
+    expect(resultDigits(withFlag.container)).toBe('5')
+    expect(resultDigits(without.container)).not.toBe('5')
+    withFlag.unmount()
+    without.unmount()
   })
 })

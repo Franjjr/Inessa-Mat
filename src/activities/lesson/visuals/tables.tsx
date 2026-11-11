@@ -221,6 +221,16 @@ export function NineTrickVisual({ params, phase, runLength, reduced }: VisualPro
   const first = a - 1
   const second = 9 - first
   const product = 9 * a
+  // only: 'ten' draws just the «ten times, minus one» way (the digits trick of the 9 is taught later, in world 6).
+  if (params?.only === 'ten') {
+    return (
+      <div className={s.stage}>
+        <p className={`${s.eq} ${s.eqBig}`}>{a} × 9 = {st === FINAL || st >= 1 ? <span className={s.hl}>{product}</span> : '?'}</p>
+        <p className={s.eq}>{a} × 10 = {a * 10}</p>
+        {(st === FINAL || st >= 1) && <p className={s.eq}>{a * 10} − {a} = <span className={s.hl}>{product}</span></p>}
+      </div>
+    )
+  }
   return (
     <div className={s.stage}>
       <p className={`${s.eq} ${s.eqBig}`}>{a} × 9 = {st >= 1 ? <span className={s.hl}>{product}</span> : '?'}</p>

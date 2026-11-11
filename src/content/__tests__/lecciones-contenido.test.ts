@@ -45,9 +45,12 @@ describe('the ways of working are shown, not chosen', () => {
 describe('«Dos formas de restar del cole»', () => {
   const l = lessonOf('w4-four-ways')
 
-  it('shows the two ways with the same example, 352 − 127, and a try of each', () => {
+  it('shows the two ways with the same example, 352 − 127, and one try with the way of the family', () => {
     expect(l.steps[0].text).toContain('352 − 127')
-    expect(triesOf(l).map((s) => s.method)).toEqual(['borrow', 'carry'])
+    // one try, no fixed method: the try slot reads ChildSettings.subMethod, so nobody is forced to do the other way
+    expect(triesOf(l)).toHaveLength(1)
+    expect(triesOf(l)[0].method).toBeUndefined()
+    expect(l.steps[l.steps.length - 1].interaction).toBe('try')
     expect(l.steps.some((s) => s.visual === 'sub-carry' && s.text.includes('Ponemos un 1 delante del 2'))).toBe(true)
   })
 
@@ -64,7 +67,7 @@ describe('«Dos formas de restar del cole»', () => {
     }
   })
 
-  it('is the last stop before the guardian of world 4 (the child can skip it)', () => {
+  it('is the last stop before the guardian of world 4 (the map has no optional stops yet: one try, never a forced method)', () => {
     const w4 = season1.worlds.find((w) => w.id === 'w4')!
     const ids = w4.nodes.map((n) => n.id)
     expect(ids[ids.length - 2]).toBe('lesson-four-ways')
@@ -80,7 +83,8 @@ describe('the galera', () => {
     const l = lessonOf('w8-div-ways')
     expect(l.title).toBe('Dos formas de hacer la galera')
     expect(l.steps.some((s) => s.interaction === 'choose')).toBe(false)
-    expect(triesOf(l).map((s) => s.divMethod)).toEqual(['galera', 'galera-short'])
+    expect(triesOf(l)).toHaveLength(1)
+    expect(triesOf(l)[0].divMethod).toBeUndefined()
   })
 
   it('«La casita de la división» has the written galera, the 17 : 5 with remainder and the check', () => {
@@ -154,14 +158,14 @@ describe('worked examples before the exercise', () => {
   })
 
   it('the lesson of the multiplying by pieces writes the 41 × 3 case with the 12 in front', () => {
-    expect(lessonOf('w7-split').steps.some((s) => s.text.includes('escribo el 12 entero delante: 123'))).toBe(true)
+    expect(lessonOf('w7-split').steps.some((s) => s.text.includes('escribo el 12 entero: 123'))).toBe(true)
   })
 
   it('the subtraction lessons do not show the compensation panel and finish with the check', () => {
     for (const id of ['w4-borrow', 'c2-w4-borrow']) {
       const l = lessonOf(id)
       expect(l.steps.some((s) => /Llevando: sumamos 10/.test(s.text) || /restáis «llevando»/.test(s.text)), id).toBe(false)
-      expect(l.steps[l.steps.length - 1].text, id).toContain('Para saber si está bien, sumamos el resultado y el número de abajo')
+      expect(l.steps[l.steps.length - 1].text, id).toContain('Sumamos el resultado y el número de abajo')
     }
   })
 })

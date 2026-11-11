@@ -141,7 +141,7 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
 })
 
 test.describe('Journey H: the lesson «Dos formas de hacer la galera»', () => {
-  test('the two ways of the galera are tried and the lesson does not ask for a favourite', async ({ page }) => {
+  test('the lesson shows the two ways of the galera, asks for one try and does not ask for a favourite', async ({ page }) => {
     test.setTimeout(180_000)
     await seedDemo(page)
     // World 8 is reached by the demo child: its earlier nodes are marked as done, as after a long journey.
@@ -179,21 +179,14 @@ test.describe('Journey H: the lesson «Dos formas de hacer la galera»', () => {
       }
       await settle(page, 400)
     }
-    // Each way has its own try step: the galera with the subtractions and the galera without them.
-    expect([...seen].sort()).toEqual(['galera', 'galera-short'])
+    // One try only, with the way the family picked in the settings: nobody has to do the other way.
+    expect(seen.size).toBe(1)
   })
 })
 
 /** On screen and enabled, without waiting for it to appear (isEnabled alone waits for the element). */
 async function ready(locator: Locator): Promise<boolean> {
   return (await locator.count()) > 0 && locator.first().isEnabled().catch(() => false)
-}
-
-/** Continues from a settled step: the lesson's own forward button, when there is one. */
-async function continueLesson(page: Page): Promise<void> {
-  const next = page.getByRole('button', { name: 'Siguiente ›' })
-  if (await ready(next)) await next.click()
-  await settle(page, 350)
 }
 
 /** A galera try step (with or without the subtractions): the quotient digits and the remainders, then Enter. */
@@ -220,38 +213,3 @@ async function solveGalera(page: Page): Promise<void> {
   await settle(page, 300)
 }
 
-/** A parts try step: each part's quotient, the total and the remainder. */
-async function solveParts(page: Page): Promise<void> {
-  const prompt = (await page.getByRole('region', { name: 'Repartir por partes' }).locator('p').first().textContent()) ?? ''
-  const m = prompt.match(/Reparte (\d+) entre (\d+)/)
-  if (!m) return
-  const n = Number(m[1])
-  const d = Number(m[2])
-  const quotients = partsQuotients(n, d)
-  for (let k = 0; k < quotients.length; k++) {
-    await fill(page, page.getByRole('textbox', { name: `cociente de la parte ${k + 1}` }), quotients[k])
-  }
-  await fill(page, page.getByRole('textbox', { name: 'cociente total' }), Math.floor(n / d))
-  await fill(page, page.getByRole('textbox', { name: 'resto' }), n % d)
-  await page.keyboard.press('Enter')
-  await settle(page, 600)
-}
-
-/** A climb try step: the multiples of the divisor, one row at a time, until one reaches the dividend; then the rest. */
-async function solveClimb(page: Page): Promise<void> {
-  const prompt = (await page.getByRole('region', { name: 'Multiplicar hacia arriba' }).locator('p').first().textContent()) ?? ''
-  const m = prompt.match(/por (\d+) da (\d+)/)
-  if (!m) return
-  const d = Number(m[1])
-  const n = Number(m[2])
-  for (let k = 1; k < 20; k++) {
-    const product = d * k
-    await fill(page, page.getByRole('textbox', { name: `producto de ${d} por ${k}` }), product)
-    await page.getByRole('button', { name: 'Fila lista' }).click()
-    await settle(page, 150)
-    if (product >= n) break
-  }
-  await fill(page, page.getByRole('textbox', { name: 'resto' }), n % d)
-  await page.keyboard.press('Enter')
-  await settle(page, 600)
-}

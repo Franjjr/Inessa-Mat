@@ -25,10 +25,10 @@ export const w3Rhyme = lesson('w3-rhyme', 'Truco 2: los pares que riman', [
 export const w3Tricks = lesson('w3-tricks', 'Los trucos de Lumi', [
   show('easy-tables', {}, 'Ya conoces varios trucos para las tablas. Vamos a repasarlos uno a uno.'),
   show('double-chain', { start: 3, steps: 1 }, 'El doble, para la tabla del 2: 2 × 3 es 3 más 3. Son 6.'),
-  show('double-chain', { start: 7, steps: 2 }, 'Doble y otra vez doble, para la tabla del 4: el doble de 7 es 14, y el doble de 14 es 28. Así que 4 × 7 son 28.'),
-  show('easy-tables', {}, 'La mitad del 10, para la tabla del 5: 10 × 8 son 80. La mitad de 80 es 40. Así que 5 × 8 son 40.'),
-  show('nine-trick', { a: 7 }, 'Diez menos una vez, para la tabla del 9: 10 × 7 son 70. Le quitas un 7 y quedan 63. Así que 9 × 7 son 63.'),
-  show('five-plus-one', { b: 7 }, 'El 5 y uno más, para la tabla del 6: 6 × 7 es 5 × 7, que son 35, y un 7 más: 42.'),
+  show('double-chain', { start: 7, steps: 2 }, 'Doble del doble, para el 4: el doble de 7 es 14, y el doble de 14 es 28. Así, 4 × 7 = 28.'),
+  show('easy-tables', {}, 'La mitad del 10, para el 5: 10 × 8 son 80. La mitad de 80 es 40. Así, 5 × 8 = 40.'),
+  show('nine-trick', { a: 7, only: 'ten' }, 'Diez menos una vez, para el 9: 10 × 7 son 70. Quitas un 7 y quedan 63. Así, 9 × 7 = 63.'),
+  show('five-plus-one', { b: 7 }, 'El 5 y uno más, para el 6: 6 × 7 es 5 × 7, que son 35, y un 7 más: 42.'),
   show('array-rotate', { rows: 3, cols: 7, emoji: '🍄' }, 'El espejo sirve para todas: 7 × 3 es lo mismo que 3 × 7. Si una no la sabes, dale la vuelta.'),
   tryIt('easy-tables', {}, '¡Te toca! Es de la tabla del 6. Usa el truco que prefieras.', { kinds: ['fact-mul'], tables: [6], factorRange: [2, 9] }),
 ])
