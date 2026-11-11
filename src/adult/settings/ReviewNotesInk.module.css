@@ -4,3 +4,4 @@
 .thumb { width: 28px; height: 28px; border-radius: 4px; flex: none; }
 .thumbBg { fill: var(--c-surface-2); }
 .thumbInk { fill: var(--c-ink); }
+.digits { white-space: nowrap; }

@@ -31,11 +31,13 @@ function InkThumb({ image, label }: { image: string; label: string }) {
   )
 }
 
-/** «la app leyó 47» with the ink of each digit, and whether one digit would have made it right. */
+/** «la app leyó 47» (the number as it was graded) with the ink of each digit read, and whether one digit would have
+ *  made it right. The digits are listed apart, in the order they are on screen: a carry or a partial row never
+ *  changes the number shown. */
 function InkReadingLine({ note }: { note: WrongAnswerNote }) {
   const ink = note.ink
   if (!ink?.digits.length) return null
-  const read = ink.digits.map((d) => d.digit).join('')
+  const digits = ink.digits.map((d) => d.digit).join(' ')
   return (
     <span className={inkCss.line}>
       <span className={inkCss.thumbs}>
@@ -43,9 +45,10 @@ function InkReadingLine({ note }: { note: WrongAnswerNote }) {
           d.image28 ? <InkThumb key={i} image={d.image28} label={`Trazo de la cifra ${i + 1}, leída como ${d.digit}`} /> : null)}
       </span>
       <span>
-        la app leyó {read}
+        la app leyó {note.given || '(nada)'}
         {ink.digits.some((d) => d.doubtful && !d.confirmed) ? ' (con dudas)' : ''}
         {ink.oneDigitFix ? ' · cambiando una cifra estaría bien' : ''}
+        <span className={inkCss.digits}> · cifras escritas a mano: {digits}</span>
       </span>
     </span>
   )

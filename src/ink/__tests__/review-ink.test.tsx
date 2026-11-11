@@ -66,4 +66,16 @@ describe('ReviewNotesCard · el trazo junto a «la app leyó 47»', () => {
     expect(screen.getByRole('img', { name: 'Trazo de la cifra 1, leída como 4' })).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'Trazo de la cifra 2, leída como 7' })).toBeInTheDocument()
   })
+
+  it('enseña el número tal como se calificó y las cifras leídas aparte', async () => {
+    const ink = inkOf()
+    data.notes = [{
+      seq: 2, at: new Date(2026, 10, 11, 9, 5).toISOString(), appVersion: '1', skill: 'add:3:1', kind: 'column-add', errorType: 'fact',
+      given: '625', expected: '626', inputMode: 'pen',
+      ink: { ...ink, kind: 'column-add', given: '625', oneDigitFix: false, digits: [6, 2, 5].map((digit) => ({ ...ink.digits[0], digit })) },
+    }]
+    render(<ReviewNotesCard />)
+    await waitFor(() => expect(screen.getByText(/la app leyó 625/)).toBeInTheDocument())
+    expect(screen.getByText(/cifras escritas a mano: 6 2 5/)).toBeInTheDocument()
+  })
 })
