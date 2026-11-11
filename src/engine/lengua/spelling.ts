@@ -283,7 +283,7 @@ const GAP_TEXT: Record<Group, [string, string]> = {
   ],
   'mp-mb': [
     'Di la palabra despacio y fíjate en la consonante que suena dentro del hueco: ¿es p o es b?',
-    'Antes de p y de b se escribe siempre m, nunca n. Di la palabra despacio y comprueba qué consonante suena después.',
+    'Antes de p y de b se escribe siempre m, nunca n. Di la palabra despacio: ¿qué consonante suena después del hueco?',
   ],
   mayusculas: [
     'Los nombres de personas y de lugares empiezan con mayúscula. ¿La letra que falta es la primera de uno de ellos?',
