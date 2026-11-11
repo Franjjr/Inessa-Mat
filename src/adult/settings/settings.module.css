@@ -8,3 +8,5 @@
 .linkText { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); overflow-wrap: anywhere; color: var(--c-ink); background: var(--c-surface); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); }
 .pinGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--sp-4); }
 @media (max-width: 560px) { .kv { grid-template-columns: minmax(0, 1fr); } }
+.reviewList { margin: 0; padding: 0 0 0 var(--sp-5); max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-sm); line-height: 1.45; color: var(--c-ink); overflow-wrap: anywhere; }
+.reviewItem { padding-left: var(--sp-1); }

@@ -12,6 +12,7 @@ import { TextField } from '../shared/Field'
 import { errorMessage } from '../shared/messages'
 import { copyText } from '../shared/clipboard'
 import { validatePin } from '../auth/validation'
+import { ReviewNotesCard } from './ReviewNotesCard'
 import { lockAdultArea } from '../gate/AdultGate'
 import { APP_VERSION, fetchServerVersion, hardRefresh, versionLabel } from '@/app/version'
 import s from './settings.module.css'
@@ -56,6 +57,8 @@ export default function SettingsScreen() {
       <SoundCard profiles={children} />
 
       <PinCard />
+
+      <ReviewNotesCard />
 
       <section className={adult.card} aria-labelledby="privacy-link-title">
         <h2 id="privacy-link-title" className={adult.subheading}>Privacidad</h2>

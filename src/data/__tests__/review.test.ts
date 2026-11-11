@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { AttemptRecord } from '@/types'
-import { recordAttempt, startSession, createChild } from '@/data'
+import { recordAttempt, startSession, createChild, deleteChild, getChild } from '@/data'
 import { db } from '../db'
 import { REVIEW_LIMIT, clearWrongAnswerNotes, listWrongAnswerNotes, noteWrongAnswer } from '../review'
 import { isErasedChild } from '../erasure'
@@ -70,6 +70,23 @@ describe('review log of wrong answers (this device only)', () => {
     await noteWrongAnswer(attempt('c1'))
     await clearWrongAnswerNotes()
     expect(await listWrongAnswerNotes()).toEqual([])
+  })
+
+  it('deleting a child also clears the log: the notes carry no child id, so they cannot be told apart', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await noteWrongAnswer(attempt(c.id))
+    await deleteChild(c.id)
+    expect(await listWrongAnswerNotes()).toEqual([])
+  })
+
+  it('deleting one of two children clears the notes of both, on purpose (no child id to tell them apart)', async () => {
+    const a = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    const b = await createChild({ nickname: 'Luis', gender: 'm', companion: LUNA })
+    await noteWrongAnswer(attempt(a.id, { given: '48' }))
+    await noteWrongAnswer(attempt(b.id, { given: '41' }))
+    await deleteChild(a.id)
+    expect(await listWrongAnswerNotes()).toEqual([])
+    expect(await getChild(b.id)).toBeTruthy()
   })
 
   it('an erased child leaves no note on this device', async () => {
