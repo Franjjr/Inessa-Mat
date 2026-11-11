@@ -16,10 +16,19 @@ import s from './MethodSketch.module.css'
 export const SUB_QUESTION_GRADE = 2
 export const DIV_QUESTION_GRADE = 3
 
+/** The child's school year: the one the grown-up gave or, without it («No lo sé»), the usual one for the birth year in
+    Spain (1.º the school year the child turns 6; the school year starts in September). 0 when neither is known. */
+export function schoolGradeOf(child: Pick<ChildProfile, 'grade' | 'birthYear'>, now: Date = new Date()): number {
+  if (child.grade !== undefined && child.grade !== null) return child.grade
+  if (!child.birthYear) return 0
+  const schoolYear = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1
+  return Math.max(0, schoolYear - child.birthYear - 5)
+}
+
 /** The grown-up still has to say how the child's school subtracts (only from 2.º; older profiles have no answer). */
-export function needsSchoolMethod(child: Pick<ChildProfile, 'grade' | 'settings'> | null | undefined): boolean {
+export function needsSchoolMethod(child: Pick<ChildProfile, 'grade' | 'birthYear' | 'settings'> | null | undefined, now: Date = new Date()): boolean {
   if (!child) return false
-  return (child.grade ?? 0) >= SUB_QUESTION_GRADE && child.settings?.schoolMethodAsked !== true
+  return schoolGradeOf(child, now) >= SUB_QUESTION_GRADE && child.settings?.schoolMethodAsked !== true
 }
 
 type Note = 'other' | 'unknown' | null
@@ -32,7 +41,7 @@ const DIV_NOTE = (name: string) => `De momento, ${name} dividirá escribiendo la
 
 export function SchoolMethodQuestion({ child }: { child: ChildProfile }) {
   const name = child.nickname
-  const askDiv = (child.grade ?? 0) >= DIV_QUESTION_GRADE
+  const askDiv = schoolGradeOf(child) >= DIV_QUESTION_GRADE
   const [sub, setSub] = useState<SubMethod | null>(null)
   const [subNote, setSubNote] = useState<Note>(null)
   const [div, setDiv] = useState<DivMethod | null>(null)
