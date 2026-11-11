@@ -105,6 +105,22 @@
   color: var(--c-ink-soft);
 }
 
+/* How well the child knows this table (Dominada / En camino / Por aprender): only the good news is loud. */
+.tableStatus {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: var(--r-pill, 999px);
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  background: var(--c-line);
+  color: var(--c-ink-soft);
+}
+
+.tableStatus[data-status='dominada'] {
+  background: var(--c-magic);
+  color: var(--c-surface);
+}
+
 .games {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
