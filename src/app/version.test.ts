@@ -4,7 +4,7 @@ describe('isSafeToReload', () => {
   it('never reloads in the middle of an exercise, a session, a lesson or onboarding', () => {
     for (const p of ['/play/w/w1/groups', '/play/w/w3/wheel', '/play/sesion', '/play/lengua', '/play/clase/mul-2',
       '/play/prueba', '/play/prueba-lengua', '/play/ingles', '/play/prueba-ingles', '/play/review', '/play/caligrafia', '/kids/new',
-      '/play/free', '/play/cancion/3', '/play/w/w1/groups']) {
+      '/play/free', '/play/cancion/6']) {
       expect(isSafeToReload(p), p).toBe(false)
     }
   })
