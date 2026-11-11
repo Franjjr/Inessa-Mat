@@ -24,7 +24,7 @@ describe('SoundSwitch · the child can turn the sound and the voice off and on',
 
   it('is visible with its state written out, and turns sound and voice off together', () => {
     state.child = kid({ sound: true, voice: true })
-    render(<SoundSwitch floating />)
+    render(<SoundSwitch />)
     const button = screen.getByRole('button', { name: /Apagar el sonido/ })
     expect(button).toHaveTextContent('Sonido')
     fireEvent.click(button)

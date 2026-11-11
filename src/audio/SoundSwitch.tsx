@@ -1,12 +1,13 @@
-/* Child-facing sound switch: sound and voice together, always visible on the child's screens, so a child who cannot
-   hear, or cannot read the notice «Activa el sonido», can find the control without the adult settings. The change is
+/* Child-facing sound switch: sound and voice together, shown inside the notices «Activa el sonido» so the child can
+   turn the sound on right there, without the adult settings. It is never a floating button over the screens: a fixed
+   pill in a corner covered the buttons under it (seen in the e2e: «Ahora no» could not be tapped). The change is
    saved on the active child's profile and applied by the app (App.tsx) as for any other setting. */
 import clsx from 'clsx'
 import { updateChild, useActiveChild } from '@/data'
 import { unlockAudio } from './index'
 import s from './SoundSwitch.module.css'
 
-export function SoundSwitch({ floating = false, className }: { floating?: boolean; className?: string }) {
+export function SoundSwitch({ className }: { className?: string }) {
   const { child } = useActiveChild()
   if (!child) return null
   const on = child.settings.sound
@@ -21,7 +22,7 @@ export function SoundSwitch({ floating = false, className }: { floating?: boolea
   return (
     <button
       type="button"
-      className={clsx(s.switch, floating && s.floating, !on && s.off, className)}
+      className={clsx(s.switch, !on && s.off, className)}
       onClick={toggle}
       aria-label={on ? 'Apagar el sonido y la voz' : 'Activar el sonido y la voz'}
     >
