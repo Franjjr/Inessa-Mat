@@ -124,6 +124,34 @@ describe('OnboardingScreen', () => {
     input.mode = 'touch'
   })
 
+  it('the optional questions (colour, companion gender) can be skipped with «Luego»: the defaults stay', async () => {
+    const user = userEvent.setup()
+    render(
+      <MemoryRouter initialEntries={['/kids/new']}>
+        <Routes>
+          <Route path="/kids/new" element={<OnboardingScreen />} />
+          <Route path="/play" element={<div>HOME</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    await user.type(await screen.findByLabelText('Tu nombre'), 'Lucas')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
+    await user.click(await screen.findByRole('button', { name: '2º de Primaria' }))
+    await user.click(await screen.findByRole('button', { name: /Gatito/ }))
+    await user.click(await screen.findByRole('button', { name: 'Luego' }))
+    await user.type(await screen.findByLabelText('Nombre del compañero'), 'Bigotes')
+    await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
+    await user.click(await screen.findByRole('button', { name: 'Luego' }))
+    await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
+    await user.click(await screen.findByRole('button', { name: 'Calibración simulada' }))
+    await user.click(await screen.findByRole('button', { name: 'Saltar' }))
+    expect(await screen.findByText('HOME')).toBeInTheDocument()
+
+    const created = (await listChildren()).filter((c) => c.nickname === 'Lucas').at(-1)
+    expect(created!.companion).toMatchObject({ species: 'cat', name: 'Bigotes', gender: 'm', colorway: 'default' })
+  })
+
   it('reads the review question without a gendered adjective (girl and female companion)', async () => {
     const user = userEvent.setup()
     render(

@@ -145,11 +145,20 @@ export function Pill({ children, style }: { children: ReactNode; style?: CSSProp
 }
 
 /** Loading state. The label is visible (children are not expected to read a bare spinner) and announced once. */
+/** After this long, a wait says that nothing loaded and offers another try (a load can stall without any error). */
+export const SPINNER_SLOW_MS = 8000
+
 export function Spinner({ label = 'Cargando…' }: { label?: string }) {
+  const [slow, setSlow] = useState(false)
+  useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), SPINNER_SLOW_MS)
+    return () => window.clearTimeout(timer)
+  }, [])
   return (
     <div className={s.center} role="status" aria-live="polite">
       <div className={s.spinner} aria-hidden />
-      <span className={s.spinnerLabel}>{label}</span>
+      <span className={s.spinnerLabel}>{slow ? 'Algo no ha cargado.' : label}</span>
+      {slow && <Button variant="secondary" onClick={() => window.location.reload()}>Probar otra vez</Button>}
     </div>
   )
 }
