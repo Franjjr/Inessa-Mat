@@ -138,7 +138,8 @@ export async function updateChild(id: string, patch: Partial<Omit<ChildProfile, 
   })
 }
 
-/** Soft delete (synced as a tombstone). Local learning data of the child is removed from this device.
+/** Soft delete (synced as a tombstone). Local learning data of the child is removed from this device, and so is the
+ *  device's log of wrong answers (it cannot be split by child).
  *  Signed-in: only owners/admins of the child's organization may delete. */
 export async function deleteChild(id: string): Promise<void> {
   const auth = getAuth()
@@ -150,7 +151,7 @@ export async function deleteChild(id: string): Promise<void> {
       throw new DataError('permission', 'Solo el responsable de la familia o del colegio puede borrar perfiles.')
     }
   }
-  await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta], async () => {
+  await db.transaction('rw', [db.children, db.progress, db.mastery, db.attempts, db.sessions, db.rewards, db.inkSamples, db.outbox, db.meta, db.reviewNotes], async () => {
     // Drop unsent learning data of this child: it is being deleted anyway.
     await db.outbox.where('childId').equals(id).and((e) => e.table !== 'children').delete()
     await Promise.all([
@@ -161,6 +162,8 @@ export async function deleteChild(id: string): Promise<void> {
       db.rewards.where('childId').equals(id).delete(),
       db.inkSamples.where('childId').equals(id).delete(),
     ])
+    // The wrong-answer log has no child id, so it cannot be cut down to this child: it goes with the profile (as in erasure.ts).
+    await db.reviewNotes.clear()
     if (cur.orgId === null) {
       // Never synced: nothing to tell the server, remove it completely.
       await db.children.delete(id)

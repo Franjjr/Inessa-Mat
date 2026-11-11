@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { AttemptRecord } from '@/types'
-import { recordAttempt, startSession, createChild } from '@/data'
+import { recordAttempt, startSession, createChild, deleteChild } from '@/data'
 import { db } from '../db'
 import { REVIEW_LIMIT, clearWrongAnswerNotes, listWrongAnswerNotes, noteWrongAnswer } from '../review'
 import { isErasedChild } from '../erasure'
@@ -69,6 +69,13 @@ describe('review log of wrong answers (this device only)', () => {
   it('can be cleared', async () => {
     await noteWrongAnswer(attempt('c1'))
     await clearWrongAnswerNotes()
+    expect(await listWrongAnswerNotes()).toEqual([])
+  })
+
+  it('deleting a child also clears the log: the notes carry no child id, so they cannot be told apart', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await noteWrongAnswer(attempt(c.id))
+    await deleteChild(c.id)
     expect(await listWrongAnswerNotes()).toEqual([])
   })
 
