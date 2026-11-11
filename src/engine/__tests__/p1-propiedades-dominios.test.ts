@@ -710,6 +710,29 @@ describe('geometría, 21 operaciones (auditoría p1-medida-problemas H9, H21; P4
       }
     }
   })
+
+  it('las pistas de geometría no gritan: ninguna palabra en mayúsculas (la voz podría deletrearla)', () => {
+    for (const op of CLASSIFY) {
+      for (const ex of of(sample(`geo:${op}`, 10, 4), 'shape-choice')) {
+        for (const h of hintsFor(ex)) expect(h.text, `${op}`).not.toMatch(/[A-ZÁÉÍÓÚÑ]{3,}/)
+      }
+    }
+  })
+
+  it('la pista 2 de cada clasificación tiene frases cortas (como mucho 14 palabras cada una)', () => {
+    for (const op of CLASSIFY) {
+      for (const ex of of(sample(`geo:${op}`, 10, 4), 'shape-choice')) {
+        for (const h of [hintsFor(ex)[1]]) {
+          for (const sentence of h.text.split(/(?<=[.?!])\s+/)) expect(sentence.split(/\s+/).length, `${op}: ${sentence}`).toBeLessThanOrEqual(14)
+        }
+      }
+    }
+  })
+
+  it('la pista 2 de las rectas explica la tercera opción: «se cortan torcidas»', () => {
+    const ex = of(sample('geo:line:rel', 5, 3), 'shape-choice')[0]
+    expect(hintsFor(ex)[1].text).toBe('Si nunca se tocan, son «paralelas». Si se cortan como la esquina del papel, son «perpendiculares». Si se cortan torcidas, es la otra: «se cortan sin formar ángulo recto».')
+  })
 })
 
 // ---------------------------------------------------------------- medida
@@ -731,10 +754,12 @@ describe('medida (P4-18, P4-19, P3PE-15)', () => {
     report('medida: libro o malas', misses, measures.length)
   })
 
-  it('pistas de peso y capacidad sin «coche» ni «tira»; ninguna con «cuántos saltos»', () => {
+  it('pistas de peso y capacidad sin «coche» ni «tira» ni «patatas»; ninguna con «cuántos saltos»', () => {
     for (const ex of measures) {
       const hs = hintsFor(ex).map((h) => h.text).join(' ')
       if (ex.mode !== 'ruler' && 'dimension' in ex && ex.dimension !== 'length') expect(hs, ex.id).not.toMatch(/coche|tira/)
+      // «Una bolsa de patatas» is, for a child, the 150 g bag of crisps: a wrong picture of a kilo.
+      expect(hs, ex.id).not.toMatch(/patatas/)
       expect(hs, ex.id).not.toMatch(/cuántos saltos/)
     }
   })

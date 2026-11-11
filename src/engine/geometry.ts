@@ -194,7 +194,7 @@ export function genLineType(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué tipo de línea es?', figures: [figure], options, answer,
     hints: [
       'Mira si la línea tiene esquinas, si se dobla o si va siempre derecha.',
-      'Si va siempre derecha, es RECTA. Si se dobla sin esquinas, es CURVA. Si tiene esquinas y trozos rectos, es POLIGONAL.',
+      'Si va siempre derecha, es «recta». Si se dobla sin esquinas, es «curva». Si tiene esquinas y trozos rectos, es «poligonal».',
       'Si no se dobla nunca, va derecha. Si se dobla sin esquinas, es redondeada. Si tiene esquinas y trozos rectos, está hecha de rectas unidas.',
     ],
   }
@@ -230,7 +230,7 @@ export function genLineRelation(rng: Rng): ShapeChoiceExercise {
     question: '¿Cómo son estas dos rectas?', figures: [figure], options, answer,
     hints: [
       'Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?',
-      `Si nunca se tocan, son PARALELAS. Si se cortan formando una esquina como la del papel, son PERPENDICULARES. Si se cortan de otra forma, ${LINE_REL_OTHER.toUpperCase()}.`,
+      'Si nunca se tocan, son «paralelas». Si se cortan como la esquina del papel, son «perpendiculares». Si se cortan torcidas, es la otra: «se cortan sin formar ángulo recto».',
       'Si nunca se tocan y siempre están a la misma distancia, no hay cruce. Si se tocan de otra forma, la cruz está torcida.',
     ],
   }
@@ -304,7 +304,7 @@ export function genCircle(rng: Rng): ShapeChoiceExercise {
     question: '¿Es un círculo o una circunferencia?', figures: [figure], options, answer,
     hints: [
       'Mira si la figura está pintada por dentro o si solo tiene la línea del borde.',
-      'Si solo se ve la línea que rodea, es una CIRCUNFERENCIA. Si está pintado por dentro, es un CÍRCULO.',
+      'Si solo se ve la línea que rodea, es una «circunferencia». Si está pintada por dentro, es un «círculo».',
       'Si solo se ve la línea que rodea la figura, es el borde; si la superficie de dentro está pintada, es toda la figura con su borde.',
     ],
   }
@@ -394,7 +394,7 @@ export function genLineKind(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué es esta línea?', figures: [figure], options, answer,
     hints: [
       'Mira los dos extremos de la línea: ¿acaban en un punto, en una flecha o en las dos cosas?',
-      'Flechas en los dos extremos: es una RECTA. Un punto y una flecha: es una SEMIRRECTA. Un punto en cada extremo: es un SEGMENTO.',
+      'Flechas en los dos extremos: es una «recta». Un punto y una flecha: es una «semirrecta». Un punto en cada extremo: es un «segmento».',
       example,
     ],
   }
@@ -417,7 +417,7 @@ export function genAngleClass(rng: Rng): ShapeChoiceExercise {
     question: '¿Este ángulo es agudo, recto u obtuso?', figures: [figure], options, answer,
     hints: [
       'Compara el ángulo con la esquina de una hoja de papel: ¿encaja justo, se abre más o se cierra más?',
-      'Si se abre más que la esquina del papel, es OBTUSO. Si se abre menos, es AGUDO. Si encaja justo, es RECTO.',
+      'Si se abre más que la esquina del papel, es «obtuso». Si se abre menos, es «agudo». Si encaja justo, es «recto».',
       example,
     ],
   }
@@ -458,7 +458,7 @@ export function genTriSides(rng: Rng): ShapeChoiceExercise {
     question: '¿Cómo son los lados de este triángulo?', figures: [figure], options, answer,
     hints: [
       'Lee las tres medidas escritas en el triángulo, una a una.',
-      'Si los tres lados miden lo mismo, es EQUILÁTERO. Si solo dos miden lo mismo, es ISÓSCELES. Si los tres son distintos, es ESCALENO.',
+      'Si los tres lados miden lo mismo, es «equilátero». Si solo dos miden lo mismo, es «isósceles». Si los tres son distintos, es «escaleno».',
       kind === 'equilátero' ? 'Ejemplo: 3 cm, 5 cm y 6 cm: ninguna medida se repite.' : 'Ejemplo: 4 cm, 4 cm y 4 cm: las tres medidas coinciden.',
     ],
   }
@@ -493,7 +493,7 @@ export function genTriAngles(rng: Rng): ShapeChoiceExercise {
       question: '¿Cómo son los ángulos de este triángulo?', figures: [figure], options, answer,
       hints: [
         'Compara cada esquina con la esquina de una hoja de papel: ¿encaja justo, se abre más o se cierra más?',
-        'Si las tres esquinas se cierran más que la del papel, es ACUTÁNGULO. Si una encaja justo en ella, es RECTÁNGULO. Si una se abre más, es OBTUSÁNGULO.',
+        'Si las tres esquinas se cierran más que la del papel, es «acutángulo». Si una encaja justo en ella, es «rectángulo». Si una se abre más, es «obtusángulo».',
         example,
       ],
     }
@@ -558,7 +558,7 @@ export function genQuadName(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué cuadrilátero es?', figures: [figure], options, answer,
     hints: [
       'Mira los lados: ¿son todos iguales? ¿Hay dos pares de lados que van en la misma dirección?',
-      'Lados iguales y esquinas como la del papel: CUADRADO. Esquinas como la del papel y dos lados largos y dos cortos: RECTÁNGULO. Lados iguales sin esas esquinas: ROMBO. Dos pares de lados paralelos, sin esas esquinas y con lados distintos: ROMBOIDE. Solo un par de lados paralelos: TRAPECIO.',
+      '«Cuadrado»: lados iguales y esquinas como la del papel. «Rectángulo»: esas esquinas, con lados largos y cortos. «Rombo»: lados iguales y esquinas torcidas. «Romboide»: un rectángulo empujado, con esquinas torcidas. «Trapecio»: solo dos lados paralelos.',
       QUAD_EXAMPLE[kind],
     ],
   }
@@ -585,7 +585,7 @@ export function genCircleParts(rng: Rng): ShapeChoiceExercise {
     question: '¿Qué es la línea roja?', figures: [figure], options, answer,
     hints: [
       'Busca el centro del círculo, el punto del medio. ¿La línea roja llega hasta él?',
-      `Del centro al borde: RADIO. De borde a borde pasando por el centro: DIÁMETRO. De borde a borde sin pasar por el centro: ${CHORD.toUpperCase()}. Un trozo de la línea redonda: ARCO.`,
+      `Del centro al borde: «radio». De borde a borde por el centro: «diámetro». De borde a borde por otro sitio: «${CHORD}». Un trozo de la línea redonda: «arco».`,
       example,
     ],
   }

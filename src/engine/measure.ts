@@ -325,7 +325,7 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): 
 /** The last hint of «¿qué unidad?», one per magnitude: something the child has held of each unit. */
 const UNIT_STEP: Record<MeasureDimension, (object: string) => string> = {
   length: (object) => `Imagina ${object} y compara: ¿cabe en la mano, en la mesa o hay que ir en coche?`,
-  mass: (object) => `Imagina ${object}: ¿pesa como un caramelo (gramos) o como una bolsa de patatas (kilos)?`,
+  mass: (object) => `Imagina ${object}: ¿pesa como un caramelo (gramos) o como un paquete de arroz de un kilo (kilos)?`,
   capacity: (object) => `Imagina ${object}: ¿es como una cucharada (mililitros) o como una botella grande (litros)?`,
 }
 
