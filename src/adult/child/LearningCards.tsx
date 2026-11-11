@@ -6,34 +6,59 @@
    Each section reads only its subject's rows. The cards are pure (fixed data in the gallery); the sections read the
    data and offer the test again. A failing read shows inside the section and never takes the whole report down. */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { getMastery, listAttempts, listSessions, updateProgress } from '@/data'
+import { getMastery, listAttempts, listPlacementAttempts, listSessions, updateProgress } from '@/data'
 import { syllabusFor, syllabusForGrade } from '@/content/syllabus'
 import { STORY_READINGS } from '@/content/lengua/stories'
 import { handwritingReport } from '@/engine/caligrafia/report'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
-  attemptsOf, describeError, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
+  ENGLISH_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_ACTIVITY, PLACEMENT_ACTIVITY,
+  attemptsOf, describeError, describeSkillShort, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
   syllabusReport, topicNeeds, ENGLISH_PLACEMENT_COUNT, ENGLISH_SKILL_TEXT, ENGLISH_THEMES, LENGUA_PLACEMENT_COUNT, PLACEMENT_COUNT, THEME_NAME,
   type EnglishWordsReport, type ErrorReport, type LessonSubject, type PlacementRun, type RecallReport, type SyllabusReport,
   type TopicNeeds, type TopicState,
 } from '@/engine'
+import { speedReport, type SpeedReport } from '@/engine/report'
 import type { AttemptRecord, MasteryMap, ProgressState, ReadingDef, SessionRecord } from '@/types'
 import { Button, toast } from '@/ui'
 import { errorMessage } from '../shared/messages'
 import { SpeakingWordsCard } from './SpeakingWordsCard'
 import { formatDate, formatMinutes, formatPercent, plural } from '../shared/format'
+import { tableNoun } from '../shared/reading'
+import { weeklyTrend, type WeekTrend } from './trend'
 import adult from '../shared/adult.module.css'
 import s from './child.module.css'
 
 /** Enough history for the recall check and every prueba inicial, read from this device. */
 const ATTEMPT_LIMIT = 5000
 const DAY_MS = 24 * 60 * 60 * 1000
+/** A prueba inicial is repeated every three or four weeks (docs/curriculum/PLAN_DOCENTE.md): the adult is reminded after three. */
+const TEST_EVERY_DAYS = 28
+const TEST_STALE_DAYS = 21
 
 /** Element ids are unique on the page: Lengua's cards carry a `lengua-` prefix, English's an `ingles-` one, maths keeps the original ids. */
 const ID_PREFIX: Record<LessonSubject, string> = { math: '', language: 'lengua-', english: 'ingles-' }
 const idOf = (subject: LessonSubject, name: string) => `${ID_PREFIX[subject]}${name}`
 
-export interface LearningData { mastery: MasteryMap; attempts: AttemptRecord[]; sessions: SessionRecord[] }
+export interface LearningData {
+  mastery: MasteryMap
+  /** Every attempt but the handwriting ones, so a crowd of pen tries cannot push the placement tests out of the window. */
+  attempts: AttemptRecord[]
+  sessions: SessionRecord[]
+  /** The handwriting (Caligrafía) attempts only. Optional: when missing, Caligrafía reads `attempts`. */
+  handwriting?: AttemptRecord[]
+}
+
+/** The placement tests of the three subjects: they are read whole, so an old prueba inicial is still there. */
+const PLACEMENT_ACTIVITIES = [PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_ACTIVITY]
+
+/** The recent attempts plus the placement tests that fell out of that window, each attempt once, newest first. */
+export function withPlacements(recent: AttemptRecord[], placed: AttemptRecord[]): AttemptRecord[] {
+  const seen = new Set(recent.map((a) => a.id))
+  const extra = placed.filter((a) => !seen.has(a.id))
+  if (extra.length === 0) return recent
+  return [...recent, ...extra].sort((x, y) => (x.createdAt < y.createdAt ? 1 : x.createdAt > y.createdAt ? -1 : 0))
+}
 
 /** The mastery, the attempts (newest first) and the sessions of the last week, read from this device once for the whole
     report: both sections take this one read (`data`, `loadError`). */
@@ -45,8 +70,16 @@ export function useLearningData(childId: string, progressUpdatedAt?: string): { 
     let alive = true
     const since = new Date(Date.now() - 7 * DAY_MS).toISOString()
     Promise.resolve()
-      .then(() => Promise.all([getMastery(childId), listAttempts(childId, { limit: ATTEMPT_LIMIT }), listSessions(childId, { since })]))
-      .then(([mastery, attempts, sessions]) => { if (alive) setData({ mastery, attempts, sessions }) })
+      .then(() => Promise.all([
+        getMastery(childId),
+        listAttempts(childId, { limit: ATTEMPT_LIMIT, skipHandwriting: true }),
+        listSessions(childId, { since }),
+        listAttempts(childId, { limit: ATTEMPT_LIMIT }),
+        listPlacementAttempts(childId, PLACEMENT_ACTIVITIES),
+      ]))
+      .then(([mastery, recent, sessions, all, placed]) => {
+        if (alive) setData({ mastery, attempts: withPlacements(recent, placed), sessions, handwriting: all.filter((a) => a.skill.startsWith('calig:')) })
+      })
       .catch((e: unknown) => { if (alive) setError(errorMessage(e, 'No hemos podido leer lo que ha practicado.')) })
     return () => { alive = false }
   }, [childId, progressUpdatedAt])
@@ -99,6 +132,8 @@ export function LearningSection({ childId, childName, grade, progress, data, loa
       errors: errorReport(data.attempts, now),
       runs: placementRuns(data.attempts),
       recall: recallReport(data.attempts, now),
+      weeks: weeklyTrend(data.attempts, now),
+      speed: speedReport(data.mastery),
     }
   }, [data, grade])
 
@@ -110,6 +145,8 @@ export function LearningSection({ childId, childName, grade, progress, data, loa
   return (
     <>
       <TemarioCard report={reports.syllabus} needs={reports.needs} childName={childName} />
+      <SpeedCard speed={reports.speed} childName={childName} />
+      <WeeklyTrendCard weeks={reports.weeks} childName={childName} />
       <MistakesCard report={reports.errors} childName={childName} />
       <TestsCard
         runs={reports.runs}
@@ -261,7 +298,7 @@ export function EnglishWordsCard({ report, minutes }: { report: EnglishWordsRepo
 /** Caligrafía con lápiz for the grown-ups: the letters and links learnt, the ones that cost, and the criterion that fails
     most. Hidden while the data is not read and when the child has no handwriting try (the section is not for everyone). */
 export function CaligrafiaSection({ data, childName }: { data: LearningData | null; childName: string }) {
-  const report = useMemo(() => (data ? handwritingReport(data.attempts, data.mastery) : null), [data])
+  const report = useMemo(() => (data ? handwritingReport(data.handwriting ?? data.attempts, data.mastery) : null), [data])
   if (!report) return null
   return (
     <section className={adult.card} aria-labelledby="caligrafia-title">
@@ -381,6 +418,12 @@ function trendText(count: number, previous: number): string | null {
   return `Parecido al mes anterior (${previous}).`
 }
 
+/** One or two names in quotes, «7 × 8» or «7 × 8» y «6 × 9»: at most two different names, the examples a piece of advice points at. */
+function joinNames(names: string[]): string {
+  const unique = [...new Set(names)].slice(0, 2).map((n) => `«${n}»`)
+  return unique.length === 2 ? `${unique[0]} y ${unique[1]}` : unique.join('')
+}
+
 export function MistakesCard({ report, childName, subject = 'math' }: { report: ErrorReport; childName: string; subject?: LessonSubject }) {
   const now = report.groups.filter((g) => g.count > 0)
   const gone = report.groups.filter((g) => g.count === 0)
@@ -403,7 +446,7 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
             Los fallos de lectura de la letra no cuentan. Equivocarse es parte de aprender: lo útil es ver qué se repite.
           </p>
           <ul className={adult.list} aria-label="Tipos de fallo">
-            {now.map((g, i) => {
+            {now.map((g) => {
               const trend = trendText(g.count, g.previous)
               return (
                 <li key={g.id} className={s.mistake}>
@@ -415,8 +458,20 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
                   {g.types.length > 1 && (
                     <p className={adult.muted}>{g.types.map((t) => `${describeError(t.errorType)} (${t.count})`).join(' · ')}</p>
                   )}
+                  {g.examples.length > 0 && (
+                    <ul className={s.examples} aria-label={`Ejemplos de ${g.label.toLowerCase()}`}>
+                      {g.examples.map((e, k) => (
+                        <li key={k}>
+                          {describeSkillShort(e.skill)}: {e.given.trim() ? `escribió «${e.given}»` : 'no escribió nada'} (la respuesta es {e.expected})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {trend && <p className={adult.muted}>{trend}</p>}
-                  {i < 2 && <p className={s.advice}><strong>Qué ayuda:</strong> {g.advice}</p>}
+                  <p className={s.advice}>
+                    <strong>Qué ayuda:</strong> {g.advice}
+                    {g.examples.length > 0 && <> Para empezar, con {joinNames(g.examples.map((e) => describeSkillShort(e.skill)))}.</>}
+                  </p>
                 </li>
               )
             })}
@@ -453,6 +508,8 @@ export function TestsCard({ runs, count, subject = 'math', recall, childName, er
   offer: { requested: boolean; busy: boolean; onOffer: () => void }
 }) {
   const latest = runs[runs.length - 1] ?? null
+  // The reminder counts from the last test that was finished: one left half done does not set the next date.
+  const lastFinished = [...runs].reverse().find((r) => r.complete) ?? null
   const first = runs.length > 1 ? runs[0] : null
   const blocks = latest ? latest.blocks.filter((b) => b.total > 0) : []
   const intro = TESTS_INTRO[subject](count)
@@ -476,6 +533,7 @@ export function TestsCard({ runs, count, subject = 'math', recall, childName, er
             {first ? `. La primera, el ${formatDate(first.startedAt)}: ${first.correct} de ${first.answered}.` : '.'}
           </p>
           {!latest.complete && <p className={adult.hint}>Quedó a medias ({latest.answered} de {count}).</p>}
+          {lastFinished && <TestDueNote lastStartedAt={lastFinished.startedAt} />}
           <ul className={s.worldList} aria-label="Resultado por bloque">
             {blocks.map((b) => {
               const before = first?.blocks.find((x) => x.id === b.id)
@@ -539,6 +597,73 @@ export function ReadingCard({ read, total, minutes }: { read: ReadingDef[]; tota
         </>
       )}
       <p className={adult.hint}>Los minutos son solo de Lengua, de los últimos 7 días.</p>
+    </section>
+  )
+}
+
+// ------------------------------------------------------------------------------------------------ rhythm, speed and trend
+
+/** Reminder for the grown-up: the next prueba inicial is due four weeks after the last one; after three without one it says so. */
+export function TestDueNote({ lastStartedAt, now = new Date() }: { lastStartedAt: string; now?: Date }) {
+  const days = (now.getTime() - Date.parse(lastStartedAt)) / DAY_MS
+  if (!Number.isFinite(days) || days < 0) return null
+  if (days >= TEST_STALE_DAYS) {
+    const weeks = Math.floor(days / 7)
+    return <p className={adult.hint} role="status">Hace {weeks} semanas que no se hace. Conviene repetirla para ver lo que ha avanzado.</p>
+  }
+  const due = new Date(Date.parse(lastStartedAt) + TEST_EVERY_DAYS * DAY_MS).toISOString()
+  return <p className={adult.hint}>Próxima prueba sugerida: {formatDate(due)}.</p>
+}
+
+/** How fast the times tables come back: from memory (quick) and still thought over (slow). Only a reading, never a push. */
+export function SpeedCard({ speed, childName }: { speed: SpeedReport; childName: string }) {
+  if (speed.quick.length === 0 && speed.slow.length === 0) return null
+  return (
+    <section className={adult.card} aria-labelledby="rapidez-title">
+      <div className={adult.cardHead}>
+        <h2 id="rapidez-title" className={adult.subheading}>Rapidez</h2>
+        <span className={adult.muted}>Tiempo medio de lo que ya domina</span>
+      </div>
+      <p className={adult.lead}>
+        {speed.quick.length > 0 && <>{childName} tarda poco en contestar {tableNoun(speed.quick)}. </>}
+        {speed.slow.length > 0 && <>Con {tableNoun(speed.slow)} todavía va pensando: es normal, y con la práctica se acorta.</>}
+      </p>
+      <p className={adult.hint}>No hay prisa: es solo una lectura del tiempo que tarda, no una medida para comparar.</p>
+    </section>
+  )
+}
+
+/** The last eight weeks of maths: answers, accuracy and days played, so the grown-up sees whether things move. */
+export function WeeklyTrendCard({ weeks, childName }: { weeks: WeekTrend[]; childName: string }) {
+  const oldestFirst = [...weeks].reverse()
+  if (oldestFirst.filter((w) => w.answered > 0).length < 2) return null
+  const label = (w: WeekTrend) => (w.weeksAgo === 0 ? 'Esta semana' : w.weeksAgo === 1 ? 'La semana pasada' : `Hace ${w.weeksAgo} semanas`)
+  return (
+    <section className={adult.card} aria-labelledby="tendencia-title">
+      <div className={adult.cardHead}>
+        <h2 id="tendencia-title" className={adult.subheading}>Cómo va cambiando</h2>
+        <span className={adult.muted}>Matemáticas, últimas 8 semanas</span>
+      </div>
+      <p className={adult.muted}>
+        Cada semana: cuántas respuestas ha dado {childName}, cuántas fueron bien y en cuántos días jugó. Una semana sin datos es una semana sin jugar.
+      </p>
+      <ul className={s.worldList} aria-label="Semanas de matemáticas">
+        {oldestFirst.map((w) => (
+          <li key={w.weeksAgo} className={s.worldItem}>
+            <span className={s.worldName}>{label(w)}</span>
+            {w.answered === 0 ? (
+              <span className={s.worldState}>Sin practicar</span>
+            ) : (
+              <span className={s.worldState}>
+                {formatPercent(w.correct / w.answered)} de aciertos · {plural(w.answered, 'respuesta', 'respuestas')} · {plural(w.days, 'día', 'días')}
+                <span className={s.meter} aria-hidden>
+                  <span className={s.meterFill} style={{ width: `${(w.correct / w.answered) * 100}%` }} />
+                </span>
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

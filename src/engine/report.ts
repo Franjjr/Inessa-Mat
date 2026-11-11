@@ -12,6 +12,7 @@ import { teachableCourse } from './lengua/teachable'
 import { teachableEnglishCourse } from './ingles/teachable'
 import { topicOfToday } from './topicOfToday'
 import { englishSkill } from './skills'
+import { fluencyThresholdMs } from './mastery'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -121,6 +122,36 @@ export function topicNeeds(syllabus: Syllabus, allAttempts: readonly AttemptReco
     if ((a.retries ?? 0) > 0) need.retried += 1
   }
   return out
+}
+
+// ------------------------------------------------------------------------------------------------ speed
+
+/** The tables the child answers from memory (quick) and the ones still slowed down (slow), from the average time of the
+    facts she has dominated. A table needs three dominated facts with a time to be said at all. */
+export interface SpeedReport {
+  quick: number[]
+  slow: number[]
+}
+
+/** Lenient pace on purpose (7 s, the pen and touch threshold): the report says «todavía lo piensa», it never scolds. */
+const SPEED_LENIENT_MS = fluencyThresholdMs('pen', 'fact-mul')
+const SPEED_MIN_FACTS = 3
+
+export function speedReport(mastery: MasteryMap): SpeedReport {
+  const quick: number[] = []
+  const slow: number[] = []
+  for (let n = 1; n <= 10; n++) {
+    const times: number[] = []
+    for (let k = 1; k <= 10; k++) {
+      const m = mastery[`mul:${Math.min(n, k)}x${Math.max(n, k)}`]
+      if (m && m.box >= MASTERED_BOX && m.avgMs !== null) times.push(m.avgMs)
+    }
+    if (times.length < SPEED_MIN_FACTS) continue
+    const average = times.reduce((sum, ms) => sum + ms, 0) / times.length
+    if (average <= SPEED_LENIENT_MS) quick.push(n)
+    else slow.push(n)
+  }
+  return { quick, slow }
 }
 
 // ------------------------------------------------------------------------------------------------ errors
@@ -319,7 +350,19 @@ export interface ErrorGroupReport {
   previous: number
   /** The most frequent error types inside the group, most frequent first. */
   types: { errorType: ErrorType; count: number }[]
+  /** The latest wrong answers of the group in the window, newest first (up to three): what was asked and what was written. */
+  examples: WrongExample[]
 }
+
+/** One wrong answer as the report shows it: the skill it was on, what the child wrote and the right answer. */
+export interface WrongExample {
+  skill: SkillKey
+  given: string
+  expected: string
+}
+
+/** How many wrong answers per group the report keeps as examples. */
+const EXAMPLES_PER_GROUP = 3
 
 export interface ErrorReport {
   days: number
@@ -336,7 +379,7 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
   const t = now.getTime()
   const from = t - days * DAY_MS
   const before = from - days * DAY_MS
-  const groups = new Map<ErrorGroupId, { count: number; previous: number; types: Map<ErrorType, number> }>()
+  const groups = new Map<ErrorGroupId, { count: number; previous: number; types: Map<ErrorType, number>; examples: WrongExample[] }>()
   let answered = 0
   let wrong = 0
   for (const a of attempts) {
@@ -348,12 +391,14 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
     if (a.correct) continue
     const group = errorGroupOf(a.errorType ?? 'other', subject)
     if (!group) continue
-    const g = groups.get(group) ?? { count: 0, previous: 0, types: new Map() }
+    const g = groups.get(group) ?? { count: 0, previous: 0, types: new Map(), examples: [] as WrongExample[] }
     if (recent) {
       wrong += 1
       g.count += 1
       const type = a.errorType ?? 'other'
       g.types.set(type, (g.types.get(type) ?? 0) + 1)
+      // Attempts come newest first, so the first ones kept are the latest mistakes.
+      if (g.examples.length < EXAMPLES_PER_GROUP) g.examples.push({ skill: a.skill, given: a.given, expected: a.expected })
     } else {
       g.previous += 1
     }
@@ -367,7 +412,7 @@ export function errorReport(allAttempts: readonly AttemptRecord[], now: Date, da
       .map((d) => {
         const g = groups.get(d.id)!
         const types = [...g.types].map(([errorType, count]) => ({ errorType, count })).sort((x, y) => y.count - x.count || x.errorType.localeCompare(y.errorType))
-        return { ...d, count: g.count, previous: g.previous, types }
+        return { ...d, count: g.count, previous: g.previous, types, examples: g.examples }
       })
       .sort((x, y) => Number(x.id === 'otros') - Number(y.id === 'otros') || y.count - x.count || y.previous - x.previous),
   }

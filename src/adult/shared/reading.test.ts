@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { hardestTable, readTables, struggleCount, tableNoun } from './reading'
+import { hardestTableAcross, readTables, reviewSentence, struggleCount, tableNoun } from './reading'
 
 /** Symmetric grid with every fact unseen (-1) except the ones set here. */
 function grid(set: [number, number, number][]): number[][] {
@@ -23,10 +23,16 @@ describe('readTables', () => {
   })
 
   it('lists the facts to review once, with a ≤ b, and counts distinct mastered facts out of 55', () => {
-    const r = readTables(grid([[7, 8, 0], [9, 6, 1], [2, 2, 5]]), 'Lía')
+    const r = readTables(grid([[7, 8, 0], [9, 6, 0], [2, 2, 5]]), 'Lía')
     expect(r.reviewFacts).toEqual(['6 × 9', '7 × 8'])
     expect(r.toReview).toEqual([6, 7, 8, 9])
     expect(r.mastered).toBe(1)
+  })
+
+  it('does not ask to review a fact answered right once: it is «en camino»', () => {
+    const r = readTables(grid([[9, 6, 1]]), 'Lía')
+    expect(r.reviewFacts).toEqual([])
+    expect(r.tables.find((t) => t.n === 9)?.state).toBe('learning')
   })
 
   it('writes the conclusion from the data, with the child name', () => {
@@ -48,17 +54,32 @@ describe('readTables', () => {
   })
 })
 
-describe('tableNoun and hardestTable', () => {
+describe('tableNoun and hardestTableAcross', () => {
   it('uses singular and plural forms', () => {
     expect(tableNoun([7])).toBe('la tabla del 7')
     expect(tableNoun([2, 5])).toBe('las tablas del 2 y 5')
     expect(tableNoun([1, 2, 3, 4])).toBe('4 tablas')
   })
 
-  it('finds the table with most facts to review', () => {
+  it('finds the class table where most (child, fact) pairs need review', () => {
+    const kid1 = grid([[7, 1, 0], [7, 2, 0]])
+    const kid2 = grid([[7, 3, 0], [4, 4, 0], [4, 5, 0]])
+    expect(hardestTableAcross([kid1, kid2])).toEqual({ n: 7, count: 3 })
+    expect(hardestTableAcross([grid([])])).toBeNull()
+  })
+
+  it('finds the table with most facts to review for one child, the same as for a class of one', () => {
     const g = grid([[7, 1, 0], [7, 2, 0], [3, 3, 0]])
-    expect(hardestTable(g)).toBe(7)
-    expect(hardestTable(grid([]))).toBeNull()
+    expect(hardestTableAcross([g])).toEqual({ n: 7, count: 2 })
+    expect(hardestTableAcross([grid([])])).toBeNull()
     expect(struggleCount(g)).toBe(3)
+  })
+})
+
+describe('reviewSentence', () => {
+  it('says nothing to review, or lists three facts and the rest', () => {
+    expect(reviewSentence([])).toBe(' No hay multiplicaciones para repasar ahora.')
+    expect(reviewSentence(['2 × 2'])).toBe(' Para repasar: 2 × 2.')
+    expect(reviewSentence(['1 × 1', '2 × 2', '3 × 3', '4 × 4'])).toBe(' Para repasar: 1 × 1, 2 × 2 y 3 × 3 (y 1 más).')
   })
 })

@@ -31,6 +31,17 @@ describe('statsFromLocal: ungraded retry rows do not count in accuracy', () => {
   })
 })
 
+describe('statsFromLocal: «No lo sé» is not a most frequent error', () => {
+  it('leaves dont-know out of the top errors, and keeps the real mistakes', () => {
+    const list = [
+      attempt({ correct: false, errorType: 'dont-know' }),
+      attempt({ correct: false, errorType: 'dont-know' }),
+      attempt({ correct: false, errorType: 'fact' }),
+    ]
+    expect(statsFromLocal(list, list, [], null).topErrors).toEqual([{ errorType: 'fact', count: 1 }])
+  })
+})
+
 describe('statsFromLocal: Lengua sessions are not maths minutes (R5)', () => {
   const session = (minutes: number, subject?: 'language') => ({
     id: `ses-${minutes}-${subject ?? 'math'}`, childId: 'c', startedAt: new Date(now).toISOString(), endedAt: null, minutes,

@@ -15,7 +15,7 @@ import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { countFactStates } from '../shared/heatmap'
+import { countFactStates, FACT_STATE_NOTE } from '../shared/heatmap'
 import { readTables } from '../shared/reading'
 import { downloadBlob, slug } from '../shared/download'
 import { errorMessage } from '../shared/messages'
@@ -245,6 +245,7 @@ export default function ChildReportScreen() {
           <p className={adult.hint}>
             Dominadas: {counts.mastered} · En camino: {counts.learning} · Para repasar: {counts.struggling} · Sin practicar: {counts.unseen}
           </p>
+          <p className={adult.hint}>{FACT_STATE_NOTE}</p>
           {reading.reviewFacts.length > 0 && (
             <p className={adult.hint}>Si una casilla aparece «Hay que repasarla», conviene jugar un rato con esas tablas, sin prisa.</p>
           )}

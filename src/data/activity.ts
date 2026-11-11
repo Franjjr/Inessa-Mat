@@ -35,6 +35,21 @@ export async function listAttempts(childId: string, opts: { since?: string; limi
   return coll.toArray()
 }
 
+/**
+ * The attempts made in the given placement tests (context.activity), newest first and with no limit: a prueba inicial
+ * is read whole even when the recent window of `listAttempts` has moved past it.
+ */
+export async function listPlacementAttempts(childId: string, activities: readonly string[]): Promise<AttemptRecord[]> {
+  if (activities.length === 0) return []
+  const wanted = new Set(activities)
+  return db.attempts
+    .where('[childId+createdAt]')
+    .between([childId, Dexie.minKey], [childId, Dexie.maxKey], true, true)
+    .reverse()
+    .filter((a) => wanted.has(a.context?.activity ?? ''))
+    .toArray()
+}
+
 // ------------------------------------------------------------------------------------------------ sessions
 
 /** Active-time bookkeeping: time between touches counts, capped, and hidden-tab time never counts. */

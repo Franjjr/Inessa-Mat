@@ -61,7 +61,8 @@ export default function AdultHomeScreen() {
   }
 
   const reading = current && summary ? readTables(summary.factGrid, current.nickname) : null
-  const topError = summary?.topErrors[0] ?? null
+  // «No lo sé» is a casilla still to learn: the most frequent mistake is a real one.
+  const topError = summary?.topErrors.find((e) => e.errorType !== 'dont-know') ?? null
 
   return (
     <AdultPage title="Zona de adultos" back="/kids" actions={<BackButton variant="exit" onClick={leave} />}>

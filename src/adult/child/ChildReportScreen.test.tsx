@@ -19,6 +19,7 @@ const data = vi.hoisted(() => ({
   markRewardClaimed: vi.fn(),
   getMastery: vi.fn(),
   listAttempts: vi.fn(),
+  listPlacementAttempts: vi.fn(),
   listSessions: vi.fn(),
   updateProgress: vi.fn(),
 }))
@@ -47,8 +48,8 @@ function seededGrid(): number[][] {
     grid[b - 1][a - 1] = box
   }
   set(2, 3, 5) // mastered
-  set(7, 7, 1) // struggling
-  set(6, 8, 3) // learning
+  set(7, 7, 0) // struggling: failed, not yet learnt
+  set(6, 8, 1) // learning: answered right once, not yet dominated (box 2 or more)
   return grid
 }
 
@@ -91,6 +92,7 @@ describe('ChildReportScreen', () => {
     data.getRewards.mockResolvedValue([])
     data.getMastery.mockResolvedValue({})
     data.listSessions.mockResolvedValue([])
+    data.listPlacementAttempts.mockResolvedValue([])
     // Four wrong times-table answers in the last days.
     data.listAttempts.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({
       id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',

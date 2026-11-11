@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { DEFAULT_CHILD_SETTINGS, type AttemptRecord, type InkSample, type SkillMastery } from '@/types'
 import {
   addInkSample, clearInkSamples, createChild, deleteChild, endSession, exportChildData, getChild, getChildSummary,
-  getMastery, getProgress, getRewards, listAttempts, listChildren, listInkSamples, listSessions, markRewardClaimed,
+  getMastery, getProgress, getRewards, listAttempts, listChildren, listPlacementAttempts, listInkSamples, listSessions, markRewardClaimed,
   markRewardUnlocked, recordAttempt, saveMastery, setChestReward, startSession, touchSession, updateChild,
   updateProgress, DataError,
 } from '@/data'
@@ -143,6 +143,19 @@ describe('attempts & sessions', () => {
     expect((await listAttempts(c.id, { limit: 2 })).map((a) => a.skill)).toEqual(['calig:letra:a', 'calig:letra:a'])
     expect((await listAttempts(c.id, { limit: 2, skipHandwriting: true })).map((a) => a.skill)).toEqual(['mul:6x8', 'mul:6x7'])
     expect((await listAttempts(c.id, { skipHandwriting: true })).length).toBe(2)
+  })
+
+  it('the placement tests are read whole, even when the recent window has moved past them', async () => {
+    const c = await createChild({ nickname: 'Inessa', gender: 'f', companion: LUNA })
+    await recordAttempt(attempt({ childId: c.id, skill: 'mul:6x7', createdAt: '2025-01-05T10:00:00.000Z', context: { activity: 'placement' } }))
+    await recordAttempt(attempt({ childId: c.id, skill: 'mul:6x8', createdAt: '2025-01-06T10:00:00.000Z', context: { activity: 'daily' } }))
+    for (let i = 1; i <= 3; i++) {
+      await recordAttempt(attempt({ childId: c.id, skill: 'mul:6x9', createdAt: `2026-03-0${i}T10:00:00.000Z`, context: { activity: 'daily' } }))
+    }
+    expect((await listAttempts(c.id, { limit: 2 })).map((a) => a.createdAt.slice(0, 10))).toEqual(['2026-03-03', '2026-03-02'])
+    const placed = await listPlacementAttempts(c.id, ['placement'])
+    expect(placed.map((a) => a.skill)).toEqual(['mul:6x7'])
+    expect(await listPlacementAttempts(c.id, [])).toEqual([])
   })
 
   it('sessions: start records the day played; minutes only grow; end is idempotent', async () => {
