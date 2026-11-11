@@ -334,11 +334,14 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     }
     case 'missing-factor': {
       const known = ex.missing === 'a' ? ex.b : ex.a
-      const seq = Array.from({ length: Math.min(ex.answer, 10) }, (_, i) => known * (i + 1)).join(', ')
+      // The last step is left to the child: the series stops before the product, so counting it does not give the answer.
+      const before = Array.from({ length: Math.min(ex.answer - 1, 9) }, (_, i) => known * (i + 1)).join(', ')
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
         hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
-        hint(3, `${seq}. ¿Cuántos números has dicho?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1 }),
+        ex.answer >= 2
+          ? hint(3, `${before}… ¿Qué número sigue? ¿Cuántas veces has dicho ${known} hasta llegar a él?`, 'none')
+          : hint(3, `Piensa: ¿${known} por cuánto da ${ex.product}?`, 'none'),
       ]
     }
     case 'skip-count': return skipHints(ex)
