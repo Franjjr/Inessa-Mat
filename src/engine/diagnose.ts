@@ -11,6 +11,9 @@ export interface Diagnosis {
   wrongColumns: number[]
   /** The wrong columns that show the diagnosed error itself (named in the feedback). Defaults to wrongColumns. */
   focus?: number[]
+  /** Subtraction: 'borrow-column' = a column that had to borrow was left undone (written 0) while its neighbour
+      did lend (it is right): the child did not ask for the ten, so the message names that column. */
+  detail?: 'borrow-column'
 }
 
 /** Columns (0 = units) where the given digits differ from the expected value. Empty cells count as 0. */
@@ -117,13 +120,23 @@ export function diagnoseSub(minuend: number, subtrahend: number, given: readonly
   if (wrong.some((i) => i < cols && m(i) < s(i) && g(i) === s(i) - m(i))) return { errorType: 'smaller-from-larger', wrongColumns: wrong }
   const borrowIn = (i: number) => (i > 0 && an.borrowed[i - 1] ? 1 : 0)
   const noDecrement = (i: number) => (m(i) >= s(i) ? m(i) - s(i) : m(i) + 10 - s(i))
-  if (wrong.some((i) => i < cols && borrowIn(i) === 1 && g(i) === noDecrement(i))) return { errorType: 'borrow-forgot', wrongColumns: wrong }
-  if (wrong.some((i) => i < cols && an.borrowed[i] && g(i) === 0)) return { errorType: 'borrow-forgot', wrongColumns: wrong }
+  // The lender kept its digit: it lent a ten and was not crossed out. `focus` is the lender column.
+  const lender = wrong.find((i) => i < cols && borrowIn(i) === 1 && g(i) === noDecrement(i))
+  if (lender !== undefined) return { errorType: 'borrow-forgot', wrongColumns: wrong, focus: [lender] }
+  // A borrowing column written 0. When its neighbour did lend (it is right), the ten was never asked for in this
+  // column: name the column, not the neighbour (981 − 314 written 660). Otherwise the neighbour was not crossed out.
+  const zeroCol = wrong.find((i) => i < cols && an.borrowed[i] && g(i) === 0)
+  if (zeroCol !== undefined) {
+    if (zeroCol + 1 < cols && !wrong.includes(zeroCol + 1)) return { errorType: 'fact', wrongColumns: wrong, focus: [zeroCol], detail: 'borrow-column' }
+    return { errorType: 'borrow-forgot', wrongColumns: wrong, focus: [zeroCol + 1] }
+  }
   return { errorType: 'fact', wrongColumns: wrong }
 }
 
-// ---------------------------------------------------------------- 2-digit × 1-digit
+// ---------------------------------------------------------------- any number of digits × 1-digit
 
+/** Column by column, for a top of any length (12 × 9, 525 × 8): p[i] = digit i × bottom, cin[i] = the carry into
+    column i. The classic bugs are checked on the whole number first, then column by column (`focus` = the column). */
 export function diagnoseMul(top: number, bottom: number, given: readonly (number | null)[]): Diagnosis {
   const answer = top * bottom
   const wrong = wrongColumnsOf(given, answer, digitCount(answer))
@@ -131,20 +144,35 @@ export function diagnoseMul(top: number, bottom: number, given: readonly (number
   if (given.some((d) => d !== null && (d > 9 || d < 0))) {
     return { errorType: 'carry-wrong', wrongColumns: given.flatMap((d, i) => (d !== null && (d > 9 || d < 0) ? [i] : [])) }
   }
+  const n = digitCount(top)
   // Everything right except the leading digit left out: the final carry was never written down.
-  if (wrong.length && wrong.every((i) => i >= digitCount(top) && (given[i] ?? 0) === 0)) return { errorType: 'carry-forgot', wrongColumns: wrong }
-  const t = Math.floor(top / 10)
-  const u = top % 10
-  const up = u * bottom
-  const c = Math.floor(up / 10)
-  if (c > 0) {
-    const noCarry = t * bottom * 10 + (up % 10)
-    if (value === noCarry) return { errorType: 'carry-forgot', wrongColumns: wrong }
-    const beforeMultiply = (t + c) * bottom * 10 + (up % 10)
-    const concat = Number(`${t * bottom}${up}`)
-    const swapped = (t * bottom + (up % 10)) * 10 + c
-    if (value === beforeMultiply || value === concat || value === swapped) return { errorType: 'carry-wrong', wrongColumns: wrong }
-    if (!wrong.includes(0) && (given[1] ?? 0) === (t * bottom) % 10) return { errorType: 'carry-forgot', wrongColumns: wrong }
+  if (wrong.length && wrong.every((i) => i >= n && (given[i] ?? 0) === 0)) return { errorType: 'carry-forgot', wrongColumns: wrong, focus: [wrong[0]] }
+  const p: number[] = []
+  const cin: number[] = [0]
+  for (let i = 0; i < n; i++) {
+    p.push(digitAt(top, i) * bottom)
+    cin.push(Math.floor((p[i] + cin[i]) / 10))
+  }
+  const carried = cin.slice(0, n).map((c, i) => (c > 0 ? i : -1)).filter((i) => i >= 0)
+  if (carried.length) {
+    // Every carry left out: each column keeps its own product (47 × 3 → 121).
+    let noCarry = 0
+    for (let i = 0; i < n; i++) noCarry += (i < n - 1 ? p[i] % 10 : p[i]) * 10 ** i
+    if (value === noCarry) return { errorType: 'carry-forgot', wrongColumns: wrong, focus: carried.slice(0, 1) }
+    if (n === 2) {
+      const t = Math.floor(top / 10)
+      const u = top % 10
+      const up = u * bottom
+      const c = Math.floor(up / 10)
+      const beforeMultiply = (t + c) * bottom * 10 + (up % 10)
+      const concat = Number(`${t * bottom}${up}`)
+      const swapped = (t * bottom + (up % 10)) * 10 + c
+      if (value === beforeMultiply || value === concat || value === swapped) return { errorType: 'carry-wrong', wrongColumns: wrong }
+    }
+    const forgot = wrong.filter((i) => i < n && cin[i] > 0 && (given[i] ?? 0) === p[i] % 10)
+    if (forgot.length) return { errorType: 'carry-forgot', wrongColumns: wrong, focus: forgot.slice(0, 1) }
+    const multiplied = wrong.filter((i) => i < n && cin[i] > 0 && (given[i] ?? 0) === ((digitAt(top, i) + cin[i]) * bottom) % 10)
+    if (multiplied.length) return { errorType: 'carry-wrong', wrongColumns: wrong, focus: multiplied.slice(0, 1) }
   }
   if (value === top + bottom) return { errorType: 'operation', wrongColumns: wrong }
   return { errorType: 'fact', wrongColumns: wrong }
@@ -161,7 +189,7 @@ export type DivisionDetail =
 
 export function diagnoseDivision(
   dividend: number, divisor: number, q: number, r: number,
-): { errorType: ErrorType; detail: DivisionDetail } {
+): { errorType: ErrorType; detail: DivisionDetail; place?: number } {
   const Q = Math.floor(dividend / divisor)
   if (r === 0 && [dividend - divisor, dividend + divisor, dividend * divisor].includes(q)) {
     return { errorType: 'operation', detail: 'operation' }
@@ -179,8 +207,12 @@ export function diagnoseDivision(
     }
     const qd = toDigits(q)
     const Qd = toDigits(Q)
-    // Stopped after sharing the tens: the units digit of the quotient is missing (a cell left empty).
+    // Stopped after sharing the tens: the units digit of the quotient is missing (a cell left empty). In a longer
+    // division the child may stop earlier (5248 : 8 → 6, after the centenas): `place` names the column it stopped at.
     if (q >= 1 && q === Math.floor(Q / 10)) return { errorType: 'incomplete', detail: 'stopped' }
+    for (let place = 2; 10 ** place <= Q; place++) {
+      if (q >= 1 && q === Math.floor(Q / 10 ** place)) return { errorType: 'incomplete', detail: 'stopped', place }
+    }
     if (qd.length === Qd.length && qd.length > 1 && [...qd].reverse().every((d, i) => d === Qd[i])) {
       return { errorType: 'misaligned', detail: 'reversed' }
     }

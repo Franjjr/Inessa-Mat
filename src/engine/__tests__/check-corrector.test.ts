@@ -43,7 +43,7 @@ describe('resta en columna: el mensaje sigue al método que eligió el niño (3.
   })
 })
 
-describe('resta por saltos: cualquier cadena creciente de paradas (3.10)', () => {
+describe('resta por saltos: el total decide; las paradas solo orientan (3.10)', () => {
   const line = (values: (number | null)[], total: number | null = 225): Answer => ({ type: 'steps', method: 'line', values, total })
   const ex = makeColumnSub(352, 127) // paradas canónicas 130, 300, 350; el total es 225
   it('acepta más o menos paradas que la ruta canónica, y ninguna', () => {
@@ -53,21 +53,28 @@ describe('resta por saltos: cualquier cadena creciente de paradas (3.10)', () =>
     expect(check(ex, line([])).correct).toBe(true)
     expect(check(ex, line([null, null])).correct).toBe(true)
   })
-  it('las paradas van hacia delante, estrictamente entre el sustraendo y el minuendo', () => {
-    expect(check(ex, line([300, 200])).errorType).toBe('other')
-    expect(check(ex, line([300, 300])).errorType).toBe('other')
-    expect(check(ex, line([100, 300])).errorType).toBe('other')
-    expect(check(ex, line([352])).errorType).toBe('other')
+  it('con el total bien, unas paradas fuera de orden no suspenden: solo una nota detrás del acierto', () => {
+    for (const stops of [[300, 200], [300, 300], [100, 300], [352], [130, null, 350]]) {
+      const r = check(ex, line(stops))
+      expect(r.correct, JSON.stringify(stops)).toBe(true)
+      expect(r.feedback).not.toMatch(/Casi|falta/)
+    }
+    expect(check(ex, line([300, 200])).feedback).toBe('¡Muy bien, 225! Los saltos van de menor a mayor: 127, 130, 300, 350 y 352.')
   })
-  it('una casilla vacía entre dos paradas está incompleta; el total tiene que ser correcto', () => {
-    expect(check(ex, line([130, null, 350])).errorType).toBe('incomplete')
-    expect(check(ex, line([130, 300], null)).errorType).toBe('incomplete')
+  it('con el total mal, las paradas van hacia delante, estrictamente entre el sustraendo y el minuendo', () => {
+    expect(check(ex, line([300, 200], 226)).errorType).toBe('other')
+    expect(check(ex, line([300, 300], 226)).errorType).toBe('other')
+    expect(check(ex, line([100, 300], 226)).errorType).toBe('other')
+    expect(check(ex, line([352], 226)).errorType).toBe('other')
+  })
+  it('sin total, se pide el total', () => {
+    expect(check(ex, line([130, 300], null))).toMatchObject({ errorType: 'incomplete', feedback: 'Escribe cuánto has saltado en total.' })
     expect(check(ex, line([130, 300], 226)).errorType).toBe('other')
   })
   it('el mensaje de un salto fuera de rango dice dónde tiene que caer, sin señalar un destino falso', () => {
-    expect(check(ex, line([300, 200])).feedback).toContain('El salto 2 tiene que caer después de 300 y antes de 352')
-    expect(check(ex, line([352])).feedback).toContain('El salto 1 tiene que caer después de 127 y antes de 352')
-    expect(check(ex, line([300, 200])).feedback).not.toMatch(/hacia 352/)
+    expect(check(ex, line([300, 200], 226)).feedback).toContain('El salto 2 tiene que caer después de 300 y antes de 352')
+    expect(check(ex, line([352], 226)).feedback).toContain('El salto 1 tiene que caer después de 127 y antes de 352')
+    expect(check(ex, line([300, 200], 226)).feedback).not.toMatch(/hacia 352/)
   })
   it('sin ningún salto escrito, un total equivocado no habla de saltos ya colocados', () => {
     const r = check(ex, line([], 200))
