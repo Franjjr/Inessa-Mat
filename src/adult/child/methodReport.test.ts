@@ -26,7 +26,7 @@ describe('divisionReportLine', () => {
   })
 
   it('does not name a better method when the favourite is already the best', () => {
-    const line = divisionReportLine({ preferred: 'div-parts', byMethod: [{ method: 'div-parts', attempts: 3, correct: 3 }, { method: 'galera', attempts: 3, correct: 1 }] })
+    const line = divisionReportLine({ preferred: 'galera-short', byMethod: [{ method: 'galera-short', attempts: 3, correct: 3 }, { method: 'galera', attempts: 3, correct: 1 }] })
     expect(line).not.toContain('Acierta más')
   })
 })

@@ -10,22 +10,22 @@ describe('subtractionReportLine', () => {
     expect(subtractionReportLine(info)).toBe('Resta: prefiere «Pedir prestado arriba». Todavía no hay restas hechas con cada método.')
   })
 
-  it('lists the results per method and says which one the child is most accurate with', () => {
+  it('lists the results per school method and says which one the child is most accurate with', () => {
     const info: Info = {
       preferred: 'borrow',
       byMethod: [
         { method: 'borrow', attempts: 10, correct: 6 },
-        { method: 'parts', attempts: 4, correct: 4 },
-        { method: 'line', attempts: 2, correct: 2 },
+        { method: 'carry', attempts: 4, correct: 4 },
+        { method: 'line', attempts: 5, correct: 5 },
       ],
     }
     const line = subtractionReportLine(info)
     expect(line.startsWith('Resta: prefiere «Pedir prestado arriba»; aciertos por método (últimos 30 días): ')).toBe(true)
     expect(line).toContain('Pedir prestado arriba: 6 de 10 (60 %)')
-    expect(line).toContain('Por partes: 4 de 4 (100 %)')
-    expect(line).toContain('Saltos en la recta: 2 de 2 (100 %)')
-    // Only 'parts' has the minimum of attempts and beats the favourite.
-    expect(line).toContain('Acierta más con «Por partes».')
+    expect(line).toContain('Me llevo una abajo: 4 de 4 (100 %)')
+    // A retired method (old attempts with saltos en la recta) is never proposed to the grown-up.
+    expect(line).not.toContain('Saltos en la recta')
+    expect(line).toContain('Acierta más con «Me llevo una abajo».')
   })
 
   it('does not name a method with fewer than three attempts as the most accurate one', () => {
