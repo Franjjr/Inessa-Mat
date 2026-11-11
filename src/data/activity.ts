@@ -1,6 +1,6 @@
 /* Attempts (append-only log of answered exercises) and play sessions. */
 import Dexie from 'dexie'
-import type { AttemptRecord, SessionRecord, SubjectId } from '@/types'
+import type { AttemptRecord, SessionRecord, SessionSubject } from '@/types'
 import { db } from './db'
 import { DataError } from './errors'
 import { isErasedChild } from './erasure'
@@ -77,8 +77,9 @@ function activeMinutes(row: SessionRow, explicit: number | undefined): number {
   return Math.round((row.minutes + gain / 60_000) * 100) / 100
 }
 
-/** A Lengua or English session is marked from its start (its summary carries the subject), so an unfinished one counts as that subject too. */
-export async function startSession(childId: string, subject: SubjectId = 'math'): Promise<SessionRecord> {
+/** A Lengua, English or Caligrafía session is marked from its start (its summary carries the subject), so an unfinished
+    one counts as that subject too. */
+export async function startSession(childId: string, subject: SessionSubject = 'math'): Promise<SessionRecord> {
   const now = nowIso()
   const mark = subject === 'math' ? null : { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject }
   const row: SessionRow = { id: uuid(), childId, startedAt: now, endedAt: null, minutes: 0, summary: mark, updatedAt: now }

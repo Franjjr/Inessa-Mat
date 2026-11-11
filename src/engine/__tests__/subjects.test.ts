@@ -172,6 +172,10 @@ describe('English subject table', () => {
     expect(subjectOffered('english', 4)).toBe(false)
   })
 
+  it('a session marked handwriting is Caligrafía, not maths', () => {
+    expect(subjectOfSession({ summary: { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject: 'handwriting' } })).toBe('handwriting')
+  })
+
   it('a session marked english is English', () => {
     expect(subjectOfSession({ summary: { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject: 'english' } })).toBe('english')
   })

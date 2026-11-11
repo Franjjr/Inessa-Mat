@@ -25,6 +25,8 @@ export { useProgress, getProgress, updateProgress, useMastery, getMastery, saveM
 // ---------------------------------------------------------------- attempts & sessions
 /** listAttempts / listSessions return newest first. touchSession is idempotent; minutes only grow. */
 export { recordAttempt, listAttempts, listPlacementAttempts, startSession, touchSession, endSession, listSessions } from './activity'
+/** A play session for a screen outside GameHostProvider (Caligrafía): started on mount, ended on unmount. */
+export { usePlaySession } from './playSession'
 
 // ---------------------------------------------------------------- rewards (parent-defined real-world prize)
 export { getRewards, setChestReward, markRewardUnlocked, markRewardClaimed } from './rewards'

@@ -20,6 +20,8 @@ const updateProgress = vi.fn(async (_id: string, fn: (p: typeof progress) => typ
   progress = fn(progress)
   return progress
 })
+const sessionTally = { current: { id: 'sess-1' as string | null, startedAt: 0, attempts: 0, correct: 0 } }
+const usePlaySession = vi.fn((_childId: string, _subject: string) => sessionTally)
 const CHILD = { id: 'c1', name: 'Lucía', grade: 3, settings: { handwriting: true } } as unknown as ChildProfile
 
 vi.mock('@/data', () => ({
@@ -31,6 +33,7 @@ vi.mock('@/data', () => ({
   recordAttempt: (a: unknown) => recordAttempt(a),
   saveMastery: (id: string, items: unknown[]) => saveMastery(id, items),
   updateProgress: (id: string, fn: (p: typeof progress) => typeof progress) => updateProgress(id, fn),
+  usePlaySession: (childId: string, subject: string) => usePlaySession(childId, subject),
 }))
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn(), stopCelebrations: vi.fn() }))
@@ -48,6 +51,8 @@ beforeEach(() => {
   recordAttempt.mockClear()
   saveMastery.mockClear()
   updateProgress.mockClear()
+  usePlaySession.mockClear()
+  sessionTally.current = { id: 'sess-1', startedAt: 0, attempts: 0, correct: 0 }
 })
 
 function renderScreen() {
@@ -94,8 +99,12 @@ describe('CaligrafiaScreen', () => {
       expect(a.errorType).toBeNull()
       expect(a.context.stars).toBe(3)
       expect(a.childId).toBe(CHILD.id)
+      expect((a as { sessionId?: string }).sessionId).toBe('sess-1')
     })
     expect(saveMastery).toHaveBeenCalledTimes(items.length)
+    // The visit is a Caligrafía play session: its minutes are written down, and it counts the graded letters.
+    expect(usePlaySession).toHaveBeenCalledWith(CHILD.id, 'handwriting')
+    expect(sessionTally.current).toMatchObject({ attempts: items.length, correct: items.length })
 
     const key = caligrafiaRewardKey(new Date())
     expect(progress.stars).toBe(5 + CALIG_STARS)

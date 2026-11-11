@@ -49,11 +49,17 @@ export interface AttemptRecord {
   /** method: the method used when the operation has several (e.g. 'borrow', 'parts'); see src/engine/methods.ts. */
   context: {
     worldId?: string; nodeId?: string; activity?: string; free?: boolean; method?: string
+    /** The teacher's mission the attempt was played from (see Assignment). */
+    assignmentId?: string
     /** Caligrafía: the four criteria (true = passed) and the stars of the try. */
     shape?: boolean; line?: boolean; size?: boolean; start?: boolean; stars?: number
   }
   createdAt: ISODate
 }
+
+/** What a play session practised: a subject, or Caligrafía con lápiz ('handwriting', not a subject of its own: its
+    keys are calig:…). A session with no mark is maths. */
+export type SessionSubject = SubjectId | 'handwriting'
 
 export interface SessionRecord {
   id: ID
@@ -62,8 +68,9 @@ export interface SessionRecord {
   endedAt: ISODate | null
   /** Active minutes (idle time excluded). */
   minutes: number
-  /** `subject` marks a Lengua session (missing = maths): it lives in the summary so it syncs without a new column. */
-  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[]; subject?: SubjectId } | null
+  /** `subject` marks a Lengua, English or Caligrafía session (missing = maths): it lives in the summary so it syncs
+      without a new column. `assignmentId` marks a session played from a teacher's mission (missing = none). */
+  summary: { attempts: number; correct: number; starsEarned: number; nodesCompleted: string[]; subject?: SessionSubject; assignmentId?: string } | null
 }
 
 export interface NodeProgress {
