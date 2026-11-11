@@ -311,7 +311,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
               allowRetry
               allowDontKnow={slot.item.item.block !== 'warmup'}
               teach={slot.item.item.block === 'warmup' ? 'clue' : 'full'}
-              // The visual support of a fact the child failed twice (an array) is on screen from the start.
+              // The visual support of a fact the child failed twice (its scaffold: arrays, the division galera, the first hint)
+              // is on screen from the start.
               guided={slot.item.item.scaffold}
             />
           </div>
