@@ -15,6 +15,7 @@ import { pickPhrase } from '@/content'
 import { hintsFor, isCompletionOnly } from '@/engine'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
+import { guidedOutcome } from '@/activities/shared/guided'
 import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
@@ -47,6 +48,8 @@ export interface ExerciseStepProps {
   /** Teaching after a wrong multiplication fact (default 'full': the trick, then the drawing and copying the answer);
    *  'clue' only the trick (warm-up), 'none' nothing (a check before a class). See ExerciseViewProps.teach. */
   teach?: 'none' | 'clue' | 'full'
+  /** The help is on screen from the start (the daily session's visual support): a right answer counts as a hint used. */
+  guided?: boolean
 }
 
 /**
@@ -59,7 +62,7 @@ const now = (): number => (typeof performance !== 'undefined' ? performance.now(
 
 export function ExerciseStep({
   exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue, onSkip, allowRetry = false, allowDontKnow = false,
-  teach = 'full',
+  teach = 'full', guided = false,
 }: ExerciseStepProps) {
   const host = useActivityHost()
   const [stage, setStage] = useState<Stage>('asking')
@@ -157,7 +160,8 @@ export function ExerciseStep({
     hostRef.current.react(o.check.correct ? 'correct' : 'wrong', { errorType: o.check.errorType })
   }
 
-  const handleAnswered = (o: ExerciseOutcome) => {
+  const handleAnswered = (raw: ExerciseOutcome) => {
+    const o = guided ? guidedOutcome(raw) : raw
     const st = stageRef.current
     if (st === 'asking') {
       first.current = o
@@ -233,6 +237,7 @@ export function ExerciseStep({
           exercise={exercise}
           onAnswered={handleAnswered}
           allowHints={allowHints}
+          guided={guided}
           showFeedback={false}
           teach={teach}
           onTry={() => setTried(true)}

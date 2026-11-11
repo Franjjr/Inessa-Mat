@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import type { ActivityProps, Exercise } from '@/types'
 import { generate } from '@/engine'
 import { adaptiveSelector } from '../facts/shared/items'
+import { guidedOutcome } from '../shared/guided'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
 import { useOpsRun } from '../groups/useOpsRun'
@@ -28,7 +29,8 @@ export default function ExercisesActivity({ config, onDone, onExit }: ActivityPr
         <ExerciseView
           key={`${ex.id}-${run.index}`}
           exercise={ex}
-          onAnswered={run.record}
+          // A guided round shows its help from the start: that help is a hint used (mastery does not climb on it).
+          onAnswered={(o) => run.record(guided ? guidedOutcome(o) : o)}
           guided={guided}
           allowHints
           showFeedback

@@ -1,6 +1,6 @@
 /* Exercise view "word-problem": a short Spanish story with its numbers. Optionally the child first chooses the
    operation (juntar, quitar, repetir, repartir). The answer is written with the unit ("estrellas") shown next to it. */
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { ExerciseViewProps, WordProblemExercise } from '@/types'
 import { NumberInput } from '@/ink'
 import { speech } from '@/audio'
@@ -55,6 +55,8 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
   const [picked, setPicked] = useState<WordProblemExercise['op'] | null>(null)
   const [opClue, setOpClue] = useState<string | null>(null)
+  /** The wrong-operation clue has been counted for this problem (counted once, at the first wrong button). */
+  const clueCounted = useRef(false)
   const [value, setValue] = useState<number | null>(null)
   const [rest, setRest] = useState<number | null>(null)
   const hasRemainder = (ex.remainder ?? 0) > 0
@@ -62,7 +64,17 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
 
   const pickOp = (op: WordProblemExercise['op']) => {
     setPicked(op)
-    setOpClue(op === ex.op ? null : host.t('Pista: mira la historia. ¿Se juntan, se quitan, se repiten o se reparten?'))
+    if (op === ex.op) {
+      setOpClue(null)
+      return
+    }
+    // A wrong operation is a clue taken: the first one counts as a hint used, so trying the buttons one by one does not
+    // climb mastery. The buttons stay open, and the clue makes the child read the story again without naming the operation.
+    if (!clueCounted.current) {
+      clueCounted.current = true
+      flow.countClue()
+    }
+    setOpClue(host.t('Esa no es la que toca. Vuelve a leer la historia y piensa qué pasa con los números.'))
   }
 
   // Takes the values explicitly: a NumberInput submit passes the value it has just read.
