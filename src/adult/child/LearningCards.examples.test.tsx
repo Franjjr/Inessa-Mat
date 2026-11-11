@@ -73,8 +73,13 @@ describe('TestDueNote: the reminder of the prueba inicial', () => {
 describe('SpeedCard and WeeklyTrendCard', () => {
   it('reads the speed as a sentence, with no push', () => {
     render(<SpeedCard speed={{ quick: [2, 5], slow: [7] }} childName="Lía" />)
-    expect(screen.getByText(/responde de memoria las tablas del 2 y 5/)).toBeInTheDocument()
+    expect(screen.getByText(/tarda poco en contestar las tablas del 2 y 5/)).toBeInTheDocument()
     expect(screen.getByText(/Con la tabla del 7 todavía va pensando/)).toBeInTheDocument()
+  })
+
+  it('does not claim the answers come from memory: the time is a mix of pen, keyboard and touch', () => {
+    render(<SpeedCard speed={{ quick: [2], slow: [] }} childName="Lía" />)
+    expect(screen.queryByText(/de memoria/)).not.toBeInTheDocument()
   })
 
   it('shows the weeks with answers, newest week labelled', () => {

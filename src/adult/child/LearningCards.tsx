@@ -610,7 +610,7 @@ export function SpeedCard({ speed, childName }: { speed: SpeedReport; childName:
         <span className={adult.muted}>Tiempo medio de lo que ya domina</span>
       </div>
       <p className={adult.lead}>
-        {speed.quick.length > 0 && <>{childName} responde de memoria {tableNoun(speed.quick)}. </>}
+        {speed.quick.length > 0 && <>{childName} tarda poco en contestar {tableNoun(speed.quick)}. </>}
         {speed.slow.length > 0 && <>Con {tableNoun(speed.slow)} todavía va pensando: es normal, y con la práctica se acorta.</>}
       </p>
       <p className={adult.hint}>No hay prisa: es solo una lectura del tiempo que tarda, no una medida para comparar.</p>
