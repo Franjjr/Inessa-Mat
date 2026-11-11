@@ -19,6 +19,7 @@ const data = vi.hoisted(() => ({
   markRewardClaimed: vi.fn(),
   getMastery: vi.fn(),
   listAttempts: vi.fn(),
+  listPlacementAttempts: vi.fn(),
   listSessions: vi.fn(),
   updateProgress: vi.fn(),
 }))
@@ -91,6 +92,7 @@ describe('ChildReportScreen', () => {
     data.getRewards.mockResolvedValue([])
     data.getMastery.mockResolvedValue({})
     data.listSessions.mockResolvedValue([])
+    data.listPlacementAttempts.mockResolvedValue([])
     // Four wrong times-table answers in the last days.
     data.listAttempts.mockResolvedValue(Array.from({ length: 4 }, (_, i) => ({
       id: `a${i}`, childId: 'c1', sessionId: 's', skill: 'mul:7x7', kind: 'fact-mul', correct: false, given: '48', expected: '49',
