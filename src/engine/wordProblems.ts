@@ -119,6 +119,8 @@ export function getWordTemplate(id: string): WordTemplate | undefined {
 const SENSE_STORIES = WORD_TEMPLATES.filter((t) => !/\{(child|pet)\}/.test(t.text))
 
 const SENSE_OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido'] as const
+/** A close proposal (a slip of 10 or 100) has a sensible size: the question is whether it is right, not whether it makes sense. */
+const EXACT_OPTIONS = ['Sí, es correcta', 'No, no es correcta'] as const
 
 /** The hints of the ordinary proposals: the strategy, the rounding, and a worked example in words (other numbers). */
 const SENSE_HINTS: [string, string, string] = [
@@ -138,15 +140,17 @@ const SENSE_HINTS_CLOSE: [string, string, string] = [
 /** A wrong answer for the story, and whether it is close to the right result. Absurd ones: off by an order of magnitude
     (×10, or ÷10 when that stays whole), or impossible for the story. Close ones: a step away from the right result in the
     tens or the hundreds (a forgotten carry, a digit slip), or by one when the result is small. */
-function wrongAnswer(rng: Rng, op: WordOp, a: number, b: number, right: number): { value: number; close: boolean } {
-  if (rng() < 0.5) {
+function wrongAnswer(rng: Rng, op: WordOp, a: number, b: number, right: number, close: boolean): { value: number; close: boolean } {
+  if (!close) {
     const absurd = [right * 10]
     if (right % 10 === 0 && right >= 20) absurd.push(right / 10)
     if (op === 'add') absurd.push(randInt(rng, 1, Math.max(a, b) - 1)) // a total smaller than one of its parts
     else if (op === 'sub') absurd.push(a + randInt(rng, 1, a)) // more left than there was to start with
     else if (op === 'mul') absurd.push(randInt(rng, 1, b - 1)) // fewer than one group
     else absurd.push(a + randInt(rng, 1, a)) // each share bigger than the whole
-    return { value: pick(rng, absurd), close: false }
+    // «Absurd» is about the size: a number within 10 % of the result does not look absurd, so it is left out.
+    const far = absurd.filter((v) => v > 0 && Math.abs(v - right) / right > 0.1)
+    return { value: pick(rng, far.length ? far : [right * 10]), close: false }
   }
   const step = right < 10 ? 1 : right < 100 ? 10 : pick(rng, [10, 100])
   const down = right - step
@@ -202,17 +206,22 @@ export function buildSense(rng: Rng): SenseProblem {
     right = randInt(rng, 2, 19)
     a = b * right
   }
-  const wrong = rng() < 0.5 ? null : wrongAnswer(rng, op, a, b, right)
+  // Two kinds of item, with the same question for the right answer and the wrong one, so the question never gives it
+  // away: «¿Tiene sentido?» (the wrong proposals are absurd in size) and «¿Es correcta?» (the wrong ones are a slip away).
+  const exact = rng() < 0.5
+  const wrong = rng() < 0.5 ? null : wrongAnswer(rng, op, a, b, right, exact)
   const shown = wrong ? wrong.value : right
   const near = wrong?.close === true
   const story = fillTemplate(t.text, a, b)
-  const question = `${story} Lumi responde: «${withSpaces(shown)} ${t.unit}». ¿Tiene sentido esa respuesta?`
+  const ask = exact ? '¿Es correcta la respuesta de Lumi?' : '¿Tiene sentido esa respuesta?'
+  const question = `${story} Lumi responde: «${withSpaces(shown)} ${t.unit}». ${ask}`
   const order = shuffle(rng, [0, 1])
   const correct = shown === right ? 0 : 1
+  const labels = exact ? EXACT_OPTIONS : SENSE_OPTIONS
   const exercise: ShapeChoiceExercise = {
     id: `word-sense:${t.id}:${a}.${b}:${shown}`, kind: 'shape-choice', skill: WORD_SENSE_SKILL, difficulty: 3,
-    question, figures: [], options: order.map((i) => SENSE_OPTIONS[i]), answer: order.indexOf(correct),
-    hints: near ? SENSE_HINTS_CLOSE : SENSE_HINTS,
+    question, figures: [], options: order.map((i) => labels[i]), answer: order.indexOf(correct),
+    hints: exact ? SENSE_HINTS_CLOSE : SENSE_HINTS,
   }
   return { op, a, b, right, shown, near, exercise }
 }
