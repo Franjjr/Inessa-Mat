@@ -96,6 +96,11 @@ describe('ClassScreen', () => {
     expect(flags[`clase-hoy:${new Date().toISOString().slice(0, 10)}:${TOPIC}`]).toBe(true)
   })
 
+  it('the intro says what «Ya lo sé» does before it is pressed', () => {
+    renderAt()
+    expect(screen.getByText(/Te haré 3 preguntas para comprobarlo/)).toBeInTheDocument()
+  })
+
   it('«Ya lo sé» with all three right skips the class', async () => {
     state.answers = [true, true, true]
     const user = userEvent.setup()

@@ -40,7 +40,7 @@ const SESSION_SETUP: Record<LessonSubject, {
   activity: string; title: string; minutes: number; classFirst: boolean; adventure: boolean; blocks: [string, string][]
 }> = {
   math: {
-    activity: 'sesion', title: 'Mi sesión de hoy', minutes: DAILY_MINUTES, classFirst: false, adventure: true,
+    activity: 'sesion', title: 'Mi sesión de hoy', minutes: DAILY_MINUTES, classFirst: true, adventure: true,
     blocks: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con un ejemplo'], ['Mezcla', '5 min · de todo un poco'], ['Problema', '2 min · con historia']],
   },
   language: {
@@ -213,7 +213,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
     <header className={s.header}>
       <BackButton variant="exit" onClick={() => setPaused(true)} />
       <h1 className={s.headerTitle}>{title}</h1>
-      {phase === 'play' ? <span className={s.clock} aria-live="off">{formatClock(seconds)} de {SESSION_SETUP[subject].minutes}</span> : <span />}
+      {phase === 'play' ? <span className={s.clock} aria-live="off">{clockText(seconds, SESSION_SETUP[subject].minutes)}</span> : <span />}
     </header>
   )
 
@@ -510,6 +510,11 @@ function safeNext(progress: ProgressState) {
   } catch {
     return null
   }
+}
+
+/** «3 de 15 minutos»: the minutes done out of the minutes of the session, in words a child reads at a glance. */
+export function clockText(totalSeconds: number, minutes: number): string {
+  return `${Math.floor(totalSeconds / 60)} de ${minutes} minutos`
 }
 
 export function formatClock(totalSeconds: number): string {

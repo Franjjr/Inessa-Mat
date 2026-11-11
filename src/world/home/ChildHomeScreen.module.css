@@ -369,3 +369,7 @@
 .mission:focus-visible { outline: 4px solid var(--c-primary); outline-offset: 3px; }
 .missionKicker { font-size: var(--fs-sm); font-weight: 700; color: var(--c-ink-soft); }
 .missionTitle { max-width: 100%; overflow-wrap: anywhere; font-size: var(--fs-md); font-weight: 800; }
+
+/* The first day: one main action (the placement test); the rest is there, but quieter. */
+.quiet { opacity: 0.6; filter: saturate(0.6); }
+.quiet:hover, .quiet:focus-within { opacity: 1; filter: none; }
