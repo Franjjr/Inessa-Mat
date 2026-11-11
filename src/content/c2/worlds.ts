@@ -312,7 +312,7 @@ export const c2w6 = world({
       selector: { skills: ['mental:decenas'] },
       count: 5,
     }),
-    storyNode('mid', 'Cuántas flores hay', 'c2-w6-mid'),
+    storyNode('mid', '¿Cuántas flores hay?', 'c2-w6-mid'),
     activityNode('shop', {
       kind: 'exercises',
       title: 'El puesto de semillas',
