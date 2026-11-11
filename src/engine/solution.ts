@@ -5,9 +5,10 @@
    The answer always holds the expected answer of the corrector (check(...).expected), so the two never disagree. */
 import type {
   BarProblemExercise, CheckCalcExercise, ColumnSubExercise, DivisionExercise, DivMethod,
-  EqTerm, ErrorHuntExercise, Exercise, Hint, HintVisual, SubMethod, TableMethod,
+  EqTerm, ErrorHuntExercise, Exercise, Hint, HintVisual, MentalExercise, SubMethod, TableMethod,
 } from '@/types'
 import { check } from './check'
+import { toRoman } from './calc'
 import { digitAt, digitCount } from './arith'
 import { columnName, columnWithArticle } from './feedback'
 import { strategyDetail, trickDetail } from './strategies'
@@ -325,7 +326,12 @@ function checkCalcSolution(ex: CheckCalcExercise): Solution {
 /** The hint texts that can stand as a step of the solution (a strategy, not a question to answer with «= ?»). */
 function strategySteps(ex: Exercise, opts: SolutionOptions): string[] {
   const hs = hintsFor(ex, opts.subMethod, { divMethod: opts.divMethod, tableMethod: opts.tableMethod })
-  return hs.slice(0, 2).map((h) => h.text).filter((t) => !/=\s*\?/.test(t) && !/[{}]/.test(t.replace(/\{(child|pet)\}/g, '')))
+  return hs.slice(0, 2).map((h) => h.text).filter(isStatement)
+}
+
+/** A hint that can stand as a step of a solution: it states, never asks («¿…?», «= ?») and has no template brace. */
+function isStatement(t: string): boolean {
+  return !t.includes('?') && !/[{}]/.test(t.replace(/\{(child|pet)\}/g, ''))
 }
 
 /** «roja» → «rojas», «azul» → «azules», «minuto» → «minutos». */
@@ -337,6 +343,160 @@ const time = (h: number, m: number) => `${h}:${String(m).padStart(2, '0')}`
 /** «a las 12:40», «a la 1:40»: the article of a time on the clock face. */
 const atTime = (h: number, m: number) => `${h % 12 === 1 ? 'la' : 'las'} ${time(h, m)}`
 
+/** The trick and its worked step as two steps of a solution. The hint texts stop before the answer («→ …», «5, 10…»,
+    «= ?»): here every doubling is a sentence, nothing trails off and each step ends with its full stop. */
+export function factMulSteps(rule: string, worked: string, answer: number): string[] {
+  const end = (s: string) => (/[.!»]$/.test(s.trim()) ? s.trim() : `${s.trim()}.`)
+  // «Doble y doble: 3 → 6 → …» keeps only the name of the trick; the worked step does the doubling.
+  const ruleText = /→|…/.test(rule) ? rule.split(':')[0] : rule
+  let w = worked.replace(/\?\s*$/, String(answer))
+  // «1 → 2 → 4. Y el doble de 4: …» → «El doble de 1 es 2. El doble de 2 es 4. Y el doble de 4: …»
+  w = w.replace(/(\d+)((?: → \d+)+)\./g, (_m, first: string, rest: string) => {
+    const chain = [first, ...rest.split(' → ').slice(1)]
+    return chain.slice(1).map((v, i) => `El doble de ${chain[i]} es ${v}.`).join(' ')
+  })
+  // «5, 10… y uno más» → «5, 10 y uno más»
+  w = w.replace(/…/g, '')
+  const steps = [end(ruleText), end(w)]
+  return ruleText.endsWith('?') ? [end(w)] : steps
+}
+
+const PLACE_ONE =['unidad', 'decena', 'centena', 'millar', 'decena de millar']
+
+/** «Hay 1 decena de millar, 7 millares, 5 centenas, 1 decena y 1 unidad.» and the sum of the values: every column, the
+    singular for a 1, and the columns worth 0 left out. */
+export function placeValueSteps(value: number): string[] {
+  const names: string[] = []
+  const parts: number[] = []
+  for (let i = digitCount(value) - 1; i >= 0; i--) {
+    const d = digitAt(value, i)
+    if (!d) continue
+    names.push(`${d} ${d === 1 ? PLACE_ONE[i] ?? columnName(i) : columnName(i)}`)
+    parts.push(d * 10 ** i)
+  }
+  if (!names.length) return ['No hay nada en ninguna casa: es el 0.']
+  return [`Hay ${andList(names)}.`, parts.length > 1 ? `${parts.map(num).join(' + ')} = ${num(value)}.` : `Es el ${num(value)}.`]
+}
+
+/** Rounds to the nearest multiple of `place` (halves go up), as the estimates of cálculo mental do. */
+const roundTo = (n: number, place: number) => Math.round(n / place) * place
+
+const ROMAN_PIECES: [string, number][] = [['XC', 90], ['XL', 40], ['IX', 9], ['IV', 4], ['C', 100], ['L', 50], ['X', 10], ['V', 5], ['I', 1]]
+/** 'LXXXVII' → [['L', 50], ['X', 10], …]: the pieces a Roman numeral is read in, from the left. */
+function romanPieces(r: string): [string, number][] {
+  const out: [string, number][] = []
+  let rest = r
+  while (rest) {
+    const hit = ROMAN_PIECES.find(([s]) => rest.startsWith(s))
+    if (!hit) break
+    out.push(hit)
+    rest = rest.slice(hit[0].length)
+  }
+  return out
+}
+
+/** Cálculo mental, worked the way the hints teach each family: never the prompt copied back with the answer. */
+function mentalSteps(ex: MentalExercise, opts: SolutionOptions): string[] {
+  const { a, b, answer } = ex
+  const plus = ex.prompt.includes(' + ')
+  const op = plus ? '+' : '−'
+  const t = a - (a % 10)
+  const u = a % 10
+  // The rule of the family (hint 1) opens the solution, unless the worked steps already say it in their own words.
+  const ownWords = ['dobles', 'triples', 'mitades', 'por10', 'romanos', 'asociativa', 'distributiva', 'estimar']
+  const steps = ownWords.includes(ex.family) ? [] : strategySteps(ex, opts).slice(0, 1)
+  const evaluated = () => {
+    const ev = evaluateSteps(ex.prompt.replace(/\s*=\s*\?\s*$/, ''))
+    return ev && ev.value === answer ? ev.steps : null
+  }
+  switch (ex.family) {
+    case 'dobles':
+      if (a < 10) steps.push(`${a} + ${a} = ${answer}.`)
+      else if (u === 0) steps.push(`${num(a)} son ${a / 10} decenas. El doble: ${a / 10} + ${a / 10} = ${a / 5} decenas, que son ${num(answer)}.`)
+      else steps.push(`Parto el ${a} en ${t} y ${u}, y doblo cada parte.`, `${t} + ${t} = ${2 * t}.`, `${u} + ${u} = ${2 * u}.`, `Junto las dos partes: ${2 * t} + ${2 * u} = ${num(answer)}.`)
+      break
+    case 'triples':
+      if (a < 10) steps.push(`${a} + ${a} + ${a} = ${answer}.`)
+      else if (u === 0) steps.push(`${num(a)} son ${a / 10} decenas. El triple: ${a / 10} + ${a / 10} + ${a / 10} = ${(3 * a) / 10} decenas, que son ${num(answer)}.`)
+      else steps.push(`Parto el ${a} en ${t} y ${u}, y triplico cada parte.`, `${t} + ${t} + ${t} = ${3 * t}.`, `${u} + ${u} + ${u} = ${3 * u}.`, `Junto las dos partes: ${3 * t} + ${3 * u} = ${num(answer)}.`)
+      break
+    case 'mitades':
+      if (a < 10 || u === 0) steps.push(`Reparto ${a} en dos partes iguales: ${answer} y ${answer}, porque ${answer} + ${answer} = ${a}.`)
+      else steps.push(`Parto el ${a} en ${t} y ${u}, y reparto cada parte entre dos.`, `La mitad de ${t} es ${t / 2}, porque ${t / 2} + ${t / 2} = ${t}.`, `La mitad de ${u} es ${u / 2}, porque ${u / 2} + ${u / 2} = ${u}.`, `Junto las dos mitades: ${t / 2} + ${u / 2} = ${answer}.`)
+      break
+    case 'completar10':
+      steps.push(u === 0 ? `De ${a} a ${b} hay una decena entera: ${a} + ${answer} = ${b}.` : `A ${a} le faltan ${answer} unidades para llegar a ${b}: ${a} + ${answer} = ${b}.`)
+      break
+    case 'completar100':
+    case 'completar1000': {
+      const step = ex.family === 'completar100' ? 10 : 100
+      const next = Math.ceil(a / step) * step
+      if (next !== a && next !== b) {
+        steps.push(`De ${num(a)} a ${num(next)} faltan ${num(next - a)}.`, `De ${num(next)} a ${num(b)} faltan ${num(b - next)}.`, `Junto lo que falta: ${num(next - a)} + ${num(b - next)} = ${num(answer)}.`)
+      } else if (next === b) {
+        steps.push(`De ${num(a)} a ${num(b)} faltan ${num(answer)}.`)
+      } else {
+        const k = (b - a) / step
+        steps.push(`De ${num(a)} a ${num(b)} hay ${k} ${step === 10 ? (k === 1 ? 'decena' : 'decenas') : k === 1 ? 'centena' : 'centenas'}: ${num(answer)}.`)
+      }
+      steps.push(`Lo compruebo: ${num(a)} + ${num(answer)} = ${num(b)}.`)
+      break
+    }
+    case 'decenas':
+      steps.push(`${num(a)} son ${a / 10} decenas y ${b} son ${b / 10} decenas.`, `${a / 10} ${op} ${b / 10} = ${answer / 10} decenas, que son ${num(answer)}.`)
+      break
+    case 'centenas': {
+      const h = Math.floor(a / 100)
+      steps.push(`Las centenas: ${h} ${op} ${b / 100} = ${Math.floor(answer / 100)}.`, `${num(a)} ${op} ${num(b)} = ${num(answer)}.`)
+      break
+    }
+    case 'compensar': {
+      const round = b + 1
+      if (plus) steps.push(`${a} + ${round} = ${a + round}.`, `He sumado 1 de más, así que lo quito: ${a + round} − 1 = ${answer}.`)
+      else steps.push(`${a} − ${round} = ${a - round}.`, `He quitado 1 de más, así que lo sumo: ${a - round} + 1 = ${answer}.`)
+      break
+    }
+    case 'por10': {
+      const n = String(b).length - 1
+      const zeros = ['', 'un cero', 'dos ceros', 'tres ceros'][n]
+      steps.push(ex.prompt.includes('×')
+        ? `Por ${num(b)} ${n === 1 ? 'se pone' : 'se ponen'} ${zeros} a la derecha: ${num(a)} × ${num(b)} = ${num(answer)}.`
+        : `Entre ${num(b)} ${n === 1 ? 'se quita' : 'se quitan'} ${zeros} de la derecha: ${num(a)} : ${num(b)} = ${num(answer)}.`)
+      break
+    }
+    case 'romanos': {
+      const roman = toRoman(a)
+      const pieces = romanPieces(roman)
+      if (pieces.length > 1) steps.push(`Leo ${roman} por trozos, de izquierda a derecha: ${pieces.map(([s, v]) => `${s} vale ${v}`).join(', ')}.`, `Sumo los trozos: ${pieces.map(([, v]) => v).join(' + ')} = ${answer}.`)
+      else steps.push(`${roman} vale ${answer}.`)
+      break
+    }
+    case 'asociativa': {
+      // a is the even factor (2 or 4), b the other one.
+      steps.push(`Junto primero el 5 con el ${a}: 5 × ${a} = ${5 * a}.`, `Después, ${5 * a} × ${b} = ${answer}.`)
+      break
+    }
+    case 'distributiva': {
+      const units = b % 10
+      const tens = b - units
+      steps.push(`Parto el ${b} en ${tens} y ${units}: ${a} × ${b} = ${a} × ${tens} + ${a} × ${units}.`, `${a} × ${tens} = ${a * tens}.`, `${a} × ${units} = ${a * units}: ese es el número que falta.`, `En total, ${a} × ${b} = ${a * tens} + ${a * units} = ${a * b}.`)
+      break
+    }
+    case 'estimar': {
+      const place = ex.place ?? 10
+      const ra = roundTo(a, place)
+      const rb = roundTo(b, place)
+      steps.push(`Redondeo cada número a las ${place === 10 ? 'decenas' : 'centenas'}: ${num(a)} se queda en ${num(ra)} y ${num(b)}, en ${num(rb)}.`, `${num(ra)} ${op} ${num(rb)} = ${num(answer)}.`)
+      break
+    }
+    default: {
+      const ev = evaluated()
+      steps.push(...(ev ?? [`La respuesta es ${num(answer)}.`]))
+    }
+  }
+  return steps
+}
+
 function divisionAnswer(q: number, r: number): string {
   return r === 0 ? `${num(q)}, y no sobra nada` : `${num(q)}, y sobra${r === 1 ? '' : 'n'} ${num(r)}`
 }
@@ -346,8 +506,7 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
   switch (ex.kind) {
     case 'fact-mul': {
       const d = trickDetail(opts.tableMethod, ex.a, ex.b) ?? strategyDetail(ex.a, ex.b)
-      const worked = d.workedText.replace(/\?\s*$/, String(ex.answer))
-      return { steps: [d.strategy.text, worked], answer: `${ex.a} × ${ex.b} = ${ex.answer}`, visual: d.strategy.visual, params: d.visualParams }
+      return { steps: factMulSteps(d.strategy.text, d.workedText, ex.answer), answer: `${ex.a} × ${ex.b} = ${ex.answer}`, visual: d.strategy.visual, params: d.visualParams }
     }
     case 'fact-div': {
       const { dividend: p, divisor: d, answer: q } = ex
@@ -410,12 +569,8 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
     }
     case 'bar-problem': return { steps: barSteps(ex), answer: `${num(ex.answer)} ${ex.unit}` }
     case 'place-value': {
-      const parts = ex.parts
-      const names = ['millares', 'centenas', 'decenas', 'unidades']
-      const digits = String(ex.value).padStart(4, '0').split('').map(Number).slice(-4)
-      const count = digits.map((dg, i) => `${dg} ${names[i]}`).filter((_, i) => i > 0 || digits[0] > 0)
       const answer = Array.isArray(ex.answer) ? ex.answer.map(num).join(', ') : num(ex.answer)
-      return { steps: [`Hay ${andList(count)}.`, `${parts.filter((p) => p > 0).map(num).join(' + ')} = ${num(ex.value)}.`], answer }
+      return { steps: placeValueSteps(ex.value), answer }
     }
     case 'compare': {
       const { left: l, right: r } = ex
@@ -453,15 +608,7 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
       const text = ex.blank > 0 ? `Después de ${num(prev)} viene ${num(prev)} + ${num(ex.step)} = ${num(ex.answer)}.` : `Antes de ${num(prev)} va ${num(prev)} − ${num(ex.step)} = ${num(ex.answer)}.`
       return { steps: [`Las marcas van de ${num(ex.step)} en ${num(ex.step)}.`, text], answer: num(ex.answer) }
     }
-    case 'mental': {
-      const steps = strategySteps(ex, opts).slice(0, 1)
-      const expr = ex.prompt.replace(/\s*=\s*\?\s*$/, '')
-      const ev = /=\s*\?\s*$/.test(ex.prompt) ? evaluateSteps(expr) : null
-      if (ev && ev.value === ex.answer) steps.push(...ev.steps)
-      else if (ex.family.startsWith('completar')) steps.push(`${num(ex.a)} + ${num(ex.answer)} = ${num(ex.b)}.`)
-      else steps.push(`${ex.prompt.replace(/\s*=\s*\?\s*$/, '').replace(/\?/g, '')} → ${num(ex.answer)}.`.replace(/^¿/, ''))
-      return { steps, answer: num(ex.answer) }
-    }
+    case 'mental': return { steps: mentalSteps(ex, opts), answer: num(ex.answer) }
     case 'equation': {
       const l = sideText(ex.left)
       const r = sideText(ex.right)
@@ -529,7 +676,7 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
       return { steps: ['Miro si todas las partes de cada figura son del mismo tamaño.', list.length ? `Las partes no son iguales en: ${list.join(', ')}.` : 'Todas las figuras tienen partes iguales.'], answer: list.length ? `Figuras ${list.join(', ')}` : 'Ninguna' }
     }
     case 'shape-choice': {
-      const steps = ex.hints.filter((h) => !/=\s*\?/.test(h)).slice(0, 2)
+      const steps = ex.hints.filter(isStatement).slice(0, 2)
       return { steps: [...steps, `La respuesta es «${ex.options[ex.answer]}».`], answer: ex.options[ex.answer] }
     }
     case 'angle-tap': {
@@ -539,7 +686,7 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
     case 'perimeter': return { steps: ['El perímetro es el camino alrededor: se suman todos los lados.', `${ex.sides.map(num).join(' + ')} = ${num(ex.answer)} ${ex.unit}.`], answer: `${num(ex.answer)} ${ex.unit}` }
     case 'shape-count': {
       const what = ex.ask === 'sides' ? 'lados' : 'esquinas'
-      return { steps: [`Cuento ${ex.ask === 'sides' ? 'los lados' : 'las esquinas'} uno a uno: ${Array.from({ length: ex.answer }, (_, i) => i + 1).join(', ')}.`], answer: `${ex.answer} ${what}` }
+      return { steps: [`Cuento ${ex.ask === 'sides' ? 'los lados uno a uno' : 'las esquinas una a una'}: ${Array.from({ length: ex.answer }, (_, i) => i + 1).join(', ')}.`], answer: `${ex.answer} ${what}` }
     }
     case 'area': {
       const rows = new Map<number, number>()
@@ -547,16 +694,16 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
       const counts = [...rows.entries()].sort((a, b) => a[0] - b[0]).map(([, c]) => c)
       return { steps: ['El área es lo que ocupa la figura: cuento los cuadraditos.', counts.length > 1 ? `Fila a fila: ${counts.join(' + ')} = ${ex.answer}.` : `Hay ${ex.answer}.`], answer: `${ex.answer} cuadraditos` }
     }
-    case 'money': return moneySolution(ex, opts)
+    case 'money': return moneySolution(ex)
     case 'measure': {
       switch (ex.mode) {
         case 'ruler': return { steps: [`El objeto empieza en el ${ex.start} y acaba en el ${ex.end}.`, `${ex.end} − ${ex.start} = ${ex.answer}.`], answer: `${ex.answer} cm` }
-        case 'convert': return { steps: [...strategySteps(ex, opts).slice(0, 1), `${ex.given} = ${num(ex.answer)} ${ex.unit}.`], answer: `${num(ex.answer)} ${ex.unit}` }
-        case 'add': return { steps: [...strategySteps(ex, opts).slice(0, 1), `En total: ${num(ex.answer)} ${ex.unit}.`], answer: `${num(ex.answer)} ${ex.unit}` }
-        case 'unit': return { steps: [`Pienso en el tamaño real de ${ex.object}.`, `Se mide en ${ex.answer}.`], answer: ex.answer }
+        case 'convert': return { steps: [...strategySteps(ex, opts).slice(0, 1), `${cap(amountInWords(ex.given))} son ${num(ex.answer)} ${unitWord(ex.unit, ex.answer)}.`], answer: `${num(ex.answer)} ${unitWord(ex.unit, ex.answer)}` }
+        case 'add': return measureAddSolution(ex, opts)
+        case 'unit': return { steps: [`Pienso en el tamaño real de ${ex.object}.`, `Se mide en ${unitWord(ex.answer)}.`], answer: `${unitWord(ex.answer)} (${ex.answer})` }
         case 'estimate': {
           const answer = expectedOf(ex)
-          return { steps: [`Pienso en el tamaño real de ${ex.object}: «${ex.claim}».`, ex.answer ? 'Tiene sentido.' : 'No tiene sentido.'], answer }
+          return { steps: [`Pienso en el tamaño real de ${ex.object}: «${ex.claim.trim().replace(/\.$/, '').replace(/(\d+) ([a-z]+)\b/g, (_m, n: string, u: string) => `${n} ${unitWord(u, Number(n))}`)}».`, ex.answer ? 'Tiene sentido.' : 'No tiene sentido.'], answer }
         }
       }
       break
@@ -655,7 +802,7 @@ function divisionSolution(ex: DivisionExercise): Solution {
   return { steps, answer: divisionAnswer(q, r), visual: 'share', params: { total: n, groups: d, dividend: n, divisor: d } }
 }
 
-function moneySolution(ex: Extract<Exercise, { kind: 'money' }>, opts: SolutionOptions): Solution {
+function moneySolution(ex: Extract<Exercise, { kind: 'money' }>): Solution {
   switch (ex.mode) {
     case 'recognise': return { steps: ['Miro el número y el tamaño de la moneda o del billete.'], answer: ex.answer < 100 ? `${ex.answer} ${ex.answer === 1 ? 'céntimo' : 'céntimos'}` : `${euros(ex.answer)} (${num(ex.answer)} céntimos)` }
     case 'pay': return { steps: ['Empiezo por la pieza más grande que quepa en el precio y sigo con las que faltan.', `Junto exactamente ${euros(ex.price)}.`], answer: euros(ex.price) }
@@ -664,10 +811,7 @@ function moneySolution(ex: Extract<Exercise, { kind: 'money' }>, opts: SolutionO
     case 'compare': {
       return { steps: [`Los precios: ${ex.items.map((i) => `${i.name}, ${euros(i.price)}`).join('; ')}.`, `${ex.question === 'more' ? 'El más caro' : 'El más barato'}: ${ex.answer}.`], answer: ex.answer }
     }
-    case 'budget': {
-      const answer = typeof ex.answer === 'number' ? euros(ex.answer) : ex.answer
-      return { steps: [`Tengo ${euros(ex.budget)}. Los precios: ${ex.items.map((i) => `${i.name}, ${euros(i.price)}`).join('; ')}.`, ...strategySteps(ex, opts).slice(0, 1), `La respuesta es ${answer}.`], answer }
-    }
+    case 'budget': return budgetSolution(ex)
     case 'convert': {
       if (ex.direction === 'to-cents') return { steps: [`1 euro son 100 céntimos: ${euros(ex.amount)} son ${num(ex.amount)} céntimos.`], answer: `${num(ex.amount)} céntimos` }
       const [e, c] = Array.isArray(ex.answer) ? ex.answer : [Math.floor(ex.amount / 100), ex.amount % 100]
@@ -681,3 +825,70 @@ export function subtractionSolution(ex: ColumnSubExercise, method?: SubMethod): 
   return withAnswer(subSteps(ex.minuend, ex.subtrahend, method), num(ex.answer))
 }
 
+
+const UNIT_WORDS: Record<string, [string, string]> = {
+  mm: ['milímetro', 'milímetros'], cm: ['centímetro', 'centímetros'], dm: ['decímetro', 'decímetros'], m: ['metro', 'metros'],
+  km: ['kilómetro', 'kilómetros'], g: ['gramo', 'gramos'], kg: ['kilo', 'kilos'], ml: ['mililitro', 'mililitros'],
+  cl: ['centilitro', 'centilitros'], dl: ['decilitro', 'decilitros'], l: ['litro', 'litros'],
+  dam: ['decámetro', 'decámetros'], hm: ['hectómetro', 'hectómetros'], mg: ['miligramo', 'miligramos'],
+  cg: ['centigramo', 'centigramos'], dg: ['decigramo', 'decigramos'], dag: ['decagramo', 'decagramos'],
+  hg: ['hectogramo', 'hectogramos'], dal: ['decalitro', 'decalitros'], hl: ['hectolitro', 'hectolitros'],
+  kl: ['kilolitro', 'kilolitros'],
+}
+/** «l» → «litros» (the voice would read the letter): the unit in words, singular for 1. */
+export function unitWord(unit: string, n = 2): string {
+  const w = UNIT_WORDS[unit]
+  return w ? w[n === 1 ? 0 : 1] : unit
+}
+
+/** «3 l» → «3 litros», «1 m» → «1 metro»; any other text («medio litro») stays. */
+function amountInWords(given: string): string {
+  const m = /^(\d[\d ]*) ([a-z]+)$/.exec(given.trim())
+  return m ? `${m[1]} ${unitWord(m[2], Number(m[1].replace(/ /g, '')))}` : given
+}
+
+/** «3 l y 143 ml»: the big unit converted first, then the sum, with the units in words. */
+function measureAddSolution(ex: Extract<Exercise, { kind: 'measure'; mode: 'add' }>, opts: SolutionOptions): Solution {
+  const answer = `${num(ex.answer)} ${unitWord(ex.unit)}`
+  const [, , , a, b] = ex.id.split(':').map(Number)
+  const factor = ({ cm: 100, g: 1000, ml: 1000 } as Record<string, number>)[ex.unit]
+  const big = ({ cm: 'm', g: 'kg', ml: 'l' } as Record<string, string>)[ex.unit]
+  if (!Number.isInteger(a) || !Number.isInteger(b) || !factor || a * factor + b !== ex.answer) {
+    return { steps: [...strategySteps(ex, opts).slice(0, 1), `En total: ${answer}.`], answer }
+  }
+  return {
+    steps: [
+      'Antes de sumar, pongo las dos medidas en la misma unidad.',
+      a === 1
+        ? `1 ${unitWord(big, 1)} son ${num(factor)} ${unitWord(ex.unit)}.`
+        : `1 ${unitWord(big, 1)} son ${num(factor)} ${unitWord(ex.unit)}: ${a} ${unitWord(big, a)} son ${a} × ${num(factor)} = ${num(a * factor)} ${unitWord(ex.unit)}.`,
+      `Sumo: ${num(a * factor)} + ${num(b)} = ${num(ex.answer)} ${unitWord(ex.unit)}.`,
+    ],
+    answer,
+  }
+}
+
+/** The budget: the prices added first, then what the question asks (enough, short, left, afford). */
+function budgetSolution(ex: Extract<Exercise, { kind: 'money'; mode: 'budget' }>): Solution {
+  const total = ex.items.reduce((s, i) => s + i.price, 0)
+  const have = `Tengo ${euros(ex.budget)}.`
+  const sum = ex.items.length > 1
+    ? `Sumo los precios: ${ex.items.map((i) => euros(i.price)).join(' + ')} = ${euros(total)}.`
+    : `Cuesta ${euros(total)}.`
+  switch (ex.ask) {
+    case 'enough': {
+      const yes = total <= ex.budget
+      return {
+        steps: [have, sum, yes ? `${euros(total)} no pasa de ${euros(ex.budget)}: me llega.` : `${euros(total)} es más que ${euros(ex.budget)}: no me llega.`],
+        answer: yes ? 'Sí, te llega' : 'No, no te llega',
+      }
+    }
+    case 'short': return { steps: [have, sum, `Me falta: ${euros(total)} − ${euros(ex.budget)} = ${euros(total - ex.budget)}.`], answer: euros(Number(ex.answer)) }
+    case 'left': return { steps: [have, sum, `Me sobra: ${euros(ex.budget)} − ${euros(total)} = ${euros(ex.budget - total)}.`], answer: euros(Number(ex.answer)) }
+    case 'afford': {
+      const answer = String(ex.answer)
+      const prices = ex.items.map((i) => `${i.name}, ${euros(i.price)}`).join('; ')
+      return { steps: [have, `Los precios: ${prices}.`, `Solo me llega para ${answer}: cuesta ${euros(ex.items.find((i) => i.name === answer)?.price ?? 0)}, y no pasa de ${euros(ex.budget)}.`], answer }
+    }
+  }
+}
