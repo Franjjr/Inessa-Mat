@@ -915,7 +915,9 @@ export type ErrorType =
   | 'quotient-off'         // quotient off by one with consistent remainder logic
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
-  | 'recognition'          // child said the handwriting was misread (not a maths error!)
+  | 'recognition'          // the handwriting was misread (not a maths error!). NOT assigned by engine check(): a doubtful digit is
+                            // confirmed by the child in the ink layer first (src/ink/context.ts). Consumers ignore it in accuracy and
+                            // mastery; it stays in the union for attempts already stored and for dev data (src/data/dev.ts)
   | 'calig-shape'          // Caligrafía: the letter's form is off (worst criterion of a cursive try)
   | 'calig-line'           // Caligrafía: the letter does not sit on the baseline
   | 'calig-size'           // Caligrafía: the letter is too big or too small
