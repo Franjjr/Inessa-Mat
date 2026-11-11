@@ -1,0 +1,38 @@
+/* The calm end of a mission: one sticker card in the middle of the page, no celebration that pushes. */
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5) var(--page-gutter);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
+  padding: var(--sp-6) var(--sp-5);
+  border: var(--sticker-border);
+  border-radius: var(--r-lg);
+  background: var(--c-green-soft, #dcfce7);
+  box-shadow: var(--sticker-shadow);
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: var(--fs-xl);
+  color: var(--c-ink);
+}
+
+.text {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
