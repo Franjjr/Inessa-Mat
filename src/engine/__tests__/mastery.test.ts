@@ -204,6 +204,15 @@ describe('choice exercises cannot climb past CHOICE_MAX_BOX by guessing', () => 
     expect(next.streak).toBe(mastered.streak + 1)
   })
 
+  it('two fluent right choice answers on different days still reach the mastered box (the accepted guess case)', () => {
+    const once = updateMastery(withBox(0, 'word:sense:add'), choice(), now)
+    expect(once.box).toBe(1)
+    const twice = updateMastery(once, choice(), at(2))
+    expect(twice.box).toBe(CHOICE_MAX_BOX)
+    // Mastered by choice alone, the next box needs a written answer.
+    expect(updateMastery(twice, choice(), at(4)).box).toBe(CHOICE_MAX_BOX)
+  })
+
   it('the same answer written (not a choice) climbs past the cap as before', () => {
     const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
     expect(updateMastery(mastered, write(), at(1)).box).toBe(CHOICE_MAX_BOX + 1)

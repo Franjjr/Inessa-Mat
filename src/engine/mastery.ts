@@ -21,8 +21,10 @@ const EMA_ALPHA = 0.3
 
 const FACT_THRESHOLDS: Record<InputMode, number> = { keyboard: 4000, keypad: 5000, pen: 7000, touch: 7000, tap: 4000 }
 const SPEED_KINDS: ExerciseKind[] = ['fact-mul', 'fact-div', 'missing-factor']
-/** Highest box a right answer to a choice exercise can take a skill to. A choice between two or three options is right
-    half or a third of the time by chance, so the box past this one (mastered, then the next) needs written answers. */
+/** Highest box a right answer to a choice exercise can take a skill to: MASTERED_BOX itself. A choice between two or three
+    options is right half or a third of the time by chance, so a guess can reach «dominado» on two different days. That
+    is accepted for now: choice-only skills (clock, money, measures, shape names) would otherwise never complete their
+    topic. Only written answers go past this box (memorised and above). */
 export const CHOICE_MAX_BOX = 2
 const CHOICE_KINDS: ExerciseKind[] = ['compare', 'shape-choice', 'eng-listen-pick', 'eng-complete', 'lng-classify', 'lng-read-choice']
 
@@ -38,7 +40,8 @@ export function fluencyThresholdMs(inputMode: InputMode, kind: Exercise['kind'])
 }
 
 /** True when the child only picks an answer from a few options (no writing): a guess gets it right too often to climb
-    past CHOICE_MAX_BOX. Kinds that are choice only in one of their modes are judged by the mode. */
+    past CHOICE_MAX_BOX. Kinds that are choice only in one of their modes are judged by the mode. Tapping a figure
+    (fraction-equal, angle-tap) is not listed here: pending a product decision on whether marking a figure counts as choice. */
 export function isChoiceExercise(ex: Exercise): boolean {
   if (CHOICE_KINDS.includes(ex.kind)) return true
   switch (ex.kind) {
