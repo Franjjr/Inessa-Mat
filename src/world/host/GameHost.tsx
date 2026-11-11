@@ -250,7 +250,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject: subjectPr
       if (key === 'subMethod' || key === 'divMethod') return
       const c = childRef.current
       if (!c) return
-      updateChild(c.id, { settings: { ...c.settings, [key]: value } }).catch((e) => reportError('setPreference', e))
+      updateChild(c.id, { settings: { ...c.settings, tableMethod: normaliseTableMethod(value) } }).catch((e) => reportError('setPreference', e))
     }
 
     return {

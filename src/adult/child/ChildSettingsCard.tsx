@@ -1,4 +1,7 @@
-/* Per-child learning settings. Sound, music and voice live in Settings (they are device-level habits). */
+/* Per-child learning settings. Sound, music and voice live in Settings (they are device-level habits).
+   The subtraction and division methods are the ones of the child's school: only the grown-up chooses them here, each
+   option with its notebook drawing and its sentence always visible. Until they are answered, the question is shown on
+   top (never blocking): the defaults are pedir prestado and the galera con restas. */
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { DIV_METHODS, SUB_METHODS, TABLE_METHODS, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod } from '@/engine'
@@ -7,6 +10,9 @@ import type { ChildProfile, ChildSettings } from '@/types'
 import { toast } from '@/ui'
 import { errorMessage } from '../shared/messages'
 import { SwitchRow } from './SwitchRow'
+import { MethodSketch, type SketchId } from './MethodSketch'
+import { SchoolMethodQuestion, needsSchoolMethod } from './SchoolMethodQuestion'
+import m from './MethodSketch.module.css'
 import adult from '../shared/adult.module.css'
 import s from './child.module.css'
 
@@ -18,6 +24,7 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
     divMethod: normaliseDivMethod(child.settings.divMethod),
     tableMethod: normaliseTableMethod(child.settings.tableMethod),
   }
+  const trick = TABLE_METHODS.find((t) => t.id === settings.tableMethod) ?? null
 
   const change = async (patch: Partial<ChildSettings>) => {
     setError(null)
@@ -114,64 +121,81 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
         </div>
       </div>
 
+      {needsSchoolMethod(child) && (
+        <div className={`${adult.notice} ${adult.noticeInfo}`} role="note" aria-label="Cómo se hace en su colegio">
+          <SchoolMethodQuestion child={child} />
+        </div>
+      )}
+
       <div className={adult.stack}>
-        <span className={adult.label} id="sub-method-label">Método favorito para restar</span>
-        <p className={adult.hint}>Las restas de la app usan este método. El niño puede cambiarlo en su lección «Cuatro caminos para restar».</p>
-        <div className={s.segGroup} role="radiogroup" aria-labelledby="sub-method-label">
-          {SUB_METHODS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              role="radio"
-              aria-checked={settings.subMethod === m.id}
-              className={adult.segment}
-              title={m.summary}
-              onClick={() => void change({ subMethod: m.id })}
-            >
-              {m.label}
-            </button>
+        <span className={adult.label} id="sub-method-label">Cómo resta en su colegio</span>
+        <p className={adult.hint}>Todas las restas de la app se hacen así. Elige la forma que usa su colegio. Si la respuesta final está bien, siempre vale.</p>
+        <div className={m.options} role="radiogroup" aria-labelledby="sub-method-label">
+          {SUB_METHODS.map((meth) => (
+            <div key={meth.id} className={m.option}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={settings.subMethod === meth.id}
+                className={adult.segment}
+                onClick={() => void change({ subMethod: meth.id, schoolMethodAsked: true })}
+              >
+                {meth.label}
+              </button>
+              <MethodSketch id={meth.id as SketchId} />
+            </div>
           ))}
         </div>
       </div>
 
       <div className={adult.stack}>
-        <span className={adult.label} id="div-method-label">Método favorito para dividir</span>
-        <p className={adult.hint}>Las divisiones de la app usan este método. El niño puede cambiarlo en su lección «Cuatro caminos para dividir».</p>
-        <div className={s.segGroup} role="radiogroup" aria-labelledby="div-method-label">
-          {DIV_METHODS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              role="radio"
-              aria-checked={settings.divMethod === m.id}
-              className={adult.segment}
-              title={m.summary}
-              onClick={() => void change({ divMethod: m.id })}
-            >
-              {m.label}
-            </button>
+        <span className={adult.label} id="div-method-label">Cómo divide en su colegio</span>
+        <p className={adult.hint}>Todas las divisiones de la app usan la galera, así. Si el cociente y el resto están bien, siempre vale.</p>
+        <div className={m.options} role="radiogroup" aria-labelledby="div-method-label">
+          {DIV_METHODS.map((meth) => (
+            <div key={meth.id} className={m.option}>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={settings.divMethod === meth.id}
+                className={adult.segment}
+                onClick={() => void change({ divMethod: meth.id })}
+              >
+                {meth.label}
+              </button>
+              <MethodSketch id={meth.id as SketchId} />
+            </div>
           ))}
         </div>
       </div>
 
       <div className={adult.stack}>
-        <span className={adult.label} id="table-trick-label">Truco favorito para las tablas</span>
-        <p className={adult.hint}>Si el truco sirve para el hecho, es lo primero que se le recuerda en la pista. Si no se elige ninguno, la app decide.</p>
+        <span className={adult.label} id="table-trick-label">Truco para las tablas</span>
+        <p className={adult.hint}>Si el truco sirve para la multiplicación, es lo primero que se le recuerda en la pista. Con «La app decide», cada pista usa el truco que mejor va.</p>
         <div className={s.segGroup} role="radiogroup" aria-labelledby="table-trick-label">
-          {TABLE_METHODS.map((m) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={settings.tableMethod === null}
+            className={adult.segment}
+            onClick={() => void change({ tableMethod: null })}
+          >
+            La app decide
+          </button>
+          {TABLE_METHODS.map((meth) => (
             <button
-              key={m.id}
+              key={meth.id}
               type="button"
               role="radio"
-              aria-checked={settings.tableMethod === m.id}
+              aria-checked={settings.tableMethod === meth.id}
               className={adult.segment}
-              title={m.summary}
-              onClick={() => void change({ tableMethod: m.id })}
+              onClick={() => void change({ tableMethod: meth.id })}
             >
-              {m.label}
+              {meth.label}
             </button>
           ))}
         </div>
+        <p className={adult.hint} aria-live="polite">{trick ? `${trick.label}: ${trick.summary}` : 'La app elige el truco de cada multiplicación.'}</p>
       </div>
 
       {error && <p className={adult.error} role="alert">{error}</p>}
