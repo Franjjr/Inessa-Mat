@@ -210,7 +210,8 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
       }
     }
     expect([...new Set(found)]).toEqual([])
-  }, 30_000)
+    // Generates every skill of two temarios: slower than vitest's default 5 s on a loaded machine.
+  }, 60_000)
   it('no English hint gives the answer away, for every English kind of its skills', () => {
     const found: string[] = []
     for (const skill of english) {

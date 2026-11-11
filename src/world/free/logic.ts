@@ -1,9 +1,26 @@
 /* Free play rules (pure): which times tables and which minigames the child has unlocked, and the config of a
    table drill. Only what the child has reached is offered; nothing here changes progress. */
+import { readTables, type TableState } from '@/adult/shared/reading'
 import { isNodeUnlocked, seasonOf } from '@/content'
 import { classForTopic, isClassDone, type ClassDef } from '@/content/classes'
 import { allTopics, currentTopic, isTopicMastered, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { factGrid } from '@/engine'
 import type { ActivityConfig, ActivityKind, MasteryMap, ProgressState, WorldDef, NodeDef } from '@/types'
+
+/** The child's words for one times table: never the errors («en camino» covers the tables still being learnt). */
+export type TableStatus = 'dominada' | 'en-camino' | 'por-aprender'
+export const TABLE_STATUS_LABEL: Record<TableStatus, string> = {
+  dominada: 'Dominada',
+  'en-camino': 'En camino',
+  'por-aprender': 'Por aprender',
+}
+
+/** The status of every times table 1..10, read from the child's mastery of the facts (the engine's grid). */
+export function tableStatuses(mastery: MasteryMap | undefined): Record<number, TableStatus> {
+  const { tables } = readTables(factGrid(mastery ?? {}), '')
+  const status = (state: TableState): TableStatus => (state === 'mastered' ? 'dominada' : state === 'unseen' ? 'por-aprender' : 'en-camino')
+  return Object.fromEntries(tables.map((t) => [t.n, status(t.state)]))
+}
 
 export interface FreeClass {
   topicId: string

@@ -11,7 +11,7 @@ import { useActiveChild, useMastery, useProgress } from '@/data'
 import { Button, Screen, Spinner, TopBar } from '@/ui'
 import type { ActivityConfig, ActivityResult } from '@/types'
 import { CancionesSection } from './CancionesSection'
-import { kindLabel, reachedClasses, tableDrill, unlockedGames, unlockedTables } from './logic'
+import { kindLabel, reachedClasses, TABLE_STATUS_LABEL, tableDrill, tableStatuses, unlockedGames, unlockedTables } from './logic'
 import s from './free.module.css'
 
 interface Summary {
@@ -45,6 +45,7 @@ export default function FreePlayScreen() {
   }
 
   const tables = unlockedTables(progress)
+  const statuses = tableStatuses(mastery)
   const games = unlockedGames(progress)
   const classes = reachedClasses({ grade: child.grade, mastery: mastery ?? {}, progress })
 
@@ -97,6 +98,7 @@ export default function FreePlayScreen() {
                 <span className={s.tableTimes} aria-hidden>×</span>
                 <span className={s.tableNumber}>{t}</span>
                 <span className={s.tableLabel}>La tabla del {t}</span>
+                <span className={s.tableStatus} data-status={statuses[t]}>{TABLE_STATUS_LABEL[statuses[t]]}</span>
               </button>
             ))}
           </div>
