@@ -15,6 +15,9 @@ import {
   subjectOfSkill, subjectOffered,
 } from '../subjects'
 
+/** The maths numbers of the local stats, without the activity of every subject (which counts every row on purpose). */
+const mathsOf = (stats: ReturnType<typeof statsFromLocal>) => ({ ...stats, bySubject: undefined })
+
 const now = new Date('2026-10-22T10:00:00.000Z')
 const DAY = 24 * 60 * 60 * 1000
 const daysAgo = (d: number) => new Date(now.getTime() - d * DAY).toISOString()
@@ -141,7 +144,10 @@ describe('English rows (eng:) are kept apart from maths and Lengua', () => {
       attempt({ skill: 'eng:num:0-20', createdAt: daysAgo(1), correct: false, errorType: 'fact' }),
       attempt({ skill: 'eng:num:0-20', createdAt: daysAgo(2), correct: true }),
     ]
-    expect(statsFromLocal([...eng, ...base], [...eng, ...base], [], null)).toEqual(statsFromLocal(base, base, [], null))
+    // The maths numbers are the same; only the activity of every subject (bySubject) lists the English answers.
+    const withEng = statsFromLocal([...eng, ...base], [...eng, ...base], [], null)
+    expect(mathsOf(withEng)).toEqual(mathsOf(statsFromLocal(base, base, [], null)))
+    expect(withEng.bySubject?.english?.attempts).toBe(2)
   })
 })
 
@@ -281,7 +287,7 @@ describe('maths readers ignore Lengua rows', () => {
     const all = mixedAttempts()
     const sessions: never[] = []
     const onlyMaths = statsFromLocal(attemptsOf(all, 'math'), attemptsOf(all, 'math'), sessions, null)
-    expect(statsFromLocal(all, all, sessions, null)).toEqual(onlyMaths)
+    expect(mathsOf(statsFromLocal(all, all, sessions, null))).toEqual(mathsOf(onlyMaths))
   })
 })
 
