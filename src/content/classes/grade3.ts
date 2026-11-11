@@ -364,6 +364,8 @@ const dividirRepartir = clase({
     show('share', GEMAS, 'Vamos a repartir 12 gemas en 3 cofres. Las pongo de una en una, sin saltarme ningún cofre.'),
     show('share', GEMAS, 'Ya están repartidas: a cada cofre le ha tocado lo mismo.'),
     show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres es cuatro»: cada cofre tiene 4 gemas.'),
+    show('groups', { groups: 3, perGroup: 4, emoji: '💎' }, 'Dividir también es agrupar: ¿cuántos cofres de 4 gemas se llenan con 12? Vamos llenando cofres de 4.', 'owl'),
+    show('big-text', { text: '12 ÷ 4 = 3', sub: '3 cofres llenos' }, 'Los dos caminos dan lo mismo: repartir 12 en 3 cofres da 4 a cada uno, y llenar cofres de 4 da 3 cofres.', 'owl'),
   ],
   guiada: [
     tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos les toca lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
@@ -374,7 +376,7 @@ const dividirRepartir = clase({
     tryIt('share', GEMAS, '¡Tu turno! Ahora con cofres de más gemas.', { kinds: ['fact-div'], tables: [7, 8, 9], factorRange: [6, 9] }),
     tryIt('share', GEMAS, '¡Tu turno! Sin pistas: ¿qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [8, 9, 10], factorRange: [6, 10] }),
   ],
-  cierre: show('share', GEMAS, 'Dividir es repartir en partes iguales: el total se reparte entre los grupos y lo que sale es lo que toca a cada uno.'),
+  cierre: show('share', GEMAS, 'Dividir es repartir en partes iguales, o agrupar en grupos iguales. Son dos maneras de mirar la misma división.'),
 })
 
 const dividirExacta = clase({
