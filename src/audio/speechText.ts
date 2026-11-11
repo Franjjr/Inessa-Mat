@@ -193,12 +193,19 @@ function readMath(expr: string): string {
   return wordsOf(tokens, '… ¿cuánto?…')
 }
 
-/** "07:05" → "las siete y cinco"; from 13 h on (and 0 h) hour and minutes are said as numbers: "las dieciocho cuarenta y cinco". */
+/** "07:05" → "las siete y cinco", "4:30" → "las cuatro y media"; from 13 h on (and 0 h) hour and minutes are said as numbers: "las dieciocho cuarenta y cinco". */
 function clockWords(h: number, m: number): string {
   const art = h === 1 ? 'la' : 'las'
   if (h >= 1 && h <= 12) {
     const hour = numberToSpanish(h, 'f')
-    return m === 0 ? `${art} ${hour} en punto` : `${art} ${hour} y ${numberToSpanish(m)}`
+    if (m === 0) return `${art} ${hour} en punto`
+    if (m === 15) return `${art} ${hour} y cuarto`
+    if (m === 30) return `${art} ${hour} y media`
+    if (m === 45) {
+      const next = h === 12 ? 1 : h + 1
+      return `${next === 1 ? 'la' : 'las'} ${numberToSpanish(next, 'f')} menos cuarto`
+    }
+    return `${art} ${hour} y ${numberToSpanish(m)}`
   }
   const hour = numberToSpanish(h)
   if (m === 0) return `${art} ${hour} horas`
@@ -268,7 +275,7 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
 
     // Fractions "3/4" → "tres cuartos"; with a unit "1/2 kg" → "medio kilo", "3/4 l" → "tres cuartos de litro".
     s = s.replace(new RegExp(`(^|[^\\p{L}\\d/])(\\d{1,2})/(\\d{1,2})(?![\\d/])(?:\\s?(${UNIT})(?![\\p{L}\\d]))?`, 'gu'),
-      (m, pre: string, a: string, b: string, unit?: string) => {
+      (_m, pre: string, a: string, b: string, unit?: string) => {
         const words = fractionWords(Number(a), Number(b))
         if (!words) return `${pre}${numberToSpanish(Number(a))} entre ${numberToSpanish(Number(b))}${unit ? ` ${UNITS[unit][1]}` : ''}`
         if (!unit || unit === '€' || unit === '%') return `${pre}${words}${unit ? ` ${UNITS[unit][1]}` : ''}`
@@ -281,7 +288,7 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
       (_m, n: string, u: string, sq?: string) => quantity(n, u, !!sq))
 
     // Remaining numbers, agreeing with the next word. In doubt a "1" stays "uno": only before a noun it is "un".
-    s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)(\s+[\p{L}]+)?/gu, (m, n: string, next: string | undefined, offset: number, whole: string) => {
+    s = s.replace(/(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)(\s+[\p{L}]+)?/gu, (_m, n: string, next: string | undefined, offset: number, whole: string) => {
       const before = whole.slice(0, offset)
       const prevWord = /([\p{L}]+)\s+$/u.exec(before)?.[1] ?? ''
       const nextWord = next?.trim()

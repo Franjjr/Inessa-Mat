@@ -1,7 +1,14 @@
 /* The voice says what a teacher would say: numbers with spaces, hours, fractions, money, signs, agreement.
    Cases come from the audit of the maths module (voice findings V1 to V10 and V15). */
-import { SAFE_TEXT } from '../../../api/tts'
+import ttsSource from '../../../api/tts.ts?raw'
 import { toSpeakable } from '../speechText'
+
+/** The filter of the voice service, read from its source so the test cannot drift from it. */
+const SAFE_TEXT = (() => {
+  const m = /const SAFE_TEXT = \/(.+)\/([a-z]*)\n/.exec(ttsSource)
+  if (!m) throw new Error('SAFE_TEXT not found in api/tts.ts')
+  return new RegExp(m[1], m[2])
+})()
 
 const cases: [string, string][] = [
   // V1: thousands written with a space
@@ -31,6 +38,11 @@ const cases: [string, string][] = [
   ['19:00', 'las diecinueve horas'],
   ['19:05', 'las diecinueve cero cinco'],
   ['00:30', 'las cero treinta'],
+  ['4:30', 'las cuatro y media'],
+  ['3:15', 'las tres y cuarto'],
+  ['6:45', 'las siete menos cuarto'],
+  ['12:45', 'la una menos cuarto'],
+  ['Empieza a las 4:30 y dura 120 minutos', 'Empieza a las cuatro y media y dura ciento veinte minutos'],
   ['12 : 3', 'doce entre tres'],
   // V5: fractions
   ['1/2', 'un medio'],
