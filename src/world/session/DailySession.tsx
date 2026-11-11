@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useActivityHost } from '@/activities'
 import { speech } from '@/audio'
+import { SoundSwitch } from '@/audio/SoundSwitch'
 import { StarIcon } from '@/art'
 import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
@@ -393,7 +394,7 @@ function PassageCard({ reading, paragraphs, soundOn, onNext }: {
         {soundOn ? (
           <Button variant="secondary" size="lg" onClick={listen}>{speaking ? '🔊 Escuchando…' : '🔊 Escuchar'}</Button>
         ) : (
-          <p className={s.text}>Activa el sonido para escuchar el texto</p>
+          <><p className={s.text}>Activa el sonido para escuchar el texto</p><SoundSwitch /></>
         )}
         <Button size="lg" variant="success" onClick={onNext}>¡Ahora las preguntas!</Button>
       </div>

@@ -1,5 +1,6 @@
 /* Inglés de 3.º: the components the English views share (the «🔊 Otra vez» control and the picture of a card). The hooks
    for the sound are in sound.ts. */
+import { SoundSwitch } from '@/audio/SoundSwitch'
 import { Button } from '@/ui'
 import type { EnglishCard } from '@/types'
 import s from './Ingles.module.css'
@@ -7,10 +8,14 @@ import s from './Ingles.module.css'
 /** «🔊 Otra vez», or, with the sound off, the reason the child cannot hear it. The text is never written here. */
 export function ListenControl({ soundOn, soundSetting, again }: { soundOn: boolean; soundSetting: boolean; again: () => void }) {
   if (!soundOn) {
-    return (
-      <p className={s.prompt}>
-        {soundSetting ? 'Este aparato no tiene voz: pide a alguien que lea la palabra en voz alta' : 'Activa el sonido para escuchar'}
-      </p>
+    // Only a switched-off sound has a switch to turn it on; a device without a voice has none to offer.
+    return soundSetting ? (
+      <p className={s.prompt}>Este aparato no tiene voz: pide a alguien que lea la palabra en voz alta</p>
+    ) : (
+      <>
+        <p className={s.prompt}>Activa el sonido para escuchar</p>
+        <SoundSwitch />
+      </>
     )
   }
   return <Button variant="secondary" size="lg" onClick={again}>🔊 Otra vez</Button>

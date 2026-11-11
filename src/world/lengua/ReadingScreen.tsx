@@ -5,6 +5,7 @@
    with the question's skill. The text can be read again from the questions, folded under «Leer el texto otra vez». */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { speech } from '@/audio'
+import { SoundSwitch } from '@/audio/SoundSwitch'
 import { useActiveChild } from '@/data'
 import { renderTemplate, templateContext } from '@/content/template'
 import { Button, Screen } from '@/ui'
@@ -85,7 +86,7 @@ function ReadingBody({ reading, onDone }: ReadingScreenProps) {
                 {speaking ? '🔊 Escuchando…' : '🔊 Escuchar'}
               </Button>
             ) : (
-              <p className={s.note}>Activa el sonido para escuchar el texto</p>
+              <><p className={s.note}>Activa el sonido para escuchar el texto</p><SoundSwitch /></>
             )}
             <Button variant="primary" size="lg" onClick={() => setPhase('questions')}>Siguiente</Button>
           </div>
