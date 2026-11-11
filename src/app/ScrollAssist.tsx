@@ -33,13 +33,18 @@ export function ScrollAssist() {
     update()
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
-    // Content grows and shrinks without a scroll or a resize (feedback, a new round): check twice a second.
-    const timer = window.setInterval(schedule, 500)
+    // Content grows and shrinks without a scroll or a resize (feedback, a new round): observe the page instead of
+    // polling. The observers only schedule a check, which is cheap and runs at most once per frame.
+    const resizes = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : null
+    resizes?.observe(document.body)
+    const changes = new MutationObserver(schedule)
+    changes.observe(document.body, { childList: true, subtree: true })
     return () => {
       if (frame) cancelAnimationFrame(frame)
       window.removeEventListener('scroll', schedule)
       window.removeEventListener('resize', schedule)
-      window.clearInterval(timer)
+      resizes?.disconnect()
+      changes.disconnect()
     }
   }, [])
 

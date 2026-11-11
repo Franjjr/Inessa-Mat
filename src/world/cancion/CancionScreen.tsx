@@ -229,7 +229,7 @@ function SongPlayer({ child, table, flags, mastery }: { child: ChildProfile; tab
             <Button size="lg" variant="magic" onClick={() => void start()}>▶ ¡A cantar!</Button>
           </div>
         )}
-        {phase === 'preparing' && <Spinner label="Preparando la canción…" />}
+        {phase === 'preparing' && <Spinner label="Preparando la canción…" retry={false} />}
 
         {phase === 'playing' && (
           <>
