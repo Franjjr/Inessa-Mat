@@ -15,10 +15,10 @@ const sumar2d = clase({
     show('place-value', { n: 34 }, 'El 34 son 3 decenas y 4 unidades. Mi amiga Dani trae 25 más: sumamos 34 + 25.', 'ladybug'),
   ],
   ejemplo: [
-    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades, como siempre.'),
-    show('carry', { a: 34, b: 25 }, '4 + 5 = 9. Escribo el 9 en las unidades.'),
+    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades: 4 + 5 = 9. Escribo el 9.'),
     show('carry', { a: 34, b: 25 }, 'Decenas: 3 + 2 = 5. ¡34 + 25 = 59!'),
     show('carry', { a: 38, b: 25 }, 'Ahora una con llevada: 38 + 25. Empezamos por las unidades.'),
+    show('groups', { groups: 1, perGroup: 10, emoji: '🔵' }, '¿Por qué nos llevamos 1? Diez unidades juntas forman una decena. Con 13 unidades: 1 decena y 3 unidades.', 'owl'),
     show('carry', { a: 38, b: 25 }, '8 + 5 = 13. Escribo el 3 y me llevo 1 decena.'),
     show('carry', { a: 38, b: 25 }, 'Decenas: 3 + 2 + 1 = 6. ¡38 + 25 = 63!'),
   ],
