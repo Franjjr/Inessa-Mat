@@ -13,6 +13,7 @@ import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
 import { CompleteAccountPanel, useNeedsAccountSetup } from '../auth/CompleteAccountPanel'
 import { SyncBadge } from '../shared/SyncBadge'
+import { PersistenceNotice } from '../shared/PersistenceNotice'
 import { plural, formatPercent } from '../shared/format'
 import { errorMessage } from '../shared/messages'
 import { lockAdultArea } from '../gate/AdultGate'
@@ -110,6 +111,8 @@ export default function AdultHomeScreen() {
           )}
         </div>
       )}
+
+      <PersistenceNotice />
 
       {needsSetup && <CompleteAccountPanel />}
       {signedIn && !needsSetup && <ClaimLocalPanel onDone={() => toast('Perfiles guardados en tu cuenta')} />}
