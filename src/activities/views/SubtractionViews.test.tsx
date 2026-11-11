@@ -131,4 +131,14 @@ describe('number-line view', () => {
     act(() => { fireEvent.keyDown(cell(/unidades de salto 1/), { key: 'Enter' }) })
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
+
+  it('with no jumps at all there is no «último salto hasta» row, and the total alone is checked', () => {
+    const onAnswered = vi.fn()
+    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="line" />)
+    for (let k = 0; k < 3; k++) act(() => { fireEvent.click(screen.getByRole('button', { name: 'Quitar salto' })) })
+    expect(screen.queryByText(/último salto/)).toBeNull()
+    type(225, 'de total saltado', ['unidades', 'decenas', 'centenas'])
+    act(() => { fireEvent.keyDown(cell(/unidades de total saltado/), { key: 'Enter' }) })
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
 })

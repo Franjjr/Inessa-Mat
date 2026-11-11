@@ -71,11 +71,14 @@ function LineRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
               </li>
             )
           })}
-          <li className={s.jump}>
-            <span className={s.landing}>{lands.length ? landValues[lands.length - 1] ?? '…' : ex.subtrahend}</span>
-            <span className={s.arrow} aria-hidden>→ último salto hasta</span>
-            <span className={s.chip}>{ex.minuend}</span>
-          </li>
+          {/* With no jump written there is no last jump to name: the row would claim one that does not exist. */}
+          {lands.length > 0 && (
+            <li className={s.jump}>
+              <span className={s.landing}>{landValues[lands.length - 1] ?? '…'}</span>
+              <span className={s.arrow} aria-hidden>→ último salto hasta</span>
+              <span className={s.chip}>{ex.minuend}</span>
+            </li>
+          )}
         </ol>
         <div className={s.total}>
           <span>{host.t('Total que has saltado:')}</span>
