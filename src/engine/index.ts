@@ -17,7 +17,7 @@ export { hintsFor } from './hints'
 /** The workbook "trick" for a multiplication fact (6×7 → five-plus-one, 8×n → double-double-double, ...). */
 export { strategyForFact } from './strategies'
 /** Leitner mastery: newMastery, updateMastery (fluency-aware), dueSkills, fluencyThresholdMs, starsFor, factGrid. */
-export { dueSkills, factGrid, fluencyThresholdMs, newMastery, starsFor, updateMastery } from './mastery'
+export { CHOICE_MAX_BOX, dueSkills, factGrid, fluencyThresholdMs, isChoiceExercise, newMastery, starsFor, updateMastery } from './mastery'
 /** Spanish descriptions for adult dashboards. */
 export { describeError, describeSkill, describeSkillShort, ENGLISH_SKILL_TEXT } from './describe'
 /** Review plan and selectors (daily review), and the 15-minute daily session plan (blocks, scaffolding). */

@@ -8,7 +8,7 @@ import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
 import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
-import { createRng, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
+import { createRng, isChoiceExercise, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
 import { haptics, sfx } from '@/audio'
 import type {
@@ -185,7 +185,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       // A completion-only text (escritura guiada) is not graded, but finishing it counts as done: its mastery moves.
       const next = graded || isCompletionOnly(exercise.kind) ? updateMastery(
         masteryRef.current[skill],
-        { skill, correct: check.correct, ms, inputMode, hintsUsed, retries, errorType: check.errorType ?? null },
+        { skill, correct: check.correct, ms, inputMode, hintsUsed, retries, errorType: check.errorType ?? null, choice: isChoiceExercise(exercise) },
         now,
       ) : null
       if (next) masteryRef.current = { ...masteryRef.current, [skill]: next }

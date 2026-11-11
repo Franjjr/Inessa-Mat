@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
-  dueSkills, factGrid, fluencyThresholdMs, intervalMs, LEITNER_INTERVAL_DAYS, newMastery, starsFor, updateMastery,
+  CHOICE_MAX_BOX, dueSkills, factGrid, fluencyThresholdMs, intervalMs, isChoiceExercise, LEITNER_INTERVAL_DAYS, newMastery,
+  starsFor, updateMastery,
 } from '@/engine'
 import type { AttemptForMastery } from '@/engine'
-import type { MasteryMap, SkillMastery } from '@/types'
+import type { Exercise, MasteryMap, SkillMastery } from '@/types'
 
 const now = new Date('2026-10-21T10:00:00.000Z')
 const DAY = 86400000
@@ -187,5 +188,49 @@ describe('starsFor and factGrid', () => {
     expect(grid[9][8]).toBe(0)
     expect(grid[2][3]).toBe(-1)
     for (let a = 0; a < 10; a++) for (let b = 0; b < 10; b++) expect(grid[a][b]).toBe(grid[b][a])
+  })
+})
+
+describe('choice exercises cannot climb past CHOICE_MAX_BOX by guessing', () => {
+  const choice = (over: Partial<AttemptForMastery> = {}) => attempt({ choice: true, skill: 'word:sense:add', ...over })
+  const write = (over: Partial<AttemptForMastery> = {}) => attempt({ skill: 'word:sense:add', ...over })
+
+  it('a fluent, due right answer to a choice exercise stops at the mastered box', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    const next = updateMastery(mastered, choice(), at(1))
+    expect(next.box).toBe(CHOICE_MAX_BOX)
+    // Still a right answer: it counts, and the review date moves on.
+    expect(next.correct).toBe(mastered.correct + 1)
+    expect(next.streak).toBe(mastered.streak + 1)
+  })
+
+  it('the same answer written (not a choice) climbs past the cap as before', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    expect(updateMastery(mastered, write(), at(1)).box).toBe(CHOICE_MAX_BOX + 1)
+  })
+
+  it('a choice exercise still climbs from the boxes below the cap', () => {
+    expect(updateMastery(withBox(0, 'word:sense:add'), choice(), now).box).toBe(1)
+    expect(updateMastery(withBox(1, 'word:sense:add'), choice(), at(1)).box).toBe(CHOICE_MAX_BOX)
+  })
+
+  it('a wrong choice answer still lowers the box', () => {
+    const mastered = withBox(CHOICE_MAX_BOX, 'word:sense:add')
+    expect(updateMastery(mastered, choice({ correct: false, errorType: 'word-class' }), now).box).toBe(0)
+  })
+
+  it('isChoiceExercise marks the pick-from-options kinds and leaves the written ones alone', () => {
+    const shape = { id: 's', kind: 'shape-choice', skill: 'word:sense:add', difficulty: 2 } as unknown as Exercise
+    const fact = { id: 'f', kind: 'fact-mul', skill: 'mul:6x7', difficulty: 2 } as unknown as Exercise
+    const eqSame = { id: 'e', kind: 'equation', mode: 'same', skill: 'eq:same', difficulty: 2 } as unknown as Exercise
+    const eqFill = { id: 'e2', kind: 'equation', mode: 'fill', skill: 'eq:flex', difficulty: 2 } as unknown as Exercise
+    const clockWrite = { id: 'c', kind: 'clock-read', mode: 'write', skill: 'clock:read:5', difficulty: 2 } as unknown as Exercise
+    const clockPhrase = { id: 'c2', kind: 'clock-read', mode: 'phrase', skill: 'clock:read:5', difficulty: 2 } as unknown as Exercise
+    expect(isChoiceExercise(shape)).toBe(true)
+    expect(isChoiceExercise(eqSame)).toBe(true)
+    expect(isChoiceExercise(clockPhrase)).toBe(true)
+    expect(isChoiceExercise(fact)).toBe(false)
+    expect(isChoiceExercise(eqFill)).toBe(false)
+    expect(isChoiceExercise(clockWrite)).toBe(false)
   })
 })
