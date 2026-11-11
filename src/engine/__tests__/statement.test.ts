@@ -4,6 +4,8 @@ import { toSpeakable } from '@/audio/speechText'
 import { allTopics, syllabusForGrade } from '@/content/syllabus'
 import { createRng, generate } from '@/engine'
 import { statementFor } from '@/engine/statement'
+import { ordinalWord } from '@/engine/ordinals'
+import { numberToSpanish } from '@/audio/spanishNumbers'
 import type { Exercise, ExerciseKind } from '@/types'
 
 function sample(): Exercise[] {
@@ -51,5 +53,24 @@ describe('statementFor', () => {
     const [story] = generate({ kinds: ['word-problem'] }, 1, { rng: createRng(7) })
     const ctx = { childName: 'Inessa', childGender: 'f' as const, petName: 'Coco', petGender: 'm' as const, petSpecies: 'cat' as const }
     expect(statementFor(story, ctx)).not.toMatch(/\{/)
+  })
+
+  it('the sentence never gives the answer away (ordinals, decimals, money)', () => {
+    const said = (ex: Exercise) => toSpeakable(statementFor(ex)).toLowerCase()
+    const own = { id: 'x', skillId: 's', difficulty: 1 } as never
+    for (let n = 1; n <= 30; n++) {
+      const read = said({ ...(own as object), kind: 'ordinal', mode: 'read', n } as Exercise)
+      expect(read, `read ${n}`).not.toMatch(/primero|segundo|tercero|cuarto|quinto|sexto|séptimo|octavo|noveno|décimo|vigésimo|trigésimo|decimo|undécimo|duodécimo/)
+      const write = said({ ...(own as object), kind: 'ordinal', mode: 'write', n } as Exercise)
+      // The word is on the screen, the number is the answer.
+      expect(write, `write ${n}`).toContain(ordinalWord(n))
+      expect(write, `write ${n}`).not.toContain(` ${numberToSpanish(n)}?`)
+    }
+    expect(said({ ...(own as object), kind: 'ordinal', mode: 'write', n: 13 } as Exercise)).toContain('decimotercero')
+    const read = said({ ...(own as object), kind: 'decimal', mode: 'read', places: 1, value: 30 } as Exercise)
+    expect(read).toContain('tres décimas')
+    expect(read).not.toContain('cero coma')
+    const money = said({ ...(own as object), kind: 'decimal', mode: 'money', places: 2, value: 361 } as Exercise)
+    expect(money).not.toMatch(/sesenta|tres euros/)
   })
 })

@@ -19,21 +19,27 @@ export function ListenButton({ text, voice = 'lumi', className }: ListenButtonPr
   // Each press gets a number so a finished old reading does not switch off a newer one.
   const turn = useRef(0)
   const mounted = useRef(true)
+  // True only while this button's own reading is on the air: the voice of anything else is never cut.
+  const speakingRef = useRef(false)
 
   useEffect(() => {
     mounted.current = true
     return () => {
       mounted.current = false
       // Leaving the exercise cuts the voice only if this button was the one speaking.
-      if (turn.current > 0) speech.stop()
+      if (speakingRef.current) {
+        speakingRef.current = false
+        speech.stop()
+      }
     }
   }, [])
 
   // A new statement is a new exercise: the old reading stops.
   useEffect(() => {
     return () => {
-      if (turn.current > 0) {
+      if (speakingRef.current) {
         turn.current += 1
+        speakingRef.current = false
         speech.stop()
         if (mounted.current) setSpeaking(false)
       }
@@ -43,17 +49,21 @@ export function ListenButton({ text, voice = 'lumi', className }: ListenButtonPr
   const press = useCallback(() => {
     if (speaking) {
       turn.current += 1
+      speakingRef.current = false
       speech.stop()
       setSpeaking(false)
       return
     }
     const mine = ++turn.current
+    speakingRef.current = true
     setSpeaking(true)
     void speech
       .say(text, { voice, force: true, interrupt: true })
       .catch(() => undefined)
       .finally(() => {
-        if (mounted.current && turn.current === mine) setSpeaking(false)
+        if (turn.current !== mine) return
+        speakingRef.current = false
+        if (mounted.current) setSpeaking(false)
       })
   }, [speaking, text, voice])
 

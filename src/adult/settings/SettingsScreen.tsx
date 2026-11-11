@@ -301,7 +301,7 @@ function SoundCard({ profiles }: { profiles: ChildProfile[] }) {
       <SwitchRow label="Música" checked={child.settings.music} onChange={(v) => void change({ music: v })} />
       <SwitchRow
         label="Lumi lee en voz alta"
-        hint="Lumi lee en voz alta las instrucciones y las historias."
+        hint="Si la apagas, las historias tienen un botón para escucharlas."
         checked={child.settings.voice}
         onChange={(v) => void change({ voice: v })}
       />

@@ -10,6 +10,10 @@ import type { SpeechCharacter } from './speech'
 /** A clip that takes longer than this is not waited for: the step goes on with the device voice (the first chunk is
     requested the moment the step appears, so a warm service answers well within it). */
 const FETCH_TIMEOUT_MS = 1500
+/** The first clip of a session may meet a cold serverless function or a slow network: it gets more time. */
+const FIRST_FETCH_TIMEOUT_MS = 2500
+/** Whether a clip has already arrived in this session (the service is warm). */
+let warm = false
 /** After a 429 (too many requests) the natural voice rests for a while: asking again at once only gets another 429. */
 const RATE_LIMIT_PAUSE_MS = 3 * 60_000
 /** Part of every clip URL: bump it when a voice in api/tts.ts changes, so cached clips of the old voice are not reused. */
@@ -83,13 +87,15 @@ export function fetchClip(text: string, character: SpeechCharacter): Promise<str
   const hit = clips.get(key)
   if (hit) return hit
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS)
+  const timer = setTimeout(() => ctrl.abort(), warm ? FETCH_TIMEOUT_MS : FIRST_FETCH_TIMEOUT_MS)
   const p = fetch(clipUrl(text, character), { signal: ctrl.signal })
     .then(async (res) => {
       if (res.status === 503 || res.status === 403) available = false
       if (res.status === 429) pausedUntil = Date.now() + RATE_LIMIT_PAUSE_MS
       if (!res.ok || !(res.headers.get('content-type') ?? '').startsWith('audio/')) return null
-      return URL.createObjectURL(await res.blob())
+      const blob = await res.blob()
+      warm = true
+      return URL.createObjectURL(blob)
     })
     .catch(() => null)
     .finally(() => clearTimeout(timer))
@@ -133,6 +139,7 @@ export function __resetNeuralForTests(enable = false): void {
   enabledInTests = enable
   available = true
   pausedUntil = 0
+  warm = false
   player = null
   unlocked = false
   wired = false

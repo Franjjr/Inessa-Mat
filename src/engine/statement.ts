@@ -1,7 +1,9 @@
 /* What an exercise says to the child, written to be read aloud: «¿Cuánto es 6 × 7?», «Resta en columna: 352 − 127.».
    One sentence or two, in a teacher's words for a 7-8-year-old. It may carry digits and signs: the voice turns them into
    words (src/audio/speechText.ts). Used by the «Escuchar» button of every exercise (src/activities/shared/ListenButton.tsx). */
-import { numberToSpanish, ordinalToSpanish } from '@/audio/spanishNumbers'
+import { numberToSpanish } from '@/audio/spanishNumbers'
+import { decimalWords } from './decimals'
+import { ordinalWord } from './ordinals'
 import { FALLBACK_CHILD_NAME, renderTemplate, type TemplateContext } from '@/content/template'
 import type { Exercise, ClockTime } from '@/types'
 
@@ -156,14 +158,15 @@ export function statementFor(ex: Exercise, ctx: TemplateContext = DEFAULT_CONTEX
     case 'long-mul': return `Multiplica en columna: ${fmt(ex.top)} × ${fmt(ex.bottom)}. Escribe cada fila y el total.`
     case 'ordinal':
       if (ex.mode === 'row') return `Toca el ${ex.n}.º de la fila.`
-      if (ex.mode === 'read') return `¿Cómo se dice ${ex.n}.º? Elige la palabra.`
-      return `¿Qué número es el ${ordinalToSpanish(ex.n, false)}? Elígelo.`
+      // The numeral is on the screen: saying it (or its word) would give the answer away.
+      if (ex.mode === 'read') return 'Mira el número con la o pequeña. ¿Cómo se dice? Elige la palabra.'
+      return `¿Qué número es el ${ordinalWord(ex.n)}? Elígelo.`
     case 'decimal':
       switch (ex.mode) {
         case 'shade': return 'Mira lo que está coloreado. ¿Qué número decimal es? Escríbelo.'
-        case 'read': return `Escribe con cifras: ${decimal(ex.value, ex.places)}.`
+        case 'read': return `Escribe con cifras: ${decimalWords(ex)}.`
         case 'compare': return `¿Qué signo va entre ${decimal(ex.value, ex.places)} y ${decimal(ex.other ?? 0, ex.places)}? Elige mayor que, menor que o igual.`
-        case 'money': return `¿Cuántos euros y cuántos céntimos son ${decimal(ex.value, 2)} €? Escríbelos.`
+        case 'money': return 'Mira la cantidad. ¿Cuántos euros y cuántos céntimos son? Escríbelos.'
       }
       break
     case 'decimal-op':

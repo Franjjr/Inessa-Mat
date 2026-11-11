@@ -47,4 +47,13 @@ describe('ListenButton', () => {
     unmount()
     expect(speech.stop).not.toHaveBeenCalled()
   })
+
+  it('does not cut a voice that is not its own once its reading has ended', async () => {
+    const { unmount } = render(<ListenButton text="Hola" />)
+    fireEvent.click(screen.getByRole('button', { name: /Escuchar/ }))
+    await act(async () => { finish() })
+    vi.mocked(speech.stop).mockClear()
+    unmount()
+    expect(speech.stop).not.toHaveBeenCalled()
+  })
 })

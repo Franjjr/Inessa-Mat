@@ -48,6 +48,7 @@ const FEMININE = [
 const MASCULINE_A = new Set([
   'día', 'días', 'problema', 'mapa', 'pictograma', 'planeta', 'tema', 'idioma', 'sistema', 'programa', 'diagrama',
   'poema', 'clima', 'drama', 'lema', 'esquema', 'teorema', 'telegrama', 'cometa', 'yoga', 'sofá', 'papá',
+  'koala', 'pirata', 'panda', 'atleta', 'dentista', 'turista', 'guía', 'colega',
 ])
 
 /** Words that are also verbs or other non-nouns: after a number they do not take the feminine / the shortened "un". */
@@ -195,6 +196,7 @@ function readMath(expr: string): string {
 
 /** "07:05" → "las siete y cinco", "4:30" → "las cuatro y media"; from 13 h on (and 0 h) hour and minutes are said as numbers: "las dieciocho cuarenta y cinco". */
 function clockWords(h: number, m: number): string {
+  if (h === 0) return `${clockWords(12, m)} de la noche`
   const art = h === 1 ? 'la' : 'las'
   if (h >= 1 && h <= 12) {
     const hour = numberToSpanish(h, 'f')
@@ -207,7 +209,7 @@ function clockWords(h: number, m: number): string {
     }
     return `${art} ${hour} y ${numberToSpanish(m)}`
   }
-  const hour = numberToSpanish(h)
+  const hour = numberToSpanish(h, 'f')
   if (m === 0) return `${art} ${hour} horas`
   return `${art} ${hour} ${m < 10 ? `cero ${numberToSpanish(m)}` : numberToSpanish(m)}`
 }
@@ -260,8 +262,18 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
       ROMAN.test(w) || ACRONYMS.has(w) ? m : `${pre}${w.toLocaleLowerCase('es-ES')}`)
 
     // Hours "07:05" (before the maths: ":" would be read as a division).
-    s = s.replace(/(^|[^\p{L}\d:])(?:las?\s+)?([01]?\d|2[0-3]):([0-5]\d)(?![\p{L}\d:])/gu, (_m, pre: string, h: string, mm: string) =>
-      `${pre}${clockWords(Number(h), Number(mm))}`)
+    // A ":" after the hour ("de 10:00 a 10:45: son 45 minutos") is punctuation; only ":" and a digit goes on with the number.
+    s = s.replace(/(^|[^\p{L}\d:])(?:(las?)\s+)?([01]?\d|2[0-3]):([0-5]\d)(?![\p{L}\d]|:\d)/giu, (_m, pre: string, art: string | undefined, h: string, mm: string) => {
+      const words = clockWords(Number(h), Number(mm))
+      return `${pre}${art && art[0] !== art[0].toLowerCase() ? words[0].toUpperCase() + words.slice(1) : words}`
+    })
+
+    // Comparisons between two numbers read like a sentence: "5 > 3" → "5 es mayor que 3".
+    s = s.replace(/(\d)\s*([<>≠≤≥])\s*(?=[\d])/g, (_m, d: string, sign: string) =>
+      `${d} es ${{ '<': 'menor que', '>': 'mayor que', '≠': 'distinto de', '≤': 'menor o igual que', '≥': 'mayor o igual que' }[sign]} `)
+
+    // "1/2 hora" is "media hora".
+    s = s.replace(/(^|[^\p{L}\d/])1\/2\s+(horas?)(?![\p{L}])/gu, (_m, pre: string, w: string) => `${pre}media ${w}`)
 
     // Maths spans first (they may contain "?" / "_" blanks that markdown stripping would eat).
     s = s.replace(MATH_RE, (_m, pre: string, expr: string) => `${pre}${readMath(expr)}`)
@@ -293,7 +305,11 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
       const prevWord = /([\p{L}]+)\s+$/u.exec(before)?.[1] ?? ''
       const nextWord = next?.trim()
       let form: NumberForm = 'm'
-      if (nextWord) {
+      if (nextWord && /^(el|un|del|al)$/i.test(prevWord)) {
+        // "El 1 empieza", "El 201 aparece": after a masculine article only a listed feminine noun makes it feminine.
+        const w = nextWord.toLowerCase()
+        if (FEMININE.some((f) => w === f || w === `${f}s` || w === `${f}es`) && !VERB_A.has(w)) form = 'f'
+      } else if (nextWord) {
         if (isFeminine(nextWord, prevWord)) form = 'f'
         else if (looksLikeNoun(nextWord)) form = 'apocope'
         else if (/^(la|las)$/i.test(prevWord)) form = 'f'
@@ -310,8 +326,8 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
       .replace(/≠/g, ' distinto de ').replace(/≤/g, ' menor o igual que ').replace(/≥/g, ' mayor o igual que ')
       .replace(/≈/g, ' aproximadamente ')
       .replace(/\s=\s|=/g, ' es igual a ')
-      .replace(/(\S\s|^)>(?=\s)/g, (_m, pre: string) => `${pre} mayor que`)
-      .replace(/(\S\s)<(?=\s)/g, (_m, pre: string) => `${pre} menor que`)
+      .replace(/>/g, ' mayor que ')
+      .replace(/</g, ' menor que ')
       .replace(/\s[×✕]\s|[×✕]/g, ' por ')
       .replace(/\s÷\s|÷/g, ' entre ')
       .replace(/\s\+\s|\+/g, ' más ')
@@ -321,12 +337,24 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
 
     // Arrows: "→" is "flecha a la derecha"; several in a row, "tres flechas a la derecha". A single "→" between two things
     // ("14 → 28") is only a pause, as before: a teacher says "el doble de 14 es 28", not "flecha".
-    for (const [re, phrase] of ARROWS) {
+    for (const [re, phrase, short] of ARROWS) {
       s = s.replace(re, (run, offset: number, whole: string) => {
         const n = [...run].filter((c) => !/[\s\uFE0F]/u.test(c)).length
+        const before = whole.slice(0, offset)
+        const after = whole.slice(offset + run.length)
+        // The text already says which way ("→ a la derecha", "← izquierda"): the arrow is only "flecha".
+        const named = new RegExp(`^\\s*(?:${phrase}|${short})(?![\\p{L}])`, 'iu').test(after)
+        if (named) return ' flecha '
+        // "Las flechas →→ son…": the word "flechas" is already there.
+        if (/flechas?\s*$/iu.test(before)) return n > 1 ? ` ${numberToSpanish(n, 'f')} ${phrase} ` : ` ${phrase} `
         if (n > 1) return ` ${numberToSpanish(n, 'f')} flechas ${phrase} `
-        const between = /[\p{L}\d]\s*$/u.test(whole.slice(0, offset)) && /^\s*[\p{L}\d¿¡]/u.test(whole.slice(offset + run.length))
-        return between && phrase === 'a la derecha' ? ', ' : ` flecha ${phrase} `
+        // A single "→" between two things ("14 → 28", "8 → 16 → …", "5, 10 → ?") is only a pause.
+        const afterWord = /[\p{L}\d]\s*$/u.test(before)
+        if (phrase === 'a la derecha' && afterWord) {
+          if (/^\s*\?/u.test(after)) return ', y luego'
+          if (/^\s*(?:[\p{L}\d¿¡…]|\.{3})/u.test(after)) return ', '
+        }
+        return ` flecha ${phrase} `
       })
     }
     s = s.replace(/[↔⇔]/g, ' flecha en las dos direcciones ')

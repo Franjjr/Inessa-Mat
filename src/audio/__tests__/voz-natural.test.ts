@@ -37,7 +37,7 @@ const cases: [string, string][] = [
   ['18:45', 'las dieciocho cuarenta y cinco'],
   ['19:00', 'las diecinueve horas'],
   ['19:05', 'las diecinueve cero cinco'],
-  ['00:30', 'las cero treinta'],
+  ['00:30', 'las doce y media de la noche'],
   ['4:30', 'las cuatro y media'],
   ['3:15', 'las tres y cuarto'],
   ['6:45', 'las siete menos cuarto'],
@@ -64,14 +64,14 @@ const cases: [string, string][] = [
   ['El signo > significa mayor que', 'El signo mayor que significa mayor que'],
   ['El signo < significa menor que', 'El signo menor que significa menor que'],
   ['El signo = significa igual', 'El signo igual significa igual'],
-  ['5 > 3', 'cinco mayor que tres'],
-  ['3 < 5', 'tres menor que cinco'],
+  ['5 > 3', 'cinco es mayor que tres'],
+  ['3 < 5', 'tres es menor que cinco'],
   ['cociente × divisor + resto = dividendo', 'cociente por divisor más resto es igual a dividendo'],
   ['son 14 cm', 'son catorce centímetros'],
   ['3 cm + 4 cm = 7 cm', 'tres centímetros más cuatro centímetros son siete centímetros'],
   ['2 dm y 5 mm', 'dos decímetros y cinco milímetros'],
   ['3 m²', 'tres metros cuadrados'],
-  ['5 ≠ 6', 'cinco distinto de seis'],
+  ['5 ≠ 6', 'cinco es distinto de seis'],
   // V8: arrows
   ['Pulsa →', 'Pulsa flecha a la derecha'],
   ['← vuelve', 'flecha a la izquierda vuelve'],
@@ -107,7 +107,26 @@ describe('voz natural', () => {
   })
 
   it('a comparison is not taken for an HTML tag', () => {
-    expect(toSpeakable('3 < 5 y 7 > 2')).toBe('tres menor que cinco y siete mayor que dos')
+    expect(toSpeakable('3 < 5 y 7 > 2')).toBe('tres es menor que cinco y siete es mayor que dos')
+  })
+
+  it.each([
+    ['Doble y doble: 8 → 16 → …', 'Doble y doble: ocho, dieciséis, …'],
+    ['8 → 16 → ?', 'ocho, dieciséis, y luego?'],
+    ['Cuenta 3 saltos de 5: 5, 10 → ?', 'Cuenta tres saltos de cinco: cinco, diez, y luego?'],
+    ['Las flechas son los pasos: → a la derecha, ← a la izquierda', 'Las flechas son los pasos: flecha a la derecha, flecha a la izquierda'],
+    ['Las flechas →→ son 2 casillas', 'Las flechas dos a la derecha son dos casillas'],
+    ['← izquierda y derecha', 'flecha izquierda y derecha'],
+    ['cuenta de 10:00 a 10:45: son 45 minutos', 'cuenta de las diez en punto a las once menos cuarto: son cuarenta y cinco minutos'],
+    ['Las 21:00', 'Las veintiuna horas'],
+    ['A las 21:10', 'A las veintiuna diez'],
+    ['El 1 empieza', 'El uno empieza'],
+    ['El 201 aparece', 'El doscientos uno aparece'],
+    ['21 koalas', 'veintiún koalas'],
+    ['1/2 hora', 'media hora'],
+    ['Elige < o >', 'Elige menor que o mayor que'],
+  ])('%s', (input, out) => {
+    expect(toSpeakable(input)).toBe(out)
   })
 
   it('nothing the voice service refuses is left after toSpeakable', () => {
