@@ -271,7 +271,7 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none', p
 const GAP_TEXT: Record<Group, [string, string]> = {
   'c-qu': [
     'Este sonido «k» se puede escribir de dos formas. Di la palabra despacio y mira la vocal que viene justo después del hueco.',
-    'Delante de e o de i se escribe qu (que, qui). Delante de a, o, u se escribe c (ca, co, cu). ¿Qué vocal viene después del hueco?',
+    'Delante de e o de i se escribe «que» y «qui», y la u no suena. Delante de a, o, u se escribe «ca», «co», «cu». ¿Qué vocal viene después del hueco?',
   ],
   'g-gu': [
     'Esta letra puede sonar fuerte o suave según la vocal que venga después. Fíjate si la u se oye o no se oye.',
@@ -286,7 +286,7 @@ const GAP_TEXT: Record<Group, [string, string]> = {
     'Antes de p y de b se escribe siempre m, nunca n. Di la palabra despacio y comprueba qué consonante suena después.',
   ],
   mayusculas: [
-    'Las palabras que nombran a una persona o a un lugar empiezan con mayúscula. ¿La que falta es una de ellas?',
+    'Los nombres de personas y de lugares empiezan con mayúscula. ¿La letra que falta es la primera de uno de ellos?',
     'Los nombres de personas y de lugares se escriben con mayúscula. ¿Es el nombre de una persona o de un lugar?',
   ],
 }

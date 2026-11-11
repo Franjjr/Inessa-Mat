@@ -174,8 +174,8 @@ describe('the hints teach the rule, and do not ask the child to hear a letter th
   it('c/qu: level 3 teaches which letters go before e and i, and before a, o, u', () => {
     const ex = sample('lng:orto:c-qu', 'lng-missing-letter', 0)[0] as LngMissingLetterExercise
     const l3 = hintsFor(ex)[2]
-    expect(l3.text).toMatch(/que, qui/)
-    expect(l3.text).toMatch(/ca, co, cu/)
+    expect(l3.text).toMatch(/«que» y «qui»/)
+    expect(l3.text).toMatch(/«ca», «co», «cu»/)
   })
 
   it('a dictated sentence level 1 says the marks are not heard', () => {
