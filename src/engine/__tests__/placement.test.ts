@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { AttemptRecord } from '@/types'
-import { PLACEMENT_ACTIVITY, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from '../placement'
+import { GRADE2_SYLLABUS, GRADE3_SYLLABUS } from '@/content/syllabus'
+import { initialProgress } from '@/content'
+import { PLACEMENT_ACTIVITY, PLACEMENT_CLEAR_MIN, PLACEMENT_COUNT, buildPlacement, placementBlockOf, placementKnownTopics, summarizePlacement } from '../placement'
+import { placementKnownKey, topicOfToday } from '../topicOfToday'
 
 const now = new Date('2026-10-22T10:00:00.000Z')
 
@@ -93,5 +96,44 @@ describe('summarizePlacement', () => {
   it('a full run is complete', () => {
     const list = Array.from({ length: PLACEMENT_COUNT }, (_, i) => attempt('mul:6x7', i % 2 === 0, i))
     expect(summarizePlacement(list).complete).toBe(true)
+  })
+})
+
+describe('placementKnownTopics (the test places the child)', () => {
+  const answersOf = (grade: number | undefined, right: (block: string, skill: string) => boolean) =>
+    buildPlacement(`child-${grade}|2026-11-11`, now, grade).map((i) => ({ block: i.block, skill: i.exercise.skill, correct: right(i.block, i.exercise.skill) }))
+
+  it('all right in 3.º: some topics of etapa 1 are known, never a whole table from one fact, and the session starts elsewhere', () => {
+    const known = placementKnownTopics(GRADE3_SYLLABUS, answersOf(3, () => true))
+    expect(known).toEqual(expect.arrayContaining(['descomponer-9999', 'comparar-ordenar-9999', 'suma-3d-sin-llevar', 'resta-3d-sin-llevar']))
+    expect(known.some((id) => id.startsWith('tabla-'))).toBe(false)
+    const progress = { ...initialProgress('c', now), flags: Object.fromEntries(known.map((id) => [placementKnownKey(id), true])) }
+    const first = topicOfToday(GRADE3_SYLLABUS, {}, progress, now)
+    expect(first?.id).not.toBe('descomponer-9999')
+    expect(known).not.toContain(first?.id)
+  })
+
+  it('«No lo sé» and wrong answers never count as known', () => {
+    expect(placementKnownTopics(GRADE3_SYLLABUS, answersOf(3, () => false))).toEqual([])
+  })
+
+  it('one wrong answer in a block leaves its topics to practise as usual', () => {
+    const answers = answersOf(3, () => true)
+    const firstNumber = answers.findIndex((a) => a.block === 'numeros')
+    answers[firstNumber] = { ...answers[firstNumber], correct: false }
+    const known = placementKnownTopics(GRADE3_SYLLABUS, answers)
+    expect(known).not.toContain('descomponer-9999')
+    expect(known).toContain('suma-3d-sin-llevar')
+  })
+
+  it('a block of one item says nothing clearly', () => {
+    expect(placementKnownTopics(GRADE3_SYLLABUS, [{ block: 'tiempo', skill: 'clock:read:15', correct: true }])).toEqual([])
+    expect(PLACEMENT_CLEAR_MIN).toBe(2)
+  })
+
+  it('works for 2.º too, with its own temario', () => {
+    const known = placementKnownTopics(GRADE2_SYLLABUS, answersOf(2, () => true))
+    expect(known.length).toBeGreaterThan(0)
+    expect(known.every((id) => GRADE2_SYLLABUS.blocks.some((b) => b.topics.some((t) => t.id === id)))).toBe(true)
   })
 })

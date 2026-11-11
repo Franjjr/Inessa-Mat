@@ -34,8 +34,8 @@ export { buildLenguaPlacement, lenguaPlacementBlockOf, LENGUA_PLACEMENT_ACTIVITY
 export type { LenguaPlacementBlockId } from './lengua/placement'
 export type { DailyBlockId, DailyItem, DailyPlan } from './daily'
 /** Prueba inicial: items, block mapping and the summary for the adult report. */
-export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_COUNT, buildPlacement, placementBlockOf, summarizePlacement } from './placement'
-export type { PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
+export { PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_CLEAR_MIN, PLACEMENT_COUNT, buildPlacement, placementBlockOf, placementKnownTopics, summarizePlacement } from './placement'
+export type { PlacementAnswer, PlacementBlockId, PlacementItem, PlacementSummary } from './placement'
 /** Adult report: temario progress, mistakes by kind, tests (placement runs and recall). */
 export { englishWordsReport, ERROR_GROUPS, errorGroupOf, errorReport, placementRuns, recallReport, syllabusReport, topicNeeds } from './report'
 export type {
@@ -77,7 +77,7 @@ export { englishKindsFor, makableEnglish, teachableEnglishCourse } from './ingle
 /** Inglés de 3.º: the 10-minute session and the placement test (src/engine/ingles/daily.ts, placement.ts). */
 export { planEnglishSession } from './ingles/daily'
 /** Today's topic of every subject: the topic of today's class stays until tomorrow (src/engine/topicOfToday.ts). */
-export { markClassToday, topicOfToday } from './topicOfToday'
+export { isPlacedTopic, markClassToday, PLACEMENT_KNOWN_PREFIX, placementKnownKey, stageOfCurrentWorld, topicOfToday } from './topicOfToday'
 export type { EnglishPlanInput } from './ingles/daily'
 /** Inglés: «Ahora dilo tú» (src/engine/ingles/speaking.ts): the stars, the day's limits and the words hard to say. */
 export { SPEAK_DAILY_MAX, SPEAK_PER_SESSION_MAX, hardToSay, pronunciationStars, speakAttemptKey, speakAttemptsToday, speakOffKey, speakingAvailable } from './ingles/speaking'

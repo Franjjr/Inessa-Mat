@@ -1,7 +1,8 @@
 /* Prueba inicial (route /play/prueba, maths), Prueba de Lengua (route /play/prueba-lengua) and Prueba de Inglés (route
    /play/prueba-ingles): about ten minutes, no hints and no feedback of right or wrong («¡Gracias!» only). «No lo sé» skips an
    item the child cannot do yet: it counts as not known, so the plan starts there. Each answer goes through the normal mastery
-   update, so the plan starts where the child is. Leaving before the end does not mark it done; the adult can launch it again
+   update (a right answer goes to the spaced review). At the end the topics a block answered clearly right shows as known
+   are flagged «to confirm» (placementKnownTopics): the session teaches the others first, and the end text says so. Leaving before the end does not mark it done; the adult can launch it again
    from the report. The subject picks the items, the blocks, the activity name, the texts and the progress flags
    (placementFlags). */
 import { useEffect, useRef, useState } from 'react'
@@ -12,8 +13,10 @@ import { childText } from '@/world/rewards/childText'
 import { GameHostProvider } from '@/world/host/GameHost'
 import {
   buildEnglishPlacement, buildLenguaPlacement, buildPlacement, ENGLISH_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_BLOCKS, LENGUA_PLACEMENT_ACTIVITY,
-  LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, placementFlags, type LessonSubject,
+  LENGUA_PLACEMENT_BLOCKS, PLACEMENT_ACTIVITY, PLACEMENT_BLOCKS, PLACEMENT_KNOWN_PREFIX, placementFlags, placementKnownKey,
+  placementKnownTopics, type LessonSubject, type PlacementAnswer,
 } from '@/engine'
+import { subjectOfTopic, syllabusFor } from '@/content/syllabus'
 import { updateProgress, useActiveChild, useProgress } from '@/data'
 import { useInputMode } from '@/ink'
 import { BackButton, Button, Screen, Spinner } from '@/ui'
@@ -28,22 +31,27 @@ interface PlacementItemOf {
   exercise: Exercise
 }
 
-/** What each subject's placement shows and runs: its activity name, title, blocks, items and the text at its end. */
+/** What each subject's placement shows and runs: its activity name, title, blocks, items and the texts at its end (`known`
+    when the test found topics the child knows, `fresh` when it found none). Both are true: known topics wait for the
+    spaced review and the session practises the rest more. */
 const PLACEMENT_SETUP: Record<LessonSubject, {
   activity: string; title: string; blocks: { id: string; label: string }[]
-  build: (seed: string, now: Date, grade?: number) => PlacementItemOf[]; done: string
+  build: (seed: string, now: Date, grade?: number) => PlacementItemOf[]; known: string; fresh: string
 }> = {
   math: {
     activity: PLACEMENT_ACTIVITY, title: 'Prueba inicial', blocks: PLACEMENT_BLOCKS, build: (seed, now, grade) => buildPlacement(seed, now, grade),
-    done: 'Ya sabemos por dónde empezar. Tu sesión de hoy se ajustará a lo que sabes.',
+    known: 'Ya sabemos qué te sale bien. Lo repasaremos de vez en cuando y practicarás más lo que todavía no sabes.',
+    fresh: 'Ya sabemos lo que te toca aprender. ¡Iremos paso a paso!',
   },
   language: {
     activity: LENGUA_PLACEMENT_ACTIVITY, title: 'Prueba de Lengua', blocks: LENGUA_PLACEMENT_BLOCKS, build: (seed, now) => buildLenguaPlacement(seed, now),
-    done: 'Ya sabemos por dónde empezar en Lengua. Tu sesión de Lengua se ajustará a lo que sabes.',
+    known: 'Ya sabemos qué te sale bien en Lengua. Lo repasaremos de vez en cuando y practicarás más lo que todavía no sabes.',
+    fresh: 'Ya sabemos lo que te toca aprender en Lengua. ¡Iremos paso a paso!',
   },
   english: {
     activity: ENGLISH_PLACEMENT_ACTIVITY, title: 'Prueba de Inglés', blocks: ENGLISH_PLACEMENT_BLOCKS, build: (seed, now) => buildEnglishPlacement(seed, now),
-    done: 'Ya sabemos por dónde empezar en Inglés. Tu sesión de Inglés se ajustará a lo que sabes.',
+    known: 'Ya sabemos qué te sale bien en Inglés. Lo repasaremos de vez en cuando y practicarás más lo que todavía no sabes.',
+    fresh: 'Ya sabemos lo que te toca aprender en Inglés. ¡Iremos paso a paso!',
   },
 }
 
@@ -64,7 +72,10 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
   const [items, setItems] = useState<PlacementItemOf[] | null>(null)
   const [index, setIndex] = useState(0)
   const [thanks, setThanks] = useState(false)
-  const [finished, setFinished] = useState(false)
+  /** The end screen: null while the test runs, else whether it found topics the child knows. */
+  const [finished, setFinished] = useState<{ known: boolean } | null>(null)
+  /** This run's answers, in order (for the known topics at the end). */
+  const answers = useRef<PlacementAnswer[]>([])
   const { mode } = useInputMode()
   const shownAt = useRef(performance.now())
   useEffect(() => { shownAt.current = performance.now() }, [index])
@@ -90,6 +101,7 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
       hintsUsed: 0,
       recognitionFixes: o.recognitionFixes,
     })
+    answers.current.push({ block: current.block, skill: current.exercise.skill, correct: o.check.correct })
     setThanks(true)
   }
 
@@ -102,6 +114,7 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
       inputMode: mode,
       hintsUsed: 0,
     })
+    answers.current.push({ block: current.block, skill: current.exercise.skill, correct: false })
     setThanks(true)
   }
 
@@ -111,8 +124,9 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
       setIndex(index + 1)
       return
     }
-    await markDone(child.id, progress, subject)
-    setFinished(true)
+    const known = placementKnownTopics(syllabusFor(subject, child.grade), answers.current)
+    const saved = await markDone(child.id, progress, subject, known)
+    setFinished({ known: saved && known.length > 0 })
   }
 
   const setup = PLACEMENT_SETUP[subject]
@@ -132,7 +146,7 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
           <div className={`${s.card} ${s.calm}`}>
             <div className={s.stars}>{[0, 1, 2].map((i) => <StarIcon key={i} size={56} filled />)}</div>
             <h2 className={s.title}>{childText(child, '¡Gracias, {child}!')}</h2>
-            <p className={s.text}>{setup.done}</p>
+            <p className={s.text}>{finished.known ? setup.known : setup.fresh}</p>
             <div className={s.actions}>
               <Button size="lg" variant="success" onClick={onDone}>Volver al inicio</Button>
             </div>
@@ -179,12 +193,19 @@ function PlacementRunner({ subject, onDone, onExit }: { subject: LessonSubject; 
   )
 }
 
-async function markDone(childId: string, progress: ProgressState, subject: LessonSubject): Promise<void> {
+/** Marks the test done and replaces the subject's «known, to confirm» topics with this run's. Returns false when nothing is
+    saved (a test done again without the adult asking for it: its answers still count, but it changes no flag). */
+async function markDone(childId: string, progress: ProgressState, subject: LessonSubject, known: string[]): Promise<boolean> {
   const flags = placementFlags(subject)
-  if (progress.flags?.[flags.done] && !progress.flags?.[flags.requested]) return
-  await updateProgress(childId, (p) => ({
-    ...p,
-    flags: { ...p.flags, [flags.done]: true, [flags.requested]: false },
-    updatedAt: new Date().toISOString(),
-  }))
+  if (progress.flags?.[flags.done] && !progress.flags?.[flags.requested]) return false
+  await updateProgress(childId, (p) => {
+    const kept = Object.fromEntries(Object.entries(p.flags ?? {})
+      .filter(([key]) => !key.startsWith(PLACEMENT_KNOWN_PREFIX) || subjectOfTopic(key.slice(PLACEMENT_KNOWN_PREFIX.length)) !== subject))
+    return {
+      ...p,
+      flags: { ...kept, ...Object.fromEntries(known.map((id) => [placementKnownKey(id), true])), [flags.done]: true, [flags.requested]: false },
+      updatedAt: new Date().toISOString(),
+    }
+  })
+  return true
 }
