@@ -73,6 +73,8 @@ describe('method registry', () => {
     }
     // The sentences end with the right result of their example.
     for (const m of SUB_METHODS) expect(m.notebook).toMatch(/25\.$/)
+    // «Me llevo una» says where the 3 comes from: the 2 below plus the 1 carried.
+    expect(SUB_METHODS.find((m) => m.id === 'carry')!.notebook).toMatch(/junto al 2 de abajo, que pasa a ser 3\. 5 − 3 = 2/)
     for (const m of DIV_METHODS) expect(m.notebook).toMatch(/24\.$/)
   })
 

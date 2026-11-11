@@ -28,7 +28,7 @@ export const SUB_METHODS: readonly SchoolMethodInfo<SubMethod>[] = [
   { id: 'borrow', label: 'Pedir prestado arriba', summary: 'Se tacha la cifra de arriba, se le quita uno y la de al lado pasa a ser +10.',
     example: '52 − 27', notebook: 'Se tacha el 5 y se pone 4; el 2 pasa a ser 12. 12 − 7 = 5 y 4 − 2 = 2: da 25.' },
   { id: 'carry', label: 'Me llevo una abajo', summary: 'Se suma 10 arriba y 1 a la cifra de abajo de la columna siguiente.',
-    example: '52 − 27', notebook: 'El 2 pasa a ser 12 y se pone un 1 pequeño junto al 2 de abajo. 12 − 7 = 5 y 5 − 3 = 2: da 25.' },
+    example: '52 − 27', notebook: 'El 2 de arriba pasa a ser 12: 12 − 7 = 5. Me llevo una: se pone un 1 pequeño junto al 2 de abajo, que pasa a ser 3. 5 − 3 = 2: da 25.' },
 ] as const
 
 export const DIV_METHODS: readonly SchoolMethodInfo<DivMethod>[] = [
