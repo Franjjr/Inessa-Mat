@@ -70,4 +70,19 @@ describe('clases-texto', () => {
     expect(textOf('c3-comprobar')).toContain('el divisor por el cociente, más el resto, da el dividendo')
     expect(textOf('c3-div-3x1')).toContain('el divisor por el cociente, más el resto, da el dividendo')
   })
+
+  it('the example and the closing of a class never leave a sum open («= ?»), and nobody writes «cociente × divisor»', () => {
+    for (const cls of CLASSES) {
+      const { para, ejemplo, guiada, sola } = cls.phases
+      const shown = cls.lesson.steps.slice(para, para + ejemplo).concat(cls.lesson.steps.slice(para + ejemplo + guiada + sola))
+      for (const step of shown) expect(`${step.text} ${JSON.stringify(step.params ?? {})}`, cls.lesson.id).not.toMatch(/=\s*\?/)
+      expect(allWords(cls), cls.lesson.id).not.toMatch(/cociente\s*×\s*divisor/i)
+    }
+  })
+
+  it('the division proof is written one way: the divisor first (5 × 3 + 2, 4 × 96 + 3)', () => {
+    expect(textOf('c3-div-resto')).toContain('5 × 3 + 2')
+    expect(textOf('c3-div-3x1')).toContain('4 × 96 + 3')
+    expect(textOf('c3-div-3x1')).not.toContain('96 × 4 + 3')
+  })
 })

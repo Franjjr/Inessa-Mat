@@ -37,6 +37,7 @@ const DECLARED: { id: string; needs: RegExp; why: string }[] = [
   { id: 'c3-ordinales', needs: /decimotercero.*decimonoveno/s, why: 'num:ordinal:20 (13.º a 19.º)' },
   { id: 'c3-ordinales', needs: /vigésimo primero.*trigésimo/s, why: 'num:ordinal:30' },
   { id: 'c3-compensar', needs: /Con 19 se usa el 20/, why: 'mental:compensar con 19' },
+  { id: 'c3-compensar', needs: /55 menos 20 son 35/, why: 'mental:compensar restando 19' },
   { id: 'c3-completar', needs: /470.*500.*530/s, why: 'mental:completar1000' },
   { id: 'c3-decenas-centenas', needs: /430 \+ 300.*730/s, why: 'mental:centenas' },
   { id: 'c3-decenas-centenas', needs: /De mil en mil/, why: 'num:line:1000' },

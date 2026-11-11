@@ -131,6 +131,7 @@ const compensar = clase({
     show('big-text', { text: '46 + 9 = 46 + 10 − 1', sub: '56 − 1 = 55' }, 'Como sumamos 1 de más, lo quitamos al final: 56 − 1 = 55. Así que 46 + 9 = 55.'),
     show('big-text', { text: '55 − 9 = 55 − 10 + 1', sub: '45 + 1 = 46' }, 'Restar 9 es al revés: restamos 10 y sumamos 1. 55 − 10 = 45, y 45 + 1 = 46. Así que 55 − 9 = 46.'),
     show('big-text', { text: '36 + 19', sub: '36 + 20 = 56 · 56 − 1 = 55' }, 'Con 19 se usa el 20: 36 más 20 son 56, y quito 1: 55.'),
+    show('big-text', { text: '55 − 19', sub: '55 − 20 = 35 · 35 + 1 = 36' }, 'Con una resta es al revés: 55 menos 20 son 35, y como he quitado uno de más, sumo 1: 36.'),
   ],
   guiada: [
     tryIt('number-line', { from: 40, to: 60, step: 10, mark: 46, jump: 10 }, '¡Te toca! Piensa en la decena cercana.', { skills: ['mental:compensar'] }),

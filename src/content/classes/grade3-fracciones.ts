@@ -18,7 +18,7 @@ const mitadCuarto = clase({
     show('fraction-shape', { parts: 3, shaded: 1, shape: 'bar' }, 'Partida en 3 partes iguales, cada parte es un tercio: se escribe 1/3.'),
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'circle' }, 'Partida en 4 partes iguales, cada parte es un cuarto: se escribe 1/4.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'circle' }, 'Si se colorean 3 de las 4 partes, son tres cuartos: se escribe 3/4. Arriba van las de color, y abajo, todas.'),
-    show('big-text', { text: '4 trozos', sub: 'uno enorme y otro muy pequeño' }, 'Esta pizza tiene 4 trozos, pero uno es enorme y otro muy pequeño. Así no son cuartos: las partes tienen que ser iguales.'),
+    show('big-text', { text: '4 trozos', sub: 'uno enorme y otro muy pequeño' }, 'Ojo: si una pizza se parte en 4 trozos, pero uno es enorme y otro muy pequeño, no son cuartos. Las partes tienen que ser iguales.'),
   ],
   guiada: [
     tryIt('fraction-shape', { parts: 3, shaded: 2, shape: 'bar' }, '¡Te toca! Cuenta todas las partes iguales de la figura: ese número va abajo.', { skills: ['frac:read:2', 'frac:read:3', 'frac:read:4'] }),
@@ -76,7 +76,7 @@ const compararFracciones = clase({
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'bar' }, 'Un cuarto: la barra partida en 4 partes, con 1 parte de color. Cada parte es más pequeña que la de la mitad.'),
     show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'Dos cuartos de la misma barra ocupan lo mismo que un medio: 2/4 es igual a 1/2, así que las dos fracciones son iguales.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'bar' }, 'Si el número de abajo es el mismo, gana la que tiene más partes de color: tres cuartos es más que un cuarto.'),
-    show('big-text', { text: '1/2 y 1/3', sub: 'dos barras iguales' }, '1/2 y 1/3: con dos barras iguales, el trozo de la barra partida en 2 es más grande que el de la barra partida en 3. 1/2 es mayor.'),
+    show('big-text', { text: '1/2 y 1/3', sub: 'dos barras iguales' }, '1/2 y 1/3: si las barras son iguales, el trozo de la que se parte en 2 es más grande que el de la que se parte en 3. 1/2 es mayor.'),
   ],
   guiada: [
     tryIt('fraction-shape', { parts: 3, shaded: 1, shape: 'bar' }, '¡Te toca! Mira cuánto ocupa una sola parte en cada barra.', { skills: ['frac:compare'] }),

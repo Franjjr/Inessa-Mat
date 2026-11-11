@@ -177,7 +177,10 @@ const restarCeros = clase({
   ],
   ejemplo: [
     ...w4Zero.steps.slice(0, 4),
-    show('zero-borrow', { a: 6003, b: 2178 }, 'Con cuatro cifras se hace igual. 6 003 − 2 178: el 3 no puede con el 8, y las dos vecinas son ceros. Se pide al 6: el 6 pasa a 5 y los dos ceros se vuelven 9. ¡6 003 − 2 178 = 3 825!'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Con cuatro cifras se hace igual. 6 003 − 2 178: el 3 no puede con el 8, y las dos vecinas son ceros.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Se pide al 6: el 6 pasa a 5, los dos ceros se vuelven 9 y el 3 se vuelve 13. Unidades: 13 − 8 = 5.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Decenas: 9 − 7 = 2. Centenas: 9 − 1 = 8.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Millares: 5 − 2 = 3. ¡6 003 − 2 178 = 3 825!'),
   ],
   guiada: [
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Te toca! Cuidado con la trampa del cero.', { skills: ['sub:3d:z'] }),
@@ -479,8 +482,8 @@ const dividir3x1 = clase({
     show('galera', GAL384, 'Bajo el 4: queda 24. ¿Cuántas veces cabe el 4 en el 24? Seis. Escribo el 6, 6 × 4 = 24 y 24 − 24 = 0. ¡384 : 4 = 96!'),
     show('galera', GAL387, 'Ahora 387, y sobra algo. Empieza igual: con el 38, el 4 cabe nueve veces. Escribo el 9, 9 × 4 = 36 y 38 − 36 = 2.'),
     show('galera', GAL387, 'Bajo el 7: queda 27. ¿Cuántas veces cabe el 4 en el 27? Seis. Escribo el 6, 6 × 4 = 24 y 27 − 24 = 3: sobran 3.'),
-    show('division-check', GAL387, 'La prueba: 96 × 4 + 3 = ?'),
-    show('division-check', GAL387, '96 × 4 + 3 = 387. ¡La prueba está bien!'),
+    show('division-check', GAL387, 'La prueba: el divisor por el cociente, más el resto. ¿Cuánto es 4 × 96 + 3?'),
+    show('division-check', GAL387, '4 × 96 + 3 = 387. ¡Da el dividendo, la prueba está bien!'),
   ],
   guiada: [
     tryIt('galera', GAL384, '¡Te toca! Empieza por las dos primeras cifras.', { skills: ['div:3x1:exact'] }),

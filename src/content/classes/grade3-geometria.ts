@@ -21,7 +21,7 @@ const poligonos = clase({
     show('polygon', { sides: 3, mark: 'sides' }, 'Este polígono tiene 3 lados y 3 esquinas: es un triángulo.'),
     show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero.'),
     show('polygon', { sides: 4, mark: 'corners' }, 'Si tiene 4 esquinas rectas y los 4 lados iguales, es un cuadrado. Si tiene 4 esquinas rectas y dos lados más largos, es un rectángulo.'),
-    show('polygon', { sides: 4, mark: 'sides' }, 'Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas.'),
+    show('big-text', { text: 'Rombo', sub: '4 lados iguales · sin esquinas rectas' }, 'Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas: es como un cuadrado inclinado.'),
     show('polygon', { sides: 5, mark: 'sides' }, 'Este tiene 5 lados y 5 esquinas: es un pentágono.'),
     show('polygon', { sides: 6, mark: 'corners' }, 'Este tiene 6 lados y 6 esquinas: es un hexágono.'),
     show('polygon', { sides: 7, mark: 'sides' }, 'Con 7 lados es un heptágono.'),
