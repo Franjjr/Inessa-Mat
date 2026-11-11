@@ -166,7 +166,7 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       const pick = page.getByRole('radio', { name: 'La galera con restas' })
       if (await pick.isVisible().catch(() => false)) {
         await pick.click()
-        await expect(page.getByText('Anotado: tu método favorito es «La galera con restas».')).toBeVisible()
+        await expect(page.getByText('Has elegido «La galera con restas».')).toBeVisible()
         seen.add('choice')
         await shot(page, 'h9-lesson-choice')
         await continueLesson(page)

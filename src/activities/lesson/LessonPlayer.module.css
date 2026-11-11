@@ -173,8 +173,9 @@
   justify-content: center;
 }
 
-/* Portrait: stack the board above Lumi. The board keeps a minimum height (a 360 x 740 phone gave it 250 px, with Lumi's bubble
-   at 45% of the screen): when the bubble and the footer need more room, the page scrolls instead of squeezing the board. */
+/* Portrait: Lumi and the bubble go ABOVE the board, so what Lumi says is read before the board and never scrolls away
+   under it. The board keeps a minimum height: when the bubble and the footer need more room, the page scrolls instead of
+   squeezing the board. */
 @media (orientation: portrait) {
   .player {
     height: auto;
@@ -184,21 +185,22 @@
 
   .stage {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(min(300px, 46dvh), 1fr) auto;
+    grid-template-rows: auto minmax(min(300px, 46dvh), 1fr);
   }
 
   .speaker {
+    order: -1;
     flex-direction: row;
     justify-content: center;
     align-items: flex-end;
   }
 
-  /* Lumi's bubble shows its whole text here (the board gives up the space), up to 45% of the screen; a longer text
-     scrolls inside the bubble, so the footer («Atrás», «Siguiente ›») always stays on screen. */
+  /* Lumi's bubble shows its whole text here, up to 30% of the screen; a longer text scrolls inside the bubble, so the
+     board and the footer («Atrás», «Siguiente ›») keep their room. */
   .speakerPortrait .bubble {
     flex: 1 1 auto;
-    max-width: 420px;
-    max-height: 45dvh;
+    max-width: 520px;
+    max-height: 30dvh;
   }
 }
 
@@ -248,6 +250,17 @@
 .playerGrow .stage {
   grid-template-rows: max-content;
   grid-auto-rows: max-content;
+}
+
+/* Landscape, grown lesson: the page scrolls with the tall try, but Lumi's column stays in view (sticky) next to it, so the
+   bubble is always on screen. It sits in its own column, so it covers nothing of the board. */
+@media (orientation: landscape) {
+  .playerGrow .speaker {
+    position: sticky;
+    top: var(--sp-2);
+    align-self: start;
+    max-height: calc(100dvh - 2 * var(--sp-2));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

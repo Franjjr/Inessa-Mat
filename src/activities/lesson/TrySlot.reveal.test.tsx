@@ -1,10 +1,11 @@
-/* A try step that gives up after its misses shows the right answer in a fixed line, and the exercise is asked with
-   teach='full' so that the child copies the answer before the lesson goes on. */
+/* A try step that gives up after its misses shows the exercise solved step by step (the solution panel), and the exercise
+   is asked with teach='full' so that a missed fact is copied before the lesson goes on. */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
+import { makeDivision, makeFactMul } from '@/engine'
 import type { ExerciseViewProps, SkillSelector } from '@/types'
-import TrySlot, { shownAnswerOf } from './TrySlot'
+import TrySlot, { SOLVED_LINE, shownAnswerOf } from './TrySlot'
 
 const seen: { teach?: string; guided?: boolean }[] = []
 
@@ -31,120 +32,88 @@ vi.mock('@/activities', async () => {
 
 const selector: SkillSelector = { kinds: ['fact-mul'], tables: [6], factorRange: [6, 7] }
 
+const renderTry = (props: Partial<Parameters<typeof TrySlot>[0]> = {}) => {
+  const onSettled = vi.fn()
+  render(
+    <ActivityHostProvider value={defaultActivityHost}>
+      <TrySlot selector={selector} seedKey="reveal" onSettled={onSettled} {...props} />
+    </ActivityHostProvider>,
+  )
+  return onSettled
+}
+
 describe('TrySlot: the copy step is not a new miss', () => {
-  it('a copy written right gives up the step at once: no «¡Casi!» and no second try', () => {
-    const onSettled = vi.fn()
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-copy" onSettled={onSettled} />
-      </ActivityHostProvider>,
-    )
-    // With teach full the view only ends an exercise at its copy step, so this outcome is the first one of the step.
+  it('a copy written right gives up the step at once with the solution: no «¡Casi!» and no second try', () => {
+    const onSettled = renderTry({ seedKey: 'reveal-copy' })
     fireEvent.click(screen.getByRole('button', { name: 'Copia bien' }))
     const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
     expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
+    expect(onSettled.mock.calls[0][0]).toBe(false)
+    expect(onSettled.mock.calls[0][1]).toContain(`= ${answer}`)
     expect(screen.queryByText(/Casi/)).toBeNull()
     expect(screen.queryByRole('button', { name: 'Inténtalo otra vez' })).toBeNull()
-    expect(screen.getByText(`La respuesta es ${answer}.`)).toBeTruthy()
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent(`= ${answer}`)
   })
-})
 
-describe('TrySlot: no «¡Casi!» once the child has copied the answer', () => {
-  it('a miss, a retry, then a copy written right: the copy ends the step with no «¡Casi!» left on screen', () => {
-    const onSettled = vi.fn()
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-after-miss" onSettled={onSettled} />
-      </ActivityHostProvider>,
-    )
+  it('a miss, a retry, then a copy written right: the copy ends the step with no «Casi» left on screen', () => {
+    const onSettled = renderTry({ seedKey: 'reveal-after-miss' })
     fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
-    expect(screen.getByText(/¡Casi!/)).toBeTruthy()
+    expect(screen.getByText(/Casi\. Fíjate/)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
     fireEvent.click(screen.getByRole('button', { name: 'Copia bien' }))
-    const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
     expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
+    expect(onSettled.mock.calls[0][0]).toBe(false)
     expect(screen.queryByText(/Casi/)).toBeNull()
     expect(screen.queryByRole('button', { name: 'Inténtalo otra vez' })).toBeNull()
   })
 })
 
-describe('TrySlot: the answer line only shows a plain number answer', () => {
-  it('shows a counted answer', () => {
-    expect(shownAnswerOf({ kind: 'fact-mul', a: 6, b: 7, answer: 42 } as never)).toBe(42)
-  })
-
-  it('shows no bare number for a time problem, whose number is minutes', () => {
-    expect(shownAnswerOf({ kind: 'time-duration', answer: 45 } as never)).toBeNull()
+describe('TrySlot: the answer shown after giving up', () => {
+  it('is the solution answer for every kind: a fact, and a division with what is left over', () => {
+    expect(shownAnswerOf(makeFactMul(6, 7))).toBe('6 × 7 = 42')
+    expect(shownAnswerOf(makeDivision(22, 5))).toBe('4, y sobran 2')
+    expect(shownAnswerOf(makeDivision(84, 4))).toBe('21, y no sobra nada')
   })
 })
 
 describe('TrySlot: teaching after the misses', () => {
   it('asks the exercise with teach full, so a miss ends in the copy step', () => {
     seen.length = 0
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-teach" onSettled={vi.fn()} />
-      </ActivityHostProvider>,
-    )
+    renderTry({ seedKey: 'reveal-teach' })
     expect(seen.length).toBeGreaterThan(0)
     expect(seen.every((p) => p.teach === 'full')).toBe(true)
   })
 
   it('a step without hints does not open the exercise with its trick on screen', () => {
     seen.length = 0
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-nohints" onSettled={vi.fn()} allowHints={false} />
-      </ActivityHostProvider>,
-    )
+    renderTry({ seedKey: 'reveal-nohints', allowHints: false })
     expect(seen.length).toBeGreaterThan(0)
     expect(seen.every((p) => p.guided === false)).toBe(true)
   })
 
   it('a step with hints opens the exercise guided', () => {
     seen.length = 0
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-hints" onSettled={vi.fn()} />
-      </ActivityHostProvider>,
-    )
+    renderTry({ seedKey: 'reveal-hints' })
     expect(seen.every((p) => p.guided === true)).toBe(true)
   })
 
-  it('after giving up, a fixed line says the right answer', () => {
-    const onSettled = vi.fn()
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-line" onSettled={onSettled} />
-      </ActivityHostProvider>,
-    )
+  it('after giving up, the exercise stays and the solution says the right answer', () => {
+    const onSettled = renderTry({ seedKey: 'reveal-line' })
     fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
     fireEvent.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
     fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
     const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
-    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
-    expect(screen.getByText(`La respuesta es ${answer}.`)).toBeTruthy()
+    expect(onSettled).toHaveBeenCalledTimes(1)
+    expect(onSettled.mock.calls[0][1]).toContain(`= ${answer}`)
+    expect(screen.getByText(SOLVED_LINE)).toBeTruthy()
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent(`= ${answer}`)
+    expect(screen.queryByText(/No pasa nada/)).toBeNull()
   })
 
-  it('a step given up before, shown again from the lesson, still says the right answer', () => {
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-back" onSettled={vi.fn()} settled={false} givenUpAnswer={42} />
-      </ActivityHostProvider>,
-    )
-    expect(screen.getByText('La respuesta es 42.')).toBeTruthy()
-    expect(screen.getByText(/No pasa nada/)).toBeTruthy()
-  })
-
-  it('a step given up without a shown answer (a time problem) says no number', () => {
-    render(
-      <ActivityHostProvider value={defaultActivityHost}>
-        <TrySlot selector={selector} seedKey="reveal-back-none" onSettled={vi.fn()} settled={false} givenUpAnswer={null} />
-      </ActivityHostProvider>,
-    )
-    expect(screen.queryByText(/La respuesta es/)).toBeNull()
-    expect(screen.getByText(/No pasa nada/)).toBeTruthy()
+  it('a step given up before, shown again from the lesson, shows the exercise solved', () => {
+    renderTry({ seedKey: 'reveal-back', settled: false, givenUpAnswer: '6 × 7 = 42' })
+    expect(screen.getByText(SOLVED_LINE)).toBeTruthy()
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent(/Respuesta:/)
+    expect(screen.queryByTestId('fake-exercise')).toBeNull()
   })
 })

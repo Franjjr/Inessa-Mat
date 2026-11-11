@@ -83,7 +83,7 @@ describe('ExerciseStep «No lo sé»', () => {
     expect(screen.queryByRole('button', { name: 'No lo sé' })).toBeNull()
   })
 
-  it('records one wrong attempt with errorType dont-know, shows every hint («Así se hace») and then «Siguiente»', async () => {
+  it('records one wrong attempt with errorType dont-know, shows the solution («Así se resuelve») and then «Siguiente»', async () => {
     const user = userEvent.setup()
     const { reportAttempt, onContinue } = renderStep({ allowDontKnow: true })
     await user.click(screen.getByRole('button', { name: 'No lo sé' }))
@@ -92,9 +92,9 @@ describe('ExerciseStep «No lo sé»', () => {
       exercise: expect.objectContaining({ id: 'fact-mul:6x7' }),
       check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
     })
-    expect(screen.getByRole('heading', { name: 'Así se hace' })).toBeInTheDocument()
-    expect(screen.getByText('Pista 1 de 3')).toBeInTheDocument()
-    expect(screen.getByText('Pista 3 de 3')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Así se resuelve' })).toBeInTheDocument()
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent('6 × 7 = 42')
+    expect(screen.queryByText(/Pista \d de 3/)).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(onContinue).toHaveBeenCalledTimes(1)
     expect(onContinue.mock.calls[0][0].check).toMatchObject({ correct: false, errorType: 'dont-know' })

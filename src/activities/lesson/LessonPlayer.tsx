@@ -6,7 +6,7 @@ import clsx from 'clsx'
 import { Character } from '@/art'
 import { sfx, speech } from '@/audio'
 import { parseMixed, plainMixed, sayMixed, type SpanishVoice } from '@/audio/sayMixed'
-import type { LessonDef, LessonStep, SubMethod } from '@/types'
+import type { LessonDef, LessonStep, TableMethod } from '@/types'
 import { BackButton, Button } from '@/ui'
 import { useActivityHost } from '../host'
 import { LESSON_VISUALS } from './visuals'
@@ -29,6 +29,9 @@ function speakLine(line: string, voice: SpanishVoice) {
 function preferenceOf(step: LessonStep | undefined): 'subMethod' | 'divMethod' | 'tableMethod' {
   return step?.preference ?? 'subMethod'
 }
+
+/** Whether the voice is still talking (the stubbed speech of the tests may not know). */
+const stillSpeaking = () => (typeof speech.speaking === 'function' ? speech.speaking() : false)
 
 export interface LessonPlayerProps {
   lesson: LessonDef
@@ -56,8 +59,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const [index, setIndex] = useState(0)
   /** How each try step was settled: true when solved, false when given up. Going back keeps that outcome. */
   const [settled, setSettled] = useState<ReadonlyMap<number, boolean>>(() => new Map())
-  /** The right answer a given-up try showed, so that going back to that step shows it again. */
-  const [shownAnswers, setShownAnswers] = useState<ReadonlyMap<number, number>>(() => new Map())
+  /** The answer a given-up try showed (its solution's answer), so that going back to that step shows it again. */
+  const [shownAnswers, setShownAnswers] = useState<ReadonlyMap<number, string>>(() => new Map())
   const current = Math.min(Math.max(index, 0), Math.max(total - 1, 0))
   const step = steps[current]
   const run = runs[current]
@@ -77,10 +80,28 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   const stageId = stageCharacter(speaker)
   const Visual = step && !isAnswerStep(step) ? LESSON_VISUALS[step.visual] : undefined
 
-  // Voice: read each step aloud when it appears (the speech module ignores the call when voice is off).
+  /** The voice is reading (one button toggles «Escuchar» and «Parar»). */
+  const [speaking, setSpeaking] = useState(false)
+  const speak = useCallback((line: string) => {
+    setSpeaking(true)
+    void Promise.resolve(speakLine(line, voice)).finally(() => setSpeaking(stillSpeaking()))
+  }, [voice])
+  const stopSpeaking = useCallback(() => {
+    speech.stop()
+    setSpeaking(false)
+  }, [])
+  // While the voice reads, check now and then whether it has finished (a line cut by another one resolves late).
+  useEffect(() => {
+    if (!speaking || typeof speech.speaking !== 'function') return
+    const id = setInterval(() => { if (!speech.speaking()) setSpeaking(false) }, 400)
+    return () => clearInterval(id)
+  }, [speaking])
+
+  // Voice: read each step aloud when it appears (the speech module ignores the call when voice is off). The voice says
+  // `say` when the step has one (numbers and signs as words), the bubble shows `text`.
   useEffect(() => {
     if (!step || !host.prefs.voice) return
-    void speakLine(host.t(step.text), voice)
+    speak(host.t(step.say ?? step.text))
     // Only the step itself should trigger speech; host and voice are stable for a lesson.
   }, [current])
 
@@ -107,17 +128,19 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   }, [current, goTo])
 
   // A try step is settled when solved or given up after the last allowed miss: the lesson then goes on.
-  const settle = useCallback((solvedNow: boolean, shown?: number | null) => {
+  const settle = useCallback((solvedNow: boolean, shown?: string | null) => {
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, solvedNow)))
-    if (typeof shown === 'number') setShownAnswers((prev) => (prev.has(current) ? prev : new Map(prev).set(current, shown)))
+    if (typeof shown === 'string') setShownAnswers((prev) => (prev.has(current) ? prev : new Map(prev).set(current, shown)))
   }, [current])
 
   const onTryOverflow = useCallback(() => setOverflowAt(current), [current])
 
-  // Choosing settles the step at once and saves the pick as the child's preference.
+  // Choosing settles the step at once. Only a favourite trick of the tables is saved: a subtraction or division method
+  // picked in a lesson is NOT saved for every later exercise (the method is the school's, set by the grown-ups).
   const pick = useCallback((value: string) => {
     setPicks((prev) => new Map(prev).set(current, value))
-    host.setPreference?.(preferenceOf(lesson.steps[current]), value as SubMethod)
+    const preference = preferenceOf(lesson.steps[current])
+    if (preference === 'tableMethod') host.setPreference?.(preference, value as TableMethod)
     setSettled((prev) => (prev.has(current) ? prev : new Map(prev).set(current, true)))
   }, [current, host, lesson.steps])
 
@@ -159,7 +182,8 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
   }
 
   const pose = isTry && outcome === true ? 'cheer' : 'talk'
-  const avatarSize = portrait ? 150 : 200
+  // Portrait: Lumi and the bubble go above the board, so Lumi is smaller there and the board keeps its room.
+  const avatarSize = portrait ? 110 : 200
 
   return (
     <main className={clsx(styles.player, growing && styles.playerGrow)} aria-label={host.t(lesson.title)}>
@@ -171,9 +195,15 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
         )}
         <h1 className={styles.title}>{host.t(lesson.title)}</h1>
         {host.prefs.voice ? (
-          <Button variant="secondary" size="sm" onClick={() => void speakLine(text, voice)} aria-label="Escuchar otra vez">
-            🔊 Escuchar
-          </Button>
+          speaking ? (
+            <Button variant="secondary" size="sm" onClick={stopSpeaking} aria-label="Parar la voz">
+              ⏹ Parar
+            </Button>
+          ) : (
+            <Button variant="secondary" size="sm" onClick={() => speak(step ? host.t(step.say ?? step.text) : text)} aria-label="Escuchar otra vez">
+              🔊 Escuchar
+            </Button>
+          )
         ) : (
           <span />
         )}
@@ -191,12 +221,12 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             >
               {isTry && step.trySelector ? (
                 <SafeVisual>
-                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} givenUpAnswer={shownAnswers.get(current)} onSettled={settle} method={step.method} divMethod={step.divMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
+                  <TrySlot key={current} selector={step.trySelector} seedKey={`${lesson.id}:${current}`} settled={outcome} givenUpAnswer={shownAnswers.get(current)} onSettled={settle} method={step.method} divMethod={step.divMethod} tableMethod={step.tableMethod} allowHints={step.hints !== false} grown={growing} onOverflow={onTryOverflow} />
                 </SafeVisual>
               ) : isChoose && step.choices ? (
                 <SafeVisual>
                   <FitInBoard>
-                    <ChoiceSlot choices={step.choices.map((c) => ({ label: c.label, value: c.value }))} picked={picks.get(current)} onPick={pick} />
+                    <ChoiceSlot choices={step.choices.map((c) => ({ label: c.label, value: c.value }))} picked={picks.get(current)} onPick={pick} saved={preferenceOf(step) === 'tableMethod'} />
                   </FitInBoard>
                 </SafeVisual>
               ) : Visual ? (
@@ -230,8 +260,9 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             <span key={i} aria-hidden className={clsx(styles.dot, i === current && styles.dotActive, i < current && styles.dotDone)} />
           ))}
         </div>
-        <Button variant={isLast ? 'gold' : 'primary'} onClick={next} disabled={!canContinue}>
-          {isLast ? '¡Lo he entendido!' : 'Siguiente ›'}
+        {/* A try given up shows its solution: the lesson goes on with «Seguir», not with «¡Lo he entendido!». */}
+        <Button variant={isLast && !(isTry && outcome === false) ? 'gold' : 'primary'} onClick={next} disabled={!canContinue}>
+          {isLast ? (isTry && outcome === false ? 'Seguir' : '¡Lo he entendido!') : 'Siguiente ›'}
         </Button>
       </footer>
     </main>
