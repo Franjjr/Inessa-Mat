@@ -66,7 +66,7 @@ export type { StrategyDetail } from './strategies'
 export { intervalMs, LEITNER_INTERVAL_DAYS } from './mastery'
 export { WORD_TEMPLATES } from './wordProblems'
 export type { WordTemplate } from './wordProblems'
-export { columnName } from './feedback'
+export { columnName, columnWithArticle } from './feedback'
 /** Lengua de 3.º, gramática: the exercises, their prompts, check and hints (src/engine/lengua). */
 export { buildGrammar, checkGrammar, grammarPrompt, grammarStatement, hintsGrammar } from './lengua/grammar'
 export { buildLengua, checkLengua, hintsLengua, lenguaStatement, LENGUA_KINDS } from './lengua/exercises'

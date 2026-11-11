@@ -4,15 +4,22 @@
 import type { FactStrategy } from '@/types'
 import { hashString } from './rng'
 
-export const COLUMN_NAMES = ['unidades', 'decenas', 'centenas', 'unidades de mil', 'decenas de mil']
+export const COLUMN_NAMES = ['unidades', 'decenas', 'centenas', 'millares', 'decenas de millar']
+/** The same columns with their article: «millares» is masculine, so «los millares». */
+const COLUMN_WITH_ARTICLE = ['las unidades', 'las decenas', 'las centenas', 'los millares', 'las decenas de millar']
 
 export function columnName(i: number): string {
   return COLUMN_NAMES[i] ?? 'cifras de la izquierda'
 }
 
+/** The column with its article, for sentences after a preposition: «a las decenas», «a los millares». */
+export function columnWithArticle(i: number): string {
+  return COLUMN_WITH_ARTICLE[i] ?? 'las cifras de la izquierda'
+}
+
 /** "las decenas", "las decenas y las centenas", "las unidades, las decenas y las centenas". */
 export function columnList(cols: number[]): string {
-  const names = [...new Set(cols)].sort((a, b) => a - b).map((c) => `las ${columnName(c)}`)
+  const names = [...new Set(cols)].sort((a, b) => a - b).map((c) => columnWithArticle(c))
   if (names.length <= 1) return names[0] ?? ''
   return `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`
 }
