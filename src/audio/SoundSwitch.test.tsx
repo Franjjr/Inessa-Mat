@@ -20,7 +20,10 @@ function kid(settings: Partial<ChildProfile['settings']>): ChildProfile {
 }
 
 describe('SoundSwitch · the child can turn the sound and the voice off and on', () => {
-  beforeEach(() => updateChild.mockClear())
+  beforeEach(() => {
+    updateChild.mockClear()
+    window.localStorage.clear()
+  })
 
   it('is visible with its state written out, and turns sound and voice off together', () => {
     state.child = kid({ sound: true, voice: true })
@@ -41,6 +44,19 @@ describe('SoundSwitch · the child can turn the sound and the voice off and on',
     fireEvent.click(button)
     expect(updateChild).toHaveBeenCalledWith('kid', expect.objectContaining({
       settings: expect.objectContaining({ sound: true, voice: true }),
+    }))
+  })
+
+  it('turning the sound on restores a voice that was off before, and turns it on if there was no memory', () => {
+    state.child = kid({ sound: true, voice: false })
+    const { unmount } = render(<SoundSwitch />)
+    fireEvent.click(screen.getByRole('button', { name: /Apagar el sonido/ }))
+    unmount()
+    state.child = kid({ sound: false, voice: false })
+    render(<SoundSwitch />)
+    fireEvent.click(screen.getByRole('button', { name: /Activar el sonido/ }))
+    expect(updateChild).toHaveBeenLastCalledWith('kid', expect.objectContaining({
+      settings: expect.objectContaining({ sound: true, voice: false }),
     }))
   })
 

@@ -125,6 +125,8 @@
   color: var(--c-ink);
   background: var(--c-primary-soft);
 }
+.noticeBody { flex: 1; }
+.noticeAction { flex: none; }
 .noticeMark { font-family: var(--font-display); font-weight: 700; flex: none; }
 .noticeInfo { background: var(--c-primary-soft); }
 .noticeOk { background: var(--c-success-soft); }
