@@ -41,8 +41,15 @@ export const TABLE_METHODS: readonly TableTrick[] = [
   { id: 'double-double', label: 'Doble y doble otra vez', summary: 'Con 4 y 8: se dobla dos veces (4) o tres veces (8).', applies: (a, b) => has(a, b, 4) || has(a, b, 8), hint: (a, b) => (has(a, b, 4) ? 'Dobla y dobla otra vez: el 4 son dos dobles del otro número.' : 'Dobla y dobla otra vez: el 8 son tres dobles del otro número.') },
   { id: 'half-ten', label: 'La mitad del 10', summary: 'Con 5: la mitad de la tabla del 10 con el mismo número.', applies: (a, b) => has(a, b, 5), hint: 'Con el 5: mira la tabla del diez con el otro número y parte ese resultado por la mitad.' },
   { id: 'ten-minus-one', label: 'Diez menos una vez', summary: 'Con 9: diez veces el número, menos una vez el número.', applies: (a, b) => has(a, b, 9), hint: 'Con el 9: diez veces el número, y quita una vez el número.' },
-  { id: 'five-plus-one', label: 'El 5 y uno más', summary: 'Con 6 y 7: cinco veces el otro número, y una o dos veces más.', applies: (a, b) => has(a, b, 6) || has(a, b, 7), hint: 'Cinco veces el otro número, y una o dos veces más.' },
-  { id: 'mirror', label: 'El espejo', summary: 'Se cambia el orden: 7 × 6 es lo mismo que 6 × 7. Vale para cualquier hecho con dos factores distintos.', applies: (a, b) => a !== b, hint: 'Dale la vuelta al hecho: el espejo sale igual y es más fácil de recordar.' },
+  { id: 'five-plus-one', label: 'El 5 y uno más', summary: 'Con 6 y 7: cinco veces el otro número, y una o dos veces más.', applies: (a, b) => has(a, b, 6) || has(a, b, 7),
+    // The text says which factor is the one with the trick: a 6 adds one more, a 7 adds two more.
+    hint: (a, b) => {
+      const k = has(a, b, 6) ? 6 : 7
+      const o = a === k ? b : a
+      return k === 6 ? `Cinco veces el ${o}, y una vez más el ${o}.` : `Cinco veces el ${o}, y dos veces más el ${o}.`
+    } },
+  { id: 'mirror', label: 'El espejo', summary: 'Se cambia el orden: 7 × 6 es lo mismo que 6 × 7. Vale para cualquier hecho con dos factores distintos.', applies: (a, b) => a !== b,
+    hint: (a, b) => `Dale la vuelta: ${b} × ${a} da lo mismo. Piensa en la tabla del número más pequeño, el ${Math.min(a, b)}.` },
 ] as const
 
 /** Methods per operation. 'sub' = column subtraction, 'div' = division, 'tables' = the tricks of the times tables. */
