@@ -1,0 +1,32 @@
+/* Child's sound switch: a labelled pill, never a bare icon, with a tap area of at least 56 px. */
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  min-width: 56px;
+  padding: 0 16px;
+  border: 3px solid var(--c-line);
+  border-radius: 999px;
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  -webkit-tap-highlight-color: transparent;
+}
+.switch:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--c-line); }
+.switch:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 3px; }
+.off { color: var(--c-ink-soft); }
+.icon { font-size: 22px; line-height: 1; }
+.label { white-space: nowrap; }
+
+/* Over the screens of the child: top right, under the notices and the modals. */
+.floating {
+  position: fixed;
+  top: max(8px, env(safe-area-inset-top));
+  right: 8px;
+  z-index: 40;
+}
