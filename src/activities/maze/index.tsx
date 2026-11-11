@@ -47,11 +47,11 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
   const kOf = (cell: number) => maze.values[cell] / table
   const isGoal = (cell: number) => cell === maze.path[maze.path.length - 1]
 
-  const log = (cell: number, ok: boolean, ms: number) => {
+  const log = (cell: number, ok: boolean, ms: number, hintsUsed = 0) => {
     const value = maze.values[cell]
     const exercise: Exercise = makeFactMul(table, ok ? kOf(cell) : kOf(expected))
     const res = check(exercise, { type: 'number', value })
-    host.reportAttempt({ exercise, check: res, ms, inputMode: 'tap', hintsUsed: 0 })
+    host.reportAttempt({ exercise, check: res, ms, inputMode: 'tap', hintsUsed })
     return res
   }
 
@@ -59,7 +59,8 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
     if (cell === cur || isGoal(cell) && cell !== expected) return
     const ms = Math.round(now() - stepStart)
     if (cell === expected && !isGoal(cell)) {
-      const res = log(cell, true, ms)
+      // After two wrong taps the right cell is highlighted: a tap on it is right, but it was not known by heart (a hint).
+      const res = log(cell, true, ms, wrongHere >= 2 ? 1 : 0)
       sfx.play('step')
       haptics.tap()
       host.react('correct', { errorType: res.errorType })
