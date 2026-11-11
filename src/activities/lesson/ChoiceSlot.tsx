@@ -19,7 +19,7 @@ export default function ChoiceSlot({ choices, picked, onPick, saved = false }: C
   const chosen = choices.find((c) => c.value === picked)
   return (
     <div className={s.wrap}>
-      <div className={s.options} role="radiogroup" aria-label={host.t('Tu método favorito')}>
+      <div className={s.options} role="radiogroup" aria-label={host.t(saved ? 'Tu truco favorito' : 'Elige el que te resulte más fácil')}>
         {choices.map((c) => (
           <Button
             key={c.value}
