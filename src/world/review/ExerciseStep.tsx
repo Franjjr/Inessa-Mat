@@ -13,8 +13,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { SolutionPanel } from '@/activities/shared/SolutionPanel'
+import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
-import { isCompletionOnly } from '@/engine'
+import { hintsFor, isCompletionOnly } from '@/engine'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
 import { guidedOutcome } from '@/activities/shared/guided'
@@ -56,7 +57,7 @@ export interface ExerciseStepProps {
 
 /**
  * asking: the child answers (first try). offered: wrong first try, «Inténtalo otra vez» on screen. retrying: the same
- * exercise again. dontknow: «No lo sé», the hints are shown. final: answered for good.
+ * exercise again. dontknow: «No lo sé», the solution is shown (maths) or the hints (Lengua, English). final: answered for good.
  */
 type Stage = 'asking' | 'offered' | 'retrying' | 'dontknow' | 'final'
 
@@ -244,9 +245,12 @@ export function ExerciseStep({
   const subMethod = sessionSubMethod(host.prefs.subMethod)
   const divMethod = sessionDivMethod(host.prefs.divMethod)
   const solutionOpts = { subMethod, divMethod, tableMethod: host.prefs.tableMethod }
-  // The solution is taught for maths only (Lengua and English keep their own messages); a speaking task has none.
-  // A missed fact with teach 'full' was already worked and copied in its own view: no second solution under it.
-  const teaches = !exercise.kind.startsWith('lng-') && !exercise.kind.startsWith('eng-') && !(exercise.kind === 'fact-mul' && teach === 'full')
+  // The solution is taught for maths only: Lengua and English keep their hints at «No lo sé» and their own messages at
+  // the end (their «solution» would only be «La respuesta es X»). A missed fact with teach 'full' was already worked
+  // and copied in its own view: no second solution under it.
+  const isMath = !exercise.kind.startsWith('lng-') && !exercise.kind.startsWith('eng-')
+  const teaches = isMath && !(exercise.kind === 'fact-mul' && teach === 'full')
+  const hints = stage === 'dontknow' && !isMath ? hintsFor(exercise, subMethod, { divMethod, tableMethod: host.prefs.tableMethod }) : []
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
 
@@ -277,7 +281,20 @@ export function ExerciseStep({
       {stage === 'dontknow' && (
         <div className={s.feedback} data-tone="clue" role="status">
           <p className={s.message}>{message}</p>
-          <SolutionPanel exercise={exercise} opts={solutionOpts} />
+          {isMath ? <SolutionPanel exercise={exercise} opts={solutionOpts} /> : (
+            <div className={s.hints}>
+              <h3 className={s.hintsTitle}>Así se hace</h3>
+              <ol className={s.hintList}>
+                {hints.map((h) => (
+                  <li key={h.level} className={s.hintItem}>
+                    <p className={s.hintLevel}>Pista {h.level} de {hints.length}</p>
+                    <p className={s.hintText}>{host.t(h.text)}</p>
+                    <HintVisual hint={h} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <Button size="lg" variant="primary" onClick={finish}>{wrongText}</Button>
         </div>
       )}

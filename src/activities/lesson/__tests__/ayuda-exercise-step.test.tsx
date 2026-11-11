@@ -3,7 +3,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
-import { check, createRng, generate, makeColumnSub, toDigits } from '@/engine'
+import { check, createRng, generate, hintsFor, makeColumnSub, toDigits } from '@/engine'
 import { ERROR_PHRASES } from '@/content/phrases'
 import type { ActivityHost, ExerciseViewProps } from '@/types'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
@@ -98,6 +98,24 @@ describe('ExerciseStep: «No lo sé»', () => {
     expect(seen.at(-1)).toEqual({ method: 'borrow', divMethod: 'galera' })
     fireEvent.click(screen.getByRole('button', { name: 'No lo sé' }))
     expect(screen.getByTestId('solution-panel')).toHaveTextContent('Unidades: 1 − 0 = 1.')
+  })
+
+  it('in Lengua and English shows the hints, as before, and no maths solution', () => {
+    for (const skill of ['lng:gram:articulo', 'eng:voc:animales'] as const) {
+      const ex = generate({ skills: [skill] }, 1, { rng: createRng(3) })[0]
+      expect(ex, skill).toBeDefined()
+      const hints = hintsFor(ex)
+      render(
+        <ActivityHostProvider value={host()}>
+          <ExerciseStep exercise={ex} allowHints allowDontKnow okLabel="Siguiente" onContinue={vi.fn()} />
+        </ActivityHostProvider>,
+      )
+      fireEvent.click(screen.getByRole('button', { name: 'No lo sé' }))
+      expect(screen.queryByTestId('solution-panel'), ex.id).toBeNull()
+      expect(screen.getByRole('status'), ex.id).toHaveTextContent('Así se hace')
+      if (hints.length) expect(screen.getByRole('status'), ex.id).toHaveTextContent(`Pista 1 de ${hints.length}`)
+      cleanup()
+    }
   })
 })
 
