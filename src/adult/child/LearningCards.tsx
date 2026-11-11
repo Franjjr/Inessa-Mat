@@ -6,12 +6,13 @@
    Each section reads only its subject's rows. The cards are pure (fixed data in the gallery); the sections read the
    data and offer the test again. A failing read shows inside the section and never takes the whole report down. */
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
-import { getMastery, listAttempts, listSessions, updateProgress } from '@/data'
+import { getMastery, listAttempts, listPlacementAttempts, listSessions, updateProgress } from '@/data'
 import { syllabusFor, syllabusForGrade } from '@/content/syllabus'
 import { STORY_READINGS } from '@/content/lengua/stories'
 import { handwritingReport } from '@/engine/caligrafia/report'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
+  ENGLISH_PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_ACTIVITY, PLACEMENT_ACTIVITY,
   attemptsOf, describeError, describeSkillShort, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
   syllabusReport, topicNeeds, ENGLISH_PLACEMENT_COUNT, ENGLISH_SKILL_TEXT, ENGLISH_THEMES, LENGUA_PLACEMENT_COUNT, PLACEMENT_COUNT, THEME_NAME,
   type EnglishWordsReport, type ErrorReport, type LessonSubject, type PlacementRun, type RecallReport, type SyllabusReport,
@@ -48,6 +49,17 @@ export interface LearningData {
   handwriting?: AttemptRecord[]
 }
 
+/** The placement tests of the three subjects: they are read whole, so an old prueba inicial is still there. */
+const PLACEMENT_ACTIVITIES = [PLACEMENT_ACTIVITY, LENGUA_PLACEMENT_ACTIVITY, ENGLISH_PLACEMENT_ACTIVITY]
+
+/** The recent attempts plus the placement tests that fell out of that window, each attempt once, newest first. */
+export function withPlacements(recent: AttemptRecord[], placed: AttemptRecord[]): AttemptRecord[] {
+  const seen = new Set(recent.map((a) => a.id))
+  const extra = placed.filter((a) => !seen.has(a.id))
+  if (extra.length === 0) return recent
+  return [...recent, ...extra].sort((x, y) => (x.createdAt < y.createdAt ? 1 : x.createdAt > y.createdAt ? -1 : 0))
+}
+
 /** The mastery, the attempts (newest first) and the sessions of the last week, read from this device once for the whole
     report: both sections take this one read (`data`, `loadError`). */
 export function useLearningData(childId: string, progressUpdatedAt?: string): { data: LearningData | null; error: string | null } {
@@ -63,9 +75,10 @@ export function useLearningData(childId: string, progressUpdatedAt?: string): { 
         listAttempts(childId, { limit: ATTEMPT_LIMIT, skipHandwriting: true }),
         listSessions(childId, { since }),
         listAttempts(childId, { limit: ATTEMPT_LIMIT }),
+        listPlacementAttempts(childId, PLACEMENT_ACTIVITIES),
       ]))
-      .then(([mastery, attempts, sessions, all]) => {
-        if (alive) setData({ mastery, attempts, sessions, handwriting: all.filter((a) => a.skill.startsWith('calig:')) })
+      .then(([mastery, recent, sessions, all, placed]) => {
+        if (alive) setData({ mastery, attempts: withPlacements(recent, placed), sessions, handwriting: all.filter((a) => a.skill.startsWith('calig:')) })
       })
       .catch((e: unknown) => { if (alive) setError(errorMessage(e, 'No hemos podido leer lo que ha practicado.')) })
     return () => { alive = false }
