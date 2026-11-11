@@ -1,6 +1,6 @@
 /* Daily session runner logic (pure): the run order of the plan, the re-asks of failed items, the time-box and the
    reward key. The screen (DailySession.tsx) only renders what this file decides. */
-import { DAILY_MINUTES, ENGLISH_SESSION_MINUTES, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
+import { DAILY_MINUTES, ENGLISH_SESSION_MINUTES, EXAMPLE_SECONDS, estimateSeconds, type DailyBlockId, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
 import { startQueue, requeueWrong, type RunQueue } from '@/activities/shared/requeue'
 
 /** One planned item of the run, with an id unique inside the run (the same exercise id can come twice). */
@@ -19,6 +19,19 @@ export const SUBJECT_LIMIT_SECONDS: Record<LessonSubject, number> = {
 /** Stars given once per day for finishing the session (not per correct answer). */
 export const SESSION_STARS = 3
 
+/** The intro's block titles and the plan block each one is. */
+const BLOCK_OF_TITLE: Record<string, DailyBlockId> = { Calentamiento: 'warmup', 'Lo nuevo': 'new', Mezcla: 'mix', Problema: 'problem', Lectura: 'story' }
+
+/** The time text of an intro block («5 min · con un ejemplo») with the minutes this plan really takes, by the planner's own
+    estimate per item. A block the plan leaves empty keeps its text. */
+export function blockTimeText(plan: DailyPlan, title: string, text: string): string {
+  const block = plan.blocks.find((b) => b.id === BLOCK_OF_TITLE[title])
+  if (!block || block.items.length === 0) return text
+  const example = block.id === 'new' && plan.example ? EXAMPLE_SECONDS : 0
+  const seconds = block.items.reduce((sum, item) => sum + estimateSeconds(item), example)
+  return text.replace(/^\d+ min/, `${Math.max(1, Math.round(seconds / 60))} min`)
+}
+
 export function flattenPlan(plan: DailyPlan): RunItem[] {
   return plan.blocks.flatMap((b) => b.items).map((item, i) => ({ uid: `${i}:${item.exercise.id}`, item }))
 }
@@ -33,9 +46,19 @@ export function afterAnswer(q: RunQueue<RunItem>, pos: number, correct: boolean)
   return requeueWrong(q, pos, (r) => r.uid) ?? q
 }
 
+/** «Ahora no» at most this many times in one run: a child cannot skip the practice and still close it with the stars. */
+export const MAX_POSTPONES = 3
+
+/** Whether «Ahora no» is offered for the slot at `pos`: each item only once (a postponed item that comes back is answered),
+    and at most MAX_POSTPONES in the run (`used` is how many the run has already had). */
+export function canPostpone(q: RunQueue<RunItem>, pos: number, used: number): boolean {
+  const slot = q.slots[pos]
+  return !!slot && !slot.item.postponed && used < MAX_POSTPONES
+}
+
 /**
- * «Ahora no»: the slot at `pos` goes to the end of the run, marked postponed, and comes back later as often as the child
- * says it (no limit). Only when it is the last slot left is it dropped, so the run ends. Nothing is reported: a
+ * «Ahora no»: the slot at `pos` goes to the end of the run, marked postponed, and comes back later to be answered (once
+ * per item, see canPostpone). Only when it is the last slot left is it dropped, so the run ends. Nothing is reported: a
  * postponed item is not an attempt and is not counted as wrong.
  */
 export function postpone(q: RunQueue<RunItem>, pos: number): RunQueue<RunItem> {
@@ -74,11 +97,24 @@ export function isTimeUp(activeSeconds: number, limitSeconds: number = SESSION_L
 
 /** Result of the run for the closing screen: planned items only (re-asks are practice, not graded). */
 export interface RunSummary {
+  /** Answers to planned items, speaking included («Ahora dilo tú» is an answer for the intro and the closing). */
   answered: number
+  /** The answers that are graded (not «Ahora dilo tú»): the only ones that count as practice for the stars. */
+  graded: number
   correct: number
   total: number
   /** The session ended because the child finished the items (not because time ran out). */
   finished: boolean
+}
+
+/**
+ * The stars of the session (once a day): the child has practised, not just opened it. Right or wrong answers count; items
+ * skipped with «Ahora no» do not, and neither do «Ahora dilo tú» answers (not graded). Ending by the time counts the same as
+ * finishing, if at least half of the planned items were answered with a graded answer. A session with no planned graded item (speaking only) needs one answer.
+ */
+export function earnsStars(summary: RunSummary): boolean {
+  if (summary.total === 0) return summary.answered > 0
+  return summary.graded * 2 >= summary.total
 }
 
 /** «Ahora dilo tú» (eng-speak) is not graded: its stars are a pronunciation result, not an answer to be right or wrong. It is
@@ -90,7 +126,7 @@ export function summarizeRun(q: RunQueue<RunItem>, results: readonly { uid: stri
   const graded = results.filter((r) => isGraded(kindOf.get(r.uid) ?? ''))
   const planned = q.slots.filter((s) => !s.retry && isGraded(s.item.item.exercise.kind)).length
   const correct = graded.filter((r) => r.correct).length
-  return { answered: results.length, correct, total: planned, finished }
+  return { answered: results.length, graded: graded.length, correct, total: planned, finished }
 }
 
 /** The table whose song is offered at the end: each missed multiplication fact counts for both factors (when they are

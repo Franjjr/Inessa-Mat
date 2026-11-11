@@ -6,7 +6,7 @@ import {
   DAILY_MINUTES, NEW_FACT_BUDGET, estimateSeconds, planDailySession, scaffoldedSkills, statementOf,
 } from '../daily'
 import { newMastery } from '../mastery'
-import { isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
+import { divSkill, isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill } from '../skills'
 import { createRng } from '../rng'
 import { markClassToday } from '../topicOfToday'
 import { initialProgress } from '@/content'
@@ -147,6 +147,31 @@ describe('planDailySession', () => {
     const plan = planDailySession({ child, mastery: midYearMastery(), attempts: [], syllabus: GRADE3_SYLLABUS, now })
     const problem = plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise
     expect(problem.kind).toBe('bar-problem')
+  })
+
+  it('a topic without an operation (the clock) gets the most advanced operation the child practises, not the most used one', () => {
+    // Many addition facts (box 3) but one division (box 1): the problem is a division, the most advanced one practised.
+    const mastery = masteredBefore('reloj-en-punto-media-cuarto')
+    for (const s of Object.keys(mastery)) if (parseSkill(s)?.type === 'div') delete mastery[s]
+    mastery[divSkill(12, 3)] = m(divSkill(12, 3), 1, { dueDays: -1, seenDays: -1 })
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    const problem = plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise
+    expect(problem.kind).toBe('bar-problem')
+    expect(problem.skill).toBe('bar:div')
+  })
+
+  it('a problem topic gets the operation it teaches, even when the child practises another one more', () => {
+    const mastery = masteredBefore('prob-sumar')
+    for (let a = 2; a <= 9; a++) mastery[mulSkill(a, 7)] = m(mulSkill(a, 7), 4)
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(plan.topic?.id).toBe('prob-sumar')
+    expect(plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise.skill).toBe('bar:add')
+  })
+
+  it('a child who practises no operation at all gets an addition problem', () => {
+    const mastery: MasteryMap = { 'clock:read:30': m('clock:read:30', 3) }
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise.skill).toBe('bar:add')
   })
 
   it('same child and day give the same plan; another day can differ', () => {

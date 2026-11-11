@@ -17,11 +17,10 @@ function fractionFamily(ops: ('shade' | 'read' | 'name' | 'of')[], ds: number[])
   return ops.flatMap((op) => ds.map((d) => fractionSkill(op, d)))
 }
 
-/** Division facts whose divisor is 2..10 and quotient 2..10 (the ones a 3.º child meets as tables). */
+/** Division facts whose divisor is 2..10 and quotient 2..10 (the ones a 3.º child meets as tables). Listed by divisor in the
+    order the tables are taught (2, 5, 10, 3, 4, 6, 8, 7, 9): «Lo nuevo» takes its hard facts in that order. */
 export function divisionFactSkills(): SkillKey[] {
-  const out: SkillKey[] = []
-  for (let d = 2; d <= 10; d++) for (let q = 2; q <= 10; q++) out.push(divSkill(d * q, d))
-  return out
+  return TABLE_ORDER.flatMap((d) => Array.from({ length: 9 }, (_, i) => divSkill((i + 2) * d, d)))
 }
 
 /** Teaching order: eight stages, one per world, three trimesters. Every topic of the blocks appears exactly once. */
@@ -62,12 +61,12 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'suma-2d', name: 'Suma de 2 cifras', skills: ['add:2d:c0', 'add:2d:c1'], status: 'disponible', rungs: { concreto: 'Bloques de decenas y unidades', dibujo: 'Barras de decenas y unidades', numeros: 'La cuenta en columna', uso: 'Problemas de juntar' } },
         { id: 'suma-3d-sin-llevar', name: 'Suma de 3 cifras sin llevadas', skills: ['add:3d:c0'], status: 'disponible', rungs: { concreto: 'Bloques de centenas, decenas y unidades', dibujo: 'Columnas de valor posicional', numeros: 'La cuenta en columna', uso: 'Problemas de juntar' } },
-        { id: 'suma-3d-llevando', name: 'Suma de 3 cifras con llevadas', skills: ['add:3d:c1', 'add:3d:c2', 'add:3d:c3'], status: 'disponible', rungs: { concreto: 'Cambiar 10 unidades por 1 decena', dibujo: 'Llevadas dibujadas arriba', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de juntar' } },
-        { id: 'suma-4d', name: 'Suma de 4 cifras', skills: ['add:4d:c0', 'add:4d:c1', 'add:4d:c2', 'add:4d:c3', 'add:4d:c4'], status: 'disponible', rungs: { numeros: 'La cuenta en columna de 4 cifras', uso: 'Problemas de juntar' } },
+        { id: 'suma-3d-llevando', name: 'Suma de 3 cifras con llevadas', skills: ['add:3d:c1', 'add:3d:c2', 'add:3d:c3'], status: 'disponible', ordered: true, rungs: { concreto: 'Cambiar 10 unidades por 1 decena', dibujo: 'Llevadas dibujadas arriba', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de juntar' } },
+        { id: 'suma-4d', name: 'Suma de 4 cifras', skills: ['add:4d:c0', 'add:4d:c1', 'add:4d:c2', 'add:4d:c3', 'add:4d:c4'], status: 'disponible', ordered: true, rungs: { numeros: 'La cuenta en columna de 4 cifras', uso: 'Problemas de juntar' } },
         { id: 'resta-3d-sin-llevar', name: 'Resta de 3 cifras sin llevadas', skills: ['sub:3d:b0'], status: 'disponible', rungs: { concreto: 'Quitar bloques', dibujo: 'Tachar en la barra', numeros: 'La cuenta en columna', uso: 'Problemas de quitar' } },
         { id: 'resta-3d-prestando', name: 'Resta de 3 cifras pidiendo prestado', skills: ['sub:3d:b1', 'sub:3d:b2'], status: 'disponible', rungs: { concreto: 'Cambiar una decena por 10 unidades', dibujo: 'Cruces en los dígitos', numeros: 'La cuenta en columna', uso: 'Problemas de comparar' } },
         { id: 'resta-con-ceros', name: 'Resta con ceros en medio', skills: ['sub:3d:z', 'sub:4d:z'], status: 'disponible', rungs: { concreto: 'Cambiar una centena por 10 decenas', dibujo: 'Cruces en los ceros', numeros: 'La cuenta en columna con ceros', uso: 'Problemas de quitar' } },
-        { id: 'resta-4d', name: 'Resta de 4 cifras', skills: ['sub:4d:b0', 'sub:4d:b1', 'sub:4d:b2', 'sub:4d:b3'], status: 'disponible', rungs: { numeros: 'La cuenta en columna de 4 cifras', uso: 'Comprobar con una suma' } },
+        { id: 'resta-4d', name: 'Resta de 4 cifras', skills: ['sub:4d:b0', 'sub:4d:b1', 'sub:4d:b2', 'sub:4d:b3'], status: 'disponible', ordered: true, rungs: { numeros: 'La cuenta en columna de 4 cifras', uso: 'Comprobar con una suma' } },
         { id: 'igualdad', name: 'Signo igual: los dos lados valen lo mismo', skills: ['eq:flex'], status: 'disponible', rungs: { concreto: 'Balanza con dos platillos', numeros: '5 + 3 = __ + 6 y 7 = 3 + __' } },
       ],
     },
