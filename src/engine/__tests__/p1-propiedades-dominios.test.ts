@@ -868,9 +868,23 @@ describe('numeración y cálculo mental (auditoría p1-numeros p1n-03, p1n-04, p
     const d = of(sample('mental:distributiva', 4, 3), 'mental')[0]
     expect(d.prompt).toBe(`${d.a} × ${d.b} es ${d.a} × ${d.b - (d.b % 10)} más ${d.a} × ${d.b % 10}. ¿Cuánto es ${d.a} × ${d.b % 10}?`)
     const e = of(sample('mental:estimar', 4, 3), 'mental')[0]
-    expect(e.prompt).toMatch(/^Redondea cada número a la (decena|centena) y (suma|resta): [\d ]+ [+−] [\d ]+ = \?$/)
+    expect(e.prompt).toMatch(/^¿Cuánto da, más o menos, [\d ]+ [+−] [\d ]+\? Redondea cada número a la (decena|centena) y (suma|resta)\.$/)
     const comb = of(sample('mental:combinadas', 60, 10), 'mental')
     report('combinadas con números > 99', comb.filter((x) => Math.max(x.a, x.b, x.c ?? 0) > 99).map((x) => text(x.prompt)), comb.length)
+  })
+
+  it('estimar: la cuenta exacta no es un error de cuenta; el mensaje enseña a redondear primero', () => {
+    const base = of(sample('mental:estimar', 4, 3), 'mental')[0]
+    const ex = { ...base, a: 47, b: 32, answer: 80, place: 10 as const }
+    const r = check(ex, { type: 'number', value: 79 })
+    expect(r.correct).toBe(false)
+    expect(r.errorType).not.toBe('fact')
+    expect(r.feedback).toBe('Esa es la cuenta exacta. Aquí redondea primero: 50 + 30 = ?')
+    const sub = check({ ...ex, a: 86, b: 42, answer: 50 }, { type: 'number', value: 44 })
+    expect(sub.feedback).toBe('Esa es la cuenta exacta. Aquí redondea primero: 90 − 40 = ?')
+    for (const e of of(sample('mental:estimar', 40, 6), 'mental')) {
+      expect(check(e, { type: 'number', value: e.answer }).correct).toBe(true)
+    }
   })
 
   it('ninguna respuesta que se escribe es negativa (el teclado no tiene signo menos)', () => {

@@ -115,15 +115,16 @@ describe('cálculo mental de 4.º: the answer follows the order of operations', 
 
   it('estimar: the answer is the estimate of the two numbers rounded to the stated place, never negative', () => {
     for (const ex of mentalItems('estimar')) {
-      const m = ex.prompt.match(/^Redondea cada número a la (decena|centena) y (suma|resta): (\d[\d ]*) ([+−]) (\d[\d ]*) = \?$/)
+      const m = ex.prompt.match(/^¿Cuánto da, más o menos, (\d[\d ]*) ([+−]) (\d[\d ]*)\? Redondea cada número a la (decena|centena) y (suma|resta)\.$/)
       expect(m, ex.prompt).not.toBeNull()
-      m!.splice(2, 1)
-      const place = m![1] === 'decena' ? 10 : 100
-      const x = Number(m![2].replace(/\s/g, ''))
-      const y = Number(m![4].replace(/\s/g, ''))
+      const [, xs, op, ys, word, verb] = m!
+      expect(verb).toBe(op === '+' ? 'suma' : 'resta')
+      const place = word === 'decena' ? 10 : 100
+      const x = Number(xs.replace(/\s/g, ''))
+      const y = Number(ys.replace(/\s/g, ''))
       const rx = Math.round(x / place) * place
       const ry = Math.round(y / place) * place
-      expect(ex.answer, ex.prompt).toBe(m![3] === '+' ? rx + ry : rx - ry)
+      expect(ex.answer, ex.prompt).toBe(op === '+' ? rx + ry : rx - ry)
       expect(ex.answer).toBeGreaterThanOrEqual(0)
       expect(ex.place).toBe(place)
     }
@@ -132,7 +133,7 @@ describe('cálculo mental de 4.º: the answer follows the order of operations', 
   it('estimar accepts the estimate only, not the exact result', () => {
     let differs = 0
     for (const ex of mentalItems('estimar', 120, 11)) {
-      const [, x, op, y] = ex.prompt.match(/(\d+) ([+−]) (\d+) = \?$/)!
+      const [, x, op, y] = ex.prompt.match(/(\d+) ([+−]) (\d+)\?/)!
       const exact = op === '+' ? Number(x) + Number(y) : Number(x) - Number(y)
       if (exact === ex.answer) continue
       differs++

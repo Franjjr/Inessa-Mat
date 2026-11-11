@@ -156,7 +156,7 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       const b = plus ? randInt(rng, lo, Math.min(hi, 999 - a)) : randInt(rng, lo, a - 1)
       const answer = plus ? roundToPlace(a, place) + roundToPlace(b, place) : roundToPlace(a, place) - roundToPlace(b, place)
       const word = place === 10 ? 'decena' : 'centena'
-      return makeMental(family, a, b, answer, `Redondea cada número a la ${word} y ${plus ? 'suma' : 'resta'}: ${fmt(a)} ${plus ? '+' : '−'} ${fmt(b)} = ?`, { place })
+      return makeMental(family, a, b, answer, `¿Cuánto da, más o menos, ${fmt(a)} ${plus ? '+' : '−'} ${fmt(b)}? Redondea cada número a la ${word} y ${plus ? 'suma' : 'resta'}.`, { place })
     }
   }
 }
@@ -659,6 +659,15 @@ function mentalTip(ex: MentalExercise): string {
   return `Parte el ${ex.b} en ${ex.b - u} y ${u}: ${ex.a} × ${ex.b - u} y ${ex.a} × ${u}. Aquí te piden solo ${ex.a} × ${u}.`
 }
 
+/** estimar: the exact result and the rounded sum to write («50 + 30»), from the two numbers and the place. */
+function estimateParts(ex: MentalExercise & { place?: 10 | 100 }): { exact: number; rounded: string } | null {
+  if (!ex.place) return null
+  const ra = roundToPlace(ex.a, ex.place)
+  const rb = roundToPlace(ex.b, ex.place)
+  const plus = ex.answer === ra + rb
+  return { exact: plus ? ex.a + ex.b : ex.a - ex.b, rounded: `${fmt(ra)} ${plus ? '+' : '−'} ${fmt(rb)}` }
+}
+
 export function checkMental(ex: MentalExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
   if (answer.type !== 'number') return res(false, '', expected, { errorType: 'other', feedback: 'Escribe solo el número.' })
@@ -666,6 +675,11 @@ export function checkMental(ex: MentalExercise, answer: Answer): CheckResult {
   const v = answer.value
   const given = String(v)
   if (v === ex.answer) return res(true, given, expected, { feedback: '¡Muy bien, de cabeza!' })
+  // estimar: the exact result is not a slip in a sum: the child skipped the rounding, so the note shows it.
+  const exact = ex.family === 'estimar' && ex.place ? estimateParts(ex) : null
+  if (exact && v === exact.exact) {
+    return res(false, given, expected, { errorType: 'other', feedback: `Esa es la cuenta exacta. Aquí redondea primero: ${exact.rounded} = ?` })
+  }
   const near = Math.abs(v - ex.answer) === 1
   const tip = mentalTip(ex)
   const feedback = near ? `¡Casi! Revisa la cuenta: ${tip.charAt(0).toLowerCase()}${tip.slice(1)}` : `¡Casi! ${tip}`
