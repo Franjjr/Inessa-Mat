@@ -118,12 +118,20 @@ function crowdedCells(w: number, t: number, h: number | null, expected: string):
   return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: `Pon una cifra en cada casilla: ${spread}.` }
 }
 
-/** «150 céntimos son 1 € y 50 céntimos: escribe 39 € y 50 céntimos.» The amount is the child's own, put in order. */
-export function centsOverflow(e: number, c: number): string {
+/**
+ * «150 céntimos son 1 € y 50 céntimos.» The rule and the conversion of the child's own céntimos. It only says «escribe
+ * 39 € y 50 céntimos» when that amount, put in order, is the right one (`expected`, in céntimos): otherwise the child
+ * would obey and be told it is wrong (P4).
+ */
+export function centsOverflow(e: number, c: number, expected?: number): string {
   const extra = Math.floor(c / 100)
   const rest = c % 100
-  const total = e + extra
-  return `${c} céntimos son ${extra} € y ${rest} céntimos: escribe ${total} € y ${rest} céntimos.`
+  const parts = rest === 0 ? `${extra} €` : `${extra} € y ${rest} céntimos`
+  if (expected !== undefined && (e + extra) * 100 + rest === expected) {
+    const amount = rest === 0 ? `${e + extra} €` : `${e + extra} € y ${rest} céntimos`
+    return `${c} céntimos son ${parts}: escribe ${amount}.`
+  }
+  return `${c} céntimos son ${parts}. En la casilla de los céntimos va un número de 0 a 99.`
 }
 
 /** Grades a decimal exercise: the writing cells (whole, décimas, centésimas) or the sign for compare, or the euros and
@@ -151,7 +159,7 @@ function checkMoneyAmount(ex: DecimalExercise, answer: Answer): CheckResult {
   const [e, c] = answer.values
   if (e === null || c === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
   // 150 céntimos is not a way to write céntimos: neither right nor a slip in the sum (P1), the child puts it in order.
-  if (c >= 100) return { correct: false, given: `${e} € y ${c} céntimos`, expected, errorType: 'incomplete', feedback: centsOverflow(e, c) }
+  if (c >= 100) return { correct: false, given: `${e} € y ${c} céntimos`, expected, errorType: 'incomplete', feedback: centsOverflow(e, c, ex.value) }
   const given = e * 100 + c
   if (given === ex.value) return { correct: true, given: fmtDecimal(given, 2), expected, feedback: FB.money }
   return { correct: false, given: fmtDecimal(given, 2), expected, errorType: 'other', feedback: FB.moneyWrong }

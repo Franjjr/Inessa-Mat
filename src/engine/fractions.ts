@@ -24,6 +24,21 @@ export function fractionName(n: number, d: number): string {
   return n === 1 ? `un ${words[0]}` : `${NUM_WORDS[n]} ${words[1]}`
 }
 
+/** A fraction in words for a sentence the voice reads (P5): «tres cuartos», or `null` when it has no school name
+    (2/7, 12/12): the sentence then says «esa fracción» instead of reading «2/7» as «dos barra siete». */
+function fractionWords(n: number, d: number): string | null {
+  return FRACTION_WORDS[d] && Number.isInteger(n) && n >= 1 && n < NUM_WORDS.length ? fractionName(n, d) : null
+}
+
+/** «¡Bien! Cuatro quintos valen lo mismo que ocho décimos.» — the note for an equivalent fraction, all in words. */
+function sameValueNote(n: number, d: number, en: number, ed: number): string {
+  const given = fractionWords(n, d) ?? 'esa fracción'
+  const expected = fractionWords(en, ed)
+  const head = given.charAt(0).toUpperCase() + given.slice(1)
+  const verb = n === 1 || given === 'esa fracción' ? 'vale' : 'valen'
+  return expected ? `¡Bien! ${head} ${verb} lo mismo que ${expected}.` : `¡Bien! ${head} ${verb} lo mismo.`
+}
+
 const DIFFICULTY_OF_D = (d: number) => (d <= 4 ? 1 : d <= 6 ? 2 : 3)
 
 /** Unequal parts: the biggest at least twice the smallest, so the difference is visible. */
@@ -288,7 +303,7 @@ export function checkFractionRead(ex: FractionReadExercise, answer: Answer): Che
   if (n === ex.numerator && d === ex.denominator) return { correct: true, given, expected, feedback: FB.right }
   // The same amount written with other numbers (1/2 for 2 of 4): right, and the drawing tells which parts it counts.
   if (d > 0 && n * ex.denominator === ex.numerator * d) {
-    return { correct: true, given, expected, feedback: `¡Bien! ${n}/${d} vale lo mismo que ${expected}; aquí contamos las ${ex.denominator} partes: ${expected}.` }
+    return { correct: true, given, expected, feedback: `${sameValueNote(n, d, ex.numerator, ex.denominator)} Aquí contamos las ${ex.denominator} partes.` }
   }
   if (n === ex.denominator && d === ex.numerator) return { correct: false, given, expected, errorType: 'fraction-count', feedback: FB.reversed }
   if (d !== ex.denominator) return { correct: false, given, expected, errorType: 'fraction-count', feedback: FB.under }
@@ -329,7 +344,7 @@ export function checkFractionAdd(ex: FractionAddExercise, answer: Answer): Check
     return { correct: true, given, expected, feedback: n === d ? `¡Muy bien! ${d}/${d} es la unidad entera: todas las partes.` : FB.right }
   }
   // An equivalent fraction (4/5 for 8/10, 1/1 for 4/4) is the same result.
-  if (dd > 0 && n * d === ex.answer * dd) return { correct: true, given, expected, feedback: `¡Bien! ${given} vale lo mismo que ${expected}.` }
+  if (dd > 0 && n * d === ex.answer * dd) return { correct: true, given, expected, feedback: sameValueNote(n, dd, ex.answer, d) }
   if (dd !== d) {
     const combined = ex.op === 'add' ? dd === 2 * d : dd === 0
     return { correct: false, given, expected, errorType: 'fraction-count', feedback: combined ? (ex.op === 'add' ? FB.addBottom : FB.subBottom) : FB.sameBottom }

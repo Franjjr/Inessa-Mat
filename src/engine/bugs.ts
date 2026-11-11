@@ -361,14 +361,18 @@ function proofOf(ex: CheckCalcExercise): { text: string; target: number } {
   return { text: `${ex.right} × ${ex.claimed} + ${ex.remainder ?? 0}`, target: ex.left }
 }
 
-/** The values of a valid check: for a sum, «result − either addend» (it gives back the other one). */
+/** The values of a valid check: for a sum, «result − either addend» (it gives back the other one); for a difference,
+    «result + the number taken away» (the first number) or «first number − result» (the number taken away). */
 function validChecks(ex: CheckCalcExercise): number[] {
-  return ex.op === 'add' ? [ex.claimed - ex.right, ex.claimed - ex.left] : [ex.answer]
+  if (ex.op === 'add') return [ex.claimed - ex.right, ex.claimed - ex.left]
+  if (ex.op === 'sub') return [ex.answer, ex.left - ex.claimed]
+  return [ex.answer]
 }
 
 /**
- * Grades a comprobar. The verdict decides (P1): the right verdict is right with the check box empty or with any valid
- * check (for a sum, subtracting either addend). A check number that does not come out is pointed out, not passed.
+ * Grades a comprobar. The verdict is the final answer and decides alone (P1): the right verdict is right with the check
+ * box empty, with any valid check (for a sum, subtracting either addend) or with a check that does not come out. The
+ * check box is an intermediate step: it only guides, with a kind note that shows the check worked out.
  */
 export function checkCheckCalc(ex: CheckCalcExercise, answer: Answer): CheckResult {
   const expected = `${ex.answer}; ${ex.ok ? 'bien' : 'mal'}`
@@ -382,14 +386,19 @@ export function checkCheckCalc(ex: CheckCalcExercise, answer: Answer): CheckResu
   if (answer.ok !== ex.ok) {
     if (ex.ok) return { correct: false, given, expected, errorType: 'false-alarm', feedback: CHECK_FEEDBACK.falseAlarm }
     const type: ErrorType = ex.errorType ?? 'other'
-    // She said «bien» to a wrong claim. Her own check tells her so when it does not give back the first number.
-    const feedback = value !== null && value !== proof.target
-      ? `Tu prueba da ${value} y arriba pone ${proof.target}: no coinciden, así que la cuenta está mal.`
-      : `Haz la prueba con calma: ${proof.text} = ? Si no sale ${proof.target}, la cuenta está mal.`
+    // She said «bien» to a wrong claim. Her own check tells her so when it does not give back the first number (or,
+    // with «first − result» for a difference, the number taken away).
+    const otherSubCheck = ex.op === 'sub' && value === ex.left - ex.claimed
+    const feedback = otherSubCheck && value !== ex.right
+      ? `Tu prueba da ${value} y el número que restas es ${ex.right}: no coinciden, así que la cuenta está mal.`
+      : value !== null && !otherSubCheck && value !== proof.target
+        ? `Tu prueba da ${value} y arriba pone ${proof.target}: no coinciden, así que la cuenta está mal.`
+        : `Haz la prueba con calma: ${proof.text} = ? Si no sale ${proof.target}, la cuenta está mal.`
     return { correct: false, given, expected, errorType: type, feedback }
   }
   if (value === null || validChecks(ex).includes(value)) return { correct: true, given, expected, feedback: CHECK_FEEDBACK.correct }
-  return { correct: false, given, expected, errorType: 'fact', feedback: `Lo que decides está bien, pero tu prueba no sale. Hazla otra vez: ${proof.text} = ?` }
+  // Right verdict, check that does not come out: still right; the note shows the check worked out.
+  return { correct: true, given, expected, feedback: `¡Bien decidido! Repasa tu prueba: ${proof.text} = ${ex.answer}.` }
 }
 
 const HUNT_RESULT_SYMBOL: Record<ErrorHuntExercise['op'], string> = { add: '+', sub: '−', mul: '×' }

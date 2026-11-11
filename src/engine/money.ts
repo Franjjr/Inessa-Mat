@@ -308,7 +308,7 @@ function judgeAmount(expected: number, answer: Answer): CheckResult {
   // 150 céntimos in the céntimos box is not a way to write an amount: neither right nor a slip in the sum (P1).
   if (answer.type === 'numbers' && (answer.values[1] as number) >= 100) {
     const [e, c] = answer.values as number[]
-    return res(false, `${e} € y ${c} céntimos`, exp, { errorType: 'incomplete', feedback: centsOverflow(e, c) })
+    return res(false, `${e} € y ${c} céntimos`, exp, { errorType: 'incomplete', feedback: centsOverflow(e, c, expected) })
   }
   const given = euros(v)
   if (v === expected) return res(true, given, exp, { feedback: '¡Muy bien! Has contado bien el dinero.' })

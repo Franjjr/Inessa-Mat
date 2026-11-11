@@ -304,6 +304,9 @@ describe('comprobar (auditoría p1-numeros p1n-02, p1n-07; P4-21)', () => {
     for (const ex of checks) {
       const answers: Answer[] = [{ type: 'verdict', ok: ex.ok, value: ex.answer }, { type: 'verdict', ok: ex.ok, value: null }]
       if (ex.op === 'add') answers.push({ type: 'verdict', ok: ex.ok, value: ex.claimed - ex.left })
+      if (ex.op === 'sub') answers.push({ type: 'verdict', ok: ex.ok, value: ex.left - ex.claimed })
+      // A check that does not come out is an intermediate step: it guides, it never fails the right verdict (P1).
+      answers.push({ type: 'verdict', ok: ex.ok, value: ex.answer + 7 })
       for (const a of answers) {
         const r = check(ex, a)
         if (!r.correct) misses.push({ id: ex.id, answer: a, result: r })
@@ -317,6 +320,28 @@ describe('comprobar (auditoría p1-numeros p1n-02, p1n-07; P4-21)', () => {
     const base = checks.find((e) => e.op === 'add')!
     const ex: CheckCalcExercise = { ...base, left: 21, right: 82, claimed: 103, answer: 21, ok: true, errorType: null }
     expect(check(ex, { type: 'verdict', ok: true, value: 82 }).correct).toBe(true)
+  })
+
+  it('la decisión buena con una prueba que no sale es correcta, con una nota que enseña la prueba', () => {
+    const base = checks.find((e) => e.op === 'add')!
+    const ex: CheckCalcExercise = { ...base, left: 31, right: 22, claimed: 53, answer: 31, ok: true, errorType: null }
+    const r = check(ex, { type: 'verdict', ok: true, value: 30 })
+    expect(r.correct).toBe(true)
+    expect(r.errorType).toBeUndefined()
+    expect(r.feedback).toBe('¡Bien decidido! Repasa tu prueba: 53 − 22 = 31.')
+  })
+
+  it('resta 75 − 32 = 43: también vale la prueba 75 − 43 = 32', () => {
+    const base = checks.find((e) => e.op === 'sub')!
+    const ex: CheckCalcExercise = { ...base, left: 75, right: 32, claimed: 43, answer: 75, ok: true, errorType: null }
+    const r = check(ex, { type: 'verdict', ok: true, value: 32 })
+    expect(r.correct).toBe(true)
+    expect(r.feedback).toBe('¡Muy bien! Has comprobado con la operación contraria.')
+    // 75 − 32 = 44 with «bien» and the check 75 − 44 = 31: the check tells her it is wrong.
+    const bad: CheckCalcExercise = { ...ex, claimed: 44, answer: 76, ok: false, errorType: 'fact' }
+    const rb = check(bad, { type: 'verdict', ok: true, value: 31 })
+    expect(rb.correct).toBe(false)
+    expect(rb.feedback).toBe('Tu prueba da 31 y el número que restas es 32: no coinciden, así que la cuenta está mal.')
   })
 
   it('53 + 22 = 76, prueba 54 y «bien» → «no coinciden»', () => {
@@ -367,14 +392,18 @@ describe('fracciones (auditoría p1-medida-problemas H4, H15, H16)', () => {
       const a: Answer = { type: 'fraction', numerator: ex.answer / g, denominator: ex.denominator / g }
       total++
       const r = check(ex, a)
-      if (!r.correct || !r.feedback?.includes('vale lo mismo')) misses.push({ id: ex.id, answer: a, result: r })
+      if (!r.correct || !r.feedback?.includes(' lo mismo')) misses.push({ id: ex.id, answer: a, result: r })
     }
     expect(total).toBeGreaterThan(100)
     report('fracción equivalente simplificada dada por mala', misses, total)
     const ex = { ...exs[0], op: 'add' as const, a: 5, b: 3, denominator: 10, answer: 8 }
     const r = check(ex, { type: 'fraction', numerator: 4, denominator: 5 })
     expect(r.correct).toBe(true)
-    expect(r.feedback).toBe('¡Bien! 4/5 vale lo mismo que 8/10.')
+    expect(r.feedback).toBe('¡Bien! Cuatro quintos valen lo mismo que ocho décimos.')
+    // The voice reads the note (P5): no «4/5» in figures.
+    expect(r.feedback).not.toMatch(/\d\/\d/)
+    const half = check({ ...ex, a: 1, b: 1, denominator: 4, answer: 2 }, { type: 'fraction', numerator: 1, denominator: 2 })
+    expect(half.feedback).toBe('¡Bien! Un medio vale lo mismo que dos cuartos.')
   })
 
   it('leer la fracción coloreada: una equivalente (2 de 4 → 1/2) se acepta y la nota dice qué contamos', () => {
@@ -387,7 +416,7 @@ describe('fracciones (auditoría p1-medida-problemas H4, H15, H16)', () => {
       const a: Answer = { type: 'fraction', numerator: ex.numerator / g, denominator: ex.denominator / g }
       total++
       const r = check(ex, a)
-      if (!r.correct || !r.feedback?.includes(`aquí contamos las ${ex.denominator} partes`)) misses.push({ id: ex.id, answer: a, result: r })
+      if (!r.correct || !r.feedback?.includes(`Aquí contamos las ${ex.denominator} partes`) || /\d\/\d/.test(r.feedback)) misses.push({ id: ex.id, answer: a, result: r })
     }
     expect(total).toBeGreaterThan(100)
     report('fracción leída equivalente dada por mala', misses, total)
@@ -480,6 +509,12 @@ describe('dinero (auditoría p1-medida-problemas H6, H11, H13, H14)', () => {
     expect(r.errorType).not.toBe('fact')
     expect(r.errorType).not.toBe('other')
     expect(r.feedback).toBe('150 céntimos son 1 € y 50 céntimos: escribe 39 € y 50 céntimos.')
+    // A wrong amount in disorder: the message gives the rule, never «escribe» a wrong amount the child would obey (P4).
+    const wrongOrder = check(ex, { type: 'numbers', values: [38, 160] })
+    expect(wrongOrder.correct).toBe(false)
+    expect(wrongOrder.feedback).toBe('160 céntimos son 1 € y 60 céntimos. En la casilla de los céntimos va un número de 0 a 99.')
+    expect(wrongOrder.feedback).not.toContain('escribe')
+    expect(check(ex, { type: 'numbers', values: [37, 250] }).feedback).toBe('250 céntimos son 2 € y 50 céntimos: escribe 39 € y 50 céntimos.')
     let accepted = 0
     for (const e of money.filter((x): x is MoneyChangeExercise => x.mode === 'change' && x.answer >= 100)) {
       if (check(e, { type: 'numbers', values: [Math.floor(e.answer / 100) - 1, (e.answer % 100) + 100] }).correct) accepted++
@@ -581,7 +616,7 @@ describe('reloj y tiempo (auditoría p1-medida-problemas H7, H18; P4-13)', () =>
     for (const ex of exs) {
       const a: Answer = { type: 'time', hour: 24, minute: ex.answer.minute }
       const r = check(ex, a)
-      if (!r.correct || !r.feedback?.includes('A medianoche se escribe 00:00')) misses.push({ id: ex.id, answer: a, result: r })
+      if (!r.correct || !r.feedback?.includes('la hora se escribe con dos ceros') || /\d:\d/.test(r.feedback)) misses.push({ id: ex.id, answer: a, result: r })
     }
     report('24:xx por 00:xx dado por malo', misses, exs.length)
   })

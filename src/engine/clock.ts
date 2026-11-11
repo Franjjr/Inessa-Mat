@@ -310,7 +310,7 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
       if (exactHour && minuteOk) return res(true, given, expectedDigital, { feedback: '¡Muy bien! Ya sabes leer la hora de 24 horas.' })
       // 24:15 is the same moment as 00:15: right, with the way it is written.
       if (answer.hour === 24 && ex.answer.hour === 0 && minuteOk) {
-        return res(true, given, expectedDigital, { feedback: `¡Bien! Es esa hora. A medianoche se escribe 00:00, así que se escribe ${expectedDigital}.` })
+        return res(true, given, expectedDigital, { feedback: '¡Bien! Es esa hora. A las doce de la noche, el reloj vuelve a empezar: la hora se escribe con dos ceros.' })
       }
       if (!exactHour && faceHour(answer.hour) === faceHour(ex.answer.hour) && minuteOk) {
         return res(false, given, expectedDigital, { errorType: 'clock-period', feedback: PERIOD_FEEDBACK })

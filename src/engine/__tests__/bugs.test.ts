@@ -178,7 +178,7 @@ describe('comprobar: claims and grading', () => {
     expect([...types].every((t) => t === 'quotient-off' || t === 'remainder-too-big' || t === 'place-value')).toBe(true)
   })
 
-  it('verdict and check value: both right is correct; a wrong verdict keeps the claim error; a wrong value is a fact error', () => {
+  it('verdict and check value: both right is correct; a wrong verdict keeps the claim error; a wrong value only guides (P1)', () => {
     const wrong = claims('sub', false, 1)[0]
     const right = claims('sub', true, 1)[0]
     expect(checkCheckCalc(right, { type: 'verdict', ok: true, value: right.answer }).correct).toBe(true)
@@ -186,7 +186,8 @@ describe('comprobar: claims and grading', () => {
     expect(miss.correct).toBe(false)
     expect(miss.errorType).toBe(wrong.errorType)
     const badValue = checkCheckCalc(right, { type: 'verdict', ok: true, value: right.answer + 1 })
-    expect(badValue.errorType).toBe('fact')
+    expect(badValue.correct).toBe(true)
+    expect(badValue.errorType).toBeUndefined()
     const alarm = checkCheckCalc(right, { type: 'verdict', ok: false, value: right.answer })
     expect(alarm.errorType).toBe('false-alarm')
   })
