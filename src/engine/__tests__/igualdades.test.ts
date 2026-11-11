@@ -5,8 +5,6 @@
    Read only: it never changes those files. The deliberate wrong sums («Dani ha hecho esta suma: 47 + 35 = 72») are on
    an explicit whitelist, and the statements of error-hunt, check-calc and equation (which show a false sum on purpose)
    are left out. A wrong equality planted in a fixture is detected (last test). */
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { check, hintsFor } from '@/engine'
 import type { DivMethod, ExerciseKind, SubMethod } from '@/types'
@@ -71,19 +69,13 @@ export function falseEqualities(text: string): string[] {
 
 // ---------------------------------------------------------------- the files
 
-const ROOT = process.cwd()
-const DIRS = ['src/content', 'src/activities/lesson/visuals']
-
-function sourceFiles(dir: string): string[] {
-  const out: string[] = []
-  for (const name of readdirSync(dir)) {
-    const path = join(dir, name)
-    if (statSync(path).isDirectory()) {
-      if (name !== '__tests__') out.push(...sourceFiles(path))
-    } else if (/\.(ts|tsx)$/.test(name) && !/\.test\./.test(name) && !/gallery/.test(name)) out.push(path)
-  }
-  return out
-}
+/** The sources of src/content and src/activities/lesson/visuals as text (no tests, no galleries). */
+const SOURCES = Object.entries({
+  ...import.meta.glob('/src/content/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+  ...import.meta.glob('/src/activities/lesson/visuals/**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }),
+} as Record<string, string>)
+  .filter(([path]) => !/__tests__|\.test\.|gallery/.test(path))
+  .map(([path, text]) => ({ file: path.replace(/^\//, ''), text }))
 
 /** The text a child may read: every string literal, with template holes (`${…}`) cut out. */
 function literals(source: string): { line: number; text: string }[] {
@@ -105,18 +97,16 @@ describe('igualdades de las lecciones, clases y dibujos', () => {
   it('todas las igualdades escritas son verdaderas (salvo las de «encuentra el error», en la lista blanca)', () => {
     const bad: string[] = []
     let seen = 0
-    for (const dir of DIRS) {
-      for (const file of sourceFiles(join(ROOT, dir))) {
-        const rel = relative(ROOT, file)
-        for (const { line, text } of literals(readFileSync(file, 'utf8'))) {
-          seen += [...text.matchAll(EQUALITY)].length
-          for (const eq of falseEqualities(text)) {
-            if (WHITELIST.some((w) => w.file === rel && w.equality === eq)) continue
-            bad.push(`${rel}:${line}: «${eq}» en «${text.slice(0, 160)}»`)
-          }
+    for (const { file: rel, text: source } of SOURCES) {
+      for (const { line, text } of literals(source)) {
+        seen += [...text.matchAll(EQUALITY)].length
+        for (const eq of falseEqualities(text)) {
+          if (WHITELIST.some((w) => w.file === rel && w.equality === eq)) continue
+          bad.push(`${rel}:${line}: «${eq}» en «${text.slice(0, 160)}»`)
         }
       }
     }
+    expect(SOURCES.length).toBeGreaterThan(50)
     expect(seen).toBeGreaterThan(200)
     expect(bad, bad.join('\n')).toEqual([])
   })
