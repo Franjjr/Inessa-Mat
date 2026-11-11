@@ -17,9 +17,11 @@ describe('curriculum scoring', () => {
     expect(score.stars).toBe(3)
   })
 
-  // Known false negatives (pendiente, see the notes of the change): under a ±1.5 hand the strict scorer still gives X, Y, J,
-  // P, i and j less than 3 stars (shape or start on a narrow or short stroke). They are not sampled here until fixed.
+  // Known false negatives: under a ±1.5 hand the strict scorer still gives X, Y, J, P, i and j less than 3 stars (the
+  // start or the shape fails on their short or narrow strokes). They are not sampled here, and each one is listed as a
+  // pending test below so that the gap stays visible in the test report until the scorer is fixed.
   const KNOWN_JITTER_FALSE_NEGATIVES = new Set(['X', 'Y', 'J', 'P', 'i', 'j'])
+  for (const letter of KNOWN_JITTER_FALSE_NEGATIVES) it.todo(`a ±1.5 hand on «${letter}» scores 3 stars (scorer gap, pending)`)
   it.each(CAL_CURRICULUM.filter((item, i) => i % 4 === 0 && !KNOWN_JITTER_FALSE_NEGATIVES.has(item.text)).map((i) => [i.text]))('a ±1.5 hand on «%s» still scores 3 stars', (text) => {
     const target = joinWord(text)
     const fit = fitFor(text)

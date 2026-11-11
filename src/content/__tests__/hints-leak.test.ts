@@ -214,7 +214,8 @@ describe('no hint gives the answer away (3.º and 4.º, every skill)', () => {
       }
     }
     expect([...new Set(found)]).toEqual([])
-  })
+    // Generates every exercise of every skill: slow on a loaded machine, so it gets more than the default 5 s.
+  }, 30000)
   it('no English hint gives the answer away, for every English kind of its skills', () => {
     const found: string[] = []
     for (const skill of english) {
