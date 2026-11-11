@@ -36,3 +36,11 @@
   font-size: var(--fs-md);
   color: var(--c-ink);
 }
+
+/* While the mission loads: the spinner and, always, a way out. */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}

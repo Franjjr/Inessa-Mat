@@ -20,7 +20,7 @@ import type { Assignment, ProgressState, SubjectId, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
 import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
-import { currentMission } from '@/world/mision/logic'
+import { currentMission, missionKicker } from '@/world/mision/logic'
 import s from './ChildHomeScreen.module.css'
 
 /** The «Hoy» session card of each subject: its kicker (the subject and its minutes) and what the session holds. */
@@ -236,8 +236,8 @@ export default function ChildHomeScreen() {
           </div>
 
           {view === 'math' && mission && (
-            <button type="button" className={s.mission} onClick={() => navigate(`/play/mision/${mission.id}`)}>
-              <span className={s.missionKicker}>Misión de tu profe</span>
+            <button type="button" className={s.mission} onClick={() => navigate(`/play/mision/${mission.id}`, { state: { mission } })}>
+              <span className={s.missionKicker}>{missionKicker(progress.flags, mission.id)}</span>
               <span className={s.missionTitle}>{mission.title} ›</span>
             </button>
           )}
