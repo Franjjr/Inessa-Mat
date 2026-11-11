@@ -109,7 +109,7 @@ function CaligrafiaRun({ child, mastery }: { child: ChildProfile; mastery: Maste
       <Screen className={s.root} background="var(--c-bg)">
         <div className={s.card}>
           <h2 className={s.title}>¡Terminado!</h2>
-          <p className={s.text}>Has practicado {plan.length} {plan.length === 1 ? 'cosa' : 'cosas'} de letra ligada.</p>
+          <p className={s.text}>Has practicado {plan.length} {plan.length === 1 ? 'cosa' : 'cosas'} de caligrafía.</p>
           {reward === 'new' && <p className={s.reward}>+{CALIG_STARS} estrellas para tu cuerno</p>}
           {reward === 'already' && <p className={s.text}>Ya tienes las estrellas de hoy.</p>}
           <Button size="lg" variant="success" onClick={leave}>Volver al inicio</Button>

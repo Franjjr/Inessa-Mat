@@ -48,7 +48,7 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
       />
       <SwitchRow
         label="Caligrafía con lápiz"
-        hint="Al terminar Lengua, se le propone practicar la letra ligada con el lápiz, 5 minutos. Solo aparece en un dispositivo donde se usa el lápiz."
+        hint="Al terminar Lengua, se le propone practicar la letra con el lápiz, 5 minutos. Las minúsculas son de letra ligada; las mayúsculas son de imprenta (no se ligan). Solo aparece en un dispositivo donde se usa el lápiz."
         checked={settings.handwriting !== false}
         onChange={(v) => void change({ handwriting: v })}
       />

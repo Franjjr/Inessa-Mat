@@ -114,7 +114,7 @@ test.describe('Caligrafía con lápiz', () => {
     }
     await expect(page.getByText('¡Terminado!', { exact: true })).toBeVisible({ timeout: 15_000 })
     expect(written.length, 'the day has 2 or 3 items').toBeGreaterThanOrEqual(2)
-    await expect(page.getByText(new RegExp(`Has practicado ${written.length} cosas de letra ligada`))).toBeVisible()
+    await expect(page.getByText(new RegExp(`Has practicado ${written.length} cosas de caligrafía`))).toBeVisible()
     await expect(page.getByText(/\+2 estrellas para tu cuerno/)).toBeVisible()
     const sideways = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
     expect(sideways, 'no horizontal scroll at the end').toBe(true)
