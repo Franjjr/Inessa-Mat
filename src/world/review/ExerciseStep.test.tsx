@@ -308,3 +308,26 @@ describe('ExerciseStep · a missed multiplication fact', () => {
     expect(screen.queryByText(/Recuérdalo/)).toBeNull()
   })
 })
+
+describe('ExerciseStep · a guided step (a visual support on screen from the start)', () => {
+  it('reports a right first answer with one hint used', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    renderStep({ guided: true }, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ check: { correct: true }, hintsUsed: 1 })
+  })
+
+  it('an unguided right answer reports no hint', async () => {
+    const user = userEvent.setup()
+    const reportAttempt = vi.fn()
+    renderStep({}, reportAttempt)
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Siguiente' })
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ hintsUsed: 0 })
+  })
+})
