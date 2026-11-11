@@ -3,7 +3,7 @@ import { createContext, useContext } from 'react'
 import type { AnswerInputPreference, DigitRecognition, DigitRecognizer, InkSample, InputMode } from '@/types'
 import { addInkSample } from '@/data'
 import { createRecognizer } from './ml/recognizer'
-import { PENDING_TTL_MS } from './constants'
+import { ALT_CHIPS, PENDING_TTL_MS } from './constants'
 import { hasEmbedding, makeSample, selectPersonalSamples, selectSamples, type PersonalSampleLite } from './learning'
 import { detectPhone, detectTouchDevice, forgetPenSeen, readPenSeen, resolveInputMode } from './policy'
 
@@ -42,6 +42,46 @@ export function loadRecognizer(r: Recognizer): Promise<boolean> {
 
 interface Pending { digit: number; rec: DigitRecognition; at: number }
 
+/** One handwritten digit as the app read it (kept while its ink is on screen, for the misread checks and the review log). */
+export interface InkRead {
+  digit: number
+  confidence: number
+  /** The next most likely digits (without `digit`), best first, at most ALT_CHIPS. */
+  alternatives: number[]
+  /** The read needed the child's confirmation (low confidence or a confusable pair). */
+  doubtful: boolean
+  /** The child confirmed it or picked it. */
+  confirmed: boolean
+  /** 28×28 normalised image of the ink (0..1), when the recogniser gave one. */
+  image28?: Float32Array
+}
+
+/** What an ink surface (a DigitCell, a NumberInput pad) lets the store do on it. */
+export interface InkSurfaceApi {
+  /** Recognise pending ink right now. Returns true when there was some. */
+  flush(): boolean
+  /** Erase this surface (or only the digit `readKey` of it) and give it the focus. */
+  rewrite(readKey?: string): void
+  /** Open the "¿Qué número es?" picker on the unread digit `readKey`. */
+  pick(readKey?: string): void
+}
+
+/** A question the ink layer asks before grading (misread digit, reversed number, unread ink). */
+export interface InkQuestion {
+  kind: 'misread' | 'reversed' | 'unknown'
+  text: string
+  /** Spoken version (the voice says it without symbols). */
+  speak?: string
+  /** The number shown in print, big ("He leído 47"). */
+  shown?: string
+  actions: { label: string; primary?: boolean; run: () => void }[]
+}
+
+/** The alternatives of a recognition without the digit itself, best first. */
+function altsOf(rec: DigitRecognition, digit: number): number[] {
+  return rec.alternatives.map((a) => a.digit).filter((d) => d !== digit).slice(0, ALT_CHIPS)
+}
+
 /**
  * Collects recognitions of the cells used since the last confirm/discard. After a correct answer the activity
  * calls confirm(): those digits become 'confirmed' personal samples. Picking an alternative chip stores a
@@ -53,6 +93,25 @@ export class LearningStore {
   /** Digits read with low confidence and not yet confirmed or rewritten by the child, by cell key. */
   private doubts = new Map<string, number>()
   private promptOpen = false
+  /** Cells or pad digits whose ink could not be read ("?"), by key. */
+  private unknowns = new Set<string>()
+  /** Why a key could not be read, when the cell knows (two digits in one cell). */
+  private unknownWhy = new Map<string, string>()
+  /** Digits read from ink on screen, by key (`uid` of a cell, `uid:segment` of a pad digit). */
+  private reads = new Map<string, InkRead>()
+  /** Mounted ink surfaces, by uid. */
+  private surfaces = new Map<string, InkSurfaceApi>()
+  /** Surfaces with ink not recognised yet (writing, or waiting for the pause). */
+  private busy = new Set<string>()
+  private question: InkQuestion | null = null
+  /** Mounted prompts (<DoubtPrompt/>): questions are only asked while someone shows them. */
+  private prompts = 0
+  /** Mounted answer bars with their own «Comprobar». */
+  private bars = 0
+  /** A digit was typed (keyboard or on-screen keypad) since the last confirm/discard. */
+  private typedInput = false
+  /** Random source of the masking questions (tests inject a seeded one). */
+  random: () => number = Math.random
   private listeners = new Set<() => void>()
   /** Changes on every doubt change: subscribers read it through useSyncExternalStore. */
   version = 0
@@ -66,6 +125,10 @@ export class LearningStore {
     this.recognizer = recognizer
     this.discard()
     this.doubts.clear()
+    this.unknowns.clear()
+    this.reads.clear()
+    this.question = null
+    this.typedInput = false
     this.promptOpen = false
     this.setSamples([])
   }
@@ -78,12 +141,156 @@ export class LearningStore {
 
   forget(key: string): void {
     this.pending.delete(key)
+    this.reads.delete(key)
+    this.known(key)
     this.settle(key)
   }
 
   forgetPrefix(prefix: string): void {
     for (const k of [...this.pending.keys()]) if (k.startsWith(prefix)) this.pending.delete(k)
+    for (const k of [...this.reads.keys()]) if (k.startsWith(prefix)) this.reads.delete(k)
+    for (const k of [...this.unknowns]) if (k.startsWith(prefix)) this.known(k)
     for (const k of [...this.doubts.keys()]) if (k.startsWith(prefix)) this.settle(k)
+  }
+
+  // ---------------------------------------------------------------------------------------- reads and surfaces
+
+  /** A digit was read from ink (recorded also when the recogniser gives no embedding). */
+  noteRead(key: string, rec: DigitRecognition, doubtful: boolean): void {
+    if (rec.digit == null) return
+    this.known(key)
+    this.reads.set(key, {
+      digit: rec.digit, confidence: rec.confidence, alternatives: altsOf(rec, rec.digit), doubtful, confirmed: false,
+      ...(rec.image28 ? { image28: rec.image28 } : {}),
+    })
+  }
+
+  /** The child picked (or confirmed) the digit of this read: it is hers now. */
+  confirmRead(key: string, digit: number): void {
+    const r = this.reads.get(key)
+    if (r) this.reads.set(key, { ...r, digit, confidence: 1, confirmed: true })
+  }
+
+  private isLive(key: string): boolean {
+    return this.surfaces.has(key) || this.surfaces.has(key.split(':')[0])
+  }
+
+  /** Reads of the surfaces still on screen, in the order they were written. */
+  liveReads(): { key: string; read: InkRead }[] {
+    return [...this.reads].filter(([k]) => this.isLive(k)).map(([key, read]) => ({ key, read }))
+  }
+
+  /** Ink that could not be read ("?"): grading waits until the child picks or rewrites the digit. */
+  unknown(key: string, why?: string): void {
+    this.reads.delete(key)
+    if (why) this.unknownWhy.set(key, why)
+    else this.unknownWhy.delete(key)
+    if (this.unknowns.has(key)) return
+    this.unknowns.add(key)
+    this.changed()
+  }
+
+  /** This key is no longer an unread "?". */
+  known(key: string): void {
+    this.unknownWhy.delete(key)
+    if (!this.unknowns.delete(key)) return
+    if (this.question?.kind === 'unknown' && this.liveUnknowns().length === 0) this.question = null
+    this.changed()
+  }
+
+  private liveUnknowns(): string[] {
+    return [...this.unknowns].filter((k) => this.isLive(k))
+  }
+
+  registerSurface(uid: string, api: InkSurfaceApi): () => void {
+    this.surfaces.set(uid, api)
+    return () => {
+      if (this.surfaces.get(uid) === api) this.surfaces.delete(uid)
+      this.setBusy(uid, false)
+    }
+  }
+
+  /** A surface has ink that is not recognised yet (true) or not any more (false). */
+  setBusy(uid: string, busy: boolean): void {
+    if (busy === this.busy.has(uid)) return
+    if (busy) this.busy.add(uid)
+    else this.busy.delete(uid)
+    this.changed()
+  }
+
+  /** Some ink on screen is still being written or waiting to be read. */
+  isBusy(): boolean {
+    return this.busy.size > 0
+  }
+
+  /** Recognise every pending ink on screen right now (before grading). Returns true when something was read. */
+  flushInk(): boolean {
+    let flushed = false
+    for (const s of [...this.surfaces.values()]) {
+      try { flushed = s.flush() || flushed } catch (err) { console.warn('[ink] flush failed', err) }
+    }
+    return flushed
+  }
+
+  /** Erases the digit of a read (or a whole surface) and focuses it, so the child writes it again. */
+  rewrite(key: string): void {
+    const s = this.surfaces.get(key) ?? this.surfaces.get(key.split(':')[0])
+    s?.rewrite(key.includes(':') ? key : undefined)
+  }
+
+  // ---------------------------------------------------------------------------------------- typed input
+
+  noteTyped(): void {
+    this.typedInput = true
+  }
+
+  /** A digit was typed (not written) since the last confirm/discard. */
+  wasTyped(): boolean {
+    return this.typedInput
+  }
+
+  // ---------------------------------------------------------------------------------------- questions
+
+  /** <DoubtPrompt/> announces itself: questions are only asked while a prompt is mounted to show them. */
+  mountPrompt(): () => void {
+    this.prompts++
+    return () => {
+      this.prompts--
+      if (this.prompts <= 0) this.question = null
+    }
+  }
+
+  canAsk(): boolean {
+    return this.prompts > 0
+  }
+
+  /** An answer bar with its own «Comprobar» mounts: pads hide their ✓ (one check button per screen). */
+  mountBar(): () => void {
+    this.bars++
+    this.changed()
+    return () => {
+      this.bars--
+      this.changed()
+    }
+  }
+
+  hasBar(): boolean {
+    return this.bars > 0
+  }
+
+  ask(q: InkQuestion): void {
+    this.question = q
+    this.changed()
+  }
+
+  currentQuestion(): InkQuestion | null {
+    return this.question
+  }
+
+  closeQuestion(): void {
+    if (!this.question) return
+    this.question = null
+    this.changed()
   }
 
   /** A digit was read below LOW_CONFIDENCE: the child must confirm it (or rewrite it) before the answer is graded. */
@@ -110,9 +317,15 @@ export class LearningStore {
     return [...this.doubts.values()]
   }
 
+  /** The keys of the digits still in doubt, in the order they were written. */
+  uncertainKeys(): string[] {
+    return [...this.doubts.keys()]
+  }
+
   /** The child said the digits are right ("Sí, es así"): they count as certain now. */
   confirmDoubts(): void {
     if (this.doubts.size === 0 && !this.promptOpen) return
+    for (const [k, d] of this.doubts) this.confirmRead(k, d)
     this.doubts.clear()
     this.promptOpen = false
     this.changed()
@@ -123,6 +336,20 @@ export class LearningStore {
    * true: the caller must not grade the answer.
    */
   requestConfirm(): boolean {
+    const unread = this.canAsk() ? this.liveUnknowns() : []
+    if (unread.length) {
+      // Ink that could not be read is never graded as an empty cell: the child says which digit it is.
+      const key = unread[0]
+      this.question = {
+        kind: 'unknown',
+        text: this.unknownWhy.get(key) ?? 'No he entendido este número. Toca el que has escrito o escríbelo otra vez.',
+        actions: [{ label: 'Lo escribo otra vez', run: () => { this.closeQuestion(); this.rewrite(key) } }],
+      }
+      this.changed()
+      ;(this.surfaces.get(key) ?? this.surfaces.get(key.split(':')[0]))?.pick(key.includes(':') ? key : undefined)
+      return true
+    }
+    if (this.question) return true
     if (this.doubts.size === 0) return false
     if (!this.promptOpen) {
       this.promptOpen = true
@@ -176,12 +403,14 @@ export class LearningStore {
     for (const p of this.pending.values()) this.store(p.digit, p.rec, 'confirmed', false)
     this.pending.clear()
     this.fixes = 0
+    this.typedInput = false
     this.push()
   }
 
   discard(): void {
     this.pending.clear()
     this.fixes = 0
+    this.typedInput = false
   }
 
   /** Replaces the in-memory set (e.g. loaded from the database); only the newest samples per digit are kept. */

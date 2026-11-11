@@ -1,5 +1,5 @@
 /* Handwriting doubt beyond the confidence threshold. A read whose two best candidates are a pair that children's
-   handwriting often blurs (1/7, 4/9, 0/6, 5/6, 3/8) is doubtful when the margin between them is narrow, even if the
+   handwriting often blurs (CONFUSABLE_PAIRS: 1/7, 4/9, 0/6, 5/6, 3/8, 1/8, 1/3, 3/9, 2/7) is doubtful when the margin between them is narrow, even if the
    top candidate is above LOW_CONFIDENCE. The child then confirms the digit before the answer is graded. */
 import type { DigitRecognition } from '@/types'
 import { CONFUSABLE_MARGIN, CONFUSABLE_PAIRS, LOW_CONFIDENCE } from './constants'
