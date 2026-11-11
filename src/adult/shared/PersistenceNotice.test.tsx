@@ -6,7 +6,7 @@ vi.mock('@/data', () => data)
 
 import { PersistenceNotice } from './PersistenceNotice'
 
-const WARNING = 'Este navegador puede borrar el progreso si se queda sin espacio. Para protegerlo, añade la app a la pantalla de inicio.'
+const WARNING = 'Este navegador podría borrar el progreso si se queda sin espacio. Si puedes, añade la app a la pantalla de inicio.'
 
 beforeEach(() => data.getPersistenceState.mockReset())
 

@@ -22,7 +22,7 @@ export function PersistenceNotice() {
     <div className={`${s.notice} ${s.noticeWarn}`} role="note">
       <span className={s.noticeMark} aria-hidden="true">!</span>
       <span>
-        Este navegador puede borrar el progreso si se queda sin espacio. Para protegerlo, añade la app a la pantalla de inicio.
+        Este navegador podría borrar el progreso si se queda sin espacio. Si puedes, añade la app a la pantalla de inicio.
       </span>
     </div>
   )
