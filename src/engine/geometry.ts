@@ -947,13 +947,17 @@ function areaStep(f: GridFigure): string {
     : `Cuenta la primera fila: ${squares}. Hay ${rows.length} filas con color: cuenta cada una y suma.`
 }
 
-/** The last hint of «¿cuántos lados?», with the corner to start from (the highest one), so the count goes round once. */
-function countStep(ex: ShapeCountExercise): string {
-  const pts = ex.figure.points
+/** Where the highest corner of a figure is (the drawing keeps y downwards): «a la izquierda», «en el medio», «a la derecha». */
+function topCorner(pts: [number, number][]): string {
   const xs = pts.map((p) => p[0])
   const top = pts.reduce((a, b) => (b[1] < a[1] ? b : a))
   const third = (Math.max(...xs) - Math.min(...xs)) / 3
-  const where = top[0] < Math.min(...xs) + third ? 'a la izquierda' : top[0] > Math.max(...xs) - third ? 'a la derecha' : 'en el medio'
+  return top[0] < Math.min(...xs) + third ? 'a la izquierda' : top[0] > Math.max(...xs) - third ? 'a la derecha' : 'en el medio'
+}
+
+/** The last hint of «¿cuántos lados?», with the corner to start from (the highest one), so the count goes round once. */
+function countStep(ex: ShapeCountExercise): string {
+  const where = topCorner(ex.figure.points)
   const what = ex.ask === 'sides' ? 'los lados uno a uno' : 'las esquinas una a una'
   return `Pon el dedo en la esquina de más arriba, ${where}, y cuenta ${what} hasta volver a ella.`
 }
@@ -966,7 +970,7 @@ export function geometryHints(ex: ShapeChoiceExercise | ShapeCountExercise | Ang
     case 'shape-count': return [hint(1, SIDES_HINTS[0]), hint(2, SIDES_HINTS[1]), hint(3, countStep(ex))]
     case 'angle-tap': return [
       hint(1, ANGLE_TAP_HINTS[0]), hint(2, ANGLE_TAP_HINTS[1]),
-      hint(3, `La figura tiene ${ex.figure.points.length} esquinas. Compara cada una con la de un papel y toca solo las que encajan.`),
+      hint(3, `La figura tiene ${ex.figure.points.length} esquinas. Empieza por la de más arriba, ${topCorner(ex.figure.points)}, y compara cada una con la de un papel.`),
     ]
     case 'perimeter':
       if (ex.mode === 'story') {

@@ -371,7 +371,7 @@ export function fractionHints(ex: FractionShadeExercise | FractionReadExercise |
       return [
         hint(1, 'Primero cuenta todas las partes iguales de la figura: ese número va abajo.'),
         hint(2, 'Ahora cuenta solo las partes de color: ese número va arriba.'),
-        hint(3, `${SHAPE_COUNT[ex.figure.shape]} Arriba, las partes de color; abajo, todas las partes.`),
+        hint(3, `${SHAPE_COUNT[ex.figure.shape]} Son ${ex.denominator} trozos en total: ese número va abajo. Arriba, solo los de color.`),
       ]
     case 'fraction-equal':
       return [

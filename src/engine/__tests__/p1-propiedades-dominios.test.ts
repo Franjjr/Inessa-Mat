@@ -5,11 +5,14 @@
    another valid notation), which must be right too; (3) wrong final results, which must never be right. Then the cases
    of the audit branches auditoria/p1-medida-problemas and auditoria/p1-numeros, with the P1 expectation. */
 import { describe, expect, it } from 'vitest'
-import { check, createRng, generate, hintsFor } from '@/engine'
+import { check, createRng, generate, geoSkill, GEO_OPS, hintsFor, statementOf } from '@/engine'
 import { makeWordProblem } from '@/engine/make'
 import { explainHunt } from '@/engine/bugs'
 import { fractionName, genFractionOf } from '@/engine/fractions'
 import { SHOP } from '@/engine/money'
+import { measureUnitQuestion } from '@/engine/measure'
+import { makePlaceValue } from '@/engine/numeric'
+import { buildSense } from '@/engine/wordProblems'
 import { parseClockPhrase } from '@/engine/time'
 import { hourFromAngle } from '@/activities/views/Clock'
 import type {
@@ -625,5 +628,248 @@ describe('reloj y tiempo (auditoría p1-medida-problemas H7, H18; P4-13)', () =>
       }
     }
     report('hora mal leída por el orden en que se mueven las agujas', misses, total)
+  })
+})
+
+// ---------------------------------------------------------------- geometría
+
+const GEO: SkillKey[] = GEO_OPS.map(geoSkill)
+/** The classification ops: the level-2 hint ties each description to its name. */
+const CLASSIFY: string[] = ['line:type', 'line:rel', 'line:kind', 'angle:class', 'tri:sides', 'tri:angles', 'quad:name', 'circle:parts', 'circle']
+
+describe('geometría, 21 operaciones (auditoría p1-medida-problemas H9, H21; P4-17)', () => {
+  const geo = sample(GEO, 30, 6)
+
+  it('las 21 operaciones: libro correcto, otra opción u otro número nunca', () => {
+    expect(GEO.length).toBe(21)
+    const ops = new Set(geo.map((e) => e.skill))
+    for (const s of GEO) expect(ops.has(s), s).toBe(true)
+    const misses: Miss[] = []
+    for (const ex of geo) {
+      if (!check(ex, bookAnswer(ex)).correct) misses.push({ id: ex.id, answer: bookAnswer(ex) })
+      for (const bad of wrongAnswers(ex)) if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: `${ex.id}: acepta una mala` })
+    }
+    report('geometría: libro o malas', misses, geo.length)
+  })
+
+  it('en cada pregunta exactamente una opción es verdad', () => {
+    const exs = of(sample(['geo:line:rel', 'geo:circle:parts', 'geo:poly:name', 'geo:quad:name'], 60, 10), 'shape-choice')
+    expect(exs.length).toBeGreaterThan(500)
+    const alsoTrue: Record<string, string[]> = {
+      perpendiculares: ['se cruzan', 'se cortan'], diámetro: ['cuerda'], cuadrado: ['rectángulo', 'rombo'],
+    }
+    const bad = exs.filter((ex) => (alsoTrue[ex.options[ex.answer]] ?? []).some((o) => ex.options.includes(o)))
+    report('preguntas con dos opciones verdaderas', bad.map((e) => text(`${e.question} ${e.options.join(' / ')}`)), exs.length)
+  })
+
+  it('«¿Puede rodar este cuerpo?»', () => {
+    const ex = of(sample('geo:solid:roll', 3, 3), 'shape-choice')[0]
+    expect(ex.question).toBe('¿Puede rodar este cuerpo?')
+  })
+
+  it('la pista 2 de cada clasificación nombra todas las opciones', () => {
+    for (const op of CLASSIFY) {
+      for (const ex of of(sample(`geo:${op}`, 10, 4), 'shape-choice')) {
+        const h = hintsFor(ex)[1].text.toLowerCase()
+        for (const o of ex.options) expect(h, `${op}: ${hintsFor(ex)[1].text}`).toContain(o.toLowerCase())
+      }
+    }
+  })
+})
+
+// ---------------------------------------------------------------- medida
+
+describe('medida (P4-18, P4-19, P3PE-15)', () => {
+  const measures = of(sample(['measure:unit:length', 'measure:unit:mass', 'measure:unit:capacity', 'measure:convert:length', 'measure:convert:mass',
+    'measure:convert:capacity', 'measure:convert:length:all', 'measure:ruler', 'measure:add', 'measure:estimate'], 20, 6), 'measure')
+
+  it('libro correcto, otro número u otra unidad nunca', () => {
+    expect(new Set(measures.map((e) => e.mode)).size).toBe(5)
+    const misses: Miss[] = []
+    for (const ex of measures) {
+      const book: Answer = ex.mode === 'unit' ? { type: 'option', value: ex.answer }
+        : ex.mode === 'estimate' ? { type: 'verdict', ok: ex.answer, value: null } : { type: 'number', value: ex.answer }
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      const bad: Answer[] = ex.mode === 'unit' ? wrongAnswers(ex) : ex.mode === 'estimate' ? [{ type: 'verdict', ok: !ex.answer, value: null }] : [{ type: 'number', value: ex.answer + 1 }]
+      for (const b of bad) if (check(ex, b).correct) misses.push({ id: ex.id, answer: b, note: 'acepta una mala' })
+    }
+    report('medida: libro o malas', misses, measures.length)
+  })
+
+  it('pistas de peso y capacidad sin «coche» ni «tira»; ninguna con «cuántos saltos»', () => {
+    for (const ex of measures) {
+      const hs = hintsFor(ex).map((h) => h.text).join(' ')
+      if (ex.mode !== 'ruler' && 'dimension' in ex && ex.dimension !== 'length') expect(hs, ex.id).not.toMatch(/coche|tira/)
+      expect(hs, ex.id).not.toMatch(/cuántos saltos/)
+    }
+  })
+
+  it('la pregunta de la unidad dice las opciones con palabras y no «medir capacidad de»', () => {
+    const vaso = of(sample('measure:unit:capacity', 40, 4), 'measure').find((e) => e.mode === 'unit' && e.object === 'un vaso de agua')
+    expect(vaso && vaso.mode === 'unit' && measureUnitQuestion(vaso)).toMatch(/^Un vaso de agua, ¿cuánto tiene: 200 (mililitros|litros) o 200 (mililitros|litros)\?$/)
+    for (const ex of measures) expect(statementOf(ex), ex.id).not.toMatch(/medir capacidad de/)
+  })
+})
+
+// ---------------------------------------------------------------- datos y probabilidad
+
+describe('gráficos y probabilidad (auditoría p1-medida-problemas H12)', () => {
+  const charts = sample(['chart:pict', 'chart:pict:x', 'chart:bars', 'chart:table', 'chart:freq', 'chart:mode', 'prob:chance', 'prob:likely'], 30, 6)
+    .filter((e): e is Extract<Exercise, { kind: 'chart' | 'chance' }> => e.kind === 'chart' || e.kind === 'chance')
+
+  it('libro correcto, otro número u otra opción nunca', () => {
+    expect(new Set(charts.map((e) => e.kind))).toEqual(new Set(['chart', 'chance']))
+    const misses: Miss[] = []
+    for (const ex of charts) {
+      const book: Answer = (ex.kind === 'chart' && ex.options.length) || ex.kind === 'chance' ? { type: 'choice', index: ex.answer } : { type: 'number', value: ex.answer }
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      const bad: Answer = book.type === 'choice' ? { type: 'choice', index: (ex.answer + 1) % (ex.options.length || 2) } : { type: 'number', value: ex.answer + 1 }
+      if (check(ex, bad).correct) misses.push({ id: ex.id, answer: bad, note: 'acepta una mala' })
+    }
+    report('gráficos: libro o malas', misses, charts.length)
+  })
+
+  it('900 preguntas: ninguna con «tiene los/las…»; cada tema con su pregunta', () => {
+    const exs = of(sample(['chart:pict', 'chart:pict:x', 'chart:bars'], 100, 9), 'chart')
+    expect(exs.length).toBeGreaterThan(400)
+    report('preguntas con «tiene los/las»', exs.filter((e) => /tiene (los|las) /.test(e.question) || /días (más )?tiene/.test(e.question)).map((e) => text(e.question)), exs.length)
+    const qs = new Set(exs.map((e) => e.question))
+    for (const q of ['¿Cuántas gallinas vimos?', '¿Cuántos días llovió?', '¿Cuántos días estuvo nublado?', '¿Cuántos votos tiene la fresa?', '¿De qué clase de libro leímos más?']) {
+      expect(qs.has(q), q).toBe(true)
+    }
+    expect([...qs].some((q) => /^¿Cuántos cuentos más que cómics leímos\?$/.test(q) || /^¿Cuántos cómics más que cuentos leímos\?$/.test(q))).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------- numeración, cálculo mental, igualdades, ordinales, series, posición
+
+const NUM: SkillKey[] = [
+  ...(['blocks', 'expanded', 'words'] as const).flatMap((m) => ['', ':999', ':19999', ':99999'].map((x) => `num:place:${m}${x}`)),
+  ...['compare', 'order'].flatMap((k) => ['', ':999', ':19999', ':99999'].map((x) => `num:${k}${x}`)),
+  'num:round:10', 'num:round:100', 'num:round:1000:99999',
+  'num:line:10', 'num:line:100', 'num:line:1000', 'num:line:10000', 'num:line:10:999', 'num:line:100:999',
+  ...['dobles', 'triples', 'mitades', 'completar10', 'completar100', 'completar1000', 'decenas', 'centenas', 'compensar', 'por10', 'romanos',
+    'combinadas', 'jerarquia', 'parentesis', 'asociativa', 'distributiva', 'estimar'].map((f) => `mental:${f}`),
+  'eq:flex', 'eq:same', 'num:ordinal:10', 'num:ordinal:20', 'num:ordinal:30', 'pattern:shapes', 'pattern:numbers', 'pattern:predict',
+  'pos:relative', 'pos:next', 'pos:route',
+]
+
+describe('numeración y cálculo mental (auditoría p1-numeros p1n-03, p1n-04, p1n-05, p1n-08)', () => {
+  const nums = sample(NUM, 30, 6)
+
+  it('place-value, round, number-line, mental, equation, ordinal, pattern, position: libro correcto, malas nunca', () => {
+    const kinds = new Set(nums.map((e) => e.kind))
+    for (const k of ['place-value', 'compare', 'order', 'round', 'number-line', 'mental', 'equation', 'ordinal', 'pattern', 'position'] as const) expect(kinds.has(k), k).toBe(true)
+    const misses: Miss[] = []
+    for (const ex of nums) {
+      const book: Answer = ex.kind === 'place-value' && ex.mode === 'expanded' ? { type: 'numbers', values: [...ex.parts] }
+        : ex.kind === 'equation' && ex.mode === 'same' ? { type: 'sign', sign: ex.answer as '=' | '≠' }
+          : ex.kind === 'pattern' ? (ex.mode === 'shapes' ? { type: 'choice', index: ex.answer } : { type: 'number', value: ex.answer })
+            : ex.kind === 'ordinal' || ex.kind === 'position' ? { type: 'choice', index: ex.answer } : bookAnswer(ex)
+      if (!check(ex, book).correct) misses.push({ id: ex.id, answer: book })
+      const bad: Answer[] = book.type === 'sign' ? [{ type: 'sign', sign: book.sign === '=' ? '≠' : book.sign === '≠' ? '=' : book.sign === '<' ? '>' : '<' }]
+        : book.type === 'choice' ? [{ type: 'choice', index: ((book.index as number) + 1) % ('options' in ex && ex.options.length > 1 ? ex.options.length : 2) }]
+          : book.type === 'numbers' ? [{ type: 'numbers', values: book.values.map((v, i) => (i === 0 ? (v as number) + 1 : v)) }]
+            : book.type === 'number' ? [{ type: 'number', value: (book.value as number) + 1 }] : []
+      for (const b of bad) if (check(ex, b).correct) misses.push({ id: ex.id, answer: b, note: 'acepta una mala' })
+    }
+    report('numeración: libro o malas', misses, nums.length)
+  })
+
+  it('descomposición: dejar vacía la casilla de un 0 (4 025 = 4 000 + 20 + 5) no es un error', () => {
+    const exs = of(sample(['num:place:expanded', 'num:place:expanded:999', 'num:place:expanded:19999', 'num:place:expanded:99999'], 80, 10), 'place-value').filter((e) => e.parts.includes(0))
+    expect(exs.length).toBeGreaterThan(300)
+    const bad = exs.filter((ex) => !check(ex, { type: 'numbers', values: ex.parts.map((p) => (p === 0 ? null : p)) }).correct)
+    report('descomposición con un 0 sin escribir', bad.map((e) => text(String(e.value))), exs.length)
+    const ex = exs[0]
+    expect(check(ex, { type: 'numbers', values: ex.parts.map(() => null) }).errorType).toBe('incomplete')
+  })
+
+  it('descomposición: «3» bajo la etiqueta «centenas» es lo mismo que 300 (352 con [3, 5, 2])', () => {
+    const ex = makePlaceValue(352, 'expanded')
+    expect(check(ex, { type: 'numbers', values: [3, 5, 2] }).correct).toBe(true)
+    expect(check(ex, { type: 'numbers', values: [300, 50, 2] }).correct).toBe(true)
+    expect(check(ex, { type: 'numbers', values: [3, 5, 3] }).correct).toBe(false)
+    expect(check(ex, { type: 'numbers', values: [30, 5, 2] }).correct).toBe(false)
+  })
+
+  it('ningún redondeo a la decena o a la centena da 10 000 (no cabe en la casilla de cuatro cifras)', () => {
+    const exs = of(sample(['num:round:10', 'num:round:100'], 200, 10), 'round')
+    report('redondeo con 5 cifras', exs.filter((e) => e.answer >= 10000).map((e) => text(`${e.value} → ${e.answer}`)), exs.length)
+  })
+
+  it('ordinales: la fila se cuenta «desde la salida»', () => {
+    const rows = of(sample(['num:ordinal:10', 'num:ordinal:20', 'num:ordinal:30'], 30, 6), 'ordinal').filter((e) => e.mode === 'row')
+    expect(rows.length).toBeGreaterThan(20)
+    for (const ex of rows) expect(statementOf(ex)).toContain('desde la salida')
+  })
+
+  it('cálculo mental: enunciados de distributiva y estimar, y ninguna combinada con números de más de dos cifras', () => {
+    const d = of(sample('mental:distributiva', 4, 3), 'mental')[0]
+    expect(d.prompt).toBe(`${d.a} × ${d.b} es ${d.a} × ${d.b - (d.b % 10)} más ${d.a} × ${d.b % 10}. ¿Cuánto es ${d.a} × ${d.b % 10}?`)
+    const e = of(sample('mental:estimar', 4, 3), 'mental')[0]
+    expect(e.prompt).toMatch(/^Redondea cada número a la (decena|centena) y (suma|resta): [\d ]+ [+−] [\d ]+ = \?$/)
+    const comb = of(sample('mental:combinadas', 60, 10), 'mental')
+    report('combinadas con números > 99', comb.filter((x) => Math.max(x.a, x.b, x.c ?? 0) > 99).map((x) => text(x.prompt)), comb.length)
+  })
+
+  it('ninguna respuesta que se escribe es negativa (el teclado no tiene signo menos)', () => {
+    const all = [...nums, ...of(sample(['check:add', 'check:sub', 'check:div'], 40, 10), 'check-calc')]
+    const bad = all.filter((e) => 'answer' in e && typeof e.answer === 'number' && e.answer < 0)
+    report('respuestas negativas', bad.map((e) => text(e.id)), all.length)
+  })
+})
+
+// ---------------------------------------------------------------- la pista 3 usa los datos del ejercicio (P4-24)
+
+describe('la pista 3 usa los datos del ejercicio (P4-24)', () => {
+  const kinds: [string, SkillKey[]][] = [
+    ['clock-read', ['clock:read:5']], ['clock-set', ['clock:set:5']], ['area', ['geo:area']], ['angle-tap', ['geo:angle:tap']],
+    ['fraction-read', ['frac:read:4', 'frac:read:8', 'frac:read:6']], ['fraction-equal', ['frac:equal']], ['shape-count', ['geo:poly:sides']],
+    ['place-value', ['num:place:words', 'num:place:words:999']], ['error-hunt', ['hunt:add', 'hunt:sub', 'hunt:mul']],
+    ['chart', ['chart:pict', 'chart:bars']], ['time-convert', ['clock:convert:day']], ['time-duration', ['time:end', 'time:elapsed']],
+  ]
+  for (const [kind, skills] of kinds) {
+    it(`${kind}: en 5 ejercicios distintos, al menos 3 pistas 3 distintas`, () => {
+      // Five exercises spread over the sample (not five of the same seed).
+      const pool = sample(skills, 10, 4).filter((e) => e.kind === kind).filter((e) => !(e.kind === 'chart' && e.options.length))
+      const exs = [0, 1, 2, 3, 4].map((i) => pool[Math.floor((i * pool.length) / 5)]).filter(Boolean)
+      expect(exs.length).toBe(5)
+      const third = new Set(exs.map((e) => hintsFor(e)[2].text))
+      expect(third.size, [...third].join('\n')).toBeGreaterThanOrEqual(3)
+    })
+  }
+})
+
+// ---------------------------------------------------------------- «¿tiene sentido?» y suma de precios
+
+describe('«¿tiene sentido?» (auditoría p1-medida-problemas H10)', () => {
+  it('ninguna propuesta a menos del 10 % del resultado se pregunta con «¿Tiene sentido?»', () => {
+    const bad: Miss[] = []
+    let total = 0
+    for (let seed = 1; seed <= 1200; seed++) {
+      const p = buildSense(createRng(seed))
+      if (p.shown === p.right) continue
+      total++
+      if (Math.abs(p.shown - p.right) / p.right <= 0.1 && /¿Tiene sentido esa respuesta\?$/.test(p.exercise.question)) bad.push(text(`${p.exercise.question} (resultado ${p.right})`))
+    }
+    expect(total).toBeGreaterThan(316)
+    report('«¿tiene sentido?» con una propuesta cercana', bad, total)
+  })
+
+  it('la pregunta no delata la respuesta: las dos preguntas salen con respuestas buenas y malas', () => {
+    const seen = new Set<string>()
+    for (let seed = 1; seed <= 400; seed++) {
+      const p = buildSense(createRng(seed))
+      seen.add(`${p.exercise.question.endsWith('¿Es correcta la respuesta de Lumi?') ? 'exacta' : 'sentido'}:${p.shown === p.right}`)
+    }
+    expect(seen).toEqual(new Set(['exacta:true', 'exacta:false', 'sentido:true', 'sentido:false']))
+  })
+})
+
+describe('suma de precios', () => {
+  it('cada suma tiene al menos dos tarjetas con su precio', () => {
+    const exs = of(sample('money:add'), 'money').filter((e) => e.mode === 'add')
+    expect(exs.every((e) => e.mode === 'add' && e.items.length >= 2)).toBe(true)
   })
 })
