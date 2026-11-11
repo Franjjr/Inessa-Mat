@@ -8,7 +8,8 @@
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
 import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
-import { availableSkills, behindTopics, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { availableSkills, behindTopics, isTopicMastered, teachingOrder, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
+import { classForTopic, isClassDone } from '@/content/classes'
 import { topicOfToday } from './topicOfToday'
 import { makeArray } from './make'
 import { statementClock } from './clock'
@@ -100,7 +101,7 @@ export interface DailyPlan {
   /** The topic taught in «Lo nuevo» (null when every available topic is mastered). */
   topic: SyllabusTopic | null
   /** Worked example for «Lo nuevo»: not graded and not counted as practice. */
-  example: { exercise: Exercise; statement: string; steps: string[] } | null
+  example: { exercise: Exercise; statement: string; steps: string[]; answer?: string | null } | null
   blocks: { id: DailyBlockId; items: DailyItem[] }[]
   /** Estimated seconds of items (the example and the transitions are not counted). */
   practiceSeconds: number
@@ -128,6 +129,11 @@ export function statementOf(ex: Exercise): string {
   switch (ex.kind) {
     case 'fact-mul': return `${ex.a} × ${ex.b} = ?`
     case 'fact-div': return `${ex.dividend} : ${ex.divisor} = ?`
+    case 'skip-count': return `Cuenta de ${ex.step} en ${ex.step}: ${ex.values.map((v, i) => (ex.hiddenIndexes.includes(i) ? '__' : fmt(v))).join(', ')}`
+    case 'groups': return `${ex.groups} ${ex.groups === 1 ? 'grupo' : 'grupos'} de ${ex.perGroup}: ¿cuántos hay?`
+    case 'array': return `${ex.rows} filas de ${ex.cols}: ¿cuántos hay?`
+    case 'double-chain': return `El doble del ${ex.start}${ex.steps > 1 ? `, y su doble${ex.steps > 2 ? ', y su doble'.repeat(ex.steps - 2) : ''}` : ''}`
+    case 'fact-family': return `Con ${ex.a}, ${ex.b} y ${ex.product} escribe 4 operaciones`
     case 'missing-factor': return ex.missing === 'a' ? `? × ${ex.b} = ${ex.product}` : `${ex.a} × ? = ${ex.product}`
     case 'column-add': return ex.operands.join(' + ')
     case 'column-sub': return `${ex.minuend} − ${ex.subtrahend}`
@@ -176,7 +182,7 @@ export function statementOf(ex: Exercise): string {
       return statementEnglish(ex)
     case 'check-calc': return ex.op === 'add'
       ? `${ex.left} + ${ex.right} = ${ex.claimed}`
-      : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} ÷ ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
+      : ex.op === 'sub' ? `${ex.left} − ${ex.right} = ${ex.claimed}` : `${ex.left} : ${ex.right} = ${ex.claimed} resto ${ex.remainder ?? 0}`
     default: return statementClock(ex) ?? ex.skill
   }
 }
@@ -247,11 +253,32 @@ function interleavedPick(skills: SkillKey[], n: number, exclude: Set<SkillKey>):
   return out
 }
 
-/** Worked example for the new topic: a fresh exercise of the skill (its own seed), with the hints as steps. */
+/** The final answer of an exercise as the child would write it, for the worked example (null when it has no single one). */
+function workedAnswer(ex: Exercise): string | null {
+  switch (ex.kind) {
+    case 'fact-mul': case 'fact-div': case 'missing-factor': case 'column-add': case 'column-sub': case 'column-mul':
+    case 'long-mul': case 'round': case 'mental': case 'groups': case 'array': case 'number-line':
+      return fmt(ex.answer)
+    case 'word-problem': case 'bar-problem': return `${fmt(ex.answer)} ${ex.unit}`.trim()
+    case 'division': return ex.remainder > 0 ? `${fmt(ex.quotient)} y sobran ${fmt(ex.remainder)}` : fmt(ex.quotient)
+    case 'place-value':
+      return Array.isArray(ex.answer) ? ex.parts.filter((p) => p !== 0).map(fmt).join(' + ') : fmt(ex.answer)
+    case 'skip-count': return ex.answer.map(fmt).join(', ')
+    case 'double-chain': return ex.answer.map(fmt).join(', ')
+    case 'compare': return ex.answer
+    default: return null
+  }
+}
+
+/** Worked example for the new topic: a fresh exercise of the skill (its own seed), with the hints as steps and, last, the
+    answer, so the child sees the whole cuenta finished and never a «= ?» left open. */
 function exampleFor(skill: SkillKey, rng: Rng, now: Date): DailyPlan['example'] {
   const [ex] = generate({ skills: [skill] }, 1, { rng: createRng(hashString(`example:${skill}:${rng()}`)), now })
   if (!ex) return null
-  return { exercise: ex, statement: statementOf(ex), steps: hintsFor(ex).map((h) => h.text) }
+  const answer = workedAnswer(ex)
+  const steps = hintsFor(ex).map((h) => h.text)
+  if (answer) steps.push(`Resultado: ${answer}.`)
+  return { exercise: ex, statement: statementOf(ex).replace(/ = \?$/, ''), steps, answer }
 }
 
 /** The operations from the simplest to the most advanced. */
@@ -289,6 +316,13 @@ function barOpFor(topic: SyllabusTopic | null, mastery: MasteryMap): BarSkillOp 
   return wordOpFor(topic, mastery)
 }
 
+/** The topic whose class teaches each word-problem operation, and the one for «Encuentra el error» and each column operation. */
+const PROBLEM_CLASS: Record<BarSkillOp, string> = {
+  add: 'prob-sumar', sub: 'prob-restar', mul: 'prob-multiplicar', div: 'prob-dividir', two: 'prob-dos-pasos', three: 'prob-dos-pasos',
+}
+const HUNT_CLASS_TOPIC = 'encuentra-error'
+const HUNT_OP_TOPIC: Record<HuntOp, string> = { add: 'suma-3d-llevando', sub: 'resta-3d-prestando', mul: 'mul-2x1-llevando' }
+
 export interface PlanInput {
   child: ChildProfile
   mastery: MasteryMap
@@ -321,6 +355,22 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   // Same generator as make(), with its own seed per (day, skill) so probing does not move the session's rng.
   const canMake = (s: SkillKey) => generate({ skills: [s] }, 1, { rng: createRng(hashString(`step:${today}:${s}`)), now, mastery }).length > 0
+
+  // What has been taught: nothing is asked (in the mix, the hunts, the problem) before the class of its topic has been given.
+  // A topic counts as taught when its class is done (the map lesson too) or the child masters it (older progress, tests); a
+  // topic without a class (other courses) has nothing to wait for.
+  const order = teachingOrder(syllabus)
+  const topicIndex = new Map(order.map((t, i) => [t.id, i]))
+  const firstTopicOfSkill = new Map<SkillKey, number>()
+  order.forEach((t, i) => { if (t.status === 'disponible') for (const sk of t.skills) if (!firstTopicOfSkill.has(sk)) firstTopicOfSkill.set(sk, i) })
+  const progressNow = input.progress
+  const taughtTopic = (id: string): boolean => {
+    const cls = classForTopic(id, child.grade)
+    if (!cls) return true
+    if (progressNow && isClassDone(progressNow, cls)) return true
+    const t = order.find((x) => x.id === id)
+    return !!t && isTopicMastered(t, mastery)
+  }
 
   // 1. Calentamiento: learnt cálculo mental and facts not seen today, the most urgent first. Never introduces a skill.
   const seenBeforeToday = (m: SkillMastery) => m.box >= 1 && (m.lastSeenAt ?? '').slice(0, 10) < today
@@ -368,20 +418,30 @@ export function planDailySession(input: PlanInput): DailyPlan {
     }
   }
   const newSkills = new Set(newItems.map((i) => i.exercise.skill))
+  // Skills the mix may fill up with when the child has few: those of today's topic or earlier ones, or of a topic whose
+  // class has been given. A later topic is never asked before its class.
+  const todayIdx = topic ? topicIndex.get(topic.id) ?? -1 : order.length
+  const mixable = (sk: SkillKey) => {
+    const i = firstTopicOfSkill.get(sk)
+    return i !== undefined && (i <= todayIdx || taughtTopic(order[i].id))
+  }
 
   // A topic behind (not met, before one the child has started) is not taught in «Lo nuevo»: its first step is practised
   // once in the mix, so the child meets it without being pulled back (its own budget rule applies).
-  const repaso = behindTopics(syllabus, mastery, input.term).find((t) => t.id !== topic?.id)
+  // «Encuentra el error» is a check, not a class: its answers never make a later topic look met.
+  const masteryNoHunt = Object.fromEntries(Object.entries(mastery).filter(([k]) => !k.startsWith('hunt:'))) as MasteryMap
+  const repaso = behindTopics(syllabus, masteryNoHunt, input.term).find((t) => t.id !== topic?.id)
   const repasoSkill = repaso?.skills.find((s) => parseSkill(s) !== null && canMake(s))
 
   // 3. Mezcla: most urgent skills, interleaved by family. Falls back to available non-new skills.
   const urgent = urgencyOrder(mastery, now).map((m) => m.skill)
   let pool = interleavedPick(urgent, MIX_MAX, newSkills)
   if (pool.length < MIX_MIN) {
-    const fallback = availableSkills(syllabus, input.term).filter((s) => !isNewHard(s) && !pool.includes(s) && parseSkill(s) !== null)
+    const fallback = availableSkills(syllabus, input.term).filter((s) => !isNewHard(s) && !pool.includes(s) && parseSkill(s) !== null && mixable(s))
     pool = [...pool, ...interleavedPick(fallback, MIX_MAX - pool.length, newSkills)]
   }
-  if (pool.length === 0) pool = interleavedPick(availableSkills(syllabus, input.term).filter((s) => !isNewHard(s)), MIX_MAX, new Set())
+  // Nothing taught to mix yet: a shorter mix (even none) is better than asking what was not taught.
+  if (pool.length === 0) pool = interleavedPick(availableSkills(syllabus, input.term).filter((s) => !isNewHard(s) && mixable(s)), MIX_MAX, new Set())
   const mixItems: DailyItem[] = []
   const mixCap = repasoSkill ? MIX_MAX - 1 : MIX_MAX
   for (const s of pool.slice(0, mixCap)) {
@@ -397,8 +457,13 @@ export function planDailySession(input: PlanInput): DailyPlan {
   // The «encuentra el error» of the mix: the column operation the child is weakest at (never seen counts as weakest).
   // Only what the child's temario has: 2.º finds errors in sums and subtractions, not in multiplications.
   const inSyllabus = new Set(availableSkills(syllabus))
-  const huntNow = HUNT_OPS.map((op) => huntSkill(op)).filter((s) => inSyllabus.has(s))
-    .sort((x, y) => (mastery[x]?.box ?? -1) - (mastery[y]?.box ?? -1) || x.localeCompare(y))[0]
+  // Only after the class of «Encuentra el error» and the class of the operation itself; among the allowed ones, the weakest
+  // the child has seen (an operation never practised is not «the weakest», it is just not known yet).
+  const huntOk = (op: HuntOp) => taughtTopic(HUNT_OP_TOPIC[op]) && (taughtTopic(HUNT_CLASS_TOPIC) || !!mastery[huntSkill(op)])
+  const huntable = HUNT_OPS.filter(huntOk).map((op) => huntSkill(op)).filter((sk) => inSyllabus.has(sk))
+  const huntSeen = huntable.filter((sk) => mastery[sk] !== undefined)
+  const huntNow = (huntSeen.length ? huntSeen : huntable)
+    .sort((x, y) => (mastery[x]?.box ?? 0) - (mastery[y]?.box ?? 0) || x.localeCompare(y))[0]
   const hunt = huntNow ? make(huntNow, rng, ['error-hunt']) : null
   if (hunt) {
     if (mixItems.length >= mixCap) mixItems.pop()
@@ -431,10 +496,20 @@ export function planDailySession(input: PlanInput): DailyPlan {
   const problem: DailyItem[] = []
   // 2.º has its own groups problem (bar:mul:small): the bar of the temario wins over the generic one.
   const barOf = (op: BarSkillOp) => [barSkill(op), barSkill(op, true)].find((s) => inSyllabus.has(s)) ?? barSkill(op)
-  const barNow = barOf(barOpFor(topic, mastery))
-  const barAny = (['add', 'sub', 'mul', 'div', 'two'] as const).map(barOf).find((s) => inSyllabus.has(s)) ?? barSkill('add')
-  const bex = make(inSyllabus.has(barNow) ? barNow : barAny, rng, ['bar-problem'])
-  if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
+  // Not before the class «Problemas de juntar», and then only the operations whose problems class has been given.
+  const probOp = (): BarSkillOp | null => {
+    if (!taughtTopic(PROBLEM_CLASS.add)) return null
+    const want = barOpFor(topic, mastery)
+    if (taughtTopic(PROBLEM_CLASS[want])) return want
+    return (['add', 'sub', 'mul', 'div'] as const).filter((op) => taughtTopic(PROBLEM_CLASS[op])).find((op) => (mastery[barSkill(op)] ?? mastery[barSkill(op, true)]) !== undefined) ?? 'add'
+  }
+  const op = probOp()
+  if (op) {
+    const barNow = barOf(op)
+    const barAny = (['add', 'sub', 'mul', 'div', 'two'] as const).map(barOf).find((sk) => inSyllabus.has(sk)) ?? barSkill('add')
+    const bex = make(inSyllabus.has(barNow) ? barNow : barAny, rng, ['bar-problem'])
+    if (bex) problem.push({ exercise: bex, block: 'problem', scaffold: false, isNew: false })
+  }
 
   const blocks: DailyPlan['blocks'] = [
     { id: 'warmup', items: warmup },
@@ -452,5 +527,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
     })
   }
   const practiceSeconds = blocks.reduce((sum, b) => sum + b.items.reduce((s, i) => s + estimateSeconds(i), 0), 0)
-  return { topic, example, blocks, practiceSeconds, newFactCount: newFacts.size }
+  // The class of today's topic comes before «Lo nuevo» when the child has not done it.
+  const cls = topic ? classForTopic(topic.id, child.grade) : undefined
+  const classTopicId = topic && cls && !(progressNow && isClassDone(progressNow, cls)) ? topic.id : null
+  return { topic, example, blocks, practiceSeconds, newFactCount: newFacts.size, classTopicId }
 }
