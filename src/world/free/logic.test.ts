@@ -76,6 +76,14 @@ describe('free play', () => {
     expect(reachedClasses({ grade: 2, mastery: masteredTopic('suma-2d'), progress: done })).toEqual([])
   })
 
+  it('today\'s class is the topic of «Hoy» (the stage of the world the map is on), not only the temario order', () => {
+    const fresh = initialProgress('c')
+    const onW2 = { ...fresh, worlds: { ...fresh.worlds, w1: { unlocked: true, nodes: {}, crystal: true }, w2: { unlocked: true, nodes: {}, crystal: false } } }
+    const ids = topicIds(reachedClasses({ grade: 3, mastery: {}, progress: onW2 }))
+    expect(ids).toContain('suma-2d')
+    expect(ids).not.toContain('descomponer-9999')
+  })
+
   it('each reached class carries its topic title and the class definition', () => {
     const list = reachedClasses({ grade: 3, mastery: masteredTopic('suma-2d'), progress: initialProgress('c') })
     const item = list.find((c) => c.topicId === 'suma-2d')
