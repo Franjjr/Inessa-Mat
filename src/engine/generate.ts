@@ -34,7 +34,7 @@ import { ENGLISH_SKILLS, LENGUA_SKILLS, moneySkill, measureSkill } from './skill
 import { clamp, createRng, hashString, pick, randInt, range, shuffle, weightedIndex } from './rng'
 import {
   CHECK_OPS, DIVISION_VARIANTS, HUNT_OPS, NUMERIC_KINDS, addSkill, barSkill, blockSkillsOf, checkSkill, conceptSkill, div2x1Skill,
-  divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulColSkill, mulSkill, ordinalSkill, parseSkill, skipSkill, subSkill, wordSkill,
+  div3x1Skill, divSkill, huntSkill, isEasyFact, isFactSkill, kindsForSkill, mul2x1Skill, mulColSkill, mulSkill, ordinalSkill, parseSkill, skipSkill, subSkill, wordSkill,
   type BarSkillOp, type DivisionVariant, type ParsedSkill, type WordOp,
 } from './skills'
 import type { GenerateOptions } from './types'
@@ -172,6 +172,9 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
           for (const d of new Set([t, n])) {
             const q = p / d
             if (d === 1 && !(ctx.tables?.length === 1 && ctx.tables[0] === 1)) continue
+            // With a table asked for, 24 ÷ 4 = 6 in the table of 6 is answered by recalling the table, not by dividing:
+            // the orientation whose quotient is the table is dropped (the table stays as the divisor).
+            if (ctx.tables && d !== t && q === t) continue
             const w = q === 1 ? 0.3 : d === 10 || q === 10 ? 0.5 : 1
             addItem(map, divSkill(p, d), kind, w)
           }
@@ -218,9 +221,19 @@ function kindUniverse(kind: ExerciseKind, ctx: Ctx): UniverseItem[] {
       if (ctx.regroup !== 'one' && ctx.regroup !== 'many') addItem(map, mul2x1Skill(false), kind, ctx.regroup === 'any' ? 0.6 : 1)
       if (ctx.regroup !== 'none') addItem(map, mul2x1Skill(true), kind, 1)
       break
-    case 'division':
+    case 'division': {
+      // 3 or 4 digits asked (3.º, 4.º): the one-digit divisor with a bigger dividend. The tables do not apply to these
+      // (their generators pick any divisor 2..9), so with a table asked the 2-digit division stays.
+      if ((ctx.digits === 3 || ctx.digits === 4) && !ctx.tables) {
+        const variants = ctx.variantsExplicit ? ctx.variants.filter((v) => v !== 'long') : ['exact', 'rem']
+        for (const v of variants.length ? variants : ['exact', 'rem']) {
+          addItem(map, ctx.digits === 3 ? div3x1Skill(v as 'exact' | 'rem') : `div:4x1:${v}`, kind, 1)
+        }
+        break
+      }
       for (const v of ctx.variants) addItem(map, div2x1Skill(v), kind, 1)
       break
+    }
     case 'bar-problem':
       for (const op of BAR_OPS) addItem(map, barSkill(op), kind, 1)
       break
@@ -370,16 +383,20 @@ function weightedOrder(rng: Rng, items: UniverseItem[]): UniverseItem[] {
   return out
 }
 
+/** Uniform-style plan: every skill of the universe once (weighted order) when the plan is long enough, then draws by
+    weight with replacement. The weights decide how often a skill comes (a ×1 or ×10 fact less than a middle fact). */
 function planUniform(rng: Rng, items: UniverseItem[], n: number): UniverseItem[] {
+  if (items.length === 0) return []
   const out: UniverseItem[] = []
+  for (const it of weightedOrder(rng, items)) {
+    if (out.length >= n) break
+    out.push(it)
+  }
   while (out.length < n) {
-    const order = weightedOrder(rng, items)
-    for (const it of order) {
-      if (out.length >= n) break
-      // When cycling, don't repeat the previous pick immediately.
-      if (out.length && out[out.length - 1].skill === it.skill && items.length > 1) continue
-      out.push(it)
-    }
+    // Never the same skill twice in a row (when there is a choice).
+    const prev = out[out.length - 1].skill
+    const weights = items.map((it) => (items.length > 1 && it.skill === prev ? 0 : it.weight))
+    out.push(items[weightedIndex(rng, weights)])
   }
   return out
 }
@@ -834,7 +851,10 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
     if (share === 0) return
     const fresh = g.items.filter((it) => !isFullyAvoided(it, avoid))
     const items = fresh.length ? fresh : g.items
-    const chosen = selector.adaptive && opts.mastery
+    // With the child's history given, the plan is adaptive unless the selector says otherwise: the operation games pass
+    // their mastery and need the weak skills first without asking for it.
+    const adaptive = selector.adaptive ?? opts.mastery !== undefined
+    const chosen = adaptive && opts.mastery
       ? planAdaptive(rng, items, share, opts.mastery, now, budget)
       : planUniform(rng, items, share).map((item) => ({ item, isNew: false }))
     for (const { item, isNew } of chosen) planned.push({ skill: item.skill, kind: pick(rng, item.kinds), isNew })
@@ -853,5 +873,24 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
     used.add(ex.id)
     out.push(ex)
   }
-  return out
+  return fixesLevel(ctx) ? out : rampWithinSkill(out)
+}
+
+/** Whether the selector sets the level itself (range, digits, regroup, division variants, zeros). */
+function fixesLevel(ctx: Ctx): boolean {
+  return ctx.rangeExplicit || ctx.digits !== undefined || ctx.regroupExplicit || ctx.variantsExplicit || ctx.zeros !== undefined
+}
+
+/** Without a fixed level, the easier exercises of a skill come first: within each skill the positions of the session stay
+    where the plan put them (so the interleaving and "no skill twice in a row" hold), and the items of that skill are
+    sorted by difficulty across those positions. */
+function rampWithinSkill(out: Exercise[]): Exercise[] {
+  const slots = new Map<SkillKey, number[]>()
+  out.forEach((ex, i) => slots.set(ex.skill, [...(slots.get(ex.skill) ?? []), i]))
+  const result = out.slice()
+  for (const positions of slots.values()) {
+    const sorted = positions.map((i) => out[i]).sort((x, y) => x.difficulty - y.difficulty)
+    positions.forEach((slot, k) => { result[slot] = sorted[k] })
+  }
+  return result
 }
