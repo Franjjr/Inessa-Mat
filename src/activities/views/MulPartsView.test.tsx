@@ -1,4 +1,4 @@
-/* Multiplicar por partes: the total is the answer. With the total alone the child can check; the labels say each line. */
+/* Multiplicar por partes: the labels say each line, and a right total is never graded as a mistake. */
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { makeMulParts } from '@/engine'
@@ -20,14 +20,15 @@ describe('MulPartsView (23 × 14)', () => {
     expect(screen.getByText('Suma =')).toBeTruthy()
   })
 
-  it('Comprobar is off with nothing written, and on with only the total 322', () => {
+  it('with only the total 322 nothing is graded: Comprobar waits for the three lines (no «incomplete» mistake)', () => {
     const onAnswered = vi.fn()
     render(<MulPartsView exercise={makeMulParts(23, 14)} onAnswered={onAnswered} showFeedback={false} />)
     expect(checkButton()).toBeDisabled()
     typeNumber('La suma', 322)
-    expect(checkButton()).not.toBeDisabled()
+    expect(checkButton()).toBeDisabled()
+    act(() => { fireEvent.keyDown(screen.getByRole('textbox', { name: 'La suma' }), { key: 'Enter' }) })
     act(() => { fireEvent.click(checkButton()) })
-    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered).not.toHaveBeenCalled()
   })
 
   it('with the three lines right, the answer is right', () => {
@@ -36,7 +37,9 @@ describe('MulPartsView (23 × 14)', () => {
     typeNumber('23 por 4', 92)
     typeNumber('23 por 10', 230)
     typeNumber('La suma', 322)
+    expect(checkButton()).not.toBeDisabled()
     act(() => { fireEvent.click(checkButton()) })
+    expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 })
