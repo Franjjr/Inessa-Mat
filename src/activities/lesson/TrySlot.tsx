@@ -22,10 +22,13 @@ interface Props {
   selector: SkillSelector
   /** Stable text that seeds the generated exercise (lesson id + step index). */
   seedKey: string
-  /** Called once when the step is settled: solved, or given up after MAX_MISSES misses. */
-  onSettled: (solved: boolean) => void
+  /** Called once when the step is settled: solved, or given up after MAX_MISSES misses. A given-up step passes the
+      right answer shown on its fixed line (null when there is none), so the lesson can show it again later. */
+  onSettled: (solved: boolean, shownAnswer?: number | null) => void
   /** Set when the step was already settled (the child came back to it): shows the outcome, offers no exercise. */
   settled?: boolean
+  /** The right answer of a step given up, as passed to onSettled: shown again when the child comes back to the step. */
+  givenUpAnswer?: number | null
   /** Subtraction method the exercise is solved with (a lesson step that teaches one method). */
   method?: SubMethod
   /** Division method the exercise is solved with (the division methods lesson). */
@@ -88,7 +91,7 @@ function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLEl
   return lowest <= visibleBottom - 1
 }
 
-export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
+export default function TrySlot({ selector, seedKey, onSettled, settled, givenUpAnswer, method, divMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
   const [attempt, setAttempt] = useState(0)
   const [misses, setMisses] = useState(0)
@@ -142,9 +145,14 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     return (
       <div className={s.wrap} data-status={settled ? 'correct' : 'gaveUp'}>
         <div className={s.footer} role="status">
-          {settled
-            ? <p className={s.good}>{host.t('¡Muy bien, {child}!')}</p>
-            : <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>}
+          {settled ? (
+            <p className={s.good}>{host.t('¡Muy bien, {child}!')}</p>
+          ) : (
+            <>
+              {givenUpAnswer != null && <p className={s.good}>{`La respuesta es ${givenUpAnswer}.`}</p>}
+              <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
+            </>
+          )}
         </div>
       </div>
     )
@@ -173,7 +181,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     // The view ended at its copy step: the answer is on screen and was written, so the step ends here without a new miss.
     if (outcome.revealed) {
       setStatus('gaveUp')
-      onSettled(false)
+      onSettled(false, shownAnswer)
       return
     }
     if (check.correct) {
@@ -187,7 +195,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     setMisses(nextMisses)
     if (nextMisses >= MAX_MISSES) {
       setStatus('gaveUp')
-      onSettled(false)
+      onSettled(false, shownAnswer)
     } else {
       setStatus('missed')
     }

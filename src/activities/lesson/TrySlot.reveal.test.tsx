@@ -43,10 +43,30 @@ describe('TrySlot: the copy step is not a new miss', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Copia bien' }))
     const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
     expect(onSettled).toHaveBeenCalledTimes(1)
-    expect(onSettled).toHaveBeenLastCalledWith(false)
+    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
     expect(screen.queryByText(/Casi/)).toBeNull()
     expect(screen.queryByRole('button', { name: 'Inténtalo otra vez' })).toBeNull()
     expect(screen.getByText(`La respuesta es ${answer}.`)).toBeTruthy()
+  })
+})
+
+describe('TrySlot: no «¡Casi!» once the child has copied the answer', () => {
+  it('a miss, a retry, then a copy written right: the copy ends the step with no «¡Casi!» left on screen', () => {
+    const onSettled = vi.fn()
+    render(
+      <ActivityHostProvider value={defaultActivityHost}>
+        <TrySlot selector={selector} seedKey="reveal-after-miss" onSettled={onSettled} />
+      </ActivityHostProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
+    expect(screen.getByText(/¡Casi!/)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Copia bien' }))
+    const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
+    expect(onSettled).toHaveBeenCalledTimes(1)
+    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
+    expect(screen.queryByText(/Casi/)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Inténtalo otra vez' })).toBeNull()
   })
 })
 
@@ -104,7 +124,27 @@ describe('TrySlot: teaching after the misses', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
     fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
     const answer = screen.getByTestId('fake-exercise').getAttribute('data-answer')
-    expect(onSettled).toHaveBeenLastCalledWith(false)
+    expect(onSettled).toHaveBeenLastCalledWith(false, Number(answer))
     expect(screen.getByText(`La respuesta es ${answer}.`)).toBeTruthy()
+  })
+
+  it('a step given up before, shown again from the lesson, still says the right answer', () => {
+    render(
+      <ActivityHostProvider value={defaultActivityHost}>
+        <TrySlot selector={selector} seedKey="reveal-back" onSettled={vi.fn()} settled={false} givenUpAnswer={42} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getByText('La respuesta es 42.')).toBeTruthy()
+    expect(screen.getByText(/No pasa nada/)).toBeTruthy()
+  })
+
+  it('a step given up without a shown answer (a time problem) says no number', () => {
+    render(
+      <ActivityHostProvider value={defaultActivityHost}>
+        <TrySlot selector={selector} seedKey="reveal-back-none" onSettled={vi.fn()} settled={false} givenUpAnswer={null} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.queryByText(/La respuesta es/)).toBeNull()
+    expect(screen.getByText(/No pasa nada/)).toBeTruthy()
   })
 })
