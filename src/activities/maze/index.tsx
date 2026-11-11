@@ -64,6 +64,8 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
       sfx.play('step')
       haptics.tap()
       host.react('correct', { errorType: res.errorType })
+      // Game rule: the stars count the first try of each number. A right step after two misses is right for the
+      // child (it is reported as a hint, so it does not raise the mastery box) but it does not count as a clean first try.
       const ok = wrongHere === 0
       const nextPos = step.pos + 1
       setClue(null)
