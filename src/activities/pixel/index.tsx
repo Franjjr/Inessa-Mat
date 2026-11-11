@@ -79,8 +79,9 @@ export default function PixelActivity({ config, onDone, onExit }: ActivityProps)
         list.push({ key: '.', ex: makeFactMul(a, b) })
       }
     }
-    const max = config.count ?? list.length
-    return list.slice(0, Math.max(1, Math.min(max, list.length)))
+    // Every coloured group with a usable fact is asked. A group cut here would stay hidden for good, and the picture
+    // is only complete once every group has been answered.
+    return list
     // The picture is fixed per activity node, so the questions are built once.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
