@@ -32,8 +32,45 @@ describe('bar problem view', () => {
     const piece = document.querySelector('[data-slot]') as HTMLElement
     fireEvent.click(piece)
     expect(screen.getAllByRole('button', { name: /^Número \d+$/ }).length).toBe(before - 1)
-    const check = screen.getAllByRole('button', { name: /Comprobar/ }).at(-1)!
-    expect((check as HTMLButtonElement).disabled).toBe(true)
+    // P3PE-16: the bar is its own screen: no «Comprobar» on it, and «Seguir» waits until every number is placed.
+    expect(screen.queryByRole('button', { name: /Comprobar/ })).toBeNull()
+    expect((screen.getByRole('button', { name: /Seguir/ }) as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('P3PE-16: one thing per screen, one «Comprobar» on the last one, and the right answer is right', () => {
+    for (const kind of ['add', 'two', 'three'] as const) {
+      const ex = genBarProblem(kind, createRng(12), true)
+      const onAnswered = vi.fn()
+      const { unmount, container } = render(<BarProblemView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+      // Screen 1: the bar, with a numbered sentence that says what to do.
+      expect(container.querySelector('[data-guide]')?.textContent).toMatch(/^1\. Pon cada número en su sitio/)
+      // Place every chip on its own piece.
+      for (let guard = 0; guard < 10; guard++) {
+        const chip = screen.queryAllByRole('button', { name: /^Número \d+$/ })[0]
+        if (!chip) break
+        const value = Number(chip.textContent)
+        fireEvent.click(chip)
+        const slot = ex.bar.findIndex((b, i) => b.value === value && !(container.querySelector(`[data-slot="${i}"]`)?.textContent ?? '').includes(String(value)))
+        fireEvent.click(container.querySelector(`[data-slot="${slot}"]`)!)
+      }
+      fireEvent.click(screen.getByRole('button', { name: /Seguir/ }))
+      // One screen per step: the operation, then the result.
+      ex.steps.forEach((step, k) => {
+        expect(screen.queryAllByRole('button', { name: /Comprobar/ }).length).toBe(k === ex.steps.length - 1 ? 1 : 0)
+        const label = { add: /Juntar/, sub: /Quitar/, mul: /Repetir/, div: /Repartir/ }[step.op]
+        fireEvent.click(screen.getByRole('button', { name: label }))
+        const box = screen.getByRole('textbox', { name: k < ex.steps.length - 1 ? `Resultado del paso ${k + 1}` : 'Respuesta' })
+        act(() => { box.focus() })
+        for (const d of String(step.result)) fireEvent.keyDown(box, { key: d })
+        if (k < ex.steps.length - 1) fireEvent.click(screen.getByRole('button', { name: /Seguir/ }))
+      })
+      const checks = screen.getAllByRole('button', { name: /Comprobar/ }).filter((b) => !/_key_/.test(b.className))
+      expect(checks).toHaveLength(1)
+      fireEvent.click(checks[0])
+      expect(onAnswered).toHaveBeenCalledTimes(1)
+      expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+      unmount()
+    }
   })
 
   it('without the drawing there are no chips, but the operation choice is there', () => {

@@ -23,10 +23,9 @@
   color: var(--c-ink);
   padding-right: 120px;
 }
+/* Above the work, on the right (the story is now the statement, above everything). */
 .speak {
-  position: absolute;
-  top: var(--sp-4);
-  right: var(--sp-4);
+  align-self: flex-end;
   min-height: var(--tap-min);
   padding: 0 var(--sp-4);
   border: 0;
@@ -230,6 +229,38 @@
 }
 
 .compact .story { padding: var(--sp-3) var(--sp-4); }
+
+/* One thing per screen (P3PE-16): the numbered sentence that says what to do now. */
+.guideStep {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  text-wrap: balance;
+}
+
+/* The bar already placed, shown again while the child chooses the operation: smaller and not tappable. */
+.barStill {
+  pointer-events: none;
+  padding: var(--sp-3);
+  gap: var(--sp-2);
+}
+
+/* «Atrás», «Seguir» and where the child is (2 / 3), beside the statement. */
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.navCount {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--c-ink-mute);
+}
 
 @media (max-width: 480px) {
   .opButtons { grid-template-columns: repeat(2, minmax(0, 1fr)); }

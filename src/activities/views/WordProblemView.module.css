@@ -25,10 +25,9 @@
   padding-right: 120px;
 }
 
+/* Above the work, on the right (the story is now the statement, above everything). */
 .speak {
-  position: absolute;
-  top: var(--sp-4);
-  right: var(--sp-4);
+  align-self: flex-end;
   min-height: var(--tap-min);
   padding: 0 var(--sp-4);
   border: 0;

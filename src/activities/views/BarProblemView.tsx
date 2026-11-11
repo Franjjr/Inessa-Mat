@@ -1,7 +1,10 @@
 /* Exercise view "bar-problem" (problemas con barras, PLAN_DOCENTE §5). The story, then the bar diagram: the child puts
    each number on the piece of the bar that it is (tap a number and then the piece, or drag it there). The unknown
    piece shows «?». Then the child chooses the operation of each step and writes the results. Without the drawing
-   (withBar false, the second rung of the ladder) only the story, the operations and the results remain. */
+   (withBar false, the second rung of the ladder) only the story, the operations and the results remain.
+   One thing per screen (P3PE-16): «1. Pon cada número en su sitio» (the bar), then each step of the calculation on its
+   own screen («2. ¿Qué hacemos…?», then «3. Escribe el resultado»), with «Seguir» and «Atrás». The story stays on top
+   on every screen and there is one «Comprobar», on the last one. */
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import clsx from 'clsx'
 import type { BarOp, BarProblemExercise, BarSlot, ExerciseViewProps } from '@/types'
@@ -10,8 +13,10 @@ import { NumberInput } from '@/ink'
 import { speech } from '@/audio'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
+import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import s from './BarProblemView.module.css'
 
 const OPS: { op: BarOp; label: string; sign: string }[] = [
@@ -77,6 +82,15 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
   const opsAll = ops.every((o) => o !== null)
   const resAll = res.every((r) => r !== null)
   const canCheck = placedAll && opsAll && resAll
+
+  // The screens: the bar first (with the drawing), then one per step of the calculation.
+  const screens: ('place' | number)[] = [...(ex.withBar ? ['place' as const] : []), ...ex.steps.map((_, k) => k)]
+  const [screen, setScreen] = useState(0)
+  const current = screens[screen]
+  const last = screen === screens.length - 1
+  const screenDone = current === 'place' ? placedAll : ops[current] !== null && res[current] !== null
+  const next = () => { if (screenDone && !last) setScreen((n) => n + 1) }
+  const back = () => { if (screen > 0) setScreen((n) => n - 1) }
 
   const placeAt = (slot: number, origin: number) => {
     if (ex.bar[slot].value === null) return
@@ -198,92 +212,138 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
     )
   }
 
-  return (
-    <section className={clsx(s.view, compact && s.compact)} aria-label="Problema con barras">
-      <article className={s.story}>
-        <p className={s.text}>{text}</p>
-        {host.prefs.voice && (
-          <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">🔊 Escuchar</button>
-        )}
-      </article>
+  const firstFree = chipsFree[0]
+  const guideText = (n: number, k: number | 'place', part: 'op' | 'result'): string => {
+    if (k === 'place') {
+      return firstFree
+        ? `${n}. Pon cada número en su sitio. ¿Dónde va el ${firstFree.value}? Tócalo y luego toca su parte de la barra.`
+        : `${n}. ¡Todos en su sitio! Toca «Seguir».`
+    }
+    const stepWord = steps > 1 ? (k === 0 ? 'Primero: ' : 'Después: ') : ''
+    return part === 'op'
+      ? `${n}. ${stepWord}¿Qué hacemos con los números: juntar, quitar, repetir o repartir?`
+      : `${n + 1}. Haz la cuenta y escribe el resultado.`
+  }
+  const base = ex.withBar ? 2 : 1
 
-      {ex.withBar && (
-        <section className={s.barCard} aria-label="Barra">
-          <p className={s.hint}>{host.t('Pon cada número en su sitio: toca el número y luego la parte, o arrástralo.')}</p>
-          {Array.from({ length: ex.rows }, (_, r) => {
-            const row = rows[r]
-            const total = row.find((x) => x.b.kind === 'total')
-            return (
-              <div key={r} className={s.row}>
-                {total && renderSlot(total.b, total.i, row)}
-                <div className={s.track}>
-                  {row.filter((x) => x.b.kind === 'count').map((x) => renderSlot(x.b, x.i, row))}
-                  {row.filter((x) => x.b.kind === 'segment').map((x) => renderSlot(x.b, x.i, row))}
-                </div>
-              </div>
-            )
-          })}
-          <div className={s.chips} role="group" aria-label="Números de la historia">
-            {chipsFree.length === 0 && <span className={s.done}>{host.t('¡Todos colocados!')}</span>}
-            {chipsFree.map((c) => (
-              <button
-                key={c.slot}
-                type="button"
-                className={clsx(s.chip, sel === c.slot && s.chipOn, dragging === c.slot && s.chipDrag)}
-                aria-pressed={sel === c.slot}
-                aria-label={`Número ${c.value}`}
-                onPointerDown={(e) => onChipDown(e, c.slot)}
-                onClick={() => onChipClick(c.slot)}
-              >
-                {c.value}
-              </button>
-            ))}
+  const barDrawing = (interactive: boolean) => (
+    <section className={clsx(s.barCard, !interactive && s.barStill)} aria-label="Barra">
+      {Array.from({ length: ex.rows }, (_, r) => {
+        const row = rows[r]
+        const total = row.find((x) => x.b.kind === 'total')
+        return (
+          <div key={r} className={s.row}>
+            {total && renderSlot(total.b, total.i, row)}
+            <div className={s.track}>
+              {row.filter((x) => x.b.kind === 'count').map((x) => renderSlot(x.b, x.i, row))}
+              {row.filter((x) => x.b.kind === 'segment').map((x) => renderSlot(x.b, x.i, row))}
+            </div>
           </div>
-        </section>
+        )
+      })}
+      {interactive && (
+        <div className={s.chips} role="group" aria-label="Números de la historia">
+          {chipsFree.length === 0 && <span className={s.done}>{host.t('¡Todos colocados!')}</span>}
+          {chipsFree.map((c) => (
+            <button
+              key={c.slot}
+              type="button"
+              className={clsx(s.chip, sel === c.slot && s.chipOn, dragging === c.slot && s.chipDrag)}
+              aria-pressed={sel === c.slot}
+              aria-label={`Número ${c.value}`}
+              onPointerDown={(e) => onChipDown(e, c.slot)}
+              onClick={() => onChipClick(c.slot)}
+            >
+              {c.value}
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  )
+
+  return (
+    <ExerciseLayout
+      workClassName={clsx(s.view, compact && s.compact)}
+      aria-label="Problema con barras"
+      data-screen={String(current)}
+      prompt={text}
+      actions={(
+        <>
+          {screens.length > 1 && (
+            <div className={s.nav}>
+              {screen > 0 && <Button size="md" variant="secondary" onClick={back}>← Atrás</Button>}
+              {!last && <Button size="lg" variant="primary" onClick={next} disabled={!screenDone}>Seguir →</Button>}
+              <span className={s.navCount} aria-label={`Pantalla ${screen + 1} de ${screens.length}`}>{screen + 1} / {screens.length}</span>
+            </div>
+          )}
+          {/* One «Comprobar», on the last screen; before it only the hint (selfChecking hides the check). */}
+          <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} selfChecking={!last} />
+        </>
+      )}
+    >
+      {host.prefs.voice && (
+        <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">🔊 Escuchar</button>
       )}
 
-      {Array.from({ length: steps }, (_, k) => (
-        <div key={k} className={s.step} role="group" aria-label={steps > 1 ? `Paso ${k + 1}` : '¿Qué operación?'}>
-          <p className={s.opsTitle}>{steps > 1 ? host.t(`Paso ${k + 1}: ¿qué operación?`) : host.t('¿Qué hacemos con los números?')}</p>
-          <div className={s.opButtons}>
-            {OPS.map((o) => (
-              <button
-                key={o.op}
-                type="button"
-                className={clsx(s.opBtn, ops[k] === o.op && s.opOn)}
-                onClick={() => pickOp(k, o.op)}
-                aria-pressed={ops[k] === o.op}
-              >
-                <span className={s.opSign} aria-hidden>{o.sign}</span>
-                <span>{o.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className={s.answer}>
-            <span className={s.answerLabel}>{k < steps - 1 ? host.t(k === 0 ? 'Primero:' : 'Después:') : host.t('Respuesta:')}</span>
-            <NumberInput
-              value={res[k]}
-              onChange={(v) => setResult(k, v)}
-              onSubmit={(v) => {
-                const nextRes = res.map((r, i) => (i === k ? v : r))
-                setResult(k, v)
-                if (ops.every((o) => o !== null) && nextRes.every((r) => r !== null) && placedAll) submit(ops, nextRes)
-              }}
-              maxDigits={4}
-              size="lg"
-              status={status}
-              ariaLabel={steps > 1 && k < steps - 1 ? `Resultado del paso ${k + 1}` : 'Respuesta'}
-              placeholder="?"
-              autoFocus={k === 0}
-            />
-            <span className={s.unit}>{k === steps - 1 ? ex.unit : ''}</span>
-          </div>
-        </div>
-      ))}
+      {current === 'place' && (
+        <>
+          <p className={s.guideStep} data-guide="">{host.t(guideText(1, 'place', 'op'))}</p>
+          {barDrawing(true)}
+        </>
+      )}
 
-      {!compact && <p className={s.guide}>{guided ? host.t('Primero piensa qué pasa en la historia, luego dibuja.') : ''}</p>}
+      {typeof current === 'number' && (() => {
+        const k = current
+        return (
+          <div className={s.step} role="group" aria-label={steps > 1 ? `Paso ${k + 1}` : '¿Qué operación?'}>
+            {ex.withBar && barDrawing(false)}
+            <p className={s.guideStep} data-guide="">{host.t(guideText(base + k * 2, k, 'op'))}</p>
+            <div className={s.opButtons}>
+              {OPS.map((o) => (
+                <button
+                  key={o.op}
+                  type="button"
+                  className={clsx(s.opBtn, ops[k] === o.op && s.opOn)}
+                  onClick={() => pickOp(k, o.op)}
+                  aria-pressed={ops[k] === o.op}
+                >
+                  <span className={s.opSign} aria-hidden>{o.sign}</span>
+                  <span>{o.label}</span>
+                </button>
+              ))}
+            </div>
+            {ops[k] !== null && (
+              <>
+                <p className={s.guideStep} data-guide="">{host.t(guideText(base + k * 2, k, 'result'))}</p>
+                <div className={s.answer}>
+                  <span className={s.answerLabel}>{k < steps - 1 ? host.t(k === 0 ? 'Primero:' : 'Después:') : host.t('Respuesta:')}</span>
+                  <NumberInput
+                    value={res[k]}
+                    onChange={(v) => setResult(k, v)}
+                    onSubmit={(v) => {
+                      const nextRes = res.map((r, i) => (i === k ? v : r))
+                      setResult(k, v)
+                      if (!last) { if (ops[k] !== null && v !== null) setScreen((n) => n + 1); return }
+                      if (ops.every((o) => o !== null) && nextRes.every((r) => r !== null) && placedAll) submit(ops, nextRes)
+                    }}
+                    maxDigits={4}
+                    size="lg"
+                    status={status}
+                    ariaLabel={steps > 1 && k < steps - 1 ? `Resultado del paso ${k + 1}` : 'Respuesta'}
+                    placeholder="?"
+                    checkButton={false}
+                    autoFocus
+                  />
+                  <span className={s.unit}>{k === steps - 1 ? ex.unit : ''}</span>
+                </div>
+              </>
+            )}
+          </div>
+        )
+      })()}
 
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />
-    </section>
+      {!compact && guided && <p className={s.guide}>{host.t('Primero piensa qué pasa en la historia, luego dibuja.')}</p>}
+    </ExerciseLayout>
   )
 }
