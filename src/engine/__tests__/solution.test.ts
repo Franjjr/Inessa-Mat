@@ -14,7 +14,7 @@ const MATH_SKILLS = [...new Set([...availableSkills(GRADE3_SYLLABUS), ...availab
   .sort()
 
 /** Numbers as tokens, with thousands written together («3 000» → 3000) and the decimal comma kept. */
-const numbersIn = (text: string) => (text.replace(/(\d)[   ](?=\d{3}(?!\d))/g, '$1').match(/\d+(?:,\d+)?/g) ?? [])
+const numbersIn = (text: string): string[] => [...(text.replace(/(\d)[ \u00a0\u202f](?=\d{3}(?!\d))/g, '$1').match(/\d+(?:,\d+)?/g) ?? [])]
 
 /** The answer holds the corrector's expected answer: its numbers (the column of «encuentra el error» is the column's name in
     the solution, and «resto 0» is «no sobra nada»), or its words when it has no number. */
