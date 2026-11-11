@@ -74,7 +74,7 @@ export const w6 = world({
       title: 'Carrera contra tu récord',
       instructions: 'Solo compites contra ti. ¡Intenta mejorar tu tiempo y tus aciertos!',
       selector: { kinds: ['fact-mul'], tables: [6, 7, 8], factorRange: [2, 9] },
-      count: 20,
+      count: 12,
     }),
     activityNode('garden-fractions', {
       kind: 'exercises',

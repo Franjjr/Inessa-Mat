@@ -4,6 +4,7 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import type { ActivityProps, ArrayExercise, ExerciseOutcome } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector, BUILD_SKIP_AFTER } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import { sfx } from '@/audio'
 import ArrayView from '../views/ArrayView'
@@ -14,7 +15,7 @@ import s from './array.module.css'
 export default function ArrayActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 6, { rng: host.rng, mastery: host.mastery })
+    () => generate(adaptiveSelector(config.selector), config.count ?? 6, { rng: host.rng, mastery: host.mastery })
       .filter((e): e is ArrayExercise => e.kind === 'array'),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -27,7 +28,7 @@ export default function ArrayActivity({ config, onDone, onExit }: ActivityProps)
   const mirror = config.params?.mirror !== false
   return (
     <OpsShell title={config.title} index={run.index} total={run.total} onExit={onExit}>
-      <BuildArray key={`${ex.id}-${run.index}`} ex={ex} mirror={mirror} onAnswered={run.record} />
+      <BuildArray key={`${ex.id}-${run.index}`} ex={ex} mirror={mirror} onAnswered={run.record} skippable={run.correct >= BUILD_SKIP_AFTER} />
     </OpsShell>
   )
 }
@@ -36,9 +37,11 @@ interface BuildProps {
   ex: ArrayExercise
   mirror: boolean
   onAnswered: (outcome: ExerciseOutcome) => void
+  /** After several right rounds the child may skip building the rectangle and go straight to the question. */
+  skippable: boolean
 }
 
-function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
+function BuildArray({ ex, mirror, onAnswered, skippable }: BuildProps) {
   const host = useActivityHost()
   const total = ex.rows * ex.cols
   const [filled, setFilled] = useState<boolean[]>(() => Array.from({ length: total }, () => false))
@@ -78,6 +81,11 @@ function BuildArray({ ex, mirror, onAnswered }: BuildProps) {
       <button type="button" className={s.go} disabled={!done} onClick={() => setBuilt(true)}>
         {done ? host.t('¡Ya está! ¿Cuántos hay?') : host.t('Llena todos los huecos')}
       </button>
+      {skippable && !done && (
+        <button type="button" className={s.skip} onClick={() => setBuilt(true)}>
+          {host.t('Ya lo sé, ¿cuántos hay?')}
+        </button>
+      )}
     </section>
   )
 }

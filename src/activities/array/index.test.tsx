@@ -12,6 +12,13 @@ const config: ActivityConfig = {
   params: { mirror: true },
 }
 
+describe('ArrayActivity building step', () => {
+  it('cannot be skipped before several right rounds', () => {
+    render(<ArrayActivity config={{ ...config, count: 4 }} onDone={() => {}} onExit={() => {}} />)
+    expect(screen.queryByRole('button', { name: 'Ya lo sé, ¿cuántos hay?' })).toBeNull()
+  })
+})
+
 describe('ArrayActivity build slots', () => {
   it('names every empty slot by its row and column, not by a generic label', async () => {
     const user = userEvent.setup()

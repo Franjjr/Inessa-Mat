@@ -44,6 +44,13 @@
   stroke: var(--c-gold);
 }
 
+/* The product of a fact the child did not reach: shown, but not earned. */
+.slotRevealed {
+  fill: var(--c-surface-2);
+  stroke: var(--c-ink-soft);
+  stroke-dasharray: 6 4;
+}
+
 .num {
   font-family: var(--font-display);
   font-weight: 600;

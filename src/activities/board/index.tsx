@@ -1,7 +1,8 @@
 /* Activity "board": Carrera al Castillo. The child rolls the die and answers one fact. A right answer walks the number
    of squares rolled; a wrong one keeps the child where it is. The opponent (Lumi by default) walks one square per turn.
    Special squares (params.specials) send the walker forward or back. The race ends at the castle, when the opponent
-   gets there first, or when the questions run out. */
+   gets there first, or when the questions run out. A wrong answer brings its question back 2–4 turns later
+   (shared/requeue.ts). Re-asks move the walker but are not reported to mastery nor counted in the stars. */
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ActivityProps, CharacterId, Exercise, ExerciseOutcome } from '@/types'
 import { generate, starsFor } from '@/engine'
@@ -11,6 +12,8 @@ import { Character } from '@/art'
 import { sfx } from '@/audio'
 import { celebrate } from '@/fx'
 import { Button } from '@/ui'
+import { adaptiveSelector } from '../facts/shared/items'
+import { requeueWrong, startQueue } from '../shared/requeue'
 import { NoRounds, OpsShell } from '../groups/OpsShell'
 import s from './board.module.css'
 
@@ -38,7 +41,7 @@ export default function BoardActivity({ config, onDone, onExit }: ActivityProps)
   const rawOpponent = config.params?.opponent
   const opponent: Opponent = OPPONENTS.find((id) => id === rawOpponent) ?? 'lumi'
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 12, { rng: host.rng, mastery: host.mastery }),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 12, { rng: host.rng, mastery: host.mastery }),
     // The questions of one race are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],
@@ -81,6 +84,8 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
   const [die, setDie] = useState<number | null>(null)
   const [rolling, setRolling] = useState(false)
   const [qIdx, setQIdx] = useState(0)
+  // Planned questions plus the re-asks of wrong answers: the queue is the order the questions come in.
+  const [run, setRun] = useState(() => startQueue(exercises))
   const [answered, setAnswered] = useState(0)
   const [correct, setCorrect] = useState(0)
   const [message, setMessage] = useState<string | null>(null)
@@ -125,14 +130,14 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
       setOppPos(Math.min(squares, nextOpp))
       if (pos >= squares) return endRace(true)
       if (nextOpp >= squares) return endRace(false)
-      if (qIdx + 1 >= exercises.length) return endRace(false)
+      if (qIdx + 1 >= run.slots.length) return endRace(false)
       setQIdx((i) => i + 1)
       setDie(null)
       setMessage(null)
       setPhase('roll')
     }, TURN_END_MS)
     return () => clearTimeout(t)
-  }, [phase, oppPos, pos, qIdx, squares, exercises.length])
+  }, [phase, oppPos, pos, qIdx, squares, run.slots.length])
 
   const roll = () => {
     if (phase !== 'roll' || rolling) return
@@ -146,27 +151,36 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
     }, ROLL_MS)
   }
 
-  const exercise = exercises[qIdx]
+  const slot = run.slots[qIdx]
+  const exercise = slot?.item
   const onAnswered = (outcome: ExerciseOutcome) => {
-    if (!exercise) return
-    host.reportAttempt({
-      exercise,
-      check: outcome.check,
-      ms: outcome.ms,
-      inputMode: outcome.inputMode,
-      hintsUsed: outcome.hintsUsed,
-      recognitionFixes: outcome.recognitionFixes,
-    })
+    if (!exercise || !slot) return
+    // A re-ask is practice: it is not reported again and does not count in the answers or the stars.
+    if (!slot.retry) {
+      host.reportAttempt({
+        exercise,
+        check: outcome.check,
+        ms: outcome.ms,
+        inputMode: outcome.inputMode,
+        hintsUsed: outcome.hintsUsed,
+        recognitionFixes: outcome.recognitionFixes,
+      })
+      setAnswered((n) => n + 1)
+    }
     host.react(outcome.check.correct ? 'correct' : 'wrong', { errorType: outcome.check.errorType })
-    setAnswered((n) => n + 1)
+    const requeued = outcome.check.correct || slot.retry ? null : requeueWrong(run, qIdx)
+    if (requeued) setRun(requeued)
     if (outcome.check.correct) {
-      setCorrect((n) => n + 1)
+      if (!slot.retry) setCorrect((n) => n + 1)
       const steps = die ?? 1
       setMessage(host.t(`¡Bien! Avanzas ${steps} ${steps === 1 ? 'casilla' : 'casillas'}.`))
       setGoal(Math.min(squares, pos + steps))
       setPhase('walking')
     } else {
-      setMessage(host.t('Esta vez no avanzas. ¡Mira el truco y prueba en el siguiente turno!'))
+      // The race can end (castle or opponent) before the re-ask comes up, so the text says it may come back.
+      setMessage(host.t(requeued
+        ? 'Esta vez no avanzas. Esta pregunta puede volver a salir más adelante.'
+        : 'Esta vez no avanzas. ¡Sigue con la siguiente pregunta!'))
       setPhase('turnEnd')
     }
   }
@@ -196,7 +210,7 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
 
   if (phase === 'done') {
     return (
-      <OpsShell title={title} index={qIdx + 1} total={exercises.length} onExit={onExit} className={s.shell}>
+      <OpsShell title={title} index={qIdx + 1} total={run.slots.length} onExit={onExit} className={s.shell}>
         <section className={s.end} aria-label="Fin de la carrera">
           <div className={s.endCard}>
             <span className={s.endIcon} aria-hidden>{won ? '🏰' : '🎲'}</span>
@@ -211,7 +225,7 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
   }
 
   return (
-    <OpsShell title={title} index={qIdx} total={exercises.length} onExit={onExit} className={s.shell}>
+    <OpsShell title={title} index={qIdx} total={run.slots.length} onExit={onExit} className={s.shell}>
       <section className={s.race} aria-label="Carrera al castillo">
         <div className={s.track} style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}>
           {Array.from({ length: squares }, (_, i) => i + 1).map((n) => {

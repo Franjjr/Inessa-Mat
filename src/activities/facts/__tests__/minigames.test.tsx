@@ -355,14 +355,15 @@ describe('bubbles', () => {
     expect(onDone.mock.calls[0][0]).toMatchObject({ total: 2, correct: 1 })
   })
 
-  it('when the timer runs out the fact is logged as wrong and the run moves on (no freeze)', async () => {
-    const [first] = itemsOf(config, 2, ['fact-mul']) as Array<Exercise & { answer: number }>
-    const host = mockHost({ timed: true })
+  it('when the timer runs out on a known fact nothing is logged as wrong, and the run moves on (no freeze)', async () => {
+    // Every fact is known (box 3): only known facts have a countdown (see bubbles.test.tsx for the unknown ones).
+    const known = new Proxy({}, { get: () => ({ box: 3, attempts: 5, correct: 5, streak: 3, avgMs: 900, lastSeenAt: null, dueAt: null }) })
+    const host = { ...mockHost({ timed: true }), mastery: known } as never as ReturnType<typeof mockHost>
     renderIn(host, <BubblesActivity config={config} onDone={vi.fn()} />)
     await pass(13000)
-    expect(host.reportAttempt).toHaveBeenCalledTimes(1)
-    expect(host.reportAttempt.mock.calls[0][0].exercise.answer).toBe(first.answer)
-    expect(screen.getByRole('status').textContent).toContain(`${first.answer}`)
+    // A timeout is not a wrong fact: the child is not told that they do not know it.
+    expect(host.reportAttempt).not.toHaveBeenCalled()
+    expect(screen.getByRole('status').textContent).toContain('La respuesta era')
     await pass(1500)
     // The timed-out question comes back later in the run: the run has three questions, two planned.
     expect(screen.getByText('2 / 3')).toBeTruthy()
