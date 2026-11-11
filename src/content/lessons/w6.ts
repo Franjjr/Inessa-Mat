@@ -2,18 +2,19 @@
 import { lesson, show, tryIt } from './dsl'
 
 export const w6Seven = lesson('w6-seven', 'La tabla del 7: ¡ya sabes casi toda!', [
-  show('known-facts', { table: 7 }, '¿La tabla del 7 da miedo? Mira bien… ¡ya te sabes casi toda!'),
-  show('known-facts', { table: 7 }, '7 × 6 es el espejo de 6 × 7, de la Cueva. Y 7 × 8 es del Lago.'),
-  show('known-facts', { table: 7 }, 'Solo hay 2 nuevas: 7 × 3 y 7 × 7. La del 9 la veremos en su tabla.'),
-  show('groups', { groups: 3, perGroup: 7, emoji: '📅' }, '7 × 3: tres semanas de 7 días son 21 días.', 'fairy'),
-  show('square-rhyme', undefined, '«Siete por siete, cuarenta y nueve… ¡y el arcoíris llueve!»', 'fairy'),
+  show('known-facts', { table: 7, map: 1 }, '¿La tabla del 7 da miedo? Mira bien: las que tienen la marca verde ya las sabes.'),
+  show('known-facts', { table: 7, map: 1 }, '7 × 6 da lo mismo que 6 × 7, de la Cueva: 42. Y 7 × 8 da lo mismo que 8 × 7, del Lago: 56. Si das la vuelta a una multiplicación, el resultado no cambia.'),
+  show('known-facts', { table: 7, map: 1 }, 'Solo quedan 3 nuevas: 7 × 3, 7 × 7 y 7 × 9. Hoy aprendes 7 × 3 y 7 × 7. La de 7 × 9 tiene su propio truco en la lección siguiente.'),
+  show('groups', { groups: 3, perGroup: 7, emoji: '📅' }, 'Una semana tiene 7 días. 3 semanas son 3 × 7: 7 + 7 + 7 = 21 días. Y con el espejo, 7 × 3 también son 21.', 'fairy'),
+  show('square-rhyme', undefined, '7 × 7 es un cuadrado de 7 filas de 7 puntos: 49. Para acordarte: «Siete por siete, cuarenta y nueve, ¡y el arcoíris llueve!»', 'fairy'),
   tryIt('square-rhyme', undefined, '¡Te toca! Usa la semana o la rima.', { kinds: ['fact-mul'], skills: ['mul:3x7', 'mul:7x7'] }),
 ])
 
 export const w6Nine = lesson('w6-nine', 'El truco del 9', [
-  show('nine-trick', { a: 7 }, 'El truco del 9. Para 7 × 9, el resultado empieza por uno menos: el 6.'),
-  show('nine-trick', { a: 7 }, 'Y las dos cifras suman 9: 6 + 3 = 9. ¡7 × 9 = 63!'),
-  show('nine-trick', { a: 7 }, 'Otro camino: 7 × 10 − 7 = 70 − 7 = 63. ¡Elige el que más te guste!'),
-  tryIt('nine-trick', { a: 6 }, '¡Te toca! Uno menos… y que sumen 9.', { kinds: ['fact-mul'], tables: [9], factorRange: [3, 9] }),
-  show('known-facts', { table: 7 }, '¿Lo ves? La tabla del 7 no era un monstruo. ¡Ya la habías conquistado casi entera!'),
+  show('nine-trick', { a: 7 }, 'El truco del 9. Vamos a hacer 7 × 9. Primer paso: piensa en el número que va justo antes del 7. Es el 6. Esa es la primera cifra.'),
+  show('nine-trick', { a: 7 }, 'Segundo paso: ¿qué número sumado a 6 da 9? El 3, porque 6 + 3 = 9. Esa es la segunda cifra. 7 × 9 = 63.'),
+  show('nine-trick', { a: 7 }, 'Otro camino: 10 veces 7 son 70. Pero queremos 9 veces, una menos, así que quitamos un 7: 70 − 7 = 63.'),
+  show('nine-trick', { a: 4 }, 'Otro ejemplo, 4 × 9. Antes del 4 va el 3. ¿Qué número sumado a 3 da 9? El 6. Así que 4 × 9 = 36.'),
+  tryIt('nine-trick', { a: 6 }, '¡Te toca! Primero el número de antes. Después, la cifra que falta para llegar a 9.', { kinds: ['fact-mul'], tables: [9], factorRange: [3, 9] }),
+  show('nine-trick', { a: 8 }, '¡Ya conoces el truco del 9! Para comprobar, suma las dos cifras del resultado: siempre dan 9.'),
 ])

@@ -41,7 +41,6 @@ export const w8 = world({
       params: { showTrick: true },
     }),
     lessonNode('lesson-galera', 'La casita de la división', 'w8-galera'),
-    lessonNode('lesson-div-ways', 'Cuatro caminos para dividir', 'w8-div-ways'),
     activityNode('division', {
       kind: 'division',
       title: 'Divisiones exactas y con resto',
@@ -69,6 +68,7 @@ export const w8 = world({
       selector: { skills: ['frac:read:6', 'frac:read:8', 'frac:shade:5', 'frac:name:10', 'frac:read:12'] },
       count: 5,
     }),
+    lessonNode('lesson-div-ways', 'Dos formas de hacer la galera', 'w8-div-ways'),
     guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),
   ],
 })

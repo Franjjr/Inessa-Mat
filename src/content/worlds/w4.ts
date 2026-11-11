@@ -1,5 +1,6 @@
 /* World 4 — La Montaña de las Restas: column subtraction of 3 and 4 digits, borrowing, the zero trap and the
-   magic check (+ a review of the 6 table). */
+   magic check (+ a review of the 6 table). The lesson of the two ways of subtracting at school is the last stop before
+   the guardian: it only shows the two ways, and the child can skip it. */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w4 = world({
@@ -17,21 +18,20 @@ export const w4 = world({
   nodes: [
     storyNode('arrival', 'Un bloque de hielo', 'w4-arrival'),
     lessonNode('lesson-borrow', 'Restar en la montaña', 'w4-borrow'),
-    lessonNode('lesson-four-ways', 'Cuatro caminos para restar', 'w4-four-ways'),
     lessonNode('lesson-bars', 'Dibujar la historia', 'w4-bars'),
     activityNode('column-3d', {
       kind: 'column',
       title: 'Restas de 3 cifras',
-      instructions: 'Si arriba hay un número más pequeño, ¡pide ayuda a la vecina!',
+      instructions: 'Resta en columna, empezando por las unidades.',
       selector: { kinds: ['column-sub'], digits: 3, regroup: 'any', zeros: false },
       count: 5,
       params: { guided: true },
     }),
-    lessonNode('lesson-zero', 'La trampa del cero', 'w4-zero'),
+    lessonNode('lesson-zero', 'Aprende: la trampa del cero', 'w4-zero'),
     activityNode('column-zero', {
       kind: 'column',
-      title: 'La trampa del cero',
-      instructions: 'Si la vecina es un 0, ¡pide ayuda a la casa siguiente!',
+      title: 'Practica: restas con ceros',
+      instructions: 'Resta en columna, empezando por las unidades. Cuidado con los ceros.',
       selector: { kinds: ['column-sub'], digits: 3, zeros: true },
       count: 4,
     }),
@@ -65,6 +65,7 @@ export const w4 = world({
       selector: { skills: ['money:convert', 'money:pay', 'money:change'] },
       count: 4,
     }),
+    lessonNode('lesson-four-ways', 'Dos formas de restar del cole', 'w4-four-ways'),
     guardianNode('El desafío de la osa Nieve', 'w4-guardian'),
   ],
 })
