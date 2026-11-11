@@ -13,7 +13,7 @@ import { checkCheckCalc, checkErrorHunt } from './bugs'
 import { climbProducts, divisionParts, type PartsStep } from './divParts'
 import { digitAt, digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
-import { FEEDBACK, praise, praiseFact } from './feedback'
+import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
 import { lineStops, partsResults, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
@@ -297,6 +297,8 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
 const SUB_STEP_FEEDBACK = {
   partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
   partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
+  partsAnswerEarly: (early: number, answer: number, last: number) =>
+    `¡Ya tenías el resultado en el paso ${early}: ${answer}! El último número que escribes es la respuesta: revisa el paso ${last}.`,
   partsCorrectShort: (answer: number) => `¡Muy bien, ${answer}! Has llegado al resultado.`,
   lineWrong: (step: number, after: number, before: number) =>
     `¡Casi! El salto ${step} tiene que caer después de ${after} y antes de ${before}: cuenta hacia delante, sin pasarte.`,
@@ -328,6 +330,13 @@ function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckR
     const route = partsResults(ex.minuend, ex.subtrahend)
     const book = boxes.length === route.length && boxes.every((v, k) => v === route[k])
     return { correct: true, given, expected, feedback: book ? SUB_STEP_FEEDBACK.partsCorrect : SUB_STEP_FEEDBACK.partsCorrectShort(ex.answer) }
+  }
+  // The result is already in an earlier step (all of 127 taken at once) and a later box spoils it: name the last box,
+  // not the step that holds the right number.
+  const early = boxes.indexOf(ex.answer)
+  if (early >= 0) {
+    const last = boxes.reduce<number>((at, v, k) => (v === null ? at : k), -1)
+    return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.partsAnswerEarly(early + 1, ex.answer, last + 1) }
   }
   let from = ex.minuend
   for (let k = 0; k < parts.length; k++) {
@@ -492,6 +501,11 @@ const DIV_METHOD_FEEDBACK = {
     `¡Casi! Revisa el paso ${step}: ¿cuántas veces cabe el ${divisor} en ${partial}?`,
   partsIncomplete: 'Escribe lo que sale en cada parte y después el total.',
   partsTotal: 'Ya tienes bien las partes. Ahora súmalas: eso es el cociente (lo que le toca a cada uno).',
+  /** A part written in its own unit (2 for 20) and then added as it is: say what it is worth, then the sum to do. */
+  partsInUnit: (written: number, place: string, value: number, sum: number[]) =>
+    `Tu ${written} son ${written} ${place}, es decir, ${value}. Ahora suma: ${sum.join(' + ')} = ?`,
+  climbQuotient: (dividend: number) =>
+    `Revisa el cociente (lo que le toca a cada uno): cuenta las filas que no pasan de ${dividend}.`,
   climbWrong: (row: number, divisor: number) => `¡Casi! Revisa la fila ${row}: ¿cuánto es ${divisor} por ${row}?`,
   climbIncomplete: 'Sigue subiendo: escribe la siguiente fila hasta pasarte del dividendo (el número que repartes).',
   climbOver: 'Te has pasado: para en la primera fila que llega o pasa del dividendo (el número que repartes).',
@@ -532,6 +546,15 @@ function checkDivisionParts(ex: DivisionExercise, answer: Extract<Answer, { type
     }
   }
   if (written.some((v) => v === null)) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.partsIncomplete }
+  // Every part is right, but one was written in its own unit (2 for 20): adding the digits as they are gives a wrong
+  // quotient, so say what that part is worth and the sum to do.
+  const inUnit = written.findIndex((v, k) => v !== steps[k].quotient)
+  if (inUnit >= 0) {
+    const value = steps[inUnit].quotient
+    const place = columnName(String(value / (written[inUnit] as number)).length - 1)
+    const feedback = DIV_METHOD_FEEDBACK.partsInUnit(written[inUnit] as number, place, value, steps.map((s) => s.quotient))
+    return q === null ? { ...incomplete(given, expected), feedback } : { correct: false, given, expected, errorType: 'other', feedback }
+  }
   if (q === null) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.partsTotal }
   return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
 }
@@ -566,12 +589,15 @@ function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb
     if (rest === null) return incomplete(given, expected)
     if (rest === ex.remainder) return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
   }
-  if (filled.length === 0) return incomplete('?', expected)
+  const quotientWrong = isNum(sent) && sent !== ex.quotient
+  if (filled.length === 0) return quotientWrong ? { correct: false, given: String(sent), expected, errorType: 'fact', feedback: DIV_METHOD_FEEDBACK.climbQuotient(ex.dividend) } : incomplete('?', expected)
   for (const k of filled) {
     if (written[k] !== ex.divisor * (k + 1)) {
       return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.climbWrong(k + 1, ex.divisor) }
     }
   }
+  // A quotient sent by the view that is wrong, with every row right: the quotient is what to look at again.
+  if (quotientWrong) return { correct: false, given, expected, errorType: 'fact', feedback: DIV_METHOD_FEEDBACK.climbQuotient(ex.dividend) }
   if (filled[filled.length - 1] > stop) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.climbOver }
   if (q !== ex.quotient) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.climbIncomplete }
   if (rest === null) return incomplete(given, expected)

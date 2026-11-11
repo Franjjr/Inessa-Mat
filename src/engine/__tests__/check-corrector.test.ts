@@ -133,7 +133,7 @@ describe('resta: la vecina que presta se nombra con lo que presta (P4-10)', () =
     expect(r.errorType).toBe('borrow-forgot')
     expect(r.feedback).toContain('centena')
     expect(r.feedback).not.toContain('te presta una decena')
-    expect(r.feedback).toBe('La vecina de las centenas te presta 1 centena, que son 10 decenas: tú ganas 10 y ella se queda con una menos. ¡Táchala y réstale 1!')
+    expect(r.feedback).toBe('La vecina de las centenas te presta 1 centena, que son 10 decenas: tú ganas 10 decenas y ella se queda con 1 menos. ¡Táchala y réstale 1!')
   })
   it('la decena que presta a las unidades usa el mensaje sencillo', () => {
     expect(check(makeColumnSub(734, 459), dig(385)).feedback).toBe(FEEDBACK.borrowForgot)

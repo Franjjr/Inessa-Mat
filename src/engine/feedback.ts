@@ -117,7 +117,7 @@ export const FEEDBACK = {
   /** The lender column is known (1 = decenas…): it lends one of its own units, worth 10 of the column on its right. */
   borrowForgotAt: (lender: number) =>
     lender >= 1 && lender < COLUMN_SINGULAR.length
-      ? `La vecina de ${columnWithArticle(lender)} te presta 1 ${COLUMN_SINGULAR[lender]}, que son 10 ${columnName(lender - 1)}: tú ganas 10 y ella se queda con una menos. ¡Táchala y réstale 1!`
+      ? `La vecina de ${columnWithArticle(lender)} te presta 1 ${COLUMN_SINGULAR[lender]}, que son 10 ${columnName(lender - 1)}: tú ganas 10 ${columnName(lender - 1)} y ella se queda con 1 menos. ¡Táchala y réstale 1!`
       : 'Si la vecina te presta, ella se queda con 1 menos. ¡Táchala y réstale 1!',
   /** A column that had to borrow and was not done (the neighbour is right): the column and its own subtraction. */
   borrowColumn: (col: number, top: number, bottom: number) =>
