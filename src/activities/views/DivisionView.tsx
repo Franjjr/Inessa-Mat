@@ -1,19 +1,20 @@
-/* Exercise view "division": the Spanish "galera" and, by the child's method (ChildSettings.divMethod), the other
-   written methods of the same exercise: «la galera sin restas» (only the quotient digits and the final remainder),
-   «repartir por partes» (DivisionPartsView) and «multiplicar hacia arriba» (DivisionClimbView).
+/* Exercise view "division": the Spanish "galera", in the school way the grown-up chose (ChildSettings.divMethod):
+   «la galera con restas» (the default) or «la galera sin restas» (only the quotient digits and what is left over).
+   Old data may still name a retired method (repartir por partes, multiplicar hacia arriba): it is shown as the galera.
    The galera: the dividend on the left, the divisor inside the bracket, the quotient under it, and the subtractions under
    the dividend. Steps open one by one: each step brings a digit down, writes its quotient digit (top right) and its
-   remainder (under the digit just used). The engine checks the final quotient and remainder; step marks are only
-   gentle feedback. */
+   remainder (under the digit just used). The product of a step is written only after the child writes its quotient
+   digit («7 × 9 = 63»), never before. The engine checks the final quotient and remainder: the remainders of the
+   middle steps help, but the child may check without them; step marks are only gentle feedback. */
 import { useMemo, useState, type ReactNode } from 'react'
 import type { DivMethod, DivisionExercise, ExerciseViewProps } from '@/types'
+import { hintsFor } from '@/engine'
 import { CellGroup, DigitCell } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { galeraSteps, quotientOf, remainderOf, type GaleraStep } from '../division/galera'
-import { DivisionClimbView, DivisionPartsView } from './DivisionMethods'
 import s from './DivisionView.module.css'
 
 export interface DivisionViewProps extends ExerciseViewProps {
@@ -21,25 +22,15 @@ export interface DivisionViewProps extends ExerciseViewProps {
   proof?: boolean
 }
 
-/** The method the view can really show: the climb needs a one-digit quotient, otherwise the galera is shown. */
-export function effectiveDivMethod(method: DivMethod | undefined, ex: DivisionExercise): DivMethod {
-  // Splitting into parts is for one-digit divisors: with two digits the galera is shown.
-  if (method === 'div-parts') return ex.divisor < 10 ? 'div-parts' : 'galera'
-  if (method === 'climb') return ex.quotient < 10 ? 'climb' : 'galera'
-  if (method === 'galera-short') return 'galera-short'
-  return 'galera'
+/** The method the view shows: always a galera, with or without the subtractions. A retired method becomes the galera. */
+export function effectiveDivMethod(method: DivMethod | undefined): DivMethod {
+  return method === 'galera-short' ? 'galera-short' : 'galera'
 }
 
 export default function DivisionView(props: DivisionViewProps) {
   const { exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, proof, divMethod } = props
   if (exercise.kind !== 'division') return null
-  const method = effectiveDivMethod(divMethod, exercise)
-  if (method === 'div-parts') {
-    return <DivisionPartsView key={exercise.id} exercise={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} />
-  }
-  if (method === 'climb') {
-    return <DivisionClimbView key={exercise.id} exercise={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} />
-  }
+  const method = effectiveDivMethod(divMethod)
   return (
     <GaleraRound
       key={exercise.id}
@@ -69,7 +60,9 @@ interface RoundProps {
 function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, proof, method }: RoundProps) {
   const host = useActivityHost()
   const short = method === 'galera-short'
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints, method })
+  // The hints of the galera the child uses: without subtractions they never ask to «restar» on paper.
+  const hints = useMemo(() => hintsFor(ex, undefined, { divMethod: method }), [ex, method])
+  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints, method, hints })
   const steps = useMemo(() => galeraSteps(ex.dividend, ex.divisor), [ex.dividend, ex.divisor])
   const digits = String(ex.dividend).split('')
   const n = digits.length
@@ -88,10 +81,14 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   // Without subtractions, only the last step writes a remainder (the one left over at the end).
   const needsRem = (j: number) => !short || j === k - 1
   const filled = (j: number) => qs[j] !== null && (!needsRem(j) || rs[j] !== null)
-  // Step j is open when it is the first one, or the previous step is filled.
-  const open = (j: number) => j === 0 || filled(j - 1)
-  const complete = steps.every((_, j) => filled(j))
+  // Step j is open when it is the first one, or the quotient digit of the step before is written: the remainders of
+  // the middle steps help to know what to bring down, but they never block the next step.
+  const open = (j: number) => j === 0 || qs[j - 1] !== null
+  // The answer is the quotient and what is left over at the end: those are enough to check.
+  const complete = qs.every((q) => q !== null) && rs[k - 1] !== null
   const active = steps.findIndex((_, j) => open(j) && !filled(j))
+  // The product the child's quotient digit gives (7 × 9 = 63): written only after the digit, never before.
+  const productOf = (j: number) => (qs[j] === null ? null : ex.divisor * (qs[j] as number))
 
   // The remainder is written like a subtraction: units first, then tens.
   const order = useMemo(
@@ -159,7 +156,9 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     if (!open(j)) return
     const base = 3 + j * rowsPer
     if (!short) {
-      const productDigits = String(st.product).split('')
+      const product = productOf(j)
+      // A product longer than the partial (the digit is too big) is not drawn in the columns: the step line says it.
+      const productDigits = product === null || String(product).length > String(st.partial).length ? [] : String(product).split('')
       const partialLength = String(st.partial).length
       const firstCol = st.endIndex - partialLength + 1 // 0-based column where the partial starts
       const span = { gridColumn: `${firstCol + 1} / ${st.endIndex + 2}` }
@@ -168,7 +167,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
           key={`p${j}`}
           className={s.product}
           role="group"
-          aria-label={`producto ${st.product}`}
+          aria-label={product === null ? `producto del paso ${j + 1}` : `producto del paso ${j + 1}: ${ex.divisor} × ${qs[j]} = ${product}`}
           style={{ ...span, gridRow: base, gridTemplateColumns: `repeat(${partialLength}, var(--galera-col))` }}
         >
           {Array.from({ length: partialLength }, (_, c) => {
@@ -214,8 +213,13 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     const at = j === 0
       ? `¿Cuántas veces cabe el ${ex.divisor} en ${st.partial}?`
       : `Bajamos el ${digits[st.endIndex]}: ¿cuántas veces cabe el ${ex.divisor} en ${st.partial}?`
+    const product = short ? null : productOf(j)
+    // After the digit: its product, as the notebook writes it, and a gentle word when it is more than the number.
+    const times = product === null
+      ? ''
+      : ` ${ex.divisor} × ${qs[j]} = ${product}.${product > st.partial ? ` Es más que ${st.partial}: prueba un número más pequeño.` : ''}`
     const rest = showRemainder && j === k - 1 && flow.result?.correct ? ` Resto: ${st.remainder}.` : ''
-    return host.t(at + rest)
+    return host.t(at + times + rest)
   }
 
   const magic = proof && flow.result?.correct
@@ -227,7 +231,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
       <p className={s.prompt}>
         {host.t(short
           ? `Reparte ${ex.dividend} entre ${ex.divisor}. Escribe solo el cociente y, al final, el resto.`
-          : `Reparte ${ex.dividend} entre ${ex.divisor}. Escribe el cociente y los restos paso a paso.`)}
+          : `Reparte ${ex.dividend} entre ${ex.divisor}. Escribe el cociente (lo que le toca a cada uno) y, en cada paso, lo que sobra. Así sabrás qué cifra bajar.`)}
       </p>
       <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
         <div
