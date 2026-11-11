@@ -1,5 +1,6 @@
 /* The method registry (subtraction, division, tables tricks), its normalisers, the tricks that apply to a fact, the
    place of the new kinds in the daily session and in the placement test. */
+import pedagogy from '../../../docs/PEDAGOGY.md?raw'
 import { describe, expect, it } from 'vitest'
 import type { ChildProfile } from '@/types'
 import { trickUsed } from '@/activities/facts/shared/flow'
@@ -73,6 +74,13 @@ describe('method registry', () => {
     // The sentences end with the right result of their example.
     for (const m of SUB_METHODS) expect(m.notebook).toMatch(/25\.$/)
     for (const m of DIV_METHODS) expect(m.notebook).toMatch(/24\.$/)
+  })
+
+  it('docs/PEDAGOGY.md says one method per operation, chosen by the grown-up', () => {
+    const doc = pedagogy
+    expect(doc).not.toMatch(/el niño elige/i)
+    expect(doc).not.toMatch(/cuatro métodos de resta/i)
+    expect(doc).toContain('Un método por operación, el del colegio del niño, que elige el adulto.')
   })
 
   it('each trick applies to the facts of its table, and the mirror applies to any two different factors', () => {
