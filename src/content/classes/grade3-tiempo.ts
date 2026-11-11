@@ -77,7 +77,7 @@ const relojDigital = clase({
     show('clock', { h: 18, m: 45, digital: 1 }, '18:45 son las siete menos cuarto de la tarde: faltan 15 minutos para las 19:00.'),
     show('clock', { h: 21, m: 10, digital: 1 }, '21:10 son las nueve y diez de la noche. De 21 a 23 también es de la noche.'),
     show('clock', { h: 9, m: 20, digital: 1 }, '09:20 son las nueve y veinte de la mañana. De 6 a 11 es de la mañana.'),
-    show('clock', { h: 3, m: 0, digital: 1 }, '03:00 son las tres de la noche. De 0 a 5 es de la noche y el número no cambia: a esa hora no son las 15:00.'),
+    show('clock', { h: 3, m: 0, digital: 1 }, '03:00 son las tres de la noche. De 1 a 5 es de la noche y el número no cambia: a esa hora no son las 15:00.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'mañana · tarde · noche' }, '¡Te toca! Mira la hora de 24 horas: de 6 a 11 es de la mañana; 12 es del mediodía; de 13 a 20, de la tarde; de 21 a 23 y de 0 a 5, de la noche.', { skills: ['clock:convert:day'] }),
@@ -87,9 +87,9 @@ const relojDigital = clase({
     tryIt('big-text', { text: 'horas de 0 a 23' }, '¡Tu turno! Mira la hora con calma: en el reloj de 24 horas, cuenta las horas desde la medianoche.', { skills: ['clock:convert:day'] }),
     tryIt('big-text', { text: 'mañana · mediodía · tarde · noche' }, '¡Tu turno! Mira primero el momento del día: mañana, mediodía, tarde o noche. Después mira la hora.', { skills: ['clock:convert:day'] }),
     tryIt('big-text', { text: 'hh:mm' }, '¡Tu turno! Une la hora de 24 horas con su frase: mira primero las horas, luego los minutos y el momento del día.', { skills: ['clock:convert:day'] }),
-    tryIt('big-text', { text: 'la tarde y la noche: 12 más' }, '¡Tu turno! Compara la frase con la hora de 24 horas: de 13 a 23, la hora de 24 horas es la de la frase más 12; de 0 a 5, es la misma.', { skills: ['clock:convert:day'] }),
+    tryIt('big-text', { text: 'la tarde y la noche: 12 más' }, '¡Tu turno! Compara la frase con la hora de 24 horas: de 13 a 23, la hora de 24 horas es la de la frase más 12; de 1 a 5, es la misma.', { skills: ['clock:convert:day'] }),
   ],
-  cierre: show('clock', { h: 19, m: 15, digital: 1 }, 'La regla: el reloj digital cuenta de 0 a 23; de 13 a 23 las horas van con 12 más que en la frase, y de 0 a 5 el número no cambia: 19:15 son las siete y cuarto de la tarde.'),
+  cierre: show('clock', { h: 19, m: 15, digital: 1 }, 'La regla: el reloj digital cuenta de 0 a 23; de 13 a 23 las horas van con 12 más que en la frase, y de 1 a 5 el número no cambia. La hora 0 es medianoche: las 12 de la noche. 19:15 son las siete y cuarto de la tarde.'),
 })
 
 /* Duraciones: la duración es lo que pasa del inicio al final; para la hora de llegada, se suma la duración a la de salida. */
