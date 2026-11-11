@@ -2,6 +2,7 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { useActivityHost } from '@/activities'
+import { ISLAND_ID } from '@/content'
 import { createChild, getMastery, listAttempts, listSessions, useActiveChild } from '@/data'
 import type { ActivityHost, Exercise } from '@/types'
 import { flushTimers, useLocalOnlyAuth } from '../host/testing'
@@ -153,5 +154,45 @@ describe('GameHostProvider', () => {
     await screen.findByRole('status')
     // Regression: the bubble and the figures shared a React key, which left orphaned bubbles stacked on screen.
     expect(screen.getAllByRole('status')).toHaveLength(1)
+  })
+
+  it('marks a session on the Isla de Inglés as English (its minutes are not maths)', async () => {
+    const child = await createChild({
+      nickname: 'Island Test', gender: 'f', companion: { species: 'cat', name: 'Kiwi', gender: 'f', colorway: 'default', equipped: [] },
+    })
+    await activate(child.id)
+    const { unmount } = render(
+      <GameHostProvider worldId={ISLAND_ID} nodeId="stop-1" activity="lesson">
+        <span />
+      </GameHostProvider>,
+    )
+    await waitFor(async () => expect((await listSessions(child.id)).length).toBe(1), { timeout: 3000 })
+    expect((await listSessions(child.id))[0].summary?.subject).toBe('english')
+    unmount()
+    await waitFor(async () => expect((await listSessions(child.id))[0].endedAt).toBeTruthy())
+    expect((await listSessions(child.id))[0].summary?.subject).toBe('english')
+  })
+
+  it('a mission run marks its attempts and its session with the mission id', async () => {
+    const child = await createChild({
+      nickname: 'Mission Test', gender: 'm', companion: { species: 'dog', name: 'Rex', gender: 'm', colorway: 'default', equipped: [] },
+    })
+    await activate(child.id)
+    let host: ActivityHost | null = null
+    const { unmount } = render(
+      <GameHostProvider activity="mission" assignmentId="as-7">
+        <Capture onHost={(h) => { host = h }} />
+      </GameHostProvider>,
+    )
+    await waitFor(async () => expect((await listSessions(child.id)).length).toBe(1), { timeout: 3000 })
+    await waitFor(() => expect(host).not.toBeNull())
+    host!.reportAttempt({ exercise, check: { correct: true, given: '42', expected: '42' }, ms: 2000, inputMode: 'keypad', hintsUsed: 0 })
+    await waitFor(async () => expect((await listAttempts(child.id)).length).toBe(1), { timeout: 3000 })
+    expect((await listAttempts(child.id))[0].context).toMatchObject({ activity: 'mission', assignmentId: 'as-7' })
+    unmount()
+    await waitFor(async () => expect((await listSessions(child.id))[0].endedAt).toBeTruthy())
+    const session = (await listSessions(child.id))[0]
+    expect(session.summary).toMatchObject({ assignmentId: 'as-7', attempts: 1, correct: 1 })
+    expect(session.summary?.subject).toBeUndefined()
   })
 })

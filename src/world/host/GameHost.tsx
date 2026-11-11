@@ -6,7 +6,7 @@
    Activities never import this file; they use useActivityHost() from @/activities. */
 import { createContext, useContext, useEffect, useMemo, useRef } from 'react'
 import { ActivityHostProvider } from '@/activities'
-import { FALLBACK_CHILD_NAME, pickPhraseFor, renderTemplate, templateContext } from '@/content'
+import { FALLBACK_CHILD_NAME, ISLAND_ID, pickPhraseFor, renderTemplate, templateContext } from '@/content'
 import type { TemplateContext } from '@/content'
 import { createRng, isChoiceExercise, isCompletionOnly, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, updateMastery } from '@/engine'
 import { getMastery, recordAttempt, saveMastery, startSession, touchSession, endSession, updateChild, useActiveChild } from '@/data'
@@ -92,7 +92,9 @@ function reportError(where: string, e: unknown) {
   if (import.meta.env.DEV) console.warn(`[game-host] ${where}`, e)
 }
 
-export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', children }: GameHostProviderProps) {
+export function GameHostProvider({ worldId, nodeId, activity, subject: subjectProp, assignmentId, children }: GameHostProviderProps) {
+  // The island's stops are English: without its mark, an island session would count as maths minutes.
+  const subject = subjectProp ?? (worldId === ISLAND_ID ? 'english' : 'math')
   const { child } = useActiveChild()
   const childId = child?.id ?? null
 
@@ -162,11 +164,12 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
           starsEarned: 0,
           nodesCompleted: [],
           ...(subject === 'math' ? {} : { subject }),
+          ...(assignmentId ? { assignmentId } : {}),
         }).catch((e) => reportError('endSession', e))
         void touchSession(id, { minutes }).catch(() => undefined)
       }
     }
-  }, [childId, subject])
+  }, [childId, subject, assignmentId])
 
   const host = useMemo<ActivityHost>(() => {
     const ctx = contextOf(child)
@@ -219,6 +222,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
           ...(activity ? { activity } : {}),
           ...(worldId ? {} : { free: true }),
           ...(method ? { method } : {}),
+          ...(assignmentId ? { assignmentId } : {}),
         },
         createdAt: now.toISOString(),
       }
@@ -256,7 +260,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       setPreference,
     }
     // The child's name and genders feed t(); the ids decide persistence and seeds.
-  }, [childId, worldId, nodeId, activity, child?.nickname, child?.gender, child?.companion?.name,
+  }, [childId, worldId, nodeId, activity, assignmentId, child?.nickname, child?.gender, child?.companion?.name,
     child?.companion?.gender, child?.companion?.species, child?.settings?.timedActivities,
     child?.settings?.bigCells, child?.settings?.voice, child?.settings?.handedness, child?.settings?.subMethod, child?.settings?.divMethod, child?.settings?.tableMethod])
 
