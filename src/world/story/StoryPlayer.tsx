@@ -70,7 +70,7 @@ function useFigureSize(): number {
   return Math.round(Math.min(300, Math.max(150, h * 0.34)))
 }
 
-export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps) {
+export default function StoryPlayer({ story, onDone, onSkip, onExit }: StoryPlayerProps) {
   const { child } = useActiveChild()
   const ctx = useMemo(() => contextOf(child), [child])
   const beats = useMemo(() => buildBeats(story), [story])
@@ -91,6 +91,14 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
     if (doneRef.current) return
     doneRef.current = true
     onDone()
+  }
+
+  /** «Saltar» ends the story like its end, unless the host asks for the skip apart (a skipped story gives no star). */
+  const skip = () => {
+    if (doneRef.current) return
+    doneRef.current = true
+    const end = onSkip ?? onDone
+    end()
   }
 
   const speakLine = () => {
@@ -168,7 +176,7 @@ export default function StoryPlayer({ story, onDone, onExit }: StoryPlayerProps)
             <BackButton variant="exit" onClick={onExit} />
           ) : <span />}
           <h1 className={s.title}>{renderTemplate(story.title, ctx)}</h1>
-          <Button variant="ghost" size="sm" className={s.touch} onClick={finish}>Saltar</Button>
+          <Button variant="ghost" size="sm" className={s.touch} onClick={skip}>Saltar</Button>
         </header>
 
         <div

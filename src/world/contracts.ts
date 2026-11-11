@@ -16,7 +16,12 @@ export interface GuardianChallengeProps {
 /** world-meta → src/world/rewards/RewardOverlay.tsx (default export). Shown after any node completes. */
 export interface RewardOverlayProps {
   kind: 'node' | 'crystal' | 'season'
+  /** Stars of this attempt («Esta vez»). */
   stars: number
+  /** The best stars kept for the node («Tu mejor»), when it is known. */
+  bestStars?: number
+  /** True when this attempt raised the best stars of the node. */
+  improved?: boolean
   world: WorldDef
   letter?: string
   /** New stickers / accessories unlocked by this result. */
@@ -28,6 +33,8 @@ export interface RewardOverlayProps {
 export interface StoryPlayerProps {
   story: StoryDef
   onDone: () => void
+  /** «Saltar»: when given, it is called instead of onDone (the story was not read). */
+  onSkip?: () => void
   onExit?: () => void
 }
 

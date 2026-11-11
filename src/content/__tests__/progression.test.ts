@@ -88,13 +88,17 @@ describe('applyNodeResult', () => {
     expect(q).not.toBe(p)
   })
 
-  it('stories and lessons are worth the completion stars', () => {
-    let p = applyNodeResult(initialProgress('kid', T0), 'w1', 'arrival', { stars: 0 }, T0)
+  it('reading a story or a lesson gives one star at most, and skipping gives none (but still opens the next stop)', () => {
+    let p = applyNodeResult(initialProgress('kid', T0), 'w1', 'arrival', { stars: COMPLETION_STARS, passed: true }, T0)
     expect(p.worlds.w1.nodes.arrival).toMatchObject({ done: true, stars: COMPLETION_STARS })
     expect(p.stars).toBe(COMPLETION_STARS)
-    p = applyNodeResult(p, 'w1', 'lesson-groups', { stars: 1 }, T0)
+    p = applyNodeResult(p, 'w1', 'lesson-groups', { stars: 3 }, T0)
     expect(p.worlds.w1.nodes['lesson-groups'].stars).toBe(COMPLETION_STARS)
     expect(p.stars).toBe(2 * COMPLETION_STARS)
+
+    const skipped = applyNodeResult(initialProgress('kid', T0), 'w1', 'arrival', { stars: 0, passed: true }, T0)
+    expect(skipped.worlds.w1.nodes.arrival).toMatchObject({ done: true, stars: 0 })
+    expect(skipped.stars).toBe(0)
   })
 
   it('keeps the best stars and pays only for NEW stars (no farming)', () => {
@@ -225,8 +229,9 @@ describe('nextNode', () => {
     expect(p.diplomaEarnedAt).toBe(T0.toISOString())
     expect(p.stickers).toContain('lumi-brilla')
     expect(p.stickers.filter((id) => getSticker(id)?.worldId)).toHaveLength(24)
-    // max currency = 3 stars per node
-    expect(p.stars).toBe(3 * steps)
+    // max currency: 3 stars per practice node (activities, reviews, guardians), 1 per story or lesson read
+    const maxStars = season1.worlds.reduce((sum, w) => sum + w.nodes.reduce((t, n) => t + (n.kind === 'story' || n.kind === 'lesson' ? COMPLETION_STARS : 3), 0), 0)
+    expect(p.stars).toBe(maxStars)
   })
 
   it('suggests the guardian again after a failed challenge', () => {
@@ -281,11 +286,12 @@ describe('grade, letters and shop', () => {
     expect(buyAccessory(q, 'crown', T0)).toBe(q)
   })
 
-  it('the whole shop is affordable with a full season of stars, but not after the first world', () => {
+  it('a full season of stars buys most of the shop, but not after the first world', () => {
     let p = initialProgress('kid', T0)
     for (let n = nextNode(p); n; n = nextNode(p)) p = finish(p, n.worldId, n.nodeId)
     const total = ACCESSORY_IDS.reduce((s, id) => s + getAccessory(id)!.price, 0)
-    expect(total).toBeLessThanOrEqual(p.stars)
+    // Reading gives 1 star now (not 3), so the whole shop costs a bit more than a season: prices are a product decision.
     expect(total).toBeGreaterThan(p.stars * 0.6)
+    expect(p.stars).toBeGreaterThan(total * 0.9)
   })
 })
