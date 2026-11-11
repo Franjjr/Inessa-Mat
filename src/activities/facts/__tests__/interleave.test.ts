@@ -27,6 +27,16 @@ describe('interleaveReview', () => {
     expect(interleaveReview(items, { kinds: ['fact-mul'], tables: [6] }, mastery, counter(3))).toBe(items)
   })
 
+  it('only reviews facts whose factors are inside the selector range', () => {
+    // 1 × 7 is outside the [2, 9] range of this activity: it must not come back as a review.
+    const mastery: MasteryMap = { 'mul:1x7': seen('mul:1x7', 0) }
+    const items = sixes.slice(0, 5)
+    expect(interleaveReview(items, { kinds: ['fact-mul'], tables: [6], factorRange: [2, 9] }, mastery, counter(3))).toBe(items)
+    const inside: MasteryMap = { 'mul:3x7': seen('mul:3x7', 0) }
+    expect(interleaveReview(items, { kinds: ['fact-mul'], tables: [6], factorRange: [2, 9] }, inside, counter(3))[4])
+      .toMatchObject({ a: 3, b: 7 })
+  })
+
   it('does nothing for activities with more than one table or too few items', () => {
     const mastery: MasteryMap = { 'mul:3x7': seen('mul:3x7', 0) }
     const items = sixes.slice(0, 5)

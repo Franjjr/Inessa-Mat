@@ -50,8 +50,12 @@ export function interleaveReview(items: Exercise[], selector: SkillSelector, mas
     .map(([key]) => parseSkill(key))
     .filter((p): p is { type: 'mul'; a: number; b: number } => p?.type === 'mul' && p.a !== own && p.b !== own)
     .filter((p) => !items.some((it) => it.id === makeFactMul(p.a, p.b).id))
-  if (review.length === 0) return items
-  const pick = review[Math.floor(rng() * review.length)]
+  // Only facts inside the activity's own factor range (default 1–10): 1 × 7 is not a fact of a [2, 9] activity.
+  const [lo, hi] = selector.factorRange ?? [1, 10]
+  const inRange = (p: { a: number; b: number }) => [p.a, p.b].every((f) => f >= lo && f <= hi)
+  const pool = review.filter(inRange)
+  if (pool.length === 0) return items
+  const pick = pool[Math.floor(rng() * pool.length)]
   return [...items.slice(0, -1), makeFactMul(pick.a, pick.b)]
 }
 
