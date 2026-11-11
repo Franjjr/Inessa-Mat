@@ -339,8 +339,9 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
         hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
+        // The chip of the product is a «?» (blank): the drawing shows the same series as the text, never the product.
         ex.answer >= 2
-          ? hint(3, `${before}… ¿Qué número sigue? ¿Cuántas veces has dicho ${known} hasta llegar a él?`, 'none')
+          ? hint(3, `${before}… ¿Qué número sigue? ¿Cuántas veces has dicho ${known} hasta llegar a él?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1, blank: 1 })
           : hint(3, `Piensa: ¿${known} por cuánto da ${ex.product}?`, 'none'),
       ]
     }
