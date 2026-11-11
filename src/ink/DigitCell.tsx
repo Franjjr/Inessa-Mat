@@ -17,7 +17,7 @@ import { useInkSurface } from './useInkSurface'
 import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
-import { CloseIcon } from './icons'
+import { EraserIcon } from './icons'
 import s from './DigitCell.module.css'
 
 export type CellPhase = 'empty' | 'writing' | 'pending' | 'recognized' | 'unsure' | 'unknown' | 'typed'
@@ -446,7 +446,8 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
               onClick={palm.guard(() => { clearAll(); surfaceRef.current?.focus({ preventScroll: true }) })}
               aria-label="Borrar esta cifra"
             >
-              <CloseIcon size={18} strokeWidth={3} />
+              {/* a school eraser, not a ✕: the ✕ means "leave" in the rest of the app */}
+              <EraserIcon size={18} />
             </button>
           )}
           {popover && (

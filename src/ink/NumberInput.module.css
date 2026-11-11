@@ -153,6 +153,9 @@
 .tool[aria-pressed='true'] { background: var(--c-primary-soft); }
 .erase { grid-column: 1; grid-row: 1; }
 .toggleWrap { grid-column: 1; grid-row: 2; position: relative; display: inline-flex; }
+/* Left-handed child (see InkProvider): the big ✓ moves to the left and the tools to the right. */
+:root[data-handedness='left'] .check { grid-column: 1; }
+:root[data-handedness='left'] .erase, :root[data-handedness='left'] .toggleWrap { grid-column: 2; }
 .nudge { animation: nudge 900ms var(--ease-out) 2; border-color: var(--c-primary); }
 
 .check {

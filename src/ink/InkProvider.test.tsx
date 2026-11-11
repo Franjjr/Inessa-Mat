@@ -89,4 +89,12 @@ describe('InkProvider', () => {
     expect(api.penSeen).toBe(false)
     expect(localStorage.getItem(PEN_SEEN_KEY)).toBeNull()
   })
+
+  it('the writing hand is published on the root, so the styles can mirror the cell and tool buttons', () => {
+    state.child = { ...kid('auto'), settings: { ...DEFAULT_CHILD_SETTINGS, inputPreference: 'auto', handedness: 'left' } }
+    const { unmount } = render(<InkProvider recognizer={scriptedRecognizer([])} childId="kid"><Probe /></InkProvider>)
+    expect(document.documentElement.dataset.handedness).toBe('left')
+    unmount()
+    expect(document.documentElement.dataset.handedness).toBeUndefined()
+  })
 })

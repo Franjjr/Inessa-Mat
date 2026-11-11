@@ -147,6 +147,8 @@
 }
 .clear::before { content: ''; position: absolute; inset: -12px; border-radius: 50%; }
 .clear:active { background: var(--c-primary-soft); }
+/* Left-handed child (see InkProvider): the ✕ moves to the other corner, mirroring the default. */
+:root[data-handedness='left'] .clear { right: auto; left: -13px; }
 
 /* ---- variants */
 .carry .surface {
@@ -175,6 +177,28 @@
 .st_correct { --bg: var(--c-success-soft); --border: var(--c-success); --digit: color-mix(in srgb, var(--c-success) 70%, var(--c-ink)); }
 .st_wrong { --bg: var(--c-warn-soft); --border: var(--c-warn); --digit: color-mix(in srgb, var(--c-warn) 70%, var(--c-ink)); }
 .st_wrong .surface { animation: wiggle 480ms var(--ease-out) 1; }
+/* A shape besides the colour, so the result reads without telling green from orange: ✓ right, ↻ to try again. */
+.st_correct .surface::after,
+.st_wrong .surface::after {
+  content: '✓';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--border);
+  color: var(--c-surface);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: none;
+}
+.st_wrong .surface::after { content: '↻'; }
 .st_hint .surface {
   border-color: var(--c-gold);
   box-shadow: 0 0 0 5px var(--c-gold-soft);

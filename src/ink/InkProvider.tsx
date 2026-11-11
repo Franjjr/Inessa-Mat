@@ -119,6 +119,13 @@ export function InkProvider({ children, childId = null, recognizer: injected, pe
   const bigCells = settings?.bigCells ?? false
   const handedness = settings?.handedness ?? 'right'
 
+  // The writing hand decides the side of the small buttons (see the styles of DigitCell and NumberInput).
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.handedness = handedness
+    return () => { delete root.dataset.handedness }
+  }, [handedness])
+
   const value = useMemo<InkContextValue>(() => ({
     recognizer,
     ready,
