@@ -2,7 +2,8 @@
    the companion and Lumi with the horn of crystals, then the right column in this order: the placement banner (while
    it is pending), «Hoy» (the class of today's topic, or the session of the subject on view), «Mi aventura» (maths only),
    and the tiles Repasar (only with something due), Jugar and Mis premios. The subject picker opens either subject's view.
-   The world bar is at the bottom. Shows the sync state quietly and lets a family switch child. */
+   The world bar is at the bottom. Shows the sync state quietly and lets a family switch child. A child in a class sees
+   the teacher's current mission as a small bar under the tiles of the maths view (MissionBar): no date, no pressure. */
 import { useEffect, useState } from 'react'
 import { useNavigate, Navigate } from 'react-router-dom'
 import { Crystal, LumiHorn, StarIcon, WorldBackground, CompanionArt, Character } from '@/art'
@@ -12,13 +13,14 @@ import {
 } from '@/content'
 import { speech } from '@/audio'
 import { DAILY_MINUTES, dueSkills, ENGLISH_SESSION_MINUTES, masteryOf } from '@/engine'
-import { updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
+import { listAssignmentsForChild, updateProgress, useActiveChild, useMastery, useProgress, useSyncStatus } from '@/data'
 import { Button, Pill, Screen, Spinner, toast } from '@/ui'
 import { SUBJECTS } from '@/types'
-import type { ProgressState, SubjectId, WorldDef } from '@/types'
+import type { Assignment, ProgressState, SubjectId, WorldDef } from '@/types'
 import type { SyncStatus } from '@/data'
 import { Tile } from './Tile'
 import { homeSubject, homeSubjects, placementBannerOf, todayEntry } from './todayEntry'
+import { currentMission, missionKicker } from '@/world/mision/logic'
 import s from './ChildHomeScreen.module.css'
 
 /** The «Hoy» session card of each subject: its kicker (the subject and its minutes) and what the session holds. */
@@ -52,6 +54,22 @@ function SyncPill() {
   )
 }
 
+/** The teacher's current mission (from the last list seen on this device when offline), or null: no class, no mission,
+    or no account. A failed read shows nothing. */
+function useCurrentMission(childId: string | undefined): Assignment | null {
+  const [mission, setMission] = useState<Assignment | null>(null)
+  useEffect(() => {
+    setMission(null)
+    if (!childId) return
+    let alive = true
+    listAssignmentsForChild(childId)
+      .then((list) => { if (alive) setMission(currentMission(list)) })
+      .catch(() => undefined)
+    return () => { alive = false }
+  }, [childId])
+  return mission
+}
+
 /** The world that must be finished before `world` opens (the one before it in the season). */
 function previousWorld(world: WorldDef, worlds: WorldDef[]): WorldDef | undefined {
   return world.index > 1 ? worlds[world.index - 2] : undefined
@@ -64,6 +82,7 @@ export default function ChildHomeScreen() {
   const mastery = useMastery(child?.id)
   /** The subject the family-facing picker opened; null follows homeSubject. */
   const [picked, setPicked] = useState<SubjectId | null>(null)
+  const mission = useCurrentMission(child?.id)
 
   // The adventure follows the course: a 2.º child plays the 2.º season. switchSeason keeps a season half won.
   useEffect(() => {
@@ -215,6 +234,13 @@ export default function ChildHomeScreen() {
             <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />
             <Tile label="Mis premios" tone="yellow" onClick={() => navigate('/play/premios')} />
           </div>
+
+          {view === 'math' && mission && (
+            <button type="button" className={s.mission} onClick={() => navigate(`/play/mision/${mission.id}`, { state: { mission } })}>
+              <span className={s.missionKicker}>{missionKicker(progress.flags, mission.id)}</span>
+              <span className={s.missionTitle}>{mission.title} ›</span>
+            </button>
+          )}
         </div>
       </main>
 

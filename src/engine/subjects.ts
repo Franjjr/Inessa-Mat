@@ -1,7 +1,7 @@
 /* Subjects: which school subject a skill key belongs to. Lengua skills start with `lng:`, English with `eng:`; every other key is maths.
    Maths readers filter first (masteryOf / attemptsOf), so Lengua and English rows never reach a maths plan, count or report.
    Flags are OR-merged forever (src/data/merge.ts), so the Lengua and English flags and keys never reuse a maths name. */
-import type { MasteryMap, SessionRecord, SkillKey, SubjectId } from '@/types'
+import type { MasteryMap, SessionRecord, SessionSubject, SkillKey, SubjectId } from '@/types'
 
 /** The subjects that have their own sessions and placement. */
 export type LessonSubject = Extract<SubjectId, 'math' | 'language' | 'english'>
@@ -62,10 +62,11 @@ export function placementFlags(subject: LessonSubject): (typeof PLACEMENT_FLAGS)
   return PLACEMENT_FLAGS[subject]
 }
 
-/** The subject of a play session: the Lengua and English sessions carry their mark in the summary, every other session is maths. */
-export function subjectOfSession(session: Pick<SessionRecord, 'summary'>): SubjectId {
+/** The subject of a play session: the Lengua, English and Caligrafía sessions carry their mark in the summary, every
+    other session is maths. */
+export function subjectOfSession(session: Pick<SessionRecord, 'summary'>): SessionSubject {
   const marked = session.summary?.subject
-  return marked === 'language' || marked === 'english' ? marked : 'math'
+  return marked === 'language' || marked === 'english' || marked === 'handwriting' ? marked : 'math'
 }
 
 /** The grades a subject is offered to, for the subjects that are not for every course (every other one is offered to all). */

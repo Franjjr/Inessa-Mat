@@ -52,8 +52,10 @@ export interface GameHostProviderProps {
   worldId?: string
   nodeId?: string
   activity?: string
-  /** The subject the play session is marked with (maths when missing). */
+  /** The subject the play session is marked with (when missing: English on the Isla de Inglés, maths elsewhere). */
   subject?: SubjectId
+  /** The teacher's mission this play comes from: its id goes into each attempt's context and the session summary. */
+  assignmentId?: string
   children: React.ReactNode
 }
 

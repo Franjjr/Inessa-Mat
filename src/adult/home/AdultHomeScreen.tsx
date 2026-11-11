@@ -18,6 +18,7 @@ import { plural, formatPercent } from '../shared/format'
 import { errorMessage } from '../shared/messages'
 import { lockAdultArea } from '../gate/AdultGate'
 import { readTables, TABLE_STATE_LABEL, type TableState } from '../shared/reading'
+import { pupilWeekLine } from '../school/classView'
 import s from './home.module.css'
 import adult from '../shared/adult.module.css'
 
@@ -220,7 +221,8 @@ export default function AdultHomeScreen() {
                         <span className={adult.muted}>
                           {c.grade ? `${c.grade}.º de Primaria` : 'Curso sin elegir'} · Compañero: {c.companion.name}
                         </span>
-                        {selected && summary && <span className={adult.muted}>Aciertos de la semana: {formatPercent(summary.accuracyLast7Days)}</span>}
+                        {selected && summary && <span className={adult.muted}>{pupilWeekLine(summary)}</span>}
+                        {selected && summary && <span className={adult.muted}>Aciertos de la semana en matemáticas: {formatPercent(summary.accuracyLast7Days)}</span>}
                       </span>
                     </button>
                     <Button variant="secondary" size="sm" onClick={() => navigate(`/adult/child/${c.id}`)}>Ver informe</Button>

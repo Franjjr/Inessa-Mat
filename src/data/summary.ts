@@ -1,7 +1,13 @@
 /* Dashboard aggregation (pure). Accuracy ignores 'recognition' errors: a misread digit is not a maths mistake. */
 import { seasonOf } from '@/content'
-import { attemptsOf, factGrid, isDivMethod, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, subjectOfSession } from '@/engine'
-import type { AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SubMethod, TableMethod } from '@/types'
+import {
+  attemptsOf, factGrid, isDivMethod, isHandwritingSkill, isSubMethod, isTableMethod, masteryOf, normaliseDivMethod, normaliseSubMethod,
+  normaliseTableMethod, subjectOfSession, subjectOfSkill,
+} from '@/engine'
+import type {
+  ActivitySubject, AttemptRecord, ChildProfile, ChildSummary, DivMethod, MasteryMap, ProgressState, SessionRecord, SkillKey, SubjectActivity,
+  SubMethod, TableMethod,
+} from '@/types'
 
 /** Results per method (context.method of the attempt), last 30 days, recognition errors left out. */
 export interface MethodTally {
@@ -17,6 +23,29 @@ export interface ChildStats {
   lastPlayedAt: string | null
   topErrors: { errorType: string; count: number }[]
   methods?: MethodTally[]
+  /** Activity of every subject over the same 7 days; undefined when the source only knows maths (see ChildSummary). */
+  bySubject?: Partial<Record<ActivitySubject, SubjectActivity>>
+}
+
+/** The activity subject of a skill key: Caligrafía (calig:…), Lengua, English or maths (as the server's child_activity). */
+export function activitySubjectOfSkill(skill: SkillKey): ActivitySubject {
+  return isHandwritingSkill(skill) ? 'handwriting' : subjectOfSkill(skill)
+}
+
+/** The activity subject of a play session (its summary mark; no mark is maths), as the server's child_activity. */
+export function activitySubjectOfSession(session: Pick<SessionRecord, 'summary'>): ActivitySubject {
+  const subject = subjectOfSession(session)
+  return subject === 'language' || subject === 'english' || subject === 'handwriting' ? subject : 'math'
+}
+
+/** Only the subjects with some activity, minutes rounded to whole minutes. */
+function activeSubjects(map: Partial<Record<ActivitySubject, SubjectActivity>>): Partial<Record<ActivitySubject, SubjectActivity>> {
+  const out: Partial<Record<ActivitySubject, SubjectActivity>> = {}
+  for (const [subject, a] of Object.entries(map) as [ActivitySubject, SubjectActivity][]) {
+    const minutes = Math.round(a.minutes || 0)
+    if (minutes > 0 || a.attempts > 0) out[subject] = { minutes, attempts: a.attempts }
+  }
+  return out
 }
 
 export function buildSummary(child: ChildProfile, progress: ProgressState | null, mastery: MasteryMap, stats: ChildStats | null): ChildSummary {
@@ -44,6 +73,7 @@ export function buildSummary(child: ChildProfile, progress: ProgressState | null
     currentWorld,
     minutesLast7Days: Math.round(stats?.minutes ?? 0),
     accuracyLast7Days: accuracy,
+    ...(stats?.bySubject ? { weekBySubject: activeSubjects(stats.bySubject) } : {}),
     factGrid: factGrid(masteryOf(mastery, 'math')),
     topErrors: stats?.topErrors ?? [],
     lastPlayedAt: stats?.lastPlayedAt ?? null,
@@ -89,7 +119,13 @@ export function statsFromLocal(attempts7All: AttemptRecord[], attempts30All: Att
     if (a.correct) t.correct += 1
     tally.set(method, t)
   }
+  // Every subject (and Caligrafía): graded answers and minutes of the 7 days, as the server's child_activity.
+  const bySubject: Partial<Record<ActivitySubject, SubjectActivity>> = {}
+  const entry = (subject: ActivitySubject) => (bySubject[subject] ??= { minutes: 0, attempts: 0 })
+  for (const a of attempts7All) if (a.graded !== false) entry(activitySubjectOfSkill(a.skill)).attempts += 1
+  for (const s of sessions7) entry(activitySubjectOfSession(s)).minutes += Number(s.minutes) || 0
   return {
+    bySubject,
     methods: [...tally.values()],
     attempts: counted.length,
     correct: counted.filter((a) => a.correct).length,

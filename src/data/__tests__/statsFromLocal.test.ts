@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { AttemptRecord } from '@/types'
+import type { AttemptRecord, SessionSubject } from '@/types'
 import { statsFromLocal } from '../summary'
 
 const now = Date.parse('2026-10-22T10:00:00.000Z')
@@ -43,7 +43,7 @@ describe('statsFromLocal: «No lo sé» is not a most frequent error', () => {
 })
 
 describe('statsFromLocal: Lengua sessions are not maths minutes (R5)', () => {
-  const session = (minutes: number, subject?: 'language') => ({
+  const session = (minutes: number, subject?: SessionSubject) => ({
     id: `ses-${minutes}-${subject ?? 'math'}`, childId: 'c', startedAt: new Date(now).toISOString(), endedAt: null, minutes,
     summary: subject ? { attempts: 0, correct: 0, starsEarned: 0, nodesCompleted: [], subject } : null,
   })
@@ -55,5 +55,27 @@ describe('statsFromLocal: Lengua sessions are not maths minutes (R5)', () => {
 
   it('a Lengua session on its own gives no maths minutes', () => {
     expect(statsFromLocal([], [], [session(9, 'language')], null).minutes).toBe(0)
+  })
+
+  it('the activity of every subject is counted apart: graded answers and minutes', () => {
+    const attempts = [
+      attempt({ skill: 'lng:ort:bv' }),
+      attempt({ skill: 'lng:ort:bv', graded: false }),
+      attempt({ skill: 'eng:voc:animales' }),
+      attempt({ skill: 'calig:a' }),
+      attempt({ skill: 'mul:6x7' }),
+      attempt({ skill: 'cal:weekday' }), // the calendar is maths, not Caligrafía
+    ]
+    const stats = statsFromLocal(attempts, attempts, [session(6, 'language'), session(3, 'handwriting'), session(2)], null)
+    expect(stats.bySubject).toEqual({
+      language: { attempts: 1, minutes: 6 },
+      english: { attempts: 1, minutes: 0 },
+      handwriting: { attempts: 1, minutes: 3 },
+      math: { attempts: 2, minutes: 2 },
+    })
+  })
+
+  it('English and Caligrafía sessions give no maths minutes either', () => {
+    expect(statsFromLocal([], [], [session(5, 'english'), session(3, 'handwriting'), session(2)], null).minutes).toBe(2)
   })
 })

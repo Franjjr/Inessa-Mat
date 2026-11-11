@@ -2,7 +2,7 @@
    Without a backend or account they degrade gracefully: lists are empty, writes throw a Spanish DataError.
    Lists are cached in meta so dashboards still show something offline. */
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Assignment, ChildSummary, ClassOverview, ClassRoom, Enrollment, SkillSelector } from '@/types'
+import type { ActivitySubject, Assignment, ChildSummary, ClassOverview, ClassRoom, Enrollment, SkillSelector, SubjectActivity } from '@/types'
 import { db } from './db'
 import { DataError, isNetworkError, toDataError } from './errors'
 import { assignmentFromRow, childFromRow, classFromRow, enrollmentFromRow, masteryFromRow, progressFromRow, publicMastery } from './mappers'
@@ -126,6 +126,33 @@ export async function listClassesForChild(childId: string): Promise<ClassRoom[]>
 
 // ------------------------------------------------------------------------------------------------ overview
 
+const ACTIVITY_SUBJECTS: readonly ActivitySubject[] = ['math', 'language', 'english', 'handwriting']
+
+/**
+ * Activity of every subject (migration 0006, rpc child_activity), one map per child id: every child asked for gets a map
+ * (empty when it did not play). Null when the server cannot say: a server without 0006 has no such function, and then the
+ * screens fall back to the maths numbers of child_stats and say «matemáticas». Never throws: it only adds detail.
+ */
+export async function remoteActivity(sb: SupabaseClient, childIds: string[], since: string): Promise<Map<string, Partial<Record<ActivitySubject, SubjectActivity>>> | null> {
+  const out = new Map<string, Partial<Record<ActivitySubject, SubjectActivity>>>()
+  try {
+    for (const ids of chunk(childIds, 100)) {
+      const rows = await q<Row[]>(sb.rpc('child_activity', { p_child_ids: ids, p_since: since }))
+      for (const id of ids) out.set(id, {})
+      for (const r of rows ?? []) {
+        const subject = String(r.subject) as ActivitySubject
+        const map = out.get(String(r.child_id))
+        if (!map || !ACTIVITY_SUBJECTS.includes(subject)) continue
+        map[subject] = { minutes: Number(r.minutes ?? 0), attempts: Number(r.attempts ?? 0) }
+      }
+    }
+    return out
+  } catch (e) {
+    console.warn('[numeria/schools] activity per subject not available (migration 0006 not applied?):', e)
+    return null
+  }
+}
+
 async function remoteStats(sb: SupabaseClient, childIds: string[]): Promise<Map<string, ChildStats>> {
   const out = new Map<string, ChildStats>()
   if (!childIds.length) return out
@@ -143,6 +170,8 @@ async function remoteStats(sb: SupabaseClient, childIds: string[]): Promise<Map<
       })
     }
   }
+  const activity = await remoteActivity(sb, [...out.keys()], since)
+  if (activity) for (const [id, stats] of out) stats.bySubject = activity.get(id) ?? {}
   return out
 }
 
@@ -235,4 +264,34 @@ export async function listAssignmentsForChild(childId: string): Promise<Assignme
     return (rows ?? []).map(assignmentFromRow)
   }, [] as Assignment[])
   return all.filter((a) => isCurrent(a))
+}
+
+// ------------------------------------------------------------------------------------------------ mission progress
+
+/** Graded answers on a mission's skills (in its period) that make it «hecha»: one full run of the mission (10 rounds). */
+export const MISSION_DONE_ATTEMPTS = 10
+
+export interface MissionProgress {
+  attempts: number
+  correct: number
+}
+
+/**
+ * What each pupil has done of a mission (rpc assignment_progress, migration 0006), by child id. It is read from the
+ * attempts already synced: the mission's skills between its start and its due date, and what was played from the
+ * mission itself. Null when the server cannot say (no account, offline, or a server without 0006): the class screen then
+ * shows no tracking instead of a wrong one. Never throws.
+ */
+export async function getMissionProgress(assignmentId: string): Promise<Map<string, MissionProgress> | null> {
+  if (!canUseSchools()) return null
+  try {
+    const { sb } = await online()
+    const rows = await q<Row[]>(sb.rpc('assignment_progress', { p_assignment_id: assignmentId }))
+    const out = new Map<string, MissionProgress>()
+    for (const r of rows ?? []) out.set(String(r.child_id), { attempts: Number(r.attempts ?? 0), correct: Number(r.correct ?? 0) })
+    return out
+  } catch (e) {
+    console.warn('[numeria/schools] mission progress not available (migration 0006 not applied?):', e)
+    return null
+  }
 }

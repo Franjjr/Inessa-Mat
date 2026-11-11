@@ -24,6 +24,7 @@ const DiplomaScreen = lazy(() => import('@/world/diploma/DiplomaScreen'))
 const PrizesScreen = lazy(() => import('@/world/prizes/PrizesScreen'))
 const CaligrafiaScreen = lazy(() => import('@/world/caligrafia/CaligrafiaScreen'))
 const CancionScreen = lazy(() => import('@/world/cancion/CancionScreen'))
+const MissionScreen = lazy(() => import('@/world/mision/MissionScreen'))
 const CaligrafiaTrialScreen = lazy(() => import('@/world/caligrafia/TrialScreen'))
 // adult
 const WelcomeScreen = lazy(() => import('@/adult/welcome/WelcomeScreen'))
@@ -95,6 +96,7 @@ export function AppRoutes() {
         <Route path="/play/diploma" element={<RequireChild><DiplomaScreen /></RequireChild>} />
         <Route path="/play/premios" element={<RequireChild><PrizesScreen /></RequireChild>} />
         <Route path="/play/caligrafia" element={<RequireChild><CaligrafiaScreen /></RequireChild>} />
+        <Route path="/play/mision/:assignmentId" element={<RequireChild><MissionScreen /></RequireChild>} />
 
         <Route path="/adult" element={<Adult><AdultHomeScreen /></Adult>} />
         <Route path="/adult/child/:childId" element={<Adult><ChildReportScreen /></Adult>} />
