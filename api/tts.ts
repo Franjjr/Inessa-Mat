@@ -35,7 +35,7 @@ const RATE_LIMIT = 120
 const RATE_WINDOW_MS = 10 * 60_000
 const MAX_TRACKED_IPS = 10_000
 /** Letters (with Spanish accents), digits, spaces and ordinary punctuation. Nothing that could become markup. */
-const SAFE_TEXT = /^[\p{L}\p{N}\s.,;:¡!¿?'‘’"«»()\-–—…%+×÷=/]+$/u
+export const SAFE_TEXT = /^[\p{L}\p{N}\s.,;:¡!¿?'‘’"«»()\-–—…%+×÷=/]+$/u
 
 interface Env {
   AZURE_SPEECH_KEY?: string
