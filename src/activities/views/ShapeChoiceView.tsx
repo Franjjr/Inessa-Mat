@@ -40,7 +40,13 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
         <div className={s.figureRow}>
           {ex.figures.map((f, i) => (
             <div key={i} className={s.figureBox}>
-              <FigureSvg figure={f} label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'} className={`${s.figure} ${ex.figures.length > 1 ? s.figureSmall : ''}`} />
+              <FigureSvg
+                figure={f}
+                label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'}
+                // Two fractions to compare stay big (P3PE-05): only three or more figures are drawn small.
+                className={`${s.figure} ${ex.figures.length > 2 ? s.figureSmall : ''}`}
+                lying={ex.skill === 'geo:solid:roll'}
+              />
             </div>
           ))}
         </div>
