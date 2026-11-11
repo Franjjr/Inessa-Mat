@@ -12,6 +12,7 @@ function flowAfterWrongCheck(overrides: Partial<AnswerFlow> = {}): AnswerFlow {
     hints: [{ level: 1, text: 'Empieza por las unidades.', visual: 'none' }, { level: 2, text: 'Suma 8 y 7.', visual: 'none' }],
     hintsShown: 1,
     showNextHint: () => null,
+    countClue: () => {},
     submit: () => ({ correct: false, given: '', expected: '' }),
     finish: vi.fn(),
     showFeedback: true,
