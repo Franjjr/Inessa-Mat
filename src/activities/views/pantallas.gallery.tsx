@@ -9,7 +9,9 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { GalleryEntry } from '@/dev/Gallery'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
+import { season1 } from '@/content'
 import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, GRADE4_SYLLABUS } from '@/content/syllabus'
+import PixelActivity from '@/activities/pixel'
 import { createRng, generate } from '@/engine'
 import { inferKinds } from '@/engine/generate'
 import { ScrollAssist } from '@/app/ScrollAssist'
@@ -118,6 +120,16 @@ function Harness() {
   )
 }
 
-const entries: GalleryEntry[] = [{ title: 'Pantallas: un ejercicio de la sesión, a pantalla completa', render: () => <Harness /> }]
+/** The hidden picture of world 6 (the pixel game), as the child plays it: its numbers must be readable (P3PE-17). */
+function PixelGame() {
+  const node = season1.worlds.flatMap((w) => w.nodes).find((n) => n.kind === 'activity' && n.activity?.kind === 'pixel')
+  if (!node || node.kind !== 'activity' || !node.activity) return <p>Sin juego de píxeles</p>
+  return <PixelActivity config={node.activity} onDone={() => {}} onExit={() => {}} />
+}
+
+const entries: GalleryEntry[] = [
+  { title: 'Pantallas: un ejercicio de la sesión, a pantalla completa', render: () => <Harness /> },
+  { title: 'Pixel: el cristal escondido', width: 1000, height: 490, render: () => <PixelGame /> },
+]
 
 export default entries

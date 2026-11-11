@@ -2,7 +2,8 @@
 .picture {
   display: grid;
   gap: clamp(2px, .4vmin, 4px);
-  width: min(100%, 360px, 44vh);
+  /* Big enough for the numbers in the cells to be read (P3PE-17: never under 16 px). */
+  width: min(100%, 440px, 60vh);
   aspect-ratio: 1;
   padding: clamp(8px, 1.4vmin, 14px);
   box-sizing: border-box;
@@ -27,7 +28,7 @@
   border-radius: 6px;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(12px, 2.6vmin, 22px);
+  font-size: clamp(16px, 3vmin, 24px);
   color: var(--c-ink-mute);
 }
 

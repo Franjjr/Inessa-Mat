@@ -144,3 +144,18 @@
   font-size: var(--fs-sm);
   cursor: pointer;
 }
+
+/* «Primero a la que menos tiene» (MD-6). */
+.warn {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--c-gold-soft);
+  color: #78350f;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+/* The plates shown again while the child writes the answer: not buttons, no highlight. */
+.binStill { cursor: default; box-shadow: none; }
