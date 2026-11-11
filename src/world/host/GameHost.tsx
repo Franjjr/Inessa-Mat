@@ -185,7 +185,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject = 'math', 
       // A completion-only text (escritura guiada) is not graded, but finishing it counts as done: its mastery moves.
       const next = graded || isCompletionOnly(exercise.kind) ? updateMastery(
         masteryRef.current[skill],
-        { skill, correct: check.correct, ms, inputMode, hintsUsed, errorType: check.errorType ?? null },
+        { skill, correct: check.correct, ms, inputMode, hintsUsed, retries, errorType: check.errorType ?? null },
         now,
       ) : null
       if (next) masteryRef.current = { ...masteryRef.current, [skill]: next }

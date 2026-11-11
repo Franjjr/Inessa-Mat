@@ -1,11 +1,14 @@
 /* Spaced repetition (Leitner boxes 0..5) with fluency awareness, exactly as docs/PEDAGOGY.md:
      intervals: box0 → now (same session), 1 → 1 day, 2 → 2, 3 → 4, 4 → 8, 5 → 16 days
-     correct + fluent (fast, no hints) → box + 1
-     correct but slow or with hints   → box stays (but box 0 → 1)
+     correct + fluent (fast, no hints, no wrong try first) + due → box + 1
+     correct but slow, with hints or after a wrong try         → box stays (but box 0 → 1)
+     correct before its review date (not due yet)              → box stays and the review date stays
+     correct long after its review date (over one interval)    → one box down first, then the rule above
      wrong                            → box = max(0, box − 2), due now
      recognition errors               → ignored (never lower mastery)
    Facts are judged on speed (keyboard 4 s, keypad 5 s, pen/touch 7 s); column ops and everything multi-step
-   on accuracy only. */
+   on accuracy only. Climbing only when due means one sitting cannot master a skill: after a climb the next one
+   waits a whole interval, so MASTERED_BOX (2) takes answers on two different days. */
 import type { Exercise, ExerciseKind, InputMode, MasteryMap, SkillKey, SkillMastery } from '@/types'
 import { parseSkill } from './skills'
 import type { AttemptForMastery } from './types'
@@ -42,7 +45,12 @@ export function intervalMs(box: number): number {
   return LEITNER_INTERVAL_DAYS[Math.max(0, Math.min(MAX_BOX, box))] * DAY_MS
 }
 
-/** Leitner update with fluency (speed) awareness. Hints and recognition errors never count as fluent. */
+/** True when the review date of a skill has come (a skill never reviewed, with no date, is due). */
+export function isDue(m: Pick<SkillMastery, 'dueAt'>, now: Date): boolean {
+  return m.dueAt === null || Date.parse(m.dueAt) <= now.getTime()
+}
+
+/** Leitner update with fluency (speed) awareness. Hints, a wrong try first and recognition errors never count as fluent. */
 export function updateMastery(prev: SkillMastery | undefined, attempt: AttemptForMastery, now: Date = new Date()): SkillMastery {
   const base = prev ?? newMastery(attempt.skill, now)
   if (attempt.errorType === 'recognition') return base
@@ -52,16 +60,23 @@ export function updateMastery(prev: SkillMastery | undefined, attempt: AttemptFo
   let correct = base.correct
   let avgMs = base.avgMs
   let lastError = base.lastError ?? null
+  let dueAt = iso
   if (attempt.correct) {
+    const due = isDue(base, now)
+    // Answered long after its review date: the child has probably lost some of it, so one box goes down first.
+    if (due && base.dueAt !== null && box > 0 && now.getTime() - Date.parse(base.dueAt) > intervalMs(box)) box -= 1
     const kind = speedKindForSkill(base.skill)
     const threshold = kind ? fluencyThresholdMs(attempt.inputMode, kind) : Number.POSITIVE_INFINITY
     const validMs = Number.isFinite(attempt.ms) && attempt.ms >= 0
-    const fluent = attempt.hintsUsed === 0 && (threshold === Number.POSITIVE_INFINITY || (validMs && attempt.ms <= threshold))
-    box = fluent ? Math.min(MAX_BOX, box + 1) : box === 0 ? 1 : box
+    const fluent = attempt.hintsUsed === 0 && !attempt.retries && (threshold === Number.POSITIVE_INFINITY || (validMs && attempt.ms <= threshold))
+    const climbs = fluent && (due || box === 0)
+    box = climbs ? Math.min(MAX_BOX, box + 1) : box === 0 ? 1 : box
     streak += 1
     correct += 1
     if (validMs) avgMs = avgMs === null ? Math.round(attempt.ms) : Math.round((1 - EMA_ALPHA) * avgMs + EMA_ALPHA * attempt.ms)
     if (streak >= 3) lastError = null
+    // Answered before the review date: the date stays, so the next climb still waits for it.
+    dueAt = due ? new Date(now.getTime() + intervalMs(box)).toISOString() : (base.dueAt ?? iso)
   } else {
     box = Math.max(0, box - 2)
     streak = 0
@@ -75,7 +90,7 @@ export function updateMastery(prev: SkillMastery | undefined, attempt: AttemptFo
     streak,
     avgMs,
     lastSeenAt: iso,
-    dueAt: new Date(now.getTime() + (attempt.correct ? intervalMs(box) : 0)).toISOString(),
+    dueAt,
     lastError,
     updatedAt: iso,
   }

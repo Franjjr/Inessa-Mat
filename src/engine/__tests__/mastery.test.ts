@@ -24,17 +24,49 @@ describe('Leitner transitions', () => {
     })
   })
 
-  it('correct + fluent → box + 1 with the documented intervals', () => {
+  it('correct + fluent + due → box + 1 with the documented intervals (one climb per review date)', () => {
     expect(LEITNER_INTERVAL_DAYS).toEqual([0, 1, 2, 4, 8, 16])
     let m: SkillMastery | undefined
+    let when = now
     const boxes: number[] = []
     for (let i = 0; i < 7; i++) {
-      m = updateMastery(m, attempt(), now)
+      m = updateMastery(m, attempt(), when)
       boxes.push(m.box)
-      expect(m.dueAt).toBe(new Date(now.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY).toISOString())
+      expect(m.dueAt).toBe(new Date(when.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY).toISOString())
+      if (i < 6) when = new Date(when.getTime() + LEITNER_INTERVAL_DAYS[m.box] * DAY)
     }
     expect(boxes).toEqual([1, 2, 3, 4, 5, 5, 5])
-    expect(m).toMatchObject({ attempts: 7, correct: 7, streak: 7, lastSeenAt: now.toISOString(), updatedAt: now.toISOString() })
+    expect(m).toMatchObject({ attempts: 7, correct: 7, streak: 7, lastSeenAt: when.toISOString(), updatedAt: when.toISOString() })
+  })
+
+  it('a fluent right answer before the review date does not climb (no mastery in one sitting)', () => {
+    const first = updateMastery(undefined, attempt(), now)
+    expect(first.box).toBe(1)
+    const again = updateMastery(first, attempt(), at(0.1))
+    expect(again.box).toBe(1)
+    expect(again.dueAt).toBe(first.dueAt)
+    expect(again.correct).toBe(2)
+    // The box 2 (mastered) needs the review date to come: the next day.
+    const tomorrow = updateMastery(again, attempt(), at(1))
+    expect(tomorrow.box).toBe(2)
+    expect(updateMastery(tomorrow, attempt(), at(1.1)).box).toBe(2)
+  })
+
+  it('a right answer after a wrong try is not fluent: the box stays', () => {
+    expect(updateMastery(withBox(2), attempt({ retries: 1 }), now).box).toBe(2)
+    expect(updateMastery(withBox(0), attempt({ retries: 1 }), now).box).toBe(1)
+    expect(updateMastery(withBox(2), attempt({ retries: 0 }), now).box).toBe(3)
+  })
+
+  it('a right answer long after the review date drops one box before counting', () => {
+    // Box 4 has an 8-day interval: answered 30 days after its date, it goes 4 → 3 and the fluent answer climbs back to 4.
+    const late: SkillMastery = { ...withBox(4), dueAt: at(-30).toISOString() }
+    expect(updateMastery(late, attempt(), now).box).toBe(4)
+    // Only one box down, even after months away.
+    const veryLate: SkillMastery = { ...withBox(5), dueAt: at(-300).toISOString() }
+    expect(updateMastery(veryLate, attempt(), now).box).toBe(5)
+    // A slow answer after a long gap is one box down and no climb.
+    expect(updateMastery(late, attempt({ ms: 9000 }), now).box).toBe(3)
   })
 
   it('correct but slow, or with hints → stays (box 0 → 1)', () => {

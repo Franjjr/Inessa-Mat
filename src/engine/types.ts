@@ -16,6 +16,8 @@ export interface AttemptForMastery {
   ms: number
   inputMode: InputMode
   hintsUsed: number
+  /** Wrong tries before this answer (the facts views allow one more try): a right answer after one is not fluent. */
+  retries?: number
   errorType?: ErrorType | null
 }
 
