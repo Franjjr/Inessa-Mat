@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react'
+import { cleanup, render, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
@@ -7,6 +7,20 @@ import { useActiveChild, createChild, updateProgress } from '@/data'
 import { flushTimers } from '@/data/__tests__/helpers'
 import { useLocalOnlyAuth } from '../host/testing'
 import WorldMapScreen from './WorldMapScreen'
+
+// The companion's rescue is what the Predicament art receives: the test reads it from the last render.
+const rescueSeen = vi.hoisted(() => ({ values: [] as number[] }))
+vi.mock('@/art', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/art')>()
+  const { createElement } = await import('react')
+  return {
+    ...actual,
+    Predicament: ({ rescue, children }: { rescue: number; children?: unknown }) => {
+      rescueSeen.values.push(rescue)
+      return createElement('div', null, children as never)
+    },
+  }
+})
 
 vi.mock('motion/react', async () => {
   const { createElement, forwardRef } = await import('react')
@@ -87,5 +101,28 @@ describe('WorldMapScreen lock states', () => {
     const labels = nodeLabels()
     expect(labels.find((l) => l.includes('hecho'))).toContain('Las lianas de las hadas')
     expect(labels.find((l) => l.includes('aquí estás'))).toContain('¿Qué es multiplicar?')
+  })
+
+  it('the companion is freed more by practice than by reading the same number of stops', async () => {
+    // World 1 has stops to read and to practise. One stop finished: a reading (1 star) for one child, a full practice
+    // (3 stars) for the other. The practice frees the companion more.
+    const reading = await childAt('w1')
+    await updateProgress(reading.child.id, (p) => applyNodeResult(p, 'w1', 'arrival', { stars: 3, passed: true }))
+    rescueSeen.values = []
+    renderMap('w1')
+    await waitFor(() => expect(rescueSeen.values.length).toBeGreaterThan(0))
+    const readRescue = rescueSeen.values[rescueSeen.values.length - 1]
+    cleanup()
+
+    const practice = await childAt('w1')
+    await updateProgress(practice.child.id, (p) => applyNodeResult(p, 'w1', 'groups', { stars: 3, passed: true }))
+    rescueSeen.values = []
+    renderMap('w1')
+    await waitFor(() => expect(rescueSeen.values.length).toBeGreaterThan(0))
+    const practiceRescue = rescueSeen.values[rescueSeen.values.length - 1]
+
+    expect(readRescue).toBeGreaterThan(0)
+    expect(practiceRescue).toBeGreaterThan(readRescue)
+    expect(practiceRescue).toBeCloseTo(readRescue * 3, 5)
   })
 })
