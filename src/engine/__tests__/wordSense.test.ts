@@ -13,6 +13,8 @@ function plausibleWrong(p: { op: string; a: number; b: number; right: number; sh
   const { op, a, b, right, shown } = p
   if (shown === right * 10) return true
   if (right % 10 === 0 && right >= 20 && shown === right / 10) return true
+  // A close proposal: the right result a step off (a forgotten carry, a digit slip), by one, ten or a hundred.
+  if (Math.abs(shown - right) === 1 || Math.abs(shown - right) === 10 || Math.abs(shown - right) === 100) return true
   if (op === 'add') return shown < Math.max(a, b)
   if (op === 'sub') return shown > a
   if (op === 'mul') return shown < b

@@ -120,22 +120,37 @@ const SENSE_STORIES = WORD_TEMPLATES.filter((t) => !/\{(child|pet)\}/.test(t.tex
 
 const SENSE_OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido'] as const
 
-/** The three hints are the same for every problem: the strategy, the rounding, and a worked example in words (other numbers). */
+/** The hints of the ordinary proposals: the strategy, the rounding, and a worked example in words (other numbers). */
 const SENSE_HINTS: [string, string, string] = [
   'Antes de calcular, piensa si la respuesta tiene un tamaño razonable para lo que cuenta el cuento.',
   'Redondea los números del cuento a decenas o a centenas, haz la cuenta de cabeza y mira si la respuesta que dan está cerca de ese resultado o muy lejos.',
   'Ejemplo con otros números: doscientas más trescientas son unas quinientas; cinco mil sería demasiado. Compara igual la respuesta con esa cuenta redondeada.',
 ]
 
-/** A wrong answer for the story: off by an order of magnitude (×10, or ÷10 when that stays whole), or impossible for the story. */
-function wrongAnswer(rng: Rng, op: WordOp, a: number, b: number, right: number): number {
-  const options = [right * 10]
-  if (right % 10 === 0 && right >= 20) options.push(right / 10)
-  if (op === 'add') options.push(randInt(rng, 1, Math.max(a, b) - 1)) // a total smaller than one of its parts
-  else if (op === 'sub') options.push(a + randInt(rng, 1, a)) // more left than there was to start with
-  else if (op === 'mul') options.push(randInt(rng, 1, b - 1)) // fewer than one group
-  else options.push(a + randInt(rng, 1, a)) // each share bigger than the whole
-  return pick(rng, options)
+/** The hints of a close proposal (a forgotten carry, a digit slip): rounding cannot tell it apart, so the method is the full calculation. */
+const SENSE_HINTS_CLOSE: [string, string, string] = [
+  'Antes de calcular, piensa si la respuesta tiene un tamaño razonable para lo que cuenta el cuento.',
+  'Haz la cuenta completa, columna a columna y sin redondear, y compara con la respuesta. Fíjate sobre todo en las decenas y en las llevadas.',
+  'Ejemplo con otros números: treinta y ocho más cuarenta y siete son ochenta y cinco. La estimación solo sirve para ver el tamaño; la cuenta completa da el resultado.',
+]
+
+/** A wrong answer for the story, and whether it is close to the right result. Absurd ones: off by an order of magnitude
+    (×10, or ÷10 when that stays whole), or impossible for the story. Close ones: a step away from the right result in the
+    tens or the hundreds (a forgotten carry, a digit slip), or by one when the result is small. */
+function wrongAnswer(rng: Rng, op: WordOp, a: number, b: number, right: number): { value: number; close: boolean } {
+  if (rng() < 0.5) {
+    const absurd = [right * 10]
+    if (right % 10 === 0 && right >= 20) absurd.push(right / 10)
+    if (op === 'add') absurd.push(randInt(rng, 1, Math.max(a, b) - 1)) // a total smaller than one of its parts
+    else if (op === 'sub') absurd.push(a + randInt(rng, 1, a)) // more left than there was to start with
+    else if (op === 'mul') absurd.push(randInt(rng, 1, b - 1)) // fewer than one group
+    else absurd.push(a + randInt(rng, 1, a)) // each share bigger than the whole
+    return { value: pick(rng, absurd), close: false }
+  }
+  const step = right < 10 ? 1 : right < 100 ? 10 : pick(rng, [10, 100])
+  const down = right - step
+  const value = down > 0 && rng() < 0.5 ? down : right + step
+  return { value, close: true }
 }
 
 /** Thousands with a space, as the book writes them: 3770 → 3 770. */
@@ -150,6 +165,8 @@ export interface SenseProblem {
   right: number
   /** The answer the story's character gives: right, or a wrong one (see wrongAnswer). */
   shown: number
+  /** The wrong answer is close to the right one (a slip, not an absurd number). */
+  near: boolean
   exercise: ShapeChoiceExercise
 }
 
@@ -184,16 +201,19 @@ export function buildSense(rng: Rng): SenseProblem {
     right = randInt(rng, 2, 19)
     a = b * right
   }
-  const shown = rng() < 0.5 ? right : wrongAnswer(rng, op, a, b, right)
+  const wrong = rng() < 0.5 ? null : wrongAnswer(rng, op, a, b, right)
+  const shown = wrong ? wrong.value : right
+  const near = wrong?.close === true
   const story = fillTemplate(t.text, a, b)
   const question = `${story} Lumi responde: «${withSpaces(shown)} ${t.unit}». ¿Tiene sentido esa respuesta?`
   const order = shuffle(rng, [0, 1])
   const correct = shown === right ? 0 : 1
   const exercise: ShapeChoiceExercise = {
     id: `word-sense:${t.id}:${a}.${b}:${shown}`, kind: 'shape-choice', skill: WORD_SENSE_SKILL, difficulty: 3,
-    question, figures: [], options: order.map((i) => SENSE_OPTIONS[i]), answer: order.indexOf(correct), hints: SENSE_HINTS,
+    question, figures: [], options: order.map((i) => SENSE_OPTIONS[i]), answer: order.indexOf(correct),
+    hints: near ? SENSE_HINTS_CLOSE : SENSE_HINTS,
   }
-  return { op, a, b, right, shown, exercise }
+  return { op, a, b, right, shown, near, exercise }
 }
 
 /** Grades a word:sense answer: the option tapped against the right one. */
@@ -207,6 +227,6 @@ export function checkSense(ex: ShapeChoiceExercise, answer: Answer): CheckResult
   if (answer.index === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Has comparado la respuesta con el cuento.' }
   return {
     correct: false, given, expected, errorType: 'other',
-    feedback: '¡Casi! Haz una cuenta aproximada con números redondos y compara con la respuesta que dan.',
+    feedback: '¡Casi! Haz la cuenta completa y compara con la respuesta que da Lumi.',
   }
 }
