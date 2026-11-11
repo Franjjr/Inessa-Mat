@@ -276,6 +276,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     latest.current.props.onSubmit(v)
   }
 
+  const pickAltRef = useRef<(key: string, d: number) => void>(() => {})
   const pickAlt = (key: string, d: number) => {
     setPopover(null)
     const seg = segRef.current.find((x) => x.key === key)
@@ -288,6 +289,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     recognizeAll()
     sfx.play('select', { volume: 0.4 })
   }
+  pickAltRef.current = pickAlt
 
   const surface = useInkSurface({
     surfaceRef: padRef,
@@ -394,6 +396,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       pick: (readKey) => {
         const segKey = readKey?.slice(uid.length + 1)
         if (segKey && segRef.current.some((x) => x.key === segKey)) setPopover(segKey)
+      },
+      choose: (readKey, d) => {
+        const segKey = readKey?.slice(uid.length + 1)
+        if (segKey && segRef.current.some((x) => x.key === segKey)) pickAltRef.current(segKey, d)
       },
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -582,7 +588,8 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           disabled={disabled}
           onDigit={(d) => typeDigit(d, 'keypad')}
           onDelete={backspace}
-          onSubmit={submit}
+          // One check button per screen: with an answer bar, its «Comprobar» grades (Enter still works).
+          onSubmit={store.hasBar() ? undefined : submit}
           submitDisabled={!canSubmit}
         />
       )}

@@ -40,6 +40,9 @@ export interface CellGroupProps {
   style?: CSSProperties
 }
 
+/** Under the keypad while a number typed like a calculator is not full: the cursor stays on it until she moves on. */
+export const NEXT_NUMBER_TIP = '¿Ya has terminado este número? Toca la casilla del siguiente.'
+
 export function CellGroup({
   children, order = 'dom', onSubmit, autoAdvance = true, keypad = 'auto', keypadToggle = true,
   keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr',
@@ -51,6 +54,9 @@ export function CellGroup({
   const [toggled, setToggled] = useState(false)
   const palm = usePalmGuard()
   const [nudging, nudge] = useNudge()
+  /** A number typed like a calculator that is not full yet, with another number after it: the cursor stays on it, so
+   *  the child is told to tap the next one (its numberId). */
+  const [unfinished, setUnfinished] = useState<string | null>(null)
   const keypadVisible = keypad === 'show' || (keypad === 'auto' && (mode === 'keypad' || toggled))
 
   const latest = useRef({ order, onSubmit, autoAdvance, typingOrder })
@@ -131,6 +137,14 @@ export function CellGroup({
     return list
   }, [])
 
+  /** The first cell after the number `cells` (the next number) in the typing order, if any. */
+  const nextAfter = useCallback((uid: string, cells: [string, CellEntry][]): string | undefined => {
+    const own = new Set(cells.map(([id]) => id))
+    const list = advanceOrder(uid)
+    const last = list.reduce((acc, id, i) => (own.has(id) ? i : acc), -1)
+    return list.slice(last + 1).find((id) => !own.has(id))
+  }, [advanceOrder])
+
   /** Writes the digits of a number right-aligned (units in the last cell), empty cells on the left. */
   const fillNumber = (cells: [string, CellEntry][], digits: string, via: 'keyboard' | 'keypad') => {
     const pad = cells.length - digits.length
@@ -150,16 +164,17 @@ export function CellGroup({
     // A full number starts again: the child is writing a new one over it.
     const digits = before.length >= cells.length ? String(d) : before + String(d)
     fillNumber(cells, digits, via)
+    const next = nextAfter(uid, cells)
     if (digits.length >= cells.length && latest.current.autoAdvance) {
       // The number is complete: go on to the first cell after it (the next number) in the typing order.
-      const own = new Set(cells.map(([id]) => id))
-      const list = advanceOrder(uid)
-      const last = list.reduce((acc, id, i) => (own.has(id) ? i : acc), -1)
-      const next = list.slice(last + 1).find((id) => !own.has(id))
+      setUnfinished(null)
       focusCell(next ?? units)
-    } else focusCell(units)
+    } else {
+      setUnfinished(next ? e.numberId : null)
+      focusCell(units)
+    }
     return true
-  }, [numberCells, advanceOrder, focusCell])
+  }, [numberCells, nextAfter, focusCell])
 
   const deleteInNumber = useCallback((uid: string) => {
     if (latest.current.typingOrder !== 'ltr') return false
@@ -169,10 +184,12 @@ export function CellGroup({
     if (uid !== cells[cells.length - 1][0]) return false
     const before = digitsOf(cells)
     if (!before) return false
-    fillNumber(cells, before.slice(0, -1), 'keypad')
+    const digits = before.slice(0, -1)
+    fillNumber(cells, digits, 'keypad')
+    setUnfinished(digits && nextAfter(uid, cells) ? e.numberId : null)
     focusCell(cells[cells.length - 1][0])
     return true
-  }, [numberCells, focusCell])
+  }, [numberCells, nextAfter, focusCell])
 
   const showToggle = keypadToggle && keypad === 'auto' && mode !== 'keypad'
   const canNudge = showToggle && !keypadVisible
@@ -206,6 +223,9 @@ export function CellGroup({
           <div className={s.side}>
             {keypadVisible && typingOrder === 'column' && (
               <p className={s.columnTip} role="note">Empieza por las unidades, la casilla que brilla.</p>
+            )}
+            {keypadVisible && unfinished && currentId && entries.current.get(currentId)?.numberId === unfinished && (
+              <p className={s.columnTip} role="note">{NEXT_NUMBER_TIP}</p>
             )}
             {keypadVisible && (
               <Keypad
