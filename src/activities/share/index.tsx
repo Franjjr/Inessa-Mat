@@ -44,7 +44,7 @@ interface RoundProps {
   emoji: string
   container: string | null
   onAnswered: (outcome: ExerciseOutcome) => void
-  /** After several right rounds: no guiding highlight, and the sharing can be skipped. */
+  /** After several right rounds: the sharing can be skipped (the guiding highlight stays). */
   skippable: boolean
 }
 
@@ -86,7 +86,7 @@ function ShareRound({ ex, emoji, container, onAnswered, skippable }: RoundProps)
             <button
               key={b}
               type="button"
-              className={`${s.bin} ${b === fewest && !skippable ? s.next : ''}`}
+              className={`${s.bin} ${b === fewest ? s.next : ''}`}
               onClick={() => give(b)}
               disabled={tray.length === 0}
               aria-label={`${host.t('Amiga')} ${b + 1}: ${items.length} ${emoji}`}
