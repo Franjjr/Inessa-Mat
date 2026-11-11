@@ -59,7 +59,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
     if (c.correct) celebrate('small')
   }
   return (
-    <ExerciseLayout workClassName={s.view} prompt={INSTRUCTION[ex.mode as 'shade' | 'read' | 'money']} actions={<AnswerBar flow={flow} onCheck={() => check(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />}>
+    <ExerciseLayout className="ex-wide-work" workClassName={s.view} prompt={INSTRUCTION[ex.mode as 'shade' | 'read' | 'money']} actions={<AnswerBar flow={flow} onCheck={() => check(whole, tenths, hund)} canCheck={whole !== null && tenths !== null} />}>
       {ex.mode === 'shade' && <Shade ex={ex} />}
       {ex.mode === 'read' && <p className={d.words}>{decimalWords(ex)}</p>}
       {money && (
@@ -76,7 +76,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                 onChange={setWhole}
                 onSubmit={(v) => { setWhole(v); if (!flow.submitted) check(v, tenths, hund) }}
                 maxDigits={2}
-                size="lg"
+                size="md"
                 status={status}
                 ariaLabel={money ? 'Euros' : 'Parte entera'}
                 checkButton={false}
@@ -94,7 +94,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                 onChange={setTenths}
                 onSubmit={(v) => { setTenths(v); if (!flow.submitted) check(whole, v, hund) }}
                 maxDigits={money ? 2 : 1}
-                size="lg"
+                size="md"
                 status={status}
                 ariaLabel={money ? 'Céntimos' : 'Décimas'}
                 checkButton={false}
@@ -109,7 +109,7 @@ function WriteNumber({ ex, flow, status }: { ex: DecimalExercise; flow: AnswerFl
                   onChange={setHund}
                   onSubmit={(v) => { setHund(v); if (!flow.submitted) check(whole, tenths, v) }}
                   maxDigits={1}
-                  size="lg"
+                  size="md"
                   status={status}
                   ariaLabel="Centésimas"
                   checkButton={false}

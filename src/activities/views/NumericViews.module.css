@@ -304,6 +304,9 @@
   min-width: 0;
 }
 .lineAnswerBox {
+  /* Above the empty cells beside it: its keypad and tools overflow onto them. */
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;

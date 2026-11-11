@@ -79,7 +79,8 @@
   white-space: nowrap;
 }
 
-.cells { display: inline-flex; align-items: flex-start; gap: var(--sp-2); min-width: 0; }
+/* Room between the boxes for the eraser drawn beside each one (outside its box): it is never under the next box. */
+.cells { display: inline-flex; align-items: flex-start; gap: var(--sp-8); min-width: 0; }
 
 /* Under 480 px the boxes of the column take their width from --cell-size (the keypad sits under them): their minimum
    widths of a tablet would push the column off the screen. Each box keeps its height. */

@@ -85,6 +85,12 @@
   }
 
   .ex-head { text-align: left; }
+  /* Work that needs the width (several writing boxes in a row): a narrower statement column. */
+  .ex-layout.ex-wide-work { grid-template-columns: minmax(200px, 28%) minmax(0, 1fr); }
+
+  /* While the work scrolls (a box that takes the focus scrolls the page), the bar follows the window down its column
+     (ExerciseLayout moves it: sticky does not work inside the scaled game). Above the statement it may pass over. */
+  .ex-actions { position: relative; }
   .ex-prompt { font-size: calc(var(--fs-prompt-side) / var(--fit-scale, 1)); }
   .ex-prompt-sub { font-size: calc(var(--fs-prompt-sub-side) / var(--fit-scale, 1)); }
 

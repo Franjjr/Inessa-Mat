@@ -13,6 +13,7 @@ import { season1 } from '@/content'
 import { GRADE2_SYLLABUS, GRADE3_SYLLABUS, GRADE4_SYLLABUS } from '@/content/syllabus'
 import PixelActivity from '@/activities/pixel'
 import { createRng, generate } from '@/engine'
+import { makeLineTick } from '@/engine/numeric'
 import { inferKinds } from '@/engine/generate'
 import { ScrollAssist } from '@/app/ScrollAssist'
 import { BackButton, Screen } from '@/ui'
@@ -57,6 +58,12 @@ export function pantallaCases(): PantallaCase[] {
       }
     }
   }
+  // Fixed cases the e2e needs whatever the generator draws: a number line with an empty mark, a row of ten objects.
+  out.push({ id: 'number-line__tick', exercise: makeLineTick(100, [3600, 3700, 3800, 3900, 4000], 2) })
+  out.push({
+    id: 'ordinal__row10',
+    exercise: { id: 'ordinal:row:7:10', kind: 'ordinal', skill: 'num:ordinal:10', difficulty: 1, mode: 'row', n: 7, items: Array.from({ length: 10 }, () => '🐞'), options: [], answer: 6 },
+  })
   return out
 }
 

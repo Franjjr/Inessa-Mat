@@ -9,7 +9,7 @@ import CalendarView, { howMany } from './CalendarView'
 import ClockSetView from './ClockSetView'
 import ColumnView, { columnAuxCaption, columnPrompt } from './ColumnView'
 import EquationView from './EquationView'
-import { ExerciseLayout } from './ExerciseLayout'
+import { ExerciseLayout, followShift } from './ExerciseLayout'
 import LongMulView, { partialLabel } from './LongMulView'
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
@@ -27,6 +27,19 @@ describe('ExerciseLayout (P3PE-06)', () => {
     expect(container.querySelector('.ex-prompt-sub')?.textContent).toBe('Toca una.')
     const parts = [...section.children].map((c) => c.className)
     expect(parts).toEqual(['ex-head', 'ex-work', 'ex-actions'])
+  })
+})
+
+describe('the answer bar follows the window on a short screen (P3PE-01)', () => {
+  it('in view: it stays where it is', () => {
+    expect(followShift(120, 60, 400, 0.7)).toBe(0)
+  })
+  it('gone above the window: it comes down to 8 px from the top, in its own (unscaled) pixels', () => {
+    expect(followShift(-62, 60, 400, 0.7)).toBeCloseTo(70 / 0.7, 5)
+  })
+  it('never further down than the end of its section, unless that is the only way to see it', () => {
+    expect(followShift(-20, 60, 60, 1)).toBe(28)
+    expect(followShift(-200, 60, -100, 1)).toBe(208)
   })
 })
 
