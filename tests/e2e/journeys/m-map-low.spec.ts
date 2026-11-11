@@ -12,7 +12,7 @@ test('mapa en pantalla baja: franja ≤ 90 px, nada cortado arriba, etiquetas si
   await page.waitForTimeout(1200)
 
   const m = await page.evaluate(() => {
-    const scroll = document.querySelector<HTMLElement>('[class*="scroll_"], [class*="_scroll"]')!
+    const scroll = document.querySelector<HTMLElement>('[class*="_scroll_"]')!
     const r = scroll.getBoundingClientRect()
     const tags = [...document.querySelectorAll<HTMLElement>('[class*="_tag"]')].map((e) => e.getBoundingClientRect())
     const clipped = tags.filter((b) => b.bottom > r.top && b.top < r.top + 14).length
@@ -21,9 +21,25 @@ test('mapa en pantalla baja: franja ≤ 90 px, nada cortado arriba, etiquetas si
       const a = tags[i], b = tags[j]
       if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) overlaps++
     }
-    return { bandBottom: r.top, clipped, overlaps }
+    // Tags against icons, and touching the centre of a name must land inside a stop button.
+    const badges = [...document.querySelectorAll<HTMLElement>('[class*="_badge_"]')].map((e) => e.getBoundingClientRect())
+    let tagOnIcon = 0
+    for (const a of tags) for (const b of badges) {
+      if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) tagOnIcon++
+    }
+    let untouchable = 0
+    for (const e of document.querySelectorAll<HTMLElement>('[class*="_tag"]')) {
+      const b = e.getBoundingClientRect()
+      const cx = b.left + b.width / 2
+      const cy = b.top + b.height / 2
+      if (cy < r.top || cy > r.bottom) continue
+      if (!document.elementFromPoint(cx, cy)?.closest('button')) untouchable++
+    }
+    return { bandBottom: r.top, clipped, overlaps, tagOnIcon, untouchable }
   })
   expect(m.bandBottom).toBeLessThanOrEqual(90)
   expect(m.clipped).toBe(0)
   expect(m.overlaps).toBe(0)
+  expect(m.tagOnIcon).toBe(0)
+  expect(m.untouchable).toBe(0)
 })

@@ -12,7 +12,13 @@ export const GUARDIAN_WON_PX = 96
 const GAP = 16
 const MARGIN = 8
 const STARS_PX = 20
-const PILL = { w: 170, h: 30 }
+const PILL_H = 30
+// Longest pill we draw on one line; a longer pet name gets the short text «¡Sigue aquí!» instead of a cut name.
+const PILL_MAX_W = 300
+const PILL_PAD = 36
+const PILL_CHAR = 9.2
+// Clears the gold ring around icons so two neighbouring rings never touch.
+const ICON_RING = 12
 const HELP = { w: 100, h: 24 }
 
 /** Width of the name tag: 200 px, but 160 px at most on narrow screens (and never wider than the screen). */
@@ -26,7 +32,17 @@ export function labelHeight(title: string, w: number): number {
   return title.length <= perLine ? 30 : 48
 }
 
-export interface StopInput { node: NodeDef; title: string; done: boolean; current: boolean; crystal: boolean }
+/** Text and width of the «Aquí sigue {pet}» pill: sized from the real text, never cut with an ellipsis. */
+export function pillOf(petName: string | undefined): { text: string; w: number } {
+  const name = (petName ?? '').trim()
+  const full = name ? `Aquí sigue ${name}` : '¡Sigue aquí!'
+  const w = Math.ceil(full.length * PILL_CHAR + PILL_PAD)
+  if (w <= PILL_MAX_W) return { text: full, w }
+  const short = '¡Sigue aquí!'
+  return { text: short, w: Math.ceil(short.length * PILL_CHAR + PILL_PAD) }
+}
+
+export interface StopInput { node: NodeDef; title: string; done: boolean; current: boolean; crystal: boolean; petName?: string }
 export interface Placed {
   /** Icon box, label block (name + stars) and the optional extra tags, all in stage pixels. */
   icon: Box
@@ -44,6 +60,8 @@ export interface MapLayout { height: number; placed: Placed[]; overlaps: string[
 const hit = (a: Box, b: Box) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
 const around = (cx: number, cy: number, w: number, h: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 })
 
+const grow = (b: Box, m: number): Box => ({ x0: b.x0 - m, y0: b.y0 - m, x1: b.x1 + m, y1: b.y1 + m })
+
 function iconSize(s: StopInput): number {
   if (s.node.kind !== 'guardian') return ICON_PX
   return s.crystal ? GUARDIAN_WON_PX : GUARDIAN_PX
@@ -53,7 +71,7 @@ function iconSize(s: StopInput): number {
 function extrasOf(s: StopInput, cx: number, cy: number, size: number): Box[] {
   const out: Box[] = []
   const r = size / 2
-  if (s.current) out.push(around(cx, cy - r - PILL.h / 2 + 8, PILL.w, PILL.h))
+  if (s.current) out.push(around(cx, cy - r - PILL_H / 2 + 8, pillOf(s.petName).w, PILL_H))
   if (s.node.kind === 'guardian' && !s.crystal) {
     const right = cx + r + 36
     out.push({ x0: right - HELP.w, y0: cy - r - 12, x1: right, y1: cy - r - 12 + HELP.h })
@@ -122,6 +140,7 @@ function place(stops: StopInput[], W: number, H: number): { placed: Placed[]; ov
     if (!inside(p.label)) overlaps.push(`${id}: etiqueta fuera del escenario`)
     for (let j = 0; j < stops.length; j++) {
       const other = stops[j].node.id
+      if (j > i && hit(grow(p.icon, ICON_RING), grow(result[j].icon, ICON_RING))) overlaps.push(`${id}: icono sobre el de ${other}`)
       if (hit(p.label, result[j].icon)) overlaps.push(`${id}: etiqueta sobre el icono de ${other}`)
       for (const e of result[j].extras) if (hit(p.label, e)) overlaps.push(`${id}: etiqueta sobre un aviso de ${other}`)
       if (j > i && hit(p.label, result[j].label)) overlaps.push(`${id}: etiqueta sobre la de ${other}`)
@@ -141,11 +160,11 @@ export function baseStageHeight(stageW: number, visibleH: number, viewportH = vi
   return Math.max(visibleH, Math.round(stageW * 0.96), 560)
 }
 
-/** Lays the stops out on a stage of the given size; grows the stage (up to 2.5 times) until nothing collides. */
+/** Lays the stops out on a stage of the given size; grows the stage (up to 2.5 times, 4 on phones where the width cannot help) until nothing collides. */
 export function layoutMap(stops: StopInput[], stageW: number, baseH: number, fixedHeight = false): MapLayout {
   let H = baseH
   let r = place(stops, stageW, H)
-  while (!fixedHeight && r.overlaps.length > 0 && H < baseH * 2.5) {
+  while (!fixedHeight && r.overlaps.length > 0 && H < baseH * (stageW <= 600 ? 4 : 2.5)) {
     H = Math.round(H * 1.08)
     r = place(stops, stageW, H)
   }

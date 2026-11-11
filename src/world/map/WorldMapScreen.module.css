@@ -63,8 +63,8 @@
   position: absolute;
   right: 12px;
   bottom: 8px;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border: var(--sticker-border);
@@ -73,7 +73,8 @@
   color: var(--c-ink);
   font-size: var(--fs-sm);
   pointer-events: none;
-  opacity: .9;
+  /* Semi-transparent: a tag passing under it stays readable. */
+  opacity: .6;
 }
 .path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .pathBase, .pathDone {
@@ -121,9 +122,6 @@
   position: absolute;
   top: -22px;
   left: 50%;
-  max-width: 170px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transform: translateX(-50%);
   padding: 4px 14px;
   border: var(--sticker-border);
@@ -161,7 +159,8 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  pointer-events: none;
+  /* Inside the button: touching the name opens the stop. */
+  cursor: pointer;
 }
 .label {
   /* At most two lines: a long name never climbs over the trunk of the path. */

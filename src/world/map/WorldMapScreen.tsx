@@ -10,7 +10,7 @@ import {
 import { useActiveChild, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
-import { baseStageHeight, GUARDIAN_PX, GUARDIAN_WON_PX, ICON_PX, layoutMap } from './labels'
+import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf } from './labels'
 import s from './WorldMapScreen.module.css'
 
 /** Path coordinates are authored in 0..1 (x → right, y → down); the SVG works in a 1000-unit square. */
@@ -101,12 +101,12 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
   // The island has many stops (one group per stage): its stage is as tall as they need, so they never stack on each other.
   const isIsland = world.id === ISLAND_ID
   const layout = useMemo(() => layoutMap(
-    states.map(({ node, done }) => ({ node, title: renderTemplate(node.title, ctx), done, current: node.id === current, crystal })),
+    states.map(({ node, done }) => ({ node, title: renderTemplate(node.title, ctx), done, current: node.id === current, crystal, petName: ctx.petName })),
     area.w,
     isIsland ? world.nodes.length * ISLAND_STOP_PX : baseStageHeight(area.w, area.h, area.vh),
     isIsland,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [states, current, crystal, area, isIsland, world.nodes.length, child.nickname])
+  ), [states, current, crystal, area, isIsland, world.nodes.length, child.nickname, ctx.petName])
   const stageHeight = { height: `${layout.height}px` }
 
   // Bring the child's next step into view with the step after it also in view, and room above for its pill.
@@ -131,7 +131,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     if (typeof el.scrollTo === 'function') el.scrollTo({ top: target, behavior: reduced ? 'auto' : 'smooth' })
     // Runs when the world or the next step changes, not on every progress tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [world.id, current])
+  }, [world.id, current, area.w, area.h])
 
   const onScroll = () => {
     const el = scrollRef.current
@@ -231,7 +231,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                   )}
                 </span>
                 {isGuardian && !crystal && <span className={s.guardianTag}>¡Ayúdame!</span>}
-                {isCurrent && <span className={s.here}>Aquí sigue {ctx.petName}</span>}
+                {isCurrent && <span className={s.here}>{pillOf(ctx.petName).text}</span>}
                 <span className={s.tag} style={{ left: `calc(50% + ${pl.dx}px)`, top: `calc(50% + ${pl.dy}px)`, width: pl.w }}>
                   <span className={s.label}>{label}</span>
                   {done && (
