@@ -1,7 +1,10 @@
 /* Prueba inicial (docs/curriculum/PLAN_DOCENTE.md §6): about 10 minutes, one item per need in each block, no hints
-   and no feedback of right or wrong. Its answers go through the normal mastery update, so the plan starts where the
-   child is. Pure: builds the items and summarises the attempts for the adult report. */
+   and no feedback of right or wrong. Its answers go through the normal mastery update (a right answer takes a new skill
+   to box 1, due the next day: the spaced review). The topics a block answered clearly right shows as known are set aside
+   until confirmed (placementKnownTopics, then topicOfToday), so the plan starts with what the child does not know yet.
+   Pure: builds the items, picks the known topics and summarises the attempts for the adult report. */
 import type { AttemptRecord, Exercise, Rng, SkillKey } from '@/types'
+import { allTopics, type Syllabus } from '@/content/syllabus'
 import { generate } from './generate'
 import { createRng, hashString, shuffle } from './rng'
 import { allMulFactSkills, divSkill, mulSkill, parseSkill } from './skills'
@@ -146,4 +149,37 @@ export function summarizePlacement(attempts: readonly AttemptRecord[]): Placemen
     complete: run.length === PLACEMENT_COUNT,
     blocks,
   }
+}
+
+/** One answer of a placement run (any subject): the block of the item, its skill, and whether it was right. «No lo sé» and
+    a misread handwriting are not right. */
+export interface PlacementAnswer {
+  block: string
+  skill: SkillKey
+  correct: boolean
+}
+
+/** Fewest items a block needs for its answers to say something clearly: one right answer alone may be a lucky guess. */
+export const PLACEMENT_CLEAR_MIN = 2
+
+/**
+ * Topics of `course` the placement shows the child already knows, to be confirmed later: every skill of the topic was
+ * asked in a block whose items were all answered right (at least PLACEMENT_CLEAR_MIN of them). A topic with a skill the
+ * test never asked is not set aside (one fact does not make a whole table known, and the blocks do not make the place
+ * value with blocks known). Nothing is mastered by this: the topics only wait after the others (topicOfToday), their
+ * skills come back in the spaced review, and a wrong answer brings them back.
+ */
+export function placementKnownTopics(course: Syllabus, answers: readonly PlacementAnswer[]): string[] {
+  const byBlock = new Map<string, PlacementAnswer[]>()
+  for (const a of answers) byBlock.set(a.block, [...(byBlock.get(a.block) ?? []), a])
+  const known = new Set<SkillKey>()
+  for (const list of byBlock.values()) {
+    if (list.length >= PLACEMENT_CLEAR_MIN && list.every((a) => a.correct)) for (const a of list) known.add(a.skill)
+  }
+  return allTopics(course)
+    .filter((t) => {
+      const skills = [...new Set(t.skills)]
+      return skills.length > 0 && skills.every((s) => known.has(s))
+    })
+    .map((t) => t.id)
 }

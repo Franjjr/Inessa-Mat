@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { initialProgress } from '@/content'
+import { initialProgress, nextNode } from '@/content'
 import { classForTopic, markClassDone } from '@/content/classes'
-import { allTopics, currentTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, topicTitle } from '@/content/syllabus'
+import { allTopics, currentTopic, stageOfTopic, INGLES3_SYLLABUS, LENGUA3_SYLLABUS, syllabusFor, syllabusForGrade, topicTitle } from '@/content/syllabus'
 import { createRng, markClassToday, planLenguaSession, teachableCourse, type LessonSubject } from '@/engine'
 import type { ChildProfile, MasteryMap, ProgressState, SkillMastery, SubjectId } from '@/types'
 import { sessionDoneKey } from '@/world/session/logic'
@@ -72,6 +72,23 @@ describe('todayEntry', () => {
     const topic = currentTopic(syllabusForGrade(3), {})!
     expect(entry.title).toBe(topic.name.replace(/\s*\(.*\)\s*$/, ''))
     expect(entry.title).not.toMatch(/[()]/)
+  })
+})
+
+describe('one path on the home: «Hoy» and «Mi aventura» go to the same world', () => {
+  it('a 3.º child with the crystals of w1 and w2 and the temario behind: «Hoy» teaches a topic of world 3, where the map is', () => {
+    const p = progress()
+    const ahead: ProgressState = {
+      ...p,
+      worlds: {
+        w1: { unlocked: true, nodes: {}, crystal: true }, w2: { unlocked: true, nodes: {}, crystal: true }, w3: { unlocked: true, nodes: {}, crystal: false },
+      },
+    }
+    const entry = todayEntry({ grade: 3, mastery: {}, progress: ahead })
+    expect(nextNode(ahead)?.worldId).toBe('w3')
+    const topicId = entry.kind === 'clase' ? entry.topicId : undefined
+    expect(topicId).toBeDefined()
+    expect(stageOfTopic(syllabusForGrade(3), topicId!)?.worldId).toBe('w3')
   })
 })
 
