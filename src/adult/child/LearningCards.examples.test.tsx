@@ -29,7 +29,24 @@ describe('MistakesCard: examples and advice for every kind', () => {
     expect(within(examples).getByText('6 × 9: no escribió nada (la respuesta es 54)')).toBeInTheDocument()
     // Every kind gets its advice, not only the first two.
     expect(screen.getAllByText(/Qué ayuda:/)).toHaveLength(2)
-    expect(screen.getByText(/Para empezar, con 7 × 8 y 6 × 9/)).toBeInTheDocument()
+    expect(screen.getByText(/Para empezar, con «7 × 8» y «6 × 9»\./)).toBeInTheDocument()
+  })
+
+  it('names Lengua skills briefly, without their explanation in brackets, in the examples and the advice', () => {
+    const attempts = [
+      wrong('lng:orto:signos:punto', 'coma', 'punto', 1, 'punctuation'),
+      wrong('lng:orto:signos:coma', '', 'coma', 2, 'punctuation'),
+    ]
+    render(<MistakesCard report={errorReport(attempts, now, 30, 'language')} childName="Lía" subject="language" />)
+    const examples = screen.getByRole('list', { name: /Ejemplos de/ })
+    expect(within(examples).getByText('Usar el punto: escribió «coma» (la respuesta es punto)')).toBeInTheDocument()
+    expect(screen.getByText(/Para empezar, con «Usar el punto» y «Usar la coma»\./)).toBeInTheDocument()
+  })
+
+  it('keeps the whole name of a Lengua skill that has no brackets', () => {
+    const attempts = [wrong('lng:orto:mayusculas', '', 'mayúscula', 1, 'capital')]
+    render(<MistakesCard report={errorReport(attempts, now, 30, 'language')} childName="Lía" subject="language" />)
+    expect(screen.getByText(/Para empezar, con «Mayúsculas: al empezar y en los nombres propios»\./)).toBeInTheDocument()
   })
 
   it('never shows «No lo sé» as a mistake', () => {

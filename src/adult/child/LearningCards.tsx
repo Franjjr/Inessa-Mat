@@ -12,7 +12,7 @@ import { STORY_READINGS } from '@/content/lengua/stories'
 import { handwritingReport } from '@/engine/caligrafia/report'
 import { getWorld, seasonIdForGrade } from '@/content'
 import {
-  attemptsOf, describeError, describeSkill, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
+  attemptsOf, describeError, describeSkillShort, englishWordsReport, errorReport, minutesOfSubject, placementFlags, placementRuns, recallReport, storyFlag,
   syllabusReport, topicNeeds, ENGLISH_PLACEMENT_COUNT, ENGLISH_SKILL_TEXT, ENGLISH_THEMES, LENGUA_PLACEMENT_COUNT, PLACEMENT_COUNT, THEME_NAME,
   type EnglishWordsReport, type ErrorReport, type LessonSubject, type PlacementRun, type RecallReport, type SyllabusReport,
   type TopicNeeds, type TopicState,
@@ -405,9 +405,9 @@ function trendText(count: number, previous: number): string | null {
   return `Parecido al mes anterior (${previous}).`
 }
 
-/** «7 × 8» or «7 × 8 y 6 × 9»: at most two different names, the examples a piece of advice points at. */
+/** One or two names in quotes, «7 × 8» or «7 × 8» y «6 × 9»: at most two different names, the examples a piece of advice points at. */
 function joinNames(names: string[]): string {
-  const unique = [...new Set(names)].slice(0, 2)
+  const unique = [...new Set(names)].slice(0, 2).map((n) => `«${n}»`)
   return unique.length === 2 ? `${unique[0]} y ${unique[1]}` : unique.join('')
 }
 
@@ -449,7 +449,7 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
                     <ul className={s.examples} aria-label={`Ejemplos de ${g.label.toLowerCase()}`}>
                       {g.examples.map((e, k) => (
                         <li key={k}>
-                          {describeSkill(e.skill)}: {e.given.trim() ? `escribió «${e.given}»` : 'no escribió nada'} (la respuesta es {e.expected})
+                          {describeSkillShort(e.skill)}: {e.given.trim() ? `escribió «${e.given}»` : 'no escribió nada'} (la respuesta es {e.expected})
                         </li>
                       ))}
                     </ul>
@@ -457,7 +457,7 @@ export function MistakesCard({ report, childName, subject = 'math' }: { report: 
                   {trend && <p className={adult.muted}>{trend}</p>}
                   <p className={s.advice}>
                     <strong>Qué ayuda:</strong> {g.advice}
-                    {g.examples.length > 0 && <> Para empezar, con {joinNames(g.examples.map((e) => describeSkill(e.skill)))}.</>}
+                    {g.examples.length > 0 && <> Para empezar, con {joinNames(g.examples.map((e) => describeSkillShort(e.skill)))}.</>}
                   </p>
                 </li>
               )

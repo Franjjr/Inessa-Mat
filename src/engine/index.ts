@@ -19,7 +19,7 @@ export { strategyForFact } from './strategies'
 /** Leitner mastery: newMastery, updateMastery (fluency-aware), dueSkills, fluencyThresholdMs, starsFor, factGrid. */
 export { dueSkills, factGrid, fluencyThresholdMs, newMastery, starsFor, updateMastery } from './mastery'
 /** Spanish descriptions for adult dashboards. */
-export { describeError, describeSkill, ENGLISH_SKILL_TEXT } from './describe'
+export { describeError, describeSkill, describeSkillShort, ENGLISH_SKILL_TEXT } from './describe'
 /** Review plan and selectors (daily review), and the 15-minute daily session plan (blocks, scaffolding). */
 export { planSession, selectorForSkills } from './session'
 export {

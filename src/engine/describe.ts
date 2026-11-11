@@ -133,6 +133,16 @@ export const LENGUA_SKILL_TEXT: Record<string, string> = {
   'lng:lit:trabalenguas': 'Trabalenguas',
 }
 
+/**
+ * The short name of a skill, for sentences that list several of them (the advice, the examples): Lengua and English drop
+ * the explanation in brackets, «Oración: encontrar el sujeto (quién hace la acción)» → «Oración: encontrar el sujeto».
+ * Maths keeps its full text, so «(exactas)» and the like stay.
+ */
+export function describeSkillShort(skill: SkillKey): string {
+  const text = describeSkill(skill)
+  return /^(lng|eng):/.test(skill) ? text.replace(/\s*\([^)]*\)$/, '') : text
+}
+
 /** Human description of a skill for adults (Spanish): 'mul:6x7' → '6 × 7', 'sub:4d:z' → 'Restas de 4 cifras con ceros'. */
 export function describeSkill(skill: SkillKey): string {
   const p = parseSkill(skill)
