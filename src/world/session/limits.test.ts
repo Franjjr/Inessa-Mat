@@ -37,7 +37,7 @@ describe('«Ahora no» limits', () => {
 describe('stars: practice, not attendance', () => {
   const total = 10
   const run = (answered: number) => ({
-    answered, correct: 0, total, finished: false,
+    answered, graded: answered, correct: 0, total, finished: false,
   })
 
   it('a session with half of its planned items answered earns the stars, finished or cut by the time', () => {
@@ -53,21 +53,38 @@ describe('stars: practice, not attendance', () => {
   })
 
   it('wrong answers count as practice; nothing answered earns nothing', () => {
-    expect(earnsStars({ answered: 6, correct: 0, total: 10, finished: true })).toBe(true)
+    expect(earnsStars({ answered: 6, graded: 6, correct: 0, total: 10, finished: true })).toBe(true)
     expect(earnsStars(run(0))).toBe(false)
   })
 
   it('a speaking-only session (no graded item) needs one answer', () => {
-    expect(earnsStars({ answered: 1, correct: 0, total: 0, finished: true })).toBe(true)
-    expect(earnsStars({ answered: 0, correct: 0, total: 0, finished: true })).toBe(false)
+    expect(earnsStars({ answered: 1, graded: 0, correct: 0, total: 0, finished: true })).toBe(true)
+    expect(earnsStars({ answered: 0, graded: 0, correct: 0, total: 0, finished: true })).toBe(false)
   })
 
-  it('two answers out of a whole run are not half of it: no stars, however often the child skips', () => {
-    const q = startRun(plan)
-    const results = [{ uid: q.slots[0].item.uid, correct: true }, { uid: q.slots[1].item.uid, correct: true }]
-    const s = summarizeRun(q, results, true)
-    expect(s.answered).toBe(2)
-    expect(earnsStars(s)).toBe(s.total <= 4)
+  it('half of the planned items is the line, whatever the number of planned items is', () => {
+    const planned = (answered: number, finished: boolean) => ({ answered, graded: answered, correct: 0, total: 10, finished })
+    expect(earnsStars(planned(2, true))).toBe(false)
+    expect(earnsStars(planned(4, true))).toBe(false)
+    expect(earnsStars(planned(5, true))).toBe(true)
+    expect(earnsStars(planned(5, false))).toBe(true)
+  })
+
+  it('a speaking item is an answer for the intro and the closing, but not practice for the stars', () => {
+    const slot = (uid: string, kind: string) => ({
+      item: { uid, item: { exercise: { id: uid, kind, skill: 'eng:voc:animales' }, block: 'new', scaffold: false, isNew: false } as never },
+      retry: false,
+    })
+    const graded = Array.from({ length: 10 }, (_, i) => slot(`${i}:word`, 'eng-write-word'))
+    const spoken = Array.from({ length: 5 }, (_, i) => slot(`${i}:speak`, 'eng-speak'))
+    const q = { slots: [...spoken, ...graded], retried: [] }
+    const results = [
+      ...spoken.map((s) => ({ uid: s.item.uid, correct: true })),
+      { uid: '0:word', correct: true },
+    ]
+    const s = summarizeRun(q as never, results, true)
+    expect(s).toMatchObject({ answered: 6, graded: 1, total: 10 })
+    expect(earnsStars(s)).toBe(false)
   })
 })
 

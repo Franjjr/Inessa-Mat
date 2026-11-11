@@ -1,6 +1,6 @@
 /* Daily session runner logic (pure): the run order of the plan, the re-asks of failed items, the time-box and the
    reward key. The screen (DailySession.tsx) only renders what this file decides. */
-import { DAILY_MINUTES, ENGLISH_SESSION_MINUTES, EXAMPLE_SECONDS, estimateSeconds,type DailyBlockId, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
+import { DAILY_MINUTES, ENGLISH_SESSION_MINUTES, EXAMPLE_SECONDS, estimateSeconds, type DailyBlockId, type DailyItem, type DailyPlan, type LessonSubject } from '@/engine'
 import { startQueue, requeueWrong, type RunQueue } from '@/activities/shared/requeue'
 
 /** One planned item of the run, with an id unique inside the run (the same exercise id can come twice). */
@@ -97,7 +97,10 @@ export function isTimeUp(activeSeconds: number, limitSeconds: number = SESSION_L
 
 /** Result of the run for the closing screen: planned items only (re-asks are practice, not graded). */
 export interface RunSummary {
+  /** Answers to planned items, speaking included («Ahora dilo tú» is an answer for the intro and the closing). */
   answered: number
+  /** The answers that are graded (not «Ahora dilo tú»): the only ones that count as practice for the stars. */
+  graded: number
   correct: number
   total: number
   /** The session ended because the child finished the items (not because time ran out). */
@@ -106,12 +109,12 @@ export interface RunSummary {
 
 /**
  * The stars of the session (once a day): the child has practised, not just opened it. Right or wrong answers count; items
- * skipped with «Ahora no» do not. Ending by the time counts the same as finishing, if at least half of the planned items
- * were answered. A session with no planned graded item (speaking only) needs one answer.
+ * skipped with «Ahora no» do not, and neither do «Ahora dilo tú» answers (not graded). Ending by the time counts the same as
+ * finishing, if at least half of the planned items were answered with a graded answer. A session with no planned graded item (speaking only) needs one answer.
  */
 export function earnsStars(summary: RunSummary): boolean {
   if (summary.total === 0) return summary.answered > 0
-  return summary.answered * 2 >= summary.total
+  return summary.graded * 2 >= summary.total
 }
 
 /** «Ahora dilo tú» (eng-speak) is not graded: its stars are a pronunciation result, not an answer to be right or wrong. It is
@@ -123,7 +126,7 @@ export function summarizeRun(q: RunQueue<RunItem>, results: readonly { uid: stri
   const graded = results.filter((r) => isGraded(kindOf.get(r.uid) ?? ''))
   const planned = q.slots.filter((s) => !s.retry && isGraded(s.item.item.exercise.kind)).length
   const correct = graded.filter((r) => r.correct).length
-  return { answered: results.length, correct, total: planned, finished }
+  return { answered: results.length, graded: graded.length, correct, total: planned, finished }
 }
 
 /** The table whose song is offered at the end: each missed multiplication fact counts for both factors (when they are
