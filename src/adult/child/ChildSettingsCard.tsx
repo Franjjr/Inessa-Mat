@@ -29,7 +29,7 @@ export function ChildSettingsCard({ child }: { child: ChildProfile }) {
   const change = async (patch: Partial<ChildSettings>) => {
     setError(null)
     try {
-      await updateChild(child.id, { settings: { ...settings, ...patch } })
+      await updateChild(child.id, { settings: { ...child.settings, ...patch } })
       toast('Cambio guardado')
     } catch (e) {
       setError(errorMessage(e, 'No hemos podido guardar el cambio. Inténtalo otra vez.'))

@@ -43,6 +43,12 @@ describe('the school methods in the settings', () => {
     expect(screen.getByRole('radio', { name: 'La galera con restas' })).toHaveAttribute('aria-checked', 'true')
   })
 
+  it('changing another setting keeps the old method as saved, so the start page can still tell once it was removed', () => {
+    renderCard(child({ subMethod: 'line', divMethod: 'climb', schoolMethodAsked: true }))
+    fireEvent.click(screen.getByLabelText('Casillas grandes para escribir'))
+    expect(updateChild).toHaveBeenCalledWith('c1', { settings: expect.objectContaining({ bigCells: true, subMethod: 'line', divMethod: 'climb' }) })
+  })
+
   it('choosing me llevo una saves it and marks the question as answered', () => {
     renderCard(child({ schoolMethodAsked: true }))
     fireEvent.click(screen.getByRole('radio', { name: 'Me llevo una abajo' }))
