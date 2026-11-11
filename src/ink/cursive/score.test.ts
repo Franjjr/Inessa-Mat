@@ -127,6 +127,23 @@ describe('scoreCursive: one criterion off', () => {
   })
 })
 
+describe('scoreCursive: a slight fault does not turn a well-drawn letter into one star', () => {
+  it('an o 12% wider, and an a bulged by 3 units: one shape fault that is slight, so 2 stars (and the shape is named as failed)', () => {
+    const wide = scoreDrawn('o', widenedStrokes(exactStrokes('o'), 1.12))
+    expect(wide.passed.shape).toBe(false)
+    expect(wide.stars).toBe(2)
+    const bulged = scoreDrawn('a', bulgedStrokes(exactStrokes('a'), 3))
+    expect(bulged.passed.shape).toBe(false)
+    expect(bulged.stars).toBe(2)
+  })
+
+  it('a clear shape fault (an o 20% wider) is still 1 star', () => {
+    const s = scoreDrawn('o', widenedStrokes(exactStrokes('o'), 1.2))
+    expect(s.passed.shape).toBe(false)
+    expect(s.stars).toBe(1)
+  })
+})
+
 describe('scoreCursive: almost good (each criterion just past its limit gets at most 2 stars)', () => {
   it('size 15% too big', () => {
     for (const text of ['a', 'o', 'l']) {
