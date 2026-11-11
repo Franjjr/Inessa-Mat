@@ -44,10 +44,11 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
   const [total, setTotal] = useState<number | null>(null)
   const [rest, setRest] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  const canCheck = parts.every((p) => p !== null) && total !== null && rest !== null
+  // The remainder box may stay empty: the checker reads an empty box as 0 when nothing is left over.
+  const canCheck = parts.every((p) => p !== null) && total !== null
 
   const submit = (ps = parts, t = total, r = rest) => {
-    if (!ps.every((p) => p !== null) || t === null || r === null) return
+    if (!ps.every((p) => p !== null) || t === null) return
     const c = flow.submit({ type: 'division-parts', parts: ps, quotient: t, remainder: r })
     if (c.correct) celebrate('small')
   }
@@ -87,6 +88,7 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Resto:')}</span>
           <NumberInput value={rest} onChange={setRest} onSubmit={() => submit()} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" />
+          <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       </div>
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />
@@ -102,7 +104,8 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
   const [rest, setRest] = useState<number | null>(null)
   const passed = rows.length > 0 && rows[rows.length - 1] >= ex.dividend
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  const canCheck = passed && rest !== null
+  // The remainder box may stay empty when the division is exact: the checker reads it as 0 then.
+  const canCheck = passed
 
   const confirm = (v: number | null = draft) => {
     if (v === null || passed) return
@@ -110,7 +113,7 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
     setDraft(null)
   }
   const submit = (r: number | null = rest) => {
-    if (!passed || r === null) return
+    if (!passed) return
     const c = flow.submit({ type: 'climb', products: rows, remainder: r })
     if (c.correct) celebrate('small')
   }
@@ -148,6 +151,7 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Sobra:')}</span>
           <NumberInput value={rest} onChange={setRest} onSubmit={(v) => { setRest(v); submit(v) }} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" autoFocus />
+          <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       )}
       <AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />

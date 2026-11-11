@@ -14,7 +14,7 @@ import { climbProducts, divisionParts } from './divParts'
 import { digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
 import { FEEDBACK, praise, praiseFact } from './feedback'
-import { lineStops, subtrahendParts } from './subMethods'
+import { subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
@@ -252,17 +252,25 @@ function columnPrecheck(input: ColumnInput, answer: number, cols: number, requir
   return { empty, extra, value: valueOf(input.digits) }
 }
 
+/** The final carry may have been written in the carry row instead of the result row: 768 + 457 and 12 × 9 both
+    end in a new leading column whose digit is the carry. Shared by addition and multiplication, so they agree. */
+function withFinalCarry(input: ColumnInput, answer: number, opCols: number): ColumnInput {
+  const len = digitCount(answer)
+  if (len > opCols && input.digits[len - 1] == null && input.carries?.[len - 1] === toDigits(answer)[len - 1]) {
+    const digits = input.digits.slice()
+    digits[len - 1] = input.carries[len - 1]!
+    return { ...input, digits }
+  }
+  return input
+}
+
 function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
-  const input = digitsFrom(answer)
-  if (!input) return wrongShape(expected)
+  const raw = digitsFrom(answer)
+  if (!raw) return wrongShape(expected)
   const opCols = Math.max(...ex.operands.map(digitCount))
   const len = digitCount(ex.answer)
-  // The final carry may have been written in the carry row instead of the result row (e.g. 768 + 457).
-  if (len > opCols && input.digits[len - 1] == null && input.carries?.[len - 1] === toDigits(ex.answer)[len - 1]) {
-    input.digits = input.digits.slice()
-    input.digits[len - 1] = input.carries[len - 1]!
-  }
+  const input = withFinalCarry(raw, ex.answer, opCols)
   const given = showDigits(input.digits)
   const big = bigCells(input.digits)
   if (big.length) return { correct: false, given, expected, errorType: 'carry-wrong', wrongColumns: big, feedback: FEEDBACK.carryWrong }
@@ -286,9 +294,17 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
 const SUB_STEP_FEEDBACK = {
   partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
   partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
-  lineWrong: (step: number, from: number, to: number) => `¡Casi! El salto ${step} va de ${from} hacia ${to}: cuenta hacia delante, sin pasarte.`,
+  lineWrong: (step: number, after: number, before: number) =>
+    `¡Casi! El salto ${step} tiene que caer después de ${after} y antes de ${before}: cuenta hacia delante, sin pasarte.`,
   lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
+  lineTotalAlone: 'Suma cuánto has avanzado en total.',
   lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
+} as const
+
+/* Messages for the «me llevo una abajo» method (the marks are added to the subtrahend, not crossed out on top). */
+const SUB_CARRY_FEEDBACK = {
+  forgotNext: '¡Casi! Te has olvidado de sumar 1 a la cifra de abajo de la casa de al lado.',
+  zero: '¡Cuidado con el cero! Revisa esa columna con calma y comprueba la resta sumando.',
 } as const
 
 function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckResult {
@@ -307,20 +323,29 @@ function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckR
   return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.partsCorrect }
 }
 
+/* Counting on: the stops are the child's own. Any strictly increasing chain between the subtrahend and the minuend is a
+   right way to get there, with fewer or more stops than the textbook route. Empty boxes after the last stop are not stops. */
 function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: number | null | undefined): CheckResult {
   const expected = String(ex.answer)
-  const stops = lineStops(ex.subtrahend, ex.minuend)
-  const given = values.slice(0, stops.length).map((v) => (isNum(v) ? String(v) : '?')).join(' → ') + (isNum(total) ? ` = ${total}` : '')
-  if (stops.some((_, k) => !isNum(values[k])) || !isNum(total)) return incomplete(given, expected)
+  let n = values.length
+  while (n > 0 && !isNum(values[n - 1])) n--
+  const written = values.slice(0, n) as (number | null)[]
+  const jumps = written.map((v) => (isNum(v) ? String(v) : '?')).join(' → ')
+  const given = jumps + (isNum(total) ? `${jumps ? ' = ' : ''}${total}` : '')
+  if (written.some((v) => !isNum(v)) || !isNum(total)) return incomplete(given, expected)
   let at = ex.subtrahend
-  for (let k = 0; k < stops.length; k++) {
-    const v = values[k] as number
+  for (let k = 0; k < written.length; k++) {
+    const v = written[k] as number
     if (v <= at || v >= ex.minuend) {
       return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineWrong(k + 1, at, ex.minuend) }
     }
     at = v
   }
-  if (total !== ex.answer) return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineTotal }
+  // With no stops written, «los saltos ya están bien colocados» would be false: only the total is asked for then.
+  if (total !== ex.answer) {
+    const feedback = written.length ? SUB_STEP_FEEDBACK.lineTotal : SUB_STEP_FEEDBACK.lineTotalAlone
+    return { correct: false, given, expected, errorType: 'other', feedback }
+  }
   return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
 }
 
@@ -348,10 +373,12 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
     return { correct: true, given, expected, feedback: FEEDBACK.subCorrect(ex.borrowed.filter(Boolean).length, ex.id) }
   }
   const d = diagnoseSub(ex.minuend, ex.subtrahend, input.digits)
+  // «Me llevo una abajo» adds the 1 to the next column's subtrahend instead of crossing out a ten: say that one.
+  const carryMethod = answer.type === 'digits' && answer.method === 'carry'
   const feedback =
     d.errorType === 'smaller-from-larger' ? FEEDBACK.smallerFromLarger
-      : d.errorType === 'zero-borrow' ? FEEDBACK.zeroBorrow
-        : d.errorType === 'borrow-forgot' ? FEEDBACK.borrowForgot
+      : d.errorType === 'zero-borrow' ? (carryMethod ? SUB_CARRY_FEEDBACK.zero : FEEDBACK.zeroBorrow)
+        : d.errorType === 'borrow-forgot' ? (carryMethod ? SUB_CARRY_FEEDBACK.forgotNext : FEEDBACK.borrowForgot)
           : d.errorType === 'misaligned' ? FEEDBACK.misaligned
             : d.errorType === 'other' ? FEEDBACK.subAdded
               : FEEDBACK.subFact(d.wrongColumns)
@@ -360,9 +387,10 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
 
 function checkColumnMul(ex: ColumnMulExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
-  const input = digitsFrom(answer)
-  if (!input) return wrongShape(expected)
+  const raw = digitsFrom(answer)
+  if (!raw) return wrongShape(expected)
   const len = digitCount(ex.answer)
+  const input = withFinalCarry(raw, ex.answer, digitCount(ex.top))
   const given = showDigits(input.digits)
   const big = bigCells(input.digits)
   if (big.length) return { correct: false, given, expected, errorType: 'carry-wrong', wrongColumns: big, feedback: FEEDBACK.carryWrongMul }
@@ -447,9 +475,16 @@ function checkDivisionParts(ex: DivisionExercise, answer: Extract<Answer, { type
   }
   const total = steps.reduce((sum, s) => sum + s.quotient, 0)
   if (answer.quotient !== total) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
-  if (answer.remainder === null) return incomplete(given, expected)
-  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  const rest = remainderWritten(ex, answer.remainder)
+  if (rest === null) return incomplete(given, expected)
+  if (rest !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
   return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+}
+
+/** The remainder as written. An empty box is 0 when nothing is left over (as in the galera), otherwise null. */
+function remainderWritten(ex: DivisionExercise, written: number | null | undefined): number | null {
+  if (written !== null && written !== undefined) return written
+  return ex.remainder === 0 ? 0 : null
 }
 
 function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb' }>): CheckResult {
@@ -467,8 +502,9 @@ function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb
   }
   if (filled[filled.length - 1] > stop) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.climbOver }
   if (!filled.includes(stop)) return incomplete(given, expected)
-  if (answer.remainder === null || answer.remainder === undefined) return incomplete(given, expected)
-  if (answer.remainder !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
+  const rest = remainderWritten(ex, answer.remainder)
+  if (rest === null) return incomplete(given, expected)
+  if (rest !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
   return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
 }
 
