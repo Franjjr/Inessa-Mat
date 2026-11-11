@@ -37,7 +37,7 @@ export const w2 = world({
     activityNode('column-4d', {
       kind: 'column',
       title: 'Sumas de 4 cifras',
-      instructions: 'Cuatro casas: unidades de mil, centenas, decenas y unidades. ¡Colócalas tú!',
+      instructions: 'Cuatro casas: millares, centenas, decenas y unidades. ¡Colócalas tú!',
       selector: { kinds: ['column-add'], digits: 4, regroup: 'any' },
       count: 5,
       params: { place: true },

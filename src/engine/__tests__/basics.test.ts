@@ -9,7 +9,7 @@ import { clamp, hashString, pick, randInt, range, shuffle, weightedIndex } from 
 import { ERROR_TEXT } from '@/engine/describe'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, smallerFromLargerValue } from '@/engine/diagnose'
 import { carryableColumns, divisionPool, genAddOperands, genDivision, genMul2x1, genSubPair } from '@/engine/numbers'
-import { columnList, praise } from '@/engine/feedback'
+import { columnList, columnWithArticle, praise } from '@/engine/feedback'
 import { fillTemplate, getWordTemplate, templatesFor } from '@/engine/wordProblems'
 import { regroupCounts, resolveContext, inferKinds } from '@/engine/generate'
 import type { ErrorType } from '@/types'
@@ -214,9 +214,12 @@ describe('describe', () => {
 describe('feedback, templates and misc', () => {
   it('column names and lists', () => {
     expect(columnName(0)).toBe('unidades')
-    expect(columnName(3)).toBe('unidades de mil')
+    expect(columnName(3)).toBe('millares')
     expect(columnName(9)).toBe('cifras de la izquierda')
+    expect(columnWithArticle(3)).toBe('los millares')
+    expect(columnWithArticle(4)).toBe('las decenas de millar')
     expect(columnList([2, 1])).toBe('las decenas y las centenas')
+    expect(columnList([3, 1])).toBe('las decenas y los millares')
     expect(columnList([0, 1, 2])).toBe('las unidades, las decenas y las centenas')
     expect(columnList([])).toBe('')
     expect(praise('x')).toBe(praise('x'))

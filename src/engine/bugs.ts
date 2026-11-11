@@ -11,7 +11,7 @@ import type {
   Answer, CheckCalcExercise, CheckResult, ErrorHuntExercise, ErrorType, Hint, Rng,
 } from '@/types'
 import { digitAt, digitCount, fromDigits } from './arith'
-import { columnName } from './feedback'
+import { columnWithArticle } from './feedback'
 import { genAddOperands, genMul2x1, genSubPair } from './numbers'
 import { pick, randInt, shuffle } from './rng'
 import { checkSkill, huntSkill, type CheckOp, type HuntOp } from './skills'
@@ -410,7 +410,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
 export function huntHints(ex: ErrorHuntExercise): Hint[] {
-  const where = ex.wrongColumn !== null ? ` Mira bien las ${columnName(ex.wrongColumn)}.` : ' Si todas las columnas salen bien, la cuenta está bien.'
+  const where = ex.wrongColumn !== null ? ` Mira bien ${columnWithArticle(ex.wrongColumn)}.` : ' Si todas las columnas salen bien, la cuenta está bien.'
   const params = { a: ex.top, b: ex.bottom, digits: Math.max(digitCount(ex.top), digitCount(ex.bottom), digitCount(ex.shown)) }
   return [
     { level: 1, text: 'Repasa la cuenta desde las unidades, columna a columna. Puede haber un solo error.', visual: 'none' },

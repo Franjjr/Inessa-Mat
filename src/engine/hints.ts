@@ -5,7 +5,7 @@ import type {
   SubMethod, TableMethod, WordProblemExercise,
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
-import { columnName } from './feedback'
+import { columnName, columnWithArticle } from './feedback'
 import { strategyDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 import { hintsCalc } from './calc'
@@ -55,9 +55,9 @@ function columnAddHints(ex: ColumnAddExercise): Hint[] {
     const parts = ops.map((n) => String(digitAt(n, i)))
     if ((ex.carries[i] ?? 0) > 0) parts.unshift(String(ex.carries[i]))
     const next = i + 1 < cols
-      ? `Ahora suma las ${columnName(i + 1)} sin olvidar la llevada: ¿cuánto da?`
+      ? `Ahora suma ${columnWithArticle(i + 1)} sin olvidar la llevada: ¿cuánto da?`
       : `Como ya no quedan más cifras, ese ${Math.floor(sum / 10)} baja directo al resultado. ¿Qué número sale?`
-    worked = `${cap(columnName(i))}: ${parts.join(' + ')} = ${sum}. Escribe ${sum % 10} y me llevo ${Math.floor(sum / 10)} a las ${columnName(i + 1)}. ${next}`
+    worked = `${cap(columnName(i))}: ${parts.join(' + ')} = ${sum}. Escribe ${sum % 10} y me llevo ${Math.floor(sum / 10)} a ${columnWithArticle(i + 1)}. ${next}`
   } else {
     const u = ops.map((n) => String(digitAt(n, 0))).join(' + ')
     const t = ops.map((n) => String(digitAt(n, 1))).join(' + ')
@@ -87,9 +87,9 @@ function columnSubHints(ex: ColumnSubExercise): Hint[] {
   let worked: string
   if (zero) {
     const lender = zero[zero.length - 1]
-    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}, y la vecina es un 0. Pide a las ${columnName(lender)}: el ${digitAt(m, lender)} se queda en ${digitAt(m, lender) - 1}, cada 0 se convierte en 9 y tus ${columnName(i)} son ${top + 10}. ${top + 10} − ${digitAt(s, i)} = ?`
+    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}, y la vecina es un 0. Pide a ${columnWithArticle(lender)}: el ${digitAt(m, lender)} se queda en ${digitAt(m, lender) - 1}, cada 0 se convierte en 9 y tus ${columnName(i)} son ${top + 10}. ${top + 10} − ${digitAt(s, i)} = ?`
   } else {
-    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}. La vecina de las ${columnName(i + 1)} te presta 1 y su ${digitAt(m, i + 1)} se queda en ${digitAt(m, i + 1) - 1}. Ahora tienes ${top + 10}: ${top + 10} − ${digitAt(s, i)} = ?`
+    worked = `${cap(columnName(i))}: ${top} es menos que ${digitAt(s, i)}. La vecina de ${columnWithArticle(i + 1)} te presta 1 y su ${digitAt(m, i + 1)} se queda en ${digitAt(m, i + 1) - 1}. Ahora tienes ${top + 10}: ${top + 10} − ${digitAt(s, i)} = ?`
   }
   return [
     hint(1, 'Empieza por las unidades. Si arriba hay menos que abajo, ¡pide prestado a la vecina!', 'none'),
@@ -119,7 +119,7 @@ function carrySubHints(ex: ColumnSubExercise): Hint[] {
   return [
     hint(1, 'Si arriba hay menos que abajo: ¡me llevo una! Súmale 10 al de arriba, y a la cifra de abajo de la casa de al lado súmale 1.', 'none'),
     hint(2, `Cuando la cifra de arriba es menor, no te quedes parado: ${columnName(i)} arriba suman 10 y la casa de al lado de abajo cuenta 1 más.`, 'borrow', { ...params, column: i }),
-    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en las ${columnName(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
+    hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en ${columnWithArticle(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
   ]
 }
 
