@@ -4,6 +4,7 @@
 import { useMemo, useState } from 'react'
 import type { ActivityProps, Exercise, ExerciseOutcome, FactDivExercise } from '@/types'
 import { generate } from '@/engine'
+import { adaptiveSelector, BUILD_SKIP_AFTER } from '../facts/shared/items'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { sfx } from '@/audio'
@@ -20,7 +21,7 @@ const FRIENDS = ['👧', '🧒', '👦', '🧑', '👶', '🧕', '👩', '🧔']
 export default function ShareActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
   const exercises = useMemo(
-    () => generate(config.selector, config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isFactDiv),
+    () => generate(adaptiveSelector(config.selector), config.count ?? 5, { rng: host.rng, mastery: host.mastery }).filter(isFactDiv),
     // The rounds of one run are fixed once generated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [config],
@@ -33,7 +34,7 @@ export default function ShareActivity({ config, onDone, onExit }: ActivityProps)
   const container = typeof config.params?.container === 'string' ? config.params.container : null
   return (
     <OpsShell title={config.title} index={run.index} total={run.total} onExit={onExit}>
-      <ShareRound key={`${ex.id}-${run.index}`} ex={ex} emoji={emoji} container={container} onAnswered={run.record} />
+      <ShareRound key={`${ex.id}-${run.index}`} ex={ex} emoji={emoji} container={container} onAnswered={run.record} skippable={run.correct >= BUILD_SKIP_AFTER} />
     </OpsShell>
   )
 }
@@ -43,14 +44,17 @@ interface RoundProps {
   emoji: string
   container: string | null
   onAnswered: (outcome: ExerciseOutcome) => void
+  /** After several right rounds: no guiding highlight, and the sharing can be skipped. */
+  skippable: boolean
 }
 
-function ShareRound({ ex, emoji, container, onAnswered }: RoundProps) {
+function ShareRound({ ex, emoji, container, onAnswered, skippable }: RoundProps) {
   const host = useActivityHost()
   const [tray, setTray] = useState<number[]>(() => Array.from({ length: ex.dividend }, (_, i) => i))
   const [bins, setBins] = useState<number[][]>(() => Array.from({ length: ex.divisor }, () => []))
+  const [skipped, setSkipped] = useState(false)
   const fewest = bins.reduce((best, b, i) => (b.length < bins[best].length ? i : best), 0)
-  const shared = tray.length === 0
+  const shared = tray.length === 0 || skipped
 
   const give = (bin: number) => {
     if (tray.length === 0) return
@@ -82,7 +86,7 @@ function ShareRound({ ex, emoji, container, onAnswered }: RoundProps) {
             <button
               key={b}
               type="button"
-              className={`${s.bin} ${b === fewest ? s.next : ''}`}
+              className={`${s.bin} ${b === fewest && !skippable ? s.next : ''}`}
               onClick={() => give(b)}
               disabled={tray.length === 0}
               aria-label={`${host.t('Amiga')} ${b + 1}: ${items.length} ${emoji}`}
@@ -106,6 +110,11 @@ function ShareRound({ ex, emoji, container, onAnswered }: RoundProps) {
           ))}
         </div>
         <p className={s.note}>{host.t('Toca una amiga para darle uno. Toca un objeto para devolverlo.')}</p>
+        {skippable && (
+          <button type="button" className={s.skip} onClick={() => setSkipped(true)}>
+            {host.t('Ya lo sé, ¿cuántos le tocan?')}
+          </button>
+        )}
       </section>
     )
   }
