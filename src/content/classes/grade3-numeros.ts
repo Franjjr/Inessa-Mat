@@ -42,7 +42,7 @@ const leerEscribir = clase({
     show('place-value', { n: 2064 }, 'Lo leemos casa a casa: 2 millares, 0 centenas, 6 decenas y 4 unidades.', 'ladybug'),
   ],
   ejemplo: [
-    show('big-text', { text: '3 517', sub: 'tres mil quinientos diecisiete' }, 'Lo leemos casa a casa, de mayor a menor: tres mil, quinientos, diecisiete.'),
+    show('place-value', { n: 3517 }, 'Lo leemos casa a casa, de mayor a menor: 3 millares, 5 centenas, 1 decena y 7 unidades. Se dice: tres mil quinientos diecisiete.'),
     show('big-text', { text: '7 300', sub: 'siete mil trescientos' }, 'Los ceros no se leen: el 7 300 es siete mil trescientos.'),
     show('big-text', { text: '1 000', sub: 'mil' }, 'Mil no lleva «un» delante: el 1 000 se lee mil.'),
     show('big-text', { text: '9 999', sub: 'nueve mil novecientos noventa y nueve' }, 'El número más grande de esta etapa es el 9 999.'),
@@ -70,8 +70,8 @@ const compararOrdenar = clase({
   ],
   ejemplo: [
     show('big-text', { text: '4 052 > 3 998', sub: 'mayor que' }, 'El signo > significa «mayor que». La boca del signo mira al número más grande.'),
-    show('big-text', { text: '4 052 > 3 998' }, 'El 4 de los millares gana al 3. Por eso 4 052 es mayor, sin mirar más cifras.'),
-    show('big-text', { text: '2 760 < 2 809', sub: 'menor que' }, 'Los millares son iguales: miramos las centenas. El 7 es menos que el 8.'),
+    show('place-value', { n: 4052 }, 'Miramos las casas: el 4 de los millares de 4 052 gana al 3 de los millares de 3 998. Por eso 4 052 es mayor, sin mirar más cifras.'),
+    show('place-value', { n: 2760 }, 'Los millares son iguales (2 y 2): miramos las centenas. El 7 de 2 760 es menos que el 8 de 2 809, así que 2 760 es menor.'),
     show('big-text', { text: '5 000 = 5 000', sub: 'son iguales' }, 'Si todas las casas son iguales, los números son iguales: se usa el signo =.'),
     show('big-text', { text: '1 905 < 2 100 < 3 020', sub: 'de menor a mayor' }, 'Para ordenar, empezamos por el más pequeño y terminamos por el más grande.'),
   ],
