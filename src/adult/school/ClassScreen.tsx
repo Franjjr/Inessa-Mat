@@ -2,18 +2,19 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { createAssignment, getClassOverview, listAssignments, removeEnrollment, useAuth } from '@/data'
-import { describeError, describeSkill } from '@/engine'
-import type { Assignment, ClassOverview, ErrorType } from '@/types'
+import { describeSkill } from '@/engine'
+import type { Assignment, ClassOverview } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
 import { ClassFactHeatmap, FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { classFactCounts, classFactState, countFactStates, FACT_STATE_NOTE, type FactClassCount } from '../shared/heatmap'
-import { hardestTableAcross, readTables, reviewSentence, struggleCount } from '../shared/reading'
+import { classFactCounts, countFactStates, FACT_STATE_NOTE } from '../shared/heatmap'
+import { hardestTableAcross, struggleCount } from '../shared/reading'
 import { errorMessage } from '../shared/messages'
 import { formatDate, formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
 import { ASSIGNMENT_PRESETS, presetSelector } from './presets'
+import { CLASS_CELL_NOTE, classSummary, failsMostLine, pupilReviewLine } from './classView'
 import { TextField } from '../shared/Field'
 import s from './school.module.css'
 import adult from '../shared/adult.module.css'
@@ -176,6 +177,7 @@ export default function ClassScreen() {
             <FactLegend forClass />
             <ClassFactHeatmap counts={counts} label={`Mapa de las tablas de la clase ${room.name}`} />
             <p className={adult.hint}>{FACT_STATE_NOTE}</p>
+            <p className={adult.hint}>{CLASS_CELL_NOTE}</p>
             <p className={adult.hint}>
               Dominadas por la mitad de la clase o más: {byClass.mastered} de 55 · Para repasar por la mitad o más: {byClass.struggling} · Sin practicar por nadie: {byClass.unseen}
             </p>
@@ -198,9 +200,8 @@ export default function ClassScreen() {
           <ul className={s.childList} aria-label="Alumnos de la clase">
             {pupils.map((c) => {
               const mastered = countFactStates(c.factGrid).mastered
-              // «No lo sé» is a casilla still to learn, not a mistake: it is not listed among the most frequent errors.
-              const errors = c.topErrors.filter((e) => e.errorType !== 'dont-know').slice(0, 2)
-              const review = reviewSentence(readTables(c.factGrid, c.nickname).reviewFacts).trim()
+              const fails = failsMostLine(c.topErrors)
+              const review = pupilReviewLine(c.factGrid, c.nickname)
               return (
                 <li key={c.childId} className={s.childRow}>
                   <div className={adult.stack} style={{ gap: 4, minWidth: 0 }}>
@@ -211,11 +212,7 @@ export default function ClassScreen() {
                       <span>{formatPercent(c.accuracyLast7Days)} de aciertos</span>
                       <span>{formatRelative(c.lastPlayedAt)}</span>
                     </div>
-                    {errors.length > 0 && (
-                      <span className={adult.muted}>
-                        Falla más en: {errors.map((e) => `${describeError(e.errorType as ErrorType)} (${e.count})`).join(' · ')}
-                      </span>
-                    )}
+                    {fails && <span className={adult.muted}>{fails}</span>}
                     <span className={adult.muted}>{review}</span>
                   </div>
                   <div className={s.mini}>
@@ -298,18 +295,4 @@ function describeAssignment(a: Assignment): string {
   if (skills.length === 0) return 'Práctica general'
   const names = skills.slice(0, 3).map((k) => describeSkill(k))
   return skills.length > 3 ? `${names.join(', ')} y más` : names.join(', ')
-}
-
-/** What the class view says in its hint: how many distinct facts half of the class or more has in each state. */
-function classSummary(counts: FactClassCount[][]): { mastered: number; struggling: number; unseen: number } {
-  const out = { mastered: 0, struggling: 0, unseen: 0 }
-  for (let a = 0; a < 10; a++) {
-    for (let b = a; b < 10; b++) {
-      const state = classFactState(counts[a][b])
-      if (state === 'mastered') out.mastered++
-      else if (state === 'struggling') out.struggling++
-      else if (state === 'unseen') out.unseen++
-    }
-  }
-  return out
 }
