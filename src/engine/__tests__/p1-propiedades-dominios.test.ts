@@ -183,6 +183,11 @@ describe('barras: el resultado final decide (auditoría p1-medida-problemas H1, 
     const sym = { add: '+', sub: '−', mul: '×', div: '÷' }
     for (const ex of bars) {
       for (let k = 0; k < ex.steps.length - 1; k++) {
+        const st0 = ex.steps[k]
+        // When the slipped value is also another action of the story on the same amount (35 + 7 for 35 + 6 when
+        // «le da 7»), it is another valid order, not a slip: the walk cannot tell, so it is left out.
+        const ap = (op: string, x: number, y: number) => (op === 'add' ? x + y : op === 'sub' ? x - y : op === 'mul' ? x * y : x / y)
+        if (ex.steps.some((o, j) => j !== k && o.op === st0.op && ap(o.op, st0.a, o.b) === st0.result + 1)) continue
         const a = right(ex)
         // Step k is wrong by one and the child carries the slip to the end (the final result is wrong too).
         for (let j = k; j < ex.steps.length; j++) a.results[j] = ex.steps[j].result + 1
@@ -195,6 +200,22 @@ describe('barras: el resultado final decide (auditoría p1-medida-problemas H1, 
     }
     expect(total).toBeGreaterThan(200)
     report('mensaje de paso intermedio que no nombra el paso', misses, total)
+  })
+
+  it('un paso válido en otro orden, con la misma operación y un resultado cercano, no se llama «paso que no sale»', () => {
+    const base = bars.find((e) => e.steps.length === 2)!
+    // «Tenía 50, pierde 8 y luego 5»: 50 − 8 = 42, 42 − 5 = 37. The child does 50 − 5 = 45 first (valid) and then slips.
+    const ex: BarProblemExercise = {
+      ...base, withBar: false, answer: 37,
+      steps: [{ op: 'sub', a: 50, b: 8, result: 42 }, { op: 'sub', a: 42, b: 5, result: 37 }],
+    }
+    const r = check(ex, { type: 'bar', placed: ex.bar.map((b) => b.value), ops: ['sub', 'sub'], results: [45, 36] })
+    expect(r.correct).toBe(false)
+    expect(r.feedback ?? '').not.toContain('El paso 1 no sale')
+    expect(check(ex, { type: 'bar', placed: ex.bar.map((b) => b.value), ops: ['sub', 'sub'], results: [45, 37] }).correct).toBe(true)
+    // A real slip in the first step is still named.
+    const slip = check(ex, { type: 'bar', placed: ex.bar.map((b) => b.value), ops: ['sub', 'sub'], results: [43, 38] })
+    expect(slip.feedback).toBe('El paso 1 no sale: 50 − 8 son 42, no 43.')
   })
 
   it('«quedan» (change-sub-end): lo que tenía es la barra entera y el ? es «Le quedan»', () => {

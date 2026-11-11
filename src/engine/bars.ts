@@ -468,19 +468,22 @@ export function checkBar(ex: BarProblemExercise, answer: Answer): CheckResult {
   if (missing) return { correct: false, given, expected, errorType: 'incomplete', feedback: BAR_FEEDBACK.incomplete }
 
   // Walk the child's chain: each step may use the numbers of the story or her earlier results, in any order.
-  const results = new Set(ex.steps.map((st) => st.result))
+  // The amounts she has: the starting numbers of the story (a first operand that no earlier step gave: a 9 in the story
+  // stays even if a later step also gives 9), then each result she writes.
   const pool: number[] = []
-  for (const st of ex.steps) for (const v of [st.a, st.b]) if (!results.has(v)) pool.push(v)
+  ex.steps.forEach((st, k) => {
+    if (!ex.steps.slice(0, k).some((prev) => prev.result === st.a)) pool.push(st.a)
+  })
   let onTrack = true // every step so far is the expected one
   for (let k = 0; k < ex.steps.length; k++) {
     const op = answer.ops[k] as BarOp
     const r = answer.results[k] as number
     const want = ex.steps[k]
     if (onTrack && op === want.op && r === want.result) { pool.push(r); continue }
-    // Another valid step (other numbers of the story, in another order) keeps the chain going. The expected operation
-    // with a result close to the expected one is a slip in that step, not another way.
-    const slip = onTrack && op === want.op && Math.abs(r - want.result) <= 10
-    const coherent = !slip && pool.some((x, i) => pool.some((y, j) => i !== j && apply(op, x, y) === r))
+    // Another valid step keeps the chain going: an action of the story (the operation with its number: «pierde 5» is
+    // − 5) done on an amount she has, in another order. It is checked first, so a valid step with the expected operation
+    // and a close result (50 − 5 for 50 − 8) is never called a slip. 33 + 8 when the story «pierde 8» is no action.
+    const coherent = ex.steps.some((st) => st.op === op && pool.some((x) => apply(op, x, st.b) === r))
     if (coherent && k < lastStep) { onTrack = false; pool.push(r); continue }
     if (onTrack && op !== want.op) {
       return { correct: false, given, expected, errorType: 'operation', feedback: BAR_OPERATION_FEEDBACK[want.op] }
