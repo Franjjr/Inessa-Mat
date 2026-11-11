@@ -20,8 +20,6 @@ function reportError(where: string, e: unknown) {
   if (import.meta.env.DEV) console.warn(`[play-session] ${where}`, e)
 }
 
-const wholeMinutes = (from: number) => Math.max(0, Math.round((Date.now() - from) / 60_000))
-
 export function usePlaySession(childId: string | null | undefined, subject: SessionSubject): MutableRefObject<PlaySessionTally> {
   const ref = useRef<PlaySessionTally>({ id: null, startedAt: Date.now(), attempts: 0, correct: 0 })
   useEffect(() => {
@@ -41,8 +39,11 @@ export function usePlaySession(childId: string | null | undefined, subject: Sess
           return
         }
         session.id = s.id
+        // Active time (activity.ts): each touch adds the time since the previous one, at most 10 min, and a hidden
+        // screen is not touched, so a tablet left open in a drawer does not write hours of play.
         timer = setInterval(() => {
-          if (session.id) void touchSession(session.id, { minutes: wholeMinutes(session.startedAt) }).catch((e) => reportError('touchSession', e))
+          if (!session.id || document.visibilityState === 'hidden') return
+          void touchSession(session.id, {}).catch((e) => reportError('touchSession', e))
         }, PLAY_SESSION_TOUCH_MS)
       })
       .catch((e) => reportError('startSession', e))
@@ -52,7 +53,7 @@ export function usePlaySession(childId: string | null | undefined, subject: Sess
       const id = session.id
       session.id = null
       if (!id) return
-      const minutes = wholeMinutes(session.startedAt)
+      // endSession adds the active time since the last touch (no wall-clock minutes).
       void endSession(id, {
         attempts: session.attempts,
         correct: session.correct,
@@ -60,7 +61,6 @@ export function usePlaySession(childId: string | null | undefined, subject: Sess
         nodesCompleted: [],
         ...(subject === 'math' ? {} : { subject }),
       }).catch((e) => reportError('endSession', e))
-      void touchSession(id, { minutes }).catch(() => undefined)
     }
   }, [childId, subject])
   return ref

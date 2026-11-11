@@ -144,10 +144,11 @@ export function GameHostProvider({ worldId, nodeId, activity, subject: subjectPr
           return
         }
         session.id = s.id
+        // Active time (activity.ts): each touch adds the time since the previous one, at most 10 min, and a hidden
+        // screen is not touched, so a game left open in the background does not write hours of play.
         timer = setInterval(() => {
-          if (!session.id) return
-          const minutes = Math.max(0, Math.round((Date.now() - session.startedAt) / 60_000))
-          void touchSession(session.id, { minutes }).catch((e) => reportError('touchSession', e))
+          if (!session.id || document.visibilityState === 'hidden') return
+          void touchSession(session.id, {}).catch((e) => reportError('touchSession', e))
         }, SESSION_TOUCH_MS)
       })
       .catch((e) => reportError('startSession', e))
@@ -157,7 +158,7 @@ export function GameHostProvider({ worldId, nodeId, activity, subject: subjectPr
       const id = session.id
       session.id = null
       if (id) {
-        const minutes = Math.max(0, Math.round((Date.now() - session.startedAt) / 60_000))
+        // endSession adds the active time since the last touch (no wall-clock minutes).
         void endSession(id, {
           attempts: session.attempts,
           correct: session.correct,
@@ -166,7 +167,6 @@ export function GameHostProvider({ worldId, nodeId, activity, subject: subjectPr
           ...(subject === 'math' ? {} : { subject }),
           ...(assignmentId ? { assignmentId } : {}),
         }).catch((e) => reportError('endSession', e))
-        void touchSession(id, { minutes }).catch(() => undefined)
       }
     }
   }, [childId, subject, assignmentId])

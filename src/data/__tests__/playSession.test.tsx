@@ -1,11 +1,14 @@
 /* usePlaySession: a screen outside GameHostProvider (Caligrafía) writes its play session down, marked with its subject. */
 import { renderHook, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createChild, listSessions, usePlaySession } from '@/data'
 import { LUNA, resetAll } from './helpers'
 
 beforeEach(async () => {
   await resetAll()
+})
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 
 describe('usePlaySession', () => {
@@ -38,5 +41,17 @@ describe('usePlaySession', () => {
   it('does nothing without a child', () => {
     const { result } = renderHook(() => usePlaySession(null, 'handwriting'))
     expect(result.current.current.id).toBeNull()
+  })
+
+  it('counts active time, not the wall clock: a screen left open for hours writes at most a few minutes', async () => {
+    const c = await createChild({ nickname: 'Lía', gender: 'f', companion: LUNA })
+    const { result, unmount } = renderHook(() => usePlaySession(c.id, 'handwriting'))
+    await waitFor(() => expect(result.current.current.id).toBeTruthy())
+    const later = Date.now() + 3 * 60 * 60_000
+    vi.spyOn(Date, 'now').mockReturnValue(later)
+    unmount()
+    await waitFor(async () => expect((await listSessions(c.id))[0].endedAt).toBeTruthy())
+    const [done] = await listSessions(c.id)
+    expect(done.minutes).toBeLessThanOrEqual(10)
   })
 })
