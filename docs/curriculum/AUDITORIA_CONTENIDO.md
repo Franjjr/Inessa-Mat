@@ -27,7 +27,7 @@ Referencias: rutas relativas a la raíz del repo `/Users/mac13/Desktop/Inessa-Ma
 | w3 Cueva | Tabla del 6 (dos trucos) | historia → lección «el 5 y uno más» → collar de 6 (3) → rueda del 6 (8) → lección «pares que riman» → historia → laberinto del 6 (1) → factor que falta (6) → repaso sumas (2) → guardián |
 | w4 Montaña | Restas de 3 y 4 cifras, ceros, prueba | historia → lección «restar» → restas 3d (5, guiado) → lección del cero → restas con cero (4) → historia → restas 4d con prueba (4) → problema (3) → memoria del 6 (6) → guardián |
 | w5 Lago | Tabla del 8 | historia → lección «doble, doble y doble» → cadena de dobles (5) → rueda del 8 (8) → lección «secretos del 8» → historia → laberinto del 8 (1) → burbujas 6 y 8 (10) → repaso restas (2) → guardián |
-| w6 Jardín | Tabla del 7, truco del 9, mezcla 6–8 | historia → lección «casi toda» → rueda del 7 (8) → lección del 9 → factor que falta (6) → cristal escondido (dibujo) → historia → parejas 6–8 (6) → carrera contra tu récord (20) → guardián |
+| w6 Jardín | Tabla del 7, truco del 9, mezcla 6–8 | historia → lección «casi toda» → rueda del 7 (8) → lección del 9 → factor que falta (6) → cristal escondido (dibujo) → historia → parejas 6–8 (6) → carrera contra tu récord (12) → guardián |
 | w7 Forja | Multiplicar 2 cifras × 1 | historia → lección «por trocitos» → en columna sin llevadas (4) → lección con llevadas → con llevadas (6) → historia → Carrera al Castillo (1 pregunta, ver E2) → problema (3) → repaso (8) → guardián |
 | w8 Castillo | Dividir | historia → lección «dividir es repartir» → repartos (4) → familias de números (3) → divide con tablas (10) → lección de la casita → divisiones exactas y con resto (6) → historia → reto de la torre, división larga (3) → guardián |
 
