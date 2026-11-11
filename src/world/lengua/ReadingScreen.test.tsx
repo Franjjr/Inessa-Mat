@@ -88,7 +88,7 @@ describe('ReadingScreen: the text', () => {
     expect(screen.queryByRole('button', { name: /Escuchar/ })).not.toBeInTheDocument()
     expect(screen.getByText('Activa el sonido para escuchar el texto')).toBeInTheDocument()
     // The notice comes with the switch itself, so the child does not have to look for it in a corner.
-    expect(screen.getByRole('button', { name: 'Activar el sonido y la voz' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Activar el sonido' })).toBeInTheDocument()
   })
 
   it('keeps the poem\'s line breaks', () => {

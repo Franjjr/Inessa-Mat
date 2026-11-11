@@ -20,6 +20,10 @@ function readVoiceMemory(childId: string): boolean | null {
   } catch { return null }
 }
 
+function clearVoiceMemory(childId: string) {
+  try { window.localStorage.removeItem(memoryKey(childId)) } catch { /* no storage: nothing to clear */ }
+}
+
 export function SoundSwitch({ className }: { className?: string }) {
   const { child } = useActiveChild()
   if (!child) return null
@@ -32,7 +36,11 @@ export function SoundSwitch({ className }: { className?: string }) {
     // already off alone keeps it off when the sound comes back.
     let voice = false
     if (!next) writeVoiceMemory(child.id, child.settings.voice)
-    else voice = readVoiceMemory(child.id) ?? true
+    else {
+      // a voice already on (the adult turned it on meanwhile) is respected; the memory is single-use
+      voice = child.settings.voice || (readVoiceMemory(child.id) ?? true)
+      clearVoiceMemory(child.id)
+    }
     updateChild(child.id, { settings: { ...child.settings, sound: next, voice } }).catch((err: unknown) =>
       console.warn('[audio] could not save the sound setting', err),
     )
@@ -42,7 +50,7 @@ export function SoundSwitch({ className }: { className?: string }) {
       type="button"
       className={clsx(s.switch, !on && s.off, className)}
       onClick={toggle}
-      aria-label={on ? 'Apagar el sonido y la voz' : 'Activar el sonido y la voz'}
+      aria-label={on ? 'Apagar el sonido' : 'Activar el sonido'}
     >
       <span aria-hidden className={s.icon}>{on ? '🔊' : '🔇'}</span>
       <span className={s.label}>{on ? 'Sonido' : 'Sin sonido'}</span>

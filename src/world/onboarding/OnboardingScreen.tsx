@@ -278,7 +278,8 @@ export default function OnboardingScreen() {
                       </button>
                     ))}
                   </div>
-                  <div className={s.suggestions} role="group" aria-label="Es niña o niño">
+                  <span className={s.label} id="ob-pet-gender">¿Es niña o niño?</span>
+                  <div className={s.suggestions} role="group" aria-labelledby="ob-pet-gender">
                     <button type="button" className={clsx(s.chip, draft.petGender === 'f' && s.selected)} aria-pressed={draft.petGender === 'f'} onClick={() => update({ petGender: 'f' })}>Es una niña</button>
                     <button type="button" className={clsx(s.chip, draft.petGender === 'm' && s.selected)} aria-pressed={draft.petGender === 'm'} onClick={() => update({ petGender: 'm' })}>Es un niño</button>
                   </div>

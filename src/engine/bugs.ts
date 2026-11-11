@@ -254,10 +254,10 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
 
 /** Child-facing comment for each kind of mistake (shown after a wrong verdict). */
 const MISSED: Record<ErrorType, string> = {
-  'calig-shape': 'La forma de la letra ligada no es la del modelo. Sigue el dibujo de la pauta.',
-  'calig-line': 'La letra ligada tiene que apoyarse en la línea de abajo.',
-  'calig-size': 'La letra ligada tiene que llegar hasta la línea de arriba, ni más ni menos.',
-  'calig-start': 'Empieza la letra ligada por el punto verde y sigue la flecha.',
+  'calig-shape': 'La forma de la letra no es la del modelo. Sigue el dibujo de la pauta.',
+  'calig-line': 'La letra tiene que apoyarse en la línea de abajo.',
+  'calig-size': 'La letra tiene que llegar hasta la línea de arriba, ni más ni menos.',
+  'calig-start': 'Empieza la letra por el punto verde y sigue la flecha.',
   'carry-forgot': '¡Ojo con la mochila! Hay una llevada que no se ha sumado en esa cuenta.',
   'borrow-forgot': 'Cuando la vecina presta una decena, se queda con una menos. ¡Mira esa resta!',
   fact: 'Hay una cuenta de una sola cifra que no sale. Mira la cuenta columna a columna.',

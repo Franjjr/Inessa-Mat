@@ -152,7 +152,9 @@
 
 /* Inside the companion form the four colours stay in one row (small cards), on phones too. */
 .form .colorways { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-2); }
-.form .colorCard { padding: var(--sp-2); }
+.form .colorCard { padding: var(--sp-2); min-width: 0; }
+/* The drawing shrinks to its card (it is a fixed 72px SVG otherwise and overlaps its neighbours on phones). */
+.form .colorCard svg { width: 100%; max-width: 72px; height: auto; }
 
 @media (max-width: 640px) {
   .species { grid-template-columns: repeat(2, minmax(0, 1fr)); }

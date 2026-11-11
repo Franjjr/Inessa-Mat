@@ -74,4 +74,15 @@ describe('SoundSwitch · the child can turn the sound and the voice off and on',
     const { container } = render(<SoundSwitch />)
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('a voice the adult turned on meanwhile stays on, and the old memory is cleared', () => {
+    window.localStorage.setItem('repasitos:voice-before-mute:kid', '0')
+    state.child = kid({ sound: false, voice: true })
+    render(<SoundSwitch />)
+    fireEvent.click(screen.getByRole('button', { name: /Activar el sonido/ }))
+    expect(updateChild).toHaveBeenLastCalledWith('kid', expect.objectContaining({
+      settings: expect.objectContaining({ sound: true, voice: true }),
+    }))
+    expect(window.localStorage.getItem('repasitos:voice-before-mute:kid')).toBeNull()
+  })
 })
