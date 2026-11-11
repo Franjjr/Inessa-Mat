@@ -6,6 +6,7 @@ import { DataError } from './errors'
 import { isErasedChild } from './erasure'
 import { publicSession } from './mappers'
 import { enqueue } from './outbox'
+import { noteWrongAnswer } from './review'
 import { updateProgress } from './progress'
 import type { SessionRow } from './types'
 import { localDay, nextTimestamp, nowIso, uuid } from './util'
@@ -15,10 +16,11 @@ import { localDay, nextTimestamp, nowIso, uuid } from './util'
 export async function recordAttempt(attempt: AttemptRecord): Promise<void> {
   if (!attempt?.childId) throw new DataError('invalid', 'recordAttempt: childId is required')
   const row: AttemptRecord = { ...attempt, id: attempt.id || uuid(), createdAt: attempt.createdAt || nowIso() }
-  await db.transaction('rw', [db.attempts, db.children, db.outbox, db.meta], async () => {
+  await db.transaction('rw', [db.attempts, db.children, db.outbox, db.meta, db.reviewNotes], async () => {
     if (await isErasedChild(row.childId)) return // erased child: nothing is kept on this device
     await db.attempts.put(row)
     await enqueue('attempts', row.id, row.childId)
+    await noteWrongAnswer(row)
   })
 }
 

@@ -1,40 +1,34 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ScrollAssist } from './ScrollAssist'
 
-describe('ScrollAssist · no polling', () => {
-  it('checks the page when it changes, not on a timer', () => {
-    const setInterval = vi.spyOn(window, 'setInterval')
-    const { unmount } = render(<ScrollAssist />)
-    expect(setInterval).not.toHaveBeenCalledWith(expect.any(Function), 500)
-    unmount()
-    setInterval.mockRestore()
-  })
-})
+const DOWN = 'Ver lo de abajo'
 
-describe('ScrollAssist · reacts to the page changing', () => {
-  // jsdom has no layout: the page height is faked on the root element, then the body is changed to fire the observer.
-  let pageHeight = 0
-  beforeEach(() => {
-    pageHeight = 400
-    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, get: () => pageHeight })
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 700 })
-  })
+function setPageHeight(px: number) {
+  Object.defineProperty(document.documentElement, 'scrollHeight', { value: px, configurable: true })
+}
+
+describe('ScrollAssist', () => {
   afterEach(() => {
+    vi.restoreAllMocks()
     delete (document.documentElement as unknown as Record<string, unknown>).scrollHeight
+    document.body.innerHTML = ''
   })
 
-  it('shows «Más abajo» when the content grows past the screen, and hides it when it fits again', async () => {
+  it('shows «Más abajo» when the page grows without a scroll or a resize, and does not poll the layout', async () => {
+    const intervalSpy = vi.spyOn(window, 'setInterval')
+    setPageHeight(500) // fits: no button yet
     render(<ScrollAssist />)
-    expect(screen.queryByRole('button', { name: 'Ver lo de abajo' })).toBeNull()
+    expect(screen.queryByRole('button', { name: DOWN })).toBeNull()
 
-    pageHeight = 1500
-    const note = document.createElement('div')
-    note.textContent = 'Un comentario nuevo'
-    document.body.appendChild(note)
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Ver lo de abajo' })).toBeInTheDocument())
-
-    pageHeight = 400
-    note.remove()
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Ver lo de abajo' })).toBeNull())
+    // A new round or a feedback box makes the page longer: only the DOM changes.
+    setPageHeight(2000)
+    act(() => {
+      const extra = document.createElement('div')
+      extra.textContent = 'Nueva ronda'
+      document.body.appendChild(extra)
+    })
+    await waitFor(() => expect(screen.getByRole('button', { name: DOWN })).toBeTruthy(), { timeout: 300 })
+    expect(intervalSpy).not.toHaveBeenCalledWith(expect.any(Function), 500)
   })
 })

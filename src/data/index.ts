@@ -72,6 +72,12 @@ export { eraseChild } from './dashboards'
 export { clearAdultPin } from './pin'
 /** Sync state outside React. */
 export { getSyncStatus, subscribeSyncStatus } from './sync'
+/** Review log of wrong answers (this device only, bounded; no screen yet): see src/data/review.ts. */
+export { listWrongAnswerNotes, clearWrongAnswerNotes } from './review'
+export type { WrongAnswerNote } from './review'
+/** Persistent storage: asked once at startup so the browser does not evict a device-only child's data. */
+export { requestPersistentStorage, getPersistenceState } from './storage'
+export type { PersistenceState } from './storage'
 /** Monotonic progress merge (exposed for tests/tools). */
 export { mergeProgress } from './merge'
 

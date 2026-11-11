@@ -1,8 +1,15 @@
 # Numeria · Supabase backend
 
-Migrations run in order: `migrations/0001_init.sql` (the schema), then `migrations/0002_erasure_tombstones_rewards.sql`
-(GDPR erasure tombstones and monotonic reward claims), then `migrations/0003_ungraded_retries.sql` (`child_stats` leaves out
-retry rows that do not grade: `context.graded = false`). Each one is idempotent and must be applied on top of the previous.
+Migrations run in order, each on top of the previous one. Each is idempotent:
+
+1. `migrations/0001_init.sql`: the schema, RLS, the last-writer-wins guard and the progress version.
+2. `migrations/0002_erasure_tombstones_rewards.sql`: GDPR erasure tombstones (`erased_children`) and monotonic reward claims.
+3. `migrations/0003_ungraded_retries.sql`: `child_stats` leaves out retry rows that do not grade (`context.graded = false`).
+4. `migrations/0004_caligrafia_stats.sql`: `child_stats` leaves out handwriting attempts (`calig:…`) from the maths aggregates.
+5. `migrations/0005_ingles_stats.sql`: `child_stats` leaves out English attempts (`eng:…`) and English sessions from the
+   maths aggregates.
+
+Migrations 0004 and 0005 only replace the body of `child_stats` (same signature, grants and search path).
 
 ## Apply it to a project
 
@@ -54,6 +61,9 @@ Nobody sees other organizations. `anon` has no access to anything.
   clocks are clamped to now + 10 min). `synced_at` is the server change time (`clock_timestamp()`) used as the pull
   cursor.
 - `progress` is merged monotonically on the client and written with compare-and-swap on `version`.
+- `skill_mastery` is a whole-row write, last-writer-wins. Note: a row written with an `updated_at` older than the stored
+  one is skipped without an error. The client therefore merges a pending local change with the newer server copy
+  (`mergeMastery`, which keeps the later `updated_at`) before pushing it.
 - `attempts` are inserted with `on conflict do nothing` (idempotent re-sends).
 
 ## Verify it locally (automated RLS suite)

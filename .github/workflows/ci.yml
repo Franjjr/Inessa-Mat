@@ -1,0 +1,38 @@
+# Comprobación automática en cada push y cada pull request: tipos y pruebas unitarias.
+# No bloquea el despliegue de Vercel (ver docs/ARCHITECTURE.md, «Publicación»). Para que una PR no se pueda fusionar
+# sin este check, el dueño del repositorio debe activar la protección de la rama main (Settings → Branches → Require
+# status checks → «ci»). Las pruebas e2e de Playwright no se ejecutan aquí: necesitan un servidor levantado aparte.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependencias exactas del lockfile
+        run: npm ci
+
+      - name: Comprobación de tipos
+        # `tsc -p .` no comprueba nada en este proyecto: hay que usar el modo de referencias (-b).
+        run: npx tsc -b
+
+      - name: Pruebas unitarias
+        run: npx vitest run
