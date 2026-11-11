@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { NodeProgress, ProgressState, WorldProgress } from '@/types'
+import type { NodeProgress, ProgressState, SkillMastery, WorldProgress } from '@/types'
 import { lww, mergeMastery, mergeProgress, mergeReward, normalizeProgress } from '../merge'
 import type { RewardRow } from '../types'
 import { deepEqual } from '../util'
@@ -281,8 +281,8 @@ describe('rewards (sync-4)', () => {
 })
 
 describe('mergeMastery (a pending local change against a server copy)', () => {
-  const base = { skill: 'mul:6x7', box: 2 as const, attempts: 6, correct: 5, streak: 1, avgMs: 3000, lastSeenAt: '2026-03-02T10:00:00.000Z', dueAt: null, updatedAt: '2026-03-02T10:00:00.000Z' }
-  const server = { ...base, box: 3 as const, attempts: 5, correct: 4, streak: 2, avgMs: 2500, lastSeenAt: '2026-03-03T10:00:00.000Z', updatedAt: '2026-03-03T10:00:00.000Z' }
+  const base: SkillMastery = { skill: 'mul:6x7', box: 2, attempts: 6, correct: 5, streak: 1, avgMs: 3000, lastSeenAt: '2026-03-02T10:00:00.000Z', dueAt: null, updatedAt: '2026-03-02T10:00:00.000Z' }
+  const server: SkillMastery = { ...base, box: 3, attempts: 5, correct: 4, streak: 2, avgMs: 2500, lastSeenAt: '2026-03-03T10:00:00.000Z', updatedAt: '2026-03-03T10:00:00.000Z' }
 
   it('keeps the larger counts and the later dates, and takes the rest from the side with more evidence', () => {
     const m = mergeMastery(base, server)
@@ -300,7 +300,7 @@ describe('mergeMastery (a pending local change against a server copy)', () => {
   })
 
   it('on equal evidence, the newer updatedAt decides the rest and the result does not depend on the order', () => {
-    const tie = { ...server, attempts: 6, correct: 6, box: 1 as const }
+    const tie: SkillMastery = { ...server, attempts: 6, correct: 6, box: 1 }
     expect(mergeMastery(base, tie)).toEqual(mergeMastery(tie, base))
     expect(mergeMastery(base, tie).box).toBe(1)
   })
