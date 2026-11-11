@@ -79,7 +79,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const submit = useCallback((answer: Answer): CheckResult => {
     // A digit still in doubt (low-confidence read): the child confirms or rewrites it first. Nothing is graded.
     if (learning.requestConfirm()) return NOT_GRADED
-    const c = check(exercise, answer)
+    const c = check(exercise, answer, { hintsUsed: hintsRef.current, method: opts.method })
     // Fixes are counted per submission: a discard after a wrong check forgets the pending recognitions.
     fixes.current += learning.recognitionFixes()
     if (c.correct) learning.confirm()

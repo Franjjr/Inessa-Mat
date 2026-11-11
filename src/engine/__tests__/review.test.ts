@@ -175,7 +175,9 @@ describe('robustness and hint consistency', () => {
     expect(hs[2]).toMatchObject({ text: 'Fila a fila: 2 + 2 + 2 + 2 = ?', visual: 'array', params: { rows: 4, cols: 2 } })
   })
   it('missing factor: the counting worked step uses the skip-count visual', () => {
-    expect(hintsFor(makeMissingFactor(4, 4, 'b'))[2]).toMatchObject({ visual: 'skip-count', params: { step: 4, count: 4, index: 3 } })
+    // Here the known factor is the answer (4 × ? = 16): no jump is drawn, since the first one would be the 4 itself
+    // (see tricks.test.ts). The worked step still counts with the skip-count visual.
+    expect(hintsFor(makeMissingFactor(4, 4, 'b'))[2]).toMatchObject({ visual: 'skip-count', params: { step: 4, count: 0 } })
   })
   it('word-problem hints use the same visual params as the column / division exercises', () => {
     const add = hintsFor(makeWordProblem('add-peces', 'x', 'add', 368, 257, 'peces'))

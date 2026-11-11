@@ -206,7 +206,7 @@ function climbDivisionHints(ex: DivisionExercise): Hint[] {
   ]
 }
 
-const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo el cociente.'
+const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo lo que sale en cada paso.'
 
 /* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
 function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
@@ -272,9 +272,10 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const carries = analyzeAdd([a, b]).carries
       const first = carries.findIndex((c, i) => i > 0 && c > 0)
       const params = { operands: [a, b], a, b, digits }
+      // Level 2 asks what the story does, without naming the operation: the child decides it. Level 3 writes it.
       return [
         hint(1, l1, 'none'),
-        hint(2, 'Se juntan dos cantidades: hay que sumar.', 'place-value', params),
+        hint(2, '¿Hay que juntar cantidades para saber cuántas hay en total?', 'place-value', params),
         hint(3, `Piénsalo en columna: ${a} + ${b} = ?`, 'carry', { ...params, column: Math.max(0, first - 1), carry: first > 0 ? carries[first] : 0 }),
       ]
     }
@@ -282,7 +283,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const params = { a, b, digits: digitCount(a), column: Math.max(0, analyzeSub(a, b).borrowed.findIndex(Boolean)) }
       return [
         hint(1, l1, 'none'),
-        hint(2, 'Se quita una cantidad (o se comparan dos): hay que restar.', 'borrow', params),
+        hint(2, '¿Se van cosas, o hay que comparar cuánto más tiene uno que otro?', 'borrow', params),
         hint(3, `Piénsalo en columna: ${a} − ${b} = ?`, 'borrow', params),
       ]
     }
@@ -292,13 +293,13 @@ function wordHints(ex: WordProblemExercise): Hint[] {
         const params = { top: b, bottom: a, tens: Math.floor(b / 10) * 10, units: b % 10 }
         return [
           hint(1, l1, 'none'),
-          hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar. Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
+          hint(2, `¿Hay ${a} grupos iguales, con ${b} en cada uno? Parte el ${b} en ${params.tens} + ${params.units}.`, 'place-value', params),
           hint(3, `Piénsalo con el ${b} arriba: ${b} × ${a} = ?`, 'carry', { ...params, column: 1, carry: Math.floor(((b % 10) * a) / 10) }),
         ]
       }
       return [
         hint(1, l1, 'none'),
-        hint(2, `Hay ${a} grupos de ${b}: hay que multiplicar.`, 'groups', { groups: a, perGroup: b }),
+        hint(2, `¿Hay ${a} grupos iguales, con ${b} en cada uno?`, 'groups', { groups: a, perGroup: b }),
         hint(3, `Piensa la operación: ${a} × ${b} = ?`, 'groups', { groups: a, perGroup: b }),
       ]
     }
@@ -306,7 +307,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       const params = { total: a, groups: b, dividend: a, divisor: b }
       return [
         hint(1, l1, 'none'),
-        hint(2, `Hay que repartir ${a} en partes iguales: hay que dividir entre ${b}.`, 'share', params),
+        hint(2, `¿Hay que repartir ${a} en partes iguales, y saber cuánto toca a cada una?`, 'share', params),
         hint(3, `Piensa la operación: ${a} ÷ ${b} = ?`, 'share', params),
       ]
     }
@@ -334,11 +335,20 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     }
     case 'missing-factor': {
       const known = ex.missing === 'a' ? ex.b : ex.a
-      const seq = Array.from({ length: Math.min(ex.answer, 10) }, (_, i) => known * (i + 1)).join(', ')
+      // Only the first two jumps are drawn and said, never the series up to the product: how many numbers the child
+      // counts is the answer. The jumps stop before one that equals the answer, so no drawn number is the answer, not even
+      // when the known factor is the answer too (3 × ? = 9 draws nothing: the first jump would be the 3 itself).
+      let drawn = 0
+      for (let i = 1; i <= Math.min(2, ex.answer - 1); i++) {
+        if (known * i === ex.answer) break
+        drawn = i
+      }
+      const first = Array.from({ length: drawn }, (_, i) => known * (i + 1))
+      const start = first.length ? `${first.join(', ')}… ` : ''
       return [
         hint(1, `¿${known} por cuánto da ${ex.product}? Piensa en la tabla del ${known}.`, 'none'),
-        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: ex.answer }),
-        hint(3, `${seq}. ¿Cuántos números has dicho?`, 'skip-count', { step: known, count: ex.answer, index: ex.answer - 1 }),
+        hint(2, `Cuenta de ${known} en ${known} hasta llegar a ${ex.product}.`, 'skip-count', { step: known, count: drawn }),
+        hint(3, `${start}Sigue contando de ${known} en ${known} hasta llegar a ${ex.product}. ¿Cuántos números dices?`, 'skip-count', { step: known, count: drawn }),
       ]
     }
     case 'skip-count': return skipHints(ex)

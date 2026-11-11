@@ -31,7 +31,7 @@ describe('resta en columna: el mensaje sigue al método que eligió el niño (3.
     // 734 − 459 answered 385: the neighbour was not decreased (borrow-forgot pattern).
     const r = check(makeColumnSub(734, 459), byCarry([5, 8, 3]))
     expect(r).toMatchObject({ correct: false, errorType: 'borrow-forgot' })
-    expect(r.feedback).toBe('¡Casi! Te has olvidado de sumar 1 a la cifra de abajo de la casa de al lado.')
+    expect(r.feedback).toContain('Te has olvidado de sumar 1 a la cifra de abajo de la casa de al lado')
     expect(r.feedback).not.toMatch(/Táchala|réstale/)
   })
   it('el método de pedir prestado conserva su mensaje', () => {

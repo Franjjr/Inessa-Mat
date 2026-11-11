@@ -61,7 +61,7 @@ export {
 export { analyzeAdd, analyzeDiv, analyzeMul, analyzeSub, digitAt, digitCount, fromDigits, toDigits } from './arith'
 /** Fact-family parsing ("6 × 7 = 42", "42 : 6 = 7"...). */
 export { parseFact } from './check'
-export { strategyDetail } from './strategies'
+export { songRhyme, strategyDetail } from './strategies'
 export type { StrategyDetail } from './strategies'
 export { intervalMs, LEITNER_INTERVAL_DAYS } from './mastery'
 export { WORD_TEMPLATES } from './wordProblems'

@@ -101,18 +101,18 @@ function incomplete(given: string, expected: string, wrongColumns?: number[]): C
 
 // ---------------------------------------------------------------- facts
 
-function checkFactMul(ex: FactMulExercise, answer: Answer): CheckResult {
+function checkFactMul(ex: FactMulExercise, answer: Answer, usedTrick = false): CheckResult {
   const expected = String(ex.answer)
   const v = numberFrom(answer)
   if (v === undefined) return wrongShape(expected)
   if (v === null) return incomplete('?', expected)
   const given = String(v)
   const strategy = strategyForFact(ex.a, ex.b)
-  if (v === ex.answer) return { correct: true, given, expected, feedback: praiseFact(ex.id, strategy) }
+  if (v === ex.answer) return { correct: true, given, expected, feedback: praiseFact(ex.id, strategy, usedTrick) }
   if (v === ex.a + ex.b) return { correct: false, given, expected, errorType: 'operation', feedback: FEEDBACK.factAdded(ex.a, ex.b) }
   const neighbours: [number, number][] = [[ex.a, ex.b - 1], [ex.a, ex.b + 1], [ex.a - 1, ex.b], [ex.a + 1, ex.b]]
   const nb = neighbours.find(([x, y]) => x >= 1 && y >= 1 && x * y === v)
-  const feedback = nb ? FEEDBACK.factNeighbour(v, nb[0], nb[1], strategy, ex.answer) : FEEDBACK.factWrong(strategy)
+  const feedback = nb ? FEEDBACK.factNeighbour(v, nb[0], nb[1], strategy) : FEEDBACK.factWrong(strategy)
   return { correct: false, given, expected, errorType: 'fact', feedback }
 }
 
@@ -128,13 +128,13 @@ function checkFactDiv(ex: FactDivExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: 'fact', feedback: FEEDBACK.divWrong(ex.dividend, ex.divisor) }
 }
 
-function checkMissing(ex: MissingFactorExercise, answer: Answer): CheckResult {
+function checkMissing(ex: MissingFactorExercise, answer: Answer, usedTrick = false): CheckResult {
   const expected = String(ex.answer)
   const v = numberFrom(answer)
   if (v === undefined) return wrongShape(expected)
   if (v === null) return incomplete('?', expected)
   const given = String(v)
-  if (v === ex.answer) return { correct: true, given, expected, feedback: praiseFact(ex.id, strategyForFact(ex.a, ex.b)) }
+  if (v === ex.answer) return { correct: true, given, expected, feedback: praiseFact(ex.id, strategyForFact(ex.a, ex.b), usedTrick) }
   const known = ex.missing === 'a' ? ex.b : ex.a
   if (v === ex.product) return { correct: false, given, expected, errorType: 'other', feedback: FEEDBACK.missingProduct(ex.product) }
   if (v === ex.product - known || v === ex.product + known) {
@@ -143,7 +143,7 @@ function checkMissing(ex: MissingFactorExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: 'fact', feedback: FEEDBACK.missingWrong(known, ex.product) }
 }
 
-function checkSequence(ex: SkipCountExercise | DoubleChainExercise, answer: Answer): CheckResult {
+function checkSequence(ex: SkipCountExercise | DoubleChainExercise, answer: Answer, usedTrick = false): CheckResult {
   const expectedValues = ex.answer
   const expected = expectedValues.join(', ')
   const vals = numbersFrom(answer, expectedValues.length)
@@ -154,7 +154,7 @@ function checkSequence(ex: SkipCountExercise | DoubleChainExercise, answer: Answ
   if (empty.length) return incomplete(given, expected, empty)
   const wrong = expectedValues.flatMap((v, i) => (vals[i] !== v ? [i] : []))
   if (wrong.length === 0) {
-    const fb = ex.kind === 'double-chain' ? praiseFact(ex.id, strategyForFact(ex.start, 2 ** ex.steps)) : praise(ex.id)
+    const fb = ex.kind === 'double-chain' ? praiseFact(ex.id, strategyForFact(ex.start, 2 ** ex.steps), usedTrick) : praise(ex.id)
     return { correct: true, given, expected, feedback: fb }
   }
   return {
@@ -303,7 +303,6 @@ const SUB_STEP_FEEDBACK = {
 
 /* Messages for the «me llevo una abajo» method (the marks are added to the subtrahend, not crossed out on top). */
 const SUB_CARRY_FEEDBACK = {
-  forgotNext: '¡Casi! Te has olvidado de sumar 1 a la cifra de abajo de la casa de al lado.',
   zero: '¡Cuidado con el cero! Revisa esa columna con calma y comprueba la resta sumando.',
 } as const
 
@@ -349,7 +348,7 @@ function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: n
   return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
 }
 
-function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
+function checkColumnSub(ex: ColumnSubExercise, answer: Answer, method?: string): CheckResult {
   const expected = String(ex.answer)
   if (answer.type === 'steps') {
     return answer.method === 'parts'
@@ -374,11 +373,11 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer): CheckResult {
   }
   const d = diagnoseSub(ex.minuend, ex.subtrahend, input.digits)
   // «Me llevo una abajo» adds the 1 to the next column's subtrahend instead of crossing out a ten: say that one.
-  const carryMethod = answer.type === 'digits' && answer.method === 'carry'
+  const carryMethod = (answer.type === 'digits' && answer.method === 'carry') || method === 'carry'
   const feedback =
     d.errorType === 'smaller-from-larger' ? FEEDBACK.smallerFromLarger
       : d.errorType === 'zero-borrow' ? (carryMethod ? SUB_CARRY_FEEDBACK.zero : FEEDBACK.zeroBorrow)
-        : d.errorType === 'borrow-forgot' ? (carryMethod ? SUB_CARRY_FEEDBACK.forgotNext : FEEDBACK.borrowForgot)
+        : d.errorType === 'borrow-forgot' ? (carryMethod ? FEEDBACK.carryForgotSub : FEEDBACK.borrowForgot)
           : d.errorType === 'misaligned' ? FEEDBACK.misaligned
             : d.errorType === 'other' ? FEEDBACK.subAdded
               : FEEDBACK.subFact(d.wrongColumns)
@@ -565,19 +564,27 @@ function expectedText(ex: Exercise): string {
 }
 
 /** Check an answer and diagnose the error type. Pure and deterministic. */
-export function check(exercise: Exercise, answer: Answer): CheckResult {
+/** What the child did before answering. A right fact may name its trick in the praise only when the child asked for a
+    hint (the trick was shown: `hintsUsed` > 0). The subtraction method says which «ten» message fits («me llevo una»). */
+export interface CheckContext {
+  hintsUsed?: number
+  method?: string
+}
+
+export function check(exercise: Exercise, answer: Answer, context: CheckContext = {}): CheckResult {
   if (!answer || typeof answer !== 'object') return wrongShape(expectedText(exercise))
+  const usedTrick = (context.hintsUsed ?? 0) > 0
   switch (exercise.kind) {
-    case 'fact-mul': return checkFactMul(exercise, answer)
+    case 'fact-mul': return checkFactMul(exercise, answer, usedTrick)
     case 'fact-div': return checkFactDiv(exercise, answer)
-    case 'missing-factor': return checkMissing(exercise, answer)
+    case 'missing-factor': return checkMissing(exercise, answer, usedTrick)
     case 'skip-count':
-    case 'double-chain': return checkSequence(exercise, answer)
+    case 'double-chain': return checkSequence(exercise, answer, usedTrick)
     case 'groups': return checkCount(exercise, answer, exercise.groups, exercise.perGroup, false)
     case 'array': return checkCount(exercise, answer, exercise.rows, exercise.cols, true)
     case 'fact-family': return checkFamily(exercise, answer)
     case 'column-add': return checkColumnAdd(exercise, answer)
-    case 'column-sub': return checkColumnSub(exercise, answer)
+    case 'column-sub': return checkColumnSub(exercise, answer, context.method)
     case 'column-mul': return checkColumnMul(exercise, answer)
     case 'division': return checkDivisionAny(exercise, answer)
     case 'word-problem': return checkWord(exercise, answer)

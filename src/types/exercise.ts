@@ -979,7 +979,8 @@ export interface Hint {
 /** Mental strategy (the "tricks" of the workbook) for a multiplication fact. */
 export interface FactStrategy {
   id: 'easy-one' | 'double' | 'five' | 'ten' | 'mirror' | 'five-plus-one' | 'even-six-rhyme' | 'double-double'
-     | 'double-double-double' | 'nine-trick' | 'square-rhyme' | 'five-six-seven-eight' | 'weeks' | 'known'
+     | 'double-double-double' | 'nine-trick' | 'square-rhyme' | 'five-six-seven-eight' | 'weeks' | 'double-and-one'
+     | 'ten-minus-two' | 'known'
   text: string
   visual: HintVisual
 }

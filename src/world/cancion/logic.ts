@@ -1,7 +1,7 @@
 /* Canciones de las tablas: the pure part. The verses of a table (with the rhymes of the tricks that really rhyme), the
    gaps of «¡Tu turno!» (the facts this child finds hard, more of them at each level), the stars kept as progress flags,
    and the three bubbles. Design: docs/superpowers/specs/2026-11-08-canciones-tablas-design.md. */
-import { mulSkill, strategyForFact } from '@/engine'
+import { mulSkill, songRhyme, strategyForFact } from '@/engine'
 import { numberWords } from '@/activities/facts/shared/speak'
 import type { MasteryMap } from '@/types'
 
@@ -19,8 +19,6 @@ const ALL_TABLES = [2, 3, 4, 5, 6, 7, 8, 9, 10]
 const GRADE2_TABLES = [2, 3, 4, 5, 10]
 /** Without data, the facts that are usually hardest go first. */
 const PRIORITY = [7, 8, 6, 9, 4, 3, 5, 2]
-/** Only the tricks that are sung, not explained (spec: «sin inventar letras nuevas»). */
-const RHYME_IDS = new Set(['square-rhyme', 'five-six-seven-eight', 'even-six-rhyme'])
 /** Gaps per level: level 1 takes the hard ones (2 to 4), level 2 five, level 3 every fact but × 1 and × 10. */
 const LEVEL_GAPS = { 2: 5, 3: 8 } as const
 
@@ -30,15 +28,10 @@ export function songTables(grade: number | undefined): number[] {
   return grade === 2 ? [...GRADE2_TABLES] : [...ALL_TABLES]
 }
 
-/** The rhyme of a fact, when its trick is one of the sung ones (6 × 8 rhymes in the table of the 6 and of the 8). */
+/** The rhyme of a fact, when its trick is one of the sung ones (6 × 8 rhymes in the table of the 6 and of the 8). Only the
+    tricks that are sung, not explained (spec: «sin inventar letras nuevas»): see songRhyme in the engine. */
 function rhymeOf(a: number, b: number): string | null {
-  const lo = Math.min(a, b)
-  const hi = Math.max(a, b)
-  const s = strategyForFact(lo, hi)
-  if (!RHYME_IDS.has(s.id)) return null
-  // «Los pares que riman» is sung once, at 6 × 8 (the plan's single verse for it), not at every even fact of the 6.
-  if (s.id === 'even-six-rhyme' && !(lo === 6 && hi === 8)) return null
-  return s.text
+  return songRhyme(a, b)
 }
 
 export function songLines(table: number): SongLine[] {
