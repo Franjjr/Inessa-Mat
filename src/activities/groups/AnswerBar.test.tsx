@@ -9,7 +9,7 @@ function flowAfterWrongCheck(overrides: Partial<AnswerFlow> = {}): AnswerFlow {
     result: { correct: false, given: '', expected: '', feedback: 'Revisa las unidades.' },
     graded: null,
     submitted: true,
-    hints: [{ level: 1, text: 'Empieza por las unidades.' }, { level: 2, text: 'Suma 8 y 7.' }],
+    hints: [{ level: 1, text: 'Empieza por las unidades.', visual: 'none' }, { level: 2, text: 'Suma 8 y 7.', visual: 'none' }],
     hintsShown: 1,
     showNextHint: () => null,
     submit: () => ({ correct: false, given: '', expected: '' }),
