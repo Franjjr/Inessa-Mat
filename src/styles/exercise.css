@@ -10,6 +10,10 @@
 :root {
   --fs-prompt: clamp(21px, 1.2vmin + 16px, 26px);
   --fs-prompt-sub: clamp(17px, 0.6vmin + 14px, 20px);
+  /* On a short screen the statement sits in the left column: a little smaller, so a long story still leaves
+     «Comprobar» in view under it (18 px on screen is the reading floor of the app). */
+  --fs-prompt-side: 18px;
+  --fs-prompt-sub-side: 16px;
 }
 
 .ex-layout {
@@ -34,9 +38,12 @@
   text-align: center;
 }
 
+/* Above the answer bar: a keypad or a popover that opens from a box of the work is never under the bar. */
 .ex-work {
   grid-area: work;
   min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .ex-actions {
@@ -67,7 +74,7 @@
 
 @media (orientation: landscape) and (max-height: 600px) {
   .ex-layout {
-    grid-template-columns: minmax(220px, 34%) minmax(0, 1fr);
+    grid-template-columns: minmax(240px, 40%) minmax(0, 1fr);
     /* The last row is flexible: a tall work column does not stretch the statement's and the answer bar's rows. */
     grid-template-rows: auto auto 1fr;
     grid-template-areas:
@@ -78,6 +85,8 @@
   }
 
   .ex-head { text-align: left; }
+  .ex-prompt { font-size: calc(var(--fs-prompt-side) / var(--fit-scale, 1)); }
+  .ex-prompt-sub { font-size: calc(var(--fs-prompt-sub-side) / var(--fit-scale, 1)); }
 
   /* The answer bar (src/activities/groups/AnswerBar.tsx, role=group «Respuesta») in the narrow left column: its parts
      one under the other, «Comprobar» first, and no room kept for the companion (it is not on this side). */
