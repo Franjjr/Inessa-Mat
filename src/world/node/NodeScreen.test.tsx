@@ -42,7 +42,13 @@ vi.mock('@/world/story/StoryPlayer', async () => {
 vi.mock('@/world/guardian/GuardianChallenge', async () => {
   const { createElement } = await import('react')
   return {
-    default: ({ guardian }: { guardian: { id: string } }) => createElement('div', { 'data-testid': 'guardian' }, guardian.id),
+    default: ({ guardian, onPass }: { guardian: { id: string }; onPass: (r: unknown) => void }) =>
+      createElement(
+        'div',
+        { 'data-testid': 'guardian' },
+        guardian.id,
+        createElement('button', { type: 'button', onClick: () => onPass({ correct: 6, total: 6, letter: 'X' }) }, 'Ganar guardián'),
+      ),
   }
 })
 vi.mock('@/world/review/DailyReview', async () => {
@@ -217,3 +223,28 @@ describe('NodeScreen rewards and passing', () => {
     expect(await screen.findByTestId('reward')).toHaveTextContent('esta vez 1')
   })
 })
+
+describe('NodeScreen finale of the 3.º adventure', () => {
+  useLocalOnlyAuth()
+
+  it('after the last guardian, offers «Enséñale a Borrón» before the season reward, and can be skipped', async () => {
+    await renderNode('w8', 'guardian', (id) => markWorldDone(id, 'w8'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Ganar guardián' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' })) // the rescue
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' })) // the finale
+    expect(await screen.findByText('Borrón quiere aprender. ¿Le enseñas un truco?')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Ahora no' }))
+    expect(await screen.findByTestId('reward')).toHaveTextContent('esta vez 3')
+  })
+
+  it('plays the teach-back game when the child accepts it', async () => {
+    await renderNode('w8', 'guardian', (id) => markWorldDone(id, 'w8'))
+    await userEvent.click(await screen.findByRole('button', { name: 'Ganar guardián' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar historia' }))
+    await userEvent.click(await screen.findByRole('button', { name: '¡Sí, enséñale!' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Terminar actividad' }))
+    expect(await screen.findByTestId('reward')).toBeInTheDocument()
+  })
+})
+

@@ -7,7 +7,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ActivityRunner, LessonPlayer } from '@/activities'
 import {
   activityPassed, applyNodeResult, finaleStoryId, getGuardian, getLesson, getNode, getStory, getWorld, isNodeUnlocked,
-  newStickers, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, type ClassDef,
+  newStickers, COMPLETION_STARS, ISLAND_ID, INGLES_CLASSES, markClassDone, TEACH_BACK_ACTIVITY, type ClassDef,
 } from '@/content'
 import { markClassToday, starsFor } from '@/engine'
 import { getProgress, updateProgress, useActiveChild, useProgress } from '@/data'
@@ -46,6 +46,7 @@ const FAILS_BEFORE_MOVING_ON = 3
 type Phase =
   | { name: 'play' }
   | { name: 'story'; storyId: string; then: Phase }
+  | { name: 'teach'; then: Phase }
   | { name: 'reward'; payload: RewardPayload }
   | { name: 'retry'; result: ActivityResult }
 
@@ -146,6 +147,10 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
     const story = getStory(phase.storyId)
     if (!story) return <Missing onBack={() => setPhase(phase.then)} />
     return <StoryPlayer story={story} onDone={() => setPhase(phase.then)} onExit={() => setPhase(phase.then)} />
+  }
+
+  if (phase.name === 'teach') {
+    return <TeachBack world={world} node={node} onDone={() => setPhase(phase.then)} />
   }
 
   if (phase.name === 'retry') {
@@ -277,8 +282,10 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       const best = bestOf(before, after, world.id, node.id)
       // The island's guardians give no maths crystal (the horn and the secret word are the maths adventure's): a plain reward.
       const reward = rewardPhase({ kind: world.id === ISLAND_ID ? 'node' : 'crystal', stars, ...best, letter: earnedLetter, stickers })
+      const seasonReward = rewardPhase({ kind: 'season', stars, ...best, letter: earnedLetter, stickers })
+      // The finale of the 3.º adventure may hand over the optional game «Enséñale a Borrón» (its facts are the 6, 7 and 8 tables).
       const finale: Phase = world.index === 8
-        ? { name: 'story', storyId: finaleStoryId(after.seasonId), then: rewardPhase({ kind: 'season', stars, ...best, letter: earnedLetter, stickers }) }
+        ? { name: 'story', storyId: finaleStoryId(after.seasonId), then: after.seasonId === 's1' ? { name: 'teach', then: seasonReward } : seasonReward }
         : reward
       setPhase({ name: 'story', storyId: rescueStory, then: finale })
     } catch {
@@ -286,6 +293,31 @@ function NodeRunner({ world, node, child }: { world: WorldDef; node: NodeDef; ch
       navigate(mapPath, { replace: true })
     }
   }
+}
+
+/** The optional game of the finale: the child teaches Borrón. Nothing is saved; «Ahora no» skips it. */
+function TeachBack({ world, node, onDone }: { world: WorldDef; node: NodeDef; onDone: () => void }) {
+  const [playing, setPlaying] = useState(false)
+  if (playing) {
+    return (
+      <div className={s.frame}>
+        <GameHostProvider worldId={world.id} nodeId={node.id} activity="facts">
+          <ActivityRunner config={TEACH_BACK_ACTIVITY} onDone={onDone} onExit={onDone} />
+        </GameHostProvider>
+      </div>
+    )
+  }
+  return (
+    <Screen background={`linear-gradient(180deg, ${world.colorSoft}, var(--c-bg))`}>
+      <div className={s.missing}>
+        <Card>
+          <p className={s.missingText}>Borrón quiere aprender. ¿Le enseñas un truco?</p>
+          <Button onClick={() => setPlaying(true)}>¡Sí, enséñale!</Button>
+          <Button variant="ghost" onClick={onDone}>Ahora no</Button>
+        </Card>
+      </div>
+    </Screen>
+  )
 }
 
 /** The lesson to review before this node: the nearest lesson stop of the world before it (else the world's first one). */
