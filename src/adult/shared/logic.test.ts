@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { averageGrid, countFactStates, factState } from './heatmap'
+import { classFactCounts, classFactState, countFactStates, factState } from './heatmap'
 import { formatMinutes, formatPercent, formatRelative, plural } from './format'
 import { errorMessage } from './messages'
 import { ASSIGNMENT_PRESETS, presetSelector } from '../school/presets'
@@ -7,14 +7,12 @@ import { ASSIGNMENT_PRESETS, presetSelector } from '../school/presets'
 const emptyGrid = () => Array.from({ length: 10 }, () => Array(10).fill(-1) as number[])
 
 describe('heatmap model', () => {
-  it('maps Leitner boxes to four states', () => {
+  it('uses one definition of «dominada»: the temario box (2) or more', () => {
     expect(factState(-1)).toBe('unseen')
     expect(factState(0)).toBe('struggling')
-    expect(factState(1)).toBe('struggling')
-    expect(factState(2)).toBe('learning')
-    expect(factState(4)).toBe('learning')
+    expect(factState(1)).toBe('learning')
+    expect(factState(2)).toBe('mastered')
     expect(factState(5)).toBe('mastered')
-    expect(factState(4.5)).toBe('mastered')
   })
 
   it('counts the 55 distinct facts once', () => {
@@ -27,16 +25,26 @@ describe('heatmap model', () => {
     expect(counts.mastered + counts.unseen + counts.learning + counts.struggling).toBe(55)
   })
 
-  it('averages only the children who practised a fact', () => {
+  it('counts how many children are in each state per fact, never an average', () => {
     const a = emptyGrid()
     const b = emptyGrid()
+    const c = emptyGrid()
     a[0][0] = 4
     b[0][0] = 2
-    b[1][1] = 5
-    const avg = averageGrid([a, b])
-    expect(avg[0][0]).toBe(3)
-    expect(avg[1][1]).toBe(5)
-    expect(avg[2][2]).toBe(-1)
+    c[0][0] = 0
+    b[1][1] = 1
+    const counts = classFactCounts([a, b, c])
+    expect(counts[0][0]).toEqual({ mastered: 2, learning: 0, struggling: 1, unseen: 0, total: 3 })
+    expect(counts[1][1]).toEqual({ mastered: 0, learning: 1, struggling: 0, unseen: 2, total: 3 })
+    expect(counts[2][2].unseen).toBe(3)
+  })
+
+  it('shows a class fact as dominated only when at least half of the class has it', () => {
+    expect(classFactState({ mastered: 1, learning: 0, struggling: 0, unseen: 11, total: 12 })).toBe('learning')
+    expect(classFactState({ mastered: 6, learning: 0, struggling: 0, unseen: 6, total: 12 })).toBe('mastered')
+    expect(classFactState({ mastered: 3, learning: 1, struggling: 4, unseen: 4, total: 12 })).toBe('learning')
+    expect(classFactState({ mastered: 2, learning: 0, struggling: 6, unseen: 4, total: 12 })).toBe('struggling')
+    expect(classFactState({ mastered: 0, learning: 0, struggling: 0, unseen: 12, total: 12 })).toBe('unseen')
   })
 })
 

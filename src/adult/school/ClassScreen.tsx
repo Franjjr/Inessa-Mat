@@ -2,14 +2,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { createAssignment, getClassOverview, listAssignments, removeEnrollment, useAuth } from '@/data'
-import { describeSkill } from '@/engine'
-import type { Assignment, ClassOverview } from '@/types'
+import { describeError, describeSkill } from '@/engine'
+import type { Assignment, ClassOverview, ErrorType } from '@/types'
 import { Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ConfirmModal } from '../shared/ConfirmModal'
-import { FactHeatmap, FactLegend } from '../shared/FactHeatmap'
-import { averageGrid, countFactStates } from '../shared/heatmap'
-import { hardestTable, struggleCount } from '../shared/reading'
+import { ClassFactHeatmap, FactHeatmap, FactLegend } from '../shared/FactHeatmap'
+import { classFactCounts, classFactState, countFactStates, FACT_STATE_NOTE, type FactClassCount } from '../shared/heatmap'
+import { hardestTableAcross, readTables, reviewSentence, struggleCount } from '../shared/reading'
 import { errorMessage } from '../shared/messages'
 import { formatDate, formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
@@ -73,15 +73,19 @@ export default function ClassScreen() {
   }
 
   const { classRoom: room, children } = overview
-  const classGrid = averageGrid(children.map((c) => c.factGrid))
-  const classCounts = countFactStates(classGrid)
+  const grids = children.map((c) => c.factGrid)
+  const counts = classFactCounts(grids)
+  const byClass = classSummary(counts)
   const notThisWeek = children.filter((c) => c.minutesLast7Days === 0).length
-  const hard = hardestTable(classGrid)
+  const hard = hardestTableAcross(grids)
+  // Minutes are maths only (the server's sum), so the sentences say «matemáticas» and not just «practicado».
   const synthesis = [
     notThisWeek === 0
-      ? 'Todos han practicado esta semana.'
-      : `Esta semana, ${plural(notThisWeek, 'alumno', 'alumnos')} ${notThisWeek === 1 ? 'no ha' : 'no han'} practicado.`,
-    hard ? `La tabla del ${hard} es la que más les cuesta.` : 'Ahora mismo no hay tablas para repasar en la clase.',
+      ? 'Todos han practicado matemáticas esta semana.'
+      : `Esta semana, ${plural(notThisWeek, 'alumno', 'alumnos')} ${notThisWeek === 1 ? 'no ha' : 'no han'} practicado matemáticas.`,
+    hard
+      ? `La tabla del ${hard.n} es la que más les cuesta: ${plural(hard.count, 'casilla', 'casillas')} por repasar entre todos los alumnos.`
+      : 'Ahora mismo no hay tablas para repasar en la clase.',
   ].join(' ')
   // Pupils who need the most review come first; "arrival" keeps the order the server returns.
   const pupils = order === 'need'
@@ -162,17 +166,18 @@ export default function ClassScreen() {
         <div className={adult.stack} style={{ gap: 4 }}>
           <h2 id="class-heat-title" className={adult.subheading}>Tablas de la clase</h2>
           <p className={adult.muted}>
-            Media de {plural(children.length, 'alumno', 'alumnos')}. Cada casilla muestra el estado medio de esa multiplicación.
+            Cada casilla muestra cuántos de los {plural(children.length, 'alumno', 'alumnos')} dominan esa multiplicación. El color sigue a la mitad de la clase.
           </p>
         </div>
         {children.length === 0 ? (
           <p className={adult.lead}>Todavía no hay alumnos en esta clase. Comparte el código {room.joinCode} con las familias.</p>
         ) : (
           <>
-            <FactLegend />
-            <FactHeatmap triangle grid={classGrid} label={`Mapa de las tablas de la clase ${room.name}`} />
+            <FactLegend forClass />
+            <ClassFactHeatmap counts={counts} label={`Mapa de las tablas de la clase ${room.name}`} />
+            <p className={adult.hint}>{FACT_STATE_NOTE}</p>
             <p className={adult.hint}>
-              Dominadas en la clase: {classCounts.mastered} de 55 · Para repasar: {classCounts.struggling} · Sin practicar: {classCounts.unseen}
+              Dominadas por la mitad de la clase o más: {byClass.mastered} de 55 · Para repasar por la mitad o más: {byClass.struggling} · Sin practicar por nadie: {byClass.unseen}
             </p>
           </>
         )}
@@ -193,16 +198,25 @@ export default function ClassScreen() {
           <ul className={s.childList} aria-label="Alumnos de la clase">
             {pupils.map((c) => {
               const mastered = countFactStates(c.factGrid).mastered
+              // «No lo sé» is a casilla still to learn, not a mistake: it is not listed among the most frequent errors.
+              const errors = c.topErrors.filter((e) => e.errorType !== 'dont-know').slice(0, 2)
+              const review = reviewSentence(readTables(c.factGrid, c.nickname).reviewFacts).trim()
               return (
                 <li key={c.childId} className={s.childRow}>
                   <div className={adult.stack} style={{ gap: 4, minWidth: 0 }}>
                     <span className={s.childName}>{c.nickname}</span>
                     <div className={s.kpis}>
                       <span>{mastered} de 55 dominadas</span>
-                      <span>{formatMinutes(c.minutesLast7Days)} esta semana</span>
+                      <span>{formatMinutes(c.minutesLast7Days)} de matemáticas esta semana</span>
                       <span>{formatPercent(c.accuracyLast7Days)} de aciertos</span>
                       <span>{formatRelative(c.lastPlayedAt)}</span>
                     </div>
+                    {errors.length > 0 && (
+                      <span className={adult.muted}>
+                        Falla más en: {errors.map((e) => `${describeError(e.errorType as ErrorType)} (${e.count})`).join(' · ')}
+                      </span>
+                    )}
+                    <span className={adult.muted}>{review}</span>
                   </div>
                   <div className={s.mini}>
                     <FactHeatmap compact triangle grid={c.factGrid} label={`Tablas de ${c.nickname}`} />
@@ -284,4 +298,18 @@ function describeAssignment(a: Assignment): string {
   if (skills.length === 0) return 'Práctica general'
   const names = skills.slice(0, 3).map((k) => describeSkill(k))
   return skills.length > 3 ? `${names.join(', ')} y más` : names.join(', ')
+}
+
+/** What the class view says in its hint: how many distinct facts half of the class or more has in each state. */
+function classSummary(counts: FactClassCount[][]): { mastered: number; struggling: number; unseen: number } {
+  const out = { mastered: 0, struggling: 0, unseen: 0 }
+  for (let a = 0; a < 10; a++) {
+    for (let b = a; b < 10; b++) {
+      const state = classFactState(counts[a][b])
+      if (state === 'mastered') out.mastered++
+      else if (state === 'struggling') out.struggling++
+      else if (state === 'unseen') out.unseen++
+    }
+  }
+  return out
 }

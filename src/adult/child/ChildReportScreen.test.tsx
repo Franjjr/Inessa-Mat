@@ -47,8 +47,8 @@ function seededGrid(): number[][] {
     grid[b - 1][a - 1] = box
   }
   set(2, 3, 5) // mastered
-  set(7, 7, 1) // struggling
-  set(6, 8, 3) // learning
+  set(7, 7, 0) // struggling: failed, not yet learnt
+  set(6, 8, 1) // learning: answered right once, not yet dominated (box 2 or more)
   return grid
 }
 

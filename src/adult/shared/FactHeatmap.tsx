@@ -2,23 +2,24 @@
    survives greyscale printing and colour-blindness. Read-only. With `triangle`, only the 55 distinct facts
    (a ≤ b) are drawn: the mirrored half is left blank so the cells add up to the total. */
 import clsx from 'clsx'
-import { FACT_STATE_GLYPH, FACT_STATE_LABEL, factState } from './heatmap'
+import { classFactSentence, classFactState, FACT_STATE_GLYPH, FACT_STATE_LABEL, factState, type FactClassCount } from './heatmap'
 import s from './FactHeatmap.module.css'
 
+const NUMS = Array.from({ length: 10 }, (_, i) => i + 1)
+
 export function FactHeatmap({ grid, compact, label, triangle }: { grid: number[][]; compact?: boolean; label: string; triangle?: boolean }) {
-  const nums = Array.from({ length: 10 }, (_, i) => i + 1)
   return (
     <div className={clsx(s.wrap, compact && s.compact)} role="table" aria-label={label}>
       <div role="row" className={s.row}>
         <div role="columnheader" className={s.corner} aria-label="Multiplicando por">×</div>
-        {nums.map((b) => (
+        {NUMS.map((b) => (
           <div role="columnheader" key={b} className={s.head} aria-hidden={compact || undefined}>{b}</div>
         ))}
       </div>
-      {nums.map((a) => (
+      {NUMS.map((a) => (
         <div role="row" key={a} className={s.row}>
           <div role="rowheader" className={s.head} aria-hidden={compact || undefined}>{a}</div>
-          {nums.map((b) => {
+          {NUMS.map((b) => {
             if (triangle && b < a) {
               return <div key={b} role="none" aria-hidden className={s.blank} />
             }
@@ -45,8 +46,42 @@ export function FactHeatmap({ grid, compact, label, triangle }: { grid: number[]
   )
 }
 
+/**
+ * The class view: per multiplication, how many children are in each state. Each cell shows how many children have it
+ * dominated; its colour follows `classFactState` (at least half of the class). Counts, never averages.
+ */
+export function ClassFactHeatmap({ counts, label }: { counts: FactClassCount[][]; label: string }) {
+  return (
+    <div className={s.wrap} role="table" aria-label={label}>
+      <div role="row" className={s.row}>
+        <div role="columnheader" className={s.corner} aria-label="Multiplicando por">×</div>
+        {NUMS.map((b) => (
+          <div role="columnheader" key={b} className={s.head}>{b}</div>
+        ))}
+      </div>
+      {NUMS.map((a) => (
+        <div role="row" key={a} className={s.row}>
+          <div role="rowheader" className={s.head}>{a}</div>
+          {NUMS.map((b) => {
+            const c = counts[a - 1]?.[b - 1]
+            if (b < a || !c) return <div key={b} role="none" aria-hidden className={s.blank} />
+            const state = classFactState(c)
+            const sentence = classFactSentence(c, a, b)
+            return (
+              <div key={b} role="cell" aria-label={sentence} title={sentence} data-state={state} className={clsx(s.cell, s[state])}>
+                <span className={s.product}>{c.mastered}</span>
+                <span className={s.glyph} aria-hidden>{FACT_STATE_GLYPH[state]}</span>
+              </div>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 /** Legend that explains each state with the same label and glyph used in the cells. */
-export function FactLegend() {
+export function FactLegend({ forClass = false }: { forClass?: boolean }) {
   const order = ['mastered', 'learning', 'struggling', 'unseen'] as const
   return (
     <ul className={s.legend} aria-label="Leyenda">
@@ -56,6 +91,7 @@ export function FactLegend() {
           {FACT_STATE_LABEL[st]}
         </li>
       ))}
+      {forClass && <li className={s.legendItem}>Número: alumnos que la dominan</li>}
     </ul>
   )
 }
