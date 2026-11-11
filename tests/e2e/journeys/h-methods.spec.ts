@@ -1,7 +1,7 @@
 /* Journey H: the new exercise types and the division methods, played through the real views. The bar problem, the
    encuentra el error and the comprobar are played in the development gallery (/dev/gallery?only=newViews), where the
-   same views run on their own; the lesson «Cuatro caminos para dividir» is played in the world 8 lesson node, all four
-   methods and the choice of the favourite. Only visible Spanish text and roles are used. */
+   same views run on their own; the lesson «Dos formas de hacer la galera» is played in the world 8 lesson node, with
+   the two ways of the galera and no choice of a favourite. Only visible Spanish text and roles are used. */
 import { mkdirSync } from 'node:fs'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { devEditProgress, seedDemo, settle } from '../helpers'
@@ -140,8 +140,8 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
   })
 })
 
-test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
-  test('the four division methods are tried and the child chooses the favourite', async ({ page }) => {
+test.describe('Journey H: the lesson «Dos formas de hacer la galera»', () => {
+  test('the two ways of the galera are tried and the lesson does not ask for a favourite', async ({ page }) => {
     test.setTimeout(180_000)
     await seedDemo(page)
     // World 8 is reached by the demo child: its earlier nodes are marked as done, as after a long journey.
@@ -154,7 +154,7 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       await data.updateProgress(child.id, (p) => content.unlockThroughWorld(p, 'w8'))
     })
     await page.goto('/play/w/w8/lesson-div-ways')
-    await expect(page.getByRole('heading', { name: 'Cuatro caminos para dividir' })).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByRole('heading', { name: 'Dos formas de hacer la galera' })).toBeVisible({ timeout: 20_000 })
 
     const seen = new Set<string>()
     for (let i = 0; i < 80; i++) {
@@ -163,32 +163,14 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
         await done.click({ timeout: 5_000 }).catch(() => undefined)
         break
       }
-      const pick = page.getByRole('radio', { name: 'La galera con restas' })
-      if (await pick.isVisible().catch(() => false)) {
-        await pick.click()
-        await expect(page.getByText('Anotado: tu método favorito es «La galera con restas».')).toBeVisible()
-        seen.add('choice')
-        await shot(page, 'h9-lesson-choice')
-        await continueLesson(page)
-        continue
-      }
       const galera = page.locator('section[aria-label="División en galera"]')
       if (await galera.isVisible().catch(() => false)) {
+        seen.add(((await galera.locator('p').first().textContent()) ?? '').includes('Escribe solo el cociente') ? 'galera-short' : 'galera')
         await solveGalera(page)
         continue
       }
-      const parts = page.getByRole('region', { name: 'Repartir por partes' })
-      if (await parts.isVisible().catch(() => false)) {
-        seen.add('parts')
-        await solveParts(page)
-        continue
-      }
-      const climb = page.getByRole('region', { name: 'Multiplicar hacia arriba' })
-      if (await climb.isVisible().catch(() => false)) {
-        seen.add('climb')
-        await solveClimb(page)
-        continue
-      }
+      // No step of this lesson asks the child to choose a favourite way.
+      expect(await page.getByRole('radio').count()).toBe(0)
       const next = page.getByRole('button', { name: 'Siguiente ›' })
       if (await ready(next)) {
         await next.click({ timeout: 5_000 }).catch(() => undefined)
@@ -197,8 +179,8 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       }
       await settle(page, 400)
     }
-    // The favourite was chosen and each method's try step shows its own exercise (a climb with a two-digit quotient would fall back to the galera).
-    expect([...seen].sort()).toEqual(['choice', 'climb', 'parts'])
+    // Each way has its own try step: the galera with the subtractions and the galera without them.
+    expect([...seen].sort()).toEqual(['galera', 'galera-short'])
   })
 })
 
