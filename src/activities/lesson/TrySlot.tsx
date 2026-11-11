@@ -189,7 +189,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
         <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
           {/* teach full: after the second miss the view shows the worked step and the child copies the answer before the lesson goes on. */}
-          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided allowHints={allowHints} showFeedback={false} teach="full" method={method} divMethod={divMethod} />
+          <ExerciseView key={`${attempt}`} exercise={exercise} onAnswered={answered} guided={allowHints} allowHints={allowHints} showFeedback={false} teach="full" method={method} divMethod={divMethod} />
         </div>
       </div>
       <div ref={footerRef} className={s.footer} role="status" aria-live="polite">
