@@ -149,7 +149,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, givenUp
             <p className={s.good}>{host.t('¡Muy bien, {child}!')}</p>
           ) : (
             <>
-              {givenUpAnswer != null && <p className={s.good}>{`La respuesta es ${givenUpAnswer}.`}</p>}
+              {givenUpAnswer != null && <p className={s.answer}>{`La respuesta es ${givenUpAnswer}.`}</p>}
               <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
             </>
           )}
@@ -224,7 +224,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, givenUp
         )}
         {status === 'gaveUp' && (
           <>
-            {shownAnswer !== null && <p className={s.good}>{`La respuesta es ${shownAnswer}.`}</p>}
+            {shownAnswer !== null && <p className={s.answer}>{`La respuesta es ${shownAnswer}.`}</p>}
             <p className={s.hint}>{host.t('No pasa nada, {child}. Seguimos con la lección.')}</p>
           </>
         )}
