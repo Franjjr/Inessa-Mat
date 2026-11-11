@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { useActivityHost } from '@/activities'
 import { ISLAND_ID } from '@/content'
-import { createChild, getChild, getMastery, listAttempts, listSessions, useActiveChild } from '@/data'
+import { createChild, getChild, updateChild, getMastery, listAttempts, listSessions, useActiveChild } from '@/data'
 import type { ActivityHost, Exercise } from '@/types'
 import { flushTimers, useLocalOnlyAuth } from '../host/testing'
 import { GameHostProvider } from './GameHost'
@@ -219,5 +219,24 @@ describe('GameHostProvider', () => {
     const saved = (await getChild(child.id))!.settings
     expect(saved.subMethod).toBe('borrow')
     expect(saved.divMethod).toBe('galera')
+  })
+
+  it('host.prefs never hands out a retired method: an old «line» reaches the hints and views as borrow', async () => {
+    const child = await createChild({
+      nickname: 'Old Method', gender: 'f', companion: { species: 'cat', name: 'Nube', gender: 'f', colorway: 'default', equipped: [] },
+    })
+    const cur = (await getChild(child.id))!
+    // An old profile, as saved before the school methods: the lesson stored «saltos». The short galera is not a default,
+    // so seeing it proves the host read this child's settings.
+    await updateChild(child.id, { settings: { ...cur.settings, subMethod: 'line', divMethod: 'galera-short' } })
+    await activate(child.id)
+    let host: ActivityHost | null = null
+    render(
+      <GameHostProvider worldId="w4" nodeId="lesson-sub-methods" activity="lesson">
+        <Capture onHost={(h) => { host = h }} />
+      </GameHostProvider>,
+    )
+    await waitFor(() => expect(host?.prefs.divMethod).toBe('galera-short'), { timeout: 3000 })
+    expect(host!.prefs.subMethod).toBe('borrow')
   })
 })
