@@ -39,3 +39,14 @@ export function previewEquipped(companion: Companion, previewId: string | null):
 export function affordableAfter(progress: ProgressState, price: number): number {
   return spendableStars(progress) - price
 }
+
+/** Child-facing "stars missing" line for an accessory the child cannot afford yet (singular-aware). */
+export function missingStarsText(price: number, stars: number): string {
+  const missing = Math.max(1, price - stars)
+  return missing === 1 ? 'Te falta 1 estrella' : `Te faltan ${missing} estrellas`
+}
+
+/** True when every accessory is already the child's (owned or worn): the shop has nothing left to sell. */
+export function hasEverything(statuses: AccessoryStatus[]): boolean {
+  return statuses.length > 0 && statuses.every((s) => s === 'owned' || s === 'equipped')
+}

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { CompanionArt, StarIcon } from '@/art'
 import { Button, Modal, Screen, TopBar } from '@/ui'
 import type { AccessoryDef, Companion } from '@/types'
-import type { AccessoryStatus } from './logic'
+import { hasEverything, type AccessoryStatus } from './logic'
 import s from './shop.module.css'
 
 export interface ShopItem {
@@ -111,6 +111,11 @@ export function ShopView({
         </section>
 
         <section className={s.grid} aria-label="Accesorios">
+          {hasEverything(items.map((i) => i.status)) && (
+            <p className={s.hint} style={{ gridColumn: '1 / -1' }}>
+              ¡Lo tienes todo! Tus estrellas siguen contando tu esfuerzo.
+            </p>
+          )}
           {items.map((item) => {
             const { accessory, status } = item
             const selected = previewId === accessory.id
@@ -134,6 +139,7 @@ export function ShopView({
                     <span className={s.price}>
                       <StarIcon size={22} filled />
                       {accessory.price}
+                      {status === 'stars' && item.reason ? <span> · {item.reason}</span> : null}
                     </span>
                   )}
                 </span>
