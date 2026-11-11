@@ -1,6 +1,7 @@
 /* The guardian's challenge (node kind 'guardian'): intro → mixed rounds → Hechizo del Cristal.
-   onPass hands over the crystal and letter (NodeScreen plays the rescue). Failing gives an encouraging retry
-   that starts a fresh set of exercises. Rendered inside GameHostProvider by NodeScreen. */
+   onPass hands over the crystal and letter (NodeScreen plays the rescue). Failing shows the score and offers a short
+   review (with hints) of the items the child missed, then an encouraging retry that starts a fresh set of exercises.
+   Rendered inside GameHostProvider by NodeScreen. */
 import { useEffect, useState } from 'react'
 import { useActivityHost } from '@/activities'
 import { music } from '@/audio'
@@ -15,7 +16,7 @@ import {
 } from './logic'
 import s from './GuardianChallenge.module.css'
 
-type Stage = 'intro' | 'rounds' | 'spell' | 'lost' | 'won'
+type Stage = 'intro' | 'rounds' | 'spell' | 'review' | 'lost' | 'won'
 
 export default function GuardianChallenge({ guardian, world, onPass, onFail, onExit }: GuardianChallengeProps) {
   const host = useActivityHost()
@@ -26,6 +27,10 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
   const [spell, setSpell] = useState<Exercise | null>(null)
   const [spellTry, setSpellTry] = useState(0)
   const [lostNote, setLostNote] = useState('')
+  const [lostScore, setLostScore] = useState({ correct: 0, total: 0 })
+  /** Items answered wrong in this attempt, asked again in the review after a loss. */
+  const [missed, setMissed] = useState<Exercise[]>([])
+  const [reviewIndex, setReviewIndex] = useState(0)
 
   useEffect(() => {
     music.play('guardian')
@@ -43,11 +48,15 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
     setSpell(null)
     setSpellTry(0)
     setLostNote('')
+    setLostScore({ correct: 0, total: 0 })
+    setMissed([])
+    setReviewIndex(0)
     setStage('rounds')
   }
 
   const fail = (note: string, got: number, of: number) => {
     setLostNote(note)
+    setLostScore({ correct: got, total: of })
     setStage('lost')
     onFail({ correct: got, total: of })
   }
@@ -55,6 +64,7 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
   const onRoundContinue = (o: ExerciseOutcome) => {
     const nextCorrect = correct + (o.check.correct ? 1 : 0)
     setCorrect(nextCorrect)
+    if (!o.check.correct) setMissed((m) => [...m, exercises[index]])
     if (index + 1 < exercises.length) {
       setIndex(index + 1)
       return
@@ -85,7 +95,17 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
       setSpellTry(spellTry + 1)
       return
     }
+    if (spell) setMissed((m) => [...m, spell])
     fail(guardian.retryText, spellCorrect, of)
+  }
+
+  /** After the review of the missed items, the child goes back to the loss screen and tries again. */
+  const onReviewContinue = () => {
+    if (reviewIndex + 1 < missed.length) {
+      setReviewIndex(reviewIndex + 1)
+      return
+    }
+    setStage('lost')
   }
 
   const header = (
@@ -184,7 +204,28 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
     )
   }
 
-  // lost: encouraging, with a retry that starts a new set of items.
+  if (stage === 'review' && missed[reviewIndex]) {
+    const last = reviewIndex + 1 >= missed.length
+    return (
+      <Screen className={s.root} style={{ ['--guardian' as string]: color, ['--guardian-soft' as string]: world.colorSoft }}>
+        {header}
+        <div className={s.stage}>
+          <p className={s.rule}>{host.t('Repasamos juntos lo que se te ha resistido. ¡Tú puedes!')}</p>
+          <div className={s.card}>
+            <ExerciseStep
+              key={`review-${reviewIndex}`}
+              exercise={missed[reviewIndex]}
+              allowHints
+              okLabel={last ? host.t('Terminar repaso') : host.t('Siguiente')}
+              onContinue={onReviewContinue}
+            />
+          </div>
+        </div>
+      </Screen>
+    )
+  }
+
+  // lost: encouraging, with a short review of what was missed and a retry that starts a new set of items.
   return (
     <Screen className={s.root} style={{ ['--guardian' as string]: color, ['--guardian-soft' as string]: world.colorSoft }}>
       {header}
@@ -192,7 +233,13 @@ export default function GuardianChallenge({ guardian, world, onPass, onFail, onE
         <div className={s.intro}>
           <Character id={character} pose="think" size={180} />
           <p className={s.speech}>{host.t(lostNote)}</p>
+          <p className={s.rule}>{host.t(`Has acertado ${lostScore.correct} de ${lostScore.total}.`)}</p>
           <div className={s.actions}>
+            {missed.length > 0 && (
+              <Button size="lg" variant="secondary" onClick={() => { setReviewIndex(0); setStage('review') }}>
+                {host.t('Repasar lo que fallaste')}
+              </Button>
+            )}
             <Button size="lg" variant="magic" onClick={start}>{host.t('Intentarlo otra vez')}</Button>
             <Button size="lg" variant="secondary" onClick={onExit}>{host.t('Volver al mapa')}</Button>
           </div>
