@@ -255,8 +255,8 @@ export default function OnboardingScreen() {
                     </button>
                   ))}
                 </div>
-                {/* optional: the default colour stays */}
-                <Button variant="ghost" onClick={next}>Luego</Button>
+                {/* optional: the default colour stays (nothing in the app changes it later) */}
+                <Button variant="ghost" onClick={next}>Dejarlo así</Button>
               </Question>
             )}
 
@@ -301,8 +301,8 @@ export default function OnboardingScreen() {
                   <ChoiceButton label="Es una niña" selected={draft.petGender === 'f'} onClick={() => { update({ petGender: 'f' }); next() }} />
                   <ChoiceButton label="Es un niño" selected={draft.petGender === 'm'} onClick={() => { update({ petGender: 'm' }); next() }} />
                 </Choices>
-                {/* optional: the default stays */}
-                <Button variant="ghost" onClick={next}>Luego</Button>
+                {/* optional: the default stays (nothing in the app changes it later) */}
+                <Button variant="ghost" onClick={next}>Dejarlo así</Button>
               </Question>
             )}
 

@@ -124,7 +124,7 @@ describe('OnboardingScreen', () => {
     input.mode = 'touch'
   })
 
-  it('the optional questions (colour, companion gender) can be skipped with «Luego»: the defaults stay', async () => {
+  it('the optional questions (colour, companion gender) can be skipped with «Dejarlo así»: the defaults stay', async () => {
     const user = userEvent.setup()
     render(
       <MemoryRouter initialEntries={['/kids/new']}>
@@ -139,10 +139,10 @@ describe('OnboardingScreen', () => {
     await user.click(await screen.findByRole('button', { name: 'Como a un niño' }))
     await user.click(await screen.findByRole('button', { name: '2º de Primaria' }))
     await user.click(await screen.findByRole('button', { name: /Gatito/ }))
-    await user.click(await screen.findByRole('button', { name: 'Luego' }))
+    await user.click(await screen.findByRole('button', { name: 'Dejarlo así' }))
     await user.type(await screen.findByLabelText('Nombre del compañero'), 'Bigotes')
     await user.click(screen.getByRole('button', { name: 'Siguiente ›' }))
-    await user.click(await screen.findByRole('button', { name: 'Luego' }))
+    await user.click(await screen.findByRole('button', { name: 'Dejarlo así' }))
     await user.click(await screen.findByRole('button', { name: '¡Vamos!' }))
     await user.click(await screen.findByRole('button', { name: 'Calibración simulada' }))
     await user.click(await screen.findByRole('button', { name: 'Saltar' }))
