@@ -139,9 +139,9 @@ export function ShopView({
                     <span className={s.price}>
                       <StarIcon size={22} filled />
                       {accessory.price}
-                      {status === 'stars' && item.reason ? <span> · {item.reason}</span> : null}
                     </span>
                   )}
+                  {status === 'stars' && item.reason ? <span className={s.need}>{item.reason}</span> : null}
                 </span>
               </button>
             )

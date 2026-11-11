@@ -73,7 +73,7 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
       const helped = wrongHere >= 2
       const nextPos = step.pos + 1
       // After a helped step the whole fact stays on screen, so the child sees what the number was.
-      setClue(helped ? `¡Eso es! ${factText(cell)}. ¡Ya lo sabes!` : null)
+      setClue(helped ? `¡Eso es! ${factText(cell)}. ¡Recuérdalo!` : null)
       setWrongHere(0)
       setStepStart(now())
       // Every number of the maze is one item. After the last number the maze is done (the gem needs no tap).

@@ -39,4 +39,27 @@ describe('RaceActivity', () => {
     renderRace(4)
     expect(screen.getByText(/⏱/)).toBeInTheDocument()
   })
+
+  it('keeps the clock when mastery drops mid-run (decided once on mount)', () => {
+    const ui = (box: number) => (
+      <ActivityHostProvider value={{ ...defaultActivityHost, mastery: mastery(box) }}>
+        <RaceActivity config={config} onDone={() => {}} onExit={() => {}} />
+      </ActivityHostProvider>
+    )
+    const { rerender } = render(ui(4))
+    rerender(ui(1))
+    expect(screen.getByText(/⏱/)).toBeInTheDocument()
+    expect(screen.queryByText('Sin prisa')).toBeNull()
+  })
+
+  it('stays untimed when mastery rises mid-run', () => {
+    const ui = (box: number) => (
+      <ActivityHostProvider value={{ ...defaultActivityHost, mastery: mastery(box) }}>
+        <RaceActivity config={config} onDone={() => {}} onExit={() => {}} />
+      </ActivityHostProvider>
+    )
+    const { rerender } = render(ui(1))
+    rerender(ui(4))
+    expect(screen.getByText('Sin prisa')).toBeInTheDocument()
+  })
 })
