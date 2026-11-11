@@ -47,6 +47,9 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
   const kOf = (cell: number) => maze.values[cell] / table
   const isGoal = (cell: number) => cell === maze.path[maze.path.length - 1]
 
+  // The complete fact with its result ("7 × 8 = 56"), shown before the right cell is highlighted.
+  const factText = (cell: number) => `${table} × ${kOf(cell)} = ${maze.values[cell]}`
+
   const log = (cell: number, ok: boolean, ms: number, hintsUsed = 0) => {
     const value = maze.values[cell]
     const exercise: Exercise = makeFactMul(table, ok ? kOf(cell) : kOf(expected))
@@ -67,8 +70,10 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
       // Game rule: the stars count the first try of each number. A right step after two misses is right for the
       // child (it is reported as a hint, so it does not raise the mastery box) but it does not count as a clean first try.
       const ok = wrongHere === 0
+      const helped = wrongHere >= 2
       const nextPos = step.pos + 1
-      setClue(null)
+      // After a helped step the whole fact stays on screen, so the child sees what the number was.
+      setClue(helped ? `¡Eso es! ${factText(cell)}. ¡Recuérdalo!` : null)
       setWrongHere(0)
       setStepStart(now())
       // Every number of the maze is one item. After the last number the maze is done (the gem needs no tap).
@@ -94,11 +99,11 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
     host.react('wrong')
     setWrongHere((w) => w + 1)
     setShakeCell({ cell, key: Date.now() })
-    setClue(
-      multiple
-        ? `Ese sí es del ${table}, pero el camino va a la derecha o hacia abajo.`
-        : `Ese número no es de la tabla del ${table}. ¡Busca otro!`,
-    )
+    const base = multiple
+      ? `Ese sí es del ${table}, pero el camino va a la derecha o hacia abajo.`
+      : `Ese número no es de la tabla del ${table}. ¡Busca otro!`
+    // Second miss: say the fact first (the highlight on the right cell comes with it), never the highlight alone.
+    setClue(wrongHere + 1 >= 2 ? `Fíjate: ${factText(expected)}. ¡Pisa el ${maze.values[expected]}!` : base)
   }
 
   const cellsOut = maze.values.map((v, cell) => {

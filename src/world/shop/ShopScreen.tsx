@@ -7,7 +7,7 @@ import { Spinner, toast } from '@/ui'
 import { childText } from '@/world/rewards/childText'
 import type { ProgressState } from '@/types'
 import { ShopView, type ShopItem } from './ShopView'
-import { accessoryStatus, equipAccessory, lockedReason, previewEquipped, unequipAccessory } from './logic'
+import { accessoryStatus, equipAccessory, lockedReason, missingStarsText, previewEquipped, unequipAccessory } from './logic'
 
 export default function ShopScreen() {
   const { child } = useActiveChild()
@@ -20,7 +20,7 @@ export default function ShopScreen() {
   const companion = child.companion
   const items: ShopItem[] = accessories.map((a) => {
     const status = accessoryStatus(progress, companion, a.id)
-    return { accessory: a, status, reason: status === 'locked' ? lockedReason(a) : status === 'stars' ? 'Te faltan estrellas para este' : undefined }
+    return { accessory: a, status, reason: status === 'locked' ? lockedReason(a) : status === 'stars' ? missingStarsText(a.price, spendableStars(progress)) : undefined }
   })
 
   const saveEquipped = async (next: string[]) => {

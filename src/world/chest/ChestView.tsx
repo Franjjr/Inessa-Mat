@@ -54,6 +54,12 @@ export function ChestView({ state, reward, lockedText, openText, childName, dipl
               })}
             </div>
             <p className={s.lead}>{lockedText}</p>
+            {reward && (
+              // The prize itself stays secret until the chest opens; the child only learns that one is waiting.
+              <p className={s.lead} data-testid="chest-prize-waiting">
+                {`¡Tu familia te guarda un premio! ${total - collected === 1 ? 'Te falta 1 cristal' : `Te faltan ${total - collected} cristales`}.`}
+              </p>
+            )}
           </>
         )}
 
@@ -61,6 +67,7 @@ export function ChestView({ state, reward, lockedText, openText, childName, dipl
 
         {open ? (
           <>
+            <h2 className={s.prizeTitle}>¡Lo has conseguido, {childName}!</h2>
             <p className={s.lead}>{openText}</p>
             {reward ? (
               <Card className={s.prize}>
