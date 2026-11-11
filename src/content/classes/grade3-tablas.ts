@@ -209,7 +209,7 @@ const tabla7 = clase({
   sola: [
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Ahora con números más grandes.', facts(7, 6, 8)),
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', factsIn(7, [6, 8, 10])),
-    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! Sin ayudas: calcula tú.', factsIn(7, [8, 10])),
+    tryIt('big-text', { text: 'Tabla del 7' }, '¡Tu turno! La última, sin ayudas.', factsIn(7, [8, 10])),
   ],
   cierre: show('square-rhyme', undefined, 'La regla: la tabla del 7 tiene pocas multiplicaciones nuevas. Si ya sabes 6 × 7, también sabes 7 × 6.'),
 })
