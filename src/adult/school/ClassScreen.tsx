@@ -11,10 +11,10 @@ import { ClassFactHeatmap, FactHeatmap, FactLegend } from '../shared/FactHeatmap
 import { classFactCounts, countFactStates, FACT_STATE_NOTE } from '../shared/heatmap'
 import { hardestTableAcross, struggleCount } from '../shared/reading'
 import { errorMessage } from '../shared/messages'
-import { formatDate, formatMinutes, formatPercent, formatRelative, plural } from '../shared/format'
+import { formatDate, formatPercent, formatRelative, plural } from '../shared/format'
 import { copyText } from '../shared/clipboard'
 import { ASSIGNMENT_PRESETS, presetSelector } from './presets'
-import { CLASS_CELL_NOTE, classSummary, failsMostLine, pupilReviewLine } from './classView'
+import { CLASS_CELL_NOTE, classSummary, failsMostLine, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
 import { TextField } from '../shared/Field'
 import s from './school.module.css'
 import adult from '../shared/adult.module.css'
@@ -77,13 +77,11 @@ export default function ClassScreen() {
   const grids = children.map((c) => c.factGrid)
   const counts = classFactCounts(grids)
   const byClass = classSummary(counts)
-  const notThisWeek = children.filter((c) => c.minutesLast7Days === 0).length
   const hard = hardestTableAcross(grids)
-  // Minutes are maths only (the server's sum), so the sentences say «matemáticas» and not just «practicado».
+  // Any subject counts as practice when the server sends the activity of every subject (migration 0006); before that
+  // only the maths minutes are known, and the sentence says «matemáticas».
   const synthesis = [
-    notThisWeek === 0
-      ? 'Todos han practicado matemáticas esta semana.'
-      : `Esta semana, ${plural(notThisWeek, 'alumno', 'alumnos')} ${notThisWeek === 1 ? 'no ha' : 'no han'} practicado matemáticas.`,
+    weekSentence(children),
     hard
       ? `La tabla del ${hard.n} es la que más les cuesta: ${plural(hard.count, 'casilla', 'casillas')} por repasar entre todos los alumnos.`
       : 'Ahora mismo no hay tablas para repasar en la clase.',
@@ -208,8 +206,8 @@ export default function ClassScreen() {
                     <span className={s.childName}>{c.nickname}</span>
                     <div className={s.kpis}>
                       <span>{mastered} de 55 dominadas</span>
-                      <span>{formatMinutes(c.minutesLast7Days)} de matemáticas esta semana</span>
-                      <span>{formatPercent(c.accuracyLast7Days)} de aciertos</span>
+                      <span>{pupilWeekLine(c)}</span>
+                      <span>{formatPercent(c.accuracyLast7Days)} de aciertos en matemáticas</span>
                       <span>{formatRelative(c.lastPlayedAt)}</span>
                     </div>
                     {fails && <span className={adult.muted}>{fails}</span>}

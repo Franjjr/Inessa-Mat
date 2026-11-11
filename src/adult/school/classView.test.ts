@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { describeError } from '@/engine'
 import { classFactCounts } from '../shared/heatmap'
-import { classSummary, failsMostLine, pupilReviewLine } from './classView'
+import { classSummary, failsMostLine, practisedThisWeek, pupilReviewLine, pupilWeekLine, weekSentence } from './classView'
 
 /** A 10×10 grid with every fact unseen (-1), then the boxes given as [a, b, box] (a × b, 1..10). */
 function gridWith(...facts: [number, number, number][]): number[][] {
@@ -55,5 +55,38 @@ describe('pupilReviewLine: the review sentence of a pupil', () => {
 
   it('says there is nothing to review when no fact is struggling', () => {
     expect(pupilReviewLine(gridWith([2, 2, 3]), 'Lía')).toBe('No hay multiplicaciones para repasar ahora.')
+  })
+})
+
+describe('the week of the class: any subject counts as practice', () => {
+  const lenguaOnly = { minutesLast7Days: 0, weekBySubject: { language: { minutes: 8, attempts: 14 } } }
+  const mathsAndCalig = { minutesLast7Days: 12, weekBySubject: { math: { minutes: 12, attempts: 20 }, handwriting: { minutes: 0, attempts: 3 } } }
+  const nothing = { minutesLast7Days: 0, weekBySubject: {} }
+
+  it('a pupil who only did Lengua has practised this week', () => {
+    expect(practisedThisWeek(lenguaOnly)).toBe(true)
+    expect(practisedThisWeek(nothing)).toBe(false)
+  })
+
+  it('the class sentence counts every subject when the server sends them', () => {
+    expect(weekSentence([lenguaOnly, mathsAndCalig])).toBe('Todos han practicado esta semana.')
+    expect(weekSentence([lenguaOnly, nothing])).toBe('Esta semana, 1 alumno no ha practicado.')
+    expect(weekSentence([nothing, nothing])).toBe('Esta semana, 2 alumnos no han practicado.')
+  })
+
+  it('without the activity of every subject (server without 0006) it speaks of maths only', () => {
+    const mathsOnly = [{ minutesLast7Days: 0 }, { minutesLast7Days: 5 }]
+    expect(practisedThisWeek(mathsOnly[0])).toBe(false)
+    expect(weekSentence(mathsOnly)).toBe('Esta semana, 1 alumno no ha practicado matemáticas.')
+    expect(weekSentence([{ minutesLast7Days: 5 }])).toBe('Todos han practicado matemáticas esta semana.')
+    // One pupil without the detail is enough to keep the maths wording for the whole class.
+    expect(weekSentence([lenguaOnly, { minutesLast7Days: 0 }])).toBe('Esta semana, 2 alumnos no han practicado matemáticas.')
+  })
+
+  it('each pupil line lists the subjects played, in a fixed order', () => {
+    expect(pupilWeekLine(mathsAndCalig)).toBe('Esta semana: Matemáticas 12 min · Caligrafía menos de 1 min')
+    expect(pupilWeekLine(lenguaOnly)).toBe('Esta semana: Lengua 8 min')
+    expect(pupilWeekLine(nothing)).toBe('Sin practicar esta semana')
+    expect(pupilWeekLine({ minutesLast7Days: 7 })).toBe('7 min de matemáticas esta semana')
   })
 })

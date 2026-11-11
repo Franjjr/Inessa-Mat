@@ -57,6 +57,24 @@ describe('statsFromLocal: Lengua sessions are not maths minutes (R5)', () => {
     expect(statsFromLocal([], [], [session(9, 'language')], null).minutes).toBe(0)
   })
 
+  it('the activity of every subject is counted apart: graded answers and minutes', () => {
+    const attempts = [
+      attempt({ skill: 'lng:ort:bv' }),
+      attempt({ skill: 'lng:ort:bv', graded: false }),
+      attempt({ skill: 'eng:voc:animales' }),
+      attempt({ skill: 'calig:a' }),
+      attempt({ skill: 'mul:6x7' }),
+      attempt({ skill: 'cal:weekday' }), // the calendar is maths, not Caligrafía
+    ]
+    const stats = statsFromLocal(attempts, attempts, [session(6, 'language'), session(3, 'handwriting'), session(2)], null)
+    expect(stats.bySubject).toEqual({
+      language: { attempts: 1, minutes: 6 },
+      english: { attempts: 1, minutes: 0 },
+      handwriting: { attempts: 1, minutes: 3 },
+      math: { attempts: 2, minutes: 2 },
+    })
+  })
+
   it('English and Caligrafía sessions give no maths minutes either', () => {
     expect(statsFromLocal([], [], [session(5, 'english'), session(3, 'handwriting'), session(2)], null).minutes).toBe(2)
   })
