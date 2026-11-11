@@ -144,11 +144,15 @@ export function Pill({ children, style }: { children: ReactNode; style?: CSSProp
   return <span className={s.pill} style={style}>{children}</span>
 }
 
-/** Loading state. The label is visible (children are not expected to read a bare spinner) and announced once. */
-/** After this long, a wait says that nothing loaded and offers another try (a load can stall without any error). */
+/** After this long, a wait says that it takes longer than usual (a load can stall without any error). */
 export const SPINNER_SLOW_MS = 8000
 
-export function Spinner({ label = 'Cargando…' }: { label?: string }) {
+/**
+ * Loading state. The label is visible (children are not expected to read a bare spinner) and announced once.
+ * After SPINNER_SLOW_MS it offers «Probar otra vez», which reloads the page. That loses any work in progress, so
+ * a spinner shown inside an activity passes `retry={false}`.
+ */
+export function Spinner({ label = 'Cargando…', retry = true }: { label?: string; retry?: boolean }) {
   const [slow, setSlow] = useState(false)
   useEffect(() => {
     const timer = window.setTimeout(() => setSlow(true), SPINNER_SLOW_MS)
@@ -157,8 +161,8 @@ export function Spinner({ label = 'Cargando…' }: { label?: string }) {
   return (
     <div className={s.center} role="status" aria-live="polite">
       <div className={s.spinner} aria-hidden />
-      <span className={s.spinnerLabel}>{slow ? 'Algo no ha cargado.' : label}</span>
-      {slow && <Button variant="secondary" onClick={() => window.location.reload()}>Probar otra vez</Button>}
+      <span className={s.spinnerLabel}>{slow ? 'Esto tarda más de lo normal.' : label}</span>
+      {slow && retry && <Button variant="secondary" onClick={() => window.location.reload()}>Probar otra vez</Button>}
     </div>
   )
 }
