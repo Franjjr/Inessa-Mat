@@ -205,6 +205,11 @@ describe('PlaceValueView, expanded form (p1n-03/04)', () => {
     expect(screen.getByText('valor de los millares')).toBeTruthy()
     expect(screen.getByText(/2 405 = 2 000 \+ 400 \+ 0 \+ 5/)).toBeTruthy()
   })
+
+  it('the statement says the same as the class: a 0 may be written or left empty', () => {
+    render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={() => {}} showFeedback={false} />)
+    expect(screen.getByText('Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía.')).toBeTruthy()
+  })
 })
 
 describe('MentalView (P3PE-14)', () => {
