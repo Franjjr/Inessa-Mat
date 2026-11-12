@@ -8,17 +8,21 @@ import { useActivityHost } from '../host'
 import { useAnswerFlow } from '../facts/shared/flow'
 import { HintPanel } from '../facts/shared/HintPanel'
 import shared from '../facts/shared/shared.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
+import { FactViewBar } from './FactViewBar'
 import s from './MissingFactorView.module.css'
 
-export default function MissingFactorView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact }: ExerciseViewProps) {
+export default function MissingFactorView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, initialAnswer }: ExerciseViewProps) {
   const ex = exercise as MissingFactorExercise
   const host = useActivityHost()
   const flow = useAnswerFlow({ exercise, onAnswered, guided, allowHints })
   const learning = useInkLearning()
-  const [draft, setDraft] = useState<number | null>(null)
+  // «Inténtalo otra vez»: the pad starts with what she wrote, marked as not right until she changes it.
+  const before = initialAnswer?.type === 'number' ? initialAnswer.value : null
+  const [draft, setDraft] = useState<number | null>(before ?? null)
   const done = flow.phase === 'done'
   const correct = done && !!flow.last?.correct
-  const status = correct ? 'correct' : flow.phase === 'retry' ? 'wrong' : 'idle'
+  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before) ? 'wrong' : 'idle'
   const missingFirst = ex.missing === 'a'
 
   const submit = (v: number | null) => {
@@ -46,6 +50,13 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
   )
 
   return (
+    <ExerciseLayout
+      aria-label="Número que falta"
+      prompt="¿Qué número falta?"
+      sub={`Piensa: ¿qué número multiplicado por ${missingFirst ? ex.b : ex.a} da ${ex.product}?`}
+      actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
+    >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <div className={clsx(shared.equation, compact && shared.equationCompact)}>
         {missingFirst ? blank : <span>{ex.a}</span>}
@@ -56,13 +67,6 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
       </div>
 
       <div className={s.below}>
-        {allowHints && (
-          <div className={s.actions}>
-            <button type="button" className={shared.hintBtn} onClick={flow.askHint} disabled={!flow.canHint}>
-              Pista {flow.hintsShown} de {flow.hints.length}
-            </button>
-          </div>
-        )}
         <HintPanel hints={flow.hints} shown={flow.hintsShown} />
         {showFeedback && flow.clue && (
           <p className={clsx(shared.clue, correct && shared.clueOk, done && !correct && shared.clueReveal)} role="status">
@@ -76,5 +80,6 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
         )}
       </div>
     </div>
+    </ExerciseLayout>
   )
 }

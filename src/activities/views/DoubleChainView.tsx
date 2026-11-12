@@ -10,9 +10,11 @@ import { useSlotFlow } from '../facts/shared/flow'
 import { HintPanel } from '../facts/shared/HintPanel'
 import { SequenceBoard, type SequenceCell } from '../facts/shared/SequenceBoard'
 import shared from '../facts/shared/shared.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
+import { FactViewBar } from './FactViewBar'
 import s from './DoubleChainView.module.css'
 
-export default function DoubleChainView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact }: ExerciseViewProps) {
+export default function DoubleChainView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, initialAnswer, wrongColumns }: ExerciseViewProps) {
   const ex = exercise as DoubleChainExercise
   const host = useActivityHost()
   const flow = useSlotFlow({
@@ -27,7 +29,12 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
       return `¡Casi! Dobla el ${prev}: ${prev} + ${prev} = ?`
     },
   })
-  const [draft, setDraft] = useState<number | null>(null)
+  // «Inténtalo otra vez»: each link starts with what she wrote on the previous try, marked when it was wrong.
+  const priorAt = (slot: number): number | null => {
+    const v = initialAnswer?.type === 'numbers' ? initialAnswer.values[slot] : null
+    return typeof v === 'number' ? v : null
+  }
+  const [draft, setDraft] = useState<number | null>(priorAt(0))
   const done = flow.phase === 'done'
   const allCorrect = done && !!flow.last?.correct
   const current = flow.current
@@ -35,6 +42,9 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
   const times = 2 ** ex.answer.length
   const last = ex.answer[ex.answer.length - 1]
   const goal = `${times} × ${ex.start} = ${done ? last : '?'}`
+
+  const before = current >= 0 ? priorAt(current) : null
+  const oldWrong = before !== null && draft === before && (wrongColumns ? wrongColumns.includes(current) : before !== ex.answer[current])
 
   // Link 0 is the given start; link i+1 is slot i.
   const cells: SequenceCell[] = [
@@ -48,7 +58,8 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
   ]
 
   // A new slot starts with an empty pad; after a wrong try what she wrote stays (clearKey).
-  useEffect(() => { setDraft(null) }, [current])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setDraft(priorAt(current)) }, [current])
 
   const submit = (v: number | null) => {
     if (v === null || done) return
@@ -56,6 +67,13 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
   }
 
   return (
+    <ExerciseLayout
+      aria-label="Cadena de dobles"
+      prompt={`Dobla ${ex.answer.length === 1 ? 'una vez' : `${ex.answer.length} veces`} el ${ex.start}, un eslabón tras otro.`}
+      sub={`Ejemplo: el doble de ${ex.start === 5 ? 4 : 5} es ${ex.start === 5 ? 8 : 10}, porque ${ex.start === 5 ? '4 + 4' : '5 + 5'}. Doblar es sumar el número a sí mismo.`}
+      actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
+    >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <p className={shared.instructions} data-testid="double-goal" aria-label={done ? `${times} por ${ex.start} es ${last}` : `${times} por ${ex.start}, ¿cuánto es?`}>
         {goal}
@@ -74,7 +92,7 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
             maxDigits={3}
             size={host.prefs.bigCells ? 'lg' : 'md'}
             autoFocus
-            status={flow.phase === 'retry' ? 'wrong' : 'idle'}
+            status={flow.phase === 'retry' || oldWrong ? 'wrong' : 'idle'}
             ariaLabel={`Eslabón ${current + 2} de la cadena`}
           />
         </div>
@@ -85,18 +103,12 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
       )}
 
       <div className={s.below}>
-        {allowHints && (
-          <div className={s.actions}>
-            <button type="button" className={shared.hintBtn} onClick={flow.askHint} disabled={!flow.canHint}>
-              Pista {flow.hintsShown} de {flow.hints.length}
-            </button>
-          </div>
-        )}
         <HintPanel hints={flow.hints} shown={flow.hintsShown} />
         {showFeedback && flow.clue && !allCorrect && (
           <p className={clsx(shared.clue, done && shared.clueReveal)} role="status">{flow.clue}</p>
         )}
       </div>
     </div>
+    </ExerciseLayout>
   )
 }
