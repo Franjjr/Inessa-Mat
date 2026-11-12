@@ -15,23 +15,27 @@ import { useAnswerFlow } from '../facts/shared/flow'
 import { HintPanel, HintVisual } from '../facts/shared/HintPanel'
 import { speakFact } from '../facts/shared/speak'
 import shared from '../facts/shared/shared.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
+import { FactViewBar } from './FactViewBar'
 import s from './FactView.module.css'
 
-export default function FactView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, tableMethod, teach = 'none', onTry }: ExerciseViewProps) {
+export default function FactView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, tableMethod, teach = 'none', onTry, initialAnswer }: ExerciseViewProps) {
   const ex = exercise as FactMulExercise | FactDivExercise
   const host = useActivityHost()
   const teaching = teach
   const learning = useInkLearning()
   const flow = useAnswerFlow({ exercise, onAnswered, guided, allowHints, tableMethod, copyOnReveal: teaching === 'full',
     clueCountsAsHint: teaching !== 'none' && !showFeedback })
-  const [draft, setDraft] = useState<number | null>(null)
+  // «Inténtalo otra vez»: the pad starts with what she wrote, marked as not right until she changes it.
+  const before = initialAnswer?.type === 'number' ? initialAnswer.value : null
+  const [draft, setDraft] = useState<number | null>(before ?? null)
   const isDiv = ex.kind === 'fact-div'
   const left = isDiv ? ex.dividend : ex.a
   const right = isDiv ? ex.divisor : ex.b
   const sign = isDiv ? '÷' : '×'
   const done = flow.phase === 'done'
   const correct = done && !!flow.last?.correct
-  const status = correct ? 'correct' : flow.phase === 'retry' ? 'wrong' : 'idle'
+  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before && before !== ex.answer) ? 'wrong' : 'idle'
   const copying = flow.phase === 'copy'
   // The clue after a wrong try: always where the view shows its feedback; with teach, also where it does not.
   const showClue = !!flow.clue && (showFeedback || (teaching !== 'none' && (flow.phase === 'retry' || copying)))
@@ -71,6 +75,13 @@ export default function FactView({ exercise, onAnswered, guided, allowHints = tr
   }
 
   return (
+    <ExerciseLayout
+      aria-label={isDiv ? 'División de la tabla' : 'Multiplicación de la tabla'}
+      prompt={isDiv ? `¿Cuánto es ${left} ÷ ${right}?` : `¿Cuánto es ${left} × ${right}?`}
+      sub={isDiv ? `Piensa: ¿qué número multiplicado por ${right} da ${left}?` : 'Escribe el resultado en la casilla.'}
+      actions={<FactViewBar allowHints={allowHints && !copying} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck done={done} />}
+    >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <div className={clsx(shared.equation, compact && shared.equationCompact)}>
         <span>{left}</span>
@@ -95,13 +106,6 @@ export default function FactView({ exercise, onAnswered, guided, allowHints = tr
       </div>
 
       <div className={s.below}>
-        {allowHints && !copying && (
-          <div className={s.actions}>
-            <button type="button" className={shared.hintBtn} onClick={flow.askHint} disabled={!flow.canHint}>
-              Pista {flow.hintsShown} de {flow.hints.length}
-            </button>
-          </div>
-        )}
         {!copying && <HintPanel hints={flow.hints} shown={flow.hintsShown} />}
         {showClue && (
           <p className={clsx(shared.clue, correct && shared.clueOk, (copying || (done && !correct)) && shared.clueReveal)} role="status">
@@ -121,5 +125,6 @@ export default function FactView({ exercise, onAnswered, guided, allowHints = tr
         )}
       </div>
     </div>
+    </ExerciseLayout>
   )
 }

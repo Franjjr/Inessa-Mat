@@ -8,9 +8,11 @@ import { useSlotFlow } from '../facts/shared/flow'
 import { HintPanel } from '../facts/shared/HintPanel'
 import { SequenceBoard, type SequenceCell } from '../facts/shared/SequenceBoard'
 import shared from '../facts/shared/shared.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
+import { FactViewBar } from './FactViewBar'
 import s from './SkipCountView.module.css'
 
-export default function SkipCountView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact }: ExerciseViewProps) {
+export default function SkipCountView({ exercise, onAnswered, guided, allowHints = true, showFeedback = true, compact, initialAnswer, wrongColumns }: ExerciseViewProps) {
   const ex = exercise as SkipCountExercise
   const host = useActivityHost()
   const hidden = ex.hiddenIndexes
@@ -27,10 +29,18 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
       return `¡Casi! Cuenta de ${ex.step} en ${ex.step}: después del ${prev} viene ${prev} + ${ex.step}.`
     },
   })
-  const [draft, setDraft] = useState<number | null>(null)
+  // «Inténtalo otra vez»: each bead starts with what she wrote on the previous try, marked when it was wrong.
+  const priorAt = (slot: number): number | null => {
+    const v = initialAnswer?.type === 'numbers' ? initialAnswer.values[slot] : null
+    return typeof v === 'number' ? v : null
+  }
+  const [draft, setDraft] = useState<number | null>(priorAt(0))
   const done = flow.phase === 'done'
   const current = flow.current
   const allCorrect = done && !!flow.last?.correct
+
+  const before = current >= 0 ? priorAt(current) : null
+  const oldWrong = before !== null && draft === before && (wrongColumns && wrongColumns.length ? wrongColumns.includes(current) : before !== ex.answer[current])
 
   const cells: SequenceCell[] = ex.values.map((v, i) => {
     const slot = hidden.indexOf(i)
@@ -42,7 +52,8 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
   })
 
   // A new slot starts with an empty pad; after a wrong try what she wrote stays (clearKey).
-  useEffect(() => { setDraft(null) }, [current])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setDraft(priorAt(current)) }, [current])
 
   const submit = (v: number | null) => {
     if (v === null || done) return
@@ -50,12 +61,18 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
   }
 
   return (
+    <ExerciseLayout
+      aria-label={`Collar de ${ex.step}`}
+      prompt={`Completa el collar: cuenta de ${ex.step} en ${ex.step}.`}
+      sub={`Ejemplo: contando de ${ex.step === 5 ? 2 : 5} en ${ex.step === 5 ? 2 : 5}: ${[1, 2, 3, 4].map((k) => k * (ex.step === 5 ? 2 : 5)).join(', ')}. Escribe el número de la perla marcada.`}
+      actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
+    >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <SequenceBoard cells={cells} variant="beads" label={`Collar de ${ex.step}`} />
 
       {!done ? (
         <div className={s.inputRow}>
-          <p className={shared.instructions}>¿Qué número va en la perla marcada?</p>
           <NumberInput
             key={current}
             clearKey={flow.attemptKey}
@@ -65,7 +82,7 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
             maxDigits={3}
             size={host.prefs.bigCells ? 'lg' : 'md'}
             autoFocus
-            status={flow.phase === 'retry' ? 'wrong' : 'idle'}
+            status={flow.phase === 'retry' || oldWrong ? 'wrong' : 'idle'}
             ariaLabel={`Perla ${hidden[current] + 1} del collar`}
           />
         </div>
@@ -76,13 +93,6 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
       )}
 
       <div className={s.below}>
-        {allowHints && (
-          <div className={s.actions}>
-            <button type="button" className={shared.hintBtn} onClick={flow.askHint} disabled={!flow.canHint}>
-              Pista {flow.hintsShown} de {flow.hints.length}
-            </button>
-          </div>
-        )}
         <HintPanel hints={flow.hints} shown={flow.hintsShown} />
         {showFeedback && flow.clue && !done && (
           <p className={shared.clue} role="status">{flow.clue}</p>
@@ -92,5 +102,6 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
         )}
       </div>
     </div>
+    </ExerciseLayout>
   )
 }

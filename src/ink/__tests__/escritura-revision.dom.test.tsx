@@ -63,7 +63,7 @@ const writeNumber = (el: HTMLElement, n: string, seed = 5) =>
 const writeDigit = (el: HTMLElement, d: number) =>
   act(() => replayStrokes(el, handwrite(d, { x: 0, y: 0, w: W, h: H }, { pointerType: 'pen' })))
 const idle = () => act(() => { vi.advanceTimersByTime(Math.max(IDLE_MS, CONTINUE_MS) + 40) })
-const comprobar = () => fireEvent.click(screen.getByRole('button', { name: 'Comprobar' }))
+const comprobar = () => fireEvent.click(screen.getByRole('button', { name: /Comprobar/ }))
 const disputeButton = () => screen.queryByRole('button', { name: 'No, yo he escrito otra cosa' })
 function typeKeys(keys: string) {
   for (const k of keys) fireEvent.keyDown(document.activeElement as HTMLElement, { key: k })
