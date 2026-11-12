@@ -115,8 +115,15 @@ test('P3PE-17: the numbers of the pixel game are 16 px or more', async ({ page }
   await page.goto('/dev/gallery?only=pantallas&entry=Pixel')
   await page.waitForSelector('[aria-label="Dibujo escondido"]')
   const sizes = await page.evaluate(() => [...document.querySelectorAll('[aria-label="Dibujo escondido"] span')]
-    .filter((e) => (e.textContent ?? '').trim() !== '')
-    .map((e) => parseFloat(getComputedStyle(e).fontSize)))
+    // The cells themselves (the innermost spans with text), not their slots.
+    .filter((e) => e.children.length === 0 && (e.textContent ?? '').trim() !== '')
+    // On screen: the font size times the scale the cell is drawn at (FitToScreen's transform), never the CSS size alone.
+    .map((e) => {
+      const el = e as HTMLElement
+      const scale = el.offsetHeight ? el.getBoundingClientRect().height / el.offsetHeight : 1
+      return parseFloat(getComputedStyle(el).fontSize) * scale
+    }))
   expect(sizes.length).toBeGreaterThan(0)
-  expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16)
+  // 16 px, give or take the rounding of the scale.
+  expect(Math.min(...sizes)).toBeGreaterThanOrEqual(15.95)
 })

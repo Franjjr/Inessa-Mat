@@ -3,7 +3,8 @@
    family of the 2.º–4.º syllabus, plus the subtraction and division methods) in a copy of the session's frame at
    1000 × 490 (a short Android tablet with its browser bars) and 1180 × 820 (iPad), with a finger, and checks, as the
    screen opens:
-   - «✓ Comprobar» (the answer bar's) is inside the window (P3PE-01);
+   - «✓ Comprobar» (the answer bar's) is inside the window (P3PE-01), and every case shows one, or «Seguir» (a screen
+     that leads to the next one), unless it is listed in NO_CHECK (a view answered by a tap);
    - the statement (.ex-prompt) is ≥ 20 px on screen at 1180 × 820 (P3PE-06);
    - nothing sits on a visible button: elementFromPoint at its centre is the button itself, the scroll assistant
      included (P3PE-12).
@@ -16,10 +17,15 @@ import { expect, test, type Page } from '@playwright/test'
 /** Kinds whose view is another group's file and does not use ExerciseLayout yet. */
 const VIEWS_PENDING = /^(fact-mul|fact-div|missing-factor|skip-count|double-chain|fact-family|division|mul-parts)__/
 
+/** Cases answered without «Comprobar» or «Seguir» (a tap is the answer). Any other case without them fails. */
+const NO_CHECK: RegExp[] = []
+
 interface Measure {
   id: string
   scale: number
   checks: { top: number; bottom: number }[]
+  /** Visible «Comprobar» or «Seguir» buttons. */
+  forward: number
   prompt: number | null
   covered: string[]
 }
@@ -47,6 +53,7 @@ async function measure(page: Page, id: string): Promise<Measure> {
     const checks = buttons
       .filter((b) => /Comprobar/.test(b.textContent ?? ''))
       .map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom } })
+    const forward = buttons.filter((b) => /Comprobar|Seguir/.test(b.textContent ?? '')).length
     const promptEl = root.querySelector('.ex-prompt')
     const prompt = promptEl ? parseFloat(getComputedStyle(promptEl).fontSize) * (promptEl.closest('[data-fit-scale]') ? scale : 1) : null
     const covered: string[] = []
@@ -58,7 +65,7 @@ async function measure(page: Page, id: string): Promise<Measure> {
       const hit = document.elementFromPoint(x, y)
       if (hit && !b.contains(hit)) covered.push(`${(b.textContent || b.getAttribute('aria-label') || '').trim()} ← ${(hit.textContent ?? hit.tagName).trim().slice(0, 30)}`)
     }
-    return { id: caseId, scale, checks, prompt, covered }
+    return { id: caseId, scale, checks, forward, prompt, covered }
   }, id)
 }
 
@@ -74,14 +81,18 @@ for (const [width, height] of [[1000, 490], [1180, 820]] as const) {
       const covered: string[] = []
       const small: string[] = []
       const pending: string[] = []
+      const noCheck: string[] = []
       let measured = 0
       for (const id of cases) {
         const m = await measure(page, id)
         const bad: string[] = []
+        // A case with no «Comprobar» in view never passes for free.
+        if (m.forward === 0 && !NO_CHECK.some((re) => re.test(id))) noCheck.push(id)
         for (const c of m.checks) if (c.bottom > height + 1 || c.top < 0) bad.push(`${id} (Comprobar ${Math.round(c.top)}–${Math.round(c.bottom)}, escala ${m.scale})`)
         const smallHere = width === 1180 && (m.prompt === null || m.prompt < 20) ? [`${id}: ${m.prompt === null ? 'sin .ex-prompt' : `${m.prompt.toFixed(1)} px`}`] : []
         if (VIEWS_PENDING.test(id)) {
-          if (bad.length || smallHere.length) pending.push(id)
+          if (bad.length || smallHere.length || noCheck.at(-1) === id) pending.push(id)
+          if (noCheck.at(-1) === id) noCheck.pop()
           continue
         }
         measured++
@@ -94,6 +105,8 @@ for (const [width, height] of [[1000, 490], [1180, 820]] as const) {
       if (covered.length) console.log('TAPADOS\n' + covered.join('\n'))
       if (small.length) console.log('PEQUEÑO\n' + small.join('\n'))
       if (pending.length) console.log('PENDIENTES (otros grupos)\n' + pending.join('\n'))
+      if (noCheck.length) console.log('SIN COMPROBAR NI SEGUIR\n' + noCheck.join('\n'))
+      expect(noCheck, 'sin «Comprobar» ni «Seguir» a la vista').toEqual([])
       expect(out, 'Comprobar fuera de la pantalla').toEqual([])
       expect(covered, 'botones tapados').toEqual([])
       expect(small, 'enunciado < 20 px').toEqual([])
