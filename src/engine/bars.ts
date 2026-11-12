@@ -134,7 +134,8 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
         if (!fine(s.result, [a, b])) return null
         return {
           text: `{child} tiene ${a} canicas y su amigo tiene ${b}. ¿Cuántas canicas más tiene {child}?`,
-          bar: [cell('me', 'Tú', 0, 'segment', a), cell('friend', 'Amigo', 1, 'segment', b), cell('more', 'Diferencia', 2, 'segment', null)],
+          // The pieces carry the names of the story (P3), not «Tú», «Amigo» or «Diferencia».
+          bar: [cell('me', 'Sus canicas', 0, 'segment', a), cell('friend', 'Las de su amigo', 1, 'segment', b), cell('more', 'Las que tiene de más', 2, 'segment', null)],
           steps: [s], unit: 'canicas',
         }
       }),
@@ -148,7 +149,7 @@ const VARIANTS: Record<BarSkillOp, Variant[]> = {
         if (!fine(s.result, [a, d])) return null
         return {
           text: `Ana tiene ${a} canicas, que son ${d} más que las de Luis. ¿Cuántas canicas tiene Luis?`,
-          bar: [cell('ana', 'Ana', 0, 'segment', a), cell('luis', 'Luis', 1, 'segment', null), cell('more', 'Diferencia', 2, 'segment', d)],
+          bar: [cell('ana', 'Canicas de Ana', 0, 'segment', a), cell('luis', 'Canicas de Luis', 1, 'segment', null), cell('more', 'Las que Ana tiene de más', 2, 'segment', d)],
           steps: [s], unit: 'canicas',
         }
       }),
@@ -363,6 +364,14 @@ const STRATEGY: Record<BarProblemKind, string> = {
 /** Equal groups (groups-total): the whole bar is the total and it is made of equal pieces, nothing is shared out. */
 const groupsStrategy = (n: number, p: number) => `Dibuja una barra con ${n} trozos iguales de ${p}: la barra entera es el total.`
 
+/** The concrete placement, with the names of the story: «Pon el 9 en «Niñas» y el 15 en «Niños».» */
+function placeHint(ex: BarProblemExercise): string {
+  const parts = ex.bar.flatMap((b) => (b.value === null ? [] : [`el ${b.value} en «${b.name}»`]))
+  if (!parts.length) return 'Pon cada número en la parte de la barra que le toca.'
+  const list = parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} y ${parts[parts.length - 1]}`
+  return `Pon ${list}.`
+}
+
 /** Hints for a bar problem: strategy → the drawing → the operation of the first step (the numbers, not the result). */
 export function barHints(ex: BarProblemExercise): Hint[] {
   const first = ex.steps[0]
@@ -371,7 +380,7 @@ export function barHints(ex: BarProblemExercise): Hint[] {
   const l2 = groups
     ? `La barra entera es el total (?); cada trozo vale ${first.b}; hay ${first.a} trozos.`
     : ex.withBar
-      ? 'Pon cada número en la parte de la barra que le toca. El ? es lo que tienes que averiguar.'
+      ? `${placeHint(ex)} El ? es lo que tienes que averiguar.`
       : 'Imagina la barra: cada número es una parte, y el ? el total o la parte que falta.'
   const l3 = `Lo que hay que hacer es ${OP_NAME[first.op]}: calcula ${first.a} ${SYMBOL[first.op]} ${first.b} = ?`
   return [

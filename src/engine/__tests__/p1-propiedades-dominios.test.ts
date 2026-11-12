@@ -234,11 +234,23 @@ describe('barras: el resultado final decide (auditoría p1-medida-problemas H1, 
       expect(hintsFor(ex)[0].text).toContain(`${ex.steps[0].a} trozos iguales de ${ex.steps[0].b}`)
     }
   })
+  it('las barras llevan los nombres de la historia y la pista dice dónde va cada número (P3PE-16)', () => {
+    const generic = bars.filter((e) => e.bar.some((b) => ['Tú', 'Amigo', 'Diferencia'].includes(b.name) || /[{}]/.test(b.name)))
+    report('barra con nombre genérico', generic.map((e) => text(e.id)), bars.length)
+    const withBar = bars.filter((e) => e.withBar && !(e.steps.length === 1 && e.steps[0].op === 'mul'))
+    expect(withBar.length).toBeGreaterThan(20)
+    for (const ex of withBar) {
+      const l2 = hintsFor(ex)[1].text
+      for (const b of ex.bar) if (b.value !== null) expect(l2, ex.id).toContain(`el ${b.value} en «${b.name}»`)
+    }
+    const girls = bars.find((e) => e.id.includes('combine-total') && e.withBar)
+    expect(girls, "combine-total con barra").toBeDefined()
+    expect(hintsFor(girls!)[1].text).toMatch(/^Pon el \d+ en «Niñas» y el \d+ en «Niños»\./)
+  })
 })
 
 describe('problemas de texto con resto', () => {
-  // checkWord lives in src/engine/check.ts (group p1-corrector-operaciones): enable when it grades the empty «Sobra» as incomplete.
-  it.skip('el cociente bien y el «Sobra» aún vacío es «incompleto», no un error de cuenta', () => {
+  it('el cociente bien y el «Sobra» aún vacío es «incompleto», no un error de cuenta', () => {
     const ex = makeWordProblem('div-galletas', 'Reparte 29 galletas entre 4 amigos.', 'div', 29, 4, 'galletas')
     const r = check(ex, { type: 'division', quotient: 7, remainder: null })
     expect(r.errorType).toBe('incomplete')
