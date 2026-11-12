@@ -36,12 +36,13 @@ export const w4Zero = lesson('w4-zero', 'La trampa del cero', [
   show('sub-check', z4352, 'La prueba mágica sirve siempre: 2624 + 1728 = 4352.'),
 ])
 
-/* «Dos formas de restar del cole»: the two ways that Spanish schools teach, with the same example. The world map has no
-   optional stops yet (isNodeUnlocked wants every earlier stop done), so the lesson sits right before the guardian and
-   asks for ONE try, with the way the grown-ups set in the settings (no fixed `method`: the exercise reads
-   ChildSettings.subMethod). Its try is a 3-digit subtraction without zeros and with one borrowing; the fixed list of the
-   plan (463 − 128, 574 − 236, 382 − 145) waits for a fixed pool in SkillSelector. */
-const threeDigitsOneBorrow: SkillSelector = { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false }
+/* «Dos formas de restar del cole»: the two ways that Spanish schools teach, with the same example. It is an optional
+   stop (the main lesson of subtracting is «Restar en la montaña»): the map shows it can be skipped and the guardian
+   does not wait for it. It asks for ONE try, with the way the grown-ups set in the settings (no fixed `method`: the
+   exercise reads ChildSettings.subMethod). The try is one of a fixed list shaped like the worked example 352 − 127
+   (3 digits, one borrowing in the units, no zero): 463 − 128, 574 − 236 or 382 − 145. */
+export const FOUR_WAYS_TRIES: [number, number][] = [[463, 128], [574, 236], [382, 145]]
+const threeDigitsOneBorrow: SkillSelector = { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false, operands: FOUR_WAYS_TRIES }
 
 export const w4FourWays = lesson('w4-four-ways', 'Dos formas de restar del cole', [
   show('borrow', b352, 'En el cole hay dos formas de restar, y dan lo mismo. Mira 352 − 127. Primera forma: pedir prestado.'),
