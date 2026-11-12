@@ -414,10 +414,10 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer, method?: string):
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
 
-/** The decenas lending to the units is the plain message; a lender further left is named with what it lends (the
-    centenas lend 1 centena, that is 10 decenas), so the message never says «una decena» when it is not one. */
+/** The lender is named with what it lends (the decenas lend 1 decena, 10 unidades; the centenas 1 centena, 10 decenas),
+    so the child knows which column to fix and the message never says «una decena» when it is not one. */
 function borrowForgotFeedback(lender: number | undefined): string {
-  return lender !== undefined && lender >= 2 ? FEEDBACK.borrowForgotAt(lender) : FEEDBACK.borrowForgot
+  return lender !== undefined && lender >= 1 ? FEEDBACK.borrowForgotAt(lender) : FEEDBACK.borrowForgot
 }
 
 /** «En las unidades, 1 es menos que 4…»: with pedir prestado the top digit is the one left after lending (a ten came
