@@ -241,9 +241,9 @@ export const restarCerosLlevando = clase({
     show('sub-carry', { a: 503, b: 128 }, 'Decenas: arriba hay un 0, y 0 menos 3 no se puede. Le ponemos un 1 delante: 10 menos 3 son 7.'),
     show('sub-carry', { a: 503, b: 128 }, 'Otra vez me llevo una: el 1 de las centenas de abajo pasa a ser 2.'),
     show('sub-carry', { a: 503, b: 128 }, 'Centenas: 5 menos 2 son 3. ¡503 − 128 = 375! El cero se resta como los demás números.'),
-    show('sub-carry', { a: 6003, b: 2178 }, 'Con cuatro cifras, igual. 6 003 − 2 178. Unidades: 13 menos 8 son 5, y me llevo una: el 7 pasa a 8.'),
-    show('sub-carry', { a: 6003, b: 2178 }, 'Decenas: 10 menos 8 son 2, y me llevo una: el 1 de abajo pasa a 2.'),
-    show('sub-carry', { a: 6003, b: 2178 }, 'Centenas: 10 menos 2 son 8, y me llevo una: el 2 de los millares pasa a 3.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Con cuatro cifras, igual. 6 003 − 2 178. Unidades: 3 menos 8 no se puede; 13 menos 8 son 5, y me llevo una: el 7 pasa a 8.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Decenas: 0 menos 8 no se puede. Con un 1 delante, 10 menos 8 son 2, y me llevo una: el 1 de abajo pasa a 2.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Centenas: 0 menos 2 tampoco se puede. Con un 1 delante, 10 menos 2 son 8, y me llevo una: el 2 de los millares pasa a 3.'),
     show('sub-carry', { a: 6003, b: 2178 }, 'Millares: 6 menos 3 son 3. ¡6 003 − 2 178 = 3 825!'),
   ],
   guiada: [
@@ -443,7 +443,7 @@ const mul2x2Partes = clase({
   ],
   sola: [
     tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Primero por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto; delante, escribe el número de arriba por la decena de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto; delante, escribe lo que da el número de arriba por la decena de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
     tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Sin pistas: las dos filas y su suma.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
   ],
   cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras: primero por las unidades de abajo, debajo por las decenas con un 0 detrás, y sumo las dos filas.'),
