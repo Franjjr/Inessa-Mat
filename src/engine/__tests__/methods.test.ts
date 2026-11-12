@@ -10,6 +10,8 @@ import {
   methodLabel, methodFor, isSubMethod, retiredMethodsIn,
 } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
+import { initialProgress, seasonIdForGrade } from '@/content'
+import { classForTopic, markClassDone } from '@/content/classes'
 
 describe('method registry', () => {
   it('method ids are unique across the operations (the attempt log keys its tallies by id)', () => {
@@ -116,7 +118,10 @@ describe('the new kinds in the planner and the placement', () => {
   const now = new Date('2026-10-22T09:00:00Z')
 
   it('the mix holds one «encuentra el error», and the problem block is a bar problem', () => {
-    const plan = planDailySession({ child, mastery: {}, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    // Nothing is asked before its class: the classes of the problems, the hunts and their operations are given.
+    const progress = ['prob-sumar', 'suma-3d-llevando', 'resta-3d-prestando', 'mul-2x1-llevando', 'encuentra-error']
+      .reduce((p, id) => markClassDone(p, classForTopic(id, 3)!, 'skip'), initialProgress(child.id, now, seasonIdForGrade(3)))
+    const plan = planDailySession({ child, mastery: {}, attempts: [], syllabus: GRADE3_SYLLABUS, now, progress })
     const mix = plan.blocks.find((b) => b.id === 'mix')!.items
     expect(mix.filter((i) => i.exercise.kind === 'error-hunt').length).toBe(1)
     expect(mix.filter((i) => !i.filler).length).toBeLessThanOrEqual(8)

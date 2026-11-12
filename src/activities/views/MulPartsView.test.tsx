@@ -1,4 +1,4 @@
-/* Multiplicar por partes: the labels say each line, and a right total is never graded as a mistake. */
+/* Multiplicar por partes: the labels say each line, and a right total is never graded as a mistake, even alone. */
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { makeMulParts } from '@/engine'
@@ -20,15 +20,24 @@ describe('MulPartsView (23 × 14)', () => {
     expect(screen.getByText('Suma =')).toBeTruthy()
   })
 
-  it('with only the total 322 nothing is graded: Comprobar waits for the three lines (no «incomplete» mistake)', () => {
+  it('with only the total 322 Comprobar is on and the answer is right (the total decides)', () => {
     const onAnswered = vi.fn()
     render(<MulPartsView exercise={makeMulParts(23, 14)} onAnswered={onAnswered} showFeedback={false} />)
     expect(checkButton()).toBeDisabled()
     typeNumber('La suma', 322)
-    expect(checkButton()).toBeDisabled()
-    act(() => { fireEvent.keyDown(screen.getByRole('textbox', { name: 'La suma' }), { key: 'Enter' }) })
+    expect(checkButton()).not.toBeDisabled()
     act(() => { fireEvent.click(checkButton()) })
-    expect(onAnswered).not.toHaveBeenCalled()
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('with only a wrong total the answer is wrong', () => {
+    const onAnswered = vi.fn()
+    render(<MulPartsView exercise={makeMulParts(23, 14)} onAnswered={onAnswered} showFeedback={false} />)
+    typeNumber('La suma', 312)
+    act(() => { fireEvent.click(checkButton()) })
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
   })
 
   it('with the three lines right, the answer is right', () => {

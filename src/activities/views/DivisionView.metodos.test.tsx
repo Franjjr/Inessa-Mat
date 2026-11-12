@@ -81,17 +81,18 @@ describe('one division method, the galera of the school', () => {
 
   it('the galera without subtractions shows its own hints: none asks to «resta» on paper', () => {
     const ex = makeDivision(96, 4)
-    const shortHints = hintsFor(ex, undefined, { divMethod: 'galera-short' })
-    const short = shortHints[0].text
-    // The first hint (where to start) is the same for both galeras; the step hint is the galera's own, without «resta».
-    const step = shortHints.at(-1)!.text
-    expect(step).not.toBe(hintsFor(ex, undefined, { divMethod: 'galera' }).at(-1)!.text)
-    expect(step).not.toMatch(/\b(resta|restar|réstalo)\b/i)
+    const shortHints = hintsFor(ex, undefined, { divMethod: 'galera-short' }).map((h) => h.text)
+    const fullHints = hintsFor(ex, undefined, { divMethod: 'galera' }).map((h) => h.text)
+    // Its own hints: the step of the galera with subtractions («réstalo») is not the one without them.
+    expect(shortHints).not.toEqual(fullHints)
+    expect(fullHints.join(' ')).toMatch(/résta|resta/i)
+    // No hint of the galera without subtractions speaks of subtracting (not even «restas»).
+    for (const text of shortHints) expect(text).not.toMatch(/résta|resta/i)
     render(<DivisionView exercise={ex} onAnswered={vi.fn()} divMethod="galera-short" />)
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'Pista' })) })
     const note = screen.getByRole('note')
-    expect(note.textContent).toBe(short)
-    expect(note.textContent).not.toMatch(/\b(resta|restar)\b/i)
+    expect(note.textContent).toBe(shortHints[0])
+    expect(note.textContent).not.toMatch(/resta/i)
   })
 })
 

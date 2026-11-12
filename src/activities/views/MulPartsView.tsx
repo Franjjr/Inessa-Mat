@@ -1,8 +1,7 @@
 /* Multiplicar por dos cifras por partes (mul-parts, 4.º): 23 × 14 is 23 × 4 and 23 × 10, then their sum. It explains
    why the column multiplication works; to practise, the app uses the column (long-mul). Three writing pads, one per
-   line, and a single «Comprobar» at the end (no ✓ beside each pad). The total is the answer, but checkMulParts still
-   marks a missing part as 'incomplete' (a wrong try): until it lets the total decide, «Comprobar» waits for the three
-   lines, so a right total is never graded as a mistake. */
+   line, and a single «Comprobar» at the end (no ✓ beside each pad). The total is the answer: checkMulParts lets it
+   decide, so «Comprobar» needs only the total and a right total is right even with the parts left empty. */
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
@@ -24,11 +23,11 @@ function PartsRound({ ex, onAnswered, showFeedback, allowHints }: { ex: MulParts
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const [values, setValues] = useState<Values>([null, null, null])
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  // All three lines: with a part missing checkMulParts answers 'incomplete', which the flow would record as a mistake.
-  const ready = values.every((v) => v !== null)
+  // The total decides (checkMulParts): the parts help, they are never required.
+  const ready = values[2] !== null
   const set = (i: number, v: number | null) => setValues((cur) => cur.map((x, k) => (k === i ? v : x)) as Values)
   const submit = (vs: Values = values) => {
-    if (vs.some((v) => v === null)) return
+    if (vs[2] === null) return
     if (flow.submit({ type: 'numbers', values: vs }).correct) celebrate('small')
   }
   const lines = [
