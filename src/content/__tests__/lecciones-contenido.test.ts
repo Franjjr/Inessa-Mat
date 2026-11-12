@@ -126,13 +126,13 @@ describe('the galera', () => {
 
 describe('the tricks of the tables', () => {
   it('the try of «el 5 y uno más» never asks for the 9 and names its trick', () => {
-    const step = triesOf(lessonOf('w3-five'))[0] as LessonStep & { tableMethod?: string }
+    const step = triesOf(lessonOf('w3-five'))[0]
     expect(step.tableMethod).toBe('five-plus-one')
     for (const ex of samples(step) as FactMulExercise[]) expect([ex.a, ex.b], `${ex.a} × ${ex.b}`).not.toContain(9)
   })
 
   it('the try of «los secretos del 8» works with the double of the double', () => {
-    const step = triesOf(lessonOf('w5-pattern'))[0] as LessonStep & { tableMethod?: string }
+    const step = triesOf(lessonOf('w5-pattern'))[0]
     expect(step.tableMethod).toBe('double-double')
   })
 
