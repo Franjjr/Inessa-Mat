@@ -159,10 +159,10 @@ function lineSubHints(ex: ColumnSubExercise): Hint[] {
     hint(1, `Empieza en ${s} y cuenta hacia delante hasta ${m}. Salta primero a un número redondo.`, 'none'),
     hint(2, first !== undefined
       ? `Desde ${s}, el primer salto cae en ${first}. ¿Cuánto hay de ${s} a ${first}?`
-      : `Desde ${s} salta hasta ${m}: ¿cuántos saltos de 10 caben en el camino?`, 'none'),
+      : `Desde ${s}, un salto de 10 llega a ${s} + 10 = ?. Sigue así hasta ${m}.`, 'none'),
     hint(3, first !== undefined
       ? `De ${s} a ${first} hay ${first - s}. Sigue contando: ¿cuánto hay de ${first} al siguiente salto?`
-      : `Cuenta de ${s} hacia ${m} con saltos de 10 y de 1. ¿Cuántos has dado?`, 'none', params),
+      : `Cuenta de ${s} hacia ${m} con saltos de 10 y de 1. ¿Cuánto has sumado en total?`, 'none', params),
   ]
 }
 
@@ -382,7 +382,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
         hint(1, `Reparte ${p} entre ${d}, de uno en uno: ¿cuántos le tocan a cada uno?`, 'none'),
         // The first round of the sharing: one for each of the d. How many rounds there are is what the child finds.
         hint(2, `¿${d} por cuánto da ${p}? Mira: en cada vuelta, cada uno recibe 1.`, 'share', { total: p, groups: d, perGroup: 1 }),
-        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
+        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántas veces has contado?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
       ]
     }
     case 'missing-factor': {
