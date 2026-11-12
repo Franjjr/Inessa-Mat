@@ -34,12 +34,28 @@
   transform-origin: top center;
 }
 
+/* The status lines stack one under the other (never run together on one line: «30.No pasa nada»), centred. */
 .footer {
   flex-shrink: 0;
+  width: 100%;
   min-height: 56px;
   display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
   align-items: center;
   justify-content: center;
+  text-align: center;
+}
+
+/* The corrector's message for this miss: what went wrong, in the reading ink (it is the important line). */
+.feedback {
+  margin: 0;
+  max-width: 640px;
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+  text-align: center;
 }
 
 .good {
@@ -65,14 +81,6 @@
   font-size: var(--fs-md);
   color: var(--c-ink-soft);
   text-align: center;
-}
-
-.retry {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: var(--sp-3);
 }
 
 @media (prefers-reduced-motion: reduce) {

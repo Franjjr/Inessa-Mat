@@ -5,18 +5,21 @@
      first answer is the graded one (mastery, the run's requeue); the attempt is reported once, at the end, with the
      retries it took.
    - «No lo sé» (allowDontKnow): before any answer. It records one wrong attempt with errorType 'dont-know', then shows
-     every hint («Así se hace»), which never give the final answer. Nothing else is graded.
+     the exercise solved step by step («Así se resuelve», engine/solution.ts), with its answer. Nothing else is graded.
+   - A wrong final answer shows the corrector's own message (what went wrong in this exercise) and the solution too:
+     the child never leaves an exercise without seeing how it is done.
    - «Ahora dilo tú» (eng-speak) is never an attempt: nothing is reported (no mastery, no stars in the wallet), it has no
      «Ahora no» nor «No lo sé» (the view has its own «Saltar»), and its message is the view's own (check.feedback). */
 import { useEffect, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
+import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
 import { hintsFor, isCompletionOnly } from '@/engine'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
 import { guidedOutcome } from '@/activities/shared/guided'
-import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
+import type { AttemptInput, DivMethod, Exercise, ExerciseOutcome, SubMethod } from '@/types'
 import s from './ExerciseStep.module.css'
 
 /** An attempt waiting to be reported: the outcome and the retry facts. graded: false for a retry row (see handleAnswered). */
@@ -54,11 +57,24 @@ export interface ExerciseStepProps {
 
 /**
  * asking: the child answers (first try). offered: wrong first try, «Inténtalo otra vez» on screen. retrying: the same
- * exercise again. dontknow: «No lo sé», the hints are shown. final: answered for good.
+ * exercise again. dontknow: «No lo sé», the solution is shown (maths) or the hints (Lengua, English). final: answered for good.
  */
 type Stage = 'asking' | 'offered' | 'retrying' | 'dontknow' | 'final'
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+
+/* The method a session exercise is solved with. The column methods are the school's ones: «por partes» and «saltos en la
+   recta», once saved by a lesson pick for every subtraction, are not used here (the column comes back). The registry
+   function methodFor (engine/methods.ts, group «métodos del cole») replaces these two at integration. */
+export function sessionSubMethod(pref: SubMethod | undefined): SubMethod {
+  return pref === 'carry' ? 'carry' : 'borrow'
+}
+export function sessionDivMethod(pref: DivMethod | undefined): DivMethod {
+  return pref === 'galera-short' ? 'galera-short' : 'galera'
+}
+
+/** A short cheer in front of the corrector's message, never longer than the message itself. */
+const CHEER = 'Casi.'
 
 export function ExerciseStep({
   exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue, onSkip, allowRetry = false, allowDontKnow = false,
@@ -151,7 +167,11 @@ export function ExerciseStep({
     const factLine = ex.kind === 'fact-mul' && !o.check.correct && teach !== 'none'
       ? `¡Recuérdalo: ${ex.a} × ${ex.b} = ${ex.answer}!`
       : undefined
-    const custom = feedbackFor?.(o) ?? (ex.kind === 'eng-speak' ? o.check.feedback : factLine)
+    // The corrector's own message says what went wrong in THIS exercise: it is the message (a generic phrase only when
+    // the corrector has none).
+    const fromCheck = o.check.feedback?.trim()
+    const checkLine = fromCheck ? (o.check.correct || /^¡?casi/i.test(fromCheck) ? fromCheck : `${CHEER} ${fromCheck}`) : undefined
+    const custom = feedbackFor?.(o) ?? (ex.kind === 'eng-speak' ? o.check.feedback : factLine ?? checkLine)
     const phrase = o.check.correct
       ? pickPhrase('correct', hostRef.current.rng)
       : pickPhrase('wrong', hostRef.current.rng, o.check.errorType)
@@ -212,7 +232,7 @@ export function ExerciseStep({
     pending.current = { outcome: o, retries: 0, solvedOnRetry: false, graded: gradedHere() }
     send()
     setLatest(o)
-    setMessage(host.t('No pasa nada. Mira cada pista y, cuando lo entiendas, sigue.'))
+    setMessage(host.t('No pasa nada. Mira cómo se hace y, cuando lo entiendas, sigue.'))
     enter('dontknow')
   }
 
@@ -222,9 +242,15 @@ export function ExerciseStep({
   }
 
   const ok = latest?.check.correct === true
-  const hints = stage === 'dontknow'
-    ? hintsFor(exercise, host.prefs.subMethod, { divMethod: host.prefs.divMethod, tableMethod: host.prefs.tableMethod })
-    : []
+  const subMethod = sessionSubMethod(host.prefs.subMethod)
+  const divMethod = sessionDivMethod(host.prefs.divMethod)
+  const solutionOpts = { subMethod, divMethod, tableMethod: host.prefs.tableMethod }
+  // The solution is taught for maths only: Lengua and English keep their hints at «No lo sé» and their own messages at
+  // the end (their «solution» would only be «La respuesta es X»). A missed fact with teach 'full' was already worked
+  // and copied in its own view: no second solution under it.
+  const isMath = !exercise.kind.startsWith('lng-') && !exercise.kind.startsWith('eng-')
+  const teaches = isMath && !(exercise.kind === 'fact-mul' && teach === 'full')
+  const hints = stage === 'dontknow' && !isMath ? hintsFor(exercise, subMethod, { divMethod, tableMethod: host.prefs.tableMethod }) : []
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
 
@@ -241,8 +267,8 @@ export function ExerciseStep({
           showFeedback={false}
           teach={teach}
           onTry={() => setTried(true)}
-          method={host.prefs.subMethod}
-          divMethod={host.prefs.divMethod}
+          method={subMethod}
+          divMethod={divMethod}
           tableMethod={host.prefs.tableMethod}
         />
       </div>
@@ -255,18 +281,20 @@ export function ExerciseStep({
       {stage === 'dontknow' && (
         <div className={s.feedback} data-tone="clue" role="status">
           <p className={s.message}>{message}</p>
-          <div className={s.hints}>
-            <h3 className={s.hintsTitle}>Así se hace</h3>
-            <ol className={s.hintList}>
-              {hints.map((h) => (
-                <li key={h.level} className={s.hintItem}>
-                  <p className={s.hintLevel}>Pista {h.level} de {hints.length}</p>
-                  <p className={s.hintText}>{host.t(h.text)}</p>
-                  <HintVisual hint={h} />
-                </li>
-              ))}
-            </ol>
-          </div>
+          {isMath ? <SolutionPanel exercise={exercise} opts={solutionOpts} /> : (
+            <div className={s.hints}>
+              <h3 className={s.hintsTitle}>Así se hace</h3>
+              <ol className={s.hintList}>
+                {hints.map((h) => (
+                  <li key={h.level} className={s.hintItem}>
+                    <p className={s.hintLevel}>Pista {h.level} de {hints.length}</p>
+                    <p className={s.hintText}>{host.t(h.text)}</p>
+                    <HintVisual hint={h} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <Button size="lg" variant="primary" onClick={finish}>{wrongText}</Button>
         </div>
       )}
@@ -282,6 +310,7 @@ export function ExerciseStep({
       {stage === 'final' && latest && (
         <div className={s.feedback} data-tone={ok ? 'good' : 'clue'} role="status">
           <p className={s.message}>{message}</p>
+          {!ok && teaches && <SolutionPanel exercise={exercise} opts={solutionOpts} />}
           <Button
             size="lg"
             variant={ok ? 'success' : 'primary'}

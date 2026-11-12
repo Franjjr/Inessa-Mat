@@ -1,6 +1,6 @@
 import type { SkillSelector } from './exercise'
 import type { CompanionSpecies } from './child'
-import type { DivMethod, SubMethod } from './exercise'
+import type { DivMethod, SubMethod, TableMethod } from './exercise'
 
 /**
  * TemplateString: Spanish copy with placeholders, rendered by content/template.ts → renderTemplate(text, ctx).
@@ -121,6 +121,9 @@ export interface LessonStep {
   params?: Record<string, number | string>
   /** What Lumi says on this step. */
   text: TemplateString
+  /** What the voice says, when it differs from the bubble (numbers and signs as a teacher reads them: «menos», «mil»).
+      Optional: without it the voice reads `text`. */
+  say?: TemplateString
   speaker?: CharacterId
   /** 'tap' = tap to continue; 'try' = child must solve one mini exercise (generated from selector) to continue;
    *  'choose' = the child picks one of `choices` (the pick is saved through the host, e.g. the favourite method). */
@@ -130,6 +133,9 @@ export interface LessonStep {
   method?: SubMethod
   /** 'try' steps: the division method the exercise must be solved with. */
   divMethod?: DivMethod
+  /** 'try' steps: the tables trick the lesson teaches (w3-five «el 5 y uno más», w5 «doble, doble y doble»): the hints
+      and the solution of the fact use it instead of the child's favourite. */
+  tableMethod?: TableMethod
   /** 'choose' steps: the options. */
   choices?: { label: TemplateString; value: string }[]
   /** 'choose' steps: which favourite the pick is saved as (default subMethod). */

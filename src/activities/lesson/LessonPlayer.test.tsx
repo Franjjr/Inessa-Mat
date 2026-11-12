@@ -217,9 +217,10 @@ describe('LessonPlayer: going back to a settled try step', () => {
     await user.click(nextButton())
     await user.click(screen.getByRole('button', { name: '‹ Atrás' }))
     expect(screen.queryByRole('button', { name: 'Responder bien' })).toBeNull()
-    // The right answer is shown again through LessonPlayer's shownAnswers, not only the closing line.
-    expect(screen.getByText(/La respuesta es \d+\./)).toBeInTheDocument()
-    expect(screen.getByText(/Seguimos con la lección/)).toBeInTheDocument()
+    // Back on the step: the exercise solved step by step (its solution and its answer), not a loose line.
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent(/Respuesta:/)
+    expect(screen.getByText('Así se hace. Lo vemos otra vez más adelante.')).toBeInTheDocument()
+    expect(screen.queryByText(/Seguimos con la lección/)).toBeNull()
     expect(nextButton()).toBeEnabled()
   })
 })
@@ -235,7 +236,7 @@ describe('LessonPlayer: empty lesson', () => {
 })
 
 describe('LessonPlayer: choose step', () => {
-  it('saves the picked method through the host and only then goes on', async () => {
+  it('a subtraction method picked in a lesson is not saved as a preference (the school method is set by the grown-ups)', async () => {
     const user = userEvent.setup()
     const setPreference = vi.fn()
     const onDone = vi.fn()
@@ -262,7 +263,7 @@ describe('LessonPlayer: choose step', () => {
     )
     expect(screen.getByRole('button', { name: /Lo he entendido/ })).toBeDisabled()
     await user.click(screen.getByRole('radio', { name: 'Saltos en la recta' }))
-    expect(setPreference).toHaveBeenCalledWith('subMethod', 'line')
+    expect(setPreference).not.toHaveBeenCalled()
     expect(screen.getByRole('status')).toHaveTextContent('Saltos en la recta')
     await user.click(screen.getByRole('button', { name: /Lo he entendido/ }))
     expect(onDone).toHaveBeenCalledTimes(1)

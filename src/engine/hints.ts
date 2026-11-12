@@ -6,7 +6,7 @@ import type {
 } from '@/types'
 import { analyzeAdd, analyzeSub, digitAt, digitCount } from './arith'
 import { columnName, columnWithArticle } from './feedback'
-import { strategyDetail } from './strategies'
+import { strategyDetail, trickDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 import { hintsCalc } from './calc'
 import { hintsNumeric } from './numeric'
@@ -22,8 +22,6 @@ import { hintsLongMul } from './longmul'
 import { hintsOrdinal } from './ordinals'
 import { hintsPosition } from './position'
 import { checkHints, huntHints } from './bugs'
-import { divisionParts } from './divParts'
-import { TABLE_METHODS } from './methods'
 import { fractionHints } from './fractions'
 import { geometryHints } from './geometry'
 import { hintsLengua } from './lengua/exercises'
@@ -32,15 +30,24 @@ import { hintsEnglish } from './ingles/exercises'
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: Hint['params']): Hint =>
   params ? { level, text, visual, params } : { level, text, visual }
 
-/** The favourite trick (when it applies to the fact) replaces the first hint; the visual and the worked step stay. */
+/** One trick for the three hints: the favourite trick (when it applies to the fact) gives the rule, its drawing and its
+    worked step; otherwise the engine's own strategy does. */
 function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint[] {
-  const d = strategyDetail(a, b)
-  const trick = tableMethod ? TABLE_METHODS.find((t) => t.id === tableMethod && t.applies(a, b)) : undefined
+  const d = trickDetail(tableMethod, a, b) ?? strategyDetail(a, b)
   return [
-    hint(1, trick ? (typeof trick.hint === 'function' ? trick.hint(a, b) : trick.hint) : d.strategy.text, 'none'),
+    hint(1, d.strategy.text, 'none'),
     hint(2, d.visualText, d.strategy.visual, { ...d.visualParams }),
     hint(3, d.workedText, d.workedVisual, d.workedParams ?? { ...d.visualParams, a, b }),
   ]
+}
+
+/** «La vecina de las centenas te presta 1 centena, que son 10 decenas»: the lending column named by its unit. */
+const UNIT_OF_COLUMN = ['1 unidad', '1 decena', '1 centena', '1 millar', '1 decena de millar']
+function lendText(i: number): string {
+  const lender = i + 1
+  const keeps = lender === 3 ? 'él se queda con uno menos' : 'ella se queda con una menos'
+  const who = lender === 3 ? 'El vecino' : 'La vecina'
+  return `${who} de ${columnWithArticle(lender)} te presta ${UNIT_OF_COLUMN[lender] ?? '1'}, que son 10 ${columnName(i)}: tú ganas 10 y ${keeps}.`
 }
 
 function columnAddHints(ex: ColumnAddExercise): Hint[] {
@@ -95,7 +102,7 @@ function columnSubHints(ex: ColumnSubExercise): Hint[] {
     hint(1, 'Empieza por las unidades. Si arriba hay menos que abajo, ¡pide prestado a la vecina!', 'none'),
     hint(2, zero
       ? 'Si la vecina es un 0, no tiene nada que prestar: pide a la siguiente. El 0 se convierte en 10, presta 1 y se queda en 9.'
-      : 'La vecina presta 1 decena: tú ganas 10 y ella se queda con una menos. ¡Táchala!', 'borrow', { ...params, column: i }),
+      : `${lendText(i)} ¡Táchala!`, 'borrow', { ...params, column: i }),
     hint(3, worked, 'borrow', { ...params, column: i }),
   ]
 }
@@ -118,7 +125,7 @@ function carrySubHints(ex: ColumnSubExercise): Hint[] {
   const top = digitAt(m, i) + 10
   return [
     hint(1, 'Si arriba hay menos que abajo: ¡me llevo una! Súmale 10 al de arriba, y a la cifra de abajo de la casa de al lado súmale 1.', 'none'),
-    hint(2, `Cuando la cifra de arriba es menor, no te quedes parado: ${columnName(i)} arriba suman 10 y la casa de al lado de abajo cuenta 1 más.`, 'borrow', { ...params, column: i }),
+    hint(2, 'Si arriba hay menos que abajo, pon un 1 delante del de arriba (suma 10) y escribe un 1 pequeño junto a la cifra de abajo de la casa siguiente.', 'borrow', { ...params, column: i }),
     hint(3, `${cap(columnName(i))}: ${digitAt(m, i)} + 10 = ${top}. Resta ${top} − ${digitAt(s, i)} = ? Y abajo, en ${columnWithArticle(next)}: ${digitAt(s, next)} + 1 = ${adjusted[next]}.`, 'borrow', { ...params, column: i }),
   ]
 }
@@ -168,86 +175,128 @@ function subtractionHints(ex: ColumnSubExercise, method: SubMethod | undefined):
   }
 }
 
+/* Column multiplication, house by house: every column is worked (its product, the carry it takes and the one it gives),
+   and the last column is left for the child. Works for any number of digits on top (525 × 8 is three columns). */
 function columnMulHints(ex: ColumnMulExercise): Hint[] {
-  const t = Math.floor(ex.top / 10)
-  const u = ex.top % 10
+  const top = ex.top
   const b = ex.bottom
-  const c = Math.floor((u * b) / 10)
-  const params = { top: ex.top, bottom: b, tens: t * 10, units: u }
-  const worked = c > 0
-    ? `Unidades: ${u} × ${b} = ${u * b}. Escribe ${(u * b) % 10} y me llevo ${c}. Decenas: ${t} × ${b} = ${t * b}, más la llevada ${c} = ?`
-    : `Unidades: ${u} × ${b} = ${u * b}. Decenas: ${t} × ${b} = ?`
+  const cols = digitCount(top)
+  const t = Math.floor(top / 10)
+  const u = top % 10
+  const params = { top, bottom: b, tens: t * 10, units: u }
+  const parts: string[] = []
+  let carry = 0
+  let firstCarry = 0
+  for (let i = 0; i < cols; i++) {
+    const d = digitAt(top, i)
+    const product = d * b
+    const label = cap(columnName(i))
+    const withCarry = carry > 0 ? `, más ${carry} = ${product + carry}` : ''
+    if (i === cols - 1) {
+      parts.push(carry > 0 ? `${label}: ${d} × ${b} = ${product}, más ${carry} = ?` : `${label}: ${d} × ${b} = ?`)
+      break
+    }
+    const value = product + carry
+    const next = Math.floor(value / 10)
+    parts.push(next > 0
+      ? `${label}: ${d} × ${b} = ${product}${withCarry}, escribo ${value % 10} y me llevo ${next}.`
+      : `${label}: ${d} × ${b} = ${product}${withCarry}, escribo ${value}.`)
+    if (next > 0 && firstCarry === 0) firstCarry = next
+    carry = next
+  }
+  const split = Array.from({ length: cols }, (_, i) => digitAt(top, cols - 1 - i) * 10 ** (cols - 1 - i)).filter((p) => p > 0)
   return [
-    hint(1, 'Multiplica primero las unidades y después las decenas. ¡No te olvides de sumar la llevada!', 'none'),
-    hint(2, `Parte el número: ${ex.top} = ${t * 10} + ${u}. Multiplica cada parte por ${b}.`, 'place-value', params),
-    hint(3, worked, 'carry', { ...params, column: 1, carry: c }),
+    hint(1, 'Multiplica primero las unidades, después las decenas y las demás casas. ¡No te olvides de sumar lo que te llevas!', 'none'),
+    hint(2, `Parte el número: ${top} = ${split.join(' + ')}. Multiplica cada parte por ${b}.`, 'place-value', params),
+    hint(3, parts.join(' '), 'carry', { ...params, column: 1, carry: firstCarry }),
   ]
 }
 
-/* «Repartir por partes»: the dividend in its parts; the first part is the step the hint names (never the total). */
-function partsDivisionHints(ex: DivisionExercise): Hint[] {
-  const { dividend: n, divisor: d } = ex
-  const steps = divisionParts(n, d)
-  const params = { total: n, groups: d, dividend: n, divisor: d }
-  return [
-    hint(1, 'Parte el número en partes fáciles: centenas, decenas y unidades. Reparte cada parte y después suma.', 'none'),
-    hint(2, `Parte el ${n}: ${steps.map((s) => s.part).join(' + ')}. Reparte cada parte entre ${d}.`, 'place-value', params),
-    hint(3, `Empieza por la parte más grande: ${steps[0].partial} ÷ ${d} = ?`, 'share', params),
-  ]
+/** The first number taken in the galera: the shortest left part of the dividend that holds the divisor. */
+export function firstPartial(dividend: number, divisor: number): { digits: number; value: number } {
+  const s = String(dividend)
+  for (let k = 1; k <= s.length; k++) {
+    const value = Number(s.slice(0, k))
+    if (value >= divisor) return { digits: k, value }
+  }
+  return { digits: s.length, value: dividend }
 }
 
-/* «Multiplicar hacia arriba»: the child climbs the multiples; the hints say how, not where it stops. */
-function climbDivisionHints(ex: DivisionExercise): Hint[] {
-  const { dividend: n, divisor: d } = ex
-  return [
-    hint(1, `Pregúntate: ¿qué número por ${d} da ${n}, o se acerca sin pasarse?`, 'none'),
-    hint(2, `Sube de ${d} en ${d}: cada fila suma ${d} más. Para cuando la fila llegue a ${n} o lo pase.`, 'none'),
-    hint(3, `Escribe la fila siguiente: ${d} × el número de la fila = ? ¿Pasa de ${n}?`, 'none'),
-  ]
+/** Whether the text names one of the numbers the child has to find (the result, what is left over). */
+function leaks(text: string, answers: number[]): boolean {
+  const tokens = text.replace(/(\d) (\d)/g, '$1$2').split(/\D+/)
+  return answers.some((a) => tokens.includes(String(a)))
 }
 
-const SHORT_GALERA_HINT = 'Sin restas: calcula de cabeza lo que sobra al repartir y bájalo a la siguiente cifra. Escribe solo lo que sale en cada paso.'
+/** The first candidate that names none of the answers (the last one names no number of the result at all). */
+function safeText(candidates: string[], answers: number[]): string {
+  return candidates.find((c) => !leaks(c, answers)) ?? candidates[candidates.length - 1]
+}
 
-/* A 2-digit divisor: estimate by rounding the divisor, then check by multiplying. No hint names a quotient digit. */
+/** «Mira la primera cifra, 5: el 8 no cabe. Coge dos cifras: 52. ¿Cuántas veces cabe el 8 en 52?» A number that is also
+    the result or what is left over is not said (the hint would give it away). */
+function firstStepText(n: number, d: number, answers: number[]): string {
+  const first = Number(String(n)[0])
+  const { digits, value } = firstPartial(n, d)
+  const words = ['', 'una', 'dos', 'tres', 'cuatro', 'cinco']
+  const take = words[digits] ?? String(digits)
+  const candidates = digits === 1
+    ? [`Mira la primera cifra, el ${first}: ¿cuántas veces cabe el ${d} en el ${first}?`, `Mira la primera cifra: ¿cuántas veces cabe el ${d} en ella?`]
+    : [
+        `Mira la primera cifra, ${first}: el ${d} no cabe. Coge ${take} cifras: ${value}. ¿Cuántas veces cabe el ${d} en ${value}?`,
+        `Mira la primera cifra: el ${d} no cabe. Coge ${take} cifras: ${value}. ¿Cuántas veces cabe el ${d} en ${value}?`,
+        `Mira la primera cifra: el ${d} no cabe. Coge ${take} cifras. ¿Cuántas veces cabe el ${d} en ese número?`,
+      ]
+  return safeText([...candidates, 'Mira la primera cifra. Si el número que reparte no cabe, coge una cifra más. ¿Cuántas veces cabe?'], answers)
+}
+
+const GALERA_STEP = 'Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.'
+const SHORT_GALERA_STEP = 'Escribe ese número debajo del número que reparte. Lo que sobra, calcúlalo de cabeza y escríbelo pequeño, y baja la cifra siguiente.'
+const LEFT_FIRST = 'Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número que reparte.'
+
+/* A 2-digit divisor: estimate with the table of the rounded divisor, then check by multiplying by the real one. The
+   estimate is written as a division to think about (24 : 8), never with its result. */
 function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
   const { dividend: n, divisor: d } = ex
   const params = { total: n, groups: d, dividend: n, divisor: d }
-  const estimate = d % 10 === 0 ? `${d} ya es redondo` : `Para estimar, redondea el ${d} a la decena más cercana`
+  const { value } = firstPartial(n, d)
+  const round = Math.round(d / 10) * 10
+  const table = round / 10
+  const think = `${Math.floor(value / 10)} : ${table}`
+  const rounded = d % 10 === 0 ? `El ${d} ya es redondo` : `Redondea el ${d} a ${round}`
+  const estimate = safeText([
+    `Primer número: ${value}. ${rounded}: piensa en la tabla del ${table} (${think}) y comprueba multiplicando por ${d}.`,
+    `${rounded}: piensa en la tabla del ${table} (${think}) y comprueba multiplicando por ${d}.`,
+    `${rounded}: piensa en su tabla, sin el cero, y comprueba multiplicando por ${d}.`,
+    'Redondea el número que reparte, piensa en su tabla y comprueba multiplicando por el número de verdad.',
+  ], [ex.quotient, ex.remainder])
   return [
-    hint(1, short ? SHORT_GALERA_HINT : `En cada paso pregúntate cuántas veces cabe el ${d}. Prueba un número y multiplícalo por ${d}.`, 'none'),
-    hint(2, `${estimate} y piensa con ese número. Después comprueba multiplicando por ${d} de verdad.`, 'share', params),
-    hint(3, `Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
+    hint(1, LEFT_FIRST, 'none'),
+    hint(2, estimate, 'share', params),
+    hint(3, `${short ? SHORT_GALERA_STEP : GALERA_STEP} Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
   ]
 }
 
+/* The galera. Level 1 says where to start, level 2 what sharing means, level 3 the first step with the real number
+   («¿cuántas veces cabe el 8 en 52?»): it names the number to share, never a digit of the result. The retired methods
+   («repartir por partes», «multiplicar hacia arriba») are explained with the galera too. */
 function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
-  if (method === 'div-parts' && ex.divisor < 10) return partsDivisionHints(ex)
-  if (method === 'climb' && ex.quotient < 10) return climbDivisionHints(ex)
   const short = method === 'galera-short'
   const { dividend: n, divisor: d, quotient: q } = ex
   if (d >= 10) return twoDigitDivisorHints(ex, short)
-  const t = Math.floor(n / 10)
-  const u = n % 10
   const params = { total: n, groups: d, dividend: n, divisor: d }
-  let l1: string
-  let worked: string
-  // Level 3 names the next step only: the tens of the dividend and the question, never a partial quotient.
-  const tail = ex.variant === 'exact' ? 'Después baja la cifra siguiente.' : `Lo que sobre, júntalo con el ${u}.`
-  const firstStep = `Empieza por las decenas: ¿cuántas veces cabe el ${d} en el ${t}? Escríbelo arriba y resta. ${tail}`
-  if (q < 10) {
-    l1 = `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`
-    worked = `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}. ¿En qué fila vas?`
-  } else if (ex.variant === 'exact' && n < 100) {
-    l1 = 'Primero reparte las decenas y después las unidades.'
-    worked = firstStep
-  } else {
-    l1 = 'Reparte primero las decenas. Lo que sobre, júntalo con las unidades y sigue repartiendo.'
-    worked = firstStep
+  if (q < 10 && n < 100) {
+    // One step: the table of the divisor, counted up to the dividend without passing it.
+    return [
+      hint(1, `¿Qué número de la tabla del ${d} se acerca más a ${n} sin pasarse?`, 'none'),
+      hint(2, `Reparte ${n} en ${d} partes iguales. Lo que no se pueda repartir es lo que sobra.`, 'share', params),
+      hint(3, `Cuenta de ${d} en ${d} y para antes de pasarte de ${n}: ¿cuántas veces has contado?`, 'share', params),
+    ]
   }
   return [
-    hint(1, short ? SHORT_GALERA_HINT : l1, 'none'),
-    hint(2, `Reparte ${n} en ${d} grupos iguales. Lo que no se pueda repartir es el resto.`, 'share', params),
-    hint(3, worked, 'share', params),
+    hint(1, LEFT_FIRST, 'none'),
+    hint(2, `Reparte ${n} en ${d} partes iguales, cifra a cifra. Lo que no se pueda repartir es lo que sobra.`, 'share', params),
+    hint(3, `${firstStepText(n, d, [q, ex.remainder])} ${short ? SHORT_GALERA_STEP : GALERA_STEP}`, 'share', params),
   ]
 }
 
@@ -308,7 +357,7 @@ function wordHints(ex: WordProblemExercise): Hint[] {
       return [
         hint(1, l1, 'none'),
         hint(2, `¿Hay que repartir ${a} en partes iguales, y saber cuánto toca a cada una?`, 'share', params),
-        hint(3, `Piensa la operación: ${a} ÷ ${b} = ?`, 'share', params),
+        hint(3, `Piensa la operación: ${a} : ${b} = ?`, 'share', params),
       ]
     }
   }
@@ -327,9 +376,10 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'fact-div': {
       const { dividend: p, divisor: d, answer: q } = ex
       return [
-        hint(1, `Dividir es lo contrario de multiplicar: ¿${d} por cuánto da ${p}?`, 'none'),
-        // One group of d shows the size of each group; the number of groups is what the child finds.
-        hint(2, `Reparte ${p} en grupos de ${d}.`, 'share', { total: p, groups: 1, perGroup: d }),
+        // The same idea as the lesson: sharing out one by one, then the multiplication that undoes it, then a worked example.
+        hint(1, `Reparte ${p} entre ${d}, de uno en uno: ¿cuántos le tocan a cada uno?`, 'none'),
+        // The first round of the sharing: one for each of the d. How many rounds there are is what the child finds.
+        hint(2, `¿${d} por cuánto da ${p}? Mira: en cada vuelta, cada uno recibe 1.`, 'share', { total: p, groups: d, perGroup: 1 }),
         hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
       ]
     }
@@ -379,15 +429,16 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     }
     case 'double-chain':
       return [
-        hint(1, 'El doble es sumar el número consigo mismo.', 'none'),
-        hint(2, `Dobla el ${ex.start} paso a paso: cada número es el doble del anterior.`, 'double-chain', { start: ex.start, steps: ex.steps }),
-        hint(3, `${ex.start} + ${ex.start} = ?`, 'double-chain', { start: ex.start, steps: ex.steps, index: 0 }),
+        // Only the first double is drawn (the chain of every answer would give them all); the worked step goes one further.
+        hint(1, `El doble es sumar el número consigo mismo: el doble de ${ex.start} es ${ex.start} + ${ex.start}.`, 'none'),
+        hint(2, `Dobla el ${ex.start}: cada número es el doble del anterior.`, 'double-chain', { start: ex.start, steps: 1 }),
+        hint(3, `${ex.start} + ${ex.start} = ${ex.start * 2}. Ahora el doble de ${ex.start * 2}: ${ex.start * 2} + ${ex.start * 2} = ?`, 'double-chain', { start: ex.start, steps: 1, index: 0 }),
       ]
     case 'fact-family':
       return [
         hint(1, 'Con 3 números salen 4 operaciones: dos multiplicaciones y dos divisiones.', 'none'),
         hint(2, `Mira el triángulo: arriba el ${ex.product}, abajo el ${ex.a} y el ${ex.b}.`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
-        hint(3, `${ex.a} × ${ex.b} = ${ex.product}. Con el espejo: ${ex.b} × ${ex.a} = ${ex.product}. Ahora reparte: ${ex.product} ÷ ${ex.a} = ?`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
+        hint(3, `${ex.a} × ${ex.b} = ${ex.product}. Con el espejo: ${ex.b} × ${ex.a} = ${ex.product}. Ahora reparte: ${ex.product} : ${ex.a} = ?`, 'family', { a: ex.a, b: ex.b, product: ex.product }),
       ]
     case 'column-add': return columnAddHints(ex)
     case 'column-sub': return subtractionHints(ex, method)
@@ -465,6 +516,8 @@ function divisionExample(p: number, d: number, q: number) {
     for (let k = 2; k <= 9; k++) {
       const jumps = Array.from({ length: k }, (_, i) => e * (i + 1))
       const shown = [e * k, e, k, ...jumps]
+      // 4 : 2 = 2 is a poor example: the divisor and the result are the same number, so it does not show which is which.
+      if (e === k) continue
       if (!shown.includes(p) && !shown.includes(d) && !shown.includes(q)) return { p: e * k, d: e, q: k, jumps }
     }
   }
@@ -472,7 +525,7 @@ function divisionExample(p: number, d: number, q: number) {
 }
 const DIVISION_EXAMPLE_TEXT = (p: number, d: number, q: number) => {
   const e = divisionExample(p, d, q)
-  return `Ejemplo con otro caso: ${e.p} : ${e.d}. De ${e.d} en ${e.d}: ${e.jumps.join(', ')}, son ${e.q} saltos.`
+  return `Ejemplo con otro caso: ${e.p} : ${e.d}. Cuenta de ${e.d} en ${e.d}: ${e.jumps.join(', ')}. Son ${e.q} saltos, así que a cada uno le tocan ${e.q}.`
 }
 const DIVISION_EXAMPLE_PARAMS = (p: number, d: number, q: number) => {
   const e = divisionExample(p, d, q)

@@ -53,7 +53,7 @@ describe('tricks: the wrong-answer messages never give the result of their fact'
     // question («¿qué dos de estos números forman el resultado: 5, 6, 7, 8?»), never 56.
     const r = check(makeFactMul(7, 8), num(49))
     expect(r.feedback).toContain('49 es 7 × 7: ese resultado es de la tabla del 7')
-    expect(r.feedback).toContain('Prueba el truco. Fíjate en los números 5, 6, 7, 8')
+    expect(r.feedback).toContain('Prueba el truco. Parte el 8 en 5 y 3')
     expect(r.feedback).not.toMatch(/\b56\b/)
     // Both factors differ: the message names both tables (48 = 6 × 8, a neighbour of 7 × 8).
     expect(check(makeFactMul(7, 8), num(48)).feedback).toContain('48 es 6 × 8: ese resultado es de la tabla del 6 y del 8')
@@ -61,12 +61,12 @@ describe('tricks: the wrong-answer messages never give the result of their fact'
 })
 
 describe('tricks: the worked step ends where the child writes the answer', () => {
-  it.each(ALL_FACTS)('%i × %i: the worked step ends in «= ?» or «→ ?», and the answer fills it', (a, b) => {
+  it.each(ALL_FACTS)('%i × %i: the worked step ends in «= ?», and the answer fills it', (a, b) => {
     const worked = strategyDetail(a, b).workedText
-    expect(worked).toMatch(/(= |→ )\?$/)
+    expect(worked).toMatch(/= \?$/)
     // FactView replaces the final «?» with the answer: the text must then read «= 35» or «→ 35».
     const filled = worked.replace(/\?\s*$/, String(a * b))
-    expect(filled).toMatch(new RegExp(`(= |→ )${a * b}$`))
+    expect(filled).toMatch(new RegExp(`= ${a * b}$`))
   })
 
   it('a factor 1 never writes its product in the worked step, only the expression with «= ?»', () => {
@@ -80,10 +80,10 @@ describe('tricks: the worked step ends where the child writes the answer', () =>
   })
 
   it('the 6 table and the doubling chains show the product only as the answer', () => {
-    expect(strategyDetail(6, 8).workedText).toBe('La mitad de 8 es 4. Pon el 4 delante del 8 → ?')
-    expect(strategyDetail(8, 3).workedText).toBe('3 → 6 → 12 → ?')
-    expect(strategyDetail(4, 3).workedText).toBe('3 → 6 → ?')
-    expect(strategyDetail(7, 5).workedText).toBe('Cuenta 7 saltos de 5: 5, 10, 15, 20, 25, 30 → ?')
+    expect(strategyDetail(6, 8).workedText).toBe('La mitad de 8 es 4. Pon el 4 delante del 8: 6 × 8 = ?')
+    expect(strategyDetail(8, 3).workedText).toBe('3 → 6 → 12. Y el doble de 12: 12 + 12 = ?')
+    expect(strategyDetail(4, 3).workedText).toBe('El doble de 3 es 6. Y el doble de 6: 6 + 6 = ?')
+    expect(strategyDetail(7, 5).workedText).toBe('7 saltos de 5: 5, 10, 15, 20, 25, 30… y uno más: 30 + 5 = ?')
   })
 })
 
@@ -103,9 +103,9 @@ describe('tricks: the rewritten tricks', () => {
   it('the 6 with an even number says the half and the number, not the result', () => {
     expect(strategyForFact(6, 8).text).toBe('Con el 6 y un número par: la mitad de 8 va delante y el 8 detrás.')
   })
-  it('7 × 7 and 7 × 8 ask a question instead of giving the rhyme', () => {
+  it('7 × 7 and 7 × 8 split the 7 or the 8 instead of giving the rhyme', () => {
     expect(strategyForFact(7, 7).text).toBe('Piensa en 7 × 5 y en 7 × 2, y súmalos.')
-    expect(strategyForFact(7, 8).text).toBe('Fíjate en los números 5, 6, 7, 8: ¿cuáles dos forman el resultado de 7 × 8?')
+    expect(strategyForFact(7, 8).text).toBe('Parte el 8 en 5 y 3: piensa en 7 × 5 y en 7 × 3, y súmalos.')
   })
   it('3 × 3 and 8 × 8 have their own trick', () => {
     expect(strategyForFact(3, 3).text).toBe('El doble de 3, y otro 3 más.')
@@ -183,7 +183,7 @@ describe('messages: praise, the mirror, the zero, carrying and the division', ()
   it('the wrong-answer messages say the trick after «Prueba el truco.» with no label in front of it', () => {
     expect(FEEDBACK.factWrong(strategyForFact(3, 3))).toBe('¡Casi! Prueba el truco. El doble de 3, y otro 3 más.')
     expect(FEEDBACK.factNeighbour(49, 7, 7, strategyForFact(7, 8))).not.toMatch(/: [^ ]+: /)
-    expect(FEEDBACK.factNeighbour(49, 7, 7, strategyForFact(7, 8))).toContain('de la tabla del 7. Prueba el truco. Fíjate en los números 5, 6, 7, 8')
+    expect(FEEDBACK.factNeighbour(49, 7, 7, strategyForFact(7, 8))).toContain('de la tabla del 7. Prueba el truco. Parte el 8 en 5 y 3')
   })
 
   it('the division messages explain «el resto» and do not use «cociente» unexplained', () => {

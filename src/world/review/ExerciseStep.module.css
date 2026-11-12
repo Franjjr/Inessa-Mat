@@ -13,9 +13,23 @@
   width: 100%;
 }
 
+/* «Ahora no» / «No lo sé»: kept at the bottom of the step while it scrolls (sticky, in the flow: it takes its own room
+   and covers nothing), well apart from each other and big enough for a finger. */
 .skip {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+  background: var(--c-bg);
+}
+
+.skip > * {
+  min-height: 48px;
+  min-width: 48px;
 }
 
 .feedback {

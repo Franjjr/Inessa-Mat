@@ -1,0 +1,51 @@
+/* The solution of an exercise: a calm card in the flow (never over the exercise), steps in order, the answer in bold. */
+.panel {
+  width: 100%;
+  max-width: 640px;
+  box-sizing: border-box;
+  margin: 0 auto;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  text-align: left;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  color: var(--c-ink);
+}
+
+.steps {
+  margin: 0;
+  padding-left: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.step {
+  font-family: var(--font-read);
+  font-size: var(--fs-md);
+  line-height: 1.4;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+}
+
+.answer {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  color: var(--c-ink);
+}
+
+.answerLabel {
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
