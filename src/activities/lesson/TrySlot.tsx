@@ -7,13 +7,16 @@
       and the child may write the answer again to keep it. The step is settled at once: errors are clues, never a wall.
    A multiplication fact (teach 'full') ends at its copy step instead: the view already gave two tries and showed the
    worked step, so the step settles at once with the solution shown. */
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import clsx from 'clsx'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { SolutionPanel } from '@/activities/shared/SolutionPanel'
+import { ListenButton } from '@/activities/shared/ListenButton'
+import { settleScale } from '@/activities/shared/FitToScreen'
 import { speech } from '@/audio'
-import { createRng, generate, hintsFor } from '@/engine'
+import { createRng, ENGLISH_LISTENING_KINDS, generate, hintsFor } from '@/engine'
 import { solutionFor } from '@/engine/solution'
+import { statementFor } from '@/engine/statement'
 import type { DivMethod, Exercise, ExerciseOutcome, SkillSelector, SubMethod, TableMethod } from '@/types'
 import { Button } from '@/ui'
 import s from './TrySlot.module.css'
@@ -58,6 +61,25 @@ interface Props {
   grown?: boolean
   /** Called when the exercise does not fit the board even at MIN_FIT_SCALE and one of its controls is out of reach: the lesson grows. */
   onOverflow?: () => void
+}
+
+/** The exercise with its story templates rendered for this child (host.t: {child}, {pet}, their genders), so that
+    «Escuchar» reads the names the screen shows (the same helper as in world/review/ExerciseStep). */
+function renderedForVoice<T>(value: T, t: (template: string) => string): T {
+  if (typeof value === 'string') return (value.includes('{') ? t(value) : value) as T
+  if (Array.isArray(value)) return value.map((v) => renderedForVoice(v, t)) as T
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, renderedForVoice(v, t)])) as T
+  }
+  return value
+}
+
+/** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
+    The problems read themselves when the voice is on; the English listening exercises, «Ahora dilo tú» and the dictation
+    play their own audio. */
+function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
+  if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
+  return voice && (kind === 'word-problem' || kind === 'bar-problem')
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -154,8 +176,10 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
       const footer = footerRef.current?.offsetHeight ?? 0
       const available = wrap.clientHeight - padding - footer - gap
       const natural = inner.offsetHeight
-      const scale = fitScale(available, natural)
-      setFit({ scale, height: natural })
+      // The statement keeps its size on screen (--fit-scale below), so the box grows a little as it shrinks: a change
+      // under SCALE_STEP is not applied, which ends that loop (as in FitToScreen).
+      const scale = settleScale(appliedScale.current, fitScale(available, natural))
+      setFit((f) => (f.scale === scale && f.height === natural ? f : { scale, height: natural }))
       // Taller than the board even at the smallest scale AND a control of the try out of reach: the lesson has to grow to hold it.
       // A tall exercise whose controls are all in view keeps its size (its lower part scrolls inside the board).
       if (!grown && natural * scale > available + 1 && !controlsReachable(wrap, inner, footerRef.current, appliedScale.current, scale, natural)) onOverflow?.()
@@ -266,7 +290,18 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   return (
     <div ref={wrapRef} className={clsx(s.wrap, grown && s.wrapGrown)} data-status={status}>
       <div className={s.fit} style={{ height: fit.height ? fit.height * fit.scale : undefined }}>
-        <div ref={innerRef} className={s.exercise} style={{ transform: `scale(${fit.scale})` }}>
+        <div
+          ref={innerRef}
+          className={s.exercise}
+          data-fit-inner=""
+          style={{ transform: `scale(${fit.scale})`, '--fit-scale': fit.scale } as CSSProperties}
+        >
+          {/* «Escuchar»: the try can be heard, also with the automatic reading off (unless its view reads itself). */}
+          {!readsItself(exercise.kind, host.prefs.voice) && (
+            <div className={s.listenRow}>
+              <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />
+            </div>
+          )}
           {/* teach full: a missed fact shows its worked step and the child copies the answer before the view ends. */}
           <ExerciseView
             key={`${round}`}

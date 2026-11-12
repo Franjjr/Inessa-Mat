@@ -13,7 +13,7 @@
   width: 100%;
 }
 
-/* «Ahora no» / «No lo sé»: kept at the bottom of the step while it scrolls (sticky, in the flow: it takes its own room
+/* «Escuchar», «Ahora no» / «No lo sé»: kept at the bottom of the step while it scrolls (sticky, in the flow: it takes its own room
    and covers nothing), well apart from each other and big enough for a finger. */
 .skip {
   position: sticky;

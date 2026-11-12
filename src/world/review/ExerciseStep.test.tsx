@@ -337,3 +337,40 @@ describe('ExerciseStep · a guided step (a visual support on screen from the sta
     expect(reportAttempt.mock.calls[0][0]).toMatchObject({ hintsUsed: 0 })
   })
 })
+
+describe('ExerciseStep «Escuchar» (P5)', () => {
+  it('every exercise has a button to hear it, and it reads the story with the child\'s own names', async () => {
+    const { speech } = await import('@/audio')
+    const say = vi.spyOn(speech, 'say').mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    const story = { id: 'wp:1', kind: 'word-problem', text: '{child} tiene 3 cromos y {pet} le da 4. ¿Cuántos tiene ahora?', answer: 7, unit: 'cromos', skill: 'add:wp', difficulty: 1, topic: 'add' } as unknown as Exercise
+    render(
+      <ActivityHostProvider value={{ ...defaultActivityHost, t: (x: string) => x.replace('{child}', 'Inés').replace('{pet}', 'Nube') }}>
+        <ExerciseStep exercise={story} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: /Escuchar/ }))
+    expect(say).toHaveBeenCalledTimes(1)
+    expect(say.mock.calls[0][0]).toBe('Inés tiene 3 cromos y Nube le da 4. ¿Cuántos tiene ahora?')
+    expect(say.mock.calls[0][1]).toMatchObject({ force: true })
+    say.mockRestore()
+  })
+
+  it('a problem that reads itself (voice on) gets no second «Escuchar»; a calculation always has one', () => {
+    const story = { id: 'wp:1', kind: 'word-problem', text: 'Hay 3 y vienen 4. ¿Cuántos hay?', answer: 7, unit: '', skill: 'add:wp', difficulty: 1, topic: 'add' } as unknown as Exercise
+    const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
+    const { unmount } = render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={story} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.queryByRole('button', { name: /Escuchar/ })).toBeNull()
+    unmount()
+    render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={exercise} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
+  })
+})

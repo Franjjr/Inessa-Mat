@@ -207,3 +207,32 @@ describe('LessonPlayer: the voice', () => {
     expect(setPreference).not.toHaveBeenCalled()
   })
 })
+
+describe('TrySlot «Escuchar» and the statement size (P5, P3PE-01)', () => {
+  it('the try can be heard with the child\'s names, and its box carries --fit-scale for the statement', () => {
+    const lesson = getLesson('w4-bars')!
+    const step = lesson.steps[lesson.steps.length - 1]
+    const host: ActivityHost = { ...defaultActivityHost, t: (x: string) => x.replace(/\{child\}/g, 'Inés').replace(/\{pet\}/g, 'Nube') }
+    said.length = 0
+    render(
+      <ActivityHostProvider value={host}>
+        <TrySlot selector={step.trySelector!} seedKey="w4-bars:3" onSettled={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /Escuchar/ }))
+    expect(said).toHaveLength(1)
+    expect(said[0]).not.toMatch(/\{/)
+    expect(said[0].length).toBeGreaterThan(10)
+    const box = screen.getByTestId('fake-exercise').closest('[data-fit-inner]') as HTMLElement
+    expect(box).toBeTruthy()
+    expect(box.style.getPropertyValue('--fit-scale')).toBe('1')
+  })
+})
+
+describe('the lesson bubble keeps a calculation on one line', () => {
+  it('no-break spaces around a sign between numbers', async () => {
+    const { noBreakSigns } = await import('../LessonPlayer')
+    expect(noBreakSigns('Mira: 6 + 3 = 9 y 4 × 2 = 8.')).toBe('Mira: 6 + 3 = 9 y 4 × 2 = 8.')
+    expect(noBreakSigns('Son 3 y 4.')).toBe('Son 3 y 4.')
+  })
+})
