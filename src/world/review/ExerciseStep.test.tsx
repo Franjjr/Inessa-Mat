@@ -355,4 +355,22 @@ describe('ExerciseStep «Escuchar» (P5)', () => {
     expect(say.mock.calls[0][1]).toMatchObject({ force: true })
     say.mockRestore()
   })
+
+  it('a problem that reads itself (voice on) gets no second «Escuchar»; a calculation always has one', () => {
+    const story = { id: 'wp:1', kind: 'word-problem', text: 'Hay 3 y vienen 4. ¿Cuántos hay?', answer: 7, unit: '', skill: 'add:wp', difficulty: 1, topic: 'add' } as unknown as Exercise
+    const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
+    const { unmount } = render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={story} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.queryByRole('button', { name: /Escuchar/ })).toBeNull()
+    unmount()
+    render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={exercise} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
+  })
 })

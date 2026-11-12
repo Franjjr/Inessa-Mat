@@ -14,7 +14,7 @@ import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { ListenButton } from '@/activities/shared/ListenButton'
 import { settleScale } from '@/activities/shared/FitToScreen'
 import { speech } from '@/audio'
-import { createRng, generate, hintsFor } from '@/engine'
+import { createRng, ENGLISH_LISTENING_KINDS, generate, hintsFor } from '@/engine'
 import { solutionFor } from '@/engine/solution'
 import { statementFor } from '@/engine/statement'
 import type { DivMethod, Exercise, ExerciseOutcome, SkillSelector, SubMethod, TableMethod } from '@/types'
@@ -72,6 +72,14 @@ function renderedForVoice<T>(value: T, t: (template: string) => string): T {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, renderedForVoice(v, t)])) as T
   }
   return value
+}
+
+/** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
+    The problems read themselves when the voice is on; the English listening exercises, «Ahora dilo tú» and the dictation
+    play their own audio. */
+function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
+  if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
+  return voice && (kind === 'word-problem' || kind === 'bar-problem')
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -288,10 +296,12 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
           data-fit-inner=""
           style={{ transform: `scale(${fit.scale})`, '--fit-scale': fit.scale } as CSSProperties}
         >
-          {/* «Escuchar»: the try can be heard, also with the automatic reading off. */}
-          <div className={s.listenRow}>
-            <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />
-          </div>
+          {/* «Escuchar»: the try can be heard, also with the automatic reading off (unless its view reads itself). */}
+          {!readsItself(exercise.kind, host.prefs.voice) && (
+            <div className={s.listenRow}>
+              <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />
+            </div>
+          )}
           {/* teach full: a missed fact shows its worked step and the child copies the answer before the view ends. */}
           <ExerciseView
             key={`${round}`}

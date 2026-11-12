@@ -15,7 +15,7 @@ import { ExerciseView, useActivityHost } from '@/activities'
 import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
-import { hintsFor, isCompletionOnly, methodFor } from '@/engine'
+import { ENGLISH_LISTENING_KINDS, hintsFor, isCompletionOnly, methodFor } from '@/engine'
 import { statementFor } from '@/engine/statement'
 import { ListenButton } from '@/activities/shared/ListenButton'
 import { Button } from '@/ui'
@@ -74,6 +74,14 @@ function renderedForVoice<T>(value: T, t: (template: string) => string): T {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, renderedForVoice(v, t)])) as T
   }
   return value
+}
+
+/** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
+    The problems read themselves when the voice is on; the English listening exercises, «Ahora dilo tú» and the dictation
+    play their own audio. */
+function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
+  if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
+  return voice && (kind === 'word-problem' || kind === 'bar-problem')
 }
 
 /** A short cheer in front of the corrector's message, never longer than the message itself. */
@@ -258,17 +266,16 @@ export function ExerciseStep({
   const hints = stage === 'dontknow' && !isMath ? hintsFor(exercise, subMethod, { divMethod, tableMethod: host.prefs.tableMethod }) : []
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
-  // «Escuchar»: every exercise can be heard, also with the automatic reading off. «Ahora dilo tú» has its own voice.
+  // «Escuchar»: every exercise can be heard, also with the automatic reading off (unless its view reads itself).
+  // It shares the bottom row with «Ahora no» / «No lo sé» (in the flow, sticky): a row of its own over the exercise would
+  // push the keypad under that row on a short tablet (1000 × 490). Shown while the child answers.
   const statement = useMemo(() => statementFor(renderedForVoice(exercise, host.t)), [exercise, host.t])
+  const listen = (stage === 'asking' || stage === 'retrying') && !readsItself(exercise.kind, host.prefs.voice)
+  const skipOffered = stage === 'asking' && !tried && (!!onSkip || allowDontKnow) && exercise.kind !== 'eng-speak'
 
   // Shrunk to fit the window (daily session, review, class, guardian, reading): no scrolling to answer or go on.
   return (
     <FitToScreen className={s.stepOuter} innerClassName={s.step}>
-      {exercise.kind !== 'eng-speak' && (
-        <div className={s.listenRow}>
-          <ListenButton text={statement} />
-        </div>
-      )}
       <div ref={viewRef} className={s.view} inert={inputLocked ? true : undefined}>
         <ExerciseView
           key={view}
@@ -284,10 +291,11 @@ export function ExerciseStep({
           tableMethod={host.prefs.tableMethod}
         />
       </div>
-      {stage === 'asking' && !tried && (onSkip || allowDontKnow) && exercise.kind !== 'eng-speak' && (
+      {(listen || skipOffered) && (
         <div className={s.skip}>
-          {onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
-          {allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
+          {listen && <ListenButton text={statement} />}
+          {skipOffered && onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
+          {skipOffered && allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
         </div>
       )}
       {stage === 'dontknow' && (
