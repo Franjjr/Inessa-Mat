@@ -31,6 +31,12 @@ function preferenceOf(step: LessonStep | undefined): 'subMethod' | 'divMethod' |
 }
 
 /** Whether the voice is still talking (the stubbed speech of the tests may not know). */
+/** «6 + 3 = 9» never breaks between lines in the bubble: the spaces around a sign between numbers become no-break
+    spaces. Only the bubble: the voice reads the text as it is. */
+export function noBreakSigns(text: string): string {
+  return text.replace(/(\d) ([×−+=:÷<>]) (?=\d)/g, '$1\u00A0$2\u00A0')
+}
+
 const stillSpeaking = () => (typeof speech.speaking === 'function' ? speech.speaking() : false)
 
 export interface LessonPlayerProps {
@@ -246,7 +252,7 @@ function Player({ lesson, onDone, onExit }: LessonPlayerProps) {
             <Character id={stageId} pose={pose} size={avatarSize} animated={!reduced} />
           </div>
           <div className={styles.bubble} aria-live="polite">
-            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakGroups(plainMixed(text))}</p>
+            <p className={styles.text} key={current} data-testid="lesson-text">{noBreakSigns(noBreakGroups(plainMixed(text)))}</p>
           </div>
         </aside>
       </div>

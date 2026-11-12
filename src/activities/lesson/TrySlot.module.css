@@ -34,6 +34,12 @@
   transform-origin: top center;
 }
 
+/* «Escuchar»: its own row over the exercise (in the flow, it covers nothing), at the end of the line. */
+.listenRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* The status lines stack one under the other (never run together on one line: «30.No pasa nada»), centred. */
 .footer {
   flex-shrink: 0;

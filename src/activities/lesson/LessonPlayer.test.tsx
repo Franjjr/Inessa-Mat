@@ -27,7 +27,8 @@ function nextButton() {
 }
 
 function expectStepText(step: LessonStep) {
-  expect(screen.getByTestId('lesson-text').textContent).toBe(defaultActivityHost.t(step.text))
+  // The bubble keeps «6 + 3 = 9» on one line with no-break spaces: the words are the step's own.
+  expect(screen.getByTestId('lesson-text').textContent?.replace(/ /g, ' ')).toBe(defaultActivityHost.t(step.text).replace(/ /g, ' '))
 }
 
 /** Plays a whole lesson: taps through "tap" steps and answers "try" steps correctly. */
