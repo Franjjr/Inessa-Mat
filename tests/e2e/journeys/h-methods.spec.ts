@@ -1,8 +1,7 @@
 /* Journey H: the new exercise types and the division methods, played through the real views. The bar problem, the
    encuentra el error and the comprobar are played in the development gallery (/dev/gallery?only=newViews), where the
-   same views run on their own; the division lesson of world 8 is played in its lesson node. The division is always
-   the school galera (with or without the subtractions): the retired methods (repartir por partes, multiplicar hacia
-   arriba) of old data show the galera too. Only visible Spanish text and roles are used. */
+   same views run on their own; the lesson «Dos formas de hacer la galera» is played in the world 8 lesson node, with
+   the two ways of the galera and no choice of a favourite. Only visible Spanish text and roles are used. */
 import { mkdirSync } from 'node:fs'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { devEditProgress, seedDemo, settle } from '../helpers'
@@ -109,8 +108,8 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
   })
 })
 
-test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
-  test('every try step of the division lesson is the galera; the child never saves a method', async ({ page }) => {
+test.describe('Journey H: the lesson «Dos formas de hacer la galera»', () => {
+  test('the lesson shows the two ways of the galera, asks for one try and does not ask for a favourite', async ({ page }) => {
     test.setTimeout(180_000)
     await seedDemo(page)
     // World 8 is reached by the demo child: its earlier nodes are marked as done, as after a long journey.
@@ -123,7 +122,7 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       await data.updateProgress(child.id, (p) => content.unlockThroughWorld(p, 'w8'))
     })
     await page.goto('/play/w/w8/lesson-div-ways')
-    await expect(page.getByRole('heading', { name: 'Cuatro caminos para dividir' })).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByRole('heading', { name: 'Dos formas de hacer la galera' })).toBeVisible({ timeout: 20_000 })
 
     const seen = new Set<string>()
     for (let i = 0; i < 80; i++) {
@@ -132,21 +131,14 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
         await done.click({ timeout: 5_000 }).catch(() => undefined)
         break
       }
-      // While the lesson still has a «choose» step (it goes away with the new lesson), picking does not save anything.
-      const pick = page.getByRole('radio', { name: 'La galera con restas' })
-      if (await pick.isVisible().catch(() => false)) {
-        await pick.click()
-        await continueLesson(page)
-        continue
-      }
-      if (await page.getByRole('region', { name: 'Repartir por partes' }).isVisible().catch(() => false)) seen.add('parts')
-      if (await page.getByRole('region', { name: 'Multiplicar hacia arriba' }).isVisible().catch(() => false)) seen.add('climb')
       const galera = page.locator('section[aria-label="División en galera"]')
       if (await galera.isVisible().catch(() => false)) {
-        seen.add('galera')
+        seen.add(((await galera.locator('p').first().textContent()) ?? '').includes('Escribe solo el cociente') ? 'galera-short' : 'galera')
         await solveGalera(page)
         continue
       }
+      // No step of this lesson asks the child to choose a favourite way.
+      expect(await page.getByRole('radio').count()).toBe(0)
       const next = page.getByRole('button', { name: 'Siguiente ›' })
       if (await ready(next)) {
         await next.click({ timeout: 5_000 }).catch(() => undefined)
@@ -155,8 +147,8 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       }
       await settle(page, 400)
     }
-    // Every try step was a galera: the retired methods never show.
-    expect([...seen].sort()).toEqual(['galera'])
+    // One try only, with the way the family picked in the settings: nobody has to do the other way.
+    expect(seen.size).toBe(1)
     // And the child's division method is still the school one.
     const saved = await page.evaluate(async () => (await window.__numeriaDev!.db.children.toArray()).find((c) => !c.deletedAt)!.settings.divMethod)
     expect(saved).toBe('galera')
@@ -166,13 +158,6 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
 /** On screen and enabled, without waiting for it to appear (isEnabled alone waits for the element). */
 async function ready(locator: Locator): Promise<boolean> {
   return (await locator.count()) > 0 && locator.first().isEnabled().catch(() => false)
-}
-
-/** Continues from a settled step: the lesson's own forward button, when there is one. */
-async function continueLesson(page: Page): Promise<void> {
-  const next = page.getByRole('button', { name: 'Siguiente ›' })
-  if (await ready(next)) await next.click()
-  await settle(page, 350)
 }
 
 /** A galera try step (with or without the subtractions): the quotient digits and the remainders, then Enter. */
@@ -198,3 +183,4 @@ async function solveGalera(page: Page): Promise<void> {
   await settle(page, 600)
   await settle(page, 300)
 }
+

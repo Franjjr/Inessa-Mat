@@ -59,7 +59,7 @@ export function ShareVisual({ params, phase, runLength, reduced }: VisualProps) 
       </div>
       {st >= 2 && (
         <motion.p className={`${s.eq} ${s.eqBig}`} initial={reduced ? false : { opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={motionT(reduced, POP)} data-testid="share-equation">
-          {total} ÷ {groups} = <span className={s.hl}>{each}</span>
+          {total} : {groups} = <span className={s.hl}>{each}</span>
         </motion.p>
       )}
     </div>
@@ -74,7 +74,7 @@ export function FactFamilyVisual({ params, phase, runLength, reduced }: VisualPr
   const b = Math.max(0, Math.floor(numParam(params, 'b', 4)))
   const p = a * b
   const st = stateOf({ phase, runLength })
-  const facts = [`${a} × ${b} = ${p}`, `${b} × ${a} = ${p}`, `${p} ÷ ${a} = ${b}`, `${p} ÷ ${b} = ${a}`]
+  const facts = [`${a} × ${b} = ${p}`, `${b} × ${a} = ${p}`, `${p} : ${a} = ${b}`, `${p} : ${b} = ${a}`]
   const node = (text: number, x: string, y: string, color: string, key: string) => (
     <motion.span
       key={key}
@@ -167,7 +167,9 @@ export function GaleraVisual(props: VisualProps) {
       {multiDigit && st >= 2 && (
         <div className={s.row} data-testid="galera-work">
           {plan.steps.map((step, i) => (
-            <span key={i} className={s.tag} style={{ fontSize: 'var(--fs-md)' }}>{step.cur} ÷ {divisor} = {step.digit}</span>
+            <span key={i} className={s.tag} style={{ fontSize: 'var(--fs-md)' }}>
+              {i > 0 ? `bajo el ${String(dividend)[i]}: ` : ''}{step.cur} : {divisor} = {step.digit}{step.cur - step.digit * divisor > 0 ? ` y sobra ${step.cur - step.digit * divisor}` : ''}
+            </span>
           ))}
         </div>
       )}
@@ -187,22 +189,41 @@ export function GaleraVisual(props: VisualProps) {
   )
 }
 
-/** The galera with its subtractions written (see GaleraVisual). Step k of galeraSteps is drawn once the phase reaches k. */
+/** What a phase of the written galera shows. `started` steps have their quotient digit; only the first `complete` of
+    them also show the partial dividend, product and remainder (the one that is just started shows only its partial
+    dividend). `divisorShown` is false while the casita still has only the dividend.
+    Two scripts: with at least two beats per step plus the casita (runLength ≥ 2·steps + 1) the beats are: the casita
+    (one beat, or two when there is room: dividend, then divisor), and for every step «quotient digit» then «subtraction».
+    With fewer phases each phase completes one more step (the older script). The last phase of a run shows everything. */
+export function galeraBeats(steps: number, phase: number, runLength: number): { started: number; complete: number; divisorShown: boolean } {
+  if (phase >= runLength - 1) return { started: steps, complete: steps, divisorShown: true }
+  if (runLength < 2 * steps + 1) {
+    const done = Math.min(steps, phase + 1)
+    return { started: done, complete: done, divisorShown: true }
+  }
+  const lead = runLength - 2 * steps // beats of the casita before the first quotient digit
+  const b = phase - lead // 0 = first quotient digit, 1 = its subtraction, 2 = next digit…
+  if (b < 0) return { started: 0, complete: 0, divisorShown: lead < 2 || phase >= 1 }
+  return { started: Math.min(steps, Math.floor(b / 2) + 1), complete: Math.min(steps, Math.floor((b + 1) / 2)), divisorShown: true }
+}
+
+/** The galera with its subtractions written (see GaleraVisual). */
 function GaleraWrittenVisual({ params, phase, runLength, reduced }: VisualProps) {
   const dividend = Math.max(0, Math.floor(numParam(params, 'dividend', 84)))
   const divisor = Math.max(1, Math.floor(numParam(params, 'divisor', 4)))
-  const st = stateOf({ phase, runLength })
   const digits = String(dividend)
   const steps = galeraSteps(dividend, divisor)
-  const shown = steps.slice(0, Math.min(steps.length, st + 1))
+  const { started, complete, divisorShown } = galeraBeats(steps.length, phase, runLength)
+  const shown = steps.slice(0, started)
+  const doneSteps = steps.slice(0, complete)
   const quotient = shown.length ? quotientOf(shown) : null
-  const rest = shown.length ? shown[shown.length - 1].remainder : null
+  const rest = doneSteps.length ? doneSteps[doneSteps.length - 1].remainder : null
   return (
     <div className={s.stage}>
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 4px auto', gridTemplateRows: 'auto auto', alignItems: 'start' }} data-testid="galera">
         <div style={{ ...galeraCell, gridColumn: 1, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="dividend">{dividend}</div>
         <div style={{ gridColumn: 2, gridRow: '1 / span 2', background: GALERA_BAR, width: 4, alignSelf: 'stretch' }} />
-        <div style={{ ...galeraCell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="divisor">{divisor}</div>
+        <div style={{ ...galeraCell, gridColumn: 3, gridRow: 1, borderBottom: `4px solid ${GALERA_BAR}`, paddingBottom: 6, justifySelf: 'stretch' }} data-testid="divisor">{divisorShown ? divisor : ''}</div>
         <div style={{ ...galeraCell, gridColumn: 1, gridRow: 2, textAlign: 'right', color: 'var(--c-magic)', minHeight: 60 }} data-testid="remainder">
           {rest ?? ''}
         </div>
@@ -212,21 +233,24 @@ function GaleraWrittenVisual({ params, phase, runLength, reduced }: VisualProps)
       </div>
       {shown.length > 0 && (
         <div className={s.row} style={{ alignItems: 'flex-end' }} data-testid="galera-work">
-          {shown.map((step, k) => (
-            <motion.div
-              key={k}
-              initial={reduced ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={motionT(reduced, GLIDE)}
-              style={{ display: 'grid', justifyItems: 'end', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-lg)', fontVariantNumeric: 'tabular-nums' }}
-              data-testid="galera-step"
-            >
-              <span className={s.muted} style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, minHeight: '1.3em' }}>{k > 0 ? `bajo el ${digits[step.endIndex]}` : ''}</span>
-              <span>{step.partial}</span>
-              <span style={{ borderBottom: `3px solid ${GALERA_BAR}`, paddingBottom: 2 }}>− {step.product}</span>
-              <span style={{ color: 'var(--c-magic)' }}>{step.remainder}</span>
-            </motion.div>
-          ))}
+          {shown.map((step, k) => {
+            const finished = k < complete
+            return (
+              <motion.div
+                key={k}
+                initial={reduced ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={motionT(reduced, GLIDE)}
+                style={{ display: 'grid', justifyItems: 'end', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'var(--fs-lg)', fontVariantNumeric: 'tabular-nums' }}
+                data-testid="galera-step"
+              >
+                <span className={s.muted} style={{ fontSize: 'var(--fs-sm)', fontWeight: 400, minHeight: '1.3em' }}>{k > 0 ? `bajo el ${digits[step.endIndex]}` : ''}</span>
+                <span>{step.partial}</span>
+                {finished && <span style={{ borderBottom: `3px solid ${GALERA_BAR}`, paddingBottom: 2 }}>− {step.product}</span>}
+                {finished && <span style={{ color: 'var(--c-magic)' }}>{step.remainder}</span>}
+              </motion.div>
+            )
+          })}
         </div>
       )}
     </div>

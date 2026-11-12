@@ -275,7 +275,7 @@ export const c2w6Arrival = story('c2-w6-arrival', 'Un jardín sin colores', [
   ]),
 ])
 
-export const c2w6Mid = story('c2-w6-mid', 'Las flores votan', [
+export const c2w6Mid = story('c2-w6-mid', '¿Cuántas flores hay?', [
   scene('rainbow-garden', [cast('companion', 'sad', 'left', 'fog'), cast('fairy', 'happy', 'center'), cast('borron', 'happy', 'right')], [
     say('borron', '¡Ji, ji! ¿Cuántas flores rojas hay? ¡Esa no la sabe nadie!', 'happy'),
     say('fairy', 'Cada dibujito de mi gráfica son 10 flores. Hay 3 dibujitos rojos y 2 azules.', 'happy'),

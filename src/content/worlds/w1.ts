@@ -1,5 +1,5 @@
 /* World 1 — El Bosque de los Grupos: what multiplying is (equal groups, arrays), the mirror rule and the easy
-   tables ×1 ×2 ×5 ×10, with a gentle review of ×3 and ×4. */
+   tables ×1 ×2 ×5 ×10 (the tables of 3 and 4 are not asked here: they are taught later). */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w1 = world({
@@ -38,7 +38,7 @@ export const w1 = world({
       kind: 'necklace',
       title: 'Los collares de las hadas',
       instructions: 'Cuenta saltando y escribe las cuentas que faltan.',
-      selector: { kinds: ['skip-count'], tables: [2, 3, 4, 5] },
+      selector: { kinds: ['skip-count'], tables: [2, 5] },
       count: 4,
       params: { beads: 10 },
     }),
@@ -55,7 +55,7 @@ export const w1 = world({
       kind: 'memory',
       title: 'Parejas del bosque',
       instructions: 'Da la vuelta a dos cartas. Busca cada multiplicación con su resultado.',
-      selector: { kinds: ['fact-mul'], tables: [2, 3, 4, 5], factorRange: [2, 5] },
+      selector: { kinds: ['fact-mul'], tables: [2, 5], factorRange: [2, 5] },
       count: 6,
     }),
     activityNode('numbers-forest', {

@@ -16,7 +16,20 @@ const HOUSE_COLOR: Record<string, { c: string; soft: string }> = {
   DM: { c: 'var(--pv-um)', soft: 'var(--pv-um-soft)' },
 }
 
-/** The number written in its houses: digits drop in from the right, then the house names, then the values. */
+/** The base-ten blocks of one house: a big square per hundred, a bar per ten, a small cube per unit. */
+function HouseBlocks({ k, count, color }: { k: number; count: number; color: string }) {
+  const size = k === 2 ? { w: 26, h: 26 } : k === 1 ? { w: 8, h: 26 } : { w: 10, h: 10 }
+  return (
+    <span style={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', maxWidth: 62, minHeight: 28, alignContent: 'flex-end' }} data-testid="blocks" aria-hidden>
+      {Array.from({ length: count }, (_, i) => (
+        <span key={i} style={{ width: size.w, height: size.h, borderRadius: 3, background: color, opacity: 0.85 }} />
+      ))}
+    </span>
+  )
+}
+
+/** The number written in its houses: digits drop in from the right, then the house names, then the values. With
+    `blocks: 1` (numbers up to 999) every house also draws its base-ten blocks: squares, bars and cubes. */
 export function PlaceValueVisual({ params, phase, runLength, reduced }: VisualProps) {
   const n = Math.max(0, Math.floor(numParam(params, 'n', 2486)))
   const st = stateOf({ phase, runLength })
@@ -28,6 +41,7 @@ export function PlaceValueVisual({ params, phase, runLength, reduced }: VisualPr
     return { k, name, digit: digits[k], value: digits[k] * 10 ** k, long: HOUSE_LONG[k] ?? 'decenas de millar' }
   })
   const showValues = st >= 2
+  const withBlocks = numParam(params, 'blocks', 0) === 1 && count <= 3
   return (
     <div className={s.stage}>
       <div className={s.row} style={{ alignItems: 'flex-end', gap: 'clamp(8px, 2cqi, 20px)' }} data-testid="houses">
@@ -48,6 +62,7 @@ export function PlaceValueVisual({ params, phase, runLength, reduced }: VisualPr
                 transition={motionT(reduced, { ...POP, delay: st === 0 ? 0.25 * (count - 1 - h.k) : 0, scale: { duration: 0.6, repeat: highlight ? Infinity : 0, repeatDelay: 0.6 } })}
               >
                 <span className={s.houseName} style={{ color: color.c }}>{h.name}</span>
+                {withBlocks && <HouseBlocks k={h.k} count={h.digit} color={color.c} />}
                 <span className={s.houseDigit} style={{ color: 'var(--c-ink)' }}>{h.digit}</span>
                 <span className={s.muted} style={{ fontSize: 'var(--fs-xs)' }}>{h.long}</span>
               </motion.div>
@@ -148,7 +163,7 @@ export function CarryVisual({ params, phase, runLength, reduced }: VisualProps) 
           const done = isColumn ? k < computed : computed >= cols
           const digit = resultLE[k]
           return (
-            <div key={`r${p}`} className={s.cell} style={{ color: glow ? 'var(--c-magic)' : 'var(--c-ink)' }}>
+            <div key={`r${p}`} className={s.cell} style={{ color: glow ? 'var(--c-magic)' : 'var(--c-ink)' }} data-testid="result-cell">
               {done && (
                 <motion.span key={`${st}-${p}`} initial={reduced ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={motionT(reduced, POP)}>
                   {digit}
