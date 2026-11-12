@@ -38,6 +38,7 @@
 .listenRow {
   display: flex;
   justify-content: flex-end;
+  gap: var(--sp-3);
 }
 
 /* The status lines stack one under the other (never run together on one line: «30.No pasa nada»), centred. */
@@ -91,4 +92,12 @@
 
 @media (prefers-reduced-motion: reduce) {
   .exercise { transition: none; }
+}
+
+/* «Inténtalo otra vez» and «No lo sé» side by side; they wrap on a narrow phone. */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-3);
 }

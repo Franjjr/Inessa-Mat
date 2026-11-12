@@ -294,6 +294,23 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     setStatus('idle')
   }
 
+  /** «No lo sé»: always there while the child is on the try. Before any answer it is the graded answer (a «No lo sé»);
+      after a miss the first answer already counts. Then the solution, step by step, as after the second miss. */
+  const dontKnow = () => {
+    if (misses === 0) {
+      host.reportAttempt({
+        exercise,
+        check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
+        ms: 0,
+        inputMode: 'tap',
+        hintsUsed: 0,
+        recognitionFixes: 0,
+        method: method ?? divMethod ?? tableMethod ?? undefined,
+      })
+    }
+    giveUp()
+  }
+
   /** After the solution: the same exercise again, empty, to write the answer once more (optional: the step is settled). */
   const copyAgain = () => {
     setPrevious({})
@@ -314,9 +331,11 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
           style={{ transform: `scale(${fit.scale})`, '--fit-scale': fit.scale } as CSSProperties}
         >
           {/* «Escuchar»: the try can be heard, also with the automatic reading off (unless its view reads itself). */}
-          {!readsItself(exercise.kind, host.prefs.voice) && (
+          {/* «No lo sé» sits with «Escuchar», above the try: always in reach, it never pushes «Comprobar» down. */}
+          {(!readsItself(exercise.kind, host.prefs.voice) || status === 'idle') && (
             <div className={s.listenRow}>
-              <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />
+              {!readsItself(exercise.kind, host.prefs.voice) && <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />}
+              {status === 'idle' && <Button variant="ghost" size="sm" onClick={dontKnow}>No lo sé</Button>}
             </div>
           )}
           {/* teach full: a missed fact shows its worked step and the child copies the answer before the view ends. */}
@@ -343,9 +362,13 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
             <p className={s.hint}>{MISSED_LINE}</p>
             {feedback && <p className={s.feedback}>{host.t(feedback)}</p>}
             {firstHint && firstHint !== feedback && <p className={s.hint}>{host.t(firstHint)}</p>}
-            <Button variant="secondary" onClick={retry}>Inténtalo otra vez</Button>
+            <div className={s.actions}>
+              <Button variant="secondary" onClick={retry}>Inténtalo otra vez</Button>
+              <Button variant="ghost" onClick={dontKnow}>No lo sé</Button>
+            </div>
           </>
         )}
+
         {solvedShown && (
           <>
             <p className={s.hint}>{status === 'copied' ? '¡Eso es! Lo vemos otra vez más adelante.' : SOLVED_LINE}</p>
