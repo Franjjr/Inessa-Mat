@@ -9,7 +9,7 @@ import { columnName, columnWithArticle } from './feedback'
 import { strategyDetail, trickDetail } from './strategies'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from './subMethods'
 import { hintsCalc } from './calc'
-import { hintsNumeric } from './numeric'
+import { fmt, hintsNumeric } from './numeric'
 import { hintsClock } from './clock'
 import { barHints } from './bars'
 import { hintsMoney } from './money'
@@ -156,13 +156,13 @@ function lineSubHints(ex: ColumnSubExercise): Hint[] {
   const params = { a: m, b: s, digits: digitCount(m) }
   const first = stops[0]
   return [
-    hint(1, `Empieza en ${s} y cuenta hacia delante hasta ${m}. Salta primero a un número redondo.`, 'none'),
+    hint(1, `Empieza en ${fmt(s)} y cuenta hacia delante hasta ${fmt(m)}. Salta primero a un número redondo.`, 'none'),
     hint(2, first !== undefined
-      ? `Desde ${s}, el primer salto cae en ${first}. ¿Cuánto hay de ${s} a ${first}?`
-      : `Desde ${s} salta hasta ${m}: ¿cuántos saltos de 10 caben en el camino?`, 'none'),
+      ? `Desde ${fmt(s)}, el primer salto cae en ${fmt(first)}. ¿Cuánto hay de ${fmt(s)} a ${fmt(first)}?`
+      : `Desde ${fmt(s)}, un salto de 10 llega a ${fmt(s)} + 10 = ? Sigue así hasta ${fmt(m)}.`, 'none'),
     hint(3, first !== undefined
-      ? `De ${s} a ${first} hay ${first - s}. Sigue contando: ¿cuánto hay de ${first} al siguiente salto?`
-      : `Cuenta de ${s} hacia ${m} con saltos de 10 y de 1. ¿Cuántos has dado?`, 'none', params),
+      ? `De ${fmt(s)} a ${fmt(first)} hay ${fmt(first - s)}. Sigue contando: ¿cuánto hay de ${fmt(first)} al siguiente salto?`
+      : `Cuenta de ${fmt(s)} hacia ${fmt(m)} con saltos de 10 y de 1. ¿Cuánto has sumado en total?`, 'none', params),
   ]
 }
 
@@ -382,7 +382,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
         hint(1, `Reparte ${p} entre ${d}, de uno en uno: ¿cuántos le tocan a cada uno?`, 'none'),
         // The first round of the sharing: one for each of the d. How many rounds there are is what the child finds.
         hint(2, `¿${d} por cuánto da ${p}? Mira: en cada vuelta, cada uno recibe 1.`, 'share', { total: p, groups: d, perGroup: 1 }),
-        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos saltos das?`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
+        hint(3, `${DIVISION_EXAMPLE_TEXT(p, d, q)} Ahora cuenta tú de ${d} en ${d} hasta ${p}: ¿cuántos números has dicho? Eso es lo que le toca a cada uno.`, 'skip-count', DIVISION_EXAMPLE_PARAMS(p, d, q)),
       ]
     }
     case 'missing-factor': {

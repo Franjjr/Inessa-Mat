@@ -73,7 +73,7 @@ const relojDigital = clase({
     show('clock', { h: 14, m: 30, digital: 1 }, 'Son las 14:30 en el reloj digital. Después de las 12 del mediodía, las horas siguen contando: son las dos y media de la tarde.', 'ladybug'),
   ],
   ejemplo: [
-    show('clock', { h: 12, m: 0, digital: 1 }, '12:00 son las doce en punto del mediodía. Después empieza la tarde, y las horas siguen contando: 13, 14, 15…'),
+    show('clock', { h: 12, m: 0, digital: 1 }, 'En el reloj digital, 12:00 son las doce del mediodía. Después empieza la tarde, y las horas siguen contando: 13, 14, 15…'),
     show('clock', { h: 18, m: 45, digital: 1 }, '18:45 son las siete menos cuarto de la tarde: faltan 15 minutos para las 19:00.'),
     show('clock', { h: 21, m: 10, digital: 1 }, '21:10 son las nueve y diez de la noche. De 21 a 23 también es de la noche.'),
     show('clock', { h: 9, m: 20, digital: 1 }, '09:20 son las nueve y veinte de la mañana. De 6 a 11 es de la mañana.'),

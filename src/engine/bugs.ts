@@ -254,7 +254,7 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
 // ---------------------------------------------------------------- grading
 
 /** Child-facing comment for each kind of mistake (shown after a wrong verdict). */
-const MISSED: Record<ErrorType, string> = {
+export const MISSED: Record<ErrorType, string> = {
   'calig-shape': 'La forma de la letra no es la del modelo. Sigue el dibujo de la pauta.',
   'calig-line': 'La letra tiene que apoyarse en la línea de abajo.',
   'calig-size': 'La letra tiene que llegar hasta la línea de arriba, ni más ni menos.',
@@ -266,8 +266,8 @@ const MISSED: Record<ErrorType, string> = {
   'clock-hour': 'La hora del reloj no es esa. Mira la aguja corta.',
   'clock-minute': 'Los minutos no son esos. Cuenta con la aguja larga de cinco en cinco.',
   'clock-period': 'Ese momento del día no es el que toca. Mira si es de la mañana, de la tarde o de la noche.',
-  'quotient-off': 'Si el cociente es demasiado grande o pequeño, el resto no cuadra. Revisa la prueba.',
-  'remainder-too-big': 'El resto tiene que ser más pequeño que el divisor. ¡Cabe una vez más!',
+  'quotient-off': 'Si el cociente (lo que le toca a cada uno) es demasiado grande o pequeño, lo que sobra no cuadra. Revisa la prueba.',
+  'remainder-too-big': 'Lo que sobra (el resto) tiene que ser menor que el número entre el que repartes (el divisor). ¡Cabe una vez más!',
   'false-alarm': 'Esa cuenta estaba bien. Compruébala otra vez, columna a columna.',
   'bar-placement': 'Revisa el dibujo: cada número va en su parte.',
   step: 'Revisa el primer paso de la historia.',
@@ -413,7 +413,7 @@ export function explainHunt(ex: ErrorHuntExercise): string {
 
 // ---------------------------------------------------------------- hints
 
-const HUNT_WORKED: Record<ErrorType, string> = {
+export const HUNT_WORKED: Record<ErrorType, string> = {
   'calig-shape': 'Compara la forma con el modelo de la pauta.',
   'calig-line': 'Mira si la letra se apoya en la línea de abajo.',
   'calig-size': 'Mira si la letra llega solo hasta la línea de arriba.',
@@ -425,8 +425,8 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'clock-hour': 'Revisa la aguja corta: ¿qué hora marca?',
   'clock-minute': 'Revisa la aguja larga: ¿cuántos minutos cuenta?',
   'clock-period': 'Revisa el momento del día.',
-  'quotient-off': 'Revisa cuántas veces cabe el divisor.',
-  'remainder-too-big': 'Revisa que el resto sea más pequeño que el divisor.',
+  'quotient-off': 'Revisa cuántas veces cabe el divisor (el número entre el que repartes) en el número que repartes.',
+  'remainder-too-big': 'Revisa que lo que sobra (el resto) sea menor que el número entre el que repartes (el divisor).',
   'false-alarm': 'Repasa la cuenta columna a columna.',
   'bar-placement': 'Repasa la cuenta columna a columna.',
   step: 'Repasa la cuenta columna a columna.',

@@ -427,7 +427,7 @@ function checkPlaceValue(ex: PlaceValueExercise, answer: Answer): CheckResult {
       return v !== part && v * place === part ? part : v
     })
     const given = values.map((v) => (v === null ? '?' : fmt(v))).join(' + ')
-    if (values.some((v) => v === null)) return res(false, given, expected, { errorType: 'incomplete', feedback: 'Rellena todas las casillas (si una cifra es 0, escribe 0).' })
+    if (values.some((v) => v === null)) return res(false, given, expected, { errorType: 'incomplete', feedback: 'Rellena las casillas que faltan (si una cifra es 0, puedes dejarla vacía).' })
     const wrong = ex.parts.flatMap((v, i) => (values[i] !== v ? [i] : []))
     if (wrong.length === 0) return res(true, given, expected, { feedback: OK.place[0] })
     const names = wrong.map((i) => placeName(ex.parts.length - 1 - i))
