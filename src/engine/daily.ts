@@ -539,6 +539,8 @@ export function planDailySession(input: PlanInput): DailyPlan {
   }
   // Nothing taught to mix yet: a shorter mix (even none) is better than asking what was not taught.
   if (pool.length === 0) pool = interleavedPick(availableSkills(syllabus, input.term).filter((s) => !isNewHard(s) && mixable(s)), MIX_MAX, new Set())
+  // «Encuentra el error» has its own slot below (one per session, after its class): never a second one from the pool.
+  pool = pool.filter((s) => !s.startsWith('hunt:'))
   const mixItems: DailyItem[] = []
   const mixCap = repasoSkill ? MIX_MAX - 1 : MIX_MAX
   for (const s of pool.slice(0, mixCap)) {

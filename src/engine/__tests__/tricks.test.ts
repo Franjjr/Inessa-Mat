@@ -162,7 +162,10 @@ describe('messages: praise, the mirror, the zero, carrying and the division', ()
     const ex = makeColumnSub(734, 459)
     const answer: Answer = { type: 'digits', digits: toDigits(385) }
     expect(check(ex, answer, { method: 'carry' })).toMatchObject({ errorType: 'borrow-forgot', feedback: FEEDBACK.carryForgotSub })
-    expect(check(ex, answer, { method: 'borrow' })).toMatchObject({ errorType: 'borrow-forgot', feedback: FEEDBACK.borrowForgot })
+    // The borrow message names the column that lends (the tens here), so the child knows where to look.
+    const borrow = check(ex, answer, { method: 'borrow' })
+    expect(borrow.errorType).toBe('borrow-forgot')
+    expect(borrow.feedback).toMatch(/vecina de las decenas te presta 1 decena/)
   })
 
   it('the mirror message says that the result stays the same', () => {
