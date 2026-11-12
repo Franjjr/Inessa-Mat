@@ -1,4 +1,4 @@
-/* The four subtraction methods: the written steps each one expects, the grading of those steps, and the hints (which
+/* The subtraction methods (the two of school, plus the retired «parts» and «line» graders kept for old data): the written steps each one expects, the grading of those steps, and the hints (which
    must lead to the answer without giving it). One block per method, as the child meets them. */
 import { describe, expect, it } from 'vitest'
 import {
@@ -13,17 +13,17 @@ const digitsAnswer = (n: number, method: SubMethod, carries?: (number | null)[])
 })
 
 describe('method registry', () => {
-  it('lists the four subtraction methods, borrow first, and the default is borrow', () => {
-    expect(SUB_METHODS.map((m) => m.id)).toEqual(['borrow', 'carry', 'parts', 'line'])
+  it('lists the two school subtraction methods, borrow first, and the default is borrow', () => {
+    expect(SUB_METHODS.map((m) => m.id)).toEqual(['borrow', 'carry'])
     expect(DEFAULT_METHOD.sub).toBe('borrow')
   })
 
   it('names and validates methods; unknown stored values fall back to borrow', () => {
     expect(methodLabel('sub', 'carry')).toBe('Me llevo una abajo')
-    expect(isSubMethod('line')).toBe(true)
+    expect(isSubMethod('line')).toBe(false)
     expect(isSubMethod('cross')).toBe(false)
     expect(normaliseSubMethod(undefined)).toBe('borrow')
-    expect(normaliseSubMethod('parts')).toBe('parts')
+    expect(normaliseSubMethod('parts')).toBe('borrow')
   })
 })
 
