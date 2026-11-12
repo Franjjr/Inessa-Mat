@@ -120,12 +120,13 @@ describe('ExerciseStep: «No lo sé»', () => {
 })
 
 describe('ExerciseStep: the buttons under the exercise', () => {
-  it('«Ahora no» and «No lo sé» are far apart, big and kept at the bottom', async () => {
+  it('«Ahora no» and «No lo sé» are far apart, big, in the flow under the exercise and never sticky', async () => {
     const css = await source('src/world/review/ExerciseStep.module.css')
     const skip = /\.(?:_skip_\w+|skip)\s*\{([^}]*)\}/.exec(css)![1]
     expect(skip).toMatch(/gap:\s*var\(--sp-4\)/)
-    expect(skip).toMatch(/position:\s*sticky/)
-    expect(skip).toMatch(/bottom:\s*0/)
+    // Sticky inside FitToScreen's scaled box (transform: scale) placed the row over the keypad, «Pista» and «Comprobar»
+    // (e2e pantallas-alcance: 462 buttons covered at 1000 × 490). In the flow it takes its own room and covers nothing.
+    expect(skip).not.toMatch(/position:\s*(sticky|fixed|absolute)/)
     expect(/\.(?:_skip_\w+|skip)\s*>\s*\*\s*\{([^}]*)\}/.exec(css)![1]).toMatch(/min-height:\s*48px/)
   })
 })
