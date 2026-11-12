@@ -874,7 +874,7 @@ export type Answer =
   | { type: 'hunt'; ok: boolean | null; column: number | null; value: number | null }  // encuentra el error
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
   | { type: 'division-parts'; parts: (number | null)[]; quotient: number | null; remainder: number | null } // repartir por partes
-  | { type: 'climb'; products: (number | null)[]; remainder: number | null } // multiplicar hacia arriba
+  | { type: 'climb'; products: (number | null)[]; remainder: number | null; quotient?: number | null } // multiplicar hacia arriba (old data): the quotient written, if any
   | { type: 'time'; hour: number | null; minute: number | null }        // reloj: the hour and the minutes
   | { type: 'choice'; index: number | null }                             // reloj (frases), días de la semana, shape-choice
   | { type: 'shade'; chosen: number[] }                                    // fraction-shade: the parts the child coloured
@@ -1005,6 +1005,12 @@ export interface SkillSelector {
   zeros?: boolean
   /** Division variants allowed. */
   divisionVariants?: DivisionExercise['variant'][]
+  /** Division: never a dividend whose units are 0 (80 : 2, 60 : 3), e.g. for the exact tries of a lesson where the
+   *  zero would be a second difficulty. Implemented by the generator (src/engine/generate.ts). */
+  noZeroUnitsDividend?: boolean
+  /** Column ops: draw only from these operand pairs (e.g. the subtractions of a lesson, [[463, 128], [574, 236]]).
+   *  Each pair is [first, second] operand (minuend and subtrahend in a subtraction). Implemented by the generator. */
+  operands?: [number, number][]
   /** Prefer items the child has not mastered yet (requires mastery passed to generate). */
   adaptive?: boolean
 }
