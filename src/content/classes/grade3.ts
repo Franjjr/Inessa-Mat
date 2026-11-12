@@ -223,6 +223,41 @@ const restarCeros = clase({
   cierre: show('zero-borrow', { a: 503, b: 128 }, 'La regla: si el cero no tiene nada que prestar, se pide a la cifra siguiente, el cero pasa a ser 10 y ese 10 presta 1 a las unidades.'),
 })
 
+/** «Restar con ceros» for a school that subtracts with «me llevo una» (SUB_VARIANTS, porMetodo.ts): with that method a
+    zero on top is one more digit, 0 plus 10 is 10, and nothing is asked to a neighbour. Same story and tries. One step
+    per beat of the drawing (carryBeats): units, the +1 below, tens, the +1 below, hundreds. */
+export const restarCerosLlevando = clase({
+  id: 'c3-resta-ceros',
+  topicId: 'resta-con-ceros',
+  title: 'Restar con ceros',
+  mapLessonId: 'w4-zero',
+  para: [
+    show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
+    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. ¡Mira el cero de las decenas!', 'ladybug'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 503, b: 128 }, '503 − 128. Unidades: 3 menos 8 no se puede. Le ponemos un 1 delante al 3: 13 menos 8 son 5.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas pasa a ser 3.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Decenas: arriba hay un 0, y 0 menos 3 no se puede. Le ponemos un 1 delante: 10 menos 3 son 7.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Otra vez me llevo una: el 1 de las centenas de abajo pasa a ser 2.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Centenas: 5 menos 2 son 3. ¡503 − 128 = 375! El cero se resta como los demás números.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Con cuatro cifras, igual. 6 003 − 2 178. Unidades: 13 menos 8 son 5, y me llevo una: el 7 pasa a 8.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Decenas: 10 menos 8 son 2, y me llevo una: el 1 de abajo pasa a 2.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Centenas: 10 menos 2 son 8, y me llevo una: el 2 de los millares pasa a 3.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Millares: 6 menos 3 son 3. ¡6 003 − 2 178 = 3 825!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Te toca! Si arriba no alcanza, ponle un 1 delante y llévate una abajo. Con el cero, igual.', { skills: ['sub:3d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Otra! Un 0 arriba con un 1 delante es 10.', { skills: ['sub:3d:z'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Cuidado con el cero.', { skills: ['sub:3d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Ahora con cuatro casas.', { skills: ['sub:4d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Sin pistas: ahora con cuatro casas y ceros.', { skills: ['sub:4d:z'] }),
+  ],
+  cierre: show('sub-carry', { a: 503, b: 128 }, 'La regla: con ceros se hace igual. Si arriba no alcanza, le ponemos un 1 delante y abajo, en la columna siguiente, me llevo una.'),
+})
+
 const restarCuatroCifras = clase({
   id: 'c3-resta-4d',
   topicId: 'resta-4d',
@@ -249,6 +284,35 @@ const restarCuatroCifras = clase({
     tryIt('borrow', { a: 4365, b: 1228 }, '¡Tu turno! Muchas ayudas seguidas.', { skills: ['sub:4d:b3'] }),
   ],
   cierre: show('borrow', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, pide 1 decena a la vecina.'),
+})
+
+/** «Restar con cuatro cifras» for «me llevo una» (SUB_VARIANTS, porMetodo.ts). One step per beat of the drawing:
+    units, the +1 below, tens, hundreds, thousands. Same story and tries. */
+export const restarCuatroCifrasLlevando = clase({
+  id: 'c3-resta-4d',
+  topicId: 'resta-4d',
+  title: 'Restar con cuatro cifras',
+  para: [
+    show('place-value', { n: 4365 }, 'En la fiesta del cole hay 4 365 pegatinas.', 'ladybug'),
+    show('place-value', { n: 4365 }, 'Se reparten 1 228. ¿Cuántas quedan? Restamos 4 365 − 1 228. Si arriba no alcanza, me llevo una.', 'ladybug'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 4365, b: 1228 }, '4 365 − 1 228. Unidades: 5 menos 8 no se puede. Le ponemos un 1 delante: 15 menos 8 son 7.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas pasa a ser 3.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Decenas: 6 menos 3 son 3. Escribo el 3.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Centenas: 3 menos 2 es 1. Escribo el 1.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Millares: 4 menos 1 son 3. ¡4 365 − 1 228 = 3 137!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Te toca! Cuatro casas, de derecha a izquierda.', { skills: ['sub:4d:b0'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Otra! Empieza por las unidades.', { skills: ['sub:4d:b0'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Si arriba no alcanza, me llevo una.', { skills: ['sub:4d:b1'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Algunas casas se llevan una.', { skills: ['sub:4d:b2'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Muchas llevadas seguidas.', { skills: ['sub:4d:b3'] }),
+  ],
+  cierre: show('sub-carry', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, le ponemos un 1 delante y abajo, en la columna siguiente, me llevo una.'),
 })
 
 /* Multiplicar, de menos a más. Mismo esquema: para qué sirve, un ejemplo resuelto, dos prácticas con pistas, tres o
