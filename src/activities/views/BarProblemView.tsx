@@ -10,12 +10,11 @@ import clsx from 'clsx'
 import type { BarOp, BarProblemExercise, BarSlot, ExerciseViewProps } from '@/types'
 import { barChips } from '@/engine'
 import { NumberInput } from '@/ink'
-import { speech } from '@/audio'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, RETRY_WRONG_CLASS, useRetryFlow, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import { ExerciseLayout } from './ExerciseLayout'
 import s from './BarProblemView.module.css'
 
@@ -47,6 +46,7 @@ export default function BarProblemView(props: ExerciseViewProps) {
       allowHints={allowHints}
       showFeedback={showFeedback}
       compact={compact}
+      retry={props}
     />
   )
 }
@@ -58,21 +58,53 @@ interface RoundProps {
   allowHints: boolean
   showFeedback: boolean
   compact?: boolean
+  /** «Inténtalo otra vez»: the numbers placed, the operations and the results the child wrote, and what was wrong. */
+  retry?: RetryProps
 }
 
-function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }: RoundProps) {
+/** Where each placed number came from (at[slot] = the slot of its chip), rebuilt from the values placed on the last try:
+    a value goes back to a chip with that value (its own slot first), each chip once. */
+export function atFromPlaced(ex: BarProblemExercise, placed: readonly (number | null)[]): (number | null)[] {
+  const used = new Set<number>()
+  const origins = ex.bar.flatMap((b, i) => (b.value === null ? [] : [i]))
+  return ex.bar.map((b, slot) => {
+    const v = placed[slot]
+    if (!ex.withBar || b.value === null || v === null || v === undefined) return null
+    const origin = [slot, ...origins].find((o) => !used.has(o) && ex.bar[o].value === v)
+    if (origin === undefined) return null
+    used.add(origin)
+    return origin
+  })
+}
+
+/** What to mark on a try again: the pieces of the bar with another number (the corrector looks at the drawing first),
+    or else the steps the corrector found wrong (the last one when it names none). */
+export function barRetryMarks(ex: BarProblemExercise, retry: RetryProps | undefined): { slots: Set<number>; steps: Set<number> } {
+  const before = initialOf(retry, 'bar')
+  if (!before) return { slots: new Set(), steps: new Set() }
+  const slots = ex.withBar ? ex.bar.flatMap((b, i) => (b.value !== null && before.placed[i] !== b.value ? [i] : [])) : []
+  if (slots.length) return { slots: new Set(slots), steps: new Set() }
+  const named = (retry?.wrongColumns ?? []).filter((k) => k >= 0 && k < ex.steps.length)
+  const last = ex.steps.length - 1
+  return { slots: new Set(), steps: new Set(named.length ? named : before.results[last] !== ex.answer ? [last] : []) }
+}
+
+function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, retry }: RoundProps) {
   const host = useActivityHost()
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with what the child did: the numbers on the bar, the operations and the results.
+  const [before] = useState(() => initialOf(retry, 'bar'))
+  const [marks] = useState(() => barRetryMarks(ex, retry))
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
   const chips = useMemo(() => barChips(ex, hashSeed(ex.id)), [ex])
   const steps = ex.steps.length
   const knownSlots = ex.bar.flatMap((b, i) => (b.value === null ? [] : [i]))
 
   // at[slot] = the slot the chip came from (each given number is one chip), or null when the piece is empty.
-  const [at, setAt] = useState<(number | null)[]>(() => ex.bar.map(() => null))
+  const [at, setAt] = useState<(number | null)[]>(() => (before ? atFromPlaced(ex, before.placed) : ex.bar.map(() => null)))
   const [sel, setSel] = useState<number | null>(null)
-  const [ops, setOps] = useState<(BarOp | null)[]>(() => ex.steps.map(() => null))
-  const [res, setRes] = useState<(number | null)[]>(() => ex.steps.map(() => null))
+  const [ops, setOps] = useState<(BarOp | null)[]>(() => ex.steps.map((_, k) => before?.ops[k] ?? null))
+  const [res, setRes] = useState<(number | null)[]>(() => ex.steps.map((_, k) => before?.results[k] ?? null))
   const [dragging, setDragging] = useState<number | null>(null)
   const drag = useRef<{ origin: number; x: number; y: number; moved: boolean } | null>(null)
   const justDragged = useRef(false)
@@ -85,7 +117,12 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
 
   // The screens: the bar first (with the drawing), then one per step of the calculation.
   const screens: ('place' | number)[] = [...(ex.withBar ? ['place' as const] : []), ...ex.steps.map((_, k) => k)]
-  const [screen, setScreen] = useState(0)
+  // A try again opens on the first screen with something to fix: the bar, or the first wrong step.
+  const [screen, setScreen] = useState(() => {
+    if (!before || marks.slots.size) return 0
+    const k = Math.min(...marks.steps)
+    return Number.isFinite(k) ? Math.max(0, screens.indexOf(k)) : 0
+  })
   const current = screens[screen]
   const last = screen === screens.length - 1
   const screenDone = current === 'place' ? placedAll : ops[current] !== null && res[current] !== null
@@ -157,8 +194,10 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
   const pickOp = (k: number, op: BarOp) => setOps((prev) => prev.map((o, i) => (i === k ? op : o)))
   const setResult = (k: number, v: number | null) => setRes((prev) => prev.map((r, i) => (i === k ? v : r)))
 
-  const readAloud = () => { void speech.say(text, { interrupt: true }) }
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  /** Before checking again, a piece or a result the child had wrong stays soft red until she changes it. */
+  const slotMarked = (i: number) => !flow.result && marks.slots.has(i) && before !== undefined && at[i] === atFromPlaced(ex, before.placed)[i]
+  const stepStatus = (k: number) => (!flow.result && marks.steps.has(k) && res[k] === (before?.results[k] ?? null) ? 'wrong' as const : status)
   const chipsFree = chips.filter((c) => !at.includes(c.slot))
 
   // Bars: rows of pieces, the bracket (total) above, the count of groups as a badge.
@@ -177,7 +216,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
     const label = !known ? `${b.name}: ¿cuánto?` : filled ? `${b.name}: ${b.value}` : `${b.name}: pon aquí un número`
     if (b.kind === 'total') {
       return (
-        <div key={i} className={clsx(s.total, target && s.targetTotal, filled && s.filled)}
+        <div key={i} className={clsx(s.total, target && s.targetTotal, filled && s.filled, slotMarked(i) && RETRY_WRONG_CLASS)}
           data-slot={target ? i : undefined} role={target ? 'button' : undefined} aria-label={label}
           onClick={() => onSlotTap(i)}>
           <span className={s.totalName}>{b.name}</span>
@@ -187,7 +226,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
     }
     if (b.kind === 'count') {
       return (
-        <div key={i} className={clsx(s.count, target && s.targetCount, filled && s.filled)}
+        <div key={i} className={clsx(s.count, target && s.targetCount, filled && s.filled, slotMarked(i) && RETRY_WRONG_CLASS)}
           data-slot={target ? i : undefined} role={target ? 'button' : undefined} aria-label={label}
           onClick={() => onSlotTap(i)}>
           <span className={s.countName}>{b.name}</span>
@@ -199,7 +238,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
     return (
       <div
         key={i}
-        className={clsx(s.seg, !known && s.segUnknown, target && s.target, filled && s.filled)}
+        className={clsx(s.seg, !known && s.segUnknown, target && s.target, filled && s.filled, slotMarked(i) && RETRY_WRONG_CLASS)}
         style={{ flexGrow: grow, flexBasis: 96 }}
         data-slot={target ? i : undefined}
         role={target ? 'button' : undefined}
@@ -282,10 +321,6 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
         </>
       )}
     >
-      {host.prefs.voice && (
-        <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">🔊 Escuchar</button>
-      )}
-
       {current === 'place' && (
         <>
           <p className={s.guideStep} data-guide="">{host.t(guideText(1, 'place', 'op'))}</p>
@@ -329,7 +364,7 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact }:
                     }}
                     maxDigits={4}
                     size="lg"
-                    status={status}
+                    status={stepStatus(k)}
                     ariaLabel={steps > 1 && k < steps - 1 ? `Resultado del paso ${k + 1}` : 'Respuesta'}
                     placeholder="?"
                     checkButton={false}
