@@ -1,7 +1,7 @@
 /* Map labels: in every world and on every tablet and phone size, no name tag, icon or «Aquí sigue»/«¡Ayúdame!» tag
    overlaps another, and no two icons (with their gold ring) touch (boxes in real pixels, see src/world/map/labels.ts). */
 import { describe, expect, it } from 'vitest'
-import { season1, seasonC2 } from '@/content'
+import { getWorld, ISLAND_ID, ISLAND_STOP_PX, season1, seasonC2 } from '@/content'
 import { baseStageHeight, layoutMap, pillOf, type StopInput } from '@/world/map/labels'
 
 // Header + story strip take about this much of the screen height.
@@ -38,6 +38,23 @@ for (const season of [season1, seasonC2]) {
     }
   })
 }
+
+// The island starts from the height its stops ask for (ISLAND_STOP_PX each, as WorldMapScreen draws it) and grows like
+// any world when tags would collide (on a phone or a tall tablet that fixed height was not enough). Phones included.
+describe('map labels (Isla de las Palabras)', () => {
+  const island = getWorld(ISLAND_ID)!
+  for (const [W, H] of SIZES) {
+    it(`${ISLAND_ID} at ${W}x${H}: every position of the current stop, with and without crystal`, () => {
+      for (const crystal of [false, true]) {
+        for (let cur = -1; cur < island.nodes.length; cur++) {
+          const out = layoutMap(stops(island.nodes, cur, crystal || cur < 0 ? 'all' : 'before', crystal), W, island.nodes.length * ISLAND_STOP_PX)
+          expect(out.height).toBeGreaterThanOrEqual(island.nodes.length * ISLAND_STOP_PX)
+          expect(out.overlaps, `current=${cur} crystal=${crystal}: ${out.overlaps.join('; ')}`).toEqual([])
+        }
+      }
+    })
+  }
+})
 
 describe('pill «Aquí sigue»', () => {
   it('is sized from the pet name and never cut', () => {
