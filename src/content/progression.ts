@@ -78,14 +78,16 @@ export function isNodeUnlocked(progress: ProgressState, worldId: string, nodeId:
   return k < 0 || wp?.nodes[world.nodes[k].id]?.done === true
 }
 
-/** A node the child may skip (NodeDef.optional). Read loosely so that content without the field keeps the old rule. */
+/** A node the child may skip (NodeDef.optional; content without the field keeps the old rule). */
 export function isOptionalNode(node: WorldDef['nodes'][number]): boolean {
-  return (node as { optional?: boolean }).optional === true
+  return node.optional === true
 }
 
+/** The first unfinished stop of a world, an optional one only when every required stop is done. */
 function frontierNode(progress: ProgressState, world: WorldDef): string {
   const wp = progress.worlds[world.id]
-  const open = world.nodes.find((n) => !wp?.nodes[n.id]?.done)
+  const undone = (n: WorldDef['nodes'][number]) => !wp?.nodes[n.id]?.done
+  const open = world.nodes.find((n) => undone(n) && !isOptionalNode(n)) ?? world.nodes.find(undone)
   return (open ?? world.nodes[world.nodes.length - 1]).id
 }
 

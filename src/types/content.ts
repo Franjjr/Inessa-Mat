@@ -204,6 +204,10 @@ export interface NodeDef {
   pos: { x: number; y: number }
   /** Optional: node can be replayed for more stars. Default true. */
   replayable?: boolean
+  /** A stop the child may skip (e.g. the lesson on the other way of subtracting at school): it opens in its turn, but the
+      stops after it, the guardian too, never wait for it (src/content/progression.ts), and the map says it can be
+      skipped. Default false. */
+  optional?: boolean
 }
 
 export interface WorldDef {

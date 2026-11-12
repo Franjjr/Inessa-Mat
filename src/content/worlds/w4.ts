@@ -1,7 +1,7 @@
 /* World 4 — La Montaña de las Restas: column subtraction of 3 and 4 digits, borrowing, the zero trap and the
-   magic check (+ a review of the 6 table). The lesson of the two ways of subtracting at school is the last stop before
-   the guardian: it shows the two ways and asks for one subtraction with the way the grown-ups set. The map has no
-   optional stops yet, so it cannot be skipped. */
+   magic check (+ a review of the 6 table). The lesson of the two ways of subtracting at school is an optional stop
+   before the guardian: it shows the two ways and asks for one subtraction with the way the grown-ups set; the child may
+   skip it (the main lesson of subtracting is «Restar en la montaña») and the guardian does not wait for it. */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w4 = world({
@@ -66,7 +66,7 @@ export const w4 = world({
       selector: { skills: ['money:convert', 'money:pay', 'money:change'] },
       count: 4,
     }),
-    lessonNode('lesson-four-ways', 'Dos formas de restar del cole', 'w4-four-ways'),
+    lessonNode('lesson-four-ways', 'Dos formas de restar del cole', 'w4-four-ways', { optional: true }),
     guardianNode('El desafío de la osa Nieve', 'w4-guardian'),
   ],
 })

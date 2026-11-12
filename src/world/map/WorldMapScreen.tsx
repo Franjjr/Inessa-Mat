@@ -10,7 +10,7 @@ import {
 import { useActiveChild, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
-import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf } from './labels'
+import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf, showsSkippable } from './labels'
 import s from './WorldMapScreen.module.css'
 
 /** Path coordinates are authored in 0..1 (x → right, y → down); the SVG works in a 1000-unit square. */
@@ -63,8 +63,11 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     }
   }), [world, wp, progress])
 
-  const current = states.find((x) => !x.locked && !x.done)?.node.id
-  const trainable = states.filter((x) => x.node.kind !== 'guardian')
+  // The next step is the first open stop the child has to do: an optional one (NodeDef.optional) only when nothing
+  // required is left.
+  const current = (states.find((x) => !x.locked && !x.done && x.node.optional !== true) ?? states.find((x) => !x.locked && !x.done))?.node.id
+  // An optional stop counts only once it is done: skipping it never keeps the companion caught.
+  const trainable = states.filter((x) => x.node.kind !== 'guardian' && (x.node.optional !== true || x.done))
   // Rescue 0..1: how much of the companion's trouble has loosened, from the stars of the stops (3 for a full
   // practice): finishing a reading does not free the companion as much as practising (full once the crystal is won).
   const starsTrainable = trainable.reduce((sum, x) => sum + Math.min(3, x.stars), 0)
@@ -204,7 +207,8 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
             const label = renderTemplate(node.title, ctx)
             const pl = layout.placed[idx]
             const size = isGuardian ? (crystal ? GUARDIAN_WON_PX : GUARDIAN_PX) : ICON_PX
-            const stateText = locked ? ', bloqueado' : done ? ', hecho' : isCurrent ? ', aquí estás' : ''
+            const skippable = showsSkippable({ node, done })
+            const stateText = (locked ? ', bloqueado' : done ? ', hecho' : isCurrent ? ', aquí estás' : '') + (skippable ? ', puedes saltarla' : '')
             return (
               <button
                 key={node.id}
@@ -235,6 +239,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                 {isCurrent && <span className={s.here}>{pillOf(ctx.petName).text}</span>}
                 <span className={s.tag} style={{ left: `calc(50% + ${pl.dx}px)`, top: `calc(50% + ${pl.dy}px)`, width: pl.w }}>
                   <span className={s.label}>{label}</span>
+                  {skippable && <span className={s.skippable}>Puedes saltarla</span>}
                   {done && (
                     <span className={s.stars} aria-hidden="true">
                       {[1, 2, 3].map((n) => <StarIcon key={n} filled={stars >= n} size={16} />)}

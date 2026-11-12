@@ -183,6 +183,18 @@
 }
 .locked .label { color: #5f4f7d; }
 .stars { display: inline-flex; gap: 2px; }
+/* An optional stop (NodeDef.optional): one short line under its name, height reserved in labels.ts (OPTIONAL_PX). */
+.skippable {
+  padding: 1px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  border: 1.5px dashed var(--sticker-line);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--c-ink);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .current .badge::after, .here { animation: none; }

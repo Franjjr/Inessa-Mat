@@ -12,6 +12,8 @@ export const GUARDIAN_WON_PX = 96
 const GAP = 16
 const MARGIN = 8
 const STARS_PX = 20
+/** The line «Puedes saltarla» under the name of an optional stop not done yet (NodeDef.optional). */
+const OPTIONAL_PX = 22
 const PILL_H = 30
 // Longest pill we draw on one line; a longer pet name gets the short text «¡Sigue aquí!» instead of a cut name.
 const PILL_MAX_W = 300
@@ -66,6 +68,11 @@ const hit = (a: Box, b: Box) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y
 const around = (cx: number, cy: number, w: number, h: number): Box => ({ x0: cx - w / 2, y0: cy - h / 2, x1: cx + w / 2, y1: cy + h / 2 })
 
 const grow = (b: Box, m: number): Box => ({ x0: b.x0 - m, y0: b.y0 - m, x1: b.x1 + m, y1: b.y1 + m })
+
+/** Whether the tag of the stop carries the line «Puedes saltarla»: an optional stop the child has not done. */
+export function showsSkippable(s: Pick<StopInput, 'node' | 'done'>): boolean {
+  return s.node.optional === true && !s.done
+}
 
 function iconSize(s: StopInput): number {
   if (s.node.kind !== 'guardian') return ICON_PX
@@ -170,7 +177,7 @@ function place(stops: StopInput[], W: number, H: number): { placed: Placed[]; ov
   const result: Placed[] = new Array(stops.length)
   for (const i of order) {
     const s = stops[i]
-    const h = labelHeight(s.title, w) + (s.done ? STARS_PX : 0)
+    const h = labelHeight(s.title, w) + (s.done ? STARS_PX : 0) + (showsSkippable(s) ? OPTIONAL_PX : 0)
     const r = sizes[i] / 2
     let best: { box: Box; dx: number; dy: number; bad: number } | null = null
     for (const c of candidates(r, w, h)) {
