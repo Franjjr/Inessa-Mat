@@ -335,18 +335,20 @@ export function ColumnMulVisual({ params, phase, runLength, reduced }: VisualPro
 
 /* --------------------------------------------------------------- 7 × 7 */
 
-/** 7 × 7 = 49: a square of dots coloured like a rainbow, row by row. */
+/** 7 × 7 = 49: a square of dots coloured like a rainbow, row by row. The cell follows the screen height (34 px at
+    most, 20 at least) so the seven rows and the equality fit a short board (a 360 × 740 phone under a long bubble). */
+const SQUARE_CELL = 'clamp(20px, 3.4vh, 34px)'
 export function SquareRhymeVisual({ reduced }: VisualProps) {
   return (
-    <div className={s.stage}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 34px)', gap: 6 }} data-testid="square">
+    <div className={s.stage} style={{ gap: 'var(--sp-2)', padding: 'var(--sp-2)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, ${SQUARE_CELL})`, gridAutoRows: SQUARE_CELL, gap: `calc(${SQUARE_CELL} * 0.18)`, placeItems: 'center' }} data-testid="square">
         {Array.from({ length: 49 }, (_, k) => {
           const row = Math.floor(k / 7)
           return (
             <motion.span
               key={k}
               className={s.dot}
-              style={{ width: 28, height: 28, background: ROW_COLORS[row] }}
+              style={{ width: `calc(${SQUARE_CELL} * 0.82)`, height: `calc(${SQUARE_CELL} * 0.82)`, background: ROW_COLORS[row] }}
               initial={reduced ? false : { scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={motionT(reduced, { ...POP, delay: row * 0.12 + (k % 7) * 0.03 })}

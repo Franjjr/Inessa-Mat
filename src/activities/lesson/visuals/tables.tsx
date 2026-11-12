@@ -90,9 +90,11 @@ export function KnownFactsVisual({ params, phase, runLength, reduced }: VisualPr
   const rows = Array.from({ length: 10 }, (_, i) => i + 1)
   // The second step of a run points at the facts that come from another table by turning them round (7 × 6 is 6 × 7).
   const mirrors = table === 7 ? [6, 8] : []
+  // Ten facts in five rows must fit a short board (a 360 × 740 phone under a long bubble, a 1000 × 490 tablet): the rows
+  // shrink with the screen height (52 px at most, 34 at least) and the stage keeps a smaller gap and padding.
   return (
-    <div className={s.stage}>
-      <p className={s.eq}>La tabla del {table}</p>
+    <div className={s.stage} style={{ gap: 'var(--sp-2)', padding: 'var(--sp-2) var(--sp-3)' }}>
+      <p className={s.eq} style={{ margin: 0 }}>La tabla del {table}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--sp-1)', width: '100%', maxWidth: 560 }} data-testid="known-table">
         {rows.map((k) => {
           const isKnown = known.includes(k)
@@ -102,7 +104,7 @@ export function KnownFactsVisual({ params, phase, runLength, reduced }: VisualPr
             <motion.div
               key={k}
               className={s.chip}
-              style={{ justifyContent: 'space-between', minHeight: 44, padding: '0 var(--sp-4)', width: '100%', boxSizing: 'border-box', background: highlight ? 'var(--c-magic-soft)' : undefined, borderColor: highlight ? 'var(--c-magic)' : undefined }}
+              style={{ justifyContent: 'space-between', height: 'clamp(34px, 6vh, 52px)', padding: '0 var(--sp-3)', width: '100%', boxSizing: 'border-box', background: highlight ? 'var(--c-magic-soft)' : undefined, borderColor: highlight ? 'var(--c-magic)' : undefined }}
               initial={reduced ? false : { opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={motionT(reduced, { duration: 0.3, delay: 0.03 * k })}
