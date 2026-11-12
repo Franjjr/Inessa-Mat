@@ -217,7 +217,7 @@ export function CellGroup({
 
   return (
     <CellGroupContext.Provider value={api}>
-      <div className={clsx(s.group, s[keypadPosition], className)} style={style}>
+      <div className={clsx(s.group, s[keypadPosition], className)} style={style} data-cell-group="">
         <div className={s.cells}>{children}</div>
         {(keypadVisible || showToggle) && (
           <div className={s.side}>

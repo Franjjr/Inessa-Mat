@@ -484,8 +484,12 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
   const unsure = phase === 'unsure' || phase === 'unknown'
   const filled = phase === 'recognized' || phase === 'unsure' || phase === 'unknown' || phase === 'typed'
   const clearVisible = showClear && editable && variant === 'result' && focused && filled
-  // Column order (units first): an arrow over the cell that types next says which way the digits go.
-  const arrow = isCurrent && editable && variant === 'result' && group?.typingOrder === 'column'
+  // Column order (units first): an arrow in the cell that is written next says which way the digits go. The view may
+  // mark that cell itself (status 'active', ColumnView: the first empty column); then that mark wins over the cursor
+  // (the CSS hides the cursor's arrow while the group has an active cell). A division marks 'active' too, but its
+  // quotient goes left to right: no arrow outside a group in column order.
+  const columnOrder = editable && variant === 'result' && group?.typingOrder === 'column'
+  const arrowKind = !columnOrder ? null : status === 'active' ? 'active' : isCurrent ? 'current' : null
 
   const popoverDigits =
     popover === 'alts' || (popover === 'fix' && (rec?.alternatives?.length ?? 0) > 0) ? alternativeDigits(rec) : ALL_DIGITS
@@ -505,7 +509,7 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
       disabled={disabled}
       surfaceRef={surfaceRef}
       canvasRef={canvasRef}
-      className={clsx(className, arrow && s.arrowCell)}
+      className={className}
       surfaceProps={{
         'data-ink-key': uid,
         role: 'textbox',
@@ -520,7 +524,9 @@ export function DigitCell(props: DigitCellProps & DigitCellExtraProps) {
       }}
       after={
         <>
-          {arrow && <span className={s.arrow} aria-hidden data-testid="column-arrow">←</span>}
+          {arrowKind && (
+            <span className={clsx(s.arrow, arrowKind === 'current' && s.arrowCurrent)} aria-hidden data-testid="column-arrow" data-arrow={arrowKind}>←</span>
+          )}
           {twoDigits && <NudgeBubble text={TWO_DIGITS_TEXT} side="bottom" className={s.twoDigits} />}
           {clearVisible && (
             <button
