@@ -9,7 +9,7 @@ import CalendarView, { howMany } from './CalendarView'
 import ClockSetView from './ClockSetView'
 import ColumnView, { columnAuxCaption, columnPrompt } from './ColumnView'
 import EquationView from './EquationView'
-import { ExerciseLayout, followShift } from './ExerciseLayout'
+import { ExerciseLayout, followShift, scaledBox } from './ExerciseLayout'
 import LongMulView, { partialLabel } from './LongMulView'
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
@@ -40,6 +40,22 @@ describe('the answer bar follows the window on a short screen (P3PE-01)', () => 
   it('never further down than the end of its section, unless that is the only way to see it', () => {
     expect(followShift(-20, 60, 60, 1)).toBe(28)
     expect(followShift(-200, 60, -100, 1)).toBe(208)
+  })
+  it('the scaled box it watches: FitToScreen\'s inner box, or a lesson\'s box drawn with transform: scale', () => {
+    const fit = document.createElement('div')
+    fit.setAttribute('data-fit-inner', '')
+    const lesson = document.createElement('div')
+    lesson.style.transform = 'scale(0.8)'
+    const plain = document.createElement('div')
+    const a = document.createElement('section')
+    const b = document.createElement('section')
+    const c = document.createElement('section')
+    fit.appendChild(document.createElement('div')).appendChild(a)
+    lesson.appendChild(b)
+    plain.appendChild(c)
+    expect(scaledBox(a)).toBe(fit)
+    expect(scaledBox(b)).toBe(lesson)
+    expect(scaledBox(c)).toBeNull()
   })
 })
 

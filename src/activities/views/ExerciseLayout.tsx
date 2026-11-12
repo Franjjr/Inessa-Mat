@@ -43,6 +43,15 @@ export function followShift(top: number, height: number, sectionBottom: number, 
   return shift > 0 ? shift / (scale || 1) : 0
 }
 
+/** The nearest box around `el` drawn scaled: FitToScreen's inner box, or any ancestor with an inline transform (the
+    lesson's TrySlot), whose style changes when the scale does. */
+export function scaledBox(el: Element | null): HTMLElement | null {
+  for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
+    if (node.hasAttribute('data-fit-inner') || /scale\(/.test(node.style.transform)) return node
+  }
+  return null
+}
+
 export function ExerciseLayout({ prompt, sub, actions, workClassName, className, children, ...rest }: ExerciseLayoutProps) {
   const sectionRef = useRef<HTMLElement>(null)
   const actionsRef = useRef<HTMLDivElement>(null)
@@ -69,9 +78,9 @@ export function ExerciseLayout({ prompt, sub, actions, workClassName, className,
     window.addEventListener('scroll', schedule, { passive: true })
     window.addEventListener('resize', schedule)
     mq.addEventListener?.('change', schedule)
-    // The game also moves without a scroll: FitToScreen changes its scale (the style of its inner box), or the page
-    // above it grows.
-    const fitInner = sectionRef.current?.closest('[data-fit-inner]') ?? null
+    // The game also moves without a scroll: FitToScreen (or a lesson's TrySlot) changes its scale (the style of its
+    // inner box), or the page above it grows.
+    const fitInner = scaledBox(sectionRef.current)
     const mo = typeof MutationObserver === 'function' && fitInner ? new MutationObserver(schedule) : null
     if (mo && fitInner) mo.observe(fitInner, { attributes: true, attributeFilter: ['style'] })
     const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null
