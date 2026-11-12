@@ -29,7 +29,7 @@ export default function DivisionActivity({ config, onDone, onExit }: ActivityPro
   return (
     <OpsShell title={config.title} index={run.index} total={run.total} onExit={onExit}>
       <section className={s.stage} aria-label="Galera">
-        <p className={s.intro}>{host.t('La galera: el dividendo a la izquierda, el divisor dentro de la casita y el cociente debajo.')}</p>
+        <p className={s.intro}>{host.t('La galera: a la izquierda, el número que repartes; dentro de la casita, entre cuántos; y debajo, lo que le toca a cada uno.')}</p>
         <DivisionView key={`${ex.id}-${run.index}`} exercise={ex} onAnswered={run.record} guided={guided} proof={proof} showFeedback allowHints divMethod={methodFor('div', host.prefs)} />
       </section>
     </OpsShell>
