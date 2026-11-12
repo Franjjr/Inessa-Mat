@@ -17,6 +17,7 @@ import { firstPartial, hintsFor } from './hints'
 import { euros } from './money'
 import { fmtDecimal } from './decimals'
 import { expectedClock } from './clock'
+import { explainHunt } from './bugs'
 
 export interface SolutionOptions {
   subMethod?: SubMethod
@@ -294,11 +295,11 @@ function huntSolution(ex: ErrorHuntExercise): Solution {
   steps.push(...(ex.op === 'add' ? columnAddSteps([ex.top, ex.bottom]) : ex.op === 'sub' ? columnSubSteps(ex.top, ex.bottom) : columnMulSteps(ex.top, ex.bottom)))
   if (ex.wrongColumn === null) {
     steps.push(`Sale ${num(ex.answer)}, lo mismo que en la cuenta: todas las casas están bien.`)
-    return { steps, answer: `La cuenta está bien: ${num(ex.shown)}.` }
+    return { steps, answer: `${explainHunt(ex)}.` }
   }
   const c = ex.wrongColumn
   steps.push(`Sale ${num(ex.answer)}. En la cuenta pone ${num(ex.shown)}: el error está en ${columnWithArticle(c)}, donde pone ${digitAt(ex.shown, c)} y tendría que poner ${digitAt(ex.answer, c)}.`)
-  return { steps, answer: `La cuenta está mal. Lo correcto es ${num(ex.answer)}.` }
+  return { steps, answer: `${explainHunt(ex)}.` }
 }
 
 function checkCalcSolution(ex: CheckCalcExercise): Solution {
