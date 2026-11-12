@@ -32,7 +32,7 @@
   justify-items: center;
   column-gap: 0;
   row-gap: 6px;
-  padding: var(--sp-4) var(--sp-5);
+  padding: calc(var(--sp-4) + 14px) var(--sp-5) calc(var(--sp-4) + 16px);
   background-color: var(--c-surface);
   background-image:
     linear-gradient(var(--paper-line) 1px, transparent 1px),
@@ -51,6 +51,7 @@
 }
 
 .cell {
+  position: relative;
   --cell-size: var(--galera-cell);
   display: grid;
   place-items: center;
@@ -82,6 +83,7 @@
 }
 
 .divisor {
+  position: relative;
   display: grid;
   place-items: end start;
   white-space: nowrap;
@@ -173,4 +175,92 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .product, .stepText, .magic { animation: none; }
+}
+
+/* The words written on the galera itself (dividendo, divisor, resto): small, in pencil, never over a box. */
+.caption {
+  position: absolute;
+  top: -17px;
+  left: 0;
+  font-family: var(--font-read);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--c-ink-soft);
+  pointer-events: none;
+}
+.captionBelow {
+  top: auto;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.quotientCaption {
+  justify-self: start;
+  padding-left: var(--sp-2);
+  font-family: var(--font-read);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--c-ink-soft);
+}
+@media (max-width: 760px) {
+  .quotientCaption { display: none; }
+}
+
+/* The four words, above the galera. The first time each has what it means; later only the word. */
+.terms {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+}
+.term {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  background: var(--c-primary-soft);
+  color: var(--c-ink);
+  font-family: var(--font-read);
+  font-size: 15px;
+}
+.term dt { margin: 0; font-weight: 700; }
+.term dd { margin: 0; color: var(--c-ink-soft); }
+.termsFirst .term { border-radius: var(--r-md); }
+
+/* The question of the step: a bubble under the active quotient box, in the empty part of the galera. Its tip points up
+   at the box. It sits in the galera's own grid, so it covers nothing. */
+.ask {
+  align-self: start;
+  justify-self: stretch;
+  position: relative;
+  margin-top: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--c-gold-soft);
+  color: var(--c-ink);
+  font-family: var(--font-read);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+  animation: pop var(--dur-med) var(--ease-out);
+}
+.ask::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: calc(var(--ask-tip, 20px) - 8px);
+  border: 8px solid transparent;
+  border-top: 0;
+  border-bottom-color: var(--c-gold-soft);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask { animation: none; }
 }

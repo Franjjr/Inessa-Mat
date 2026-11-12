@@ -80,7 +80,7 @@ export default function FactView({ exercise, onAnswered, guided, allowHints = tr
       prompt={isDiv ? `¿Cuánto es ${left} ÷ ${right}?` : `¿Cuánto es ${left} × ${right}?`}
       sub={isDiv ? `Piensa: ¿qué número multiplicado por ${right} da ${left}?` : 'Escribe el resultado en la casilla.'}
       actions={<FactViewBar allowHints={allowHints && !copying} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
-        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck done={done} />}
     >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <div className={clsx(shared.equation, compact && shared.equationCompact)}>

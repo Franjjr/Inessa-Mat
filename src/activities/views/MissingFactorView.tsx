@@ -55,7 +55,7 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
       prompt="¿Qué número falta?"
       sub={`Piensa: ¿qué número multiplicado por ${missingFirst ? ex.b : ex.a} da ${ex.product}?`}
       actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
-        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
+        onHint={flow.askHint} onCheck={() => submit(draft)} canCheck done={done} />}
     >
     <div className={clsx(s.root, compact && s.compact)} data-kind={ex.kind} data-phase={flow.phase}>
       <div className={clsx(shared.equation, compact && shared.equationCompact)}>

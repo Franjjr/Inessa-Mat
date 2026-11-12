@@ -60,14 +60,16 @@ describe('one division method, the galera of the school', () => {
 
   it('the prompt says what to write in each step', () => {
     render(<DivisionView exercise={makeDivision(96, 4)} onAnswered={vi.fn()} />)
-    expect(screen.getByText(/Escribe el cociente \(lo que le toca a cada uno\) y, en cada paso, lo que sobra\. Así sabrás qué cifra bajar\./)).toBeTruthy()
+    expect(screen.getByText(/Escribe el cociente y, en cada paso, lo que sobra: así sabrás qué cifra bajar\. Ejemplo con 85 ÷ 4/)).toBeTruthy()
   })
 
   it('65 ÷ 7: before the quotient digit there is no «63»; after it, «7 × 9 = 63»', () => {
     const { container } = render(<DivisionView exercise={makeDivision(65, 7)} onAnswered={vi.fn()} />)
     expect(container.textContent).not.toContain('63')
     expect(screen.queryByRole('group', { name: /63/ })).toBeNull()
-    expect(screen.getByText(/¿Cuántas veces cabe el 7 en 65\?/)).toBeTruthy()
+    // The question of the step is in the list of steps and in the bubble beside the active quotient box.
+    expect(screen.getAllByText(/¿Cuántas veces cabe el 7 en 65\?/)).toHaveLength(2)
+    expect(screen.getByTestId('galera-ask').textContent).toBe('¿Cuántas veces cabe el 7 en 65?')
     type(/cociente, cifra 1/, '9')
     expect(screen.getByRole('group', { name: 'producto del paso 1: 7 × 9 = 63' })).toBeTruthy()
     expect(screen.getByText(/7 × 9 = 63\./)).toBeTruthy()
