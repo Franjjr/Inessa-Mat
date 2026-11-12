@@ -45,9 +45,9 @@ function factHints(a: number, b: number, tableMethod?: TableMethod | null): Hint
 const UNIT_OF_COLUMN = ['1 unidad', '1 decena', '1 centena', '1 millar', '1 decena de millar']
 function lendText(i: number): string {
   const lender = i + 1
-  const keeps = lender === 3 ? 'él se queda con uno menos' : 'ella se queda con una menos'
+  const keeps = lender === 3 ? 'él se queda con 1 menos' : 'ella se queda con 1 menos'
   const who = lender === 3 ? 'El vecino' : 'La vecina'
-  return `${who} de ${columnWithArticle(lender)} te presta ${UNIT_OF_COLUMN[lender] ?? '1'}, que son 10 ${columnName(i)}: tú ganas 10 y ${keeps}.`
+  return `${who} de ${columnWithArticle(lender)} te presta ${UNIT_OF_COLUMN[lender] ?? '1'}, que son 10 ${columnName(i)}: tú ganas 10 ${columnName(i)} y ${keeps}.`
 }
 
 function columnAddHints(ex: ColumnAddExercise): Hint[] {
@@ -253,6 +253,8 @@ function firstStepText(n: number, d: number, answers: number[]): string {
 const GALERA_STEP = 'Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.'
 const SHORT_GALERA_STEP = 'Escribe ese número debajo del número que reparte. Lo que sobra, calcúlalo de cabeza y escríbelo pequeño, y baja la cifra siguiente.'
 const LEFT_FIRST = 'Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número que reparte.'
+/** The galera without subtractions: the first hint never asks for a written «resta», it says what is done in the head. */
+const SHORT_LEFT_FIRST = 'Empieza por la izquierda, como siempre. Hazlo de cabeza: lo que sobra al repartir se junta con la cifra siguiente. Escribe solo lo que sale en cada paso.'
 
 /* A 2-digit divisor: estimate with the table of the rounded divisor, then check by multiplying by the real one. The
    estimate is written as a division to think about (24 : 8), never with its result. */
@@ -271,7 +273,7 @@ function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
     'Redondea el número que reparte, piensa en su tabla y comprueba multiplicando por el número de verdad.',
   ], [ex.quotient, ex.remainder])
   return [
-    hint(1, LEFT_FIRST, 'none'),
+    hint(1, short ? SHORT_LEFT_FIRST : LEFT_FIRST, 'none'),
     hint(2, estimate, 'share', params),
     hint(3, `${short ? SHORT_GALERA_STEP : GALERA_STEP} Si al multiplicar te pasas, prueba uno menos. Si lo que sobra es ${d} o más, prueba uno más.`, 'share', params),
   ]
@@ -294,7 +296,7 @@ function divisionHints(ex: DivisionExercise, method?: DivMethod): Hint[] {
     ]
   }
   return [
-    hint(1, LEFT_FIRST, 'none'),
+    hint(1, short ? SHORT_LEFT_FIRST : LEFT_FIRST, 'none'),
     hint(2, `Reparte ${n} en ${d} partes iguales, cifra a cifra. Lo que no se pueda repartir es lo que sobra.`, 'share', params),
     hint(3, `${firstStepText(n, d, [q, ex.remainder])} ${short ? SHORT_GALERA_STEP : GALERA_STEP}`, 'share', params),
   ]
