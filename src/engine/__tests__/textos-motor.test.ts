@@ -2,6 +2,7 @@
    geometry, data and numeration read as a teacher would write them. No «= ?.», no capital after «Revisa la cuenta:», no
    «son 1 hora», no «tiene los/las», no «[object», no template brace left, no «undefined» or «NaN». */
 import { describe, expect, it } from 'vitest'
+import { HUNT_WORKED, MISSED } from '@/engine/bugs'
 import { check, createRng, generate, geoSkill, GEO_OPS, hintsFor, statementOf } from '@/engine'
 import type { Answer, Exercise, SkillKey } from '@/types'
 
@@ -87,5 +88,40 @@ describe('textos del motor (P4-22)', () => {
     if (cmp.kind === 'shape-choice' && hintsFor(cmp)[0].text.startsWith('Cuant')) expect(hintsFor(cmp)[0].text).toMatch(/^Cuantas más partes/)
     const shade2 = generate({ skills: ['frac:shade:2'] }, 1, { rng: createRng(1) })[0]
     expect(hintsFor(shade2)[2].text).toContain('Cada parte es la mitad de la figura')
+  })
+})
+
+describe('textos del motor: términos de la división y casillas (cierre)', () => {
+  it('cada texto que dice cociente, resto, divisor o dividendo lo aclara', () => {
+    const sinAclarar: string[] = []
+    for (const t of [...Object.values(MISSED), ...Object.values(HUNT_WORKED)]) {
+      if (/cociente/i.test(t) && !/cociente \(lo que le toca a cada uno\)/i.test(t)) sinAclarar.push(t)
+      if (/\bresto\b/i.test(t) && !/lo que sobra \(el resto\)/i.test(t)) sinAclarar.push(t)
+      if (/divisor/i.test(t) && !/entre el que repartes/i.test(t)) sinAclarar.push(t)
+      if (/dividendo/i.test(t)) sinAclarar.push(t)
+    }
+    expect(sinAclarar).toEqual([])
+  })
+
+  const place = (parts: number[]): Exercise => ({
+    id: 'pv', kind: 'place-value', skill: 'num:place:expanded', mode: 'expanded', value: parts.reduce((a, b) => a + b, 0), parts, answer: parts,
+  } as unknown as Exercise)
+
+  it('casilla incompleta: aviso exacto, y el 0 vacío se da por bueno', () => {
+    const ex = place([4000, 0, 20, 5])
+    const falta = check(ex, { type: 'numbers', values: [4000, null, null, 5] } as unknown as Answer)
+    expect(falta.correct).toBe(false)
+    expect(falta.feedback).toBe('Rellena las casillas que faltan (si una cifra es 0, puedes dejarla vacía).')
+    expect(check(ex, { type: 'numbers', values: [4000, null, 20, 5] } as unknown as Answer).correct).toBe(true)
+  })
+
+  it('las pistas de la recta no dejan «= ?.» ni preguntan cuántos saltos', () => {
+    for (const [m, s] of [[3500, 3300], [5000, 4995], [742, 618], [9000, 8500]]) {
+      const ex = { id: 'ls', kind: 'column-sub', skill: 'sub:3', minuend: m, subtrahend: s, answer: m - s, borrowed: [] } as unknown as Exercise
+      for (const h of hintsFor(ex, 'line')) {
+        expect(h.text).not.toMatch(/\?\./)
+        expect(h.text).not.toMatch(/cuántos saltos/i)
+      }
+    }
   })
 })

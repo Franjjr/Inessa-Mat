@@ -254,7 +254,7 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
 // ---------------------------------------------------------------- grading
 
 /** Child-facing comment for each kind of mistake (shown after a wrong verdict). */
-const MISSED: Record<ErrorType, string> = {
+export const MISSED: Record<ErrorType, string> = {
   'calig-shape': 'La forma de la letra no es la del modelo. Sigue el dibujo de la pauta.',
   'calig-line': 'La letra tiene que apoyarse en la línea de abajo.',
   'calig-size': 'La letra tiene que llegar hasta la línea de arriba, ni más ni menos.',
@@ -413,7 +413,7 @@ export function explainHunt(ex: ErrorHuntExercise): string {
 
 // ---------------------------------------------------------------- hints
 
-const HUNT_WORKED: Record<ErrorType, string> = {
+export const HUNT_WORKED: Record<ErrorType, string> = {
   'calig-shape': 'Compara la forma con el modelo de la pauta.',
   'calig-line': 'Mira si la letra se apoya en la línea de abajo.',
   'calig-size': 'Mira si la letra llega solo hasta la línea de arriba.',
@@ -425,7 +425,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'clock-hour': 'Revisa la aguja corta: ¿qué hora marca?',
   'clock-minute': 'Revisa la aguja larga: ¿cuántos minutos cuenta?',
   'clock-period': 'Revisa el momento del día.',
-  'quotient-off': 'Revisa cuántas veces cabe el número entre el que repartes (el divisor).',
+  'quotient-off': 'Revisa cuántas veces cabe el divisor (el número entre el que repartes) en el número que repartes.',
   'remainder-too-big': 'Revisa que lo que sobra (el resto) sea menor que el número entre el que repartes (el divisor).',
   'false-alarm': 'Repasa la cuenta columna a columna.',
   'bar-placement': 'Repasa la cuenta columna a columna.',
