@@ -149,7 +149,7 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
 
   return (
     <ExerciseLayout workClassName={s.view} aria-label="Multiplicación en columna" data-kind="long-mul" data-status={status} prompt="Multiplica en columna, fila a fila." sub="Cada fila se escribe de derecha a izquierda. Al final, suma las filas." actions={<AnswerBar flow={flow} onCheck={check} canCheck={total.some((v) => v !== null)} />}>
-      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
+      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle typingOrder="column">
         <div className={s.grid} style={{ gridTemplateColumns: `auto minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}
         </div>

@@ -74,6 +74,16 @@ describe('column calculations explain themselves (P3PE-13)', () => {
     expect(container.querySelector('.ex-prompt')?.textContent).toBe(columnPrompt('column-sub', 'borrow'))
   })
 
+  it('the result is typed units first: an arrow «←» sits over the cell that types next (column and long multiplication)', () => {
+    const { unmount } = render(<ColumnView exercise={makeColumnAdd([368, 257])} onAnswered={() => {}} showFeedback={false} />)
+    act(() => { screen.getByRole('textbox', { name: /unidades del resultado/ }).focus() })
+    expect(screen.getAllByTestId('column-arrow').length).toBe(1)
+    unmount()
+    render(<LongMulView exercise={makeLongMul(38, 74)} onAnswered={() => {}} showFeedback={false} />)
+    act(() => { screen.getAllByRole('textbox').find((b) => b.closest('[data-row-label]') === null && /unidades/.test(b.getAttribute('aria-label') ?? ''))!.focus() })
+    expect(screen.getAllByTestId('column-arrow').length).toBe(1)
+  })
+
   it('after a wrong subtraction there is one message only (no second bubble), and it teaches the borrowing', () => {
     // 742 − 258 = 484; the child writes 494: the decenas did not give back the ten they lent.
     const write = (ex: ReturnType<typeof makeColumnSub>, digits: [string, string, string]) => {
