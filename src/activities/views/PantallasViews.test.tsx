@@ -1,6 +1,6 @@
 /* Every exercise screen explains itself (P3PE-06, P3PE-13, P3PE-17, H8): the one statement style, the names on the
    columns and rows, and the texts the audit asked for. */
-import { render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { makeClockSet, makeColumnAdd, makeColumnSub, makeLongMul } from '@/engine'
 import { makeCalendarUnits } from '@/engine/clock'
@@ -56,6 +56,19 @@ describe('column calculations explain themselves (P3PE-13)', () => {
     expect(columnAuxCaption('column-sub', 'carry')).toMatch(/^Las casillas pequeñas de abajo/)
     const { container } = render(<ColumnView exercise={makeColumnSub(704, 258)} onAnswered={() => {}} showFeedback={false} method="borrow" />)
     expect(container.querySelector('.ex-prompt')?.textContent).toBe(columnPrompt('column-sub', 'borrow'))
+  })
+
+  it('after a wrong subtraction there is one message only (no second bubble), and it names a column', () => {
+    // 742 − 258 = 484; the child writes 494: the tens are wrong.
+    const { container } = render(<ColumnView exercise={makeColumnSub(742, 258)} onAnswered={() => {}} method="borrow" />)
+    const cell = (name: RegExp) => screen.getByRole('textbox', { name })
+    fireEvent.keyDown(cell(/unidades del resultado/), { key: '4' })
+    fireEvent.keyDown(cell(/decenas del resultado/), { key: '9' })
+    fireEvent.keyDown(cell(/centenas del resultado/), { key: '4' })
+    act(() => { fireEvent.keyDown(cell(/unidades del resultado/), { key: 'Enter' }) })
+    const bubbles = container.querySelectorAll('[aria-live="polite"] p')
+    expect(bubbles.length).toBe(1)
+    expect(bubbles[0].textContent).toMatch(/unidad|decena|centena/)
   })
 
   it('long multiplication: each row says what it is («38 × 4 =», «38 × 70 =», «suma») and the columns are named', () => {
