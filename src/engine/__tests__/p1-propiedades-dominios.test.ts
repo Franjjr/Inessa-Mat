@@ -14,7 +14,7 @@ import { measureUnitQuestion } from '@/engine/measure'
 import { makePlaceValue } from '@/engine/numeric'
 import { buildSense } from '@/engine/wordProblems'
 import { parseClockPhrase } from '@/engine/time'
-import { hourFromAngle } from '@/activities/views/Clock'
+import { hourFromAngle, moveMinuteHand } from '@/activities/views/Clock'
 import type {
   Answer, BarProblemExercise, CheckCalcExercise, CheckResult, ErrorHuntExercise, Exercise, MoneyBudgetExercise, MoneyChangeExercise,
   SkillKey,
@@ -668,17 +668,19 @@ describe('reloj y tiempo (auditoría p1-medida-problemas H7, H18; P4-13)', () =>
     report('horas de madrugada dichas «de la noche»', bad.map((e) => text(`${e.phrase} → ${e.answer.hour}:${e.answer.minute}`)), exs.length)
   })
 
-  // hourFromAngle lives in src/activities/views/Clock.tsx (group pantallas-ejercicio): enable when it is fixed there.
-  it.skip('poner el reloj: colocar primero la aguja corta en el número que dice la frase no cambia la hora', () => {
+  it('poner el reloj: colocar primero la aguja corta en el número que dice la frase no cambia la hora', () => {
     // «las cuatro menos cuarto» (3:45): the hands start at the opposite minutes; the child drags the short hand to the 4
-    // and then the long hand. hourFromAngle (src/activities/views/Clock.tsx) reads the hour with the minutes it has then.
+    // and then the long hand. While the long hand still says 15 the face honestly shows 4:15; when the long hand moves,
+    // moveMinuteHand reads the short hand again from where it was left (src/activities/views/Clock.tsx), so it ends at 3.
     const misses: Miss[] = []
     let total = 0
     for (let h = 1; h <= 12; h++) {
       for (const minute of [35, 40, 45, 50, 55]) {
         const startMinute = (minute + 30) % 60
         const nextHour = (h % 12) + 1
-        const setHour = hourFromAngle((nextHour % 12) * 30, startMinute)
+        const aim = (nextHour % 12) * 30
+        const afterShort = { hour: hourFromAngle(aim, startMinute), minute: startMinute }
+        const setHour = moveMinuteHand(afterShort, minute, aim).hour
         total++
         if (setHour !== h) misses.push(text(`«las ${nextHour} menos ${60 - minute}»: la hora queda en ${setHour}`))
       }
