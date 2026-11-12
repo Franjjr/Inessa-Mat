@@ -59,4 +59,29 @@ describe('DailySession (maths)', () => {
     await user.click(await screen.findByRole('button', { name: '¡Empezar!' }))
     expect(await screen.findByText(/^0 de 15 minutos$/)).toBeInTheDocument()
   })
+
+  it('«Lo nuevo» starts with the worked example solved to the end: every step closed and the result last', async () => {
+    state.done = true
+    const user = userEvent.setup()
+    renderSession()
+    await user.click(await screen.findByRole('button', { name: '¡Empezar!' }))
+    const ok = await screen.findByRole('button', { name: '¡Entendido, a por ello!' })
+    const steps = [...document.querySelectorAll('ol li')].map((li) => li.textContent ?? '')
+    expect(steps.length).toBeGreaterThan(0)
+    expect(steps[steps.length - 1]).toMatch(/^Resultado: /)
+    for (const t of steps) expect(t).not.toMatch(/=\s*\?/)
+    expect(ok).toBeInTheDocument()
+  })
+})
+
+describe('DailySession on a short tablet (1000 × 490)', () => {
+  it('below 600 px of height the block label of the exercise is hidden and the header is lower (P3PE-11)', async () => {
+    // The CSS module is not processed in the tests: read it as text (node imported at run time, as in ink/ml/testUtils).
+    const fs = (await import(/* @vite-ignore */ 'node:' + 'fs')) as { readFileSync(p: string, enc: 'utf8'): string }
+    const cwd = (globalThis as { process?: { cwd(): string } }).process!.cwd()
+    const css = fs.readFileSync(`${cwd}/src/world/session/session.module.css`, 'utf8')
+    const block = /@media \(max-height: 600px\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? ''
+    expect(block).toMatch(/\.playChip \{ display: none; \}/)
+    expect(block).toMatch(/\.header \{ min-height: 48px; \}/)
+  })
 })

@@ -73,11 +73,34 @@ describe('daily-ejemplo', () => {
     expect(open).toEqual([])
   })
 
+  it('the example follows the school method: with «me llevo una» the borrow is said that way, and the result is the same', () => {
+    const input = { child, mastery: masteredBefore('resta-3d-prestando'), attempts: [], syllabus: GRADE3_SYLLABUS, now }
+    for (const day of [0, 1, 2, 3, 4, 5]) {
+      const when = new Date(now.getTime() + day * 86400000)
+      const borrow = planDailySession({ ...input, now: when, methods: { subMethod: 'borrow' } }).example!
+      const carry = planDailySession({ ...input, now: when, methods: { subMethod: 'carry' } }).example!
+      expect(carry.exercise.id).toBe(borrow.exercise.id)
+      expect(carry.steps[carry.steps.length - 1]).toBe(borrow.steps[borrow.steps.length - 1])
+      const ex = carry.exercise as { minuend: number; subtrahend: number }
+      const needsBorrow = String(ex.minuend).split('').reverse().some((d, i) => Number(d) < Number(String(ex.subtrahend).split('').reverse()[i] ?? 0))
+      if (needsBorrow) {
+        expect(carry.steps.join(' ')).toMatch(/me llevo 1 a la cifra de abajo/)
+        expect(borrow.steps.join(' ')).not.toMatch(/me llevo 1 a la cifra de abajo/)
+      }
+    }
+  })
+
+  it('the example comes from «Así se resuelve» with its drawing when it has one (a times-table fact)', () => {
+    const plan = planDailySession({ child, mastery: masteredBefore('tabla-3'), attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(plan.example!.visual).toBeDefined()
+    expect(plan.example!.steps.length).toBeGreaterThan(1)
+  })
+
   it('the example of a subtraction has one step per column of the minuend, then the result', () => {
     const plan = planDailySession({ child, mastery: masteredBefore('resta-3d-prestando'), attempts: [], syllabus: GRADE3_SYLLABUS, now })
     const ex = plan.example!.exercise as { minuend: number }
     expect(plan.example!.steps.length).toBe(String(ex.minuend).length + 1)
-    expect(plan.example!.steps[0]).toMatch(/unidades/)
+    expect(plan.example!.steps[0]).toMatch(/unidades/i)
   })
 
   it('a comparison is answered with words, not with the sign', () => {

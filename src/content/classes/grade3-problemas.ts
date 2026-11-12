@@ -41,8 +41,9 @@ const probRestar = clase({
     show('big-text', { text: '¿Qué sé? ¿Qué me preguntan? ¿Qué operación?' }, 'Las mismas tres preguntas de siempre: qué sé, qué me preguntan y qué operación.', 'ladybug'),
   ],
   ejemplo: [
-    show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan.'),
-    show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta.'),
+    // The bar with its unknown: the whole (13) and the part that goes (4); what is left is the «?» until the last step.
+    show('bar-model', { a: 4, b: 0, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan: es el «?» de la barra.'),
+    show('bar-model', { a: 4, b: 0, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta: 13 − 4 = 9.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'le quedan 9 cromos' }, 'Solución: 13 − 4 = 9. A Dani le quedan 9 cromos.'),
     show('big-text', { text: 'Pepa 13 · Dani 4', sub: '¿cuántos más tiene Pepa?' }, 'Comparar también se resta. Pepa tiene 13 cromos y Dani tiene 4. ¿Cuántos más tiene Pepa? Lo que le sobra a Pepa, cuando Dani ya no tiene más que poner, es la diferencia.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'Pepa tiene 9 cromos más' }, 'Solución: 13 − 4 = 9. Pepa tiene 9 cromos más que Dani.'),
@@ -151,11 +152,11 @@ const encuentraError = clase({
     show('carry', { a: 47, b: 35 }, 'Columna de las unidades: 7 + 5 = 12. Escribo el 2 y llevo 1 a las decenas.'),
     show('carry', { a: 47, b: 35 }, 'Columna de las decenas: 4 + 3 = 7, y el 1 que llevábamos: 8. Escribo el 8.'),
     show('big-text', { text: '47 + 35 = 82', sub: 'Dani olvidó el 1 que llevaba' }, 'El resultado es 82, no 72. El error está en las decenas: se olvidó de sumar el 1 que llevaba.'),
-    show('big-text', { text: '512 − 247 = 275', sub: '¿Está bien?' }, 'Ahora una resta. Dani ha puesto 512 − 247 = 275. ¿Está bien? Revisamos columna a columna.'),
+    show('big-text', { text: '512 − 247 = ¿275?', sub: '¿Está bien?' }, 'Ahora una resta. Dani dice que 512 − 247 da 275. ¿Está bien? Revisamos columna a columna.'),
     show('borrow', { a: 512, b: 247 }, 'Unidades: 2 − 7 no se puede. Pedimos 10 prestado a las decenas: 12 − 7 = 5. Bien.'),
     show('borrow', { a: 512, b: 247 }, 'Decenas: la decena prestó 1 y se quedó en 0. 0 − 4 no se puede, así que pedimos 10 a las centenas: 10 − 4 son 6. Dani puso 7: ahí está el error.'),
     show('borrow', { a: 512, b: 247 }, 'Centenas: el 5 prestó 1 y ahora es 4. 4 − 2 = 2. El resultado bueno es 265, no 275.'),
-    show('big-text', { text: '23 × 4 = 82', sub: '¿Está bien?' }, 'Y una multiplicación. Dani ha puesto 23 × 4 = 82. ¿Está bien? Revisamos.'),
+    show('big-text', { text: '23 × 4 = ¿82?', sub: '¿Está bien?' }, 'Y una multiplicación. Dani dice que 23 × 4 da 82. ¿Está bien? Revisamos.'),
     show('column-mul', { top: 23, bottom: 4 }, 'Unidades: 4 por 3, 12. Escribo el 2 y llevo 1. Decenas: 4 por 2, 8, y la que llevaba: 9. El resultado bueno es 92: Dani olvidó la que llevaba.'),
   ],
   guiada: [

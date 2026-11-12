@@ -41,7 +41,7 @@ const poligonos = clase({
 })
 
 /* Rectas: la recta va derecha y no tiene fin; la curva se dobla sin esquinas; la poligonal tiene esquinas. Dos rectas son
-   paralelas si nunca se cruzan, y perpendiculares si se cruzan formando esquinas rectas. */
+   paralelas si nunca se cortan, y perpendiculares si se cortan formando ángulos rectos. */
 const rectas = clase({
   id: 'c3-geo-rectas',
   topicId: 'rectas',
@@ -52,21 +52,21 @@ const rectas = clase({
   ],
   ejemplo: [
     show('lines', { kind: 'poligonal' }, 'Esta línea tiene esquinas: está hecha de trozos rectos unidos. Es una línea poligonal.'),
-    show('lines', { kind: 'paralelas' }, 'Dos rectas paralelas van siempre a la misma distancia: nunca se cruzan, aunque se alarguen sin fin.'),
-    show('lines', { kind: 'perpendiculares' }, 'Dos rectas perpendiculares se cruzan formando esquinas rectas, como una cruz de sumar.'),
-    show('big-text', { text: 'Se cruzan, pero no en esquina recta' }, 'Si dos rectas se cruzan de otra forma, no son perpendiculares.'),
+    show('lines', { kind: 'paralelas' }, 'Dos rectas paralelas van siempre a la misma distancia: nunca se cortan, aunque se alarguen sin fin.'),
+    show('lines', { kind: 'perpendiculares' }, 'Dos rectas perpendiculares se cortan formando esquinas rectas, como una cruz de sumar. Esa esquina se llama ángulo recto.'),
+    show('big-text', { text: 'Se cortan sin formar ángulo recto' }, 'Si dos rectas se cortan torcidas, sin formar ángulo recto, no son perpendiculares. En el ejercicio, esa respuesta se llama «se cortan sin formar ángulo recto».'),
   ],
   guiada: [
     tryIt('big-text', { text: 'recta · curva · poligonal' }, '¡Te toca! Mira si la línea va derecha, si se dobla sin esquinas o si tiene esquinas.', { skills: ['geo:line:type'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Otra! Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Otra! Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?', { skills: ['geo:line:rel'] }),
   ],
   sola: [
     tryIt('big-text', { text: 'recta · curva · poligonal' }, '¡Tu turno! Mira si la línea tiene esquinas. Si no las tiene, mira si va derecha.', { skills: ['geo:line:type'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Tu turno! Fíjate si las dos rectas se tocan, y si la cruz que forman tiene esquinas rectas.', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Tu turno! Fíjate si las dos rectas se tocan, y si la cruz que forman tiene esquinas rectas.', { skills: ['geo:line:rel'] }),
     tryIt('big-text', { text: 'tipo de línea · cómo están' }, '¡Tu turno! Primero mira qué tipo de línea es, y después cómo están las dos rectas.', { skills: ['geo:line:type', 'geo:line:rel'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Tu turno! Piensa en las dos rectas alargadas sin fin: mira si se tocan y cómo se cruzan.', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Tu turno! Piensa en las dos rectas alargadas sin fin: mira si se tocan y si forman un ángulo recto.', { skills: ['geo:line:rel'] }),
   ],
-  cierre: show('lines', { kind: 'perpendiculares' }, 'La regla: las paralelas no se cruzan nunca. Las perpendiculares se cruzan formando esquinas rectas, como una cruz.'),
+  cierre: show('lines', { kind: 'perpendiculares' }, 'La regla: las paralelas no se cortan nunca. Las perpendiculares se cortan formando ángulos rectos, como una cruz. Si se cortan torcidas, se cortan sin formar ángulo recto.'),
 })
 
 /* Rectas, semirrectas y segmentos: el punto marca dónde se acaba la línea, y la flecha dice que sigue sin fin. */

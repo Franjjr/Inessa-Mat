@@ -166,6 +166,35 @@ const restarPrestando = clase({
   cierre: show('borrow', { a: 352, b: 127 }, 'La regla: si arriba falta, la vecina presta 1 decena, que son 10 unidades.'),
 })
 
+/** The same class for a school that subtracts with «me llevo una abajo» (methodFor('sub') === 'carry'): same story,
+    same tries (solved with that method by the class screen), the worked example and the rule said that way. */
+export const restarPrestandoLlevando = clase({
+  id: 'c3-resta-prestando',
+  topicId: 'resta-3d-prestando',
+  title: 'Restar llevando',
+  mapLessonId: 'w4-borrow',
+  para: [
+    show('place-value', { n: 352 }, 'Un oso polar cuida 352 ovejas en la montaña.', 'polarbear'),
+    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127. Fíjate: en las unidades, arriba hay un 2 y abajo un 7. Hoy aprendemos qué hacer cuando arriba hay menos.', 'polarbear'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 352, b: 127 }, '352 − 127. Empezamos por las unidades: 2 menos 7 no se puede.', 'polarbear'),
+    show('sub-carry', { a: 352, b: 127 }, 'Le ponemos un 1 delante al 2: 12 menos 7 son 5. Escribo el 5.'),
+    show('sub-carry', { a: 352, b: 127 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas de abajo pasa a ser 3.'),
+    show('sub-carry', { a: 352, b: 127 }, 'Decenas: 5 menos 3 son 2. Centenas: 3 menos 1 son 2. ¡225!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Te toca! Si arriba hay un número más pequeño, ponle un 1 delante y llévate una abajo.', { skills: ['sub:3d:b1'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Otra! Primero el 1 delante, después la resta, y no olvides la que te llevas.', { skills: ['sub:3d:b1'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Si arriba no alcanza, me llevo una.', { skills: ['sub:3d:b1'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Ojo: a veces hay que llevarse una dos veces.', { skills: ['sub:3d:b2'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Sin pistas, de derecha a izquierda.', { skills: ['sub:3d:b2'] }),
+  ],
+  cierre: show('sub-carry', { a: 352, b: 127 }, 'La regla: si arriba falta, le ponemos un 1 delante, que son 10 más, y abajo, en la columna siguiente, me llevo una.'),
+})
+
 const restarCeros = clase({
   id: 'c3-resta-ceros',
   topicId: 'resta-con-ceros',
