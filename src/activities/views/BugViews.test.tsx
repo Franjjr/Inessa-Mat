@@ -12,7 +12,8 @@ vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
 
 // The grading of a right verdict without the proof is the engine's (p1n-02, src/engine/bugs.ts). Here the engine is told to
 // accept it when the test asks, so the view is tested both ways.
-const engine = vi.hoisted(() => ({ proofOptional: false }))
+// `half`: the engine grades only the right verdict without the proof (the wrong one comes back incomplete).
+const engine = vi.hoisted(() => ({ proofOptional: false, half: false }))
 vi.mock('@/engine', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/engine')>()
   return {
@@ -20,6 +21,7 @@ vi.mock('@/engine', async (importOriginal) => {
     check: (ex: Exercise, a: Answer) => {
       if (engine.proofOptional && ex.kind === 'check-calc' && a.type === 'verdict' && a.value === null) {
         const right = a.ok === (ex as CheckCalcExercise).ok
+        if (engine.half && !right) return { correct: false, given: '?', expected: '', errorType: 'incomplete' as const }
         return { correct: right, given: right ? 'bien' : 'mal', expected: '' }
       }
       return real.check(ex, a)
@@ -76,6 +78,40 @@ describe('comprobar: the proof box (p1n-02)', () => {
     fireEvent.click(comprobar())
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+    engine.proofOptional = false
+  })
+
+  it('the real engine: the box is required for a right and for a wrong calculation alike (no «si quieres» either way)', () => {
+    engine.proofOptional = false
+    for (const ok of [true, false]) {
+      const ex = genCheckCalc('add', createRng(5), ok)
+      expect(proofOptional(ex)).toBe(false)
+      const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+      expect(screen.queryByText(/si quieres/)).toBeNull()
+      unmount()
+    }
+  })
+
+  it('«(si quieres)» never tells the answer: an engine that grades only one verdict alone keeps the box required for both', () => {
+    engine.proofOptional = true
+    engine.half = true
+    for (const ok of [true, false]) {
+      const ex = genCheckCalc('add', createRng(5), ok)
+      expect(ex.ok).toBe(ok)
+      expect(proofOptional(ex)).toBe(false)
+      const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+      expect(screen.queryByText(/si quieres/)).toBeNull()
+      unmount()
+    }
+    engine.half = false
+    // An engine that grades both verdicts alone: the label shows for a right and for a wrong calculation alike.
+    for (const ok of [true, false]) {
+      const ex = genCheckCalc('add', createRng(5), ok)
+      expect(proofOptional(ex)).toBe(true)
+      const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+      expect(screen.getByText(/si quieres/)).toBeTruthy()
+      unmount()
+    }
     engine.proofOptional = false
   })
 })

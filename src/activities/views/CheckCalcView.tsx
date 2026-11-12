@@ -27,9 +27,11 @@ const PROOF: Record<CheckCalcExercise['op'], string> = {
   div: 'La prueba: divisor × cociente + resto',
 }
 
-/** Whether the engine grades a right verdict without the proof written (then the box is optional). */
+/** Whether the engine grades a verdict without the proof written (then the box is optional). Both verdicts are asked
+    and both must be graded (not sent back as incomplete): an optional box that showed for only one of them would tell
+    the child whether the calculation is right. */
 export function proofOptional(ex: CheckCalcExercise): boolean {
-  return grade(ex, { type: 'verdict', ok: ex.ok, value: null }).correct
+  return [true, false].every((ok) => grade(ex, { type: 'verdict', ok, value: null }).errorType !== 'incomplete')
 }
 
 export default function CheckCalcView(props: ExerciseViewProps) {

@@ -18,7 +18,7 @@ import { ExerciseLayout } from './ExerciseLayout'
 import s from './BugViews.module.css'
 
 /** The sign above a calculation made wrong on purpose (p1n-01). */
-export const HUNT_SIGN = 'Dani ha hecho esta cuenta. A veces se equivoca a propósito. ¿Está bien o tiene un fallo? ¿Lo encuentras?'
+export const HUNT_SIGN = 'Dani ha hecho esta cuenta. Puede tener un fallo a propósito.'
 
 const SIGN: Record<ErrorHuntExercise['op'], string> = { add: '+', sub: '−', mul: '×' }
 
@@ -62,7 +62,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
     <ExerciseLayout
       workClassName={clsx(s.view, compact && s.compact)}
       aria-label="Encuentra el error"
-      prompt={host.t('Encuentra el error: ¿está bien el resultado?')}
+      prompt={host.t('¿Está bien esta cuenta?')}
       actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={canCheck} />}
     >
       <p className={s.sign} data-cartel="">{host.t(HUNT_SIGN)}</p>
