@@ -18,7 +18,7 @@ const mitadCuarto = clase({
     show('fraction-shape', { parts: 3, shaded: 1, shape: 'bar' }, 'Partida en 3 partes iguales, cada parte es un tercio: se escribe 1/3.'),
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'circle' }, 'Partida en 4 partes iguales, cada parte es un cuarto: se escribe 1/4.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'circle' }, 'Si se colorean 3 de las 4 partes, son tres cuartos: se escribe 3/4. Arriba van las de color, y abajo, todas.'),
-    show('big-text', { text: '4 trozos', sub: 'uno enorme y otro muy pequeño' }, 'Ojo: si una pizza se parte en 4 trozos, pero uno es enorme y otro muy pequeño, no son cuartos. Las partes tienen que ser iguales.'),
+    show('fraction-shape', { parts: 4, unequal: 1 }, 'Ojo: si una pizza se parte en 4 trozos, pero uno es enorme y otro muy pequeño, no son cuartos. Las partes tienen que ser iguales.'),
   ],
   guiada: [
     tryIt('fraction-shape', { parts: 3, shaded: 2, shape: 'bar' }, '¡Te toca! Cuenta todas las partes iguales de la figura: ese número va abajo.', { skills: ['frac:read:2', 'frac:read:3', 'frac:read:4'] }),

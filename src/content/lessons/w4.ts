@@ -60,14 +60,18 @@ export const w4FourWays = lesson('w4-four-ways', 'Dos formas de restar del cole'
 /* «Dibujar la historia»: the bar diagram for problems. The child first sees the drawing for a sum (the whole is unknown)
    and for a take-away (the whole is known and a part is the «?»), and then solves it with the bar. */
 
+const sumBar = { a: 5, b: 3, total: 8, ask: 'total' }
+const takeBar = { a: 4, b: 0, total: 13, cross: 1 }
+
 export const w4Bars = lesson('w4-bars', 'Dibujar la historia', [
-  show('bar-model', { a: 5, b: 3, total: 8 }, 'Para entender un problema, lo dibujamos con una barra. La barra entera es el total. Los trozos son las partes.'),
-  show('bar-model', { a: 5, b: 3, total: 8 }, 'Ana tiene 5 canicas y Luis tiene 3. Dibujamos un trozo de 5 y otro trozo de 3.'),
-  show('bar-model', { a: 5, b: 3, total: 8 }, '¿Cuántas tienen entre los dos? Es la barra entera. Juntamos los trozos: 5 más 3 son 8. Juntar es sumar.'),
+  // ask: 'total' keeps the whole as «?» until the last step; cross: 1 strikes the part that goes away (BarModelVisual).
+  show('bar-model', sumBar, 'Para entender un problema, lo dibujamos con una barra. La barra entera es el total. Los trozos son las partes.'),
+  show('bar-model', sumBar, 'Ana tiene 5 canicas y Luis tiene 3. Dibujamos un trozo de 5 y otro trozo de 3.'),
+  show('bar-model', sumBar, '¿Cuántas tienen entre los dos? Es la barra entera. Juntamos los trozos: 5 más 3 son 8. Juntar es sumar.'),
   // b = 0 draws the second part as «?» (see BarModelVisual): the whole is known, a part is missing.
-  show('bar-model', { a: 4, b: 0, total: 13 }, 'Otro problema: Leo tenía 13 cromos y regala 4. Ahora la barra entera es lo que tenía: 13.'),
-  show('bar-model', { a: 4, b: 0, total: 13 }, 'Un trozo son los 4 que regala. El otro trozo, con el signo de interrogación, es lo que le queda.'),
-  show('bar-model', { a: 4, b: 0, total: 13 }, 'Para hallar un trozo que falta, al total le quitamos el otro trozo: 13 menos 4 son 9. Quitar es restar.'),
+  show('bar-model', takeBar, 'Otro problema: Leo tenía 13 cromos y regala 4. Ahora la barra entera es lo que tenía: 13.'),
+  show('bar-model', takeBar, 'Los 4 que regala se tachan, porque se van. El otro trozo, con el signo de interrogación, es lo que le queda.'),
+  show('bar-model', takeBar, 'Para hallar un trozo que falta, al total le quitamos el otro trozo: 13 menos 4 son 9. Quitar es restar.'),
   show('bar-model', { a: 5, b: 3, total: 8 }, 'Toca un número y después su trozo de la barra. Luego elige Juntar o Quitar y escribe el resultado.'),
   tryIt('bar-model', { a: 5, b: 3, total: 8 }, '¡Te toca! Coloca los números, elige la operación y escribe cuánto es.', { kinds: ['bar-problem'], skills: ['bar:add', 'bar:sub'] }),
 ])
