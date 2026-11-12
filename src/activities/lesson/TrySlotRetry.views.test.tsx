@@ -158,7 +158,7 @@ describe('the views with one number box', () => {
   it('RoundView, MentalView, NumberLineView and EquationView start with the number, marked until it changes', () => {
     const cases: [View, ExerciseViewProps['exercise'], string, string][] = [
       [RoundView, makeRound(347, 10), 'Número redondeado', '340'],
-      [MentalView, makeMental('suma', 40, 30, 70, '40 + 30'), 'Respuesta de cabeza', '60'],
+      [MentalView, makeMental('decenas', 40, 30, 70, '40 + 30'), 'Respuesta de cabeza', '60'],
       [NumberLineView, makeLineTick(10, [10, 20, 30, 40, 50], 2), 'Marca que falta', '35'],
       [EquationView, { id: 'eq', kind: 'equation', skill: 'eq:flex', difficulty: 2, left: [5, '+', 3], right: [null, '+', 6], answer: 2 } as EquationExercise, 'Número que falta', '3'],
     ]
@@ -242,7 +242,7 @@ describe('WordProblemView', () => {
     text: 'Ana tiene 3 estrellas y le dan 2 más. ¿Cuántas tiene ahora?', op: 'add', operands: [3, 2], answer: 5, unit: 'estrellas',
   }
   it('starts with the number written (and the operation already found), marked', () => {
-    show(WordProblemView as View, { exercise: story, initialAnswer: { type: 'number', value: 6 }, chooseOp: true } as ExerciseViewProps)
+    render(<WordProblemView exercise={story} onAnswered={vi.fn()} showFeedback={false} initialAnswer={{ type: 'number', value: 6 }} chooseOp />)
     expect(box('Respuesta').value).toBe('6')
     expect(box('Respuesta').disabled).toBe(false)
     expect(invalid(box('Respuesta'))).toBe(true)
@@ -328,7 +328,7 @@ describe('MeasureView', () => {
   })
 
   it('convert: the number comes back, marked', () => {
-    const ex = makeMeasureConvert('length', '1 m', 'cm', 100, null, false)
+    const ex = makeMeasureConvert('length', '1 m', 'cm', 100, null, false, 100, 1)
     show(MeasureView, { exercise: ex, initialAnswer: { type: 'number', value: 10 } })
     expect(box(/Cantidad en/).value).toBe('10')
     expect(invalid(box(/Cantidad en/))).toBe(true)
