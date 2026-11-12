@@ -53,6 +53,24 @@ describe('ScrollAssist', () => {
     }
   })
 
+  it('P6: «Más abajo» shows when a button is cut by the bottom of the window by only a few pixels', async () => {
+    // The game shrunk to its smallest scale overflows by 12 px, and those 12 px are the bottom of «No lo sé».
+    setPageHeight(window.innerHeight + 12)
+    const button = document.createElement('button')
+    button.textContent = 'No lo sé'
+    button.getBoundingClientRect = () => ({ top: window.innerHeight - 44, bottom: window.innerHeight + 12, left: 400, right: 500, width: 100, height: 56, x: 400, y: window.innerHeight - 44, toJSON: () => ({}) })
+    document.body.appendChild(button)
+    render(<ScrollAssist />)
+    await waitFor(() => expect(screen.getByRole('button', { name: DOWN })).toBeTruthy())
+  })
+
+  it('a few pixels of empty page under the window do not bring «Más abajo»', async () => {
+    setPageHeight(window.innerHeight + 12)
+    render(<ScrollAssist />)
+    await new Promise((r) => setTimeout(r, 50))
+    expect(screen.queryByRole('button', { name: DOWN })).toBeNull()
+  })
+
   it('P3PE-12: «Más abajo» never sits on a control: it takes the other corner when the bottom-left one is taken', async () => {
     setPageHeight(2000)
     const control = document.createElement('button')
@@ -82,3 +100,4 @@ describe('ScrollAssist', () => {
     }
   })
 })
+

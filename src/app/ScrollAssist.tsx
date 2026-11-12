@@ -42,18 +42,43 @@ export function coversControl(rect: { left: number; top: number; right: number; 
   return false
 }
 
-function measure(spacerOn: boolean) {
+/** Height of the page without the assistant's spacer. The spacer is taken out of the layout for the reading: what it adds
+    depends on the page (all of it when it closes the page, nothing when the content overflows a box of the window's height,
+    like the placement, part of it when the content ends inside its room), so no fixed amount is right. Taking SPACER off
+    always hid «⬇» with up to SPACER px of the child's screen under the window (at 1000 × 490 a taller next question of the
+    placement left «Siguiente» out of reach, e2e r-ingles), and made a page that overflows by less than SPACER switch the
+    spacer on and off twice a second (the buttons moved under the child's finger). */
+function contentHeight(el: Element): number {
+  const spacer = document.querySelector<HTMLElement>('[data-scroll-spacer]')
+  if (!spacer) return el.scrollHeight
+  const before = spacer.style.display
+  spacer.style.display = 'none'
+  const h = el.scrollHeight
+  spacer.style.display = before
+  return h
+}
+
+/** Whether a control of the page (not the assistant's own) reaches below the bottom of the window. */
+function controlCutBelow(): boolean {
+  const bottom = window.innerHeight + 1
+  for (const el of document.querySelectorAll<HTMLElement>(CONTROL)) {
+    if (el.closest('[data-scroll-assist]')) continue
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0 && r.bottom > bottom && r.top < bottom + SLACK) return true
+  }
+  return false
+}
+
+function measure() {
   const el = document.scrollingElement ?? document.documentElement
-  // Whether the page scrolls is decided without the spacer: it is the assistant's own and never makes the page «longer»
-  // by itself (or it would keep itself on).
-  const height = el.scrollHeight - (spacerOn ? SPACER : 0)
-  // «⬇» while anything is still under the window, measured on the real page. Taking the spacer off here hid «⬇» with up
-  // to SPACER px of the child's screen under the window: on a screen whose content overflows a box of the window's height
-  // (the placement), the spacer sits inside that height and adds nothing, and a taller next question left «Siguiente»
-  // out of reach (e2e r-ingles at 1000 × 490).
-  const below = el.scrollHeight - window.innerHeight - window.scrollY
+  // The spacer is the assistant's own: it never makes the page «longer» by itself.
+  const height = contentHeight(el)
+  const below = height - window.innerHeight - window.scrollY
+  // «⬇» also for less than SLACK when what is hidden is part of a control: a button cut by a few pixels at the bottom
+  // (a game at its smallest scale that still overflows a little) is not a whole tap (P6).
+  const down = below > SLACK || (below > 1 && controlCutBelow())
   // «⬆» only once the header is gone, so it never sits on «Salir» or the round counter.
-  return { down: below > SLACK, up: window.scrollY > UP_AFTER, scrolls: height > window.innerHeight + SLACK }
+  return { down, up: window.scrollY > UP_AFTER, scrolls: height > window.innerHeight + SLACK }
 }
 
 export function ScrollAssist() {
@@ -62,14 +87,12 @@ export function ScrollAssist() {
   const [upSide, setUpSide] = useState<Side>('right')
   const downRef = useRef<HTMLButtonElement>(null)
   const upRef = useRef<HTMLButtonElement>(null)
-  const spacerOn = useRef(false)
-  spacerOn.current = state.scrolls
 
   useEffect(() => {
     let frame = 0
     const update = () => {
       frame = 0
-      const next = measure(spacerOn.current)
+      const next = measure()
       setState((prev) => (prev.down === next.down && prev.up === next.up && prev.scrolls === next.scrolls ? prev : next))
       placeButtons.current()
     }
