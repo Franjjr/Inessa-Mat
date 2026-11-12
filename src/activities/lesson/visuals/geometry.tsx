@@ -36,11 +36,36 @@ function outside(p: Pt): Pt {
   return [p[0] + (dx / len) * LABEL_GAP, p[1] + (dy / len) * LABEL_GAP]
 }
 
-/* A polygon of n sides numbered 1 to n: on the sides (mark sides) or at the corners (mark corners). */
+/** A rhombus: 4 equal sides and no right corner (a square leant over), its diagonals upright and flat. */
+export function rhombus(): Pt[] {
+  return [[C, C - RADIUS], [C + RADIUS * 0.62, C], [C, C + RADIUS], [C - RADIUS * 0.62, C]]
+}
+
+/* A polygon of n sides numbered 1 to n: on the sides (mark sides) or at the corners (mark corners).
+   shape: 'rombo' draws a rhombus instead of the regular 4-sided figure; shape: 'circunferencia' (or 'aro') draws only
+   the line round a circle, and shape: 'circulo' (or 'disco') the line and its inside painted. */
 export function PolygonVisual({ params }: VisualProps) {
-  const n = clampInt(numParam(params, 'sides', 3), 3, 8)
+  const shape = strParam(params, 'shape', '')
+  if (shape === 'circunferencia' || shape === 'aro' || shape === 'circulo' || shape === 'disco') {
+    const filled = shape === 'circulo' || shape === 'disco'
+    return (
+      <div className={s.stage}>
+        <svg viewBox={`0 0 ${VB} ${VB}`} className={s.geoFigure} role="img" aria-label={filled ? 'Círculo' : 'Circunferencia'}>
+          <circle
+            cx={C}
+            cy={C}
+            r={RADIUS}
+            data-filled={filled ? 'yes' : 'no'}
+            style={{ fill: filled ? 'var(--c-magic-soft)' : 'none', stroke: 'var(--c-ink)', strokeWidth: filled ? 3 : 6 }}
+          />
+        </svg>
+      </div>
+    )
+  }
+  const isRhombus = shape === 'rombo'
+  const n = isRhombus ? 4 : clampInt(numParam(params, 'sides', 3), 3, 8)
   const mark = strParam(params, 'mark', '')
-  const pts = regularPolygon(n)
+  const pts = isRhombus ? rhombus() : regularPolygon(n)
   const labels: { text: string; at: Pt }[] = []
   if (mark === 'sides') {
     pts.forEach((p, i) => {
@@ -52,7 +77,7 @@ export function PolygonVisual({ params }: VisualProps) {
   }
   return (
     <div className={s.stage}>
-      <svg viewBox={`0 0 ${VB} ${VB}`} className={s.geoFigure} role="img" aria-label={`Figura de ${n} lados`}>
+      <svg viewBox={`0 0 ${VB} ${VB}`} className={s.geoFigure} role="img" aria-label={isRhombus ? 'Rombo' : `Figura de ${n} lados`}>
         <polygon points={pts.map((p) => `${r1(p[0])},${r1(p[1])}`).join(' ')} className={s.geoShape} />
         {labels.map((l) => (
           <text key={l.text} x={r1(l.at[0])} y={r1(l.at[1])} textAnchor="middle" dominantBaseline="central" className={s.geoLabel}>{l.text}</text>

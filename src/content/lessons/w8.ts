@@ -1,7 +1,7 @@
 /* World 8 lessons: dividing is fair sharing and multiplication backwards (fact families); the galera, the remainder
    and the division check. The inline sign for dividing is «:» (the one of the school), «÷» is not used in the lessons. */
 import type { SkillSelector } from '@/types'
-import { lesson, show, tryIt } from './dsl'
+import { lesson, said, show, tryIt } from './dsl'
 
 const share12 = { total: 12, groups: 3, emoji: '💎' }
 const g84 = { dividend: 84, divisor: 4, written: 1 }
@@ -10,8 +10,11 @@ const g17 = { dividend: 17, divisor: 5, written: 1 }
 export const w8Share = lesson('w8-share', 'Dividir es repartir', [
   show('share', share12, 'La reina tiene 12 gemas para 3 cofres. ¡A todos lo mismo!', 'queen'),
   show('share', share12, 'Reparte de una en una… ¡a cada cofre le tocan 4!'),
-  show('share', share12, '12 : 3 = 4. Se lee «doce entre tres, cuatro». El signo «:» quiere decir «repartir entre».'),
-  tryIt('share', { total: 10, groups: 2, emoji: '⭐' }, '¡Te toca! Reparte las estrellas entre los niños, de una en una. ¿Cuántas le tocan a cada uno?', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
+  said(
+    show('share', share12, '12 : 3 = 4. Se lee «doce entre tres, cuatro». El signo «:» quiere decir «repartir entre».'),
+    'Doce entre tres, cuatro. Así se lee. El signo de dividir son dos puntos, y quiere decir «repartir entre».',
+  ),
+  tryIt('share', { total: 10, groups: 2, emoji: '⭐' }, '¡Te toca! Piensa en repartir a todos lo mismo. ¿Cuánto le toca a cada uno?', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
   show('fact-family', { a: 3, b: 4 }, 'Con 3, 4 y 12 puedes hacer 4 operaciones. ¡Es una familia de números!'),
   show('fact-family', { a: 3, b: 4 }, 'Mira las cuatro: 3 por 4 son 12, 4 por 3 son 12, 12 entre 3 son 4 y 12 entre 4 son 3.'),
   show('fact-family', { a: 6, b: 7 }, 'El gran secreto: dividir es lo contrario de multiplicar. Para hacer 42 : 6 pregúntate: ¿6 por cuánto da 42?'),
@@ -32,13 +35,13 @@ export const w8Galera = lesson('w8-galera', 'La casita de la división', [
   show('galera', g17, '¿Y 17 : 5? El 1 es más pequeño que el 5: no cabe. Por eso cogemos las dos cifras, el 17.'),
   show('galera', g17, '¿Cuánto por 5 se acerca a 17 sin pasarse? 5 × 3 = 15. Con 5 × 4 = 20 me paso. El cociente es 3.'),
   show('galera', g17, 'Ahora resto: 17 − 15 = 2. Esos 2 que sobran son el resto. Es siempre más pequeño que el divisor.'),
-  show('division-check', { dividend: 17, divisor: 5 }, 'Haz la prueba: cociente por divisor, 3 por 5, 15. Más el resto, 15 + 2 = 17. ¡Sale el dividendo! ¡Está bien!'),
+  show('division-check', { dividend: 17, divisor: 5 }, 'Haz la prueba: el divisor por el cociente, 5 por 3, 15. Más el resto, 15 + 2 = 17. ¡Sale el dividendo!'),
   tryIt('galera', g17, '¡Te toca! Busca en la tabla del divisor lo que más se acerca sin pasarse. El resto es lo que sobra.', { kinds: ['division'], divisionVariants: ['rem'] }),
 ])
 
 /* «Dos formas de hacer la galera»: the same 84 : 4 with the subtractions written and without them. The world map has
    no optional stops yet (every earlier stop must be done), so the lesson sits right before the guardian and asks for
-   ONE try, with the way the family picked in the settings (no fixed `divMethod`: the try slot reads
+   ONE try, with the way the grown-ups set in the settings (no fixed `divMethod`: the try slot reads
    ChildSettings.divMethod). */
 const exactDivision: SkillSelector = { kinds: ['division'], divisionVariants: ['exact'] }
 
