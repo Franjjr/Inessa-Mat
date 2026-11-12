@@ -1,0 +1,24 @@
+/* A pill the child presses to hear the exercise. Same look as the story's «Escuchar», with a tap target for small fingers. */
+.listen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  min-height: var(--tap-min);
+  padding: 0 var(--sp-4);
+  border: var(--sticker-border);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  box-shadow: var(--sticker-shadow-sm);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--c-primary-strong);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.speaking {
+  background: var(--c-primary-strong);
+  color: var(--c-surface);
+}

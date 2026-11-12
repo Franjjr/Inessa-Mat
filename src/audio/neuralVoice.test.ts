@@ -48,7 +48,7 @@ describe('natural voice', () => {
     const fetchMock = vi.fn(async (_url: string) => new Response(new Blob([new Uint8Array(5)]), { headers: { "content-type": "audio/mpeg" } }))
     vi.stubGlobal('fetch', fetchMock)
     await speech.say('6 × 7 = 42', { voice: 'companion' })
-    expect(String(fetchMock.mock.calls[0][0])).toBe(`/api/tts?v=companion&r=1&t=${encodeURIComponent('seis por siete son cuarenta y dos')}`)
+    expect(String(fetchMock.mock.calls[0][0])).toBe(`/api/tts?v=companion&r=2&t=${encodeURIComponent('seis por siete son cuarenta y dos')}`)
     expect(FakeAudio.played).toHaveLength(1)
     expect(FakeAudio.played[0]).toMatch(/^blob:/)
     expect(synth.spoken).toHaveLength(0)
@@ -68,7 +68,7 @@ describe('natural voice', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('a 429 (rate limit) uses the device voice for that clip only, not for the whole session', async () => {
+  it('a 429 (rate limit) rests the natural voice for a few minutes, then it is asked again', async () => {
     const fetchMock = vi.fn(async () => new Response('slow down', { status: 429 }))
     vi.stubGlobal('fetch', fetchMock)
     void speech.say('Uno')
@@ -77,10 +77,43 @@ describe('natural voice', () => {
     expect(synth.spoken.map((u) => u.text)).toEqual(['Uno'])
     synth.finish()
     await flush()
+    // Resting: the next step does not even ask.
+    void speech.say('Dos')
+    await flush()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(synth.spoken.map((u) => u.text)).toEqual(['Uno', 'Dos'])
+    synth.finish()
+    await flush()
+    // Minutes later the natural voice is back.
+    const real = Date.now()
+    const now = vi.spyOn(Date, 'now').mockReturnValue(real + 4 * 60_000)
     vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob([new Uint8Array(3)]), { headers: { 'content-type': 'audio/mpeg' } })))
-    await speech.say('Dos', { voice: 'companion' })
+    await speech.say('Tres', { voice: 'companion' })
     expect(FakeAudio.played).toHaveLength(1)
-    expect(synth.spoken.map((u) => u.text)).toEqual(['Uno'])
+    expect(synth.spoken.map((u) => u.text)).toEqual(['Uno', 'Dos'])
+    now.mockRestore()
+  })
+
+  it('a clip that fails in the middle of a step: the rest of the step uses the device voice, the next step tries again', async () => {
+    const ok = () => new Response(new Blob([new Uint8Array(3)]), { headers: { 'content-type': 'audio/mpeg' } })
+    const long = `${'a'.repeat(150)}. ${'b'.repeat(150)}. ${'c'.repeat(150)}.`
+    // The second chunk fails (a server error that is not a rate limit); every other clip is fine.
+    const fetchMock = vi.fn(async (url: string) => (String(url).includes('bbbb') ? new Response('err', { status: 500 }) : ok()))
+    vi.stubGlobal('fetch', fetchMock)
+    void speech.say(long, { voice: 'companion' })
+    for (let i = 0; i < 8; i++) await flush()
+    // Chunk 1 by the natural voice; chunks 2 and 3 by the device voice (no voice switching back and forth).
+    expect(FakeAudio.played).toHaveLength(1)
+    expect(synth.spoken.map((u) => u.text[0])).toEqual(['b'])
+    synth.finish()
+    for (let i = 0; i < 4; i++) await flush()
+    expect(synth.spoken.map((u) => u.text[0])).toEqual(['b', 'c'])
+    expect(FakeAudio.played).toHaveLength(1)
+    synth.finish()
+    await flush()
+    // The next step asks the service again.
+    await speech.say('Siguiente paso', { voice: 'companion' })
+    expect(FakeAudio.played).toHaveLength(2)
   })
 
   it('falls back to the device voice when the clip cannot play', async () => {
