@@ -154,7 +154,8 @@ function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof,
     if (allRight) return 'correct' as const
     if (wrong.has(i)) return 'wrong' as const
     // Before checking again, a column the child had wrong stays soft red until she changes it.
-    if (!flow.result && wrongBefore.has(i) && res[i] === (before?.digits[i] ?? null)) return 'wrong' as const
+    // A box left empty on the last try is not marked: soft red means «está mal», not «te falta».
+    if (!flow.result && wrongBefore.has(i) && before?.digits[i] != null && res[i] === before.digits[i]) return 'wrong' as const
     if (i === nextEmpty) return 'active' as const
     return 'idle' as const
   }

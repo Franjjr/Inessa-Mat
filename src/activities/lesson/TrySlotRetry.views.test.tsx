@@ -117,6 +117,19 @@ describe('ColumnView and SubtractionView', () => {
     expect(invalid(screen.getByRole('textbox', { name: /^decenas del resultado/ }))).toBe(true)
     expect(invalid(screen.getByRole('textbox', { name: /^centenas del resultado/ }))).toBe(true)
   })
+
+  it('a box left empty is not marked: red means «está mal», not «te falta»', () => {
+    // 368 + 257 = 625; the child wrote only the units, 4 (wrong), and left the tens and hundreds empty.
+    show(ColumnView, { exercise: makeColumnAdd([368, 257]), initialAnswer: { type: 'digits', digits: [4, null, null] } })
+    expect(invalid(screen.getByRole('textbox', { name: /^unidades del resultado/ }))).toBe(true)
+    expect(invalid(screen.getByRole('textbox', { name: /^decenas del resultado/ }))).toBe(false)
+    expect(invalid(screen.getByRole('textbox', { name: /^centenas del resultado/ }))).toBe(false)
+  })
+
+  it('an empty box stays unmarked also when the corrector names its column', () => {
+    show(ColumnView, { exercise: makeColumnAdd([368, 257]), initialAnswer: { type: 'digits', digits: [5, null, 6] }, wrongColumns: [1] })
+    expect(invalid(screen.getByRole('textbox', { name: /^decenas del resultado/ }))).toBe(false)
+  })
 })
 
 describe('LongMulView', () => {
@@ -127,6 +140,13 @@ describe('LongMulView', () => {
     expect(screen.getByRole('textbox', { name: /parcial 1, decenas/ }).textContent).toContain('9')
     expect(invalid(screen.getByRole('textbox', { name: /^decenas del resultado/ }))).toBe(true)
     expect(invalid(screen.getByRole('textbox', { name: /^unidades del resultado/ }))).toBe(false)
+  })
+
+  it('a box of the total left empty is not marked', () => {
+    // 23 × 14 = 322; the total has only the units and the tens written.
+    show(LongMulView, { exercise: makeLongMul(23, 14), initialAnswer: { type: 'long-mul', rows: [[2, 9, null], [0, 3, 2]], total: [2, 1, null] } })
+    expect(invalid(screen.getByRole('textbox', { name: /^decenas del resultado/ }))).toBe(true)
+    expect(invalid(screen.getByRole('textbox', { name: /^centenas del resultado/ }))).toBe(false)
   })
 })
 
@@ -151,6 +171,13 @@ describe('OrderView', () => {
     expect(invalid(box('3.º número'))).toBe(true)
     type('2.º número', '300')
     expect(invalid(box('2.º número'))).toBe(false)
+  })
+
+  it('a box left empty is not marked', () => {
+    const ex = makeOrder([300, 120, 450], 'asc')
+    show(OrderView, { exercise: ex, initialAnswer: { type: 'numbers', values: [120, 450, null] } })
+    expect(invalid(box('2.º número'))).toBe(true)
+    expect(invalid(box('3.º número'))).toBe(false)
   })
 })
 

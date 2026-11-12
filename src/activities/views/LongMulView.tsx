@@ -54,7 +54,7 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints, retry }: Round
   const status = flow.result?.correct ? 'correct' : 'idle'
   /** Before checking again, a column of the total the child had wrong stays soft red until she changes it. */
   const totalStatus = (k: number) =>
-    !flow.result && wrongBefore.has(k) && total[k] === (before?.total[k] ?? null) ? 'wrong' as const : status
+    !flow.result && wrongBefore.has(k) && before?.total[k] != null && total[k] === before.total[k] ? 'wrong' as const : status
 
   const setRow = (j: number, k: number, d: number | null) =>
     setRows((prev) => prev.map((r, jj) => (jj === j ? r.map((v, kk) => (kk === k ? d : v)) : r)))

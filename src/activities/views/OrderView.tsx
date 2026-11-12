@@ -22,7 +22,8 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: O
   const wrongBefore = useRetryWrong(retry, () => (before ? wrongEntries(before, ex.answer) : []))
   const [cells, setCells] = useState<(number | null)[]>(() => ex.values.map((_, i) => before?.[i] ?? null))
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
-  const statusOf = (i: number) => (!flow.result && wrongBefore.has(i) && cells[i] === (before?.[i] ?? null) ? 'wrong' as const : status)
+  // A box left empty on the last try is not marked: soft red means «está mal», not «te falta».
+  const statusOf = (i: number) => (!flow.result && wrongBefore.has(i) && before?.[i] != null && cells[i] === before[i] ? 'wrong' as const : status)
   const asc = ex.direction === 'asc'
 
   const submit = () => {

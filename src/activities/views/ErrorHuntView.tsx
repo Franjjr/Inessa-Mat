@@ -50,8 +50,8 @@ export function huntRetryMarks(ex: ErrorHuntExercise, retry: RetryProps | undefi
   if (before.ok !== (ex.wrongColumn === null)) return { ...none, verdict: true }
   if (before.ok) return none
   const c = before.column
-  const goodColumn = c !== null && digitAt(ex.shown, c) !== digitAt(ex.answer, c)
-  return { verdict: false, column: c !== null && !goodColumn, value: before.value !== null && before.value !== ex.answer }
+  const errorColumn = c !== null && digitAt(ex.shown, c) !== digitAt(ex.answer, c)
+  return { verdict: false, column: c !== null && !errorColumn, value: before.value !== null && before.value !== ex.answer }
 }
 
 function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact, retry }: RoundProps) {
