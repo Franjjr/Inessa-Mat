@@ -51,6 +51,8 @@ export interface AnswerFlow {
   exercise?: Exercise
   /** Wrong checks so far (a solution panel shows after the second one). */
   wrongTries?: number
+  /** The method the child solves with (the solution panel follows it). */
+  method?: string
 }
 
 const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now())
@@ -176,6 +178,6 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
   const wrongTries = subs.current.filter((x) => !x.check.correct).length
   return {
     result, graded: graded.current, submitted, hints, hintsShown, showNextHint, countClue, submit, finish, showFeedback, allowHints,
-    exercise, wrongTries,
+    exercise, wrongTries, ...(opts.method ? { method: opts.method } : {}),
   }
 }

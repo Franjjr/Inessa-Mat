@@ -52,3 +52,12 @@
   .bar { grid-template-columns: 1fr; }
   .side, .side:first-child { justify-content: center; }
 }
+
+/* The solution under the bar after the second wrong check: in the flow, its own scroll box on a short screen, so the
+   buttons above it stay in view and nothing is covered. */
+.solution {
+  margin-top: var(--sp-2);
+  max-height: min(42vh, 360px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
