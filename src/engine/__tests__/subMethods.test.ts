@@ -188,12 +188,23 @@ describe('grading: por partes and saltos answer with steps', () => {
     expect(r.errorType).toBe('incomplete')
   })
 
+  it('parts: the last number written is the answer, whatever the steps before it', () => {
+    expect(check(ex, steps([null, null, 225])).correct).toBe(true)
+    expect(check(ex, steps([225, null, null])).correct).toBe(true)
+    expect(check(ex, steps([345, 325, 225])).correct).toBe(true)
+    expect(check(makeColumnSub(93, 12), steps([84, 81])).correct).toBe(true)
+    const r = check(ex, steps([252, 232, 224]))
+    expect(r.correct).toBe(false)
+    expect(r.feedback).toContain('paso 3')
+  })
+
   it('line: the stops rise from 127 to 352, and the total is the sum of the jumps', () => {
     expect(check(ex, steps([130, 300, 350], 'line', 225)).correct).toBe(true)
   })
 
-  it('line: a stop that goes back is graded at its jump; a wrong total is graded at the total', () => {
-    const back = check(ex, steps([130, 120, 350], 'line', 225))
+  it('line: the total decides; with a wrong total a stop that goes back is named, else the total', () => {
+    expect(check(ex, steps([130, 120, 350], 'line', 225)).correct).toBe(true)
+    const back = check(ex, steps([130, 120, 350], 'line', 226))
     expect(back.correct).toBe(false)
     expect(back.feedback).toContain('salto 2')
     const total = check(ex, steps([130, 300, 350], 'line', 224))

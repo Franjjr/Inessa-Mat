@@ -81,26 +81,40 @@ export function genMulParts(rng: Rng, digits: 2 | 3): MulPartsExercise {
 
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 
-/** Answer: numbers [top × units, top × tens, total]. The total decides; the partials say where the slip is. */
+/** Answer: numbers [top × units, top × tens, total]. The total decides: a right total is right whatever the parts say
+    (empty, in the other order, the tens product without its zero). The parts only say where the slip is when the total
+    is wrong, and a part that is right in the other line is never named as wrong. */
 export function checkMulParts(ex: MulPartsExercise, answer: Answer): CheckResult {
   const expected = `${fmt(ex.partials[0])} + ${fmt(ex.partials[1])} = ${fmt(ex.answer)}`
   if (answer.type !== 'numbers') return { correct: false, given: '', expected, errorType: 'other', feedback: 'Escribe las dos partes y la suma.' }
-  const [p1, p2, total] = answer.values
-  if (!isNum(p1) || !isNum(p2) || !isNum(total)) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: 'Rellena las tres casillas.' }
-  const given = `${fmt(p1)} + ${fmt(p2)} = ${fmt(total)}`
-  if (p1 === ex.partials[0] && p2 === ex.partials[1] && total === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Has multiplicado por partes.' }
+  const [p1, p2, total] = answer.values.map((v) => (isNum(v) ? v : null))
+  const show = (v: number | null) => (v === null ? '?' : fmt(v))
+  const given = `${show(p1)} + ${show(p2)} = ${show(total)}`
+  const [byUnits, byTens] = ex.partials
+  const parts = [p1, p2].filter((v): v is number => v !== null)
+  const noZero = byTens % 10 === 0 && parts.includes(byTens / 10) && !parts.includes(byTens)
+  if (total === ex.answer) {
+    const note = noZero ? ` Un consejo: al multiplicar por ${ex.tens}, pon el cero de la derecha: ${fmt(ex.top)} × ${ex.tens} = ${fmt(byTens)}.` : ''
+    return { correct: true, given, expected, feedback: `¡Muy bien! Has multiplicado por partes.${note}` }
+  }
+  if (total === null) {
+    if (parts.length === 0) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: 'Rellena las tres casillas.' }
+    return { correct: false, given, expected, errorType: 'incomplete', feedback: 'Suma las dos partes y escribe el resultado.' }
+  }
   let errorType: ErrorType = 'other'
   let feedback = '¡Casi! Revisa la suma de las dos partes, columna a columna.'
-  if (p2 !== ex.partials[1] && p2 * 10 === ex.partials[1]) {
+  if (noZero) {
     errorType = 'place-value'
     feedback = `¡Casi! Al multiplicar por ${ex.tens} no olvides el cero de la derecha.`
-  } else if (p1 !== ex.partials[0]) {
+  } else if (parts.length === 2 && !parts.includes(byUnits)) {
     errorType = 'fact'
     feedback = `¡Casi! Revisa ${fmt(ex.top)} × ${ex.units}.`
-  } else if (p2 !== ex.partials[1]) {
+  } else if (parts.length === 2 && !parts.includes(byTens)) {
     errorType = 'fact'
     feedback = `¡Casi! Revisa ${fmt(ex.top)} × ${ex.tens}: multiplica por ${ex.tens / 10} y pon un cero detrás.`
-  } else if (total === p1 + p2 && total !== ex.answer) {
+  } else if (parts.length < 2) {
+    feedback = `¡Casi! Parte el ${ex.bottom} en ${ex.tens} y ${ex.units}, multiplica cada parte y suma.`
+  } else if (total === p1! + p2!) {
     feedback = '¡Casi! Revisa la suma de las dos partes.'
   }
   return { correct: false, given, expected, errorType, feedback }

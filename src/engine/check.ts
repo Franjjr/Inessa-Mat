@@ -10,11 +10,11 @@ import type {
 } from '@/types'
 import { checkBar } from './bars'
 import { checkCheckCalc, checkErrorHunt } from './bugs'
-import { climbProducts, divisionParts } from './divParts'
-import { digitCount, toDigits } from './arith'
+import { climbProducts, divisionParts, type PartsStep } from './divParts'
+import { digitAt, digitCount, toDigits } from './arith'
 import { diagnoseAdd, diagnoseDivision, diagnoseMul, diagnoseSub, valueOf } from './diagnose'
-import { FEEDBACK, praise, praiseFact } from './feedback'
-import { subtrahendParts } from './subMethods'
+import { FEEDBACK, columnName, praise, praiseFact } from './feedback'
+import { lineStops, partsResults, subtrahendParts } from './subMethods'
 import { strategyForFact } from './strategies'
 import { checkCalc } from './calc'
 import { checkNumeric } from './numeric'
@@ -215,7 +215,9 @@ function checkFamily(ex: FactFamilyExercise, answer: Answer): CheckResult {
   const foreign = parsed.filter((p) => p.fact && factTrue(p.fact) && !expectedSet.includes(factKey(p.fact))).map((p) => p.i)
   const distinctGood = new Set(keys.filter((k) => expectedSet.includes(k)))
   const allGood = falseOnes.length === 0 && unparsed.length === 0 && foreign.length === 0 && reversed.length === 0
-  if (allGood && distinctGood.size === expectedSet.length && keys.length === new Set(keys).size) {
+  // A square (6 × 6 = 36) has only two different facts: the view still asks for four, so each may be written twice.
+  const repeatsOk = ex.a === ex.b && keys.every((k) => keys.filter((x) => x === k).length <= 2)
+  if (allGood && distinctGood.size === expectedSet.length && (keys.length === new Set(keys).size || repeatsOk)) {
     return { correct: true, given, expected, feedback: praise(ex.id) }
   }
   const base = { correct: false as const, given, expected }
@@ -289,63 +291,90 @@ function checkColumnAdd(ex: ColumnAddExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
 }
 
-/* Subtraction methods: the written steps. Por partes and saltos are graded step by step. The marks in the column
-   (pedir prestado arriba, me llevo una abajo) are scratch work and never graded: only the result counts. */
+/* Subtraction methods: the written steps. In por partes and saltos the final number decides (the last step, the total);
+   the steps only guide when it is wrong. The marks in the column (pedir prestado arriba, me llevo una abajo) are scratch
+   work and never graded: only the result counts. */
 const SUB_STEP_FEEDBACK = {
   partsWrong: (step: number, from: number, part: number) => `¡Casi! Revisa el paso ${step}: a ${from} hay que quitarle ${part}.`,
   partsCorrect: '¡Muy bien! Has restado por partes, paso a paso.',
+  partsAnswerEarly: (early: number, answer: number, last: number) =>
+    `¡Ya tenías el resultado en el paso ${early}: ${answer}! El último número que escribes es la respuesta: revisa el paso ${last}.`,
+  partsCorrectShort: (answer: number) => `¡Muy bien, ${answer}! Has llegado al resultado.`,
   lineWrong: (step: number, after: number, before: number) =>
     `¡Casi! El salto ${step} tiene que caer después de ${after} y antes de ${before}: cuenta hacia delante, sin pasarte.`,
   lineTotal: 'Los saltos ya están bien colocados. Suma cuánto has avanzado en total.',
   lineTotalAlone: 'Suma cuánto has avanzado en total.',
+  lineTotalMissing: 'Escribe cuánto has saltado en total.',
   lineCorrect: '¡Muy bien! Has contado con saltos hasta llegar.',
+  /** The total is right but the stops do not climb: the praise first, then the route as advice («40, 200, 210 y 212»). */
+  lineCorrectNote: (answer: number, route: number[]) =>
+    `¡Muy bien, ${answer}! Los saltos van de menor a mayor: ${route.slice(0, -1).join(', ')} y ${route[route.length - 1]}.`,
 } as const
 
 /* Messages for the «me llevo una abajo» method (the marks are added to the subtrahend, not crossed out on top). */
 const SUB_CARRY_FEEDBACK = {
   zero: '¡Cuidado con el cero! Revisa esa columna con calma y comprueba la resta sumando.',
+  smallerFromLarger: 'Arriba hay un número más pequeño: súmale 10 arriba, y en la casa de al lado suma 1 al número de abajo. ¡Me llevo una!',
 } as const
 
+/* Por partes: the last number written is the answer. When it is wrong, the first step that does not follow from the one
+   before is named (an empty step counts as its right value, so the next one is still judged). */
 function checkSubParts(ex: ColumnSubExercise, values: (number | null)[]): CheckResult {
   const expected = String(ex.answer)
   const parts = subtrahendParts(ex.subtrahend)
-  const given = values.slice(0, parts.length).map((v) => (isNum(v) ? String(v) : '?')).join(' · ')
-  if (parts.some((_, k) => !isNum(values[k]))) return incomplete(given, expected)
+  const boxes = values.slice(0, Math.max(parts.length, 1)).map((v) => (isNum(v) ? v : null))
+  const given = boxes.map((v) => (v === null ? '?' : String(v))).join(' · ')
+  const written = boxes.filter((v): v is number => v !== null)
+  if (written.length === 0) return incomplete('?', expected)
+  if (written[written.length - 1] === ex.answer) {
+    const route = partsResults(ex.minuend, ex.subtrahend)
+    const book = boxes.length === route.length && boxes.every((v, k) => v === route[k])
+    return { correct: true, given, expected, feedback: book ? SUB_STEP_FEEDBACK.partsCorrect : SUB_STEP_FEEDBACK.partsCorrectShort(ex.answer) }
+  }
+  // The result is already in an earlier step (all of 127 taken at once) and a later box spoils it: name the last box,
+  // not the step that holds the right number.
+  const early = boxes.indexOf(ex.answer)
+  if (early >= 0) {
+    const last = boxes.reduce<number>((at, v, k) => (v === null ? at : k), -1)
+    return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.partsAnswerEarly(early + 1, ex.answer, last + 1) }
+  }
   let from = ex.minuend
   for (let k = 0; k < parts.length; k++) {
-    const v = values[k] as number
+    const v = boxes[k] ?? null
+    if (v === null) { from -= parts[k]; continue }
     if (v !== from - parts[k]) {
       return { correct: false, given, expected, errorType: 'fact', feedback: SUB_STEP_FEEDBACK.partsWrong(k + 1, from, parts[k]) }
     }
     from = v
   }
-  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.partsCorrect }
+  return incomplete(given, expected)
 }
 
-/* Counting on: the stops are the child's own. Any strictly increasing chain between the subtrahend and the minuend is a
-   right way to get there, with fewer or more stops than the textbook route. Empty boxes after the last stop are not stops. */
+/* Counting on: the total is the answer and decides. Empty stop boxes (also gaps between stops) are ignored. The stops
+   are the child's own: any strictly increasing chain between the subtrahend and the minuend is a right way to get there.
+   With a right total and stops out of order, only a friendly note follows the praise. */
 function checkSubLine(ex: ColumnSubExercise, values: (number | null)[], total: number | null | undefined): CheckResult {
   const expected = String(ex.answer)
-  let n = values.length
-  while (n > 0 && !isNum(values[n - 1])) n--
-  const written = values.slice(0, n) as (number | null)[]
-  const jumps = written.map((v) => (isNum(v) ? String(v) : '?')).join(' → ')
+  const stops = values.filter((v): v is number => isNum(v))
+  const jumps = stops.join(' → ')
   const given = jumps + (isNum(total) ? `${jumps ? ' = ' : ''}${total}` : '')
-  if (written.some((v) => !isNum(v)) || !isNum(total)) return incomplete(given, expected)
+  const rising = stops.every((v, k) => v > (k ? stops[k - 1] : ex.subtrahend) && v < ex.minuend)
+  if (!isNum(total)) return { correct: false, given, expected, errorType: 'incomplete', feedback: SUB_STEP_FEEDBACK.lineTotalMissing }
+  if (total === ex.answer) {
+    const feedback = rising ? SUB_STEP_FEEDBACK.lineCorrect
+      : SUB_STEP_FEEDBACK.lineCorrectNote(ex.answer, [ex.subtrahend, ...lineStops(ex.subtrahend, ex.minuend), ex.minuend])
+    return { correct: true, given, expected, feedback }
+  }
   let at = ex.subtrahend
-  for (let k = 0; k < written.length; k++) {
-    const v = written[k] as number
-    if (v <= at || v >= ex.minuend) {
+  for (let k = 0; k < stops.length; k++) {
+    if (stops[k] <= at || stops[k] >= ex.minuend) {
       return { correct: false, given, expected, errorType: 'other', feedback: SUB_STEP_FEEDBACK.lineWrong(k + 1, at, ex.minuend) }
     }
-    at = v
+    at = stops[k]
   }
   // With no stops written, «los saltos ya están bien colocados» would be false: only the total is asked for then.
-  if (total !== ex.answer) {
-    const feedback = written.length ? SUB_STEP_FEEDBACK.lineTotal : SUB_STEP_FEEDBACK.lineTotalAlone
-    return { correct: false, given, expected, errorType: 'other', feedback }
-  }
-  return { correct: true, given, expected, feedback: SUB_STEP_FEEDBACK.lineCorrect }
+  const feedback = stops.length ? SUB_STEP_FEEDBACK.lineTotal : SUB_STEP_FEEDBACK.lineTotalAlone
+  return { correct: false, given, expected, errorType: 'other', feedback }
 }
 
 function checkColumnSub(ex: ColumnSubExercise, answer: Answer, method?: string): CheckResult {
@@ -375,13 +404,29 @@ function checkColumnSub(ex: ColumnSubExercise, answer: Answer, method?: string):
   // «Me llevo una abajo» adds the 1 to the next column's subtrahend instead of crossing out a ten: say that one.
   const carryMethod = (answer.type === 'digits' && answer.method === 'carry') || method === 'carry'
   const feedback =
-    d.errorType === 'smaller-from-larger' ? FEEDBACK.smallerFromLarger
-      : d.errorType === 'zero-borrow' ? (carryMethod ? SUB_CARRY_FEEDBACK.zero : FEEDBACK.zeroBorrow)
-        : d.errorType === 'borrow-forgot' ? (carryMethod ? FEEDBACK.carryForgotSub : FEEDBACK.borrowForgot)
-          : d.errorType === 'misaligned' ? FEEDBACK.misaligned
-            : d.errorType === 'other' ? FEEDBACK.subAdded
-              : FEEDBACK.subFact(d.wrongColumns)
+    d.detail === 'borrow-column' && d.focus ? borrowColumnFeedback(ex, d.focus[0], carryMethod)
+      : d.errorType === 'smaller-from-larger' ? (carryMethod ? SUB_CARRY_FEEDBACK.smallerFromLarger : FEEDBACK.smallerFromLarger)
+        : d.errorType === 'zero-borrow' ? (carryMethod ? SUB_CARRY_FEEDBACK.zero : FEEDBACK.zeroBorrow)
+          : d.errorType === 'borrow-forgot' ? (carryMethod ? FEEDBACK.carryForgotSub : borrowForgotFeedback(d.focus?.[0]))
+            : d.errorType === 'misaligned' ? FEEDBACK.misaligned
+              : d.errorType === 'other' ? FEEDBACK.subAdded
+                : FEEDBACK.subFact(d.wrongColumns)
   return { correct: false, given, expected, errorType: d.errorType, wrongColumns: d.wrongColumns, feedback }
+}
+
+/** The decenas lending to the units is the plain message; a lender further left is named with what it lends (the
+    centenas lend 1 centena, that is 10 decenas), so the message never says «una decena» when it is not one. */
+function borrowForgotFeedback(lender: number | undefined): string {
+  return lender !== undefined && lender >= 2 ? FEEDBACK.borrowForgotAt(lender) : FEEDBACK.borrowForgot
+}
+
+/** «En las unidades, 1 es menos que 4…»: with pedir prestado the top digit is the one left after lending (a ten came
+    in already); with «me llevo una» the top stays and the 1 carried in goes to the bottom digit. */
+function borrowColumnFeedback(ex: ColumnSubExercise, col: number, carryMethod: boolean): string {
+  const lent = col > 0 && ex.borrowed[col - 1] ? 1 : 0
+  const top = digitAt(ex.minuend, col)
+  const bottom = digitAt(ex.subtrahend, col)
+  return carryMethod ? FEEDBACK.borrowColumnCarry(col, top, bottom + lent) : FEEDBACK.borrowColumn(col, top - lent, bottom)
 }
 
 function checkColumnMul(ex: ColumnMulExercise, answer: Answer): CheckResult {
@@ -392,7 +437,7 @@ function checkColumnMul(ex: ColumnMulExercise, answer: Answer): CheckResult {
   const input = withFinalCarry(raw, ex.answer, digitCount(ex.top))
   const given = showDigits(input.digits)
   const big = bigCells(input.digits)
-  if (big.length) return { correct: false, given, expected, errorType: 'carry-wrong', wrongColumns: big, feedback: FEEDBACK.carryWrongMul }
+  if (big.length) return { correct: false, given, expected, errorType: 'carry-wrong', wrongColumns: big, feedback: FEEDBACK.oneDigitMul(input.digits[big[0]] ?? 0) }
   const { empty, extra, value } = columnPrecheck(input, ex.answer, len, 2)
   if (input.digits.every((d) => d === null)) return incomplete('?', expected)
   if (empty.length) return incomplete(given, expected, empty)
@@ -401,7 +446,7 @@ function checkColumnMul(ex: ColumnMulExercise, answer: Answer): CheckResult {
   }
   const d = diagnoseMul(ex.top, ex.bottom, input.digits)
   const feedback =
-    d.errorType === 'carry-forgot' ? FEEDBACK.carryForgot(d.wrongColumns.filter((c) => c >= 1).slice(0, 1))
+    d.errorType === 'carry-forgot' ? FEEDBACK.carryForgot(d.focus ?? d.wrongColumns.filter((c) => c >= 1).slice(0, 1))
       : d.errorType === 'carry-wrong' ? FEEDBACK.carryWrongMul
         : d.errorType === 'operation' ? FEEDBACK.mulAdded(ex.bottom)
         : FEEDBACK.mulFact(d.wrongColumns.filter((c) => c < len).length ? d.wrongColumns.filter((c) => c < len) : d.wrongColumns)
@@ -434,12 +479,12 @@ function checkDivision(ex: DivisionExercise, answer: Answer): CheckResult {
   if (q < 0 || r < 0) return { correct: false, given, expected, errorType: 'other', feedback: FEEDBACK.divisionOther }
   const d = diagnoseDivision(ex.dividend, ex.divisor, q, r)
   const feedback =
-    d.errorType === 'remainder-too-big' ? FEEDBACK.remainderTooBig(ex.divisor)
+    d.errorType === 'remainder-too-big' ? FEEDBACK.remainderTooBigBy(r, ex.divisor)
       : d.detail === 'too-big' ? FEEDBACK.quotientTooBig(q, ex.divisor, ex.dividend)
         : d.detail === 'too-small' ? FEEDBACK.quotientTooSmall
-          : d.detail === 'remainder' ? FEEDBACK.remainderWrong(ex.dividend, q * ex.divisor)
+          : d.detail === 'remainder' ? (ex.remainder === 0 ? FEEDBACK.remainderZero : FEEDBACK.remainderWrong(ex.dividend, q * ex.divisor))
             : d.detail === 'bring-down' ? FEEDBACK.bringDown
-              : d.detail === 'stopped' ? FEEDBACK.divisionStopped
+              : d.detail === 'stopped' ? (d.place ? FEEDBACK.divisionStoppedAt(d.place) : FEEDBACK.divisionStopped)
                 : d.detail === 'reversed' ? FEEDBACK.divisionReversed
                   : d.detail === 'operation' ? FEEDBACK.divisionOperation(ex.dividend, ex.divisor)
                     : d.detail === 'near' ? FEEDBACK.divisionNear(ex.divisor, ex.dividend)
@@ -448,36 +493,70 @@ function checkDivision(ex: DivisionExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: d.errorType, feedback }
 }
 
-/* «Repartir por partes» and «Multiplicar hacia arriba»: the written steps. The total and the remainder count at the end;
-   a part that is written wrong is named (the step), never the right number. */
+/* «Repartir por partes» and «Multiplicar hacia arriba»: the quotient and the remainder decide, as in the galera. The
+   written steps only guide when the final answer is wrong: a part that is written wrong is named (the step), never the
+   right number. Each word of the division is explained the first time a message uses it. */
 const DIV_METHOD_FEEDBACK = {
   partWrong: (step: number, partial: number, divisor: number) =>
     `¡Casi! Revisa el paso ${step}: ¿cuántas veces cabe el ${divisor} en ${partial}?`,
-  partsIncomplete: 'Escribe el cociente de cada parte y después el total.',
-  partsTotal: 'Ya tienes bien las partes. Ahora suma sus cocientes: ese es el cociente.',
+  partsIncomplete: 'Escribe lo que sale en cada parte y después el total.',
+  partsTotal: 'Ya tienes bien las partes. Ahora súmalas: eso es el cociente (lo que le toca a cada uno).',
+  /** A part written in its own unit (2 for 20) and then added as it is: say what it is worth, then the sum to do. */
+  partsInUnit: (written: number, place: string, value: number, sum: number[]) =>
+    `Tu ${written} son ${written} ${place}, es decir, ${value}. Ahora suma: ${sum.join(' + ')} = ?`,
+  climbQuotient: (dividend: number) =>
+    `Revisa el cociente (lo que le toca a cada uno): cuenta las filas que no pasan de ${dividend}.`,
   climbWrong: (row: number, divisor: number) => `¡Casi! Revisa la fila ${row}: ¿cuánto es ${divisor} por ${row}?`,
-  climbIncomplete: 'Sigue subiendo: escribe la siguiente fila hasta pasarte del dividendo.',
-  climbOver: 'Te has pasado: para en la primera fila que llega o pasa del dividendo.',
-  remainder: 'El cociente está bien: ahora revisa el resto.',
+  climbIncomplete: 'Sigue subiendo: escribe la siguiente fila hasta pasarte del dividendo (el número que repartes).',
+  climbOver: 'Te has pasado: para en la primera fila que llega o pasa del dividendo (el número que repartes).',
+  remainder: 'El cociente (lo que le toca a cada uno) está bien: ahora revisa el resto (lo que sobra).',
+}
+
+/** A part may be written in its own unit: 80 ÷ 4 thought as «8 decenas entre 4 = 2 decenas» is written 2 (for 20). */
+function partMatches(written: number, step: PartsStep): boolean {
+  if (written === step.quotient) return true
+  const unit = 10 ** Math.max(0, String(step.part).length - 1)
+  return unit > 1 && step.carried === 0 && step.quotient % unit === 0 && written * unit === step.quotient
+}
+
+/** A wrong remainder next to a right quotient: too big, «no sobra nada» in an exact division, or just to be revised. */
+function remainderFeedback(ex: DivisionExercise, given: string, expected: string, rest: number): CheckResult {
+  if (rest >= ex.divisor) return { correct: false, given, expected, errorType: 'remainder-too-big', feedback: FEEDBACK.remainderTooBigBy(rest, ex.divisor) }
+  return { correct: false, given, expected, errorType: 'other', feedback: ex.remainder === 0 ? FEEDBACK.remainderZero : DIV_METHOD_FEEDBACK.remainder }
 }
 
 function checkDivisionParts(ex: DivisionExercise, answer: Extract<Answer, { type: 'division-parts' }>): CheckResult {
   const steps = divisionParts(ex.dividend, ex.divisor)
   const expected = showDivision(ex.quotient, ex.remainder)
-  const written = steps.map((_, k) => answer.parts[k] ?? null)
-  const given = written.map((v) => show(v)).join(' + ') + (answer.quotient === null ? '' : ` = ${answer.quotient}`)
-  if (written.some((v) => v === null) || answer.quotient === null) return incomplete(given, expected)
+  const written = steps.map((_, k) => { const v = answer.parts[k]; return isNum(v) ? v : null })
+  const q = isNum(answer.quotient) ? answer.quotient : null
+  const given = written.map((v) => show(v)).join(' + ') + (q === null ? '' : ` = ${q}`)
+  const rest = remainderWritten(ex, isNum(answer.remainder) ? answer.remainder : null)
+  if (q === ex.quotient) {
+    if (rest === null) return incomplete(given, expected)
+    if (rest === ex.remainder) return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+    return remainderFeedback(ex, given, expected, rest)
+  }
+  // The final quotient is wrong or missing: the parts say where to look.
+  if (q === null && written.every((v) => v === null)) return incomplete('?', expected)
   for (let k = 0; k < steps.length; k++) {
-    if (written[k] !== steps[k].quotient) {
+    const v = written[k]
+    if (v !== null && !partMatches(v, steps[k])) {
       return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.partWrong(k + 1, steps[k].partial, ex.divisor) }
     }
   }
-  const total = steps.reduce((sum, s) => sum + s.quotient, 0)
-  if (answer.quotient !== total) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
-  const rest = remainderWritten(ex, answer.remainder)
-  if (rest === null) return incomplete(given, expected)
-  if (rest !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
-  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+  if (written.some((v) => v === null)) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.partsIncomplete }
+  // Every part is right, but one was written in its own unit (2 for 20): adding the digits as they are gives a wrong
+  // quotient, so say what that part is worth and the sum to do.
+  const inUnit = written.findIndex((v, k) => v !== steps[k].quotient)
+  if (inUnit >= 0) {
+    const value = steps[inUnit].quotient
+    const place = columnName(String(value / (written[inUnit] as number)).length - 1)
+    const feedback = DIV_METHOD_FEEDBACK.partsInUnit(written[inUnit] as number, place, value, steps.map((s) => s.quotient))
+    return q === null ? { ...incomplete(given, expected), feedback } : { correct: false, given, expected, errorType: 'other', feedback }
+  }
+  if (q === null) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.partsTotal }
+  return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.partsTotal }
 }
 
 /** The remainder as written. An empty box is 0 when nothing is left over (as in the galera), otherwise null. */
@@ -486,25 +565,43 @@ function remainderWritten(ex: DivisionExercise, written: number | null | undefin
   return ex.remainder === 0 ? 0 : null
 }
 
+/* The climb: the quotient is the last right row that does not pass the dividend (the child may stop there or write the
+   row that passes), or the quotient when the view sends one. With the right quotient and remainder it is right, even if
+   a row on the way is wrong. */
 function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb' }>): CheckResult {
   const products = climbProducts(ex.dividend, ex.divisor)
   const stop = products.findIndex((p) => p >= ex.dividend)
   const expected = showDivision(ex.quotient, ex.remainder)
-  const written = answer.products
-  const filled = written.map((v, k) => (v === null || v === undefined ? -1 : k)).filter((k) => k >= 0)
-  const given = written.filter((v) => v !== null && v !== undefined).join(' · ')
-  if (filled.length === 0) return incomplete('?', expected)
+  const written = answer.products.map((v) => (isNum(v) ? v : null))
+  const sent = (answer as { quotient?: number | null }).quotient
+  const filled = written.map((v, k) => (v === null ? -1 : k)).filter((k) => k >= 0)
+  const given = written.filter((v) => v !== null).join(' · ')
+  const rest = remainderWritten(ex, isNum(answer.remainder) ? answer.remainder : null)
+  // Row k is «divisor × (k + 1)»: the last row written that still fits gives the quotient when that row is right (the
+  // remainder is worked out from it), even if a number on the way was slipped.
+  const fits = filled.filter((k) => ex.divisor * (k + 1) <= ex.dividend)
+  const top = fits.length ? fits[fits.length - 1] : -1
+  const q = isNum(sent) ? sent : top >= 0 && written[top] === ex.divisor * (top + 1) ? top + 1 : null
+  // Rows past the first one that reaches the dividend make the quotient unclear (28 ÷ 4 written up to 32): that is
+  // not a right answer unless the view sends the quotient itself.
+  const past = !isNum(sent) && filled.some((k) => k > stop)
+  if (q === ex.quotient && !past) {
+    if (rest === null) return incomplete(given, expected)
+    if (rest === ex.remainder) return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+  }
+  const quotientWrong = isNum(sent) && sent !== ex.quotient
+  if (filled.length === 0) return quotientWrong ? { correct: false, given: String(sent), expected, errorType: 'fact', feedback: DIV_METHOD_FEEDBACK.climbQuotient(ex.dividend) } : incomplete('?', expected)
   for (const k of filled) {
-    if (written[k] !== products[k]) {
+    if (written[k] !== ex.divisor * (k + 1)) {
       return { correct: false, given, expected, errorType: 'fact', wrongColumns: [k], feedback: DIV_METHOD_FEEDBACK.climbWrong(k + 1, ex.divisor) }
     }
   }
+  // A quotient sent by the view that is wrong, with every row right: the quotient is what to look at again.
+  if (quotientWrong) return { correct: false, given, expected, errorType: 'fact', feedback: DIV_METHOD_FEEDBACK.climbQuotient(ex.dividend) }
   if (filled[filled.length - 1] > stop) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.climbOver }
-  if (!filled.includes(stop)) return incomplete(given, expected)
-  const rest = remainderWritten(ex, answer.remainder)
+  if (q !== ex.quotient) return { ...incomplete(given, expected), feedback: DIV_METHOD_FEEDBACK.climbIncomplete }
   if (rest === null) return incomplete(given, expected)
-  if (rest !== ex.remainder) return { correct: false, given, expected, errorType: 'other', feedback: DIV_METHOD_FEEDBACK.remainder }
-  return { correct: true, given, expected, feedback: FEEDBACK.divCorrect(ex.id) }
+  return remainderFeedback(ex, given, expected, rest)
 }
 
 /** A division may come as the galera answer, the parts or the climb, whatever method the view used. */
@@ -539,6 +636,10 @@ function checkWord(ex: WordProblemExercise, answer: Answer): CheckResult {
   const given = answer.type === 'division' && hasRem ? showDivision(v, r) : String(v)
   const remOk = answer.type !== 'division' ? true : hasRem ? r === ex.remainder : r === null || r === 0
   if (v === ex.answer && remOk) return { correct: true, given, expected, feedback: FEEDBACK.wordCorrect(ex.answer, ex.unit) }
+  // The quotient is right and the «sobra» box is still empty: not a wrong sum, just one box to go.
+  if (v === ex.answer && hasRem && answer.type === 'division' && r === null) {
+    return { correct: false, given, expected, errorType: 'incomplete', feedback: FEEDBACK.wordRemainderMissing }
+  }
   const [a, b] = ex.operands
   if (v !== ex.answer) {
     const others = (['add', 'sub', 'mul', 'div'] as const).filter((o) => o !== ex.op)
@@ -547,7 +648,7 @@ function checkWord(ex: WordProblemExercise, answer: Answer): CheckResult {
     }
   }
   if (hasRem && v === ex.answer && r !== null && r >= b) {
-    return { correct: false, given, expected, errorType: 'remainder-too-big', feedback: FEEDBACK.remainderTooBig(b) }
+    return { correct: false, given, expected, errorType: 'remainder-too-big', feedback: FEEDBACK.remainderTooBigBy(r, b) }
   }
   return { correct: false, given, expected, errorType: 'fact', feedback: FEEDBACK.wordFact }
 }

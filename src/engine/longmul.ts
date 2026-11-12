@@ -67,11 +67,18 @@ export function checkLongMul(ex: LongMulExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: 'other', feedback: '¡Casi! Revisa la suma de las filas, columna a columna.' }
 }
 
+/** The first row with the exercise's own numbers («Primera fila: 34 × 2 = ?»). By 1 the row is the top itself, so it
+    is said in words (the hint never shows a whole row). */
+function firstRow(ex: LongMulExercise): string {
+  const units = digitAt(ex.bottom, 0)
+  return units === 1 ? 'Primera fila: por 1, el número de arriba se copia igual.' : `Primera fila: ${fmt(ex.top)} × ${units} = ?`
+}
+
 export function hintsLongMul(ex: LongMulExercise): Hint[] {
   const threeRows = ex.partials.length > 2
   return [
     hint(1, 'Multiplica el de arriba por las unidades de abajo, como en 2 × 1.'),
     hint(2, `En la segunda fila multiplicas por las decenas: empieza dejando un 0 en las unidades.${threeRows ? ' La tercera fila va por las centenas: empieza dejando dos ceros.' : ''}`),
-    hint(3, 'Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades.'),
+    hint(3, `${firstRow(ex)} Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades.`),
   ]
 }
