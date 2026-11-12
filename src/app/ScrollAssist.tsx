@@ -44,9 +44,14 @@ export function coversControl(rect: { left: number; top: number; right: number; 
 
 function measure(spacerOn: boolean) {
   const el = document.scrollingElement ?? document.documentElement
-  // The spacer is the assistant's own: it never makes the page «longer» by itself.
+  // Whether the page scrolls is decided without the spacer: it is the assistant's own and never makes the page «longer»
+  // by itself (or it would keep itself on).
   const height = el.scrollHeight - (spacerOn ? SPACER : 0)
-  const below = height - window.innerHeight - window.scrollY
+  // «⬇» while anything is still under the window, measured on the real page. Taking the spacer off here hid «⬇» with up
+  // to SPACER px of the child's screen under the window: on a screen whose content overflows a box of the window's height
+  // (the placement), the spacer sits inside that height and adds nothing, and a taller next question left «Siguiente»
+  // out of reach (e2e r-ingles at 1000 × 490).
+  const below = el.scrollHeight - window.innerHeight - window.scrollY
   // «⬆» only once the header is gone, so it never sits on «Salir» or the round counter.
   return { down: below > SLACK, up: window.scrollY > UP_AFTER, scrolls: height > window.innerHeight + SLACK }
 }

@@ -31,6 +31,28 @@ describe('ScrollAssist', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: DOWN })).toBeTruthy(), { timeout: 300 })
   })
 
+  it('P6: «Más abajo» stays while anything is below the window, also when the spacer did not make the page longer', async () => {
+    // A screen whose content overflows a box of the window's height (the placement): the spacer sits inside that height and
+    // adds nothing to the page. The child went down, then the next question is taller: 60 px of it are under the window.
+    // Taking the spacer off the page height would hide «Más abajo» with «Siguiente» out of reach.
+    setPageHeight(2000)
+    const scrollY = Object.getOwnPropertyDescriptor(window, 'scrollY')
+    const { container } = render(<ScrollAssist />)
+    await waitFor(() => expect(container.querySelector('[data-scroll-spacer]')).toBeTruthy())
+    try {
+      Object.defineProperty(window, 'scrollY', { value: 2000 - window.innerHeight - 60, configurable: true })
+      act(() => { window.dispatchEvent(new Event('scroll')) })
+      await new Promise((r) => setTimeout(r, 50))
+      expect(screen.getByRole('button', { name: DOWN })).toBeTruthy()
+      // At the very end of the page it goes.
+      Object.defineProperty(window, 'scrollY', { value: 2000 - window.innerHeight, configurable: true })
+      act(() => { window.dispatchEvent(new Event('scroll')) })
+      await waitFor(() => expect(screen.queryByRole('button', { name: DOWN })).toBeNull())
+    } finally {
+      if (scrollY) Object.defineProperty(window, 'scrollY', scrollY)
+    }
+  })
+
   it('P3PE-12: «Más abajo» never sits on a control: it takes the other corner when the bottom-left one is taken', async () => {
     setPageHeight(2000)
     const control = document.createElement('button')
