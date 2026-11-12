@@ -5,19 +5,24 @@ import { celebrate } from '@/fx'
 import { fmt } from '@/engine'
 import type { ExerciseViewProps, OrderExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryWrong, wrongEntries, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
 import { ExerciseLayout } from './ExerciseLayout'
 
-export default function OrderView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function OrderView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'order') return null
-  return <OrderRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <OrderRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [cells, setCells] = useState<(number | null)[]>(() => ex.values.map(() => null))
+function OrderRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: OrderExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the numbers the child wrote; the boxes in the wrong place are soft red until she changes them.
+  const [before] = useState(() => initialOf(retry, 'numbers')?.values ?? null)
+  const wrongBefore = useRetryWrong(retry, () => (before ? wrongEntries(before, ex.answer) : []))
+  const [cells, setCells] = useState<(number | null)[]>(() => ex.values.map((_, i) => before?.[i] ?? null))
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const statusOf = (i: number) => (!flow.result && wrongBefore.has(i) && cells[i] === (before?.[i] ?? null) ? 'wrong' as const : status)
   const asc = ex.direction === 'asc'
 
   const submit = () => {
@@ -43,7 +48,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
               onSubmit={() => submit()}
               maxDigits={Math.max(4, String(Math.max(...ex.answer)).length)}
               size="lg"
-              status={status}
+              status={statusOf(i)}
               ariaLabel={`${i + 1}.º número`}
               placeholder="?"
               autoFocus={i === 0}

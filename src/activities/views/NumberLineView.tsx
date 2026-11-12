@@ -8,18 +8,20 @@ import { celebrate } from '@/fx'
 import { fmt } from '@/engine'
 import type { ExerciseViewProps, NumberLineExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
 import { ExerciseLayout } from './ExerciseLayout'
 
-export default function NumberLineView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function NumberLineView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'number-line') return null
-  return <LineRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <LineRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLineExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [value, setValue] = useState<number | null>(null)
+function LineRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: NumberLineExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  const again = useRetryNumber(retry, ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const first = ex.ticks[0]
   const last = ex.ticks[ex.ticks.length - 1]
@@ -40,7 +42,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
       onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
       maxDigits={Math.max(4, String(last).length)}
       size="lg"
-      status={status}
+      status={again.marked(value, !!flow.result) ? 'wrong' : status}
       ariaLabel={isJump ? 'Adónde caes' : 'Marca que falta'}
       placeholder="?"
       checkButton={false}

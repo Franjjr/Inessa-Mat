@@ -13,7 +13,7 @@ import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { RETRY_WRONG_CLASS, useRetryChoice, useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import { ExerciseLayout } from './ExerciseLayout'
 import s from './BugViews.module.css'
 
@@ -38,7 +38,7 @@ export default function CheckCalcView(props: ExerciseViewProps) {
   const { exercise, onAnswered, allowHints = true, showFeedback = true, compact } = props
   if (exercise.kind !== 'check-calc') return null
   return (
-    <CheckRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} />
+    <CheckRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} retry={props} />
   )
 }
 
@@ -48,14 +48,20 @@ interface RoundProps {
   allowHints: boolean
   showFeedback: boolean
   compact?: boolean
+  /** «Inténtalo otra vez»: the verdict and the check the child wrote; the wrong one is marked. */
+  retry?: RetryProps
 }
 
-function CheckRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundProps) {
+function CheckRound({ ex, onAnswered, allowHints, showFeedback, compact, retry }: RoundProps) {
   const host = useActivityHost()
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [verdict, setVerdict] = useState<boolean | null>(null)
-  const [value, setValue] = useState<number | null>(null)
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the verdict and the check the child wrote; each wrong one is soft red until she changes it.
+  const againVerdict = useRetryChoice<boolean>(retry, (a) => (a.type === 'verdict' ? a.ok : null), ex.ok)
+  const againValue = useRetryNumber(retry, ex.answer, (a) => (a.type === 'verdict' ? a.value : null))
+  const [verdict, setVerdict] = useState<boolean | null>(againVerdict.first)
+  const [value, setValue] = useState<number | null>(againValue.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const checked = !!flow.result
 
   const claim = useMemo(() => {
     if (ex.op === 'div') return `${ex.left} ÷ ${ex.right} = ${ex.claimed}, y sobran ${ex.remainder ?? 0}`
@@ -87,10 +93,10 @@ function CheckRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
       <p className={s.claim} aria-label={`Cuenta: ${claim}`}>{claim}</p>
 
       <div className={s.verdicts} role="group" aria-label="¿Está bien?">
-        <Button size="lg" variant={verdict === true ? 'success' : 'secondary'} aria-pressed={verdict === true} onClick={() => setVerdict(true)}>
+        <Button size="lg" variant={verdict === true ? 'success' : 'secondary'} className={clsx(againVerdict.marked(true, verdict, checked) && RETRY_WRONG_CLASS)} aria-pressed={verdict === true} onClick={() => setVerdict(true)}>
           ✓ Sí, está bien
         </Button>
-        <Button size="lg" variant={verdict === false ? 'primary' : 'secondary'} aria-pressed={verdict === false} onClick={() => setVerdict(false)}>
+        <Button size="lg" variant={verdict === false ? 'primary' : 'secondary'} className={clsx(againVerdict.marked(false, verdict, checked) && RETRY_WRONG_CLASS)} aria-pressed={verdict === false} onClick={() => setVerdict(false)}>
           ✗ No está bien
         </Button>
       </div>
@@ -104,7 +110,7 @@ function CheckRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
           onSubmit={(v) => { setValue(v); if (verdict !== null) submit(v, verdict) }}
           maxDigits={4}
           size="lg"
-          status={status}
+          status={againValue.marked(value, checked) ? 'wrong' : status}
           ariaLabel="Resultado de la comprobación"
           placeholder="?"
         />
