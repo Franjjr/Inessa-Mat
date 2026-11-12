@@ -5,8 +5,8 @@
    (1) a right final with any steps in between (empty, at random, from the other method, in another order, half written)
        is correct, and its message starts with the praise (never «¡Casi!» nor «te falta»);
    (2) a final ±1, ±10, +100 or with one digit more is never correct.
-   The domain kinds (bars, bugs, fractions, clock, money, decimals, geometry, numeric) have their own file built on the
-   same harness (p1-propiedades-dominios). The literal cases of the audit (branches auditoria/p1-suma-resta and
+   The domain kinds (bars, bugs, fractions, clock, money, decimals, geometry, numeric, and also mental, equation, chart,
+   chance, pattern, position and ordinal) have their own file built on the same harness (p1-propiedades-dominios). The literal cases of the audit (branches auditoria/p1-suma-resta and
    auditoria/p1-mul-div, and the critic's photo cases) follow, each as a plain `it`. */
 import { describe, expect, it } from 'vitest'
 import {
@@ -321,5 +321,26 @@ describe('mensajes de la resta según el método (auditoría p1-mensajes)', () =
   })
   it('pedir prestado conserva su mensaje de la vecina', () => {
     expect(check(makeColumnSub(52, 27), { type: 'digits', digits: [5, 3] }).feedback).toContain('vecina')
+  })
+})
+
+describe('multiplicar en columna 2 × 2: la entrada suave de 3.º', () => {
+  const draw = (regroup?: 'one') => generate({ skills: ['mul:col:2x2'], ...(regroup ? { regroup } : {}) }, 40, { rng: createRng(7) })
+    .filter((e) => e.kind === 'long-mul')
+
+  it('con pocas llevadas (regroup one) el de abajo va de 11 a 19 y la fila de las unidades lleva poco', () => {
+    const items = draw('one')
+    expect(items.length).toBeGreaterThan(10)
+    for (const ex of items) {
+      expect(ex.bottom, ex.id).toBeGreaterThanOrEqual(11)
+      expect(ex.bottom, ex.id).toBeLessThanOrEqual(19)
+      expect(ex.top, ex.id).toBeLessThanOrEqual(34)
+      expect((ex.top % 10) * (ex.bottom % 10), ex.id).toBeLessThan(30)
+      expect(ex.answer).toBe(ex.top * ex.bottom)
+    }
+  })
+
+  it('sin pedirlo, 4.º sigue con el rango completo 12-99 × 12-99', () => {
+    expect(draw().some((ex) => ex.bottom > 19 || ex.top > 34)).toBe(true)
   })
 })

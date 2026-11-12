@@ -135,8 +135,8 @@ describe('resta: la vecina que presta se nombra con lo que presta (P4-10)', () =
     expect(r.feedback).not.toContain('te presta una decena')
     expect(r.feedback).toBe('La vecina de las centenas te presta 1 centena, que son 10 decenas: tú ganas 10 decenas y ella se queda con 1 menos. ¡Táchala y réstale 1!')
   })
-  it('la decena que presta a las unidades usa el mensaje sencillo', () => {
-    expect(check(makeColumnSub(734, 459), dig(385)).feedback).toBe(FEEDBACK.borrowForgot)
+  it('la decena que presta a las unidades también se nombra: el niño sabe qué casa arreglar (P3PE-13)', () => {
+    expect(check(makeColumnSub(734, 459), dig(385)).feedback).toBe('La vecina de las decenas te presta 1 decena, que son 10 unidades: tú ganas 10 unidades y ella se queda con 1 menos. ¡Táchala y réstale 1!')
     expect(FEEDBACK.borrowForgot).toBe('Si la vecina te presta, ella se queda con 1 menos. ¡Táchala y réstale 1!')
   })
 })

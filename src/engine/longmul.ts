@@ -21,8 +21,22 @@ export function makeLongMul(top: number, bottom: number): LongMulExercise {
   }
 }
 
-/** top with `top` digits (2 or 3) × bottom with `bottom` digits, no zero in the bottom: every row is a real partial. */
-export function genLongMul(rng: Rng, top: 2 | 3, bottom: 2 | 3): LongMulExercise {
+/** The first 2 × 2 of 3.º: the top 12-34 and the bottom 11-19, so the tens row is the top itself (× 1, shifted) and
+    the units row carries little (its units product stays under 30). Totals stay under 650. */
+function genGentle2x2(rng: Rng): LongMulExercise {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const t = randInt(rng, 12, 34)
+    const b = randInt(rng, 11, 19)
+    if (t % 10 === 0 || (t % 10) * (b % 10) >= 30) continue
+    return makeLongMul(t, b)
+  }
+  return makeLongMul(23, 14)
+}
+
+/** top with `top` digits (2 or 3) × bottom with `bottom` digits, no zero in the bottom: every row is a real partial.
+    `gentle` (2 × 2 only) is the 3.º introduction: bottom 11-19 and small carries; 4.º keeps the full 12-99 × 12-99. */
+export function genLongMul(rng: Rng, top: 2 | 3, bottom: 2 | 3, gentle = false): LongMulExercise {
+  if (gentle && top === 2 && bottom === 2) return genGentle2x2(rng)
   const range = (digits: 2 | 3): [number, number] => (digits === 2 ? [12, 99] : [102, 999])
   const [topLo, topHi] = range(top)
   const [bottomLo, bottomHi] = range(bottom)

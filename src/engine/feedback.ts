@@ -54,7 +54,7 @@ const STRATEGY_PRAISE: Partial<Record<FactStrategy['id'], string>> = {
   'even-six-rhyme': '¡La mitad delante y el número detrás! ¡Qué bien!',
   'nine-trick': '¡El truco del 9 es pura magia!',
   'square-rhyme': '¡Siete por cinco y siete por dos! ¡Muy bien!',
-  'five-six-seven-eight': '¡5, 6, 7, 8! ¡Lo has clavado!',
+  'five-six-seven-eight': '¡Partir el 8 en 5 y 3 funciona!',
   'weeks': '¡Tres semanas, veintiún días! ¡Genial!',
   'mirror': '¡El truco del espejo! ¡Muy bien pensado!',
   'double-and-one': '¡El doble y uno más! ¡Muy bien!',
