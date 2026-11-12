@@ -121,6 +121,8 @@ export function literals(source: string): { line: number; text: string }[] {
 /** Deliberately false equalities shown to the child to be found («¿Está bien?»): file and the exact equality. */
 const WHITELIST: { file: string; equality: string }[] = [
   { file: 'src/content/classes/grade3-problemas.ts', equality: '47 + 35 = 72' },
+  { file: 'src/content/classes/grade3-problemas.ts', equality: '512 − 247 = 275' },
+  { file: 'src/content/classes/grade3-problemas.ts', equality: '23 × 4 = 82' },
 ]
 
 describe('igualdades de las lecciones, clases y dibujos', () => {
