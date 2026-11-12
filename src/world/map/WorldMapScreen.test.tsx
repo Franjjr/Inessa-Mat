@@ -142,5 +142,15 @@ describe('WorldMapScreen lock states', () => {
     expect(optional).not.toContain('bloqueado')
     expect(labels.find((l) => l.includes('aquí estás'))).toContain('El desafío de la osa Nieve')
     expect(document.body.textContent).toContain('Puedes saltarla')
+    // The guardian is the current stop: its pill marks it, and no «¡Ayúdame!» is drawn under that pill.
+    expect(document.body.textContent).toContain('Aquí sigue')
+    expect(document.body.textContent).not.toContain('¡Ayúdame!')
+  })
+
+  it('a guardian that is not the current stop still asks for help', async () => {
+    await childAt('w1')
+    renderMap('w1')
+    await waitFor(() => expect(nodeLabels().some((l) => l.includes('aquí estás'))).toBe(true))
+    expect(document.body.textContent).toContain('¡Ayúdame!')
   })
 })

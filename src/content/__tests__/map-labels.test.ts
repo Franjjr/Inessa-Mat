@@ -2,13 +2,30 @@
    overlaps another, and no two icons (with their gold ring) touch (boxes in real pixels, see src/world/map/labels.ts). */
 import { describe, expect, it } from 'vitest'
 import { getWorld, ISLAND_ID, ISLAND_STOP_PX, season1, seasonC2 } from '@/content'
-import { baseStageHeight, layoutMap, pillOf, spreadForPhone, type StopInput } from '@/world/map/labels'
+import { baseStageHeight, labelHeight, labelLines, labelMaxLines, labelWidth, layoutMap, pillOf, spreadForPhone, type MapLayout, type StopInput } from '@/world/map/labels'
 
 // Header + story strip take about this much of the screen height.
 const CHROME = 130
 const SIZES = [[1000, 490], [1180, 820], [1280, 800], [1366, 657], [820, 1180], [390, 844], [360, 740]] as const
 
 type Nodes = typeof season1.worlds[number]['nodes']
+
+/** What the overlap list of layoutMap does not see: an icon or a «Aquí sigue»/«¡Ayúdame!» tag cut by the left or right
+    edge of the stage (on a phone the pill was cut: «quí sigue Luna»), and the two tags of one stop on top of each other
+    (the pill of the current guardian covered its «¡Ayúdame!»). */
+function edgeProblems(out: MapLayout, W: number, ids: string[]): string[] {
+  const bad: string[] = []
+  const hit = (a: { x0: number; y0: number; x1: number; y1: number }, b: typeof a) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
+  out.placed.forEach((p, i) => {
+    for (const [k, b] of [['icono', p.icon] as const, ...p.extras.map((e) => ['aviso', e] as const)]) {
+      if (b.x0 < 0 || b.x1 > W) bad.push(`${ids[i]}: ${k} fuera del borde (${Math.round(b.x0)}..${Math.round(b.x1)} de ${W})`)
+    }
+    for (let a = 0; a < p.extras.length; a++) for (let c = a + 1; c < p.extras.length; c++) {
+      if (hit(p.extras[a], p.extras[c])) bad.push(`${ids[i]}: sus dos avisos se tapan`)
+    }
+  })
+  return bad
+}
 
 function stops(nodes: Nodes, current: number, doneMode: 'all' | 'before', crystal: boolean, petName = 'Luna'): StopInput[] {
   return nodes.map((node, i) => ({
@@ -29,6 +46,7 @@ for (const season of [season1, seasonC2]) {
               const out = layoutMap(stops(w.nodes, cur, crystal || cur < 0 ? 'all' : 'before', crystal), W, base)
               // Phones too: close stops are spread apart there (spreadForPhone), so icons, rings and tags are all checked.
               expect(out.overlaps, `current=${cur} crystal=${crystal}: ${out.overlaps.join('; ')}`).toEqual([])
+              expect(edgeProblems(out, W, w.nodes.map((n) => n.id)), `current=${cur} crystal=${crystal}`).toEqual([])
             }
           }
         })
@@ -48,6 +66,7 @@ describe('map labels (Isla de las Palabras)', () => {
           const out = layoutMap(stops(island.nodes, cur, crystal || cur < 0 ? 'all' : 'before', crystal), W, island.nodes.length * ISLAND_STOP_PX)
           expect(out.height).toBeGreaterThanOrEqual(island.nodes.length * ISLAND_STOP_PX)
           expect(out.overlaps, `current=${cur} crystal=${crystal}: ${out.overlaps.join('; ')}`).toEqual([])
+          expect(edgeProblems(out, W, island.nodes.map((n) => n.id)), `current=${cur} crystal=${crystal}`).toEqual([])
         }
       }
     })
@@ -71,6 +90,7 @@ describe('pill «Aquí sigue»', () => {
       for (const [W, H] of SIZES) {
         const out = layoutMap(stops(w.nodes, 1, 'before', false, petName), W, baseStageHeight(W, H - CHROME, H))
         expect(out.overlaps, `${petName} ${W}x${H}: ${out.overlaps.join('; ')}`).toEqual([])
+        expect(edgeProblems(out, W, w.nodes.map((n) => n.id)), `${petName} ${W}x${H}`).toEqual([])
       }
     }
   })
@@ -97,5 +117,26 @@ describe('phones: close stops are spread apart', () => {
     const two = stops(w.nodes, 0, 'before', false).slice(0, 2).map((s, i) => ({ ...s, node: { ...s.node, pos: { x: 0.4 + i * 0.2, y: 0.5 } } }))
     const [p, q] = spreadForPhone(two, two.map((s) => ({ x: s.node.pos.x * 390, y: 500 })), [76, 76], 1000)
     expect(q.y - p.y).toBeGreaterThanOrEqual(100)
+  })
+})
+
+describe('name tags: never cut with «…»', () => {
+  // Measured in Chromium with Baloo 2 at 16 px in the 132 px of text of a phone tag: these take three lines (the
+  // estimate of labelLines never fell short of the real count for any stop name).
+  const threeLines = ['¡Borrón desordena las setas!', 'Divisiones exactas y con resto', 'Practica en el monte del cuerpo y del tiempo']
+  it('on a phone a long name gets a third line (it was «¡Borrón desordena las…» at 390×844)', () => {
+    expect(labelMaxLines(390)).toBe(3)
+    expect(labelMaxLines(1000)).toBe(2)
+    for (const W of [390, 360]) {
+      const w = labelWidth(W)
+      expect(labelHeight('Mercado', w, labelMaxLines(W))).toBe(30)
+      for (const t of threeLines) {
+        expect(labelLines(t, w), t).toBeGreaterThanOrEqual(3)
+        expect(labelHeight(t, w, labelMaxLines(W)), t).toBe(66)
+      }
+    }
+  })
+  it('tablets keep two lines', () => {
+    expect(labelHeight('¡Borrón desordena las setas!', labelWidth(1000), labelMaxLines(1000))).toBe(48)
   })
 })

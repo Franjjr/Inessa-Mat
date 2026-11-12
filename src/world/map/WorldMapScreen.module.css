@@ -119,6 +119,7 @@
   100% { transform: scale(1.25); opacity: 0; }
 }
 .here {
+  /* left comes from labels.ts (Placed.pillDx): centred, or pushed inwards near an edge of the stage. */
   position: absolute;
   top: -22px;
   left: 50%;
@@ -140,9 +141,9 @@
   50% { transform: translate(-50%, -5px); }
 }
 .guardianTag {
+  /* left comes from labels.ts (Placed.helpX): right of the icon, or left of it near the right edge of the stage. */
   position: absolute;
   top: -12px;
-  right: -36px;
   padding: 2px 10px;
   border-radius: var(--r-pill);
   background: var(--c-magic);
@@ -163,7 +164,7 @@
   cursor: pointer;
 }
 .label {
-  /* At most two lines: a long name never climbs over the trunk of the path. */
+  /* At most two lines (three on a phone, below): a long name never climbs over the trunk of the path. */
   align-self: stretch;
   padding: 4px 12px;
   border: 2px solid var(--sticker-line);
@@ -182,6 +183,8 @@
   overflow: hidden;
 }
 .locked .label { color: #5f4f7d; }
+/* Phones (stage up to PHONE_W, labels.ts): the tag is narrow, so a long name gets a third line instead of «…». */
+@media (max-width: 600px) { .label { -webkit-line-clamp: 3; } }
 .stars { display: inline-flex; gap: 2px; }
 /* An optional stop (NodeDef.optional): one short line under its name, height reserved in labels.ts (OPTIONAL_PX). */
 .skippable {

@@ -10,7 +10,7 @@ import {
 import { useActiveChild, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
-import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf, showsSkippable } from './labels'
+import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf, showsHelp, showsSkippable } from './labels'
 import s from './WorldMapScreen.module.css'
 
 /** Path coordinates are authored in 0..1 (x → right, y → down); the SVG works in a 1000-unit square. */
@@ -235,8 +235,11 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                     <NodeIcon kind={node.kind} size={76} done={done} locked={locked} color={world.color} />
                   )}
                 </span>
-                {isGuardian && !crystal && <span className={s.guardianTag}>¡Ayúdame!</span>}
-                {isCurrent && <span className={s.here}>{pillOf(ctx.petName).text}</span>}
+                {/* Where labels.ts placed them: inside the stage, and never the two on one stop (showsHelp). */}
+                {showsHelp({ node, crystal, current: isCurrent }) && pl.helpX !== null && (
+                  <span className={s.guardianTag} style={{ left: `calc(50% + ${pl.helpX}px)` }}>¡Ayúdame!</span>
+                )}
+                {isCurrent && <span className={s.here} style={{ left: `calc(50% + ${pl.pillDx}px)` }}>{pillOf(ctx.petName).text}</span>}
                 <span className={s.tag} style={{ left: `calc(50% + ${pl.dx}px)`, top: `calc(50% + ${pl.dy}px)`, width: pl.w }}>
                   <span className={s.label}>{label}</span>
                   {skippable && <span className={s.skippable}>Puedes saltarla</span>}
