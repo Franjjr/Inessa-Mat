@@ -1,6 +1,6 @@
 /* Mi sesión de hoy and the prueba inicial: a short walk through the real screens with the demo child Lía.
    Only visible Spanish text and roles are used. */
-import { expect, test } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { CHILD_NAME, devEditProgress, seedDemo, settle, openSession } from '../helpers'
 
 test.describe('Mi sesión de hoy', () => {
@@ -184,6 +184,56 @@ test.describe('Prueba inicial', () => {
     await expect(page.getByText(/· 2 de 20/)).toBeVisible()
   })
 })
+
+/** Whether the button is whole inside the window, without scrolling (P3PE-01: the child never has to look for it). */
+async function inView(page: Page, button: Locator): Promise<string | null> {
+  await expect(button).toBeVisible()
+  const box = (await button.boundingBox())!
+  const { w, h } = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
+  const ok = box.y >= 0 && box.x >= 0 && box.y + box.height <= h + 1 && box.x + box.width <= w + 1
+  return ok ? null : `${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}×${Math.round(box.height)} en ${w}×${h}`
+}
+
+for (const viewport of [{ width: 1000, height: 490 }, { width: 390, height: 844 }]) {
+  test.describe(`P3PE-01 a ${viewport.width}×${viewport.height}: «Pista» y «Comprobar» a la vista al abrir el ejercicio`, () => {
+    test.use({ viewport, hasTouch: true })
+
+    test('en la sesión', async ({ page }) => {
+      await seedDemo(page)
+      await openSession(page)
+      await page.getByRole('button', { name: '¡Empezar!' }).click()
+      // The warm-up has no hints: the first exercise with the answer bar's «💡 Pista» comes after it.
+      const hint = page.getByRole('button', { name: 'Pista', exact: true })
+      for (let i = 0; i < 60 && !(await hint.isVisible().catch(() => false)); i++) {
+        const entendido = page.getByRole('button', { name: /Entendido/ })
+        if (await entendido.count()) {
+          await entendido.click()
+          continue
+        }
+        await page.keyboard.type('1')
+        await page.keyboard.press('Enter')
+        await settle(page, 150)
+        const next = page.getByRole('button', { name: /Siguiente/ })
+        if (await next.count()) await next.first().click()
+        await page.evaluate(() => window.scrollTo(0, 0))
+      }
+      await page.evaluate(() => window.scrollTo(0, 0))
+      // FitToScreen settles over a few frames.
+      await settle(page, 400)
+      expect(await inView(page, hint), '«💡 Pista»').toBeNull()
+      expect(await inView(page, page.getByRole('button', { name: '✓ Comprobar' })), '«✓ Comprobar»').toBeNull()
+    })
+
+    test('en el repaso', async ({ page }) => {
+      await seedDemo(page)
+      await page.goto('/play/review')
+      await expect(page.getByText('Repaso de hoy')).toBeVisible()
+      await settle(page, 400)
+      expect(await inView(page, page.getByRole('button', { name: /Pista/ }).first()), '«Pista»').toBeNull()
+      expect(await inView(page, page.getByRole('button', { name: /Comprobar/ }).last()), '«Comprobar»').toBeNull()
+    })
+  })
+}
 
 test.describe('a short landscape tablet (Android with its bars)', () => {
   test.use({ viewport: { width: 1138, height: 640 } })
