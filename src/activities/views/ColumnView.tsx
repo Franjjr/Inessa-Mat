@@ -12,11 +12,12 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Answer, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, ExerciseViewProps, SubMethod } from '@/types'
 import { analyzeSub, borrowMarks, compensationSteps, hintsFor, toDigits } from '@/engine'
+import { wrongColumnsOf } from '@/engine/diagnose'
 import { CellGroup, DigitCell } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import { ExerciseLayout } from './ExerciseLayout'
 import s from './ColumnView.module.css'
 
@@ -87,6 +88,7 @@ export default function ColumnView(props: ColumnViewProps) {
       compact={compact}
       proof={proof}
       method={method}
+      retry={props}
     />
   )
 }
@@ -100,14 +102,16 @@ interface RoundProps {
   compact?: boolean
   proof?: boolean
   method?: SubMethod
+  /** «Inténtalo otra vez»: the digits and marks the child wrote, and the columns that were wrong. */
+  retry?: RetryProps
 }
 
-function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof, method }: RoundProps) {
+function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof, method, retry }: RoundProps) {
   const host = useActivityHost()
   const layout = useMemo(() => layoutOf(ex), [ex])
   const subMethod: 'borrow' | 'carry' = ex.kind === 'column-sub' && method === 'carry' ? 'carry' : 'borrow'
   const hints = useMemo(() => hintsFor(ex, ex.kind === 'column-sub' ? subMethod : undefined), [ex, subMethod])
-  const flow = useAnswerFlow(ex, {
+  const flow = useRetryFlow(ex, {
     onAnswered,
     showFeedback,
     allowHints,
@@ -115,8 +119,11 @@ function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof,
     method: ex.kind === 'column-sub' ? subMethod : undefined,
   })
   const { cols, rows, op, auxKind } = layout
-  const [res, setRes] = useState<(number | null)[]>(() => Array.from({ length: cols }, () => null))
-  const [aux, setAux] = useState<(number | null)[]>(() => Array.from({ length: cols }, () => null))
+  // A try again starts with what the child wrote (the result and her marks); the wrong columns are marked.
+  const [before] = useState(() => initialOf(retry, 'digits'))
+  const [res, setRes] = useState<(number | null)[]>(() => Array.from({ length: cols }, (_, i) => before?.digits[i] ?? null))
+  const [aux, setAux] = useState<(number | null)[]>(() => Array.from({ length: cols }, (_, i) => before?.carries?.[i] ?? null))
+  const wrongBefore = useRetryWrong(retry, () => (before ? wrongColumnsOf(before.digits, ex.answer, cols) : []))
 
   /** Subtraction: the steps the method expects (written marks) and the columns that receive a ten. */
   const steps = useMemo(() => {
@@ -146,6 +153,8 @@ function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof,
   const statusOf = (i: number) => {
     if (allRight) return 'correct' as const
     if (wrong.has(i)) return 'wrong' as const
+    // Before checking again, a column the child had wrong stays soft red until she changes it.
+    if (!flow.result && wrongBefore.has(i) && res[i] === (before?.digits[i] ?? null)) return 'wrong' as const
     if (i === nextEmpty) return 'active' as const
     return 'idle' as const
   }

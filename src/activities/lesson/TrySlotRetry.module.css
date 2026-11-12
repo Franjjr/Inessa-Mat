@@ -1,0 +1,5 @@
+/* A choice picked on the last try that was wrong («Inténtalo otra vez»): soft red, as the wrong boxes. */
+.wrongPick {
+  border-color: var(--c-warn) !important;
+  background: var(--c-warn-soft) !important;
+}
