@@ -79,10 +79,14 @@ describe('one division method, the galera of the school', () => {
     expect(screen.getByText(/Es más que 60: prueba un número más pequeño\./)).toBeTruthy()
   })
 
-  it('the galera without subtractions shows its own hints: the first one never asks to «resta» on paper', () => {
+  it('the galera without subtractions shows its own hints: none asks to «resta» on paper', () => {
     const ex = makeDivision(96, 4)
-    const short = hintsFor(ex, undefined, { divMethod: 'galera-short' })[0].text
-    expect(short).not.toBe(hintsFor(ex, undefined, { divMethod: 'galera' })[0].text)
+    const shortHints = hintsFor(ex, undefined, { divMethod: 'galera-short' })
+    const short = shortHints[0].text
+    // The first hint (where to start) is the same for both galeras; the step hint is the galera's own, without «resta».
+    const step = shortHints.at(-1)!.text
+    expect(step).not.toBe(hintsFor(ex, undefined, { divMethod: 'galera' }).at(-1)!.text)
+    expect(step).not.toMatch(/\b(resta|restar|réstalo)\b/i)
     render(<DivisionView exercise={ex} onAnswered={vi.fn()} divMethod="galera-short" />)
     act(() => { fireEvent.click(screen.getByRole('button', { name: 'Pista' })) })
     const note = screen.getByRole('note')
