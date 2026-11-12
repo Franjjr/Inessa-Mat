@@ -79,6 +79,11 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
     divMethod: normaliseDivMethod(isDivMethod(flow.method) ? flow.method : host.prefs.divMethod),
     tableMethod: normaliseTableMethod(host.prefs.tableMethod),
   }), [flow.method, host.prefs.subMethod, host.prefs.divMethod, host.prefs.tableMethod])
+  // The solution comes under the bar: bring it into view (the bar stays just above it).
+  const solutionRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (showSolution) solutionRef.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
+  }, [showSolution])
   const hasHint = flow.allowHints && flow.hints.length > 0 && flow.hintsShown < flow.hints.length
   const checkLabel = reading || busy ? 'Leyendo…' : '✓ Comprobar'
 
@@ -122,7 +127,11 @@ export function AnswerBar({ flow, onCheck, canCheck, nextLabel, selfChecking = f
         )}
       </div>
     </div>
-    {showSolution && flow.exercise && <SolutionPanel exercise={flow.exercise} opts={solutionOpts} className={s.solution} />}
+    {showSolution && flow.exercise && (
+      <div ref={solutionRef} className={s.solution}>
+        <SolutionPanel exercise={flow.exercise} opts={solutionOpts} />
+      </div>
+    )}
     </>
   )
 }
