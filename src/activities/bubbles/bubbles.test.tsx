@@ -105,6 +105,9 @@ describe('BubblesActivity wrong taps', () => {
     await user.click(bubble(first))
     expect(bubble(first).disabled).toBe(true)
     expect(bubble(answer).disabled).toBe(false)
+    // The clue is about the fact, never «has sumado» (MD-8).
+    expect(screen.getByText(/^Ese no es\. Piensa en \d+ grupos de \d+\.$/)).toBeTruthy()
+    expect(screen.queryByText(/Has sumado/)).toBeNull()
 
     await user.click(bubble(second))
     expect(screen.getByText(new RegExp(`La respuesta era ${answer}`))).toBeTruthy()

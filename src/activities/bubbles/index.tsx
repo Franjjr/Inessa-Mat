@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { check, generate } from '@/engine'
+import { FEEDBACK } from '@/engine/feedback'
 import { haptics, sfx, speech } from '@/audio'
 import { celebrate } from '@/fx'
 import type { ActivityProps, FactMulExercise } from '@/types'
@@ -42,10 +43,6 @@ export function distractors(a: number, b: number): number[] {
   }
   return out
 }
-
-/** The clue after a wrong bubble: about tapping, never the engine's message for a written answer (MD-8). To be replaced
-    by FEEDBACK.tapWrong of src/engine/feedback.ts once it exists. */
-export const TAP_WRONG = '¡Casi! Esa burbuja no es. Prueba con otra.'
 
 export default function BubblesActivity({ config, onDone, onExit }: ActivityProps) {
   const host = useActivityHost()
@@ -165,7 +162,8 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     setMissed(spent)
     if (spent.length < MAX_TAPS) {
       setWobble({ value, key: Date.now() })
-      setClue(TAP_WRONG)
+      // About tapping, never the engine's message for a written answer (MD-8): it says what the fact means.
+      setClue(FEEDBACK.tapWrong(q.ex.a, q.ex.b))
       return
     }
     // The last wrong tap ends the question: the answer is shown and the fact comes back later in the run.
