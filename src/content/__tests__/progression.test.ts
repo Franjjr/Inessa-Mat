@@ -53,6 +53,27 @@ describe('initial state and unlocking', () => {
     expect(isNodeUnlocked(p, 'w2', 'arrival')).toBe(false)
   })
 
+  it('an optional node opens in its turn but never blocks the nodes after it', () => {
+    const nodes = season1.worlds[0].nodes
+    const [n0, n1, n2, n3] = nodes
+    const optional = n1 as typeof n1 & { optional?: boolean }
+    optional.optional = true
+    try {
+      let p = initialProgress('kid', T0)
+      expect(isNodeUnlocked(p, 'w1', n1.id)).toBe(false)
+      expect(isNodeUnlocked(p, 'w1', n2.id)).toBe(false)
+      p = finish(p, 'w1', n0.id)
+      // After the required node before it, both the optional one and the next one are open.
+      expect(isNodeUnlocked(p, 'w1', n1.id)).toBe(true)
+      expect(isNodeUnlocked(p, 'w1', n2.id)).toBe(true)
+      expect(isNodeUnlocked(p, 'w1', n3.id)).toBe(false)
+      p = finish(p, 'w1', n2.id)
+      expect(isNodeUnlocked(p, 'w1', n3.id)).toBe(true)
+    } finally {
+      delete optional.optional
+    }
+  })
+
   it('a node with 0 stars stays closed for the next one; passed:true lets the host move on', () => {
     let p = finish(initialProgress('kid', T0), 'w1', 'arrival')
     p = finish(p, 'w1', 'lesson-groups')
