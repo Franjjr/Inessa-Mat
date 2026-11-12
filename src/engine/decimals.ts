@@ -108,6 +108,32 @@ function wrongShape(expected: string): CheckResult {
   return { correct: false, given: '', expected, errorType: 'other', feedback: FB.incomplete }
 }
 
+/**
+ * Two digits written in one decimal cell (by hand the cell takes them: 0,54 written «0» and «54»). That is not another
+ * number: nothing is graded, and the child is shown her own digits one per cell («0 , 5 4»).
+ */
+function crowdedCells(w: number, t: number, h: number | null, expected: string): CheckResult | null {
+  if (t <= 9 && (h === null || h <= 9)) return null
+  const spread = `${w} , ${[t, h].filter((v): v is number => v !== null).map((v) => String(v).split('').join(' ')).join(' ')}`
+  return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: `Pon una cifra en cada casilla: ${spread}.` }
+}
+
+/**
+ * «150 céntimos son 1 € y 50 céntimos.» The rule and the conversion of the child's own céntimos. It only says «escribe
+ * 39 € y 50 céntimos» when that amount, put in order, is the right one (`expected`, in céntimos): otherwise the child
+ * would obey and be told it is wrong (P4).
+ */
+export function centsOverflow(e: number, c: number, expected?: number): string {
+  const extra = Math.floor(c / 100)
+  const rest = c % 100
+  const parts = rest === 0 ? `${extra} €` : `${extra} € y ${rest} céntimos`
+  if (expected !== undefined && (e + extra) * 100 + rest === expected) {
+    const amount = rest === 0 ? `${e + extra} €` : `${e + extra} € y ${rest} céntimos`
+    return `${c} céntimos son ${parts}: escribe ${amount}.`
+  }
+  return `${c} céntimos son ${parts}. En la casilla de los céntimos va un número de 0 a 99.`
+}
+
 /** Grades a decimal exercise: the writing cells (whole, décimas, centésimas) or the sign for compare, or the euros and
     céntimos. Pure and deterministic. */
 export function checkDecimal(ex: DecimalExercise, answer: Answer): CheckResult {
@@ -117,6 +143,8 @@ export function checkDecimal(ex: DecimalExercise, answer: Answer): CheckResult {
   if (answer.type !== 'numbers' || answer.values.length !== 3) return wrongShape(expected)
   const [w, t, h] = answer.values
   if (w === null || t === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
+  const crowded = crowdedCells(w, t, h, expected)
+  if (crowded) return crowded
   const value = decimalFromCells(w, t, h, ex.places) ?? 0
   const given = fmtDecimal(value, ex.places)
   if (value === ex.value) return { correct: true, given, expected, feedback: FB.right }
@@ -130,6 +158,8 @@ function checkMoneyAmount(ex: DecimalExercise, answer: Answer): CheckResult {
   if (answer.type !== 'numbers' || answer.values.length !== 2) return wrongShape(expected)
   const [e, c] = answer.values
   if (e === null || c === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
+  // 150 céntimos is not a way to write céntimos: neither right nor a slip in the sum (P1), the child puts it in order.
+  if (c >= 100) return { correct: false, given: `${e} € y ${c} céntimos`, expected, errorType: 'incomplete', feedback: centsOverflow(e, c, ex.value) }
   const given = e * 100 + c
   if (given === ex.value) return { correct: true, given: fmtDecimal(given, 2), expected, feedback: FB.money }
   return { correct: false, given: fmtDecimal(given, 2), expected, errorType: 'other', feedback: FB.moneyWrong }
@@ -149,6 +179,8 @@ export function checkDecimalOp(ex: DecimalOpExercise, answer: Answer): CheckResu
   if (answer.type !== 'numbers' || answer.values.length !== 3) return wrongShape(expected)
   const [w, t, h] = answer.values
   if (w === null || t === null) return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: FB.incomplete }
+  const crowded = crowdedCells(w, t, h, expected)
+  if (crowded) return crowded
   const value = decimalFromCells(w, t, h, ex.places) ?? 0
   const given = fmtDecimal(value, ex.places)
   if (value === ex.answer) return { correct: true, given, expected, feedback: '¡Muy bien! Has puesto las comas en su sitio y has calculado bien.' }

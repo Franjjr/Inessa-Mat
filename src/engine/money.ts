@@ -8,6 +8,7 @@ import type {
   Answer, BudgetAsk, CheckResult, Exercise, Hint, MoneyAddExercise, MoneyBudgetExercise, MoneyChangeExercise, MoneyCompareExercise,
   MoneyConvertExercise, MoneyItem, MoneyMode, MoneyPayExercise, MoneyRecogniseExercise, Rng,
 } from '@/types'
+import { centsOverflow } from './decimals'
 import { pick, randInt, shuffle } from './rng'
 import { moneySkill } from './skills'
 
@@ -81,6 +82,14 @@ const CHANGE_TEMPLATES = [
   '{child} compra {item} que cuesta {price}. Paga con {paid}. ¿Cuánto le devuelven?',
   '{child} paga con {paid} {item} que cuesta {price}. ¿Cuánto le dan de cambio?',
 ]
+/** Two or three things: the price is what they cost together. */
+const CHANGE_TEMPLATES_MANY = [
+  '{child} compra {item}. Todo junto cuesta {price}. Paga con {paid}. ¿Cuánto le devuelven?',
+  '{child} compra {item}, que juntos cuestan {price}. Paga con {paid}. ¿Cuánto le dan de cambio?',
+]
+
+/** «un zumo, un lápiz y una goma». */
+const listNames = (names: string[]) => (names.length <= 1 ? names.join('') : `${names.slice(0, -1).join(', ')} y ${names[names.length - 1]}`)
 
 // ---------------------------------------------------------------- makers
 
@@ -105,8 +114,9 @@ export function makePay(price: number, whole = false): MoneyPayExercise {
   }
 }
 
-export function makeChange(price: number, paid: number, item: string): MoneyChangeExercise {
-  const text = CHANGE_TEMPLATES[price % CHANGE_TEMPLATES.length]
+export function makeChange(price: number, paid: number, item: string, many = false): MoneyChangeExercise {
+  const templates = many ? CHANGE_TEMPLATES_MANY : CHANGE_TEMPLATES
+  const text = templates[price % templates.length]
     .replace('{item}', item).replace('{price}', euros(price)).replace('{paid}', euros(paid))
   return {
     id: `money:change:${price}:${paid}`, kind: 'money', skill: moneySkill('change'), difficulty: 3, mode: 'change',
@@ -164,10 +174,10 @@ export function makeBudget(ask: BudgetAsk, budget: number, items: MoneyItem[]): 
 }
 
 const BUDGET_QUESTION: Record<BudgetAsk, string> = {
-  enough: '¿Te llega?',
-  short: '¿Cuánto te falta?',
-  left: '¿Cuánto te sobra?',
-  afford: '¿Qué compra no pasa del presupuesto?',
+  enough: '¿Te llega para comprar todo?',
+  short: '¿Cuánto te falta para comprarlo todo?',
+  left: 'Si lo compras todo, ¿cuánto te sobra?',
+  afford: '¿Qué puedes comprar con ese dinero? Toca la tarjeta.',
 }
 
 // ---------------------------------------------------------------- generation
@@ -226,10 +236,13 @@ export function buildMoney(mode: MoneyMode, rng: Rng, used: Set<string>, whole =
       return fresh(() => makePay(rng() < 0.4 ? randInt(rng, 1, 40) * 5 : randInt(rng, 41, 400) * 5), used)
     case 'change':
       return fresh(() => {
-        const price = randInt(rng, 10, 380) * 5
-        const paid = pick(rng, NOTES.filter((n) => n - price >= 10 && n > price))
-        if (!paid) return makeChange(100, 500, pick(rng, SHOP).name)
-        return makeChange(price, paid, pick(rng, SHOP).name)
+        // The price is the one of the shop card (or of two or three cards together), paid with the smallest note
+        // that reaches it: a story a child can believe.
+        const n = pick(rng, [1, 1, 2, 3])
+        const items = shuffle(rng, SHOP).slice(0, n)
+        const price = items.reduce((sum, it) => sum + it.price, 0)
+        const paid = NOTES.find((note) => note - price >= 10) ?? NOTES[NOTES.length - 1]
+        return makeChange(price, paid, listNames(items.map((it) => it.name)), n > 1)
       }, used)
     case 'add':
       return fresh(() => {
@@ -292,6 +305,11 @@ function judgeAmount(expected: number, answer: Answer): CheckResult {
   const v = centsFrom(answer)
   if (v === undefined) return res(false, '', exp, { errorType: 'other', feedback: 'Escribe los euros y los céntimos.' })
   if (v === null) return res(false, '?', exp, { errorType: 'incomplete', feedback: 'Escribe la cantidad completa.' })
+  // 150 céntimos in the céntimos box is not a way to write an amount: neither right nor a slip in the sum (P1).
+  if (answer.type === 'numbers' && (answer.values[1] as number) >= 100) {
+    const [e, c] = answer.values as number[]
+    return res(false, `${e} € y ${c} céntimos`, exp, { errorType: 'incomplete', feedback: centsOverflow(e, c, expected) })
+  }
   const given = euros(v)
   if (v === expected) return res(true, given, exp, { feedback: '¡Muy bien! Has contado bien el dinero.' })
   const feedback = (v - expected) % 100 === 0
@@ -362,7 +380,10 @@ function checkBudget(ex: MoneyBudgetExercise, answer: Answer): CheckResult {
   if (ex.ask === 'short' || ex.ask === 'left') {
     const r = judgeAmount(ex.answer as number, answer)
     if (r.correct || r.errorType !== 'other') return r
-    return { ...r, feedback: '¡Casi! Resta: lo que cuesta todo menos el dinero que tienes. Euros con euros y céntimos con céntimos.' }
+    const feedback = ex.ask === 'left'
+      ? '¡Casi! Resta: el dinero que tienes menos lo que cuesta todo. Euros con euros y céntimos con céntimos.'
+      : '¡Casi! Resta: lo que cuesta todo menos el dinero que tienes. Euros con euros y céntimos con céntimos.'
+    return { ...r, feedback }
   }
   const expected = String(ex.answer)
   if (answer.type !== 'option') return res(false, '', expected, { errorType: 'other', feedback: 'Elige una opción.' })
@@ -459,7 +480,7 @@ function hintsBudget(ex: MoneyBudgetExercise): Hint[] {
     ]
     case 'afford': return [
       hint(1, 'Mira el precio de cada cosa y compáralo con el dinero que tienes.'),
-      hint(2, 'Una cosa cabe en el presupuesto si cuesta lo mismo que tienes o menos. Revisa las cosas una a una.'),
+      hint(2, 'Puedes comprar una cosa si cuesta lo mismo que tienes o menos. Revisa las cosas una a una.'),
       hint(3, 'Ejemplo con otros números: con 3 € no te cabe una pulsera de 3,50 €, pero un sombrero de 2,80 € cabe.'),
     ]
   }

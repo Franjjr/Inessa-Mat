@@ -2,7 +2,7 @@
    arithmetic of durations and the calendar words. Pure: no React, no I/O.
    «las tres y veinte», «las cinco menos diez», «las dos y media de la tarde».
    Conventions: the face hour is 1..12 (12 = the 12 of the clock); the 24 h hour is 0..23.
-   Periods: 6–11 de la mañana, 12 del mediodía, 13–20 de la tarde, 21–5 de la noche (12:30 is «las doce y media del mediodía»). */
+   Periods: 6–11 de la mañana, 12 del mediodía, 13–20 de la tarde, 21–0 de la noche, 1–5 de la madrugada (12:30 is «las doce y media del mediodía»). */
 import type { ClockTime } from '@/types'
 import { numberWords } from './numeric'
 
@@ -15,7 +15,7 @@ export const MONTHS_30_31: { name: string; days: number }[] = [
   { name: 'octubre', days: 31 }, { name: 'noviembre', days: 30 }, { name: 'diciembre', days: 31 },
 ]
 
-export type DayPeriod = 'de la mañana' | 'del mediodía' | 'de la tarde' | 'de la noche'
+export type DayPeriod = 'de la mañana' | 'del mediodía' | 'de la tarde' | 'de la noche' | 'de la madrugada'
 
 export const pad2 = (n: number): string => String(n).padStart(2, '0')
 
@@ -30,6 +30,7 @@ export function periodOf(hour24: number): DayPeriod {
   if (hour24 >= 6 && hour24 < 12) return 'de la mañana'
   if (hour24 === 12) return 'del mediodía'
   if (hour24 >= 13 && hour24 < 21) return 'de la tarde'
+  if (hour24 >= 1 && hour24 <= 5) return 'de la madrugada'
   return 'de la noche'
 }
 
@@ -63,8 +64,8 @@ const WORD_TO_NUMBER: Map<string, number> = (() => {
   return m
 })()
 
-const PERIOD_WORDS: Record<string, 'mañana' | 'tarde' | 'noche' | 'mediodía'> = {
-  'de la mañana': 'mañana', 'de la tarde': 'tarde', 'de la noche': 'noche', 'del mediodía': 'mediodía',
+const PERIOD_WORDS: Record<string, 'mañana' | 'tarde' | 'noche' | 'mediodía' | 'madrugada'> = {
+  'de la mañana': 'mañana', 'de la tarde': 'tarde', 'de la noche': 'noche', 'del mediodía': 'mediodía', 'de la madrugada': 'madrugada',
 }
 
 /**
@@ -73,7 +74,7 @@ const PERIOD_WORDS: Record<string, 'mañana' | 'tarde' | 'noche' | 'mediodía'> 
  */
 export function parseClockPhrase(text: string): { hour24: number; minute: number } | null {
   const t = text.trim().toLowerCase().replace(/\s+/g, ' ')
-  const m = t.match(/^(la una|las [a-záéíóúñ]+)(?: (en punto|y media|y cuarto|menos cuarto|y [a-záéíóúñ]+|menos [a-záéíóúñ]+))?(?: (de la mañana|de la tarde|de la noche|del mediodía))?$/)
+  const m = t.match(/^(la una|las [a-záéíóúñ]+)(?: (en punto|y media|y cuarto|menos cuarto|y [a-záéíóúñ]+|menos [a-záéíóúñ]+))?(?: (de la mañana|de la tarde|de la noche|del mediodía|de la madrugada))?$/)
   if (!m) return null
   const hourText = m[1] === 'la una' ? 1 : WORD_TO_NUMBER.get(m[1].slice(4))
   if (hourText === undefined || hourText < 1 || hourText > 12) return null
@@ -96,7 +97,7 @@ export function parseClockPhrase(text: string): { hour24: number; minute: number
   } else return null
   const period = m[3] ? PERIOD_WORDS[m[3]] : undefined
   let hour24: number
-  if (period === 'mañana') hour24 = face
+  if (period === 'mañana' || period === 'madrugada') hour24 = face
   else if (period === 'tarde' || period === 'mediodía') hour24 = face === 12 ? 12 : face + 12
   else if (period === 'noche') hour24 = face === 12 ? 0 : face <= 5 ? face : face + 12
   else hour24 = face >= 6 && face <= 11 ? face : face === 12 ? 12 : face + 12

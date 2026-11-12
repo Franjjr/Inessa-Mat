@@ -126,11 +126,10 @@ describe('encuentra el error: grading', () => {
     expect(res.correct).toBe(true)
   })
 
-  it('the wrong column, or a wrong result, is wrong and keeps the error type', () => {
+  it('a wrong result is wrong and keeps the error type; the right result in another column is right (P1)', () => {
     const ex = wrongOne()
-    const wrongCol = checkErrorHunt(ex, { type: 'hunt', ok: false, column: (ex.wrongColumn! + 1) % 3, value: ex.answer })
-    expect(wrongCol.correct).toBe(false)
-    expect(wrongCol.errorType).toBe(ex.errorType)
+    const otherCol = checkErrorHunt(ex, { type: 'hunt', ok: false, column: (ex.wrongColumn! + 1) % 3, value: ex.answer })
+    expect(otherCol.correct).toBe(true)
     const wrongVal = checkErrorHunt(ex, { type: 'hunt', ok: false, column: ex.wrongColumn, value: ex.shown })
     expect(wrongVal.correct).toBe(false)
     expect(wrongVal.errorType).toBe(ex.errorType)
@@ -179,7 +178,7 @@ describe('comprobar: claims and grading', () => {
     expect([...types].every((t) => t === 'quotient-off' || t === 'remainder-too-big' || t === 'place-value')).toBe(true)
   })
 
-  it('verdict and check value: both right is correct; a wrong verdict keeps the claim error; a wrong value is a fact error', () => {
+  it('verdict and check value: both right is correct; a wrong verdict keeps the claim error; a wrong value only guides (P1)', () => {
     const wrong = claims('sub', false, 1)[0]
     const right = claims('sub', true, 1)[0]
     expect(checkCheckCalc(right, { type: 'verdict', ok: true, value: right.answer }).correct).toBe(true)
@@ -187,15 +186,16 @@ describe('comprobar: claims and grading', () => {
     expect(miss.correct).toBe(false)
     expect(miss.errorType).toBe(wrong.errorType)
     const badValue = checkCheckCalc(right, { type: 'verdict', ok: true, value: right.answer + 1 })
-    expect(badValue.errorType).toBe('fact')
+    expect(badValue.correct).toBe(true)
+    expect(badValue.errorType).toBeUndefined()
     const alarm = checkCheckCalc(right, { type: 'verdict', ok: false, value: right.answer })
     expect(alarm.errorType).toBe('false-alarm')
   })
 
-  it('a missing verdict or value is incomplete', () => {
+  it('a missing verdict is incomplete; the right verdict with the check box empty is right (P1)', () => {
     const ex = claims('add', true, 1)[0]
     expect(checkCheckCalc(ex, { type: 'verdict', ok: null, value: 3 }).errorType).toBe('incomplete')
-    expect(checkCheckCalc(ex, { type: 'verdict', ok: true, value: null }).errorType).toBe('incomplete')
+    expect(checkCheckCalc(ex, { type: 'verdict', ok: true, value: null }).correct).toBe(true)
   })
 })
 

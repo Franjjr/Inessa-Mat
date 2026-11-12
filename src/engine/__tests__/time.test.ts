@@ -52,7 +52,8 @@ describe('parseClockPhrase (reads what clockPhrase writes)', () => {
   it('returns null for text that is not a time phrase', () => {
     expect(parseClockPhrase('hola')).toBeNull()
     expect(parseClockPhrase('las tres y treinta y siete')).toBeNull()
-    expect(parseClockPhrase('las tres y veinte de la madrugada')).toBeNull()
+    expect(parseClockPhrase('las tres y veinte de la madrugada')).toEqual({ hour24: 3, minute: 20 })
+    expect(parseClockPhrase('las tres y veinte del amanecer')).toBeNull()
   })
 })
 
@@ -72,7 +73,8 @@ describe('face arithmetic', () => {
     expect(periodOf(20)).toBe('de la tarde')
     expect(periodOf(21)).toBe('de la noche')
     expect(periodOf(0)).toBe('de la noche')
-    expect(periodOf(5)).toBe('de la noche')
+    expect(periodOf(5)).toBe('de la madrugada')
+    expect(periodOf(1)).toBe('de la madrugada')
   })
 
   it('adds minutes on the 12-hour face and measures them forward', () => {

@@ -7,6 +7,7 @@ import { buildSense, genWordSense } from '@/engine/wordProblems'
 
 const SAMPLES = 400
 const OPTIONS = ['Sí, tiene sentido', 'No, no tiene sentido']
+const EXACT = ['Sí, es correcta', 'No, no es correcta']
 
 /** Is the proposal absurd for the story, or an order of magnitude away from the true result? A close proposal (near) is
     a step off the right result: by one under 10, by ten under 100, by ten or a hundred above that. */
@@ -75,7 +76,7 @@ describe('word:sense: generation', () => {
     for (let i = 0; i < SAMPLES; i++) {
       const p = buildSense(rng)
       const ex = p.exercise
-      const isYes = ex.options[ex.answer] === OPTIONS[0]
+      const isYes = ex.options[ex.answer].startsWith('Sí')
       expect(isYes, ex.id).toBe(p.shown === p.right)
       if (isYes) yes++
     }
@@ -91,12 +92,13 @@ describe('word:sense: generation', () => {
       expect(ex.kind).toBe('shape-choice')
       expect(ex.skill).toBe('word:sense')
       expect(ex.figures).toEqual([])
-      expect([...ex.options].sort()).toEqual([...OPTIONS].sort())
+      const exact = ex.question.endsWith('¿Es correcta la respuesta de Lumi?')
+      expect([...ex.options].sort()).toEqual([...(exact ? EXACT : OPTIONS)].sort())
       expect(ex.question).toContain('Lumi responde')
-      expect(ex.question.endsWith('¿Tiene sentido esa respuesta?')).toBe(true)
+      expect(exact || ex.question.endsWith('¿Tiene sentido esa respuesta?')).toBe(true)
       orders.add(ex.options.join('|'))
     }
-    expect(orders.size).toBe(2)
+    expect(orders.size).toBe(4)
   })
 
   it('is deterministic for a seed and reachable through the generator of the skill', () => {
@@ -141,7 +143,7 @@ describe('word:sense: grading and hints', () => {
       expect(hints.map((h) => h.level)).toEqual([1, 2, 3])
       for (const h of hints) {
         expect(/\b(sí|no)\b/i.test(h.text), h.text).toBe(false)
-        for (const option of OPTIONS) expect(h.text.toLowerCase().includes(option.toLowerCase()), h.text).toBe(false)
+        for (const option of [...OPTIONS, ...EXACT]) expect(h.text.toLowerCase().includes(option.toLowerCase()), h.text).toBe(false)
         expect(/\d/.test(h.text), h.text).toBe(false)
         expect(new RegExp(`(^|\\D)${p.right}(\\D|$)`).test(h.text), `${p.right}: ${h.text}`).toBe(false)
       }

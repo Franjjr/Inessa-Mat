@@ -161,7 +161,7 @@ describe('hints and statements', () => {
 
   it('the statement says what the child is asked', () => {
     const row = genOrdinal(createRng(3), 10)
-    expect(statementOf(row)).toBe(`Toca el ${ordinalWord(row.n)}`)
+    expect(statementOf(row)).toBe(`Toca el ${ordinalWord(row.n)}, contando desde la salida.`)
     const read = { ...genOrdinal(createRng(5), 30), mode: 'read' as const, n: 11 }
     expect(statementOf(read)).toBe('¿Cómo se dice el 11.º?')
     const write = { ...genOrdinal(createRng(5), 30), mode: 'write' as const, n: 11 }

@@ -213,6 +213,7 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
       if (!pair) continue
       const [l, r] = pair
       const sum = l + r
+      // The check is «result − one addend = the other one»: it can never be negative (no minus key; «12 + 68 = 8»).
       let claimed = sum
       let errorType: ErrorType | null = null
       if (!ok) {
@@ -221,7 +222,7 @@ export function genCheckCalc(op: CheckOp, rng: Rng, ok: boolean): CheckCalcExerc
         claimed = bug.value
         errorType = bug.type
       }
-      if ((claimed === sum) !== ok) continue
+      if ((claimed === sum) !== ok || claimed < Math.max(l, r)) continue
       return {
         id: `check-calc:add:${l}+${r}=${claimed}`, kind: 'check-calc', skill: checkSkill('add'), difficulty: digits === 3 ? 3 : 2,
         op: 'add', left: l, right: r, claimed, answer: claimed - r, ok, errorType,
@@ -259,7 +260,7 @@ const MISSED: Record<ErrorType, string> = {
   'calig-size': 'La letra tiene que llegar hasta la línea de arriba, ni más ni menos.',
   'calig-start': 'Empieza la letra por el punto verde y sigue la flecha.',
   'carry-forgot': '¡Ojo con la mochila! Hay una llevada que no se ha sumado en esa cuenta.',
-  'borrow-forgot': 'Cuando la vecina presta una decena, se queda con una menos. ¡Mira esa resta!',
+  'borrow-forgot': 'Si la vecina te presta, ella se queda con 1 menos. ¡Mira esa resta!',
   fact: 'Hay una cuenta de una sola cifra que no sale. Mira la cuenta columna a columna.',
   'place-value': 'Hay una cifra escrita en una columna que no le toca. Mira el sitio de cada cifra.',
   'clock-hour': 'La hora del reloj no es esa. Mira la aguja corta.',
@@ -305,8 +306,9 @@ const MISSED: Record<ErrorType, string> = {
 export const HUNT_FEEDBACK = {
   right: '¡Muy bien! La cuenta está bien. Comprobarla también es aprender.',
   falseAlarm: 'Esta cuenta estaba bien. Compruébala otra vez, columna a columna.',
-  wrongColumn: '¡Casi! Mira otra vez: ¿en qué columna empieza el error?',
-  wrongValue: 'La columna es la buena, pero el número correcto es otro. Vuelve a calcular esa columna.',
+  wrongColumn: 'Mira otra vez: ¿en qué columna hay un número que no sale?',
+  wrongValue: 'Escribe el resultado entero de la cuenta, bien hecho.',
+  digitOnly: '¡Bien, esa cifra es la buena! Ahora escribe el resultado entero: todas las cifras.',
   incomplete: 'Primero di si la cuenta está bien. Si no lo está, marca la columna y escribe el resultado.',
   correct: '¡Lo has encontrado! Cada error tiene su columna.',
 }
@@ -318,7 +320,17 @@ export const CHECK_FEEDBACK = {
   incomplete: 'Escribe la cuenta de comprobación y di si la cuenta está bien.',
 }
 
-/** Grades an encuentra el error: the verdict, then the column and the right result when there is an error. */
+/** Columns of the shown result that differ from the right one: any of them is a good place to say «aquí hay un error». */
+function wrongColumnsOf(ex: ErrorHuntExercise): number[] {
+  const cols = Math.max(digitCount(ex.shown), digitCount(ex.answer))
+  return Array.from({ length: cols }, (_, i) => i).filter((i) => digitAt(ex.shown, i) !== digitAt(ex.answer, i))
+}
+
+/**
+ * Grades an encuentra el error. The final answer decides (P1): when there is an error and the child writes the right
+ * result, it is right, whatever column she tapped (the column only guides). Without the right result, the column and
+ * the number she wrote say where to look.
+ */
 export function checkErrorHunt(ex: ErrorHuntExercise, answer: Answer): CheckResult {
   const expected = ex.wrongColumn === null ? 'bien' : `columna ${ex.wrongColumn + 1}: ${ex.answer}`
   const shown = String(ex.shown)
@@ -331,30 +343,72 @@ export function checkErrorHunt(ex: ErrorHuntExercise, answer: Answer): CheckResu
   }
   const type: ErrorType = ex.errorType ?? 'other'
   if (answer.ok === true) return { correct: false, given: `bien (${shown})`, expected, errorType: type, feedback: MISSED[type] }
-  if (answer.column === null || answer.column === undefined) {
-    return { correct: false, given: 'error', expected, errorType: 'incomplete', feedback: HUNT_FEEDBACK.incomplete }
-  }
-  const given = `error en la columna ${answer.column + 1}: ${answer.value ?? '?'}`
-  if (answer.column !== ex.wrongColumn) return { correct: false, given, expected, errorType: type, wrongColumns: [answer.column], feedback: HUNT_FEEDBACK.wrongColumn }
+  const column = answer.column ?? null
+  const given = `error${column === null ? '' : ` en la columna ${column + 1}`}: ${answer.value ?? '?'}`
+  if (answer.value === ex.answer) return { correct: true, given, expected, feedback: HUNT_FEEDBACK.correct }
+  if (column === null) return { correct: false, given: 'error', expected, errorType: 'incomplete', feedback: HUNT_FEEDBACK.incomplete }
+  const bad = wrongColumnsOf(ex)
+  if (!bad.includes(column)) return { correct: false, given, expected, errorType: type, wrongColumns: [column], feedback: HUNT_FEEDBACK.wrongColumn }
   if (answer.value === null || answer.value === undefined) return { correct: false, given, expected, errorType: 'incomplete', feedback: HUNT_FEEDBACK.incomplete }
-  if (answer.value !== ex.answer) return { correct: false, given, expected, errorType: type, wrongColumns: [ex.wrongColumn], feedback: HUNT_FEEDBACK.wrongValue }
-  return { correct: true, given, expected, feedback: HUNT_FEEDBACK.correct }
+  const feedback = answer.value === digitAt(ex.answer, column) ? HUNT_FEEDBACK.digitOnly : HUNT_FEEDBACK.wrongValue
+  return { correct: false, given, expected, errorType: type, wrongColumns: [column], feedback }
 }
 
-/** Grades a comprobar: the verdict and the check operation (the number the check gives). */
+/** The check of a claim and the number it has to give back: the first number of the claim (sum: either addend). */
+function proofOf(ex: CheckCalcExercise): { text: string; target: number } {
+  if (ex.op === 'sub') return { text: `${ex.claimed} + ${ex.right}`, target: ex.left }
+  if (ex.op === 'add') return { text: `${ex.claimed} − ${ex.right}`, target: ex.left }
+  return { text: `${ex.right} × ${ex.claimed} + ${ex.remainder ?? 0}`, target: ex.left }
+}
+
+/** The values of a valid check: for a sum, «result − either addend» (it gives back the other one); for a difference,
+    «result + the number taken away» (the first number) or «first number − result» (the number taken away). */
+function validChecks(ex: CheckCalcExercise): number[] {
+  if (ex.op === 'add') return [ex.claimed - ex.right, ex.claimed - ex.left]
+  if (ex.op === 'sub') return [ex.answer, ex.left - ex.claimed]
+  return [ex.answer]
+}
+
+/**
+ * Grades a comprobar. The verdict is the final answer and decides alone (P1): the right verdict is right with the check
+ * box empty, with any valid check (for a sum, subtracting either addend) or with a check that does not come out. The
+ * check box is an intermediate step: it only guides, with a kind note that shows the check worked out.
+ */
 export function checkCheckCalc(ex: CheckCalcExercise, answer: Answer): CheckResult {
   const expected = `${ex.answer}; ${ex.ok ? 'bien' : 'mal'}`
   if (answer.type !== 'verdict') return { correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' }
-  if (answer.ok === null || answer.ok === undefined || answer.value === null || answer.value === undefined) {
+  if (answer.ok === null || answer.ok === undefined) {
     return { correct: false, given: '?', expected, errorType: 'incomplete', feedback: CHECK_FEEDBACK.incomplete }
   }
-  const given = `${answer.value} ${answer.ok ? 'bien' : 'mal'}`
+  const value = answer.value ?? null
+  const given = `${value ?? '?'} ${answer.ok ? 'bien' : 'mal'}`
+  const proof = proofOf(ex)
   if (answer.ok !== ex.ok) {
-    const type: ErrorType = ex.ok ? 'false-alarm' : ex.errorType ?? 'other'
-    return { correct: false, given, expected, errorType: type, feedback: ex.ok ? CHECK_FEEDBACK.falseAlarm : MISSED[type] }
+    if (ex.ok) return { correct: false, given, expected, errorType: 'false-alarm', feedback: CHECK_FEEDBACK.falseAlarm }
+    const type: ErrorType = ex.errorType ?? 'other'
+    // She said «bien» to a wrong claim. Her own check tells her so when it does not give back the first number (or,
+    // with «first − result» for a difference, the number taken away).
+    const otherSubCheck = ex.op === 'sub' && value === ex.left - ex.claimed
+    const feedback = otherSubCheck && value !== ex.right
+      ? `Tu prueba da ${value} y el número que restas es ${ex.right}: no coinciden, así que la cuenta está mal.`
+      : value !== null && !otherSubCheck && value !== proof.target
+        ? `Tu prueba da ${value} y arriba pone ${proof.target}: no coinciden, así que la cuenta está mal.`
+        : `Haz la prueba con calma: ${proof.text} = ? Si no sale ${proof.target}, la cuenta está mal.`
+    return { correct: false, given, expected, errorType: type, feedback }
   }
-  if (answer.value !== ex.answer) return { correct: false, given, expected, errorType: 'fact', feedback: CHECK_FEEDBACK.value }
-  return { correct: true, given, expected, feedback: CHECK_FEEDBACK.correct }
+  if (value === null || validChecks(ex).includes(value)) return { correct: true, given, expected, feedback: CHECK_FEEDBACK.correct }
+  // Right verdict, check that does not come out: still right; the note shows the check worked out.
+  return { correct: true, given, expected, feedback: `¡Bien decidido! Repasa tu prueba: ${proof.text} = ${ex.answer}.` }
+}
+
+const HUNT_RESULT_SYMBOL: Record<ErrorHuntExercise['op'], string> = { add: '+', sub: '−', mul: '×' }
+
+/** The solution of an encuentra el error, for the solution panel: «La cuenta estaba bien: 75 × 4 = 300» or
+    «El error está en las centenas: 73 × 4 = 292». */
+export function explainHunt(ex: ErrorHuntExercise): string {
+  const calc = `${ex.top} ${HUNT_RESULT_SYMBOL[ex.op]} ${ex.bottom} = ${ex.answer}`
+  if (ex.wrongColumn === null) return `La cuenta estaba bien: ${calc}`
+  return `El error está en ${columnWithArticle(ex.wrongColumn)}: ${calc}`
 }
 
 // ---------------------------------------------------------------- hints
@@ -365,7 +419,7 @@ const HUNT_WORKED: Record<ErrorType, string> = {
   'calig-size': 'Mira si la letra llega solo hasta la línea de arriba.',
   'calig-start': 'Mira por dónde empieza la letra y hacia dónde va.',
   'carry-forgot': 'Mira las llevadas: ¿has sumado la que viene de la columna de la derecha?',
-  'borrow-forgot': 'Cuando la vecina presta una decena, ¿se queda con una menos?',
+  'borrow-forgot': 'Si la vecina te presta, ¿se queda con 1 menos?',
   fact: 'Revisa una sola cuenta de una cifra: ¿cuánto da de verdad?',
   'place-value': 'Revisa en qué columna está cada cifra del resultado.',
   'clock-hour': 'Revisa la aguja corta: ¿qué hora marca?',
@@ -425,7 +479,7 @@ export function checkHints(ex: CheckCalcExercise): Hint[] {
     ? 'Para comprobar una resta, suma el resultado y el número de abajo: ¿sale el de arriba?'
     : ex.op === 'add'
       ? 'Para comprobar una suma, resta el número de abajo al resultado: ¿sale el otro número?'
-      : 'Para comprobar una división, multiplica el divisor por el cociente y suma el resto: ¿sale el dividendo?'
+      : 'Multiplica el resultado por el número que reparte y suma lo que sobra: ¿te sale el número del principio?'
   const l3 = ex.op === 'sub'
     ? `${ex.claimed} + ${ex.right} = ?`
     : ex.op === 'add'

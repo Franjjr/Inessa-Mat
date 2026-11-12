@@ -35,6 +35,57 @@ const THEMES: Theme[] = [
   ] },
 ]
 
+/** The questions of a theme, written for it: «¿Cuántas gallinas vimos?», «¿Cuántos días llovió?», never «¿Cuántos
+    animales tiene las vacas?». Keyed by the theme title; `name` is the label without its article. */
+interface ThemeQuestions {
+  count: (label: string) => string
+  difference: (a: string, b: string) => string
+  total: string
+  most: string
+  least: string
+}
+const noArticle = (label: string) => label.replace(/^(el|la|los|las) /, '')
+const VOTES = (what: string): ThemeQuestions => ({
+  count: (l) => `¿Cuántos votos tiene ${l}?`,
+  difference: (a, b) => `¿Cuántos votos más tiene ${a} que ${b}?`,
+  total: '¿Cuántos votos hay en total?',
+  most: `¿Qué ${what} tiene más votos?`,
+  least: `¿Qué ${what} tiene menos votos?`,
+})
+/** «los de animales» → «libros de animales». */
+const bookName = (label: string) => noArticle(label).replace(/^de /, 'libros de ')
+const WEATHER: Record<string, { count: string; name: string }> = {
+  'el sol': { count: '¿Cuántos días hizo sol?', name: 'sol' },
+  'las nubes': { count: '¿Cuántos días estuvo nublado?', name: 'nubes' },
+  'la lluvia': { count: '¿Cuántos días llovió?', name: 'lluvia' },
+}
+const FEMININE = new Set(['vacas', 'gallinas', 'ovejas'])
+const THEME_QUESTIONS: Record<string, ThemeQuestions> = {
+  'La fruta favorita de la clase': VOTES('fruta'),
+  'El deporte favorito': VOTES('deporte'),
+  'Los animales que vimos en la granja': {
+    count: (l) => `¿${FEMININE.has(noArticle(l)) ? 'Cuántas' : 'Cuántos'} ${noArticle(l)} vimos?`,
+    difference: (a, b) => `¿${FEMININE.has(noArticle(a)) ? 'Cuántas' : 'Cuántos'} ${noArticle(a)} más que ${noArticle(b)} vimos?`,
+    total: '¿Cuántos animales vimos en total?',
+    most: '¿Qué animal vimos más veces?',
+    least: '¿Qué animal vimos menos veces?',
+  },
+  'Los libros que leímos este mes': {
+    count: (l) => `¿Cuántos ${bookName(l)} leímos?`,
+    difference: (a, b) => `¿Cuántos ${bookName(a)} más que ${bookName(b)} leímos?`,
+    total: '¿Cuántos libros leímos en total?',
+    most: '¿De qué clase de libro leímos más?',
+    least: '¿De qué clase de libro leímos menos?',
+  },
+  'El tiempo que hizo en el mes': {
+    count: (l) => WEATHER[l]?.count ?? `¿Cuántos días hubo de ${noArticle(l)}?`,
+    difference: (a, b) => `¿Cuántos días más hubo de ${WEATHER[a]?.name ?? noArticle(a)} que de ${WEATHER[b]?.name ?? noArticle(b)}?`,
+    total: '¿Cuántos días hay en total?',
+    most: '¿Qué tiempo hizo más días?',
+    least: '¿Qué tiempo hizo menos días?',
+  },
+}
+
 /** The themes a class votes on: a table of groups by option needs options a group can prefer. */
 const TABLE_THEMES = THEMES.filter((t) => t.unit === 'votos')
 
@@ -71,22 +122,26 @@ export function makeChart(
   let question = ''
   let options: string[] = []
   let answer = 0
+  const q: ThemeQuestions = THEME_QUESTIONS[title] ?? {
+    count: (l) => `¿Cuántos ${unit} tiene ${l}?`, difference: (x, y) => `¿Cuántos ${unit} más tiene ${x} que ${y}?`,
+    total: `¿Cuántos ${unit} hay en total?`, most: `¿Qué tiene más ${unit}?`, least: `¿Qué tiene menos ${unit}?`,
+  }
   switch (ask) {
     case 'count':
-      question = `¿Cuántos ${unit} tiene ${a.label}?`
+      question = q.count(a.label)
       answer = a.value
       break
     case 'difference':
-      question = `¿Cuántos ${unit} más tiene ${a.label} que ${b.label}?`
+      question = q.difference(a.label, b.label)
       answer = a.value - b.value
       break
     case 'total':
-      question = `¿Cuántos ${unit} hay en total?`
+      question = q.total
       answer = categories.reduce((s, c) => s + c.value, 0)
       break
     case 'most':
     case 'least': {
-      question = ask === 'most' ? `¿Qué tiene más ${unit}?` : `¿Qué tiene menos ${unit}?`
+      question = ask === 'most' ? q.most : q.least
       options = categories.map((c) => bare(c.label))
       const values = categories.map((c) => c.value)
       const target = ask === 'most' ? Math.max(...values) : Math.min(...values)
@@ -307,10 +362,26 @@ export function hintsChart(ex: ChartExercise): Hint[] {
   const read = ex.mode === 'bars'
     ? 'Sigue con el dedo la parte de arriba de la barra hasta los números de la izquierda.'
     : ex.per > 1 ? `Cada dibujo vale ${ex.per}: cuenta de ${ex.per} en ${ex.per}.` : 'Cada dibujo es uno: cuéntalos uno a uno.'
+  // The categories asked about are at the end of the id («:0-2»): the last hint names them.
+  const pair = ex.id.match(/:(\d+)-(\d+)$/)
+  const first = pair ? ex.categories[Number(pair[1])] : undefined
+  const second = pair ? ex.categories[Number(pair[2])] : undefined
+  const row = ex.mode === 'bars' ? 'la barra' : 'la fila'
   switch (ex.ask) {
-    case 'count': return [hint(1, 'Busca la fila o la barra de la que te preguntan.'), hint(2, read), hint(3, 'Escribe lo que has contado en esa fila o barra.')]
-    case 'difference': return [hint(1, 'Lee primero cuánto tiene cada una de las dos.'), hint(2, read), hint(3, 'Resta: la que tiene más menos la que tiene menos.')]
-    case 'total': return [hint(1, 'Lee cuánto tiene cada fila o barra.'), hint(2, read), hint(3, 'Suma todas las cantidades, una detrás de otra.')]
+    case 'count': return [
+      hint(1, 'Busca la fila o la barra de la que te preguntan.'), hint(2, read),
+      hint(3, first ? `Busca ${row} de «${bare(first.label)}» y escribe lo que has contado en ella.` : 'Escribe lo que has contado en esa fila o barra.'),
+    ]
+    case 'difference': return [
+      hint(1, 'Lee primero cuánto tiene cada una de las dos.'), hint(2, read),
+      hint(3, first && second
+        ? `Lee ${row} de «${bare(first.label)}» y ${row} de «${bare(second.label)}». Resta: la que tiene más menos la que tiene menos.`
+        : 'Resta: la que tiene más menos la que tiene menos.'),
+    ]
+    case 'total': return [
+      hint(1, 'Lee cuánto tiene cada fila o barra.'), hint(2, read),
+      hint(3, `Hay ${ex.categories.length} ${ex.mode === 'bars' ? 'barras' : 'filas'}: ${ex.categories.map((c) => `${bare(c.label).toLowerCase()}`).join(', ')}. Suma sus cantidades, una detrás de otra.`),
+    ]
     case 'most': return [hint(1, 'Compara el largo de las filas o de las barras.'), hint(2, 'La que llega más lejos es la que tiene más.'), hint(3, read)]
     case 'least': return [hint(1, 'Compara el largo de las filas o de las barras.'), hint(2, 'La más corta es la que tiene menos.'), hint(3, read)]
   }
