@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createRng, buildMeasure, THINGS, UNITS } from '@/engine'
 import { makeAdd, makeBudget, makeChange, makeCompare, makeConvert as makeMoneyConvert, makePay, makeRecognise, SHOP } from '@/engine/money'
-import { makeConvert, makeEstimate, makeRuler, makeUnit } from '@/engine/measure'
+import { makeConvert, makeEstimate, makeRuler, makeUnit, measureUnitQuestion } from '@/engine/measure'
 import MeasureView from './MeasureView'
 import MoneyView from './MoneyView'
 
@@ -131,7 +131,7 @@ describe('MoneyView', () => {
   it('budget: the story comes first and the question right after it, in the statement', () => {
     const { container } = render(<MoneyView exercise={makeBudget('short', 200, [SHOP[0], SHOP[1]])} onAnswered={() => {}} showFeedback={false} />)
     const prompt = container.querySelector('.ex-prompt')!
-    expect(prompt.textContent).toBe('Tienes 2 €. Estos son los precios:¿Cuánto te falta?')
+    expect(prompt.textContent).toBe('Tienes 2 €. Estos son los precios:¿Cuánto te falta para comprarlo todo?')
     expect(container.querySelector('.ex-prompt-sub')).toBeNull()
   })
 
@@ -218,6 +218,15 @@ describe('MeasureView', () => {
     fireEvent.click(screen.getByRole('button', { name: '15 m' }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('unit: the question is the engine one, never «medir capacidad de»', () => {
+    const thing = THINGS[0]
+    const ex = makeUnit(thing, UNITS.length.map((unit) => ({ value: thing.value, unit })))
+    const { container } = render(<MeasureView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    const prompt = container.querySelector('.ex-prompt')!.textContent ?? ''
+    expect(prompt).toContain(measureUnitQuestion(ex))
+    expect(prompt).not.toMatch(/medir (capacidad|longitud|peso|masa) de/)
   })
 
   it('unit: the right unit is correct', () => {
