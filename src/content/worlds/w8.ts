@@ -1,5 +1,5 @@
 /* World 8 — El Castillo del Reparto: division as fair sharing and multiplication backwards (fact families),
-   division facts, the galera (exact, with remainder) and the optional-feeling "expert" long division. */
+   division facts, the galera (exact, with remainder) and the two ways of writing it (with the subtractions and without them). */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w8 = world({

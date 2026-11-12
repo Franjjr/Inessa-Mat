@@ -259,7 +259,8 @@ function GaleraWrittenVisual({ params, phase, runLength, reduced }: VisualProps)
 
 /* ------------------------------------------------------------- check */
 
-/** The division check: quotient × divisor + remainder = dividend. */
+/** The division check as the school says it: the divisor by the quotient, plus the remainder, gives the dividend
+    (5 × 3 + 2 = 17). */
 export function DivisionCheckVisual({ params, phase, runLength, reduced }: VisualProps) {
   const dividend = Math.max(0, Math.floor(numParam(params, 'dividend', 17)))
   const divisor = Math.max(1, Math.floor(numParam(params, 'divisor', 5)))
@@ -269,12 +270,12 @@ export function DivisionCheckVisual({ params, phase, runLength, reduced }: Visua
   return (
     <div className={s.stage}>
       <p className={`${s.eq} ${s.eqBig}`} data-testid="check-equation">
-        {q} × {divisor} + {r} = {st >= 1 ? <motion.span className={s.hl} initial={reduced ? false : { scale: 0.4 }} animate={{ scale: 1 }} transition={motionT(reduced, POP)}>{dividend}</motion.span> : '?'}
+        {divisor} × {q} + {r} = {st >= 1 ? <motion.span className={s.hl} initial={reduced ? false : { scale: 0.4 }} animate={{ scale: 1 }} transition={motionT(reduced, POP)}>{dividend}</motion.span> : '?'}
       </p>
       {st >= 1 && (
         <motion.div className={s.panel} style={{ maxWidth: 420, width: 'auto' }} initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionT(reduced, GLIDE)}>
-          <p className={s.muted}>cociente × divisor + resto = dividendo</p>
-          <p className={s.eq}>{q * divisor} + {r} = {dividend} <span className={s.ok}>✔</span></p>
+          <p className={s.muted}>divisor × cociente + resto = dividendo</p>
+          <p className={s.eq}>{divisor * q} + {r} = {dividend} <span className={s.ok}>✔</span></p>
         </motion.div>
       )}
     </div>

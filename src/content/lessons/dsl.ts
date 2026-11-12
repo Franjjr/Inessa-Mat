@@ -12,17 +12,19 @@ export function show(visual: LessonVisualId, params: Params | undefined, text: s
   return s
 }
 
+/** The same step with what the voice says when it differs from the bubble (a sign read as a teacher says it). */
+export function said(step: LessonStep, say: string): LessonStep {
+  return { ...step, say }
+}
+
 /** "Try" step: the child solves one mini exercise generated from the selector to continue. */
 export function tryIt(visual: LessonVisualId, params: Params | undefined, text: string, trySelector: SkillSelector, speaker?: CharacterId): LessonStep {
   return { ...show(visual, params, text, speaker), interaction: 'try', trySelector }
 }
 
-/** A lesson step whose exercise must be solved (and hinted) with one trick of the tables. `tableMethod` is read by the
-    try slot; until LessonStep declares it, the step carries it as an extra field. */
-export type StepWithTrick = LessonStep & { tableMethod?: TableMethod }
-
-/** "Try" step that names the trick of the tables the hint and the mistake message must use. */
-export function tryTrick(visual: LessonVisualId, params: Params | undefined, text: string, trySelector: SkillSelector, tableMethod: TableMethod): StepWithTrick {
+/** "Try" step that names the trick of the tables the hint, the mistake message and the solution must use (the try slot
+    reads LessonStep.tableMethod instead of the child's favourite). */
+export function tryTrick(visual: LessonVisualId, params: Params | undefined, text: string, trySelector: SkillSelector, tableMethod: TableMethod): LessonStep {
   return { ...tryIt(visual, params, text, trySelector), tableMethod }
 }
 

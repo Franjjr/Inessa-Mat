@@ -370,3 +370,11 @@ describe('the column script of the subtraction is explicit', () => {
     without.unmount()
   })
 })
+
+describe('the division check is said as at school', () => {
+  it('draws the divisor by the quotient, plus the remainder: 5 × 3 + 2 = 17', () => {
+    const { container } = draw('division-check', { dividend: 17, divisor: 5 }, 0, 1)
+    expect(container.querySelector('[data-testid="check-equation"]')!.textContent).toBe('5 × 3 + 2 = 17')
+    expect(container.textContent).toContain('divisor × cociente + resto = dividendo')
+  })
+})

@@ -1,6 +1,7 @@
 /* World 4 — La Montaña de las Restas: column subtraction of 3 and 4 digits, borrowing, the zero trap and the
    magic check (+ a review of the 6 table). The lesson of the two ways of subtracting at school is the last stop before
-   the guardian: it only shows the two ways, and the child can skip it. */
+   the guardian: it shows the two ways and asks for one subtraction with the way the grown-ups set. The map has no
+   optional stops yet, so it cannot be skipped. */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w4 = world({
@@ -13,7 +14,7 @@ export const w4 = world({
   crystalName: 'celeste',
   predicament: 'ice',
   hook: '¡{pet} está {pg:congelada|congelado} en un bloque de hielo!',
-  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, me llevo una, por partes, la recta, ceros y prueba de la resta; euros y céntimos, pagar y el cambio',
+  skillsSummary: 'Restas en columna de 3 y 4 cifras: pedir a la vecina, me llevo una, ceros y prueba de la resta; euros y céntimos, pagar y el cambio',
   path: [[0.12, 0.86], [0.42, 0.88], [0.6, 0.84], [0.76, 0.8], [0.86, 0.62], [0.62, 0.54], [0.32, 0.56], [0.15, 0.4], [0.34, 0.26], [0.62, 0.3], [0.56, 0.12]],
   nodes: [
     storyNode('arrival', 'Un bloque de hielo', 'w4-arrival'),
