@@ -96,7 +96,7 @@ export function hintsPattern(ex: PatternExercise): Hint[] {
   if (ex.mode === 'predict') return [
     hint(1, 'Mira cuánto cambia de un número al siguiente: siempre lo mismo.'),
     hint(2, `Escribe la serie hasta llegar al puesto ${ex.position}.`),
-    hint(3, 'Cuenta cuántos saltos hay desde el primer número hasta ese puesto y súmalos.'),
+    hint(3, 'Cuenta cuántos pasos hay desde el primer número hasta ese puesto y suma el cambio una vez por cada paso.'),
   ]
   return [
     hint(1, 'Mira dos números seguidos: ¿cuánto sube o cuánto baja?'),
