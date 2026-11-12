@@ -21,7 +21,7 @@ const poligonos = clase({
     show('polygon', { sides: 3, mark: 'sides' }, 'Este polígono tiene 3 lados y 3 esquinas: es un triángulo.'),
     show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero.'),
     show('polygon', { sides: 4, mark: 'corners' }, 'Si tiene 4 esquinas rectas y los 4 lados iguales, es un cuadrado. Si tiene 4 esquinas rectas y dos lados más largos, es un rectángulo.'),
-    show('big-text', { text: 'Rombo', sub: '4 lados iguales · sin esquinas rectas' }, 'Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas: es como un cuadrado inclinado.'),
+    show('polygon', { shape: 'rombo' }, 'Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas: es como un cuadrado inclinado.'),
     show('polygon', { sides: 5, mark: 'sides' }, 'Este tiene 5 lados y 5 esquinas: es un pentágono.'),
     show('polygon', { sides: 6, mark: 'corners' }, 'Este tiene 6 lados y 6 esquinas: es un hexágono.'),
     show('polygon', { sides: 7, mark: 'sides' }, 'Con 7 lados es un heptágono.'),
@@ -158,10 +158,11 @@ const circuloCuerpos = clase({
   topicId: 'circulo-cuerpos',
   title: 'Círculo, circunferencia y cuerpos',
   para: [
-    show('big-text', { text: 'Circunferencia: solo la línea', sub: 'Círculo: la línea y todo lo de dentro' }, 'La circunferencia es solo el aro, la línea que rodea, como el aro de una rueda. El círculo es el aro y todo lo de dentro, como un disco entero.', 'frog'),
-    show('solid', { name: 'esfera' }, 'Una esfera es como una pelota: no tiene caras planas y rueda en todas direcciones.', 'ladybug'),
+    show('polygon', { shape: 'circunferencia' }, 'La circunferencia es solo el aro, la línea que rodea, como el aro de una rueda.', 'frog'),
+    show('polygon', { shape: 'circulo' }, 'El círculo es el aro y todo lo de dentro, pintado, como un disco entero.', 'ladybug'),
   ],
   ejemplo: [
+    show('solid', { name: 'esfera' }, 'Una esfera es como una pelota: no tiene caras planas y rueda en todas direcciones.'),
     show('solid', { name: 'cubo' }, 'Un cubo tiene 6 caras planas, todas cuadradas. No rueda: se queda quieto sobre la mesa.'),
     show('solid', { name: 'prisma' }, 'Este prisma tiene la base triangular: 2 caras triangulares y 3 caras de lado. Son 5 caras planas. No rueda.'),
     show('solid', { name: 'piramide' }, 'Una pirámide tiene una base y caras triangulares que llegan a una punta. Tiene 5 caras planas y no rueda.'),

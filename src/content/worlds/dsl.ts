@@ -5,7 +5,9 @@ import { layoutPath } from './path'
 export type NodeSpec = Omit<NodeDef, 'pos'>
 
 export const storyNode = (id: string, title: string, ref: string): NodeSpec => ({ id, kind: 'story', title, ref })
-export const lessonNode = (id: string, title: string, ref: string): NodeSpec => ({ id, kind: 'lesson', title, ref })
+/** A lesson stop; `{ optional: true }` lets the child skip it (NodeDef.optional). */
+export const lessonNode = (id: string, title: string, ref: string, opts: { optional?: boolean } = {}): NodeSpec =>
+  ({ id, kind: 'lesson', title, ref, ...(opts.optional ? { optional: true } : {}) })
 export const guardianNode = (title: string, ref: string): NodeSpec => ({ id: 'guardian', kind: 'guardian', title, ref })
 export const reviewNode = (id: string, title: string): NodeSpec => ({ id, kind: 'review', title })
 export const activityNode = (id: string, activity: ActivityConfig): NodeSpec => ({ id, kind: 'activity', title: activity.title, activity })

@@ -22,7 +22,7 @@ import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
 import { CHART_SKILLS, buildChance, buildChart, buildLikely } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
-import { genLongMul } from './longmul'
+import { genLongMul, genLongMulGentle } from './longmul'
 import { galeraShowsAnswer } from './divParts'
 import { genOrdinal } from './ordinals'
 import { genDecimal, genDecimalOp } from './decimals'
@@ -72,6 +72,10 @@ export interface Ctx {
   zeros?: boolean
   variants: DivisionVariant[]
   variantsExplicit: boolean
+  /** SkillSelector.operands: the column operations come from this list only (e.g. the tries of a lesson). */
+  operands?: [number, number][]
+  /** SkillSelector.noZeroUnitsDividend: no division whose dividend ends in 0. */
+  noZeroUnitsDividend?: boolean
 }
 
 interface UniverseItem {
@@ -107,7 +111,35 @@ export function resolveContext(sel: SkillSelector): Ctx {
     zeros: sel.zeros,
     variants: variants.length ? [...new Set(variants)] : ['exact', 'rem'],
     variantsExplicit: variants.length > 0,
+    operands: validOperands(sel.operands),
+    noZeroUnitsDividend: sel.noZeroUnitsDividend === true || undefined,
   }
+}
+
+/** The pairs of SkillSelector.operands that are whole positive numbers (undefined when none is). */
+function validOperands(list: SkillSelector['operands']): [number, number][] | undefined {
+  const ok = (list ?? []).filter((p) => Array.isArray(p) && p.length === 2 && p.every((v) => Number.isInteger(v) && v > 0))
+  return ok.length ? ok.map(([a, b]) => [a, b]) : undefined
+}
+
+/** A column operation of the fixed list (SkillSelector.operands), the first one not used yet in a shuffled order. A
+    subtraction puts the larger number on top. */
+function buildFromOperands(kind: ExerciseKind, operands: [number, number][], rng: Rng, used: Set<string>): Exercise | null {
+  const make = ([a, b]: [number, number]): Exercise | null => {
+    if (kind === 'column-add') return makeColumnAdd([a, b])
+    if (kind === 'column-sub') return a === b ? null : makeColumnSub(Math.max(a, b), Math.min(a, b))
+    if (kind === 'column-mul') return makeColumnMul(a, b)
+    return null
+  }
+  const cands = shuffle(rng, operands).map(make).filter((e): e is Exercise => e !== null)
+  return cands.length ? firstUnused(cands, used) : null
+}
+
+/** Draws a division again (up to 40 times) while its dividend ends in 0, when the selector asks for it. */
+function divisionDraw(ctx: Ctx, draw: () => [number, number]): [number, number] {
+  let r = draw()
+  for (let k = 0; ctx.noZeroUnitsDividend && r[0] % 10 === 0 && k < 40; k++) r = draw()
+  return r
 }
 
 /** Kinds to generate when the selector does not list them. */
@@ -637,7 +669,7 @@ function buildColumn(p: ParsedSkill, skill: SkillKey, ctx: Ctx, rng: Rng, used: 
   }
   // division
   const variant = p.type === 'div2x1' ? p.variant : 'exact'
-  return retry(() => { const [dd, dv] = genDivision(rng, variant, TABLES_2_9(ctx)); return makeDivision(dd, dv) }, used, rng)!
+  return retry(() => { const [dd, dv] = divisionDraw(ctx, () => genDivision(rng, variant, TABLES_2_9(ctx))); return makeDivision(dd, dv) }, used, rng)!
 }
 
 /** A bar problem. The ladder: until the child has mastered the bar of the operation, the drawing is shown. */
@@ -755,6 +787,10 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   const p = parseSkill(skill)
   if (!p) throw new Error(`engine.generate: unknown skill '${skill}'`)
   if (kind === 'word-problem') return buildWord(p, ctx, rng, used)
+  if (ctx.operands) {
+    const fixed = buildFromOperands(kind, ctx.operands, rng, used)
+    if (fixed) return fixed
+  }
   // Lengua: the banks of src/engine/lengua; the child's box of the skill decides whether the answer is typed.
   if (p.type === 'lengua') return retry(() => buildLengua(kind, skill, rng, ctx.mastery?.[skill]?.box ?? 0), used, rng)!
   // Inglés de 3.º (src/engine/ingles/exercises.ts): the vocabulary, phrases and numbers in English
@@ -784,11 +820,19 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'hunt') return genErrorHunt(p.op, rng, rng() < 0.6)
   if (p.type === 'check') return genCheckCalc(p.op, rng, rng() < 0.5)
   if (p.type === 'mul3x1') return retry(() => genMul3x1(rng, p.carry), used, rng)!
-  if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem', TABLES_2_9(ctx)), used, rng)!
+  if (p.type === 'div4x1') {
+    return retry(() => {
+      let ex = genDivision4(rng, p.variant === 'rem', TABLES_2_9(ctx))
+      for (let k = 0; ctx.noZeroUnitsDividend && ex.dividend % 10 === 0 && k < 40; k++) ex = genDivision4(rng, p.variant === 'rem', TABLES_2_9(ctx))
+      return ex
+    }, used, rng)!
+  }
   if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem', p.variant === 'round'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'mulCol') {
     // A selector that asks for few carries (regroup 'none' or 'one') gets the gentle 3.º introduction of 2 × 2.
+    // The 3.º entry has its own key (mul:col:2x2:suave): small carries, the exercise keeps that skill.
+    if (p.gentle) return retry(() => genLongMulGentle(rng), used, rng)!
     const gentle = ctx.regroupExplicit && (ctx.regroup === 'none' || ctx.regroup === 'one')
     return retry(() => genLongMul(rng, p.top, p.bottom, gentle), used, rng)!
   }
@@ -797,7 +841,7 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'decimal-op') return retry(() => genDecimalOp(rng, p.op, p.places), used, rng)!
   if (p.type === 'div3x1') {
     return retry(() => {
-      const [dd, dv] = genDivision3(rng, p.variant === 'rem', TABLES_2_9(ctx))
+      const [dd, dv] = divisionDraw(ctx, () => genDivision3(rng, p.variant === 'rem', TABLES_2_9(ctx)))
       return makeDivision3(dd, dv)
     }, used, rng)!
   }
@@ -890,7 +934,7 @@ export function generate(selector: SkillSelector, count: number, opts: GenerateO
 
 /** Whether the selector sets the level itself (range, digits, regroup, division variants, zeros). */
 function fixesLevel(ctx: Ctx): boolean {
-  return ctx.rangeExplicit || ctx.digits !== undefined || ctx.regroupExplicit || ctx.variantsExplicit || ctx.zeros !== undefined
+  return ctx.rangeExplicit || ctx.digits !== undefined || ctx.regroupExplicit || ctx.variantsExplicit || ctx.zeros !== undefined || !!ctx.operands
 }
 
 /** Without a fixed level, the easier exercises of a skill come first: within each skill the positions of the session stay

@@ -54,32 +54,42 @@ describe('«Dos formas de restar del cole»', () => {
     expect(l.steps.some((s) => s.visual === 'sub-carry' && s.text.includes('Ponemos un 1 delante del 2'))).toBe(true)
   })
 
-  it('every try is a 3-digit subtraction with one borrowing and no borrowing across a zero', () => {
+  it('every try is one of 463 − 128, 574 − 236 or 382 − 145, shaped like its example', () => {
     for (const step of triesOf(l)) {
-      expect(step.trySelector).toEqual({ kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
+      expect(step.trySelector).toMatchObject({ kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false })
+      const seen = new Set<string>()
       for (const ex of samples(step) as ColumnSubExercise[]) {
+        seen.add(`${ex.minuend} − ${ex.subtrahend}`)
         expect(String(ex.minuend).length).toBe(3)
         expect(ex.borrowed.filter(Boolean), `${ex.minuend} − ${ex.subtrahend}`).toHaveLength(1)
         // the digit that lends is never a zero
         const lender = ex.borrowed.findIndex(Boolean) + 1
         expect(String(ex.minuend).split('').reverse()[lender], `${ex.minuend} − ${ex.subtrahend}`).not.toBe('0')
+        // like 352 − 127: the borrowing is in the units
+        expect(ex.borrowed.findIndex(Boolean), `${ex.minuend} − ${ex.subtrahend}`).toBe(0)
       }
+      expect([...seen].sort()).toEqual(['382 − 145', '463 − 128', '574 − 236'])
     }
   })
 
-  it('is the last stop before the guardian of world 4 (the map has no optional stops yet: one try, never a forced method)', () => {
+  it('is an optional stop right before the guardian of world 4 (one try, never a forced method)', () => {
     const w4 = season1.worlds.find((w) => w.id === 'w4')!
     const ids = w4.nodes.map((n) => n.id)
     expect(ids[ids.length - 2]).toBe('lesson-four-ways')
     expect(w4.nodes[ids.length - 2].title).toBe('Dos formas de restar del cole')
+    expect(w4.nodes[ids.length - 2].optional).toBe(true)
+    // the main lesson of subtracting is required
+    expect(w4.nodes.find((n) => n.id === 'lesson-borrow')!.optional).toBeUndefined()
   })
 })
 
 describe('the galera', () => {
-  it('«Dos formas de hacer la galera» is the last stop before the guardian of world 8, with no choice', () => {
+  it('«Dos formas de hacer la galera» is an optional stop right before the guardian of world 8, with no choice', () => {
     const w8 = season1.worlds.find((w) => w.id === 'w8')!
     const ids = w8.nodes.map((n) => n.id)
     expect(ids[ids.length - 2]).toBe('lesson-div-ways')
+    expect(w8.nodes[ids.length - 2].optional).toBe(true)
+    expect(w8.nodes.find((n) => n.id === 'lesson-galera')!.optional).toBeUndefined()
     const l = lessonOf('w8-div-ways')
     expect(l.title).toBe('Dos formas de hacer la galera')
     expect(l.steps.some((s) => s.interaction === 'choose')).toBe(false)
@@ -100,20 +110,29 @@ describe('the galera', () => {
     for (const ex of samples(exact[0]) as DivisionExercise[]) expect(ex.remainder).toBe(0)
   })
 
-  // The generator (src/engine/generate.ts) can still draw 80 : 2 or 60 : 3, whose units are 0: the selector has no way to
-  // leave them out yet (see the notes of the integration).
-  it.todo('the exact tries of the lesson never ask for a dividend that ends in 0')
+  it('the exact tries of the galera lessons never ask for a dividend that ends in 0', () => {
+    for (const id of ['w8-galera', 'w8-div-ways']) {
+      const exact = triesOf(lessonOf(id)).filter((s) => s.trySelector?.divisionVariants?.[0] === 'exact')
+      expect(exact.length, id).toBeGreaterThan(0)
+      for (const step of exact) {
+        for (let seed = 0; seed < 200; seed++) {
+          const ex = generate(step.trySelector!, 1, { rng: createRng(seed) })[0] as DivisionExercise
+          expect(ex.dividend % 10, `${id}: ${ex.dividend} : ${ex.divisor}`).not.toBe(0)
+        }
+      }
+    }
+  })
 })
 
 describe('the tricks of the tables', () => {
   it('the try of «el 5 y uno más» never asks for the 9 and names its trick', () => {
-    const step = triesOf(lessonOf('w3-five'))[0] as LessonStep & { tableMethod?: string }
+    const step = triesOf(lessonOf('w3-five'))[0]
     expect(step.tableMethod).toBe('five-plus-one')
     for (const ex of samples(step) as FactMulExercise[]) expect([ex.a, ex.b], `${ex.a} × ${ex.b}`).not.toContain(9)
   })
 
   it('the try of «los secretos del 8» works with the double of the double', () => {
-    const step = triesOf(lessonOf('w5-pattern'))[0] as LessonStep & { tableMethod?: string }
+    const step = triesOf(lessonOf('w5-pattern'))[0]
     expect(step.tableMethod).toBe('double-double')
   })
 

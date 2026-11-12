@@ -22,6 +22,10 @@ export const w8Share = lesson('w8-share', 'Dividir es repartir', [
   tryIt('fact-family', { a: 6, b: 8 }, '¡Te toca! Piensa en la multiplicación.', { kinds: ['fact-div'], tables: [6, 7, 8], factorRange: [2, 9] }),
 ])
 
+/** The exact tries are like 84 : 4: never a dividend that ends in 0 (40 : 4, 80 : 2), where the zero would be a
+    second difficulty the lesson has not shown. */
+const exactNoZero: SkillSelector = { kinds: ['division'], divisionVariants: ['exact'], noZeroUnitsDividend: true }
+
 /** The galera is drawn with its subtractions written (written: 1); one step per beat: the casita, the quotient digit,
     the subtraction, the next quotient digit… (see galeraBeats in the visual). */
 export const w8Galera = lesson('w8-galera', 'La casita de la división', [
@@ -31,7 +35,7 @@ export const w8Galera = lesson('w8-galera', 'La casita de la división', [
   show('galera', g84, 'Ahora resto: 8 − 8 = 0. No sobra nada.'),
   show('galera', g84, 'Bajo la cifra siguiente, el 4. ¿Cuántas veces cabe el 4 en el 4? Una vez. Escribo el 1 al lado del 2.'),
   show('galera', g84, 'Y 4 − 4 = 0. ¡Terminado! 84 : 4 = 21. El cociente es 21 y no sobra nada.'),
-  tryIt('galera', g84, '¡Te toca! Mira la primera cifra: ¿cuántas veces cabe el divisor? Escríbelo, resta y baja la cifra siguiente.', { kinds: ['division'], divisionVariants: ['exact'] }),
+  tryIt('galera', g84, '¡Te toca! Mira la primera cifra: ¿cuántas veces cabe el divisor? Escríbelo, resta y baja la cifra siguiente.', exactNoZero),
   show('galera', g17, '¿Y 17 : 5? El 1 es más pequeño que el 5: no cabe. Por eso cogemos las dos cifras, el 17.'),
   show('galera', g17, '¿Cuánto por 5 se acerca a 17 sin pasarse? 5 × 3 = 15. Con 5 × 4 = 20 me paso. El cociente es 3.'),
   show('galera', g17, 'Ahora resto: 17 − 15 = 2. Esos 2 que sobran son el resto. Es siempre más pequeño que el divisor.'),
@@ -39,11 +43,11 @@ export const w8Galera = lesson('w8-galera', 'La casita de la división', [
   tryIt('galera', g17, '¡Te toca! Busca en la tabla del divisor lo que más se acerca sin pasarse. El resto es lo que sobra.', { kinds: ['division'], divisionVariants: ['rem'] }),
 ])
 
-/* «Dos formas de hacer la galera»: the same 84 : 4 with the subtractions written and without them. The world map has
-   no optional stops yet (every earlier stop must be done), so the lesson sits right before the guardian and asks for
-   ONE try, with the way the grown-ups set in the settings (no fixed `divMethod`: the try slot reads
-   ChildSettings.divMethod). */
-const exactDivision: SkillSelector = { kinds: ['division'], divisionVariants: ['exact'] }
+/* «Dos formas de hacer la galera»: the same 84 : 4 with the subtractions written and without them. It is an optional
+   stop (the main lesson of the galera is «La casita de la división»): the map shows it can be skipped and the guardian
+   does not wait for it. It asks for ONE try, with the way the grown-ups set in the settings (no fixed `divMethod`: the
+   try slot reads ChildSettings.divMethod), exact and without a dividend that ends in 0. */
+const exactDivision = exactNoZero
 
 export const w8DivWays = lesson('w8-div-ways', 'Dos formas de hacer la galera', [
   show('galera', g84, 'Hay dos formas de hacer la galera. Con restas: 8 entre 4, a 2. 2 por 4, 8. Y 8 − 8 = 0, debajo.'),

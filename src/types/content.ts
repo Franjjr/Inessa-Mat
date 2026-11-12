@@ -87,7 +87,12 @@ export type LessonVisualId =
   | 'sub-carry'         // params: { a, b } — subtraction "me llevo una abajo": the subtrahend's next digit gets +1
   | 'sub-parts'         // params: { a, b } — subtraction by parts: a − hundreds − tens − units
   | 'sub-line'          // params: { a, b } — subtraction on the number line: jumps from b up to a
-  | 'bar-model'         // params: { a, b, total } — part-part-whole bar (a and b are the parts, total the whole)
+  | 'bar-model'         // params: { a, b, total, ask?, cross?, compare? } — part-part-whole bar (a and b are the parts, total the whole).
+                        //   b: 0 — a take-away: the whole is `total` and the second part is the «?» (13 − 4: { a: 4, b: 0, total: 13 }).
+                        //   ask: "total" — the parts are known and the whole reads «?» until the last step ({ a: 5, b: 3, ask: "total" }).
+                        //   cross: 1 — with b: 0, the part that goes away (a) is struck through ({ a: 4, b: 0, total: 13, cross: 1 }).
+                        //   compare: 1 — two bars, a on top and b under it (b < a); the piece b lacks is the «?» until the last
+                        //   step writes a − b («cuántos más»: { a: 5, b: 2, compare: 1 }).
   | 'div-parts'         // params: { dividend, divisor } — repartir por partes: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4
   | 'div-climb'         // params: { divisor, quotient } — multiplicar hacia arriba: the multiples of the divisor
   | 'lng-sentence'      // Lengua: params { text, highlight?, mark? } — a sentence on a card; mark noun, adj, verb or art colours the highlight
@@ -98,14 +103,18 @@ export type LessonVisualId =
   | 'eng-words'         // Inglés: params { theme } — every word of a vocabulary theme as a grid, each with its Spanish meaning (tap: said in English)
   | 'eng-number-list'   // Inglés: params { from, to, step? } — a range of numbers (0 to 100) as a grid of figures and English words
   | 'number-line'       // params: { from, to, step, mark?, jump? } — ruler with ticks; mark highlights a number, jump draws an arc from mark to mark + jump
-  | 'fraction-shape'    // params: { parts, shaded, shape } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar
+  | 'fraction-shape'    // params: { parts, shaded, shape, unequal? } — one figure in equal parts, shaded of them coloured, the fraction written under; shape is circle or bar.
+                        //   unequal: 1 — a pizza cut into `parts` (2 to 4) pieces that are NOT equal, with no fraction under it
+                        //   («No son partes iguales»): { parts: 4, unequal: 1 }.
   | 'fraction-groups'   // params: { total, parts, take } — total dots dealt into parts equal groups, take of the groups highlighted
   | 'money'             // params: { items, price? } — items: comma list of céntimos (200,50,20), each drawn as a real coin or note; price (céntimos) adds the price tag and the change line «Te devuelven X» when the items pay more
   | 'clock'             // params: { h, m, digital? } — analogue clock at h:m (h 0..23, a 24 h hour sits on the face); digital 1 adds the digital time «hh:mm» next to it
   | 'ruler'             // params: { cm, from?, object? } — a centimetre ruler (1 to 9 cm) with an object (emoji) lying from `from` (default 0) to cm
   | 'units'             // params: { kind } — kind is length, mass or capacity: the units of that kind, each with a real object of that size
   | 'timeline'          // params: { start, end } — minutes from midnight: a bar from start to end on an hour line, both times and the duration written
-  | 'polygon'           // params: { sides, mark? } — a regular polygon of 3 to 8 sides; mark sides numbers the sides 1..n, mark corners numbers the corners
+  | 'polygon'           // params: { sides, mark?, shape? } — a regular polygon of 3 to 8 sides; mark sides numbers the sides 1..n, mark corners numbers the corners.
+                        //   shape: "rombo" — a rhombus (4 equal sides, no right corner) instead of the regular 4-sided figure;
+                        //   "circunferencia" (or "aro") — only the line round a circle; "circulo" (or "disco") — the line and its inside painted.
   | 'lines'             // params: { kind } — kind is recta, curva, poligonal, paralelas, perpendiculares, segmento or semirrecta
   | 'angle'             // params: { deg } — an angle of deg degrees (1 to 179) between two rays; at 90 a square marks the right angle
   | 'solid'             // params: { name } — a solid: cubo, prisma, piramide, cilindro, cono or esfera
@@ -204,6 +213,10 @@ export interface NodeDef {
   pos: { x: number; y: number }
   /** Optional: node can be replayed for more stars. Default true. */
   replayable?: boolean
+  /** A stop the child may skip (e.g. the lesson on the other way of subtracting at school): it opens in its turn, but the
+      stops after it, the guardian too, never wait for it (src/content/progression.ts), and the map says it can be
+      skipped. Default false. */
+  optional?: boolean
 }
 
 export interface WorldDef {

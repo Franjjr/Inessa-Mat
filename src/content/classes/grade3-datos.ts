@@ -48,7 +48,7 @@ const tablas = clase({
   ejemplo: [
     show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1', at: '0:0' }, 'En la fila de 3.º A y la columna de la manzana hay un 5: son 5 niños de 3.º A que prefieren la manzana.'),
     show('table', { rows: '3.º A,3.º B', cols: 'la manzana:🍎,la pera:🍐,la fresa:🍓', cells: '5-2-4/3-6-1', at: '0:1' }, 'En la misma fila, la columna de la pera tiene un 2: son 2 niños de 3.º A que prefieren la pera.'),
-    show('big-text', { text: '5 − 2 = 3', sub: '3 niños más prefieren la manzana que la pera' }, 'Para saber cuántos más, resta: en 3.º A, 5 menos 2 son 3. Hay 3 niños más que prefieren la manzana.'),
+    show('bar-model', { a: 5, b: 2, compare: 1 }, 'Para saber cuántos más, resta: en 3.º A, 5 menos 2 son 3. Hay 3 niños más que prefieren la manzana.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'fila · columna · número' }, '¡Te toca! Busca primero la fila del grupo que te preguntan, y después la columna de la opción.', { skills: ['chart:table'] }),

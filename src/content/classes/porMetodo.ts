@@ -1,9 +1,9 @@
 /* A class as the child's school teaches it. The method of subtracting and of dividing is the grown-up's choice
    (methodFor, engine/methods.ts): the tries of a class are solved with it, and a class that teaches the method itself
-   (restar pidiendo prestado) has its own version for «me llevo una abajo». Pure: the class registry is never changed. */
+   (restar pidiendo prestado, restar con ceros, restar con cuatro cifras) has its own version for «me llevo una abajo». Pure: the class registry is never changed. */
 import type { DivMethod, LessonDef, LessonStep, SubMethod } from '@/types'
 import type { ClassDef } from './dsl'
-import { restarPrestandoLlevando } from './grade3'
+import { restarCerosLlevando, restarCuatroCifrasLlevando, restarPrestandoLlevando } from './grade3'
 
 export interface ClassMethods {
   subMethod: SubMethod
@@ -13,6 +13,8 @@ export interface ClassMethods {
 /** Classes with their own version for a subtraction method (same id and topic, the example said the other way). */
 const SUB_VARIANTS: Record<string, Partial<Record<SubMethod, ClassDef>>> = {
   'c3-resta-prestando': { carry: restarPrestandoLlevando },
+  'c3-resta-ceros': { carry: restarCerosLlevando },
+  'c3-resta-4d': { carry: restarCuatroCifrasLlevando },
 }
 
 const isSubTry = (st: LessonStep) =>

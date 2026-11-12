@@ -155,7 +155,7 @@ describe('clases de sumar y restar (3.º)', () => {
       const earlier = block!.topics.slice(0, block!.topics.findIndex((t) => t.id === cls.topicId))
       const allowed = new Set([...earlier.flatMap((t) => t.skills), ...block!.topics.find((t) => t.id === cls.topicId)!.skills])
       // The class of 2 × 2 teaches the one way of the school, the column (long-mul), whose skill is not the topic's by-parts skill.
-      if (cls.topicId === 'mul-2-cifras-intro') allowed.add('mul:col:2x2')
+      if (cls.topicId === 'mul-2-cifras-intro') allowed.add('mul:col:2x2:suave')
 
       if (cls.mapLessonId) expect(getLesson(cls.mapLessonId), cls.lesson.id).toBeDefined()
 
