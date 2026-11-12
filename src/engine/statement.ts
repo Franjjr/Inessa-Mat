@@ -44,7 +44,7 @@ const UNIT_NAME: Record<string, string> = {
   kg: 'kilos', g: 'gramos', mg: 'miligramos', t: 'toneladas', kl: 'kilolitros', l: 'litros', dl: 'decilitros', cl: 'centilitros', ml: 'mililitros',
 }
 
-const ROUND_PLACE: Record<number, string> = { 10: 'decenas', 100: 'centenas', 1000: 'millares' }
+const ROUND_PLACE: Record<number, string> = { 10: 'las decenas', 100: 'las centenas', 1000: 'los millares' }
 
 /** The sentence to read for an exercise. Never empty. `ctx` fills {child} and {pet} in the stories. */
 export function statementFor(ex: Exercise, ctx: TemplateContext = DEFAULT_CONTEXT): string {
@@ -87,7 +87,7 @@ export function statementFor(ex: Exercise, ctx: TemplateContext = DEFAULT_CONTEX
     case 'compare': return `¿Qué signo va entre ${fmt(ex.left)} y ${fmt(ex.right)}? Elige mayor que, menor que o igual.`
     case 'order':
       return `Ordena estos números de ${ex.direction === 'asc' ? 'menor a mayor' : 'mayor a menor'}: ${ex.values.map(fmt).join(', ')}.`
-    case 'round': return `Redondea ${fmt(ex.value)} a las ${ROUND_PLACE[ex.to]}.`
+    case 'round': return `Redondea ${fmt(ex.value)} a ${ROUND_PLACE[ex.to]}.`
     case 'number-line':
       return ex.mode === 'tick'
         ? 'Mira la recta numérica. ¿Qué número falta en la marca vacía?'
