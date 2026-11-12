@@ -74,7 +74,25 @@ describe('ExerciseStep «Ahora no»', () => {
 })
 
 describe('ExerciseStep «No lo sé»', () => {
-  it('is offered only when allowed, and only before the child answers', async () => {
+  it('stays after a wrong answer and on the second try; it shows the solution and keeps the first answer as the graded one', async () => {
+    const user = userEvent.setup()
+    script.outcomes = [wrong()]
+    const { reportAttempt, onContinue } = renderStep({ allowDontKnow: true, allowRetry: true })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await screen.findByRole('button', { name: 'Inténtalo otra vez' })
+    expect(screen.getByRole('button', { name: 'No lo sé' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Inténtalo otra vez' }))
+    await user.click(screen.getByRole('button', { name: 'No lo sé' }))
+    expect(screen.getByRole('heading', { name: 'Así se resuelve' })).toBeInTheDocument()
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0]).toMatchObject({ check: { correct: false }, retries: 1 })
+    expect(reportAttempt.mock.calls[0][0].check.errorType).not.toBe('dont-know')
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+    expect(onContinue).toHaveBeenCalledTimes(1)
+    expect(onContinue.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('is offered only when allowed, and gone once the exercise is settled', async () => {
     const user = userEvent.setup()
     const first = renderStep()
     expect(screen.queryByRole('button', { name: 'No lo sé' })).toBeNull()

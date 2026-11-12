@@ -90,4 +90,25 @@ describe('TrySlot «Inténtalo otra vez» keeps what the child wrote', () => {
     render(<TrySlot selector={{ kinds: ['word-problem'] }} seedKey="retry-listen" onSettled={vi.fn()} />)
     expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
   })
+
+  it('«No lo sé» is there from the start and after a miss; it settles the step with the solution and records one «No lo sé»', () => {
+    seen.length = 0
+    const onSettled = vi.fn()
+    const reportAttempt = vi.fn()
+    render(
+      <ActivityHostProvider value={{ ...defaultActivityHost, reportAttempt }}>
+        <TrySlot selector={{ kinds: ['fact-mul'], tables: [6], factorRange: [6, 7] }} seedKey="retry-dontknow" onSettled={onSettled} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getByRole('button', { name: 'No lo sé' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Responder mal' }))
+    expect(screen.getByRole('button', { name: 'No lo sé' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'No lo sé' }))
+    expect(onSettled).toHaveBeenCalledWith(false, expect.anything())
+    expect(screen.queryByRole('button', { name: 'No lo sé' })).toBeNull()
+    expect(screen.getByTestId('solution-panel')).toBeInTheDocument()
+    // The wrong answer was the graded one; «No lo sé» after it adds nothing.
+    expect(reportAttempt).toHaveBeenCalledTimes(1)
+    expect(reportAttempt.mock.calls[0][0].check.errorType).not.toBe('dont-know')
+  })
 })

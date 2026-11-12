@@ -239,7 +239,19 @@ export function ExerciseStep({
   }
 
   const dontKnow = () => {
-    if (stageRef.current !== 'asking') return
+    const st = stageRef.current
+    // «No lo sé» after a wrong answer (the offer, or the second try): the first answer stays the graded one, and the child
+    // sees how it is done, as with «No lo sé» at the start.
+    if ((st === 'offered' || st === 'retrying') && first.current) {
+      if (!firstSent.current) {
+        pending.current = { outcome: first.current, retries: st === 'retrying' ? 1 : 0, solvedOnRetry: false, graded: gradedHere() }
+      }
+      send()
+      setMessage(host.t('No pasa nada. Mira cómo se hace y, cuando lo entiendas, sigue.'))
+      enter('dontknow')
+      return
+    }
+    if (st !== 'asking') return
     const o: ExerciseOutcome = {
       check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
       ms: Math.round(now() - startedAt.current),
@@ -279,7 +291,10 @@ export function ExerciseStep({
   // push the keypad under that row on a short tablet (1000 × 490). Shown while the child answers.
   const statement = useMemo(() => statementFor(renderedForVoice(exercise, host.t)), [exercise, host.t])
   const listen = (stage === 'asking' || stage === 'retrying') && !readsItself(exercise.kind, host.prefs.voice)
-  const skipOffered = stage === 'asking' && !tried && (!!onSkip || allowDontKnow) && exercise.kind !== 'eng-speak'
+  // «Ahora no» only before trying; «No lo sé» always while the child is still on the exercise (asking, offered a retry,
+  // retrying), so a child who is lost is never left with only «Comprobar».
+  const skipOffered = stage === 'asking' && !tried && !!onSkip && exercise.kind !== 'eng-speak'
+  const dontKnowOffered = (stage === 'asking' || stage === 'offered' || stage === 'retrying') && allowDontKnow && exercise.kind !== 'eng-speak'
 
   // Shrunk to fit the window (daily session, review, class, guardian, reading): no scrolling to answer or go on.
   return (
@@ -301,11 +316,11 @@ export function ExerciseStep({
           wrongColumns={stage === 'retrying' ? previous.wrongColumns : undefined}
         />
       </div>
-      {(listen || skipOffered) && (
+      {(listen || skipOffered || dontKnowOffered) && (
         <div className={s.skip}>
           {listen && <ListenButton text={statement} />}
-          {skipOffered && onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
-          {skipOffered && allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
+          {skipOffered && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
+          {dontKnowOffered && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
         </div>
       )}
       {stage === 'dontknow' && (
