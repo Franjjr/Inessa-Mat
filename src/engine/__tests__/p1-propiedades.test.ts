@@ -5,8 +5,8 @@
    (1) a right final with any steps in between (empty, at random, from the other method, in another order, half written)
        is correct, and its message starts with the praise (never «¡Casi!» nor «te falta»);
    (2) a final ±1, ±10, +100 or with one digit more is never correct.
-   The domain kinds (bars, bugs, fractions, clock, money, decimals, geometry, numeric) have their own file built on the
-   same harness (p1-propiedades-dominios). The literal cases of the audit (branches auditoria/p1-suma-resta and
+   The domain kinds (bars, bugs, fractions, clock, money, decimals, geometry, numeric, and also mental, equation, chart,
+   chance, pattern, position and ordinal) have their own file built on the same harness (p1-propiedades-dominios). The literal cases of the audit (branches auditoria/p1-suma-resta and
    auditoria/p1-mul-div, and the critic's photo cases) follow, each as a plain `it`. */
 import { describe, expect, it } from 'vitest'
 import {
