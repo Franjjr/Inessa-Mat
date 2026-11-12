@@ -155,7 +155,7 @@ const tabla6 = clase({
   mapLessonId: 'w3-five',
   title: 'La tabla del 6',
   para: [
-    show('known-facts', { table: 6 }, '¡Ya sabes 6 × 1, 6 × 2, 6 × 5 y 6 × 10! Las demás de la tabla del 6 son nuevas.', 'frog'),
+    show('known-facts', { table: 6 }, '¡Ya sabes 6 × 1, 6 × 2, 6 × 3, 6 × 4, 6 × 5 y 6 × 10! Solo quedan 4 nuevas: 6 × 6, 6 × 7, 6 × 8 y 6 × 9.', 'frog'),
   ],
   // The first step of the map lesson says what is known again; the opening of this class already did.
   ejemplo: w3Five.steps.slice(1, 5),
@@ -178,11 +178,13 @@ const tabla8 = clase({
   mapLessonId: 'w5-pattern',
   title: 'La tabla del 8',
   para: [
-    show('known-facts', { table: 8 }, '¡Ya sabes 8 × 1, 8 × 2, 8 × 5, 8 × 6, 8 × 7 y 8 × 10! Solo te quedan 8 × 3, 8 × 4, 8 × 8 y 8 × 9.', 'octopus'),
+    show('known-facts', { table: 8 }, '¡Ya sabes 8 × 1, 8 × 2, 8 × 3, 8 × 4, 8 × 5, 8 × 6 y 8 × 10! Solo te quedan 3 nuevas: 8 × 7, 8 × 8 y 8 × 9.', 'octopus'),
   ],
   ejemplo: [
-    ...w5Pattern.steps.slice(0, 3),
+    // The pattern and the rhyme of 8 × 7 from the map lesson (its «known-facts» steps follow the map's order, not the classes').
+    ...w5Pattern.steps.slice(0, 4),
     show('double-chain', { start: 3, steps: 3 }, '8 es doble, doble y doble: el doble de 3 es 6, el de 6 es 12, el de 12 es 24. Así que 8 × 3 = 24.'),
+    show('double-chain', { start: 9, steps: 3 }, 'Y con una nueva, 8 × 9: el doble de 9 es 18, el de 18 es 36 y el de 36 es 72. Así que 8 × 9 = 72.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'Tabla del 8' }, '¡Te toca! Dobla tres veces.', facts(8, 1, 5)),
@@ -203,9 +205,14 @@ const tabla7 = clase({
   mapLessonId: 'w6-seven',
   title: 'La tabla del 7',
   para: [
-    show('known-facts', { table: 7 }, 'Ya sabes casi toda. Solo hay 2 nuevas: 7 × 3 y 7 × 7. La del 9 la verás en su tabla.', 'fairy'),
+    show('known-facts', { table: 7 }, 'Ya sabes casi toda: 7 × 1, 7 × 2, 7 × 3, 7 × 4, 7 × 5, 7 × 6, 7 × 8 y 7 × 10. Solo quedan 2 nuevas: 7 × 7 y 7 × 9. La del 9 la verás en su tabla.', 'fairy'),
   ],
-  ejemplo: [w6Seven.steps[1], w6Seven.steps[3], w6Seven.steps[4]],
+  // Own steps: the map lesson's «known-facts» marks what the map has taught (map: 1), not the order of the classes.
+  ejemplo: [
+    show('known-facts', { table: 7 }, '7 × 6 y 6 × 7 dan lo mismo: 42. 7 × 8 y 8 × 7, también: 56. Da la vuelta y no cambia.', 'fairy'),
+    w6Seven.steps[3],
+    w6Seven.steps[4],
+  ],
   guiada: [
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Te toca! Cuenta de 7 en 7 si te ayuda.', facts(7, 1, 5)),
     tryIt('big-text', { text: 'Tabla del 7' }, '¡Otra! Piensa en las semanas: 7 días cada una.', facts(7, 1, 5)),

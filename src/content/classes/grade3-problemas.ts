@@ -151,11 +151,11 @@ const encuentraError = clase({
     show('carry', { a: 47, b: 35 }, 'Columna de las unidades: 7 + 5 = 12. Escribo el 2 y llevo 1 a las decenas.'),
     show('carry', { a: 47, b: 35 }, 'Columna de las decenas: 4 + 3 = 7, y el 1 que llevábamos: 8. Escribo el 8.'),
     show('big-text', { text: '47 + 35 = 82', sub: 'Dani olvidó el 1 que llevaba' }, 'El resultado es 82, no 72. El error está en las decenas: se olvidó de sumar el 1 que llevaba.'),
-    show('big-text', { text: '512 − 247 = 275', sub: '¿Está bien?' }, 'Ahora una resta. Dani ha puesto 512 − 247 = 275. ¿Está bien? Revisamos columna a columna.'),
+    show('big-text', { text: '512 − 247 = ¿275?', sub: '¿Está bien?' }, 'Ahora una resta. Dani dice que 512 − 247 da 275. ¿Está bien? Revisamos columna a columna.'),
     show('borrow', { a: 512, b: 247 }, 'Unidades: 2 − 7 no se puede. Pedimos 10 prestado a las decenas: 12 − 7 = 5. Bien.'),
     show('borrow', { a: 512, b: 247 }, 'Decenas: la decena prestó 1 y se quedó en 0. 0 − 4 no se puede, así que pedimos 10 a las centenas: 10 − 4 son 6. Dani puso 7: ahí está el error.'),
     show('borrow', { a: 512, b: 247 }, 'Centenas: el 5 prestó 1 y ahora es 4. 4 − 2 = 2. El resultado bueno es 265, no 275.'),
-    show('big-text', { text: '23 × 4 = 82', sub: '¿Está bien?' }, 'Y una multiplicación. Dani ha puesto 23 × 4 = 82. ¿Está bien? Revisamos.'),
+    show('big-text', { text: '23 × 4 = ¿82?', sub: '¿Está bien?' }, 'Y una multiplicación. Dani dice que 23 × 4 da 82. ¿Está bien? Revisamos.'),
     show('column-mul', { top: 23, bottom: 4 }, 'Unidades: 4 por 3, 12. Escribo el 2 y llevo 1. Decenas: 4 por 2, 8, y la que llevaba: 9. El resultado bueno es 92: Dani olvidó la que llevaba.'),
   ],
   guiada: [
