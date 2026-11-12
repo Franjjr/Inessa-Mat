@@ -239,6 +239,7 @@
 .ask {
   align-self: start;
   justify-self: stretch;
+  min-width: 170px;
   position: relative;
   margin-top: var(--sp-3);
   padding: var(--sp-2) var(--sp-3);

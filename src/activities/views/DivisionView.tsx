@@ -200,7 +200,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
         key="ask"
         className={s.ask}
         data-testid="galera-ask"
-        style={{ gridRow: `3 / ${lastRow + 1}`, gridColumn: `${n + 2} / span ${width}`, ['--ask-tip' as string]: `calc((${active} + .5) * var(--galera-col))` }}
+        style={{ gridRow: `3 / ${lastRow + 1}`, gridColumn: `${n + 2} / -1`, ['--ask-tip' as string]: `calc((${active} + .5) * var(--galera-col))` }}
       >
         {host.t(`${active > 0 ? `Baja el ${digits[activeStep.endIndex]}. ` : ''}¿Cuántas veces cabe el ${ex.divisor} en ${activeStep.partial}?`)}
       </div>,
