@@ -56,11 +56,11 @@ Column ops are judged on accuracy only (no speed).
 ## Column algorithms (Spain)
 
 - Addition: units first, carry written small above the next column ("me llevo una").
-- Subtraction: four methods, see «Varios métodos por operación» below. The default and the lesson's first
-  method is «pedir prestado arriba» (the neighbour gives a ten: its digit is crossed and goes down by one, this
-  column reads +10). «Me llevo una abajo» (compensation: +10 on top, +1 on the next subtrahend digit) is the other
-  school method. Both accept the correct RESULT; a written step (the lender's new digit, the +1) is graded only
-  where the child writes it, and an empty step is never wrong.
+- Subtraction: one method, the one of the child's school, see «Un método por operación» below. The default is
+  «pedir prestado arriba» (the neighbour gives a ten: its digit is crossed and goes down by one, this column reads
+  +10). «Me llevo una abajo» (compensation: +10 on top, +1 on the next subtrahend digit) is the other school
+  method, when the grown-up says so. Both accept the correct RESULT; a written step (the lender's new digit, the +1)
+  only gives a gentle tip where the child writes it, and an empty step is never wrong.
 - Multiplication 2×1: units first, carry above tens, added after multiplying.
 - Division "galera" (Spanish layout): dividend left, divisor right inside the bracket, quotient below the divisor,
   remainder below the dividend. Check: cociente × divisor + resto = dividendo; resto < divisor.
@@ -74,32 +74,40 @@ Short, warm, concrete, in Spanish, and through the companion/Lumi. Examples:
 - smaller-from-larger: "Arriba hay un número más pequeño: ¡pide ayuda a la vecina!"
 - remainder-too-big: "El resto tiene que ser más pequeño que {divisor}. ¡Cabe una vez más!"
 
-## Varios métodos por operación (patrón)
+## Un método por operación: el del colegio, que elige el adulto
 
-Un mismo ejercicio se puede resolver con varios caminos, y el niño debe ver cuál le resulta más fácil. Así se
-hace en Repasitos (resta; el mismo patrón servirá para división y tablas):
+Un método por operación, el del colegio del niño, que elige el adulto. Por defecto, pedir prestado y la galera con
+restas. La respuesta final correcta siempre vale. Otros caminos solo como pista o curiosidad opcional, nunca como
+elección del niño.
 
-1. **Registro de métodos** (`src/engine/methods.ts`): una lista por operación (`METHODS.sub`), con id, nombre
-   para el niño y resumen para el adulto. Un método nuevo es una entrada más.
-2. **Tipo** (`src/types/exercise.ts`): el id del método (`SubMethod`), y `Answer` con los pasos que el método pide
-   (`digits` con `carries` para las marcas de la columna; `steps` para «por partes» y «saltos»).
-3. **Comprobación** (`src/engine/check.ts`): la respuesta final siempre cuenta. Los pasos que el método pide
-   (marcas, saltos, resultados parciales) se comprueban **solo cuando el niño los escribe**; un paso vacío no
-   es un error, un paso escrito que no corresponde al método sí. El fallo se da en el paso concreto («¡Casi!
-   Revisa el paso 2»), sin enseñar la respuesta.
-4. **Pistas** (`src/engine/hints.ts`, `hintsFor(ex, method)`): tres niveles por método. Nivel 1, la estrategia;
-   nivel 2, el apoyo visual; nivel 3, un paso intermedio. Ninguna pista dice la diferencia ni el resultado final.
-   Hay una prueba que lo verifica para cada método.
-5. **Vista**: un componente por método dentro de la misma operación (`SubtractionView` elige: columna para
-   «pedir prestado» y «me llevo una»; `SubPartsView`; `SubLineView`). La actividad usa el método preferido del
-   niño (`ChildSettings.subMethod`, por defecto `borrow`); la lección «Cuatro caminos para restar» prueba cada
-   método con su propio «¡pruébalo tú!».
-6. **Preferencia**: el niño la elige al final de la lección (paso `choose`); el adulto la cambia en los ajustes
-   del niño. Se guarda en `ChildSettings.subMethod`.
+Por qué: a un niño de 7-8 años varias formas de hacer la misma cuenta le confunden, y la que usa en casa tiene que
+ser la de su cuaderno. Por eso se retiraron la resta por partes, los saltos en la recta, repartir por partes y
+multiplicar hacia arriba (noviembre de 2026).
+
+1. **Registro** (`src/engine/methods.ts`): una lista por operación. Resta (`SUB_METHODS`): «pedir prestado
+   arriba» (`borrow`, por defecto) y «me llevo una abajo» (`carry`). División (`DIV_METHODS`): «la galera con
+   restas» (`galera`, por defecto) y «la galera sin restas» (`galera-short`). Cada uno lleva su nombre, una frase
+   para el adulto y su ejemplo de cuaderno (52 − 27, 96 ÷ 4), que los ajustes dibujan siempre a la vista.
+2. **Quién elige**: solo el adulto. La primera vez (desde 2.º; la galera desde 3.º) la zona de adultos pregunta
+   «¿Cómo resta tu hijo en el colegio cuando arriba hay menos?» con los dos dibujos. Mientras no conteste no se
+   bloquea nada: se usan los métodos por defecto. Con «Otro» o «No lo sé» también, y se le explica que la
+   respuesta correcta siempre vale. Se guarda en `ChildSettings.subMethod`, `divMethod` y `schoolMethodAsked`.
+   Una lección nunca cambia el método (`setPreference` ignora `subMethod` y `divMethod`).
+3. **Datos antiguos**: los ids retirados siguen en los tipos (`SubMethod`, `DivMethod`) para que los perfiles y
+   los intentos guardados carguen. `normaliseSubMethod`/`normaliseDivMethod` y `methodFor(op, prefs)` los
+   convierten en el método por defecto; la zona de adultos avisa una sola vez («Hemos quitado los saltos: ahora
+   resta como en el cole») y, al leerlo, guarda el método del colegio.
+4. **Vista**: todas las pantallas piden el método con `methodFor`. La resta es siempre la columna
+   (`SubtractionView` → `ColumnView`) y la división siempre la galera (`DivisionView`).
+5. **Comprobación** (`src/engine/check.ts`): la respuesta final siempre cuenta. Los pasos escritos (marcas, restos
+   intermedios) solo dan un consejo amable; un paso vacío nunca es un error y nunca impide comprobar.
+6. **Pistas** (`src/engine/hints.ts`, `hintsFor(ex, method)`): tres niveles por método. Nivel 1, la estrategia;
+   nivel 2, el apoyo visual; nivel 3, un paso intermedio. Ninguna pista dice el resultado final. La galera sin
+   restas no pide escribir restas. La idea de multiplicar hacia arriba («¿qué número por 7 se acerca a 63 sin
+   pasarse?») queda como pista de la galera.
 7. **Registro**: cada intento lleva el método en `context.method` (sin cambiar el esquema de la base de datos).
-   El informe del adulto lo resume: «Resta: prefiere X; aciertos por método…». Solo cuentan los últimos 30 días
-   y los errores de lectura no cuentan. Un método se compara solo con tres o más intentos.
+   El informe del adulto lo resume; los intentos antiguos con un método retirado conservan su nombre.
 
-Lo que aún no tiene método propio: división (galera, reparto y restas sucesivas) y multiplicación 2 × 1
-(descomposición o cuadrícula). Cuando se añadan, cada uno tiene su entrada en `METHODS`, su tipo de paso y sus
-pistas, y la preferencia se guarda en un campo propio de `ChildSettings`.
+Los trucos de las tablas (`TABLE_METHODS`: el doble, el 5 y uno más, el 9…) no cambian la pantalla: son pistas.
+El adulto puede fijar uno o dejar «La app decide» (`tableMethod: null`). Multiplicar por dos cifras se practica
+en columna; «por partes» solo explica por qué funciona, y en ella también decide el total.

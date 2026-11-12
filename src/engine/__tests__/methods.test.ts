@@ -1,12 +1,13 @@
 /* The method registry (subtraction, division, tables tricks), its normalisers, the tricks that apply to a fact, the
    place of the new kinds in the daily session and in the placement test. */
+import pedagogy from '../../../docs/PEDAGOGY.md?raw'
 import { describe, expect, it } from 'vitest'
 import type { ChildProfile } from '@/types'
 import { trickUsed } from '@/activities/facts/shared/flow'
 import {
   DIV_METHODS, METHODS, SUB_METHODS, TABLE_METHODS, DEFAULT_METHOD, isDivMethod, isTableMethod, makeFactMul,
   normaliseDivMethod, normaliseSubMethod, normaliseTableMethod, placementBlockOf, planDailySession, tricksFor,
-  methodLabel,
+  methodLabel, methodFor, isSubMethod, retiredMethodsIn,
 } from '@/engine'
 import { GRADE3_SYLLABUS } from '@/content/syllabus'
 
@@ -23,7 +24,7 @@ describe('method registry', () => {
         expect(m.summary.length, m.id).toBeGreaterThan(10)
       }
     }
-    expect(DIV_METHODS.map((m) => m.id)).toEqual(['galera', 'galera-short', 'div-parts', 'climb'])
+    expect(DIV_METHODS.map((m) => m.id)).toEqual(['galera', 'galera-short'])
     expect(methodLabel('div', 'galera-short')).toBe('La galera sin restas')
   })
 
@@ -31,11 +32,57 @@ describe('method registry', () => {
     expect(DEFAULT_METHOD).toEqual({ sub: 'borrow', div: 'galera' })
     expect(normaliseSubMethod('nope')).toBe('borrow')
     expect(normaliseDivMethod('nope')).toBe('galera')
-    expect(normaliseDivMethod('climb')).toBe('climb')
+    expect(normaliseDivMethod('galera-short')).toBe('galera-short')
+    expect(normaliseSubMethod('carry')).toBe('carry')
     expect(normaliseTableMethod(undefined)).toBeNull()
     expect(normaliseTableMethod('double')).toBe('double')
     expect(isDivMethod('parts')).toBe(false) // the subtraction id is not a division method
     expect(isTableMethod('climb')).toBe(false)
+  })
+
+  it('one method per operation, the school ones: the retired methods of old settings become the default', () => {
+    expect(SUB_METHODS.map((m) => m.id)).toEqual(['borrow', 'carry'])
+    expect(DIV_METHODS.map((m) => m.id)).toEqual(['galera', 'galera-short'])
+    expect(normaliseSubMethod('line')).toBe('borrow')
+    expect(normaliseSubMethod('parts')).toBe('borrow')
+    expect(normaliseDivMethod('climb')).toBe('galera')
+    expect(normaliseDivMethod('div-parts')).toBe('galera')
+    expect(isSubMethod('line')).toBe(false)
+    expect(isDivMethod('climb')).toBe(false)
+    // Old attempt logs keep a readable name in the report.
+    expect(methodLabel('sub', 'line')).toBe('Saltos en la recta')
+    expect(methodLabel('div', 'climb')).toBe('Multiplicar hacia arriba')
+    expect(retiredMethodsIn({ subMethod: 'line', divMethod: 'galera' })).toEqual({ sub: true, div: false })
+    expect(retiredMethodsIn({ subMethod: 'borrow', divMethod: 'div-parts' })).toEqual({ sub: false, div: true })
+    expect(retiredMethodsIn(undefined)).toEqual({ sub: false, div: false })
+  })
+
+  it('methodFor gives the school method the grown-up saved, or the default; never a retired one', () => {
+    expect(methodFor('sub', { subMethod: 'carry' })).toBe('carry')
+    expect(methodFor('sub', { subMethod: 'line' })).toBe('borrow')
+    expect(methodFor('sub', undefined)).toBe('borrow')
+    expect(methodFor('div', { divMethod: 'galera-short' })).toBe('galera-short')
+    expect(methodFor('div', { divMethod: 'climb' })).toBe('galera')
+    expect(methodFor('div', null)).toBe('galera')
+  })
+
+  it('every school method has its notebook example in words, always shown to the grown-up', () => {
+    for (const m of [...SUB_METHODS, ...DIV_METHODS]) {
+      expect(m.example.length, m.id).toBeGreaterThan(4)
+      expect(m.notebook.length, m.id).toBeGreaterThan(30)
+    }
+    // The sentences end with the right result of their example.
+    for (const m of SUB_METHODS) expect(m.notebook).toMatch(/25\.$/)
+    // «Me llevo una» says where the 3 comes from: the 2 below plus the 1 carried.
+    expect(SUB_METHODS.find((m) => m.id === 'carry')!.notebook).toMatch(/junto al 2 de abajo, que pasa a ser 3\. 5 − 3 = 2/)
+    for (const m of DIV_METHODS) expect(m.notebook).toMatch(/24\.$/)
+  })
+
+  it('docs/PEDAGOGY.md says one method per operation, chosen by the grown-up', () => {
+    const doc = pedagogy
+    expect(doc).not.toMatch(/el niño elige/i)
+    expect(doc).not.toMatch(/cuatro métodos de resta/i)
+    expect(doc).toContain('Un método por operación, el del colegio del niño, que elige el adulto.')
   })
 
   it('each trick applies to the facts of its table, and the mirror applies to any two different factors', () => {

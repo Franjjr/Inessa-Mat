@@ -1,4 +1,7 @@
-/* The two written division methods of the division exercises (see DivisionView for the choice):
+/* RETIRED: no route shows these views any more (DivisionView always shows the galera; see docs/PEDAGOGY.md). They stay
+   for old data and for reference only. The idea of the climb («¿qué número por 7 se acerca a 63 sin pasarse?») lives
+   on as a hint of the galera.
+   The two written division methods that the division exercises used to offer:
    - DivisionPartsView («repartir por partes»): the dividend is split in its parts (84 = 80 + 4), each part is divided
      (80 ÷ 4 = 20, 4 ÷ 4 = 1), the remainder of one part joins the next, and the quotients are added.
    - DivisionClimbView («multiplicar hacia arriba»): «¿qué número por 4 da 28?». The child writes the multiples of the
@@ -44,6 +47,9 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
   const [total, setTotal] = useState<number | null>(null)
   const [rest, setRest] = useState<number | null>(null)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  // Each box fits its expected number, and one digit more (so its size does not tell the answer).
+  const fit = (n: number) => String(n).length + 1
+  const remDigits = fit(Math.max(ex.divisor - 1, 0))
   // The remainder box may stay empty: the checker reads an empty box as 0 when nothing is left over.
   const canCheck = parts.every((p) => p !== null) && total !== null
 
@@ -70,7 +76,7 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
                 setParts(next)
                 submit(next)
               }}
-              maxDigits={2}
+              maxDigits={fit(st.quotient)}
               size="md"
               status={status}
               ariaLabel={`cociente de la parte ${k + 1}`}
@@ -83,11 +89,11 @@ function PartsRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
       <div className={s.totals}>
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Cociente:')}</span>
-          <NumberInput value={total} onChange={setTotal} onSubmit={() => submit()} maxDigits={3} size="md" status={status} ariaLabel="cociente total" placeholder="?" />
+          <NumberInput value={total} onChange={setTotal} onSubmit={() => submit()} maxDigits={fit(ex.quotient)} size="md" status={status} ariaLabel="cociente total" placeholder="?" />
         </div>
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Resto:')}</span>
-          <NumberInput value={rest} onChange={setRest} onSubmit={() => submit()} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" />
+          <NumberInput value={rest} onChange={setRest} onSubmit={() => submit()} maxDigits={remDigits} size="md" status={status} ariaLabel="resto" placeholder="?" />
           <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       </div>
@@ -106,6 +112,9 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   // The remainder box may stay empty when the division is exact: the checker reads it as 0 then.
   const canCheck = passed
+  // The last row reaches or passes the dividend: its box fits that product, and one digit more.
+  const rowDigits = String(ex.dividend + ex.divisor).length + 1
+  const remDigits = String(Math.max(ex.divisor - 1, 0)).length + 1
 
   const confirm = (v: number | null = draft) => {
     if (v === null || passed) return
@@ -135,7 +144,7 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
             value={draft}
             onChange={setDraft}
             onSubmit={(v) => { setDraft(v); confirm(v) }}
-            maxDigits={3}
+            maxDigits={rowDigits}
             size="md"
             status={status}
             ariaLabel={`producto de ${ex.divisor} por ${rows.length + 1}`}
@@ -150,7 +159,7 @@ function ClimbRound({ ex, onAnswered, allowHints, showFeedback, compact }: Round
       {passed && (
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Sobra:')}</span>
-          <NumberInput value={rest} onChange={setRest} onSubmit={(v) => { setRest(v); submit(v) }} maxDigits={2} size="md" status={status} ariaLabel="resto" placeholder="?" autoFocus />
+          <NumberInput value={rest} onChange={setRest} onSubmit={(v) => { setRest(v); submit(v) }} maxDigits={remDigits} size="md" status={status} ariaLabel="resto" placeholder="?" autoFocus />
           <span className={s.guide}>{host.t('Si no sobra nada, deja 0 o déjalo vacío.')}</span>
         </div>
       )}

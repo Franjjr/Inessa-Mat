@@ -1,7 +1,8 @@
 /* Journey H: the new exercise types and the division methods, played through the real views. The bar problem, the
    encuentra el error and the comprobar are played in the development gallery (/dev/gallery?only=newViews), where the
-   same views run on their own; the lesson «Cuatro caminos para dividir» is played in the world 8 lesson node, all four
-   methods and the choice of the favourite. Only visible Spanish text and roles are used. */
+   same views run on their own; the division lesson of world 8 is played in its lesson node. The division is always
+   the school galera (with or without the subtractions): the retired methods (repartir por partes, multiplicar hacia
+   arriba) of old data show the galera too. Only visible Spanish text and roles are used. */
 import { mkdirSync } from 'node:fs'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 import { devEditProgress, seedDemo, settle } from '../helpers'
@@ -45,22 +46,6 @@ function galeraSteps(n: number, d: number): { q: number; r: number }[] {
   return steps
 }
 
-/** Quotient of each part of the dividend (repartir por partes), as the view asks for them. */
-function partsQuotients(n: number, d: number): number[] {
-  const digits = String(n).split('').map(Number)
-  const out: number[] = []
-  let carried = 0
-  digits.forEach((digit, i) => {
-    const place = digits.length - 1 - i
-    if (digit === 0 && place !== 0) return
-    const partial = carried + digit * 10 ** place
-    const q = Math.floor(partial / d)
-    carried = partial - q * d
-    out.push(q)
-  })
-  return out
-}
-
 test.describe('Journey H: new exercise views (development gallery)', () => {
   test('a bar problem: a number is tapped onto its piece, and the check waits for the operation and the results', async ({ page }) => {
     await gallery(page, 'problema con la barra (ipad)')
@@ -97,7 +82,7 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
     await shot(page, 'h5-check-answered')
   })
 
-  test('the division methods: the galera without subtractions, repartir por partes and multiplicar hacia arriba', async ({ page }) => {
+  test('the division methods: the galera without subtractions; the retired methods of old data show the galera', async ({ page }) => {
     // La galera sin restas: no product rows are written, only the quotient and the remainder.
     await gallery(page, 'la galera sin restas')
     await expect(page.getByRole('region', { name: 'División en galera' })).toBeVisible()
@@ -113,35 +98,19 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
     await expect(page.getByRole('button', { name: /Siguiente/ })).toBeVisible()
     await shot(page, 'h6-galera-short')
 
-    // Repartir por partes: 84 = 80 + 4, each part divided, then the quotients added.
-    await gallery(page, 'repartir por partes')
-    await expect(page.getByRole('region', { name: 'Repartir por partes' })).toBeVisible()
-    const quotients = partsQuotients(84, 4)
-    for (let k = 0; k < quotients.length; k++) {
-      await fill(page, page.getByRole('textbox', { name: `cociente de la parte ${k + 1}` }), quotients[k])
+    // A profile that still says «repartir por partes» or «multiplicar hacia arriba» gets the galera.
+    for (const entry of ['repartir por partes', 'multiplicar hacia arriba']) {
+      await gallery(page, entry)
+      await expect(page.getByRole('region', { name: 'División en galera' })).toBeVisible()
+      await expect(page.getByRole('region', { name: 'Repartir por partes' })).toHaveCount(0)
+      await expect(page.getByRole('region', { name: 'Multiplicar hacia arriba' })).toHaveCount(0)
     }
-    await fill(page, page.getByRole('textbox', { name: 'cociente total' }), quotients.reduce((a, b) => a + b, 0))
-    await fill(page, page.getByRole('textbox', { name: 'resto' }), 0)
-    await page.keyboard.press('Enter')
-    await expect(page.getByRole('button', { name: /Siguiente/ })).toBeVisible()
-    await shot(page, 'h7-parts')
-
-    // Multiplicar hacia arriba: 4, 8, 12… until the row reaches 28.
-    await gallery(page, 'multiplicar hacia arriba')
-    await expect(page.getByRole('region', { name: 'Multiplicar hacia arriba' })).toBeVisible()
-    for (let k = 1; k <= 7; k++) {
-      await fill(page, page.getByRole('textbox', { name: `producto de 4 por ${k}` }), 4 * k)
-      await page.getByRole('button', { name: 'Fila lista' }).click()
-    }
-    await fill(page, page.getByRole('textbox', { name: 'resto' }), 0)
-    await page.keyboard.press('Enter')
-    await expect(page.getByRole('button', { name: /Siguiente/ })).toBeVisible()
-    await shot(page, 'h8-climb')
+    await shot(page, 'h7-retired-is-galera')
   })
 })
 
 test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
-  test('the four division methods are tried and the child chooses the favourite', async ({ page }) => {
+  test('every try step of the division lesson is the galera; the child never saves a method', async ({ page }) => {
     test.setTimeout(180_000)
     await seedDemo(page)
     // World 8 is reached by the demo child: its earlier nodes are marked as done, as after a long journey.
@@ -163,30 +132,19 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
         await done.click({ timeout: 5_000 }).catch(() => undefined)
         break
       }
+      // While the lesson still has a «choose» step (it goes away with the new lesson), picking does not save anything.
       const pick = page.getByRole('radio', { name: 'La galera con restas' })
       if (await pick.isVisible().catch(() => false)) {
         await pick.click()
-        await expect(page.getByText('Anotado: tu método favorito es «La galera con restas».')).toBeVisible()
-        seen.add('choice')
-        await shot(page, 'h9-lesson-choice')
         await continueLesson(page)
         continue
       }
+      if (await page.getByRole('region', { name: 'Repartir por partes' }).isVisible().catch(() => false)) seen.add('parts')
+      if (await page.getByRole('region', { name: 'Multiplicar hacia arriba' }).isVisible().catch(() => false)) seen.add('climb')
       const galera = page.locator('section[aria-label="División en galera"]')
       if (await galera.isVisible().catch(() => false)) {
+        seen.add('galera')
         await solveGalera(page)
-        continue
-      }
-      const parts = page.getByRole('region', { name: 'Repartir por partes' })
-      if (await parts.isVisible().catch(() => false)) {
-        seen.add('parts')
-        await solveParts(page)
-        continue
-      }
-      const climb = page.getByRole('region', { name: 'Multiplicar hacia arriba' })
-      if (await climb.isVisible().catch(() => false)) {
-        seen.add('climb')
-        await solveClimb(page)
         continue
       }
       const next = page.getByRole('button', { name: 'Siguiente ›' })
@@ -197,8 +155,11 @@ test.describe('Journey H: the lesson «Cuatro caminos para dividir»', () => {
       }
       await settle(page, 400)
     }
-    // The favourite was chosen and each method's try step shows its own exercise (a climb with a two-digit quotient would fall back to the galera).
-    expect([...seen].sort()).toEqual(['choice', 'climb', 'parts'])
+    // Every try step was a galera: the retired methods never show.
+    expect([...seen].sort()).toEqual(['galera'])
+    // And the child's division method is still the school one.
+    const saved = await page.evaluate(async () => (await window.__numeriaDev!.db.children.toArray()).find((c) => !c.deletedAt)!.settings.divMethod)
+    expect(saved).toBe('galera')
   })
 })
 
@@ -236,40 +197,4 @@ async function solveGalera(page: Page): Promise<void> {
   await page.keyboard.press('Enter')
   await settle(page, 600)
   await settle(page, 300)
-}
-
-/** A parts try step: each part's quotient, the total and the remainder. */
-async function solveParts(page: Page): Promise<void> {
-  const prompt = (await page.getByRole('region', { name: 'Repartir por partes' }).locator('p').first().textContent()) ?? ''
-  const m = prompt.match(/Reparte (\d+) entre (\d+)/)
-  if (!m) return
-  const n = Number(m[1])
-  const d = Number(m[2])
-  const quotients = partsQuotients(n, d)
-  for (let k = 0; k < quotients.length; k++) {
-    await fill(page, page.getByRole('textbox', { name: `cociente de la parte ${k + 1}` }), quotients[k])
-  }
-  await fill(page, page.getByRole('textbox', { name: 'cociente total' }), Math.floor(n / d))
-  await fill(page, page.getByRole('textbox', { name: 'resto' }), n % d)
-  await page.keyboard.press('Enter')
-  await settle(page, 600)
-}
-
-/** A climb try step: the multiples of the divisor, one row at a time, until one reaches the dividend; then the rest. */
-async function solveClimb(page: Page): Promise<void> {
-  const prompt = (await page.getByRole('region', { name: 'Multiplicar hacia arriba' }).locator('p').first().textContent()) ?? ''
-  const m = prompt.match(/por (\d+) da (\d+)/)
-  if (!m) return
-  const d = Number(m[1])
-  const n = Number(m[2])
-  for (let k = 1; k < 20; k++) {
-    const product = d * k
-    await fill(page, page.getByRole('textbox', { name: `producto de ${d} por ${k}` }), product)
-    await page.getByRole('button', { name: 'Fila lista' }).click()
-    await settle(page, 150)
-    if (product >= n) break
-  }
-  await fill(page, page.getByRole('textbox', { name: 'resto' }), n % d)
-  await page.keyboard.press('Enter')
-  await settle(page, 600)
 }

@@ -58,10 +58,15 @@ export interface ChildSettings {
   bigCells: boolean
   /** Subjects the adult has enabled for this child (adult area). The child only sees these. */
   subjects: SubjectId[]
-  /** Favourite subtraction method: the column/parts/line exercises use it. Chosen by the child in the lesson, editable by the adult. */
+  /** How the child's school subtracts (pedir prestado or me llevo una): every subtraction uses it. Only the grown-up
+   *  chooses it (adult area). Old profiles may hold a retired method ('parts', 'line'): it is read as 'borrow'. */
   subMethod: SubMethod
-  /** Favourite division method: the division exercises use it. Chosen by the child in «Cuatro caminos para dividir», editable by the adult. */
+  /** How the child's school divides (la galera con o sin restas): every division uses it. Only the grown-up chooses it.
+   *  Old profiles may hold a retired method ('div-parts', 'climb'): it is read as 'galera'. */
   divMethod: DivMethod
+  /** The grown-up has answered «¿Cómo resta tu hijo en el colegio?» (and the division question, from 3.º). Absent in
+   *  older profiles = not asked yet: the adult area shows the question, never blocking, and the defaults apply. */
+  schoolMethodAsked?: boolean
   /** Favourite trick for the tables (null = none chosen yet). Chosen in «Los trucos de Lumi», editable by the adult. */
   tableMethod: TableMethod | null
   /** Caligrafía con lápiz (calig: skills). Only offered on a device where the pen was used; false hides it. */

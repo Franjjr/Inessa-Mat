@@ -1,13 +1,9 @@
-/* The view of a column subtraction, whatever method the child uses: pedir prestado and me llevo una (the column),
-   por partes and saltos en la recta (their own views). Registered for the kind 'column-sub'. */
+/* The view of a column subtraction: always the column, with the school method the grown-up chose (pedir prestado or
+   me llevo una). Old data may still name a retired method (por partes, saltos en la recta): it is shown as the column
+   with pedir prestado. Registered for the kind 'column-sub'. */
+import { normaliseSubMethod } from '@/engine'
 import ColumnView, { type ColumnViewProps } from './ColumnView'
-import SubLineView from './SubLineView'
-import SubPartsView from './SubPartsView'
 
 export default function SubtractionView(props: ColumnViewProps) {
-  switch (props.method) {
-    case 'parts': return <SubPartsView {...props} />
-    case 'line': return <SubLineView {...props} />
-    default: return <ColumnView {...props} />
-  }
+  return <ColumnView {...props} method={normaliseSubMethod(props.method)} />
 }

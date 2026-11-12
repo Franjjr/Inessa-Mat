@@ -1,5 +1,5 @@
-/* The subtraction views by method: the column (borrow and carry marks, the +10 gift), the parts view and the number-line
-   view. Typing goes through the digit cells, as in ColumnView.test.tsx. */
+/* The subtraction view by method: the column (borrow and carry marks, the +10 gift); the retired parts and number-line
+   views of old data become the borrow column. Typing goes through the digit cells, as in ColumnView.test.tsx. */
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { makeColumnSub } from '@/engine'
@@ -69,76 +69,17 @@ describe('column view by method', () => {
   })
 })
 
-describe('parts view', () => {
-  it('352 − 127: three steps, each taken from the result of the step before', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="parts" />)
-    expect(screen.getByText('352 − 127 = 352 − 100 − 20 − 7')).toBeTruthy()
-    type(252, 'de resultado del paso 1', ['unidades', 'decenas', 'centenas'])
-    type(232, 'de resultado del paso 2', ['unidades', 'decenas', 'centenas'])
-    type(225, 'de resultado del paso 3', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de resultado del paso 1/), { key: 'Enter' }) })
-    expect(onAnswered).toHaveBeenCalledTimes(1)
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
-    expect(onAnswered.mock.calls[0][0].method).toBe('parts')
-  })
-
-  it('a wrong step is wrong, and the answer is not graded as correct', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="parts" />)
-    type(252, 'de resultado del paso 1', ['unidades', 'decenas', 'centenas'])
-    type(230, 'de resultado del paso 2', ['unidades', 'decenas', 'centenas'])
-    type(223, 'de resultado del paso 3', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de resultado del paso 1/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
-  })
-})
-
-describe('number-line view', () => {
-  it('352 − 127: the stops 130, 300, 350 and the total 225', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="line" />)
-    type(130, 'de salto 1', ['unidades', 'decenas', 'centenas'])
-    type(300, 'de salto 2', ['unidades', 'decenas', 'centenas'])
-    type(350, 'de salto 3', ['unidades', 'decenas', 'centenas'])
-    type(225, 'de total saltado', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de salto 1/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
-    expect(onAnswered.mock.calls[0][0].method).toBe('line')
-  })
-
-  it('the child can add a jump: 352 − 127 with four jumps (130, 140, 300, 350) is right', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="line" />)
-    act(() => { fireEvent.click(screen.getByRole('button', { name: 'Añadir salto' })) })
-    type(130, 'de salto 1', ['unidades', 'decenas', 'centenas'])
-    type(140, 'de salto 2', ['unidades', 'decenas', 'centenas'])
-    type(300, 'de salto 3', ['unidades', 'decenas', 'centenas'])
-    type(350, 'de salto 4', ['unidades', 'decenas', 'centenas'])
-    type(225, 'de total saltado', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de salto 1/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
-  })
-
-  it('the child can take a jump away: 352 − 127 with two jumps (130, 300) is right', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="line" />)
-    act(() => { fireEvent.click(screen.getByRole('button', { name: 'Quitar salto' })) })
-    expect(screen.queryByRole('textbox', { name: /de salto 3/ })).toBeNull()
-    type(130, 'de salto 1', ['unidades', 'decenas', 'centenas'])
-    type(300, 'de salto 2', ['unidades', 'decenas', 'centenas'])
-    type(225, 'de total saltado', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de salto 1/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
-  })
-
-  it('with no jumps at all there is no «último salto hasta» row, and the total alone is checked', () => {
-    const onAnswered = vi.fn()
-    render(<SubtractionView exercise={makeColumnSub(352, 127)} onAnswered={onAnswered} showFeedback={false} method="line" />)
-    for (let k = 0; k < 3; k++) act(() => { fireEvent.click(screen.getByRole('button', { name: 'Quitar salto' })) })
-    expect(screen.queryByText(/último salto/)).toBeNull()
-    type(225, 'de total saltado', ['unidades', 'decenas', 'centenas'])
-    act(() => { fireEvent.keyDown(cell(/unidades de total saltado/), { key: 'Enter' }) })
-    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+describe('retired methods of old data', () => {
+  it('«por partes» and «saltos en la recta» show the borrow column: 212 − 40 = 172 is right', () => {
+    for (const method of ['parts', 'line'] as const) {
+      const onAnswered = vi.fn()
+      const { unmount } = render(<SubtractionView exercise={makeColumnSub(212, 40)} onAnswered={onAnswered} method={method} showFeedback={false} />)
+      expect(screen.getByRole('region', { name: 'Operación en columna' })).toBeTruthy()
+      expect(screen.getByRole('textbox', { name: /marca de decenas/ })).toBeTruthy()
+      type(172, 'del resultado')
+      act(() => { fireEvent.keyDown(cell(/^centenas del resultado/), { key: 'Enter' }) })
+      expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+      unmount()
+    }
   })
 })
