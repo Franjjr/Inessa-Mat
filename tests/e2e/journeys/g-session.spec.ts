@@ -1,17 +1,17 @@
 /* Mi sesión de hoy and the prueba inicial: a short walk through the real screens with the demo child Lía.
    Only visible Spanish text and roles are used. */
 import { expect, test } from '@playwright/test'
-import { CHILD_NAME, devEditProgress, seedDemo, settle } from '../helpers'
+import { CHILD_NAME, devEditProgress, seedDemo, settle, openSession } from '../helpers'
 
 test.describe('Mi sesión de hoy', () => {
   // The home's «Hoy» opens today's class first (every topic has one, see n-hoy); the session is its own screen.
   test('the session starts with a warm-up', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await expect(page.getByText(`¡Vamos, ${CHILD_NAME}!`)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await expect(page.getByText('Calentamiento', { exact: true })).toBeVisible()
-    await expect(page.getByText(/de 15$/)).toBeVisible()
+    await expect(page.getByText(/de 15 minutos$/)).toBeVisible()
     await settle(page, 300)
   })
 
@@ -19,7 +19,7 @@ test.describe('Mi sesión de hoy', () => {
     await seedDemo(page)
     // «Lo nuevo» teaches the stage of the world the map is on: with the map not started, descomponer (w1).
     await devEditProgress(page, { kind: 'mapNotStarted' })
-    await page.goto('/play/sesion')
+    await openSession(page)
     await expect(page.getByText(/Hoy aprendemos/)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     // The warm-up facts come first; the example of the new topic (blocks) opens «Lo nuevo».
@@ -52,7 +52,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('«Ahora no» sends the item to the end without advancing the count, at most three times per session', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const bar = page.getByRole('progressbar')
     const count = await bar.getAttribute('aria-label')
@@ -94,7 +94,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('«No lo sé» shows how it is done, and the child goes on with the next item', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     // The warm-up has no «No lo sé» (facts already learnt, no hints): the first item that offers it comes after the
     // warm-up, and each new skill opens with its example card.
@@ -126,7 +126,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('a wrong answer can be tried again once, on the same exercise, and then the child goes on', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const retry = page.getByRole('button', { name: 'Inténtalo otra vez' })
     for (let i = 0; i < 60 && (await retry.count()) === 0; i++) {
@@ -155,7 +155,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('the session can be paused and left without losing the day', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await page.getByRole('button', { name: /Salir/ }).click()
     await expect(page.getByRole('dialog', { name: 'Pausa' })).toBeVisible()
@@ -191,7 +191,7 @@ test.describe('a short landscape tablet (Android with its bars)', () => {
     await seedDemo(page)
     // The blocks of descomponer (w1) are the tall exercise: the map not started keeps «Lo nuevo» on it.
     await devEditProgress(page, { kind: 'mapNotStarted' })
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const example = page.getByRole('button', { name: /Entendido/ })
     for (let i = 0; i < 40 && (await example.count()) === 0; i++) {

@@ -161,6 +161,7 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
                 </Button>
               )}
             </div>
+            {knowItAvailable && <p className={s.text}>Si ya lo sabes, pulsa «Ya lo sé». Te haré {KNOW_IT_COUNT} preguntas para comprobarlo.</p>}
           </div>
         </div>
       </div>

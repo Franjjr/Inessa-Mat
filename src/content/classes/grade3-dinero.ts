@@ -71,8 +71,8 @@ const sumarPrecios = clase({
   ],
   ejemplo: [
     show('money', { items: '200,50,100,50,20,10' }, 'Un bocadillo de 2,50 € y un cuaderno de 1,80 €: juntos son 4,30 €.'),
-    show('money', { items: '200,50,100,50,20,10' }, 'Primero sumamos los céntimos: 50 + 80 = 130 céntimos. Como pasan de 100, 100 céntimos son 1 €, y quedan 30 céntimos.'),
-    show('money', { items: '200,100,100,20,10' }, 'Después sumamos los euros: 2 € + 1 € + 1 € (el euro que salió de los céntimos) = 4 €. El total es 4,30 €.'),
+    show('money', { items: '200,50,100,50,20,10' }, 'Primero sumamos los céntimos: 50 más 80 son 130 céntimos. Como pasan de 100, 100 céntimos son 1 €, y quedan 30 céntimos.'),
+    show('money', { items: '200,100,100,20,10' }, 'Después sumamos los euros: 2 € más 1 € más 1 € (el euro que salió de los céntimos) son 4 €. El total es 4,30 €.'),
     show('money', { items: '200,50,100,50,20,10' }, 'Un bocadillo de 2,50 € y un cuaderno de 1,80 €. Para comparar precios, mira primero los euros: 2,50 € tiene 2 € y 1,80 € tiene 1 €. Como 2 € es más que 1 €, el bocadillo es el más caro.'),
   ],
   guiada: [
@@ -100,7 +100,7 @@ const eurosCentimos = clase({
   ],
   ejemplo: [
     show('money', { items: '100,100,100' }, 'Tres monedas de 1 €: son 3 €. Cada euro son 100 céntimos, así que 3 € son 300 céntimos.'),
-    show('money', { items: '200,20,10,5' }, '2,35 € son 235 céntimos: 2 € son 200 céntimos, y 35 céntimos se suman: 200 + 35 = 235.'),
+    show('money', { items: '200,20,10,5' }, '2,35 € son 235 céntimos: 2 € son 200 céntimos, y se suman los 35 céntimos que faltan.'),
     show('money', { items: '100,20,5' }, '125 céntimos son 1 € y 25 céntimos: se escribe 1,25 €. Cada cien céntimos forman un euro.'),
     show('money', { items: '100,100,50' }, 'Para pasar de céntimos a euros, cuenta los grupos de cien: 250 céntimos tienen dos grupos de cien, son 2 €, y quedan 50 céntimos: 2,50 €.'),
   ],

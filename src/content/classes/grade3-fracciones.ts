@@ -18,6 +18,7 @@ const mitadCuarto = clase({
     show('fraction-shape', { parts: 3, shaded: 1, shape: 'bar' }, 'Partida en 3 partes iguales, cada parte es un tercio: se escribe 1/3.'),
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'circle' }, 'Partida en 4 partes iguales, cada parte es un cuarto: se escribe 1/4.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'circle' }, 'Si se colorean 3 de las 4 partes, son tres cuartos: se escribe 3/4. Arriba van las de color, y abajo, todas.'),
+    show('big-text', { text: '4 trozos', sub: 'uno enorme y otro muy pequeño' }, 'Ojo: si una pizza se parte en 4 trozos, pero uno es enorme y otro muy pequeño, no son cuartos. Las partes tienen que ser iguales.'),
   ],
   guiada: [
     tryIt('fraction-shape', { parts: 3, shaded: 2, shape: 'bar' }, '¡Te toca! Cuenta todas las partes iguales de la figura: ese número va abajo.', { skills: ['frac:read:2', 'frac:read:3', 'frac:read:4'] }),
@@ -42,10 +43,10 @@ const fraccionCantidad = clase({
     show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'Una bolsa es un cuarto de los caramelos. ¿Cuántos caramelos hay en una bolsa?', 'ladybug'),
   ],
   ejemplo: [
-    show('fraction-groups', { total: 20, parts: 4, take: 0 }, 'Repartimos: 20 caramelos en 4 grupos iguales. En cada grupo hay 5, porque 20 ÷ 4 = 5.'),
-    show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'Un cuarto de 20 son los caramelos de un grupo: 20 ÷ 4 = 5.'),
-    show('fraction-groups', { total: 20, parts: 4, take: 3 }, 'Tres cuartos son tres grupos: 3 × 5 = 15. Tres cuartos de 20 son 15.'),
-    show('fraction-groups', { total: 12, parts: 4, take: 3 }, 'Con 12 caramelos en 4 grupos, cada grupo tiene 3. Tres cuartos son 3 grupos: 3 × 3 = 9. Tres cuartos de 12 son 9.'),
+    show('fraction-groups', { total: 20, parts: 4, take: 0 }, 'Repartimos los 20 caramelos en 4 bolsas, de uno en uno, como en un reparto. En cada bolsa caen 5.'),
+    show('fraction-groups', { total: 20, parts: 4, take: 1 }, 'Un cuarto de 20 es lo que hay en una bolsa: 5.'),
+    show('fraction-groups', { total: 20, parts: 4, take: 3 }, 'Tres cuartos son tres bolsas: 3 bolsas de 5, que son 15. Tres cuartos de 20 son 15.'),
+    show('fraction-groups', { total: 12, parts: 4, take: 3 }, 'Con 12 caramelos en 4 bolsas, en cada bolsa hay 3. Tres cuartos son 3 bolsas de 3, que son 9. Tres cuartos de 12 son 9.'),
   ],
   guiada: [
     tryIt('fraction-groups', { total: 12, parts: 3, take: 1 }, '¡Te toca! Mira en cuántas partes iguales está repartido el total: ese número va abajo.', { skills: ['frac:of:2', 'frac:of:3', 'frac:of:4'] }),
@@ -75,6 +76,7 @@ const compararFracciones = clase({
     show('fraction-shape', { parts: 4, shaded: 1, shape: 'bar' }, 'Un cuarto: la barra partida en 4 partes, con 1 parte de color. Cada parte es más pequeña que la de la mitad.'),
     show('fraction-shape', { parts: 4, shaded: 2, shape: 'bar' }, 'Dos cuartos de la misma barra ocupan lo mismo que un medio: 2/4 es igual a 1/2, así que las dos fracciones son iguales.'),
     show('fraction-shape', { parts: 4, shaded: 3, shape: 'bar' }, 'Si el número de abajo es el mismo, gana la que tiene más partes de color: tres cuartos es más que un cuarto.'),
+    show('big-text', { text: '1/2 y 1/3', sub: 'dos barras iguales' }, '1/2 y 1/3: si las barras son iguales, el trozo de la que se parte en 2 es más grande que el de la que se parte en 3. 1/2 es mayor.'),
   ],
   guiada: [
     tryIt('fraction-shape', { parts: 3, shaded: 1, shape: 'bar' }, '¡Te toca! Mira cuánto ocupa una sola parte en cada barra.', { skills: ['frac:compare'] }),

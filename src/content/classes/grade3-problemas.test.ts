@@ -45,7 +45,7 @@ describe('clases de problemas y comprobar (3.º)', () => {
   it('two-step class solves its example in two lines', () => {
     const cls = classForTopic('prob-dos-pasos', 3)!
     const ejemplo = cls.lesson.steps.slice(cls.phases.para, cls.phases.para + cls.phases.ejemplo)
-    const withOperation = ejemplo.filter((s) => /[+−×÷]/.test(s.text))
+    const withOperation = ejemplo.filter((s) => /[+−×:÷]/.test(s.text))
     expect(withOperation.length).toBeGreaterThanOrEqual(2)
   })
 })

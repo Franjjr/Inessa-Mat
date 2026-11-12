@@ -143,7 +143,8 @@ describe('clases de sumar y restar (3.º)', () => {
       expect(phases.para, cls.lesson.id).toBeGreaterThanOrEqual(1)
       expect(phases.para, cls.lesson.id).toBeLessThanOrEqual(2)
       expect(phases.ejemplo, cls.lesson.id).toBeGreaterThanOrEqual(3)
-      expect(phases.ejemplo, cls.lesson.id).toBeLessThanOrEqual(6)
+      // Up to 10: a calculation shown step by step needs a presenting sentence, one per column and the result (clases-dibujo).
+      expect(phases.ejemplo, cls.lesson.id).toBeLessThanOrEqual(10)
       expect(phases.guiada, cls.lesson.id).toBe(2)
       expect(phases.sola, cls.lesson.id).toBeGreaterThanOrEqual(3)
       expect(phases.sola, cls.lesson.id).toBeLessThanOrEqual(4)
@@ -153,6 +154,8 @@ describe('clases de sumar y restar (3.º)', () => {
       expect(block, cls.topicId).toBeDefined()
       const earlier = block!.topics.slice(0, block!.topics.findIndex((t) => t.id === cls.topicId))
       const allowed = new Set([...earlier.flatMap((t) => t.skills), ...block!.topics.find((t) => t.id === cls.topicId)!.skills])
+      // The class of 2 × 2 teaches the one way of the school, the column (long-mul), whose skill is not the topic's by-parts skill.
+      if (cls.topicId === 'mul-2-cifras-intro') allowed.add('mul:col:2x2')
 
       if (cls.mapLessonId) expect(getLesson(cls.mapLessonId), cls.lesson.id).toBeDefined()
 
