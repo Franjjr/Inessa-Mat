@@ -1,7 +1,7 @@
 /* Draws the figures of the fraction and geometry exercises from their data (src/types/exercise.ts Figure). Pure SVG,
    no images. Fractions: the parts can be tapped (onPartTap) and shown as coloured (chosen or colored in the data).
    Polygons: side labels, and corners that can be tapped (corners.onTap) for the right-angle exercise. */
-import type { CSSProperties, ReactNode } from 'react'
+import { useId, type CSSProperties, type ReactNode } from 'react'
 import type { AngleFigure, CircleFigure, FractionFigure, Figure, GridFigure, LineFigure, LinesFigure, PolygonFigure, SolidFigure } from '@/types'
 import s from './FractionsGeometry.module.css'
 
@@ -68,20 +68,24 @@ export interface FigureSvgProps {
   onPartTap?: (index: number) => void
   /** Polygons: the corners marked (right angles tapped) and the tap handler; the corners are buttons when given. */
   corners?: { marked: number[]; onTap?: (index: number) => void }
+  /** Solids: drawn lying on the table, as when it rolls (H21: a cylinder rolls on its side, not standing). */
+  lying?: boolean
   className?: string
   style?: CSSProperties
 }
 
-export function FigureSvg({ figure, label, chosen, onPartTap, corners, className, style }: FigureSvgProps) {
+export function FigureSvg({ figure, label, chosen, onPartTap, corners, lying, className, style }: FigureSvgProps) {
+  // The hatch of the coloured parts is a pattern of this drawing: its id must be unique on the page.
+  const hatchId = `hatch-${useId().replace(/:/g, '')}`
   let body: ReactNode
   switch (figure.type) {
-    case 'fraction': body = <FractionBody f={figure} chosen={chosen} onPartTap={onPartTap} />; break
+    case 'fraction': body = <FractionBody f={figure} chosen={chosen} onPartTap={onPartTap} hatchId={hatchId} />; break
     case 'polygon': body = <PolygonBody f={figure} corners={corners} />; break
     case 'circle': body = <CircleBody f={figure} />; break
     case 'line': body = <LineBody f={figure} />; break
     case 'lines': body = <LinesBody f={figure} />; break
     case 'angle': body = <AngleBody f={figure} />; break
-    case 'solid': body = <SolidBody f={figure} />; break
+    case 'solid': body = <SolidBody f={figure} lying={lying} />; break
     case 'grid': body = <GridBody f={figure} />; break
   }
   return (
@@ -93,6 +97,14 @@ export function FigureSvg({ figure, label, chosen, onPartTap, corners, className
       style={style}
       data-figure={figure.type}
     >
+      {figure.type === 'fraction' && (
+        <defs>
+          <pattern id={hatchId} patternUnits="userSpaceOnUse" width={10} height={10} patternTransform="rotate(45)">
+            <rect width={10} height={10} fill={PART_ON_COLOR} />
+            <line x1={0} y1={0} x2={0} y2={10} stroke={PART_ON_STRIPE} strokeWidth={4} />
+          </pattern>
+        </defs>
+      )}
       {body}
     </svg>
   )
@@ -131,17 +143,23 @@ function GridBody({ f }: { f: GridFigure }) {
   )
 }
 const PART_OFF = 'var(--c-surface)'
-const PART_ON = 'var(--c-magic-soft)'
+/** The coloured parts of a fraction (P3PE-05): a full colour (the token --c-magic, ≥ 3:1 against white, tested) with a
+    lighter stripe, so they are told from the white parts by colour AND by texture (also in black and white). */
+export const PART_ON_TOKEN = '--c-magic'
+const PART_ON_COLOR = `var(${PART_ON_TOKEN})`
+const PART_ON_STRIPE = 'rgba(255, 255, 255, .35)'
 const PART_ON_STRONG = 'var(--c-magic)'
+/** The shaded faces of a solid (depth, not a coloured part). */
+const SOLID_SHADE = 'var(--c-magic-soft)'
 
-function FractionBody({ f, chosen, onPartTap }: { f: FractionFigure; chosen?: number[]; onPartTap?: (i: number) => void }) {
+function FractionBody({ f, chosen, onPartTap, hatchId }: { f: FractionFigure; chosen?: number[]; onPartTap?: (i: number) => void; hatchId: string }) {
   const on = new Set(chosen ?? f.colored)
   const shapes = partShapes(f)
   return (
     <g>
       {shapes.map((sh, i) => {
         const colored = on.has(i)
-        const fill = colored ? PART_ON : PART_OFF
+        const fill = colored ? `url(#${hatchId})` : PART_OFF
         const common = {
           fill,
           stroke: INK,
@@ -225,7 +243,7 @@ function rightMark(p: Pt, c: Pt): string {
 
 /** The circle; with a highlight, the radio, diámetro, cuerda or arco drawn in red, turned by f.turn degrees. */
 function CircleBody({ f }: { f: CircleFigure }) {
-  const rim = <circle cx={100} cy={100} r={80} fill={f.filled ? PART_ON : 'none'} stroke={INK} strokeWidth={4} />
+  const rim = <circle cx={100} cy={100} r={80} fill={f.filled ? SOLID_SHADE : 'none'} stroke={INK} strokeWidth={4} />
   if (!f.highlight) return rim
   const t = ((f.turn ?? 0) * Math.PI) / 180
   const at = (deg: number): Pt => [100 + 80 * Math.cos(t + (deg * Math.PI) / 180), 100 + 80 * Math.sin(t + (deg * Math.PI) / 180)]
@@ -304,9 +322,19 @@ function AngleBody({ f }: { f: AngleFigure }) {
   )
 }
 
-function SolidBody({ f }: { f: SolidFigure }) {
+function SolidBody({ f, lying }: { f: SolidFigure; lying?: boolean }) {
   const face = { fill: 'var(--c-surface)', stroke: INK, strokeWidth: 4, strokeLinejoin: 'round' as const }
-  const back = { fill: PART_ON, stroke: INK, strokeWidth: 4, strokeLinejoin: 'round' as const }
+  const back = { fill: SOLID_SHADE, stroke: INK, strokeWidth: 4, strokeLinejoin: 'round' as const }
+  if (lying && f.name === 'cilindro') {
+    // On its side on the table (the line under it): the way a cylinder rolls.
+    return (
+      <g data-lying="">
+        <path d="M 60 72 L 150 72 A 18 36 0 0 1 150 144 L 60 144" {...face} />
+        <ellipse cx={60} cy={108} rx={18} ry={36} {...back} />
+        <line x1={24} y1={147} x2={180} y2={147} stroke={INK} strokeWidth={3} strokeLinecap="round" opacity={0.5} />
+      </g>
+    )
+  }
   switch (f.name) {
     case 'cubo':
       return (

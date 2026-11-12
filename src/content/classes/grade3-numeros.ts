@@ -17,8 +17,9 @@ const descomponer = clase({
     show('place-value', { n: 4325 }, 'El 4 está en la casa de los millares: vale 4 000.'),
     show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'El 3 está en las centenas: vale 300. El 2 está en las decenas: vale 20. El 5 vale 5.'),
     show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'Si sumamos todas las partes, sale el número otra vez: 4 325.'),
-    show('big-text', { text: '6 071 = 6 000 + 70 + 1' }, 'Ahora el 6 071. ¡Mira las centenas!'),
-    show('big-text', { text: '6 071 = 6 000 + 70 + 1' }, 'Como las centenas son 0, esa casa no suma nada y no la escribimos.'),
+    show('place-value', { n: 4325 }, 'En el ejercicio también verás bloques: cada bloque grande vale 1 000, cada plancha 100, cada barra 10 y cada cubito 1. Se cuenta casa a casa y sale 4 325.'),
+    show('big-text', { text: '6 071 = 6 000 + 70 + 1' }, 'Ahora el 6 071. Empezamos por los millares, como siempre: el 6 vale 6 000.'),
+    show('big-text', { text: '6 071 = 6 000 + 70 + 1' }, 'Las centenas son 0. Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía.'),
   ],
   guiada: [
     tryIt('place-value', undefined, '¡Te toca! Empieza por la casa de los millares.', { skills: ['num:place:expanded'] }),
@@ -26,10 +27,10 @@ const descomponer = clase({
   ],
   sola: [
     tryIt('place-value', undefined, '¡Tu turno! Cada cifra vale según su casa.', { skills: ['num:place:expanded'] }),
-    tryIt('place-value', undefined, '¡Tu turno! Si una casa tiene 0, no la olvides.', { skills: ['num:place:expanded'] }),
+    tryIt('place-value', undefined, '¡Tu turno! Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía.', { skills: ['num:place:expanded'] }),
     tryIt('place-value', undefined, '¡Tu turno! Sin pistas: cuenta los bloques de cada casa.', { skills: ['num:place:blocks'] }),
   ],
-  cierre: show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'La regla: cada cifra vale según su casa. Si una casa tiene 0, no hace falta escribirla.'),
+  cierre: show('big-text', { text: '4 325 = 4 000 + 300 + 20 + 5' }, 'La regla: cada cifra vale según su casa. Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía.'),
 })
 
 /* Leer y escribir: se lee casa a casa, y los ceros no se leen. */
@@ -45,7 +46,8 @@ const leerEscribir = clase({
     show('place-value', { n: 3517 }, 'Lo leemos casa a casa, de mayor a menor: 3 millares, 5 centenas, 1 decena y 7 unidades. Se dice: tres mil quinientos diecisiete.'),
     show('big-text', { text: '7 300', sub: 'siete mil trescientos' }, 'Los ceros no se leen: el 7 300 es siete mil trescientos.'),
     show('big-text', { text: '1 000', sub: 'mil' }, 'Mil no lleva «un» delante: el 1 000 se lee mil.'),
-    show('big-text', { text: '9 999', sub: 'nueve mil novecientos noventa y nueve' }, 'El número más grande de esta etapa es el 9 999.'),
+    show('place-value', { n: 2015 }, 'Ahora al revés: «dos mil quince». Dos mil: un 2 en los millares. No dice centenas: pongo un 0. Quince: 1 decena y 5 unidades. Se escribe 2 015.'),
+    show('big-text', { text: '9 999', sub: 'nueve mil novecientos noventa y nueve' }, 'Con cuatro cifras, el número más grande es el 9 999.'),
   ],
   guiada: [
     tryIt('big-text', undefined, '¡Te toca! Empieza por los millares.', { skills: ['num:place:words'] }),
@@ -65,11 +67,12 @@ const compararOrdenar = clase({
   topicId: 'comparar-ordenar-9999',
   title: 'Comparar y ordenar',
   para: [
-    show('place-value', { n: 4052 }, 'En el concurso de dibujo, Dani tiene 4 052 puntos y Pepa tiene 3 998. ¿Quién gana?', 'ladybug'),
-    show('big-text', { text: '4 052 · 3 998', sub: 'los dos puntajes' }, 'Para saber quién tiene más, comparamos los dos números: miramos primero los millares.', 'frog'),
+    show('place-value', { n: 4052 }, 'En el concurso de dibujo, Dani tiene 4 052 puntos y Pepa 3 998. ¿Quién gana?', 'ladybug'),
+    show('big-text', { text: '4 052 · 3 998', sub: 'los dos números' }, 'Para saber quién tiene más, comparamos los dos números: miramos primero los millares.', 'frog'),
   ],
   ejemplo: [
-    show('big-text', { text: '4 052 > 3 998', sub: 'mayor que' }, 'El signo > significa «mayor que». La boca del signo mira al número más grande.'),
+    show('big-text', { text: '4 052 > 3 998', sub: 'mayor que' }, 'El signo > se lee «mayor que»: la boca del signo se abre hacia el número más grande.'),
+    show('big-text', { text: '3 998 < 4 052', sub: 'menor que' }, 'El signo < se lee «menor que»: la punta señala al número pequeño.'),
     show('place-value', { n: 4052 }, 'Miramos las casas: el 4 de los millares de 4 052 gana al 3 de los millares de 3 998. Por eso 4 052 es mayor, sin mirar más cifras.'),
     show('place-value', { n: 2760 }, 'Los millares son iguales (2 y 2): miramos las centenas. El 7 de 2 760 es menos que el 8 de 2 809, así que 2 760 es menor.'),
     show('big-text', { text: '5 000 = 5 000', sub: 'son iguales' }, 'Si todas las casas son iguales, los números son iguales: se usa el signo =.'),
@@ -99,6 +102,7 @@ const redondear = clase({
   ejemplo: [
     show('number-line', { from: 3400, to: 3500, step: 10, mark: 3456 }, 'Redondear es buscar el número redondo más cercano. ¿A qué decena está más cerca el 3 456?'),
     show('number-line', { from: 3400, to: 3500, step: 10, mark: 3456, jump: 4 }, 'Miro la cifra de las unidades: es 6. Como es 5 o más, subo: a las decenas, 3 456 es 3 460.'),
+    show('number-line', { from: 3400, to: 3500, step: 10, mark: 3432 }, 'Otro: 3 432 a las decenas. Miro las unidades, un 2. Es menos de 5: se queda en 3 430.'),
     show('number-line', { from: 3400, to: 3500, step: 100, mark: 3456, jump: 44 }, 'Ahora a las centenas miro la cifra de las decenas: es 5, así que sube. Redondeado, 3 456 es 3 500.'),
   ],
   guiada: [
@@ -124,9 +128,10 @@ const ordinales = clase({
   ],
   ejemplo: [
     show('big-text', { text: '1.º · 2.º · 3.º · 4.º · 5.º', sub: 'primero, segundo, tercero, cuarto, quinto' }, 'Cuenta desde la punta de la fila: el primero es el que está delante.'),
-    show('big-text', { text: '4.º', sub: 'cuarto' }, 'El cuarto va después del tercero. Se escribe el número y la o pequeña: 4.º.'),
-    show('big-text', { text: '7.º', sub: 'séptimo' }, 'El séptimo es el 7.º. El sexto es el 6.º, así que no se confunden.'),
-    show('big-text', { text: '21.º', sub: 'vigésimo primero' }, 'Del veinte en adelante, primero se dice vigésimo y después el número: el 21.º es el vigésimo primero.'),
+    show('big-text', { text: '6.º · 7.º · 8.º · 9.º · 10.º', sub: 'sexto, séptimo, octavo, noveno, décimo' }, 'Seguimos contando: 6.º sexto, 7.º séptimo, 8.º octavo, 9.º noveno y 10.º décimo.'),
+    show('big-text', { text: '11.º · 12.º', sub: 'undécimo, duodécimo' }, 'El 11.º es undécimo y el 12.º, duodécimo.'),
+    show('big-text', { text: '13.º · 14.º · … · 19.º', sub: 'decimotercero, decimocuarto… decimonoveno' }, 'Del 13.º al 19.º se dice «décimo» pegado al número: decimotercero, decimocuarto… decimonoveno.'),
+    show('big-text', { text: '20.º · 21.º · … · 30.º', sub: 'vigésimo, vigésimo primero… trigésimo' }, '20.º vigésimo, 21.º vigésimo primero… y 30.º trigésimo.'),
   ],
   guiada: [
     tryIt('big-text', undefined, '¡Te toca! Cuenta desde la punta de la fila.', { skills: ['num:ordinal:10'] }),
@@ -147,7 +152,7 @@ const cincoCifras = clase({
   title: 'Números de cinco cifras',
   para: [
     show('big-text', { text: '12 345', sub: 'doce mil trescientos cuarenta y cinco' }, 'Ya tenemos más de 9 999: hay números con cinco cifras.', 'owl'),
-    show('big-text', { text: '10 000', sub: 'diez mil' }, 'Diez millares hacen diez mil: 10 000 es una decena de millar.', 'owl'),
+    show('big-text', { text: '10 000', sub: 'diez mil' }, '10 millares hacen 1 decena de millar, igual que 10 unidades hacen 1 decena.', 'owl'),
   ],
   ejemplo: [
     show('big-text', { text: '12 345 = 10 000 + 2 000 + 300 + 40 + 5' }, 'El 1 de 12 345 está en las decenas de millar: vale 10 000.'),

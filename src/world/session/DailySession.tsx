@@ -15,10 +15,11 @@ import { GameHostProvider } from '@/world/host/GameHost'
 import { ExerciseStep } from '@/world/review/ExerciseStep'
 import { classForTopic, getNode, getWorld, nextNode, renderTemplate, templateContext } from '@/content'
 import { syllabusFor, syllabusForGrade, topicTitle, type SyllabusTopic } from '@/content/syllabus'
-import { markTopicPracticeDay, DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
+import { markTopicPracticeDay, DAILY_BLOCK_LABEL, DAILY_MINUTES, ENGLISH_SESSION_MINUTES, methodFor, planDailySession, planEnglishSession, planLenguaSession, storyFlag, type DailyPlan, type LessonSubject } from '@/engine'
 import { listAttempts, updateProgress, useActiveChild, useMastery, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
-import type { AttemptRecord, ChildProfile, ProgressState, ReadingDef } from '@/types'
+import type { AttemptRecord, ChildProfile, Hint, ProgressState, ReadingDef } from '@/types'
+import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import type { RunQueue } from '@/activities/shared/requeue'
 import { CancionOffer } from './CancionOffer'
 import { songTables } from '@/world/cancion/logic'
@@ -40,7 +41,7 @@ const SESSION_SETUP: Record<LessonSubject, {
   activity: string; title: string; minutes: number; classFirst: boolean; adventure: boolean; blocks: [string, string][]
 }> = {
   math: {
-    activity: 'sesion', title: 'Mi sesión de hoy', minutes: DAILY_MINUTES, classFirst: false, adventure: true,
+    activity: 'sesion', title: 'Mi sesión de hoy', minutes: DAILY_MINUTES, classFirst: true, adventure: true,
     blocks: [['Calentamiento', '2 min · de cabeza'], ['Lo nuevo', '5 min · con un ejemplo'], ['Mezcla', '5 min · de todo un poco'], ['Problema', '2 min · con historia']],
   },
   language: {
@@ -129,7 +130,11 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
       ? planEnglishSession({ child, mastery, attempts, syllabus: syllabusFor('english', child.grade), now, progress, sound: child.settings.sound && speech.available() })
       : subject === 'language'
         ? planLenguaSession({ child, mastery, syllabus: syllabusFor('language', child.grade), now, progress, voice: speech.available() })
-        : planDailySession({ child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now, progress })
+        : planDailySession({
+          child, mastery, attempts, syllabus: syllabusForGrade(child.grade), now, progress,
+          // The worked example is solved with the school's methods, as the exercises are.
+          methods: { subMethod: methodFor('sub', host.prefs), divMethod: methodFor('div', host.prefs), tableMethod: host.prefs.tableMethod },
+        })
     setPlan(made)
     if (made.blocks.every((b) => b.items.length === 0)) setPhase('empty')
   }, [child, mastery, attempts, progress, plan, subject])
@@ -213,7 +218,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
     <header className={s.header}>
       <BackButton variant="exit" onClick={() => setPaused(true)} />
       <h1 className={s.headerTitle}>{title}</h1>
-      {phase === 'play' ? <span className={s.clock} aria-live="off">{formatClock(seconds)} de {SESSION_SETUP[subject].minutes}</span> : <span />}
+      {phase === 'play' ? <span className={s.clock} aria-live="off">{clockText(seconds, SESSION_SETUP[subject].minutes)}</span> : <span />}
     </header>
   )
 
@@ -287,8 +292,9 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
       <div className={s.stage}>
         {needsExample && plan.example ? (
           <ExampleCard
-            statement={plan.example.statement}
+            statement={host.t(plan.example.statement)}
             steps={plan.example.steps.map((t) => host.t(t))}
+            visual={plan.example.visual ? { level: 3, text: '', visual: plan.example.visual, params: plan.example.params } : undefined}
             topicName={topicName}
             onNext={() => { setExampleSeen(true) }}
             onClass={topicClass ? () => navigate(`/play/clase/${topicClass.topicId}`) : undefined}
@@ -302,7 +308,7 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
           />
         ) : slot ? (
           <div className={s.card}>
-            <p className={s.blockChip}>{label}{slot.retry ? ' · vuelve para repasar' : ''}</p>
+            <p className={`${s.blockChip} ${s.playChip}`}>{label}{slot.retry ? ' · vuelve para repasar' : ''}</p>
             <ExerciseStep
               key={`${pos}:${slot.item.uid}`}
               exercise={slot.item.item.exercise}
@@ -337,8 +343,8 @@ function SessionRunner({ subject, onDone, onExit }: DailySessionProps & { subjec
   )
 }
 
-function ExampleCard({ statement, steps, topicName, onNext, onClass }: {
-  statement: string; steps: string[]; topicName: string; onNext: () => void; onClass?: () => void
+function ExampleCard({ statement, steps, visual, topicName, onNext, onClass }: {
+  statement: string; steps: string[]; visual?: Hint; topicName: string; onNext: () => void; onClass?: () => void
 }) {
   return (
     <div className={`${s.card} ${s.example}`}>
@@ -347,6 +353,7 @@ function ExampleCard({ statement, steps, topicName, onNext, onClass }: {
       <ol className={s.exampleSteps}>
         {steps.map((t, i) => <li key={i}>{t}</li>)}
       </ol>
+      {visual && <div className={s.exampleVisual} data-testid="example-visual"><HintVisual hint={visual} /></div>}
       <div className={s.actions}>
         <Button size="lg" variant="success" onClick={onNext}>¡Entendido, a por ello!</Button>
         {onClass && <Button size="lg" variant="secondary" onClick={onClass}>Ver la clase otra vez</Button>}
@@ -510,6 +517,11 @@ function safeNext(progress: ProgressState) {
   } catch {
     return null
   }
+}
+
+/** «3 de 15 minutos»: the minutes done out of the minutes of the session, in words a child reads at a glance. */
+export function clockText(totalSeconds: number, minutes: number): string {
+  return `${Math.floor(totalSeconds / 60)} de ${minutes} minutos`
 }
 
 export function formatClock(totalSeconds: number): string {

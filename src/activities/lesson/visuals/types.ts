@@ -18,9 +18,10 @@ export interface VisualProps {
 /** Phase value used for a run of one step: such a visual shows its complete end state. */
 export const FINAL = 99
 
-/** The state a visual should draw: its phase, or FINAL when the step stands alone. */
+/** The state a visual should draw: its phase, or FINAL on the last step of a run (and when the step stands alone), so
+    the picture of the last step always shows the whole result the text announces. */
 export function stateOf(p: Pick<VisualProps, 'phase' | 'runLength'>): number {
-  return p.runLength <= 1 ? FINAL : p.phase
+  return p.phase >= p.runLength - 1 ? FINAL : p.phase
 }
 
 /** The last state of a run (FINAL for a single step). */

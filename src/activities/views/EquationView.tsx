@@ -8,14 +8,18 @@ import { celebrate } from '@/fx'
 import { fmt } from '@/engine'
 import type { EqTerm, EquationExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { RETRY_WRONG_CLASS, useRetryChoice, useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
-export default function EquationView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function EquationView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'equation') return null
-  if (exercise.mode === 'same') return <SameRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
-  return <EqRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  if (exercise.mode === 'same') return <SameRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
+  return <EqRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
+
+type RoundProps = { ex: EquationExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }
 
 /** One side of the balance: the numbers and operators as written, the blank as `box`. */
 function sideNodes(terms: EqTerm[], box: ReactNode) {
@@ -26,9 +30,10 @@ function sideNodes(terms: EqTerm[], box: ReactNode) {
   })
 }
 
-function EqRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [value, setValue] = useState<number | null>(null)
+function EqRound({ ex, onAnswered, showFeedback, allowHints, retry }: RoundProps) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  const again = useRetryNumber(retry, typeof ex.answer === 'number' ? ex.answer : null)
+  const [value, setValue] = useState<number | null>(again.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
 
   const submit = (v: number | null = value) => {
@@ -44,7 +49,7 @@ function EqRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExe
       onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
       maxDigits={4}
       size="lg"
-      status={status}
+      status={again.marked(value, !!flow.result) ? 'wrong' : status}
       ariaLabel="Número que falta"
       placeholder="?"
       autoFocus
@@ -52,15 +57,13 @@ function EqRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExe
   )
 
   return (
-    <section className={s.view} aria-label="Igualdad" data-kind={ex.kind}>
-      <p className={s.instructions}>Los dos lados del = tienen que valer lo mismo. ¿Qué número falta?</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} prompt="¿Qué número falta?" sub="Los dos lados del = tienen que valer lo mismo." actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, box)}</span>
         <span className={s.eqEq} aria-hidden>=</span>
         <span className={s.eqSide}>{sideNodes(ex.right, box)}</span>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }
 
@@ -69,9 +72,10 @@ const SAME_SIGNS: { sign: '=' | '≠'; label: string }[] = [
   { sign: '≠', label: 'distinto de' },
 ]
 
-function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [picked, setPicked] = useState<'=' | '≠' | null>(null)
+function SameRound({ ex, onAnswered, showFeedback, allowHints, retry }: RoundProps) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  const again = useRetryChoice<'=' | '≠'>(retry, (a) => (a.type === 'sign' && (a.sign === '=' || a.sign === '≠') ? a.sign : null), ex.answer === '=' || ex.answer === '≠' ? ex.answer : null)
+  const [picked, setPicked] = useState<'=' | '≠' | null>(again.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
 
   const submit = () => {
@@ -81,8 +85,7 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
   }
 
   return (
-    <section className={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>¿Los dos lados valen lo mismo? Elige = o ≠.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status} prompt="¿Valen lo mismo los dos lados?" sub="Toca = si valen lo mismo, o ≠ si no." actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, null)}</span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>
@@ -93,7 +96,7 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
           <button
             key={o.sign}
             type="button"
-            className={clsx(s.signBtn, picked === o.sign && s.signOn)}
+            className={clsx(s.signBtn, picked === o.sign && s.signOn, again.marked(o.sign, picked, !!flow.result) && RETRY_WRONG_CLASS)}
             onClick={() => { if (!flow.result?.correct) setPicked(o.sign) }}
             aria-pressed={picked === o.sign}
             aria-label={o.label}
@@ -102,7 +105,6 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

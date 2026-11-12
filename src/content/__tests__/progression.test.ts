@@ -53,6 +53,38 @@ describe('initial state and unlocking', () => {
     expect(isNodeUnlocked(p, 'w2', 'arrival')).toBe(false)
   })
 
+  it('an optional node opens in its turn but never blocks the nodes after it', () => {
+    const nodes = season1.worlds[0].nodes
+    const [n0, n1, n2, n3] = nodes
+    const optional = n1 as typeof n1 & { optional?: boolean }
+    optional.optional = true
+    try {
+      let p = initialProgress('kid', T0)
+      expect(isNodeUnlocked(p, 'w1', n1.id)).toBe(false)
+      expect(isNodeUnlocked(p, 'w1', n2.id)).toBe(false)
+      p = finish(p, 'w1', n0.id)
+      // After the required node before it, both the optional one and the next one are open.
+      expect(isNodeUnlocked(p, 'w1', n1.id)).toBe(true)
+      expect(isNodeUnlocked(p, 'w1', n2.id)).toBe(true)
+      expect(isNodeUnlocked(p, 'w1', n3.id)).toBe(false)
+      p = finish(p, 'w1', n2.id)
+      expect(isNodeUnlocked(p, 'w1', n3.id)).toBe(true)
+    } finally {
+      delete optional.optional
+    }
+  })
+
+  it('the optional lessons of world 4 and 8 never block the guardian, and «Continuar» goes to the guardian', () => {
+    for (const [worldId, optionalId] of [['w4', 'lesson-four-ways'], ['w8', 'lesson-div-ways']] as const) {
+      const w = season1.worlds.find((x) => x.id === worldId)!
+      let p = unlockThroughWorld(initialProgress('kid', T0), worldId)
+      for (const n of w.nodes) if (n.kind !== 'guardian' && n.id !== optionalId) p = finish(p, worldId, n.id)
+      expect(isNodeUnlocked(p, worldId, 'guardian'), worldId).toBe(true)
+      expect(isNodeUnlocked(p, worldId, optionalId), worldId).toBe(true)
+      expect(nextNode({ ...p, lastNode: { worldId, nodeId: 'guardian' } }), worldId).toEqual({ worldId, nodeId: 'guardian' })
+    }
+  })
+
   it('a node with 0 stars stays closed for the next one; passed:true lets the host move on', () => {
     let p = finish(initialProgress('kid', T0), 'w1', 'arrival')
     p = finish(p, 'w1', 'lesson-groups')
@@ -260,14 +292,16 @@ describe('nextNode', () => {
       p = finish(p, n.worldId, n.nodeId)
       if (++steps > 200) throw new Error('loop')
     }
-    expect(steps).toBe(season1.worlds.reduce((s, w) => s + w.nodes.length, 0))
+    // «Continuar» walks every required stop: the optional lessons (NodeDef.optional) are left for the child to choose.
+    const required = season1.worlds.flatMap((w) => w.nodes.filter((n) => n.optional !== true))
+    expect(steps).toBe(required.length)
     expect(crystalsOf(p)).toEqual(Array(8).fill(true))
     expect(lettersOf(p).join('')).toBe('VALIENTE')
     expect(p.diplomaEarnedAt).toBe(T0.toISOString())
     expect(p.stickers).toContain('lumi-brilla')
     expect(p.stickers.filter((id) => getSticker(id)?.worldId)).toHaveLength(24)
     // max currency: 3 stars per practice node (activities, reviews, guardians), 1 per story or lesson read
-    const maxStars = season1.worlds.reduce((sum, w) => sum + w.nodes.reduce((t, n) => t + (n.kind === 'story' || n.kind === 'lesson' ? COMPLETION_STARS : 3), 0), 0)
+    const maxStars = required.reduce((t, n) => t + (n.kind === 'story' || n.kind === 'lesson' ? COMPLETION_STARS : 3), 0)
     expect(p.stars).toBe(maxStars)
   })
 

@@ -8,6 +8,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  /* A drawing taller than the board must not overflow upwards, where nobody can scroll to it. */
+  justify-content: safe center;
   gap: var(--sp-4);
   padding: var(--sp-4);
   box-sizing: border-box;

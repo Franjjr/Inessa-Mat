@@ -233,3 +233,30 @@
   .digit, .typed, .unsure, .clear, .st_wrong .surface, .st_hint .surface { animation: none; }
   .canvas, .surface { transition: none; }
 }
+
+/* ---- column order: an arrow in the cell that is written next (units first, then to the left). Inside the cell's own
+   top-left corner, so it never sits over the operand above, the line or the carry cell (P6). */
+.arrow {
+  position: absolute;
+  left: 7px;
+  top: 5px;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  color: var(--c-primary);
+  pointer-events: none;
+}
+/* The cursor's arrow gives way to the cell the view marks as next. */
+:global([data-cell-group]):has(.st_active) .arrowCurrent { display: none; }
+.twoDigits {
+  white-space: normal;
+  width: min(260px, 70vw);
+  text-align: center;
+}
+/* a digit the doubt prompt asks about */
+.surface[data-doubt="true"] {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-gold) 45%, transparent);
+}

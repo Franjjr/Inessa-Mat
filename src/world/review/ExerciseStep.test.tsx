@@ -7,12 +7,14 @@ import { ExerciseStep } from './ExerciseStep'
 
 // The exercise view is covered by the activities module. Here a stub answers on click with the next scripted outcome
 // (a correct one when the script is empty), so only the step is tested.
-const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0, guidedSeen: [] as unknown[] }))
+const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0, guidedSeen: [] as unknown[], props: [] as Record<string, unknown>[] }))
 
 vi.mock('@/activities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/activities')>()
   const React = await import('react')
-  function ExerciseView({ onAnswered, guided }: { onAnswered: (o: unknown) => void; guided?: boolean }) {
+  function ExerciseView(props: { onAnswered: (o: unknown) => void; guided?: boolean; initialAnswer?: unknown; wrongColumns?: number[] }) {
+    const { onAnswered, guided } = props
+    script.props.push({ initialAnswer: props.initialAnswer, wrongColumns: props.wrongColumns })
     React.useEffect(() => { script.mounts += 1; script.guidedSeen.push(guided === true) }, [])
     return React.createElement('div', null,
       React.createElement('input', { 'aria-label': 'Respuesta' }),
@@ -35,6 +37,7 @@ beforeEach(() => {
   script.outcomes = []
   script.mounts = 0
   script.guidedSeen = []
+  script.props = []
 })
 
 function renderStep(props: Partial<React.ComponentProps<typeof ExerciseStep>> = {}, reportAttempt = vi.fn()) {
@@ -83,7 +86,7 @@ describe('ExerciseStep «No lo sé»', () => {
     expect(screen.queryByRole('button', { name: 'No lo sé' })).toBeNull()
   })
 
-  it('records one wrong attempt with errorType dont-know, shows every hint («Así se hace») and then «Siguiente»', async () => {
+  it('records one wrong attempt with errorType dont-know, shows the solution («Así se resuelve») and then «Siguiente»', async () => {
     const user = userEvent.setup()
     const { reportAttempt, onContinue } = renderStep({ allowDontKnow: true })
     await user.click(screen.getByRole('button', { name: 'No lo sé' }))
@@ -92,9 +95,9 @@ describe('ExerciseStep «No lo sé»', () => {
       exercise: expect.objectContaining({ id: 'fact-mul:6x7' }),
       check: { correct: false, given: 'No lo sé', expected: '?', errorType: 'dont-know' },
     })
-    expect(screen.getByRole('heading', { name: 'Así se hace' })).toBeInTheDocument()
-    expect(screen.getByText('Pista 1 de 3')).toBeInTheDocument()
-    expect(screen.getByText('Pista 3 de 3')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Así se resuelve' })).toBeInTheDocument()
+    expect(screen.getByTestId('solution-panel')).toHaveTextContent('6 × 7 = 42')
+    expect(screen.queryByText(/Pista \d de 3/)).toBeNull()
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(onContinue).toHaveBeenCalledTimes(1)
     expect(onContinue.mock.calls[0][0].check).toMatchObject({ correct: false, errorType: 'dont-know' })
@@ -129,6 +132,17 @@ describe('ExerciseStep «Inténtalo otra vez»', () => {
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(onContinue).toHaveBeenCalledTimes(1)
     expect(onContinue.mock.calls[0][0].check.correct).toBe(false) // the first answer decides the run (requeue), as before
+  })
+
+  it('a retry brings back what the child wrote and the wrong boxes; the first try starts empty', async () => {
+    const user = userEvent.setup()
+    const answer = { type: 'digits', digits: [7, 4] }
+    script.outcomes = [{ ...wrong({ check: { correct: false, given: '47', expected: '42', wrongColumns: [0] } }), answer }, right]
+    renderStep({ allowRetry: true })
+    expect(script.props.at(-1)).toEqual({ initialAnswer: undefined, wrongColumns: undefined })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: 'Inténtalo otra vez' }))
+    expect(script.props.at(-1)).toEqual({ initialAnswer: answer, wrongColumns: [0] })
   })
 
   it('a wrong retry shows the feedback and «Siguiente», with retries but not solved on retry', async () => {
@@ -335,5 +349,42 @@ describe('ExerciseStep · a guided step (a visual support on screen from the sta
     await screen.findByRole('button', { name: 'Siguiente' })
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(reportAttempt.mock.calls[0][0]).toMatchObject({ hintsUsed: 0 })
+  })
+})
+
+describe('ExerciseStep «Escuchar» (P5)', () => {
+  it('every exercise has a button to hear it, and it reads the story with the child\'s own names', async () => {
+    const { speech } = await import('@/audio')
+    const say = vi.spyOn(speech, 'say').mockResolvedValue(undefined)
+    const user = userEvent.setup()
+    const story = { id: 'wp:1', kind: 'word-problem', text: '{child} tiene 3 cromos y {pet} le da 4. ¿Cuántos tiene ahora?', answer: 7, unit: 'cromos', skill: 'add:wp', difficulty: 1, topic: 'add' } as unknown as Exercise
+    render(
+      <ActivityHostProvider value={{ ...defaultActivityHost, t: (x: string) => x.replace('{child}', 'Inés').replace('{pet}', 'Nube') }}>
+        <ExerciseStep exercise={story} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    await user.click(screen.getByRole('button', { name: /Escuchar/ }))
+    expect(say).toHaveBeenCalledTimes(1)
+    expect(say.mock.calls[0][0]).toBe('Inés tiene 3 cromos y Nube le da 4. ¿Cuántos tiene ahora?')
+    expect(say.mock.calls[0][1]).toMatchObject({ force: true })
+    say.mockRestore()
+  })
+
+  it('a problem that reads itself (voice on) gets no second «Escuchar»; a calculation always has one', () => {
+    const story = { id: 'wp:1', kind: 'word-problem', text: 'Hay 3 y vienen 4. ¿Cuántos hay?', answer: 7, unit: '', skill: 'add:wp', difficulty: 1, topic: 'add' } as unknown as Exercise
+    const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
+    const { unmount } = render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={story} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.queryByRole('button', { name: /Escuchar/ })).toBeNull()
+    unmount()
+    render(
+      <ActivityHostProvider value={voiceOn}>
+        <ExerciseStep exercise={exercise} allowHints okLabel="Siguiente" onContinue={vi.fn()} />
+      </ActivityHostProvider>,
+    )
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
   })
 })

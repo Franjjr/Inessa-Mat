@@ -23,9 +23,11 @@ vi.mock('@/ink', () => ({
     onSubmit: (v: number | null) => void
     ariaLabel?: string
     placeholder?: string
+    maxDigits?: number
   }) => (
     <input
       aria-label={p.ariaLabel}
+      maxLength={p.maxDigits}
       value={p.value ?? ''}
       placeholder={p.placeholder}
       onChange={(e) => p.onChange(e.target.value === '' ? null : Number(e.target.value))}
@@ -162,6 +164,74 @@ describe('RoundView', () => {
     await user.type(box('Número redondeado'), '3750')
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('p1n-05: 9 973 to the centena is 10 000, so the box takes 5 digits', () => {
+    const onAnswered = vi.fn()
+    render(<RoundView exercise={makeRound(9973, 100)} onAnswered={onAnswered} showFeedback={false} />)
+    expect(box('Número redondeado').getAttribute('maxlength')).toBe('5')
+    fireEvent.change(box('Número redondeado'), { target: { value: '10000' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+})
+
+describe('PlaceValueView, expanded form (p1n-03/04)', () => {
+  it('1 509 with 1 000, 500, (empty), 9: Comprobar is on and it is right', () => {
+    const onAnswered = vi.fn()
+    render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box(/Valor de los millares/), { target: { value: '1000' } })
+    fireEvent.change(box(/Valor de las centenas/), { target: { value: '500' } })
+    expect(comprobar().hasAttribute('disabled')).toBe(true)
+    fireEvent.change(box(/Valor de las unidades/), { target: { value: '9' } })
+    expect(comprobar().hasAttribute('disabled')).toBe(false)
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('3 040 with 3 000 and 40 written: Enter in the last box checks (the empty zero boxes are optional)', () => {
+    const onAnswered = vi.fn()
+    render(<PlaceValueView exercise={makePlaceValue(3040, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box(/Valor de los millares/), { target: { value: '3000' } })
+    fireEvent.change(box(/Valor de las decenas/), { target: { value: '40' } })
+    fireEvent.keyDown(box(/Valor de las decenas/), { key: 'Enter' })
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('the empty box of a non-zero digit is still needed, and a wrong part is wrong', () => {
+    const onAnswered = vi.fn()
+    render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box(/Valor de los millares/), { target: { value: '1000' } })
+    fireEvent.change(box(/Valor de las centenas/), { target: { value: '50' } })
+    fireEvent.change(box(/Valor de las unidades/), { target: { value: '9' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('every box says what it is («valor de las centenas») and the guided mode shows a worked example', () => {
+    render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={() => {}} showFeedback={false} guided />)
+    expect(screen.getByText('valor de las centenas')).toBeTruthy()
+    expect(screen.getByText('valor de los millares')).toBeTruthy()
+    expect(screen.getByText(/2 405 = 2 000 \+ 400 \+ 0 \+ 5/)).toBeTruthy()
+  })
+
+  it('the statement says the same as the class: a 0 may be written or left empty', () => {
+    render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={() => {}} showFeedback={false} />)
+    expect(screen.getByText('Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía.')).toBeTruthy()
+  })
+})
+
+describe('MentalView (P3PE-14)', () => {
+  it('small numbers: «de cabeza»', () => {
+    const { container } = render(<MentalView exercise={makeMental('dobles', 24, 2, 48, '¿Cuál es el doble de 24?')} onAnswered={() => {}} showFeedback={false} />)
+    expect(container.querySelector('.ex-prompt')?.textContent).toMatchInlineSnapshot(`"Calcúlalo de cabeza, sin escribir la cuenta."`)
+  })
+
+  it('a number of 3 digits: no «sin escribir cuentas»', () => {
+    const { container } = render(<MentalView exercise={makeMental('centenas', 450, 200, 650, '450 + 200 = ?')} onAnswered={() => {}} showFeedback={false} />)
+    expect(container.querySelector('.ex-prompt')?.textContent).toMatchInlineSnapshot(`"Calcula y escribe el resultado."`)
+    expect(container.textContent).not.toMatch(/sin escribir/)
   })
 })
 

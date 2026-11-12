@@ -6,13 +6,15 @@ import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
 import type { ExerciseViewProps, FractionAddExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
-export default function FractionAddView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function FractionAddView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'fraction-add') return null
-  return <AddRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <AddRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
 function Fraction({ n, d }: { n: number; d: number }) {
@@ -25,11 +27,16 @@ function Fraction({ n, d }: { n: number; d: number }) {
   )
 }
 
-function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAddExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [top, setTop] = useState<number | null>(null)
-  const [bottom, setBottom] = useState<number | null>(null)
+function AddRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: FractionAddExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the fraction the child wrote; the wrong number is soft red until she changes it.
+  const againTop = useRetryNumber(retry, ex.answer, (a) => (a.type === 'fraction' ? a.numerator : null))
+  const againBottom = useRetryNumber(retry, ex.denominator, (a) => (a.type === 'fraction' ? a.denominator : null))
+  const [top, setTop] = useState<number | null>(againTop.first)
+  const [bottom, setBottom] = useState<number | null>(againBottom.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const topStatus = againTop.marked(top, !!flow.result) ? 'wrong' as const : status
+  const bottomStatus = againBottom.marked(bottom, !!flow.result) ? 'wrong' as const : status
   const add = ex.op === 'add'
   const sign = add ? '+' : '−'
 
@@ -40,8 +47,7 @@ function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAd
   }
 
   return (
-    <section className={s.view} aria-label={add ? 'Sumar fracciones' : 'Restar fracciones'} data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>{add ? 'Suma las fracciones' : 'Resta las fracciones'}</p>
+    <ExerciseLayout workClassName={s.view} aria-label={add ? 'Sumar fracciones' : 'Restar fracciones'} data-kind={ex.kind} data-status={status} prompt={add ? 'Suma las fracciones' : 'Resta las fracciones'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />}>
       {ex.figures.length > 0 && (
         <div className={s.figureRow}>
           <FigureSvg figure={ex.figures[0]} label={`Barra con ${ex.a} partes de color`} className={`${s.figure} ${s.figureSmall}`} />
@@ -64,7 +70,7 @@ function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAd
             onSubmit={(v) => { setTop(v); if (!flow.submitted) submit(v, bottom) }}
             maxDigits={2}
             size="lg"
-            status={status}
+            status={topStatus}
             ariaLabel="Número de arriba"
             checkButton={false}
             placeholder="?"
@@ -77,14 +83,13 @@ function AddRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionAd
             onSubmit={(v) => { setBottom(v); if (!flow.submitted) submit(top, v) }}
             maxDigits={2}
             size="lg"
-            status={status}
+            status={bottomStatus}
             ariaLabel="Número de abajo"
             checkButton={false}
             placeholder="?"
           />
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

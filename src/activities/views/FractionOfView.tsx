@@ -7,21 +7,25 @@ import { celebrate } from '@/fx'
 import { fmt, fractionName } from '@/engine'
 import type { ExerciseViewProps, FractionOfExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
-export default function FractionOfView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function FractionOfView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'fraction-of') return null
-  return <OfRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <OfRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
 /** Columns of the groups: a row of up to four, so the groups stay big on a tablet. */
 const columnsFor = (d: number) => (d <= 4 ? d : d <= 6 ? 3 : 4)
 
-function OfRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionOfExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [value, setValue] = useState<number | null>(null)
-  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+function OfRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: FractionOfExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the number the child wrote, soft red until she changes it.
+  const again = useRetryNumber(retry, ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
+  const status = again.marked(value, !!flow.result) ? 'wrong' as const : flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const name = fractionName(ex.numerator, ex.denominator)
   const perGroup = ex.total / ex.denominator
 
@@ -47,8 +51,7 @@ function OfRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionOfE
 
   if (ex.mode === 'drawing') {
     return (
-      <section className={s.view} aria-label="Fracción de una cantidad" data-kind={ex.kind} data-mode="drawing" data-status={status}>
-        <p className={s.prompt}>¿Cuántos objetos hay en los grupos de color?</p>
+      <ExerciseLayout workClassName={s.view} aria-label="Fracción de una cantidad" data-kind={ex.kind} data-mode="drawing" data-status={status} prompt={'¿Cuántos objetos hay en los grupos de color?'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
         <p className={s.instructions}>
           Hay {fmt(ex.total)} objetos repartidos en {ex.denominator} grupos iguales. Los grupos de color son {name} del total.
         </p>
@@ -65,14 +68,12 @@ function OfRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionOfE
           })}
         </div>
         <div className={s.inputRow}>{answerBox}</div>
-        <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-      </section>
+      </ExerciseLayout>
     )
   }
 
   return (
-    <section className={s.view} aria-label="Fracción de una cantidad" data-kind={ex.kind} data-mode="numbers" data-status={status}>
-      <p className={s.prompt}>{ex.story ?? `¿Cuánto es ${name} de ${fmt(ex.total)}?`}</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Fracción de una cantidad" data-kind={ex.kind} data-mode="numbers" data-status={status} prompt={<>{ex.story ?? `¿Cuánto es ${name} de ${fmt(ex.total)}?`}</>} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={s.fractionRow}>
         <div className={s.fractionEntry}>
           <span className={s.bigText}>{ex.numerator}</span>
@@ -82,7 +83,6 @@ function OfRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionOfE
         <span className={s.bigText}>de {fmt(ex.total)} =</span>
         {answerBox}
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

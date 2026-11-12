@@ -11,7 +11,8 @@ const SAMPLES = 120
 const DIMS: MeasureDimension[] = ['length', 'mass', 'capacity']
 
 function hintsLeak(texts: string[], answer: number): boolean {
-  return texts.some((t) => new RegExp(`(^|\\D)${answer}(\\D|$)`).test(t.replace(/\s/g, '')))
+  // «× 10» and «÷ 10» are the rungs of the ladder (the rule), not the answer.
+  return texts.some((t) => new RegExp(`(^|\\D)${answer}(\\D|$)`).test(t.replace(/\s/g, '').replace(/[×÷]10(?!\d)/g, '')))
 }
 
 describe('medida: skill keys', () => {
@@ -204,7 +205,7 @@ describe('medida: múltiplos y submúltiplos (:all)', () => {
         // The answer as the child may type it (3000) and as the pad shows it (3 000): neither appears in a hint.
         const formatted = ex.answer.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
         for (const h of hints) {
-          expect(new RegExp(`(^|\\D)${formatted}(\\D|$)`).test(h.text), JSON.stringify(ex)).toBe(false)
+          expect(new RegExp(`(^|\\D)${formatted}(\\D|$)`).test(h.text.replace(/[×÷] 10(?!\d)/g, '')), JSON.stringify(ex)).toBe(false)
         }
         expect(hintsLeak(hints.map((h) => h.text), ex.answer), JSON.stringify(ex)).toBe(false)
       }
@@ -284,7 +285,7 @@ describe('medida: :all se aprende por escalones (un salto antes que varios)', ()
       const ex = buildMeasure('convert', DIMS[i % 3], rng, new Set(), true, true)
       if (ex.kind !== 'measure' || ex.mode !== 'convert' || !ex.ladder) throw new Error('mode')
       const example = hintsFor(ex)[2].text
-      expect(example.match(/diez/g)?.length ?? 0, example).toBe(ex.ladder.steps)
+      expect(example.match(/[×÷] 10(?!\d)/g)?.length ?? 0, example).toBe(ex.ladder.steps)
     }
   })
 

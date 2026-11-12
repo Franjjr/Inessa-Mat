@@ -103,10 +103,10 @@ export const PHRASES: Record<ReactionKind, TemplateString[]> = {
 
 /** Clue-style phrases for a diagnosed error (used for 'wrong', 'hint' and 'encourage' when an errorType is given). */
 export const ERROR_PHRASES: Partial<Record<ErrorType, TemplateString[]>> = {
+  // 'fact' also tags a slip in a column (6 − 2 = 3): the phrase must fit any operation, not only the tables.
   fact: [
-    '¡Casi! Prueba con el truco de esa tabla.',
-    '¿Te acuerdas del espejo? A lo mejor ya te sabes la otra.',
-    'Elige un truco: el doble, el 5 y uno más… ¡y vuelve a probar!',
+    'Revisa esa cuenta paso a paso.',
+    'Casi. Vuelve a hacer esa cuenta despacio.',
   ],
   'carry-forgot': [
     '¡Ojo con la mochila! ¿Has sumado la llevada?',
@@ -123,7 +123,7 @@ export const ERROR_PHRASES: Partial<Record<ErrorType, TemplateString[]>> = {
   ],
   'smaller-from-larger': [
     'Arriba hay un número más pequeño: ¡pide ayuda a la vecina!',
-    'Siempre es el de arriba menos el de abajo. ¡La vecina te presta una decena!',
+    'Siempre es el de arriba menos el de abajo. ¡La vecina te presta!',
   ],
   'zero-borrow': [
     '¡La trampa del cero! Si la vecina es un 0, pide a la siguiente casa.',
@@ -134,16 +134,16 @@ export const ERROR_PHRASES: Partial<Record<ErrorType, TemplateString[]>> = {
     'Coloca los números empezando por la derecha. ¡Cada uno en su casa!',
   ],
   'remainder-too-big': [
-    'El resto tiene que ser más pequeño que el divisor. ¡Cabe una vez más!',
+    'Lo que sobra tiene que ser más pequeño que el número que reparte. ¡Cabe una vez más!',
     'Si sobra tanto, ¡todavía puedes repartir otra vuelta!',
   ],
   'quotient-off': [
-    'Comprueba: cociente por divisor más resto… ¿da el dividendo?',
+    'Multiplica tu resultado por el número que reparte y suma lo que sobra: ¿te da el número del principio?',
     'Busca en la tabla el número que más se acerca sin pasarse.',
   ],
   operation: [
+    '¡Ojo! Mira el signo: ¿hay que sumar, restar, multiplicar o repartir?',
     'Vuelve a leer la historia: ¿hay que juntar, quitar, repetir o repartir?',
-    '¡Ojo con la operación! ¿Qué pasa en el problema?',
   ],
   incomplete: [
     '¡Te falta alguna casilla por rellenar!',

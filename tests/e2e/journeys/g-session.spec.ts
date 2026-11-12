@@ -1,17 +1,17 @@
 /* Mi sesión de hoy and the prueba inicial: a short walk through the real screens with the demo child Lía.
    Only visible Spanish text and roles are used. */
-import { expect, test } from '@playwright/test'
-import { CHILD_NAME, devEditProgress, seedDemo, settle } from '../helpers'
+import { expect, test, type Locator, type Page } from '@playwright/test'
+import { CHILD_NAME, devEditProgress, seedDemo, settle, openSession } from '../helpers'
 
 test.describe('Mi sesión de hoy', () => {
   // The home's «Hoy» opens today's class first (every topic has one, see n-hoy); the session is its own screen.
   test('the session starts with a warm-up', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await expect(page.getByText(`¡Vamos, ${CHILD_NAME}!`)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await expect(page.getByText('Calentamiento', { exact: true })).toBeVisible()
-    await expect(page.getByText(/de 15$/)).toBeVisible()
+    await expect(page.getByText(/de 15 minutos$/)).toBeVisible()
     await settle(page, 300)
   })
 
@@ -19,7 +19,7 @@ test.describe('Mi sesión de hoy', () => {
     await seedDemo(page)
     // «Lo nuevo» teaches the stage of the world the map is on: with the map not started, descomponer (w1).
     await devEditProgress(page, { kind: 'mapNotStarted' })
-    await page.goto('/play/sesion')
+    await openSession(page)
     await expect(page.getByText(/Hoy aprendemos/)).toBeVisible()
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     // The warm-up facts come first; the example of the new topic (blocks) opens «Lo nuevo».
@@ -52,7 +52,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('«Ahora no» sends the item to the end without advancing the count, at most three times per session', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const bar = page.getByRole('progressbar')
     const count = await bar.getAttribute('aria-label')
@@ -94,7 +94,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('«No lo sé» shows how it is done, and the child goes on with the next item', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     // The warm-up has no «No lo sé» (facts already learnt, no hints): the first item that offers it comes after the
     // warm-up, and each new skill opens with its example card.
@@ -115,8 +115,9 @@ test.describe('Mi sesión de hoy', () => {
     const bar = page.getByRole('progressbar')
     const planned = (await bar.getAttribute('aria-label'))!.replace(/^Ejercicio \d+ de /, '')
     await noSe.click()
-    await expect(page.getByRole('heading', { name: 'Así se hace' })).toBeVisible()
-    await expect(page.getByText(/^Pista 1 de \d$/)).toBeVisible()
+    // Maths: «No lo sé» teaches with the solution worked step by step (not the hints), and the child goes on.
+    await expect(page.getByRole('heading', { name: 'Así se resuelve' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Así se resuelve' }).getByRole('listitem').first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Ahora no' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'No lo sé' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Siguiente' }).click()
@@ -126,7 +127,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('a wrong answer can be tried again once, on the same exercise, and then the child goes on', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const retry = page.getByRole('button', { name: 'Inténtalo otra vez' })
     for (let i = 0; i < 60 && (await retry.count()) === 0; i++) {
@@ -155,7 +156,7 @@ test.describe('Mi sesión de hoy', () => {
 
   test('the session can be paused and left without losing the day', async ({ page }) => {
     await seedDemo(page)
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await page.getByRole('button', { name: /Salir/ }).click()
     await expect(page.getByRole('dialog', { name: 'Pausa' })).toBeVisible()
@@ -184,6 +185,56 @@ test.describe('Prueba inicial', () => {
   })
 })
 
+/** Whether the button is whole inside the window, without scrolling (P3PE-01: the child never has to look for it). */
+async function inView(page: Page, button: Locator): Promise<string | null> {
+  await expect(button).toBeVisible()
+  const box = (await button.boundingBox())!
+  const { w, h } = await page.evaluate(() => ({ w: window.innerWidth, h: window.innerHeight }))
+  const ok = box.y >= 0 && box.x >= 0 && box.y + box.height <= h + 1 && box.x + box.width <= w + 1
+  return ok ? null : `${Math.round(box.x)},${Math.round(box.y)} ${Math.round(box.width)}×${Math.round(box.height)} en ${w}×${h}`
+}
+
+for (const viewport of [{ width: 1000, height: 490 }, { width: 390, height: 844 }]) {
+  test.describe(`P3PE-01 a ${viewport.width}×${viewport.height}: «Pista» y «Comprobar» a la vista al abrir el ejercicio`, () => {
+    test.use({ viewport, hasTouch: true })
+
+    test('en la sesión', async ({ page }) => {
+      await seedDemo(page)
+      await openSession(page)
+      await page.getByRole('button', { name: '¡Empezar!' }).click()
+      // The warm-up has no hints: the first exercise with the answer bar's «💡 Pista» comes after it.
+      const hint = page.getByRole('button', { name: 'Pista', exact: true })
+      for (let i = 0; i < 60 && !(await hint.isVisible().catch(() => false)); i++) {
+        const entendido = page.getByRole('button', { name: /Entendido/ })
+        if (await entendido.count()) {
+          await entendido.click()
+          continue
+        }
+        await page.keyboard.type('1')
+        await page.keyboard.press('Enter')
+        await settle(page, 150)
+        const next = page.getByRole('button', { name: /Siguiente/ })
+        if (await next.count()) await next.first().click()
+        await page.evaluate(() => window.scrollTo(0, 0))
+      }
+      await page.evaluate(() => window.scrollTo(0, 0))
+      // FitToScreen settles over a few frames.
+      await settle(page, 400)
+      expect(await inView(page, hint), '«💡 Pista»').toBeNull()
+      expect(await inView(page, page.getByRole('button', { name: '✓ Comprobar' })), '«✓ Comprobar»').toBeNull()
+    })
+
+    test('en el repaso', async ({ page }) => {
+      await seedDemo(page)
+      await page.goto('/play/review')
+      await expect(page.getByText('Repaso de hoy')).toBeVisible()
+      await settle(page, 400)
+      expect(await inView(page, page.getByRole('button', { name: /Pista/ }).first()), '«Pista»').toBeNull()
+      expect(await inView(page, page.getByRole('button', { name: /Comprobar/ }).last()), '«Comprobar»').toBeNull()
+    })
+  })
+}
+
 test.describe('a short landscape tablet (Android with its bars)', () => {
   test.use({ viewport: { width: 1138, height: 640 } })
 
@@ -191,7 +242,7 @@ test.describe('a short landscape tablet (Android with its bars)', () => {
     await seedDemo(page)
     // The blocks of descomponer (w1) are the tall exercise: the map not started keeps «Lo nuevo» on it.
     await devEditProgress(page, { kind: 'mapNotStarted' })
-    await page.goto('/play/sesion')
+    await openSession(page)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     const example = page.getByRole('button', { name: /Entendido/ })
     for (let i = 0; i < 40 && (await example.count()) === 0; i++) {

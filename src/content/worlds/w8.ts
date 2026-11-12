@@ -1,5 +1,6 @@
 /* World 8 — El Castillo del Reparto: division as fair sharing and multiplication backwards (fact families),
-   division facts, the galera (exact, with remainder) and the optional-feeling "expert" long division. */
+   division facts, the galera (exact, with remainder) and the two ways of writing it (with the subtractions and without them),
+   an optional stop before the guardian: the main lesson of the galera is «La casita de la división». */
 import { activityNode, guardianNode, lessonNode, storyNode, world } from './dsl'
 
 export const w8 = world({
@@ -41,7 +42,6 @@ export const w8 = world({
       params: { showTrick: true },
     }),
     lessonNode('lesson-galera', 'La casita de la división', 'w8-galera'),
-    lessonNode('lesson-div-ways', 'Cuatro caminos para dividir', 'w8-div-ways'),
     activityNode('division', {
       kind: 'division',
       title: 'Divisiones exactas y con resto',
@@ -69,6 +69,7 @@ export const w8 = world({
       selector: { skills: ['frac:read:6', 'frac:read:8', 'frac:shade:5', 'frac:name:10', 'frac:read:12'] },
       count: 5,
     }),
+    lessonNode('lesson-div-ways', 'Dos formas de hacer la galera', 'w8-div-ways', { optional: true }),
     guardianNode('El desafío de la Reina Aurora', 'w8-guardian'),
   ],
 })

@@ -156,7 +156,7 @@ export function FivePlusOneVisual({ params, phase, runLength, reduced }: VisualP
       </div>
       {st >= 1 && (
         <motion.p className={`${s.eq} ${s.eqBig}`} initial={reduced ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={motionT(reduced, GLIDE)}>
-          6 × {b} = 5 × {b} + {b} = {5 * b} + {b} = <span className={s.hl}>{6 * b}</span>
+          {5 * b} + {b} = <span className={s.hl}>{6 * b}</span>
         </motion.p>
       )}
     </div>
@@ -255,7 +255,8 @@ export function ColumnMulVisual({ params, phase, runLength, reduced }: VisualPro
     const prod = topDigits[i] * bottom + carry
     carryIn.push(carry)
     outs.push(prod % 10)
-    work.push(carry ? `${topDigits[i]} × ${bottom} + ${carry} = ${prod}` : `${topDigits[i]} × ${bottom} = ${prod}`)
+    // The number below is read first («3 por 2»), like the text of the lesson. With a carry the sum comes on its own.
+    work.push(carry ? `${bottom} × ${topDigits[i]} = ${bottom * topDigits[i]} · ${bottom * topDigits[i]} + ${carry} = ${prod}` : `${bottom} × ${topDigits[i]} = ${prod}`)
     carry = Math.floor(prod / 10)
   }
   const finalCarry = carry
@@ -263,7 +264,11 @@ export function ColumnMulVisual({ params, phase, runLength, reduced }: VisualPro
   const width = resultDigits.length
   const topRow = padLE(topDigits, width).reverse() // left to right
   const resultRow = resultDigits.slice().reverse() // left to right
+  // `computed` columns are multiplied (their working shows); `written` have their digits in the result. A last column
+  // that receives a carry needs one more beat (multiply, add the carry) before its digits are written.
   const computed = st === FINAL ? cols : Math.min(st + 1, cols)
+  const lastHasCarry = cols > 0 && carryIn[cols - 1] > 0
+  const written = st === FINAL ? cols : lastHasCarry && st < cols ? Math.min(computed, cols - 1) : computed
   const glow = st === FINAL || st > cols
   const cellVars = { '--col-w': 'clamp(52px, 9vmin, 76px)', '--col-h': 'clamp(56px, 9vmin, 80px)' } as CSSProperties
 
@@ -306,9 +311,9 @@ export function ColumnMulVisual({ params, phase, runLength, reduced }: VisualPro
         {resultRow.map((d, p) => {
           const k = colOf(p)
           const isProduct = k < cols
-          const done = isProduct ? k < computed : computed >= cols
+          const done = isProduct ? k < written : written >= cols
           return (
-            <div key={`r${p}`} className={s.cell} style={{ color: glow ? 'var(--c-magic)' : 'var(--c-ink)' }}>
+            <div key={`r${p}`} className={s.cell} style={{ color: glow ? 'var(--c-magic)' : 'var(--c-ink)' }} data-testid="result-cell">
               {done && (
                 <motion.span key={`${st}-${p}`} initial={reduced ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={motionT(reduced, POP)}>
                   {d}
@@ -330,18 +335,20 @@ export function ColumnMulVisual({ params, phase, runLength, reduced }: VisualPro
 
 /* --------------------------------------------------------------- 7 × 7 */
 
-/** 7 × 7 = 49: a square of dots coloured like a rainbow, row by row. */
+/** 7 × 7 = 49: a square of dots coloured like a rainbow, row by row. The cell follows the screen height (34 px at
+    most, 20 at least) so the seven rows and the equality fit a short board (a 360 × 740 phone under a long bubble). */
+const SQUARE_CELL = 'clamp(20px, 3.4vh, 34px)'
 export function SquareRhymeVisual({ reduced }: VisualProps) {
   return (
-    <div className={s.stage}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 34px)', gap: 6 }} data-testid="square">
+    <div className={s.stage} style={{ gap: 'var(--sp-2)', padding: 'var(--sp-2)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(7, ${SQUARE_CELL})`, gridAutoRows: SQUARE_CELL, gap: `calc(${SQUARE_CELL} * 0.18)`, placeItems: 'center' }} data-testid="square">
         {Array.from({ length: 49 }, (_, k) => {
           const row = Math.floor(k / 7)
           return (
             <motion.span
               key={k}
               className={s.dot}
-              style={{ width: 28, height: 28, background: ROW_COLORS[row] }}
+              style={{ width: `calc(${SQUARE_CELL} * 0.82)`, height: `calc(${SQUARE_CELL} * 0.82)`, background: ROW_COLORS[row] }}
               initial={reduced ? false : { scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={motionT(reduced, { ...POP, delay: row * 0.12 + (k % 7) * 0.03 })}

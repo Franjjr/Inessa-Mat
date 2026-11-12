@@ -78,6 +78,15 @@
   display: contents;
 }
 
+/* What the small boxes are for (P3PE-13). */
+.auxCaption {
+  margin: 0;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-soft);
+  text-align: center;
+}
+
 .name {
   font-family: var(--font-read);
   font-size: var(--fs-xs);

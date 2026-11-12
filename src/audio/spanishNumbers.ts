@@ -67,13 +67,19 @@ export function decimalWords(d: string): string {
   return [...zeros, ...(rest ? [integerWords(Number(rest), 'm')] : [])].join(' ')
 }
 
-const ORD_M = ['', 'primero', 'segundo', 'tercero', 'cuarto', 'quinto', 'sexto', 'séptimo', 'octavo', 'noveno', 'décimo']
+const ORD_M = [
+  '', 'primero', 'segundo', 'tercero', 'cuarto', 'quinto', 'sexto', 'séptimo', 'octavo', 'noveno', 'décimo',
+  'undécimo', 'duodécimo', 'decimotercero', 'decimocuarto', 'decimoquinto', 'decimosexto', 'decimoséptimo',
+  'decimoctavo', 'decimonoveno', 'vigésimo', 'vigésimo primero', 'vigésimo segundo', 'vigésimo tercero',
+  'vigésimo cuarto', 'vigésimo quinto', 'vigésimo sexto', 'vigésimo séptimo', 'vigésimo octavo', 'vigésimo noveno',
+  'trigésimo',
+]
 
-/** 1º → primero, 2ª → segunda … (1..10). Larger ordinals fall back to the cardinal. */
+/** 1º → primero, 2ª → segunda … 13º → decimotercero … 30º → trigésimo (1..30). Larger ordinals fall back to the cardinal. */
 export function ordinalToSpanish(n: number, feminine: boolean): string {
-  if (n >= 1 && n <= 10) {
+  if (Number.isInteger(n) && n >= 1 && n < ORD_M.length) {
     const w = ORD_M[n]
-    return feminine ? w.replace(/o$/, 'a') : w
+    return feminine ? w.replace(/o\b/g, 'a') : w
   }
   return numberToSpanish(n, feminine ? 'f' : 'm')
 }

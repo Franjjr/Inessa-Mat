@@ -1,7 +1,7 @@
 /* Todo el ancho (Task 6b): on a wide screen the child screens use the width that is available, minus the page gutter
    (48 px at 1920). On a phone nothing scrolls sideways. Only the desktop project runs the wide checks. */
 import { expect, test, type Page } from '@playwright/test'
-import { seedDemo, settle } from '../helpers'
+import { seedDemo, settle, openSession } from '../helpers'
 
 const GUTTER = 48
 
@@ -64,14 +64,14 @@ test.describe('wide screens use the full width', () => {
 
     test('/play/sesion: the intro fills the width', async ({ page }) => {
       await seedDemo(page)
-      await page.goto('/play/sesion')
+      await openSession(page)
       await expect(page.getByText(/Hoy aprendemos/)).toBeVisible()
       expect(await contentSpan(page)).toBeGreaterThanOrEqual(1920 - 2 * GUTTER - 2)
     })
 
     test('/play/sesion: the first exercise fills the width', async ({ page }) => {
       await seedDemo(page)
-      await page.goto('/play/sesion')
+      await openSession(page)
       await page.getByRole('button', { name: '¡Empezar!' }).click()
       await expect(page.getByText('Calentamiento', { exact: true })).toBeVisible()
       await settle(page, 400)

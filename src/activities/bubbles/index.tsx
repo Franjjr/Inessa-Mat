@@ -6,7 +6,8 @@ import clsx from 'clsx'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { check, generate } from '@/engine'
-import { haptics, sfx } from '@/audio'
+import { FEEDBACK } from '@/engine/feedback'
+import { haptics, sfx, speech } from '@/audio'
 import { celebrate } from '@/fx'
 import type { ActivityProps, FactMulExercise } from '@/types'
 import { useActivityHost } from '../host'
@@ -29,14 +30,16 @@ const REVEALED = -2
 
 interface Question { ex: FactMulExercise; options: number[] }
 
-/** Near misses: the answers a child is most likely to confuse with the right one. */
+/** Near misses: the answers a child is most likely to confuse with the right one. Never a + b (MD-8): a bubble with the
+    sum is a trap that teaches nothing, and its message («has sumado») talks about writing, not about tapping. */
 export function distractors(a: number, b: number): number[] {
   const p = a * b
+  const ok = (x: number) => x > 0 && x !== p && x !== a + b
   const candidates = [p + 1, p - 1, p + a, p - a, p + b, p - b, a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b]
-  const out = [...new Set(candidates.filter((x) => x > 0 && x !== p))]
+  const out = [...new Set(candidates.filter(ok))]
   // Small facts (1×1, 2×1…) have few near misses: pad with nearby numbers so there are always enough bubbles.
   for (let d = 1; out.length < 6; d++) {
-    for (const x of [p + d, p - d]) if (x > 0 && x !== p && !out.includes(x)) out.push(x)
+    for (const x of [p + d, p - d]) if (ok(x) && !out.includes(x)) out.push(x)
   }
   return out
 }
@@ -87,7 +90,11 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     setTimeLeft(TIMER_MS)
     requeuedRef.current = false
     // Read the question only: saying the product would answer it.
-    if (q && host.prefs.voice) speakFact(q.ex.a, q.ex.b, '×')
+    // A new question cuts the one still being read (V13): never two facts queued one after the other.
+    if (q && host.prefs.voice) {
+      speech.stop()
+      speakFact(q.ex.a, q.ex.b, '×')
+    }
   }, [session.index]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Soft timer (only for known facts, and only when the family allows timed games).
@@ -155,7 +162,8 @@ export default function BubblesActivity({ config, onDone, onExit }: ActivityProp
     setMissed(spent)
     if (spent.length < MAX_TAPS) {
       setWobble({ value, key: Date.now() })
-      setClue(res.feedback ? host.t(res.feedback) : '¡Casi! Mira otra burbuja.')
+      // About tapping, never the engine's message for a written answer (MD-8): it says what the fact means.
+      setClue(FEEDBACK.tapWrong(q.ex.a, q.ex.b))
       return
     }
     // The last wrong tap ends the question: the answer is shown and the fact comes back later in the run.

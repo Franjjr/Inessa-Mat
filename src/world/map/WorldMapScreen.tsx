@@ -1,7 +1,7 @@
 /* WorldMapScreen (/play/w/:worldId): one world as a path of nodes over its background. The companion is caught in
    the world's predicament until the guardian is beaten; the scene gets its colour back as the child progresses.
    Locked nodes explain themselves gently. The path scrolls on tablets and phones. */
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { CompanionArt, Crystal, NodeIcon, Predicament, StarIcon, WorldBackground } from '@/art'
 import {
@@ -10,6 +10,7 @@ import {
 import { useActiveChild, useProgress } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import type { ChildProfile, NodeDef, ProgressState, WorldDef } from '@/types'
+import { baseStageHeight, GUARDIAN_WON_PX, ICON_PX, layoutMap, GUARDIAN_PX, pillOf, showsHelp, showsSkippable } from './labels'
 import s from './WorldMapScreen.module.css'
 
 /** Path coordinates are authored in 0..1 (x → right, y → down); the SVG works in a 1000-unit square. */
@@ -62,9 +63,11 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     }
   }), [world, wp, progress])
 
-  const current = states.find((x) => !x.locked && !x.done)?.node.id
-  const path = useMemo(() => world.nodes.map((n) => n.pos), [world])
-  const trainable = states.filter((x) => x.node.kind !== 'guardian')
+  // The next step is the first open stop the child has to do: an optional one (NodeDef.optional) only when nothing
+  // required is left.
+  const current = (states.find((x) => !x.locked && !x.done && x.node.optional !== true) ?? states.find((x) => !x.locked && !x.done))?.node.id
+  // An optional stop counts only once it is done: skipping it never keeps the companion caught.
+  const trainable = states.filter((x) => x.node.kind !== 'guardian' && (x.node.optional !== true || x.done))
   // Rescue 0..1: how much of the companion's trouble has loosened, from the stars of the stops (3 for a full
   // practice): finishing a reading does not free the companion as much as practising (full once the crystal is won).
   const starsTrainable = trainable.reduce((sum, x) => sum + Math.min(3, x.stars), 0)
@@ -74,14 +77,71 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
   const next = nextNode(progress)
   const continueTarget = next && next.worldId === world.id ? next.nodeId : current
   const reduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  // The island has many stops (one group per stage): its stage is as tall as they need, so they never stack on each other.
-  const stageHeight = world.id === ISLAND_ID ? { height: `${world.nodes.length * ISLAND_STOP_PX}px` } : undefined
 
-  // Bring the child's next step into view.
+  // The real size of the scrolling area: name tags are placed in real pixels so none lands on another stop.
+  const [area, setArea] = useState(() => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    h: typeof window !== 'undefined' ? Math.max(200, window.innerHeight - 130) : 600,
+    vh: typeof window !== 'undefined' ? window.innerHeight : 768,
+  }))
+  const [moreBelow, setMoreBelow] = useState(false)
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const measure = () => {
+      if (el.clientWidth > 0 && el.clientHeight > 0) {
+        setArea((a) => (a.w === el.clientWidth && a.h === el.clientHeight && a.vh === window.innerHeight ? a : { w: el.clientWidth, h: el.clientHeight, vh: window.innerHeight }))
+      }
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // The island has many stops (one group per stage): its stage starts as tall as they need and, like every world,
+  // grows when a tag would still land on another (phones, tall tablets).
+  const isIsland = world.id === ISLAND_ID
+  const layout = useMemo(() => layoutMap(
+    states.map(({ node, done }) => ({ node, title: renderTemplate(node.title, ctx), done, current: node.id === current, crystal, petName: ctx.petName })),
+    area.w,
+    isIsland ? Math.max(world.nodes.length * ISLAND_STOP_PX, area.h) : baseStageHeight(area.w, area.h, area.vh),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [states, current, crystal, area, isIsland, world.nodes.length, child.nickname, ctx.petName])
+  const stageHeight = { height: `${layout.height}px` }
+  // The path goes through the icons as they are drawn (on a phone close stops are spread apart, see labels.ts).
+  const path = useMemo(() => layout.placed.map((p) => p.pos), [layout])
+
+  // Bring the child's next step into view with the step after it also in view, and room above for its pill.
   useEffect(() => {
-    currentRef.current?.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
+    const el = scrollRef.current
+    const idx = states.findIndex((x) => x.node.id === current)
+    if (!el || idx < 0) return
+    const top = (i: number) => Math.min(layout.placed[i].icon.y0, layout.placed[i].label.y0, ...layout.placed[i].extras.map((b) => b.y0))
+    const bottom = (i: number) => Math.max(layout.placed[i].icon.y1, layout.placed[i].label.y1)
+    const mid = (layout.placed[idx].icon.y0 + layout.placed[idx].icon.y1) / 2
+    let target = mid - area.h / 2
+    if (idx + 1 < states.length) target = Math.max(target, bottom(idx + 1) + 12 - area.h)
+    target = Math.min(target, top(idx) - 28)
+    // Never leave a tag half cut at the top edge (nor in its fading strip): move the view up to show it whole.
+    const boxes = layout.placed.flatMap((p) => [p.icon, p.label, ...p.extras])
+    for (let k = 0; k < 4; k++) {
+      const cut = boxes.find((b) => b.y0 < target + 16 && b.y1 > target)
+      if (!cut) break
+      target = cut.y0 - 16
+    }
+    target = Math.max(0, Math.min(target, layout.height - area.h))
+    if (typeof el.scrollTo === 'function') el.scrollTo({ top: target, behavior: reduced ? 'auto' : 'smooth' })
     // Runs when the world or the next step changes, not on every progress tick.
-  }, [world.id, current])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [world.id, current, area.w, area.h])
+
+  const onScroll = () => {
+    const el = scrollRef.current
+    if (el) setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 24)
+  }
+  useEffect(onScroll, [layout.height, area.h])
 
   const openNode = (node: NodeDef, locked: boolean) => {
     if (locked) {
@@ -95,6 +155,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     <Screen className={s.screen} background={world.colorSoft}>
       <WorldBackground id={world.background} vividness={vividness} />
 
+      <div className={s.band}>
       <header className={s.top}>
         <BackButton aria-label="Volver al inicio" onClick={() => navigate('/play')} />
         <div className={s.titleBox}>
@@ -115,8 +176,10 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
           </Button>
         )}
       </div>
+      </div>
 
-      <div className={s.scroll} ref={scrollRef}>
+      <div className={s.scrollWrap}>
+      <div className={s.scroll} ref={scrollRef} onScroll={onScroll}>
         <div className={s.stage} style={stageHeight}>
           <svg className={s.path} viewBox={`0 0 ${VB} ${VB}`} preserveAspectRatio="none" aria-hidden="true">
             {path.slice(0, -1).map((_, i) => (
@@ -138,18 +201,21 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
             ))}
           </svg>
 
-          {states.map(({ node, done, stars, locked }) => {
+          {states.map(({ node, done, stars, locked }, idx) => {
             const isCurrent = node.id === current
             const isGuardian = node.kind === 'guardian'
             const label = renderTemplate(node.title, ctx)
-            const stateText = locked ? ', bloqueado' : done ? ', hecho' : isCurrent ? ', aquí estás' : ''
+            const pl = layout.placed[idx]
+            const size = isGuardian ? (crystal ? GUARDIAN_WON_PX : GUARDIAN_PX) : ICON_PX
+            const skippable = showsSkippable({ node, done })
+            const stateText = (locked ? ', bloqueado' : done ? ', hecho' : isCurrent ? ', aquí estás' : '') + (skippable ? ', puedes saltarla' : '')
             return (
               <button
                 key={node.id}
                 type="button"
                 ref={isCurrent ? currentRef : undefined}
                 className={`${s.node} ${isCurrent ? s.current : ''} ${locked ? s.locked : ''} ${done ? s.done : ''}`}
-                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%`, ['--x' as string]: node.pos.x }}
+                style={{ left: `${pl.pos.x * 100}%`, top: `${pl.pos.y * 100}%`, width: size, height: size }}
                 aria-label={`${label}${stateText}`}
                 aria-disabled={locked || undefined}
                 onClick={() => openNode(node, locked)}
@@ -169,18 +235,26 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                     <NodeIcon kind={node.kind} size={76} done={done} locked={locked} color={world.color} />
                   )}
                 </span>
-                {isGuardian && !crystal && <span className={s.guardianTag}>¡Ayúdame!</span>}
-                {isCurrent && <span className={s.here}>Aquí sigue {ctx.petName}</span>}
-                <span className={s.label}>{label}</span>
-                {done && (
-                  <span className={s.stars} aria-hidden="true">
-                    {[1, 2, 3].map((n) => <StarIcon key={n} filled={stars >= n} size={16} />)}
-                  </span>
+                {/* Where labels.ts placed them: inside the stage, and never the two on one stop (showsHelp). */}
+                {showsHelp({ node, crystal, current: isCurrent }) && pl.helpX !== null && (
+                  <span className={s.guardianTag} style={{ left: `calc(50% + ${pl.helpX}px)` }}>¡Ayúdame!</span>
                 )}
+                {isCurrent && <span className={s.here} style={{ left: `calc(50% + ${pl.pillDx}px)` }}>{pillOf(ctx.petName).text}</span>}
+                <span className={s.tag} style={{ left: `calc(50% + ${pl.dx}px)`, top: `calc(50% + ${pl.dy}px)`, width: pl.w }}>
+                  <span className={s.label}>{label}</span>
+                  {skippable && <span className={s.skippable}>Puedes saltarla</span>}
+                  {done && (
+                    <span className={s.stars} aria-hidden="true">
+                      {[1, 2, 3].map((n) => <StarIcon key={n} filled={stars >= n} size={16} />)}
+                    </span>
+                  )}
+                </span>
               </button>
             )
           })}
         </div>
+      </div>
+      {moreBelow && <span className={s.more} aria-hidden="true">▼</span>}
       </div>
     </Screen>
   )

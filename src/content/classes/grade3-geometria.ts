@@ -19,7 +19,9 @@ const poligonos = clase({
   ],
   ejemplo: [
     show('polygon', { sides: 3, mark: 'sides' }, 'Este polígono tiene 3 lados y 3 esquinas: es un triángulo.'),
-    show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero. Si tiene 4 esquinas rectas y los 4 lados iguales, es un cuadrado. Si tiene 4 esquinas rectas y dos lados más largos, es un rectángulo. Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas.'),
+    show('polygon', { sides: 4, mark: 'sides' }, 'Con 4 lados es un cuadrilátero.'),
+    show('polygon', { sides: 4, mark: 'corners' }, 'Si tiene 4 esquinas rectas y los 4 lados iguales, es un cuadrado. Si tiene 4 esquinas rectas y dos lados más largos, es un rectángulo.'),
+    show('polygon', { shape: 'rombo' }, 'Un rombo tiene 4 lados iguales, pero no tiene esquinas rectas: es como un cuadrado inclinado.'),
     show('polygon', { sides: 5, mark: 'sides' }, 'Este tiene 5 lados y 5 esquinas: es un pentágono.'),
     show('polygon', { sides: 6, mark: 'corners' }, 'Este tiene 6 lados y 6 esquinas: es un hexágono.'),
     show('polygon', { sides: 7, mark: 'sides' }, 'Con 7 lados es un heptágono.'),
@@ -39,7 +41,7 @@ const poligonos = clase({
 })
 
 /* Rectas: la recta va derecha y no tiene fin; la curva se dobla sin esquinas; la poligonal tiene esquinas. Dos rectas son
-   paralelas si nunca se cruzan, y perpendiculares si se cruzan formando esquinas rectas. */
+   paralelas si nunca se cortan, y perpendiculares si se cortan formando ángulos rectos. */
 const rectas = clase({
   id: 'c3-geo-rectas',
   topicId: 'rectas',
@@ -50,21 +52,21 @@ const rectas = clase({
   ],
   ejemplo: [
     show('lines', { kind: 'poligonal' }, 'Esta línea tiene esquinas: está hecha de trozos rectos unidos. Es una línea poligonal.'),
-    show('lines', { kind: 'paralelas' }, 'Dos rectas paralelas van siempre a la misma distancia: nunca se cruzan, aunque se alarguen sin fin.'),
-    show('lines', { kind: 'perpendiculares' }, 'Dos rectas perpendiculares se cruzan formando esquinas rectas, como una cruz de sumar.'),
-    show('big-text', { text: 'Se cruzan, pero no en esquina recta' }, 'Si dos rectas se cruzan de otra forma, no son perpendiculares.'),
+    show('lines', { kind: 'paralelas' }, 'Dos rectas paralelas van siempre a la misma distancia: nunca se cortan, aunque se alarguen sin fin.'),
+    show('lines', { kind: 'perpendiculares' }, 'Dos rectas perpendiculares se cortan formando esquinas rectas, como una cruz de sumar. Esa esquina se llama ángulo recto.'),
+    show('big-text', { text: 'Se cortan sin formar ángulo recto' }, 'Si dos rectas se cortan torcidas, sin formar ángulo recto, no son perpendiculares. En el ejercicio, esa respuesta se llama «se cortan sin formar ángulo recto».'),
   ],
   guiada: [
     tryIt('big-text', { text: 'recta · curva · poligonal' }, '¡Te toca! Mira si la línea va derecha, si se dobla sin esquinas o si tiene esquinas.', { skills: ['geo:line:type'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Otra! Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Otra! Imagina que las dos rectas se alargan sin fin: ¿llegan a tocarse en algún punto?', { skills: ['geo:line:rel'] }),
   ],
   sola: [
     tryIt('big-text', { text: 'recta · curva · poligonal' }, '¡Tu turno! Mira si la línea tiene esquinas. Si no las tiene, mira si va derecha.', { skills: ['geo:line:type'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Tu turno! Fíjate si las dos rectas se tocan, y si la cruz que forman tiene esquinas rectas.', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Tu turno! Fíjate si las dos rectas se tocan, y si la cruz que forman tiene esquinas rectas.', { skills: ['geo:line:rel'] }),
     tryIt('big-text', { text: 'tipo de línea · cómo están' }, '¡Tu turno! Primero mira qué tipo de línea es, y después cómo están las dos rectas.', { skills: ['geo:line:type', 'geo:line:rel'] }),
-    tryIt('big-text', { text: 'paralelas · perpendiculares · se cruzan' }, '¡Tu turno! Piensa en las dos rectas alargadas sin fin: mira si se tocan y cómo se cruzan.', { skills: ['geo:line:rel'] }),
+    tryIt('big-text', { text: 'paralelas · perpendiculares · se cortan sin ángulo recto' }, '¡Tu turno! Piensa en las dos rectas alargadas sin fin: mira si se tocan y si forman un ángulo recto.', { skills: ['geo:line:rel'] }),
   ],
-  cierre: show('lines', { kind: 'perpendiculares' }, 'La regla: las paralelas no se cruzan nunca. Las perpendiculares se cruzan formando esquinas rectas, como una cruz.'),
+  cierre: show('lines', { kind: 'perpendiculares' }, 'La regla: las paralelas no se cortan nunca. Las perpendiculares se cortan formando ángulos rectos, como una cruz. Si se cortan torcidas, se cortan sin formar ángulo recto.'),
 })
 
 /* Rectas, semirrectas y segmentos: el punto marca dónde se acaba la línea, y la flecha dice que sigue sin fin. */
@@ -156,10 +158,11 @@ const circuloCuerpos = clase({
   topicId: 'circulo-cuerpos',
   title: 'Círculo, circunferencia y cuerpos',
   para: [
-    show('big-text', { text: 'Circunferencia: solo la línea', sub: 'Círculo: la línea y todo lo de dentro' }, 'La circunferencia es la línea que rodea una figura, como el aro de una rueda. El círculo es toda la figura, con lo de dentro pintado.', 'frog'),
-    show('solid', { name: 'esfera' }, 'Una esfera es como una pelota: no tiene caras planas y rueda en todas direcciones.', 'ladybug'),
+    show('polygon', { shape: 'circunferencia' }, 'La circunferencia es solo el aro, la línea que rodea, como el aro de una rueda.', 'frog'),
+    show('polygon', { shape: 'circulo' }, 'El círculo es el aro y todo lo de dentro, pintado, como un disco entero.', 'ladybug'),
   ],
   ejemplo: [
+    show('solid', { name: 'esfera' }, 'Una esfera es como una pelota: no tiene caras planas y rueda en todas direcciones.'),
     show('solid', { name: 'cubo' }, 'Un cubo tiene 6 caras planas, todas cuadradas. No rueda: se queda quieto sobre la mesa.'),
     show('solid', { name: 'prisma' }, 'Este prisma tiene la base triangular: 2 caras triangulares y 3 caras de lado. Son 5 caras planas. No rueda.'),
     show('solid', { name: 'piramide' }, 'Una pirámide tiene una base y caras triangulares que llegan a una punta. Tiene 5 caras planas y no rueda.'),
@@ -207,20 +210,20 @@ const perimetro = clase({
   cierre: show('perimeter', { sides: '3,4,3,4' }, 'La regla: el perímetro es la suma de todos los lados. Aquí: 3 + 4 + 3 + 4 = 14 cm.'),
 })
 
-/* Recorridos: la casilla dorada es la salida; cada flecha (← → ↑ ↓) es una casilla en esa dirección. Izquierda y derecha,
-   como se ve la cuadrícula. Un grupo de flechas iguales es un movimiento: →→ son dos casillas a la derecha. */
+/* Recorridos: la casilla dorada es la salida; cada flecha es una casilla en esa dirección. Izquierda y derecha,
+   como se ve la cuadrícula. Un grupo de flechas iguales es un movimiento: dos flechas a la derecha son dos casillas. */
 const recorridos = clase({
   id: 'c3-geo-recorridos',
   topicId: 'recorridos',
   title: 'Recorridos en una cuadrícula',
   para: [
     show('grid-route', { route: 'R,R,U' }, 'Esta cuadrícula es un tablero de casillas. La casilla dorada es la salida: desde ella empiezas a caminar.', 'frog'),
-    show('grid-route', { route: 'D,D,L' }, 'Las flechas son los pasos: → a la derecha, ← a la izquierda, ↑ hacia arriba y ↓ hacia abajo. Cada flecha mueve una casilla.', 'ladybug'),
+    show('grid-route', { route: 'D,D,L' }, 'Las flechas del dibujo son los pasos: hacia la derecha, hacia la izquierda, hacia arriba y hacia abajo. Cada flecha mueve una casilla.', 'ladybug'),
   ],
   ejemplo: [
-    show('grid-route', { route: 'R,R,D,D' }, 'Las flechas →→ son 2 casillas a la derecha, y ↓↓ son 2 casillas hacia abajo. En total, cuatro casillas.'),
-    show('grid-route', { route: 'L,U,U' }, 'Ahora ← es 1 casilla a la izquierda, y ↑↑ son 2 casillas hacia arriba. Tres flechas en total.'),
-    show('grid-route', { route: 'U,R,R,R' }, 'Un recorrido puede subir y luego ir a la derecha: ↑ es 1 casilla, y →→→ son 3 casillas a la derecha.'),
+    show('grid-route', { route: 'R,R,D,D' }, 'Dos flechas a la derecha son 2 casillas a la derecha, y dos flechas hacia abajo son 2 casillas hacia abajo. En total, cuatro casillas.'),
+    show('grid-route', { route: 'L,U,U' }, 'Ahora una flecha a la izquierda es 1 casilla a la izquierda, y dos flechas hacia arriba son 2 casillas hacia arriba. Tres flechas en total.'),
+    show('grid-route', { route: 'U,R,R,R' }, 'Un recorrido puede subir y luego ir a la derecha: una flecha hacia arriba es 1 casilla, y tres flechas a la derecha son 3 casillas a la derecha.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'casilla dorada · flechas' }, '¡Te toca! Lee la pregunta: en qué cosa empiezas, y pon el dedo en su casilla dorada.', { skills: ['pos:route'] }),
@@ -232,7 +235,7 @@ const recorridos = clase({
     tryIt('big-text', { text: 'la casilla de llegada' }, '¡Tu turno! Cuando acabes la última flecha, mira qué hay en la casilla donde está tu dedo.', { skills: ['pos:route'] }),
     tryIt('big-text', { text: 'casillas de cada flecha' }, '¡Tu turno! Cuenta bien cuántas casillas indica cada grupo de flechas antes de moverte.', { skills: ['pos:route'] }),
   ],
-  cierre: show('grid-route', { route: 'R,R,U,U,L' }, 'La regla: sigue las flechas en su orden, una casilla por flecha. → es a la derecha y ← a la izquierda, como tú ves la cuadrícula.'),
+  cierre: show('grid-route', { route: 'R,R,U,U,L' }, 'La regla: sigue las flechas en su orden, una casilla por flecha. La derecha y la izquierda son como tú ves la cuadrícula.'),
 })
 
 /** The geometry classes (3.º): one per geometry topic of the temario. */

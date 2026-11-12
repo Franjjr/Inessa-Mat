@@ -121,6 +121,18 @@ export function makeEstimate(thing: MeasureThing, claimUnit: string, reasonable:
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
+/** The units of 3.º in words, as a child says them. */
+export const UNIT_WORD: Record<string, string> = {
+  cm: 'centímetros', m: 'metros', km: 'kilómetros', g: 'gramos', kg: 'kilos', ml: 'mililitros', l: 'litros',
+}
+
+/** «Un vaso de agua, ¿cuánto tiene: 200 mililitros o 200 litros?» The question of a «¿qué unidad?» item, with its options. */
+export function measureUnitQuestion(ex: MeasureUnitExercise): string {
+  const opts = ex.options.map((o) => `${fmt(o.value)} ${UNIT_WORD[o.unit] ?? o.unit}`)
+  const list = opts.length <= 1 ? opts.join('') : `${opts.slice(0, -1).join(', ')} o ${opts[opts.length - 1]}`
+  return `${cap(ex.object)}, ¿cuánto ${VERB[ex.dimension]}: ${list}?`
+}
+
 // ---------------------------------------------------------------- generation
 
 /** `all` (only convert): every unit of the dimension, as in `measure:convert:<dim>:all`. `learnt`: the skill is known, so
@@ -219,7 +231,7 @@ function buildConvertAll(dim: MeasureDimension, rng: Rng, learnt: boolean): Meas
 export function measureStatement(ex: Exercise): string {
   if (ex.kind !== 'measure') return ex.skill
   switch (ex.mode) {
-    case 'unit': return `¿Qué unidad usas para medir ${ex.object}?`
+    case 'unit': return measureUnitQuestion(ex)
     case 'convert': return `${cap(ex.given)} = ? ${ex.unit}`
     case 'ruler': return 'Mide con la regla'
     case 'add': return ex.text
@@ -310,6 +322,13 @@ export function checkMeasure(ex: Exercise, answer: Answer): CheckResult {
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): Hint => ({ level, text, visual })
 
+/** The last hint of «¿qué unidad?», one per magnitude: something the child has held of each unit. */
+const UNIT_STEP: Record<MeasureDimension, (object: string) => string> = {
+  length: (object) => `Imagina ${object} y compara: ¿cabe en la mano, en la mesa o hay que ir en coche?`,
+  mass: (object) => `Imagina ${object}: ¿pesa como un caramelo (gramos) o como un paquete de arroz de un kilo (kilos)?`,
+  capacity: (object) => `Imagina ${object}: ¿es como una cucharada (mililitros) o como una botella grande (litros)?`,
+}
+
 const SIZE_HINT: Record<MeasureDimension, string> = {
   length: 'Los centímetros sirven para cosas pequeñas, los metros para cosas grandes y los kilómetros para distancias.',
   mass: 'Los gramos sirven para cosas ligeras y los kilos para cosas pesadas.',
@@ -346,8 +365,8 @@ function exampleOfLadder(ex: MeasureConvertExercise, from: string, steps: number
     if (!(lo === exLo && lo + steps === exHi)) pairs.push([lo, lo + steps])
   }
   const [lo, hi] = pairs[(exLo + exHi) % pairs.length]
-  const times = Array(steps).fill('diez').join(' × ')
-  const divs = Array(steps).fill('diez').join(' ÷ ')
+  const times = Array(steps).fill('10').join(' × ')
+  const divs = Array(steps).fill('10').join(' ÷ ')
   for (const n of [4, 6, 7, 3, 8, 9, 2]) {
     const small = n * factor
     if ([n, small].some((x) => x === givenValue || x === ex.answer)) continue
@@ -365,7 +384,7 @@ export function hintsMeasure(ex: Exercise): Hint[] | null {
     case 'unit': return [
       hint(1, 'Piensa en el tamaño real del objeto, no en el número.'),
       hint(2, SIZE_HINT[ex.dimension]),
-      hint(3, `Imagina ${ex.object} y compara: ¿cabe en la mano, en la mesa o hay que ir en coche?`),
+      hint(3, UNIT_STEP[ex.dimension](ex.object)),
     ]
     case 'convert': {
       if (ex.ladder) return hintsLadder(ex, ex.ladder)
@@ -385,10 +404,17 @@ export function hintsMeasure(ex: Exercise): Hint[] | null {
           hint(3, `Cada grupo de ${fmt(ex.factor)} ${small} es un ${bigName}: cuenta cuántos grupos hay.`),
         ]
       }
+      const step = ex.factor / 10
+      const n = Number(ex.given.split(' ')[0])
       return [
         hint(1, 'Una unidad grande tiene muchas unidades pequeñas dentro.'),
-        hint(2, `Imagina una tira de un ${bigName} marcada con ${small}: ¿cuántas marcas caben?`),
-        hint(3, `Cuenta de ${fmt(ex.factor / 10)} en ${fmt(ex.factor / 10)} hasta llegar a un ${bigName} y mira cuántos saltos das.`),
+        // With 1 the fact is the answer: then the hint only starts the count.
+        hint(2, n === 1
+          ? `Cuenta de ${fmt(step)} en ${fmt(step)} hasta llegar a un ${bigName}: ${fmt(step)}, ${fmt(2 * step)}, ${fmt(3 * step)}…`
+          : `Un ${bigName} son ${fmt(ex.factor)} ${small}: cuenta de ${fmt(step)} en ${fmt(step)} (${fmt(step)}, ${fmt(2 * step)}… ${fmt(ex.factor)}).`),
+        hint(3, n === 1
+          ? `¿Cuántos ${UNIT_WORD[small] ?? small} tiene 1 ${big}?`
+          : `Si 1 ${big} son ${fmt(ex.factor)} ${small}, ${ex.given} son ${n} veces ${fmt(ex.factor)}: ${n} × ${fmt(ex.factor)} = ?`),
       ]
     }
     case 'ruler': return [

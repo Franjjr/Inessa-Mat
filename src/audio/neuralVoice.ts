@@ -7,9 +7,17 @@
 import { onGesture } from './context'
 import type { SpeechCharacter } from './speech'
 
-const FETCH_TIMEOUT_MS = 3500
+/** A clip that takes longer than this is not waited for: the step goes on with the device voice (the first chunk is
+    requested the moment the step appears, so a warm service answers well within it). */
+const FETCH_TIMEOUT_MS = 1500
+/** The first clip of a session may meet a cold serverless function or a slow network: it gets more time. */
+const FIRST_FETCH_TIMEOUT_MS = 2500
+/** Whether a clip has already arrived in this session (the service is warm). */
+let warm = false
+/** After a 429 (too many requests) the natural voice rests for a while: asking again at once only gets another 429. */
+const RATE_LIMIT_PAUSE_MS = 3 * 60_000
 /** Part of every clip URL: bump it when a voice in api/tts.ts changes, so cached clips of the old voice are not reused. */
-const VOICE_REVISION = 1
+const VOICE_REVISION = 2
 /** 50 ms of silence as a WAV data URI (8 kHz, 8-bit mono), to unlock the shared element on iOS. */
 function silence(): string {
   const n = 400
@@ -26,6 +34,8 @@ function silence(): string {
 }
 
 let available = true
+/** Epoch ms until which the natural voice rests after a 429. */
+let pausedUntil = 0
 /** Unit tests use the device voice unless a test turns this on. */
 let enabledInTests = false
 let player: HTMLAudioElement | null = null
@@ -64,7 +74,7 @@ function wire(): void {
 export function neuralAvailable(): boolean {
   wire()
   if (import.meta.env.MODE === 'test' && !enabledInTests) return false
-  return available && !automated() && typeof fetch === 'function' && !!element()
+  return available && Date.now() >= pausedUntil && !automated() && typeof fetch === 'function' && !!element()
 }
 
 export function clipUrl(text: string, character: SpeechCharacter): string {
@@ -77,12 +87,15 @@ export function fetchClip(text: string, character: SpeechCharacter): Promise<str
   const hit = clips.get(key)
   if (hit) return hit
   const ctrl = new AbortController()
-  const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS)
+  const timer = setTimeout(() => ctrl.abort(), warm ? FETCH_TIMEOUT_MS : FIRST_FETCH_TIMEOUT_MS)
   const p = fetch(clipUrl(text, character), { signal: ctrl.signal })
     .then(async (res) => {
       if (res.status === 503 || res.status === 403) available = false
+      if (res.status === 429) pausedUntil = Date.now() + RATE_LIMIT_PAUSE_MS
       if (!res.ok || !(res.headers.get('content-type') ?? '').startsWith('audio/')) return null
-      return URL.createObjectURL(await res.blob())
+      const blob = await res.blob()
+      warm = true
+      return URL.createObjectURL(blob)
     })
     .catch(() => null)
     .finally(() => clearTimeout(timer))
@@ -125,6 +138,8 @@ export function stopClip(): void {
 export function __resetNeuralForTests(enable = false): void {
   enabledInTests = enable
   available = true
+  pausedUntil = 0
+  warm = false
   player = null
   unlocked = false
   wired = false

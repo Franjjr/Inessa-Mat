@@ -1,13 +1,16 @@
 /* The grown-ups' start page. For the selected child: one conclusion built from the times-table data, the ten
    tables with a legend, and the most frequent mistake. Beside it, the profiles (pick one, open its report, add
-   one) and the three links: settings and account, classes and school, privacy and data. */
+   one) and the three links: settings and account, classes and school, privacy and data.
+   Above them, for the selected child, two notes that never block anything: the question «¿Cómo resta … en el
+   colegio?» while the grown-up has not answered it (from 2.º), and, once, the news that a retired method (saltos,
+   por partes) is now the school one; the note goes away for good when the grown-up reads it. */
 import { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import { Link, useNavigate } from 'react-router-dom'
 import { CompanionArt } from '@/art'
-import { getChildSummary, useAuth, useChildren } from '@/data'
-import { describeError } from '@/engine'
-import type { ChildSummary, ErrorType } from '@/types'
+import { getChildSummary, updateChild, useAuth, useChildren } from '@/data'
+import { describeError, normaliseDivMethod, normaliseSubMethod, retiredMethodsIn } from '@/engine'
+import type { ChildProfile, ChildSummary, ErrorType } from '@/types'
 import { BackButton, Button, toast } from '@/ui'
 import { AdultPage } from '../shared/AdultPage'
 import { ClaimLocalPanel } from '../shared/ClaimLocalPanel'
@@ -19,12 +22,56 @@ import { errorMessage } from '../shared/messages'
 import { lockAdultArea } from '../gate/AdultGate'
 import { readTables, TABLE_STATE_LABEL, type TableState } from '../shared/reading'
 import { pupilWeekLine } from '../school/classView'
+import { SchoolMethodQuestion, needsSchoolMethod } from '../child/SchoolMethodQuestion'
 import s from './home.module.css'
 import adult from '../shared/adult.module.css'
 
 const KIND_LABEL = { family: 'Familia', school: 'Colegio' } as const
 const TABLE_LEGEND: TableState[] = ['mastered', 'struggling', 'learning', 'unseen']
 const WORLDS_TOTAL = 8
+
+/** Once, for a profile that still holds a retired method: what changed. «Entendido» saves the school default, so the
+    note never comes back. */
+export function RetiredMethodNotice({ child }: { child: ChildProfile }) {
+  const [error, setError] = useState<string | null>(null)
+  const retired = retiredMethodsIn(child.settings)
+  if (!retired.sub && !retired.div) return null
+  const name = child.nickname
+  const title = retired.sub
+    ? child.settings.subMethod === 'line'
+      ? 'Hemos quitado los saltos: ahora resta como en el cole.'
+      : 'Hemos quitado la resta por partes: ahora resta como en el cole.'
+    : 'Hemos quitado repartir por partes y multiplicar hacia arriba: ahora divide como en el cole.'
+  const lines = [
+    retired.sub ? `${name} hará las restas en columna, pidiendo prestado, como en la mayoría de colegios.` : null,
+    retired.div ? `${name} dividirá con la galera, escribiendo las restas debajo.` : null,
+    'Si en su colegio lo hacen de otra forma, cámbialo en sus ajustes. Si la respuesta final está bien, siempre vale.',
+  ].filter(Boolean)
+  const ok = async () => {
+    setError(null)
+    try {
+      await updateChild(child.id, { settings: {
+        ...child.settings,
+        subMethod: normaliseSubMethod(child.settings.subMethod),
+        divMethod: normaliseDivMethod(child.settings.divMethod),
+      } })
+    } catch (e) {
+      setError(errorMessage(e, 'No hemos podido guardar el cambio. Inténtalo otra vez.'))
+    }
+  }
+  return (
+    <section className={`${adult.notice} ${adult.noticeInfo}`} aria-label="Cambio en las restas">
+      <div className={adult.stack} style={{ gap: 6, flex: 1 }}>
+        <strong>{title}</strong>
+        {lines.map((l) => <span key={l}>{l}</span>)}
+        {error && <p className={adult.error} role="alert">{error}</p>}
+      </div>
+      <div className={adult.actions}>
+        <Button size="sm" onClick={() => void ok()}>Entendido</Button>
+      </div>
+    </section>
+  )
+}
 
 export default function AdultHomeScreen() {
   const { status, activeOrg, organizations, setActiveOrg, backendAvailable } = useAuth()
@@ -126,6 +173,15 @@ export default function AdultHomeScreen() {
           </div>
         </section>
       ) : (
+        <>
+        {current && <RetiredMethodNotice child={current} />}
+        {current && needsSchoolMethod(current) && (
+          <section className={`${adult.card} ${adult.cardYellow}`} aria-labelledby="school-method-title">
+            <h2 id="school-method-title" className={adult.subheading}>Falta un dato para que las restas de {current.nickname} sean como en su cole</h2>
+            <p className={adult.muted}>Mientras tanto, {current.nickname} puede seguir jugando: se usa la forma más común.</p>
+            <SchoolMethodQuestion key={current.id} child={current} />
+          </section>
+        )}
         <div className={s.main}>
           <div className={s.col}>
             <section className={`${adult.card} ${adult.cardYellow} ${s.verdict}`} aria-labelledby="verdict-title">
@@ -232,6 +288,7 @@ export default function AdultHomeScreen() {
             </ul>
           </section>
         </div>
+        </>
       )}
 
       <section className={s.links} aria-label="Secciones">

@@ -15,13 +15,15 @@ export function numberWords(n: number): string {
   return u === 0 ? TENS[t] : `${TENS[t]} y ${UNITS[u]}`
 }
 
-/** Speaks "seis por siete, cuarenta y dos" (or "cuarenta y dos entre seis") when voice is on. Never throws. */
+/** Speaks the fact when voice is on. Without a result it is the question «¿Seis por siete?»; with one, the whole fact
+ *  «seis por siete, cuarenta y dos». A new exercise cuts in on whatever was still being said. Never throws. */
 export function speakFact(left: number, right: number, op: '×' | '÷', result?: number): void {
   try {
-    const text = op === '×'
-      ? `${numberWords(left)} por ${numberWords(right)}${result !== undefined ? `, ${numberWords(result)}` : ''}`
-      : `${numberWords(left)} entre ${numberWords(right)}${result !== undefined ? `, ${numberWords(result)}` : ''}`
-    void speech.say(text)
+    const word = op === '×' ? 'por' : 'entre'
+    const text = result !== undefined
+      ? `${numberWords(left)} ${word} ${numberWords(right)}, ${numberWords(result)}`
+      : `¿${numberWords(left)} ${word} ${numberWords(right)}?`
+    void speech.say(text, { interrupt: true })
   } catch {
     /* speech is optional */
   }

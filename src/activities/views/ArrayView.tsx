@@ -10,6 +10,7 @@ import { guidedOutcome } from '../shared/guided'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './ArrayView.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export interface ArrayViewProps extends ExerciseViewProps {
   /** After a correct answer, turn the array over and show that the total does not change. */
@@ -86,10 +87,12 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
 
   return (
-    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Filas y columnas">
-      <p className={s.prompt}>
-        {host.t(`Hay ${ex.rows} filas de ${ex.cols}. ¿Cuántos ${ex.emoji} hay en total?`)}
-      </p>
+    <ExerciseLayout
+      workClassName={`${s.view} ${compact ? s.compact : ''}`}
+      aria-label="Filas y columnas"
+      prompt={host.t(`Hay ${ex.rows} filas de ${ex.cols}. ¿Cuántos ${ex.emoji} hay en total?`)}
+      actions={<AnswerBar flow={flow} onCheck={check} canCheck={value !== null} />}
+    >
       {guided && <p className={s.guide}>{host.t('Cuenta por filas: cada fila tiene lo mismo.')}</p>}
 
       <div className={s.stage}>
@@ -145,8 +148,6 @@ function ArrayRound({ ex, onAnswered, guided, allowHints = true, showFeedback = 
           placeholder="?"
         />
       </div>
-
-      <AnswerBar flow={flow} onCheck={check} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

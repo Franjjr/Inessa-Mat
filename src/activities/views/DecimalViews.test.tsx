@@ -24,6 +24,15 @@ vi.mock('@/ink', () => ({
       onKeyDown={(e) => { if (e.key === 'Enter') p.onSubmit(p.value) }}
     />
   ),
+  // The column of decimal-op: one digit box per place (DigitCell) inside a CellGroup; here plain boxes too.
+  CellGroup: (p: { children: unknown }) => p.children,
+  DigitCell: (p: { value: number | null; onChange: (v: number | null) => void; ariaLabel: string }) => (
+    <input
+      aria-label={p.ariaLabel}
+      value={p.value ?? ''}
+      onChange={(e) => p.onChange(e.target.value === '' ? null : Number(e.target.value))}
+    />
+  ),
   useInkLearning: () => ({ requestConfirm: () => false, recognitionFixes: () => 0, confirm() {}, discard() {} }),
   useInputMode: () => ({ mode: 'keypad' }),
 }))
@@ -31,40 +40,60 @@ vi.mock('@/ink', () => ({
 const comprobar = () => screen.getByRole('button', { name: /Comprobar/ })
 const box = (name: string) => screen.getByRole('textbox', { name })
 
-describe('DecimalOpView', () => {
+describe('DecimalOpView (P3PE-10: a column with one box per digit, the comma fixed)', () => {
   const sum: DecimalOpExercise = { id: 'dec-op-1', kind: 'decimal-op', skill: 'dec:add:2', difficulty: 3, op: 'add', places: 2, left: 125, right: 250, answer: 375 }
 
-  it('1,25 + 2,5: the commas are shown one under the other; 3 and 75 in the two boxes are correct', () => {
+  it('1,25 + 2,50: every digit in its column, the commas printed one under the other; 3, 7, 5 in the boxes is correct', () => {
     const onAnswered = vi.fn()
-    render(<DecimalOpView exercise={sum} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText('1')).toBeTruthy()
-    expect(screen.getByText('25')).toBeTruthy()
-    expect(screen.getByText('2')).toBeTruthy()
-    fireEvent.change(box('Parte entera del resultado'), { target: { value: '3' } })
-    fireEvent.change(box('Décimas del resultado'), { target: { value: '7' } })
-    fireEvent.change(box('Centésimas del resultado'), { target: { value: '5' } })
+    const { container } = render(<DecimalOpView exercise={sum} onAnswered={onAnswered} showFeedback={false} />)
+    // One box per digit of the result, named by its place; no box for the comma.
+    expect(screen.getAllByRole('textbox').map((b) => b.getAttribute('aria-label'))).toEqual(['unidades del resultado', 'décimas del resultado', 'centésimas del resultado'])
+    expect(container.querySelectorAll('[aria-hidden]').length).toBeGreaterThan(0)
+    expect([...container.querySelectorAll('span')].filter((e) => e.textContent === ',').length).toBe(3)
+    fireEvent.change(box('unidades del resultado'), { target: { value: '3' } })
+    fireEvent.change(box('décimas del resultado'), { target: { value: '7' } })
+    fireEvent.change(box('centésimas del resultado'), { target: { value: '5' } })
     fireEvent.click(comprobar())
     expect(onAnswered).toHaveBeenCalledTimes(1)
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
-  it('a wrong decimal part is not correct', () => {
+  it('a wrong decimal part is not correct (the empty centésimas count as 0: 3,70 is not 3,75)', () => {
     const onAnswered = vi.fn()
     render(<DecimalOpView exercise={sum} onAnswered={onAnswered} showFeedback={false} />)
-    fireEvent.change(box('Parte entera del resultado'), { target: { value: '3' } })
-    fireEvent.change(box('Décimas del resultado'), { target: { value: '7' } })
+    fireEvent.change(box('unidades del resultado'), { target: { value: '3' } })
+    fireEvent.change(box('décimas del resultado'), { target: { value: '7' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('a sum that carries into the tens gets a tens box: 9,5 + 2,5 = 12,0', () => {
+    const big: DecimalOpExercise = { id: 'dec-op-3', kind: 'decimal-op', skill: 'dec:add:1', difficulty: 3, op: 'add', places: 1, left: 950, right: 250, answer: 1200 }
+    const onAnswered = vi.fn()
+    render(<DecimalOpView exercise={big} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box('decenas del resultado'), { target: { value: '1' } })
+    fireEvent.change(box('unidades del resultado'), { target: { value: '2' } })
+    fireEvent.change(box('décimas del resultado'), { target: { value: '0' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
   it('a subtraction with décimas: one box for the tenth', () => {
     const diff: DecimalOpExercise = { id: 'dec-op-2', kind: 'decimal-op', skill: 'dec:sub:1', difficulty: 3, op: 'sub', places: 1, left: 430, right: 180, answer: 250 }
     const onAnswered = vi.fn()
     render(<DecimalOpView exercise={diff} onAnswered={onAnswered} showFeedback={false} />)
-    fireEvent.change(box('Parte entera del resultado'), { target: { value: '2' } })
-    fireEvent.change(box('Décimas del resultado'), { target: { value: '5' } })
+    fireEvent.change(box('unidades del resultado'), { target: { value: '2' } })
+    fireEvent.change(box('décimas del resultado'), { target: { value: '5' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+})
+
+describe('DecimalView: the boxes are really empty (P3PE-10)', () => {
+  it('no «0», «00» or «€» written in an empty box', () => {
+    const ex: DecimalExercise = { id: 'dec-r', kind: 'decimal', skill: 'dec:read:2', difficulty: 3, mode: 'read', places: 2, value: 125, answer: 125 }
+    render(<DecimalView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    for (const b of screen.getAllByRole('textbox')) expect(b.getAttribute('placeholder')).toBe('')
   })
 })
 

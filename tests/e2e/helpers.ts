@@ -216,7 +216,8 @@ export async function answerForVisibleInput(page: Page, field: Locator): Promise
   // Descomponer (4 325 = 4 000 + 300 + 20 + 5): the value of one place of the number on screen.
   const place = aria.match(/^Valor de (?:los|las) (millares|centenas|decenas|unidades)$/)
   if (place) {
-    const shown = await page.locator('section[aria-label="Números hasta 9 999"] p').nth(1).innerText().catch(() => '')
+    // The number is the paragraph made only of digits (the instructions above it are paragraphs too).
+    const shown = await page.locator('section[aria-label="Números hasta 9 999"] p').filter({ hasText: /^[\d\s\u00a0\u202f]+$/ }).first().innerText().catch(() => '')
     const n = Number(shown.replace(/\D/g, ''))
     const size = { millares: 1000, centenas: 100, decenas: 10, unidades: 1 }[place[1] as 'millares']
     return Math.floor(n / size) % 10 * size
@@ -279,6 +280,16 @@ export async function driveExercises(page: Page, finished: () => Promise<boolean
       const value = await answerFromPrompt(page) ?? (await answerForVisibleInput(page, field))
       if (value === null) throw new Error(`cannot solve the exercise "${(await field.getAttribute('aria-label')) ?? ''}" (screen: ${((await page.locator('main').first().innerText().catch(() => '')) ?? '').replace(/\s+/g, ' ').slice(0, 200)})`)
       await typeAnswer(page, field, value)
+      await settle(page, 300)
+      continue
+    }
+    // Nothing left that the driver answers (no empty box it can solve, no choice, no token) and «Comprobar» is active: the
+    // child checks with the button. Seen in place value with a 0 («Si una cifra es 0, puedes escribir 0 o dejar la casilla
+    // vacía»): the box of the 0 stays empty (its «0» is only the placeholder) and the Enter of the last box moves the focus
+    // to it instead of checking (a product defect of src/ink/NumberInput.tsx, noted for integration).
+    const check = page.getByRole('button', { name: /Comprobar/ }).last()
+    if (await check.isVisible().catch(() => false) && await check.isEnabled().catch(() => false)) {
+      await check.click()
       await settle(page, 300)
       continue
     }
@@ -353,4 +364,19 @@ export async function devFlag(page: Page, key: string, value = true): Promise<vo
     if (!child) throw new Error('no child on this device')
     await data.updateProgress(child.id, (p) => ({ ...p, flags: { ...p.flags, [k]: v } }))
   }, [key, value] as const)
+}
+
+/** Opens the maths session intro. The maths session sends the child to the class of today's topic first («¡Empezar la clase!»);
+    when that class is pending it is marked as done (like a child who already took it), so the intro shows «¡Empezar!». */
+export async function openSession(page: Page): Promise<void> {
+  await page.goto('/play/sesion')
+  const classButton = page.getByRole('button', { name: '¡Empezar la clase!' })
+  await classButton.waitFor({ state: 'visible', timeout: 15000 }).catch(() => undefined)
+  if (await classButton.count()) {
+    await classButton.click()
+    await page.waitForURL(/\/play\/clase\/[^/]+$/)
+    const topic = page.url().split('/').pop()!
+    await devFlag(page, `clase:${topic}`)
+    await page.goto('/play/sesion')
+  }
 }

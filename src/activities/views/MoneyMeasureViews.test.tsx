@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createRng, buildMeasure, THINGS, UNITS } from '@/engine'
 import { makeAdd, makeBudget, makeChange, makeCompare, makeConvert as makeMoneyConvert, makePay, makeRecognise, SHOP } from '@/engine/money'
-import { makeConvert, makeEstimate, makeRuler, makeUnit } from '@/engine/measure'
+import { makeConvert, makeEstimate, makeRuler, makeUnit, measureUnitQuestion } from '@/engine/measure'
 import MeasureView from './MeasureView'
 import MoneyView from './MoneyView'
 
@@ -71,16 +71,75 @@ describe('MoneyView', () => {
     expect(onAnswered.mock.calls[0][0].check.feedback).toContain('Te falta')
   })
 
-  it('change: the euros and the céntimos are two boxes that must both be filled', () => {
+  it('change: the euros and the céntimos are two boxes; the story asks the one question', () => {
     const onAnswered = vi.fn()
     render(<MoneyView exercise={makeChange(340, 500, 'un cuaderno')} onAnswered={onAnswered} showFeedback={false} />)
     expect(screen.getByText(/Paga con 5 €/)).toBeTruthy()
+    // P3PE-15: one question only (the story's), never a second «¿Cuánto cambio te dan?» under it.
+    expect(screen.getAllByText(/¿Cuánto/)).toHaveLength(1)
+    expect(screen.queryByText(/te dan/)).toBeNull()
     expect(comprobar().hasAttribute('disabled')).toBe(true)
     fireEvent.change(box('Euros'), { target: { value: '1' } })
-    expect(comprobar().hasAttribute('disabled')).toBe(true)
     fireEvent.change(box('Céntimos'), { target: { value: '60' } })
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('P3PE-15: «2» in the euros and nothing in the céntimos is 2 €: Comprobar is on and it is right', () => {
+    const onAnswered = vi.fn()
+    // 3 € paid with 5 €: the change is 2 € exactly.
+    render(<MoneyView exercise={makeChange(300, 500, 'un cuaderno')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box('Euros'), { target: { value: '2' } })
+    expect(comprobar().hasAttribute('disabled')).toBe(false)
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('P3PE-15: an empty box is 0, never a pass for a wrong amount (2 € is not 2,50 €)', () => {
+    const onAnswered = vi.fn()
+    render(<MoneyView exercise={makeChange(250, 500, 'un cuaderno')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box('Euros'), { target: { value: '2' } })
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('whole euros (2.º): with nothing written Comprobar is off, and nothing is sent as a wrong «0 €»', () => {
+    const onAnswered = vi.fn()
+    render(<MoneyView exercise={makeAdd([{ ...SHOP[0], price: 200 }, { ...SHOP[1], price: 300 }], false, true)} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.queryByRole('textbox', { name: 'Céntimos' })).toBeNull()
+    expect(comprobar().hasAttribute('disabled')).toBe(true)
+    fireEvent.click(comprobar())
+    fireEvent.keyDown(box('Euros'), { key: 'Enter' })
+    expect(onAnswered).not.toHaveBeenCalled()
+    fireEvent.change(box('Euros'), { target: { value: '5' } })
+    expect(comprobar().hasAttribute('disabled')).toBe(false)
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('with céntimos: only the céntimos written (0,60 €) is checked, and it is right', () => {
+    const onAnswered = vi.fn()
+    // 4,40 € paid with 5 €: the change is 0,60 €.
+    render(<MoneyView exercise={makeChange(440, 500, 'un cuaderno')} onAnswered={onAnswered} showFeedback={false} />)
+    expect(comprobar().hasAttribute('disabled')).toBe(true)
+    fireEvent.change(box('Céntimos'), { target: { value: '60' } })
+    expect(comprobar().hasAttribute('disabled')).toBe(false)
+    fireEvent.click(comprobar())
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
+  it('budget: the story comes first and the question right after it, in the statement', () => {
+    const { container } = render(<MoneyView exercise={makeBudget('short', 200, [SHOP[0], SHOP[1]])} onAnswered={() => {}} showFeedback={false} />)
+    const prompt = container.querySelector('.ex-prompt')!
+    expect(prompt.textContent).toBe('Tienes 2 €. Estos son los precios:¿Cuánto te falta para comprarlo todo?')
+    expect(container.querySelector('.ex-prompt-sub')).toBeNull()
+  })
+
+  it('P3PE-15: the budget cards to choose look like buttons, the price cards only like labels', () => {
+    const { container } = render(<MoneyView exercise={makeBudget('afford', 300, [SHOP[0], SHOP[1]])} onAnswered={() => {}} showFeedback={false} />)
+    const choices = screen.getByRole('group', { name: 'Elige' }).querySelectorAll('button')
+    expect(choices.length).toBe(2)
+    expect(container.querySelectorAll('[role="listitem"]').length).toBe(0)
   })
 
   it('add: the cards show the prices and the total is typed in euros and céntimos', () => {
@@ -123,7 +182,7 @@ describe('MoneyView', () => {
     const onAnswered = vi.fn()
     // 2,50 € + 1,35 € = 3,85 €, with 5 € it is enough.
     render(<MoneyView exercise={makeBudget('enough', 500, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText('¿Te llega?')).toBeTruthy()
+    expect(screen.getByText('¿Te llega para comprar todo?')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Sí' }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
@@ -141,7 +200,7 @@ describe('MoneyView', () => {
     const onAnswered = vi.fn()
     // 2,50 € + 1,35 € = 3,85 €; with 2 € we are short by 1,85 €.
     render(<MoneyView exercise={makeBudget('short', 200, [SHOP[0], SHOP[1]])} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText('¿Cuánto te falta?')).toBeTruthy()
+    expect(screen.getByText('¿Cuánto te falta para comprarlo todo?')).toBeTruthy()
     fireEvent.change(box('Euros'), { target: { value: '1' } })
     fireEvent.change(box('Céntimos'), { target: { value: '85' } })
     fireEvent.click(comprobar())
@@ -159,6 +218,15 @@ describe('MeasureView', () => {
     fireEvent.click(screen.getByRole('button', { name: '15 m' }))
     fireEvent.click(comprobar())
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(false)
+  })
+
+  it('unit: the question is the engine one, never «medir capacidad de»', () => {
+    const thing = THINGS[0]
+    const ex = makeUnit(thing, UNITS.length.map((unit) => ({ value: thing.value, unit })))
+    const { container } = render(<MeasureView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    const prompt = container.querySelector('.ex-prompt')!.textContent ?? ''
+    expect(prompt).toContain(measureUnitQuestion(ex))
+    expect(prompt).not.toMatch(/medir (capacidad|longitud|peso|masa) de/)
   })
 
   it('unit: the right unit is correct', () => {

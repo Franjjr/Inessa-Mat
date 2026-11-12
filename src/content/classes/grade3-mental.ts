@@ -14,9 +14,10 @@ const doblesMitades = clase({
     show('big-text', { text: '4 + 4 = 8', sub: 'el doble de 4' }, 'Sumar dos cantidades iguales es doblar. El doble de 4 es 8, y no hace falta contar.', 'frog'),
   ],
   ejemplo: [
-    show('big-text', { text: 'El doble de 35', sub: '35 + 35' }, '¿Cuánto es el doble de 35? Lo partimos en decenas y unidades: 30 y 5.'),
+    show('big-text', { text: 'El doble de 35', sub: '35 + 35' }, '¿Cuánto es el doble de 35? Lo partimos en decenas y unidades: 30 más 5.'),
     show('big-text', { text: '35 + 35 = 30 + 30 + 5 + 5', sub: '60 + 10 = 70' }, 'El doble de 30 es 60 y el doble de 5 es 10. 60 + 10 = 70. El doble de 35 es 70.'),
     show('big-text', { text: 'La mitad de 70 = 35', sub: '35 + 35 = 70' }, 'La mitad es lo contrario del doble: la mitad de 70 es 35, porque 35 + 35 = 70.'),
+    show('big-text', { text: 'La mitad de 56', sub: '25 + 3 = 28' }, 'La mitad de 56: 56 son 50 y 6. La mitad de 50 es 25 y la mitad de 6 es 3. 25 + 3 = 28.'),
   ],
   guiada: [
     tryIt('double-chain', { start: 4, steps: 1 }, '¡Te toca! Piensa en el doble.', { skills: ['mental:dobles'] }),
@@ -70,7 +71,11 @@ const completar = clase({
     show('number-line', { from: 0, to: 10, step: 1, mark: 7, jump: 3 }, 'Dani tiene 7 y quiere llegar a 10. Contamos desde el 7 hasta el 10.'),
     show('number-line', { from: 0, to: 10, step: 1, mark: 7, jump: 3 }, 'Del 7 al 10 hay 3 saltos: 7 + 3 = 10. Le faltan 3 canicas.'),
     show('number-line', { from: 60, to: 100, step: 10, mark: 64, jump: 6 }, 'Con 64 vamos a 100. Primero llegamos a la decena siguiente: de 64 a 70 hay 6.'),
-    show('number-line', { from: 60, to: 100, step: 10, mark: 70, jump: 30 }, 'Después, de 70 a 100 hay 30. Así que 6 + 30 = 36: a 64 le faltan 36 para llegar a 100.'),
+    show('number-line', { from: 60, to: 100, step: 10, mark: 70, jump: 30 }, 'Después, de 70 a 100 hay 30.'),
+    show('number-line', { from: 60, to: 100, step: 10, mark: 64, jump: 36 }, 'Así que 6 + 30 = 36: a 64 le faltan 36 para llegar a 100.'),
+    show('number-line', { from: 400, to: 1000, step: 100, mark: 470, jump: 30 }, '¿Cuánto le falta a 470 para 1 000? Primero hasta la centena siguiente: de 470 a 500 van 30.'),
+    show('number-line', { from: 400, to: 1000, step: 100, mark: 500, jump: 500 }, 'Luego, de 500 a 1 000 van 500.'),
+    show('number-line', { from: 400, to: 1000, step: 100, mark: 470, jump: 530 }, 'Así que 30 + 500 = 530: a 470 le faltan 530 para llegar a 1 000.'),
   ],
   guiada: [
     tryIt('number-line', { from: 0, to: 10, step: 1, mark: 7, jump: 3 }, '¡Te toca! Cuenta hasta el número redondo.', { skills: ['mental:completar10'] }),
@@ -90,14 +95,15 @@ const decenasCentenas = clase({
   topicId: 'decenas-centenas',
   title: 'Sumar y restar decenas y centenas',
   para: [
-    show('big-text', { text: '380 + 50 = 430' }, 'Dani tiene 380 pegatinas y le dan 50 más. ¿Cuántas tiene ahora?', 'frog'),
-    show('number-line', { from: 300, to: 500, step: 100, mark: 380, jump: 50 }, 'En la recta, desde el 380 damos un salto de 50 y llegamos al 430.', 'frog'),
+    show('big-text', { text: '380 + 50 = ?' }, 'Dani tiene 380 pegatinas y le dan 50 más. ¿Cuántas tiene ahora?', 'frog'),
+    show('number-line', { from: 300, to: 500, step: 100, mark: 380, jump: 50 }, 'Lo miramos en la recta. Empezamos en el 380.', 'frog'),
   ],
   ejemplo: [
-    show('number-line', { from: 300, to: 500, step: 100, mark: 380, jump: 50 }, '¿Qué sé? Tiene 380 y le dan 50. ¿Qué me preguntan? Cuántas tiene en total. Es una suma.'),
-    show('big-text', { text: '38 + 5 = 43', sub: '38 decenas + 5 decenas = 43 decenas' }, 'Miramos solo las decenas: 38 decenas más 5 decenas son 43 decenas.'),
-    show('big-text', { text: '380 + 50 = 430', sub: '43 decenas = 430' }, 'Las decenas: 8 + 5 pasan de 9, son 13. Escribimos 3 y llevamos 1 a las centenas: 3 + 1 = 4. Sale 430.'),
+    show('number-line', { from: 300, to: 500, step: 100, mark: 380, jump: 50 }, 'Damos un salto de 50 y llegamos al 430. ¿Qué sé? Tiene 380 y le dan 50. ¿Qué me preguntan? Cuántas tiene en total. Es una suma.'),
+    show('big-text', { text: '38 + 5 = 43', sub: '38 decenas + 5 decenas = 43 decenas' }, '380 + 50: piensa en decenas. 38 decenas más 5 decenas son 43 decenas: 430.'),
+    show('big-text', { text: '430 + 300 = 730', sub: 'las decenas no cambian' }, '430 + 300: se suman las centenas, 4 + 3 = 7. Son 730. Las decenas no cambian.'),
     show('big-text', { text: '540 − 30 = 510', sub: '54 decenas − 3 decenas = 51 decenas' }, 'Al restar decenas, la cuenta se hace con las decenas: 54 − 3 = 51, y 51 decenas son 510.'),
+    show('number-line', { from: 0, to: 10000, step: 1000, mark: 3000, jump: 1000 }, 'De mil en mil: desde 3 000, un salto de mil llega a 4 000 y otro a 5 000.'),
   ],
   guiada: [
     tryIt('number-line', { from: 300, to: 500, step: 100, mark: 380, jump: 50 }, '¡Te toca! Cambia solo la cifra de las centenas.', { skills: ['mental:centenas'] }),
@@ -118,12 +124,14 @@ const compensar = clase({
   title: 'Compensar',
   para: [
     show('big-text', { text: '46 + 9', sub: '¿Hay un truco?' }, 'Dani tiene 46 cromos y le dan 9 más. Sumar 9 cuesta un poco. ¿Hay un truco?', 'owl'),
-    show('number-line', { from: 40, to: 60, step: 10, mark: 46, jump: 10 }, 'Sumar 10 es muy fácil: de 46 llegamos a 56. Y como 9 es 10 menos 1, el truco funciona.', 'owl'),
+    show('number-line', { from: 40, to: 60, step: 10, mark: 46 }, 'Sumar 10 es muy fácil. Lo vemos en la recta, empezando en el 46. Y como 9 es 10 menos 1, el truco funciona.', 'owl'),
   ],
   ejemplo: [
     show('number-line', { from: 40, to: 60, step: 10, mark: 46, jump: 10 }, 'Sumar 9 es sumar 10 y quitar 1. Primero sumamos 10 a 46: llegamos a 56.'),
     show('big-text', { text: '46 + 9 = 46 + 10 − 1', sub: '56 − 1 = 55' }, 'Como sumamos 1 de más, lo quitamos al final: 56 − 1 = 55. Así que 46 + 9 = 55.'),
     show('big-text', { text: '55 − 9 = 55 − 10 + 1', sub: '45 + 1 = 46' }, 'Restar 9 es al revés: restamos 10 y sumamos 1. 55 − 10 = 45, y 45 + 1 = 46. Así que 55 − 9 = 46.'),
+    show('big-text', { text: '36 + 19', sub: '36 + 20 = 56 · 56 − 1 = 55' }, 'Con 19 se usa el 20: 36 más 20 son 56, y quito 1: 55.'),
+    show('big-text', { text: '55 − 19', sub: '55 − 20 = 35 · 35 + 1 = 36' }, 'Con una resta es al revés: 55 menos 20 son 35, y como he quitado uno de más, sumo 1: 36.'),
   ],
   guiada: [
     tryIt('number-line', { from: 40, to: 60, step: 10, mark: 46, jump: 10 }, '¡Te toca! Piensa en la decena cercana.', { skills: ['mental:compensar'] }),

@@ -9,9 +9,27 @@ import type {
 import { fmt } from './numeric'
 import { pick, randInt, range, shuffle } from './rng'
 import { clockConvertSkill, calendarSkill, clockReadSkill, clockSetSkill, parseSkill, timeDurationSkill, type ParsedSkill } from './skills'
-import { addFace, clockPhrase, digital, faceHour, MONTHS_30_31, parseClockPhrase, WEEKDAYS } from './time'
+import { addFace, clockPhrase, digital, durationWords, faceHour, MONTHS_30_31, parseClockPhrase, periodOf, WEEKDAYS } from './time'
 
 const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'] = 'none'): Hint => ({ level, text, visual })
+
+/** Where the short hand is, read from the time on the face: «La aguja corta está entre el 5 y el 6: son las 5 y algo.» */
+function shortHand(t: ClockTime): string {
+  const h = faceHour(t.hour)
+  if (t.minute === 0) return `La aguja corta está justo en el ${h}.`
+  return `La aguja corta está entre el ${h} y el ${faceHour(h + 1)}: son las ${h} y algo.`
+}
+
+/** The last step of «escribe la hora de 24 horas», from the period the phrase says. */
+function toDigitalStep(hour24: number): string {
+  if (hour24 === 0) return 'Las doce de la noche se escriben con 00 en el reloj de 24 horas. Después escribe los minutos.'
+  const period = periodOf(hour24)
+  if (hour24 <= 12) return `La frase dice «${period}»: la hora se escribe igual que en el reloj de agujas. Después escribe los minutos.`
+  return `La frase dice «${period}»: a la hora del reloj de agujas, súmale 12. Después escribe los minutos.`
+}
+
+/** The number of the face the long hand points at: 20 minutes → the 4, 0 → the 12. */
+const longHandNumber = (minute: number) => (minute === 0 ? 12 : minute / 5)
 
 /** Minutes each read step asks for. clock:read:30 = en punto and y media; :15 = cuartos; :5 = every 5 minutes. */
 const READ_MINUTES: Record<30 | 15 | 5, number[]> = { 30: [0, 30], 15: [15, 45], 5: range(0, 11).map((i) => i * 5) }
@@ -223,7 +241,8 @@ export function expectedClock(ex: Exercise): string {
 /** How a child's time differs from the expected face time: hour, minutes or nothing. */
 function timeMistake(expected: ClockTime, given: { hour: number | null; minute: number | null }): 'ok' | 'hour' | 'minute' | 'both' | 'incomplete' {
   if (given.hour === null || given.minute === null) return 'incomplete'
-  const hourOk = given.hour >= 1 && given.hour <= 12 && given.hour % 12 === expected.hour % 12
+  // The same hour in any way a child writes it: 1..12, 0..23 (13:00 for la una) or 0 for the 12 (0:45).
+  const hourOk = Number.isInteger(given.hour) && given.hour >= 0 && given.hour <= 23 && given.hour % 12 === expected.hour % 12
   const minuteOk = given.minute === expected.minute
   if (hourOk && minuteOk) return 'ok'
   if (hourOk) return 'minute'
@@ -235,14 +254,22 @@ const FEEDBACK_HOUR = '¡Casi! Revisa la hora: la aguja corta marca la hora. Si 
 const FEEDBACK_MINUTE = '¡Casi! La hora está bien. Cuenta los minutos de cinco en cinco con la aguja larga.'
 const FEEDBACK_BOTH = '¡Casi! Mira primero la aguja corta (la hora) y después la larga (los minutos).'
 const PERIOD_FEEDBACK = '¡Casi! Mira el momento del día: en el reloj de 24 horas, lo de la tarde y de la noche sigue contando después de las 12.'
+/** A duration has no hands to look at: the time line. */
+const FEEDBACK_DURATION = '¡Casi! Cuenta cuánto tiempo pasa desde que empieza: suma las horas y luego los minutos.'
 
-/** Shared judgement of a time written by the child against a face time. */
-function judgeFace(expected: ClockTime, answer: Answer, expectedText: string, ok: string): CheckResult {
+/** The message of a wrong phrase, by what is wrong in it. */
+const PHRASE_FEEDBACK: Record<'clock-hour' | 'clock-minute' | 'clock-period', string> = {
+  'clock-hour': FEEDBACK_HOUR, 'clock-minute': FEEDBACK_MINUTE, 'clock-period': PERIOD_FEEDBACK,
+}
+
+/** Shared judgement of a time written by the child against a face time. `duration`: the messages of a time line. */
+function judgeFace(expected: ClockTime, answer: Answer, expectedText: string, ok: string, duration = false): CheckResult {
   if (answer.type !== 'time') return res(false, '', expectedText, { errorType: 'other', feedback: 'Escribe la hora y los minutos.' })
   const given = `${answer.hour ?? '?'}:${answer.minute === null ? '??' : String(answer.minute).padStart(2, '0')}`
   const m = timeMistake(expected, answer)
   if (m === 'ok') return res(true, given, expectedText, { feedback: ok })
   if (m === 'incomplete') return res(false, given, expectedText, { errorType: 'incomplete', feedback: 'Escribe la hora y también los minutos.' })
+  if (duration) return res(false, given, expectedText, { errorType: m === 'minute' ? 'clock-minute' : 'clock-hour', feedback: FEEDBACK_DURATION })
   if (m === 'hour') return res(false, given, expectedText, { errorType: 'clock-hour', feedback: FEEDBACK_HOUR })
   if (m === 'minute') return res(false, given, expectedText, { errorType: 'clock-minute', feedback: FEEDBACK_MINUTE })
   return res(false, given, expectedText, { errorType: 'clock-hour', feedback: FEEDBACK_BOTH })
@@ -258,7 +285,8 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
       if (answer.index === null) return res(false, '?', expected, { errorType: 'incomplete', feedback: 'Elige la frase que dice la hora.' })
       const chosen = ex.options[answer.index] ?? ''
       if (answer.index === ex.correct) return res(true, chosen, expected, { feedback: '¡Muy bien! Esa es la hora del reloj.' })
-      return res(false, chosen, expected, { errorType: wrongPhraseType(chosen, ex.answer), feedback: FEEDBACK_HOUR })
+      const type = wrongPhraseType(chosen, ex.answer)
+      return res(false, chosen, expected, { errorType: type, feedback: PHRASE_FEEDBACK[type] })
     }
     case 'clock-set': {
       const expected = ex.prompt
@@ -271,7 +299,8 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
         if (answer.index === null) return res(false, '?', expectedDigital, { errorType: 'incomplete', feedback: 'Elige la frase que dice esa hora.' })
         const chosen = ex.options[answer.index] ?? ''
         if (answer.index === ex.correct) return res(true, chosen, expectedDigital, { feedback: '¡Muy bien! Esa frase dice esa hora.' })
-        return res(false, chosen, expectedDigital, { errorType: wrongPhraseType(chosen, ex.answer), feedback: PERIOD_FEEDBACK })
+        const type = wrongPhraseType(chosen, ex.answer)
+        return res(false, chosen, expectedDigital, { errorType: type, feedback: PHRASE_FEEDBACK[type] })
       }
       if (answer.type !== 'time') return res(false, '', expectedDigital, { errorType: 'other', feedback: 'Escribe la hora con dos números: horas y minutos.' })
       const given = `${answer.hour ?? '?'}:${answer.minute === null ? '??' : String(answer.minute).padStart(2, '0')}`
@@ -279,6 +308,10 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
       const exactHour = answer.hour === ex.answer.hour
       const minuteOk = answer.minute === ex.answer.minute
       if (exactHour && minuteOk) return res(true, given, expectedDigital, { feedback: '¡Muy bien! Ya sabes leer la hora de 24 horas.' })
+      // 24:15 is the same moment as 00:15: right, with the way it is written.
+      if (answer.hour === 24 && ex.answer.hour === 0 && minuteOk) {
+        return res(true, given, expectedDigital, { feedback: '¡Bien! Es esa hora. A las doce de la noche, el reloj vuelve a empezar: la hora se escribe con dos ceros.' })
+      }
       if (!exactHour && faceHour(answer.hour) === faceHour(ex.answer.hour) && minuteOk) {
         return res(false, given, expectedDigital, { errorType: 'clock-period', feedback: PERIOD_FEEDBACK })
       }
@@ -287,12 +320,12 @@ export function checkClock(ex: Exercise, answer: Answer): CheckResult | null {
     }
     case 'time-duration': {
       const expectedText = ex.ask === 'end' ? clockPhrase(ex.end.hour, ex.end.minute) : `${ex.duration} minutos`
-      if (ex.ask === 'end') return judgeFace(ex.end, answer, expectedText, '¡Muy bien! Has contado bien el tiempo.')
+      if (ex.ask === 'end') return judgeFace(ex.end, answer, expectedText, '¡Muy bien! Has contado bien el tiempo.', true)
       if (answer.type !== 'number') return res(false, '', expectedText, { errorType: 'other', feedback: 'Escribe cuántos minutos pasan.' })
       const v = isNum(answer.value) ? answer.value : null
       if (v === null) return res(false, '?', expectedText, { errorType: 'incomplete', feedback: 'Escribe cuántos minutos pasan.' })
       if (v === ex.duration) return res(true, String(v), expectedText, { feedback: '¡Muy bien! Has contado de hora en hora y los minutos.' })
-      return res(false, String(v), expectedText, { errorType: 'other', feedback: '¡Casi! Cuenta primero los minutos hasta la hora en punto y después las horas enteras.' })
+      return res(false, String(v), expectedText, { errorType: 'other', feedback: FEEDBACK_DURATION })
     }
     case 'calendar': {
       if (ex.topic === 'weekday') {
@@ -338,39 +371,41 @@ export function hintsClock(ex: Exercise): Hint[] | null {
       return [
         hint(1, 'Mira primero la aguja corta: dice la hora. La aguja larga dice los minutos.', 'clock'),
         hint(2, 'La aguja larga da una vuelta entera en 60 minutos. Cada número del reloj son 5 minutos: cuenta de 5 en 5 desde el 12.', 'clock'),
-        hint(3, 'Cuenta primero los minutos de la aguja larga. Después di la hora: con «y» si ya han pasado de la hora, con «menos» si faltan para la siguiente.', 'clock'),
+        hint(3, `${shortHand(ex.answer)} Cuenta los minutos de la aguja larga: con «y» si ya han pasado de la hora, con «menos» si faltan para la siguiente.`, 'clock'),
       ]
     case 'clock-set':
       return [
         hint(1, 'Pon primero la aguja larga en los minutos. La aguja corta se mueve un poco con ellos.', 'clock'),
         hint(2, 'Las frases hablan de 15, 30 y 45 minutos: «y cuarto», «y media» y «menos cuarto». Con «y», los minutos van después de la hora; con «menos», faltan para la siguiente.', 'clock'),
-        hint(3, 'Cuenta de 5 en 5 desde el 12 hasta los minutos de la frase y suelta ahí la aguja larga. Después mueve la aguja corta a la hora.', 'clock'),
+        hint(3, `Cuenta de 5 en 5 desde el 12 y suelta la aguja larga en el ${longHandNumber(ex.answer.minute)}. Después mueve la aguja corta a la hora.`, 'clock'),
       ]
     case 'time-convert':
       if (ex.direction === 'to-phrase') {
         return [
           hint(1, 'Mira primero la hora (los números de la izquierda) y después los minutos.', 'clock'),
           hint(2, 'Los minutos: 15 es «y cuarto», 30 es «y media» y 45 es «menos cuarto».', 'clock'),
-          hint(3, 'Descarta las frases con otra hora y mira el momento del día: de la mañana, de la tarde o de la noche.', 'clock'),
+          hint(3, ex.answer.hour === 0
+            ? 'Las 00 del reloj de 24 horas son las doce de la noche. Después mira los minutos.'
+            : `Son las ${ex.answer.hour} en el reloj de 24 horas: ${ex.answer.hour > 12 ? 'réstale 12 y mira qué hora es en el reloj de agujas' : 'esa hora es la misma en el reloj de agujas'}. Después mira el momento del día.`, 'clock'),
         ]
       }
       return [
         hint(1, 'Las frases con «y» cuentan los minutos después de la hora; las de «menos», los que faltan para la siguiente.', 'clock'),
-        hint(2, '«De la mañana» es antes de las 12; «del mediodía», de las 12 a la 1; «de la tarde» va de la 1 hasta la noche; «de la noche» es el final del día.', 'clock'),
-        hint(3, 'En el reloj de 24 horas, las horas de la tarde y de la noche siguen contando después de las 12. Escribe primero la hora y luego los minutos.', 'clock'),
+        hint(2, '«De la madrugada» va de la 1 a las 5; «de la mañana», de las 6 a las 12; «del mediodía», de las 12 a la 1; «de la tarde» va de la 1 hasta la noche; «de la noche» es el final del día.', 'clock'),
+        hint(3, toDigitalStep(ex.answer.hour), 'clock'),
       ]
     case 'time-duration':
       if (ex.ask === 'end') {
         return [
           hint(1, 'Dibuja la recta del tiempo: marca la hora de salida y cuenta hacia delante.', 'time-line'),
           hint(2, 'Una hora son 60 minutos. Una hora y media son 60 más 30 minutos.', 'time-line'),
-          hint(3, 'Cuenta primero hasta la siguiente hora en punto y después las horas que faltan.', 'time-line'),
+          hint(3, `Empieza a las ${clockPhrase(ex.start.hour, ex.start.minute)} y dura ${durationWords(ex.duration)}. Cuenta primero hasta la siguiente hora en punto y después lo que falta.`, 'time-line'),
         ]
       }
       return [
         hint(1, 'Dibuja la recta del tiempo: marca la hora de inicio y la hora de llegada.', 'time-line'),
         hint(2, 'Cuenta primero los minutos que faltan para la hora en punto y después las horas enteras.', 'time-line'),
-        hint(3, 'Suma los dos trozos: los minutos hasta la hora en punto y los minutos de las horas enteras.', 'time-line'),
+        hint(3, `De ${clockPhrase(ex.start.hour, ex.start.minute)} a la hora en punto hay un trozo; de ahí a ${clockPhrase(ex.end.hour, ex.end.minute)}, otro. Suma los dos trozos.`, 'time-line'),
       ]
     case 'calendar':
       if (ex.topic === 'weekday' && ex.week) {
@@ -392,7 +427,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
         const { amount, from, to } = ex.units
         return [
           hint(1, 'Piensa en la unidad que pide el problema y en cuántas partes más pequeñas tiene.', 'units'),
-          hint(2, `Lo que dice el problema son ${amount === 1 ? `1 ${from}` : `${amount} ${from}s`}. Mira cuántos ${to} tiene cada ${from}.`, 'units'),
+          hint(2, `El problema habla de ${amount === 1 ? `1 ${from}` : `${amount} ${from}s`}. Mira cuántos ${to} tiene cada ${from}.`, 'units'),
           hint(3, `Cuenta cuántos ${to} tiene cada ${from} y repite esa cuenta ${amount === 1 ? 'una vez' : `${amount} veces`}.`, 'units'),
         ]
       }

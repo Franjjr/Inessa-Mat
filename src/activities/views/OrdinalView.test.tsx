@@ -25,7 +25,7 @@ describe('OrdinalView', () => {
     const ex = ofMode('row', 10)
     const onAnswered = vi.fn()
     render(<OrdinalView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
-    expect(screen.getByText(`Toca el ${ordinalWord(ex.n)}`)).toBeTruthy()
+    expect(screen.getByText(`Toca el ${ordinalWord(ex.n)}, contando desde la salida.`)).toBeTruthy()
     expect(screen.getAllByRole('button', { name: /^Lugar \d+$/ })).toHaveLength(ex.items.length)
     fireEvent.click(screen.getByRole('button', { name: `Lugar ${ex.n}` }))
     fireEvent.click(comprobar())

@@ -13,9 +13,21 @@
   width: 100%;
 }
 
+/* «Escuchar», «Ahora no» / «No lo sé»: a row of their own under the exercise, in the flow (it takes its own room and
+   covers nothing), well apart from each other and big enough for a finger. Never sticky: inside FitToScreen's scaled box
+   (transform: scale) a sticky row is placed in unscaled pixels and climbs over the keypad, «Pista» and «Comprobar». */
 .skip {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+  background: var(--c-bg);
+}
+
+.skip > * {
+  min-height: 48px;
+  min-width: 48px;
 }
 
 .feedback {

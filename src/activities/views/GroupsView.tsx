@@ -7,6 +7,7 @@ import { sfx } from '@/audio'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './GroupsView.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export interface GroupsViewProps extends ExerciseViewProps {
   /** Show the repeated addition (4 + 4 + 4) as a reading aid. */
@@ -71,10 +72,12 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const repeated = Array.from({ length: ex.groups }, () => String(ex.perGroup)).join(' + ')
 
   return (
-    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Grupos">
-      <p className={s.prompt}>
-        {host.t(`Hay ${ex.groups} grupos de ${ex.perGroup}. ¿Cuántos ${ex.emoji} hay en total?`)}
-      </p>
+    <ExerciseLayout
+      workClassName={`${s.view} ${compact ? s.compact : ''}`}
+      aria-label="Grupos"
+      prompt={host.t(`Hay ${ex.groups} grupos de ${ex.perGroup}. ¿Cuántos ${ex.emoji} hay en total?`)}
+      actions={<AnswerBar flow={flow} onCheck={check} canCheck={value !== null} />}
+    >
       {guided && <p className={s.guide}>{host.t('Toca cada dibujo para contarlo. Luego escribe el total.')}</p>}
 
       <div className={s.baskets} role="list">
@@ -123,8 +126,6 @@ function GroupsRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
           keypadToggle
         />
       </div>
-
-      <AnswerBar flow={flow} onCheck={check} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

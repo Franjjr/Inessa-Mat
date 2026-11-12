@@ -38,6 +38,7 @@ function slicePath(i: number, parts: number): string {
 /** One figure (a circle or a bar) cut into equal parts; the first `shaded` parts are coloured, and the fraction is
     written under it: shaded over parts. */
 export function FractionShapeVisual({ params, reduced }: VisualProps) {
+  if (Number(params.unequal) === 1) return <UnequalShape params={params} />
   const parts = clampInt(numParam(params, 'parts', 4), 1, 12)
   const shaded = clampInt(numParam(params, 'shaded', 1), 0, parts)
   const isBar = strParam(params, 'shape', 'circle') === 'bar'
@@ -61,6 +62,32 @@ export function FractionShapeVisual({ params, reduced }: VisualProps) {
         <text x={CX} y={212} textAnchor="middle" fontSize={28} fontWeight={700} fill={INK}>{shaded}</text>
         <line x1={CX - 24} y1={222} x2={CX + 24} y2={222} stroke={INK} strokeWidth={3} strokeLinecap="round" />
         <text x={CX} y={252} textAnchor="middle" fontSize={28} fontWeight={700} fill={INK}>{parts}</text>
+      </svg>
+    </div>
+  )
+}
+
+/** The slice of the circle between two angles (fractions of a turn, 0 at the top), as a closed path through the centre. */
+function arcSlice(f0: number, f1: number): string {
+  const a0 = -Math.PI / 2 + 2 * Math.PI * f0
+  const a1 = -Math.PI / 2 + 2 * Math.PI * f1
+  const large = a1 - a0 > Math.PI ? 1 : 0
+  return `M ${CX} ${CY} L ${CX + RADIUS * Math.cos(a0)} ${CY + RADIUS * Math.sin(a0)} A ${RADIUS} ${RADIUS} 0 ${large} 1 ${CX + RADIUS * Math.cos(a1)} ${CY + RADIUS * Math.sin(a1)} Z`
+}
+
+/** Param unequal: 1 — a pizza cut into `parts` (2 to 4) pieces that are NOT equal: no fraction is written under it,
+    only «No son partes iguales». The first piece is the big one. */
+function UnequalShape({ params }: { params: VisualProps['params'] }) {
+  const parts = clampInt(numParam(params, 'parts', 3), 2, 4)
+  const cuts: Record<number, number[]> = { 2: [0, 0.68, 1], 3: [0, 0.5, 0.78, 1], 4: [0, 0.4, 0.62, 0.85, 1] }
+  const c = cuts[parts]
+  return (
+    <div className={s.stage}>
+      <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} width="100%" style={{ maxWidth: 420 }} role="img" aria-label="Partes que no son iguales" data-testid="fraction-shape">
+        {c.slice(0, -1).map((f0, i) => (
+          <path key={i} d={arcSlice(f0, c[i + 1])} data-part={i} data-shaded="false" style={{ fill: PLAIN, stroke: INK, strokeWidth: 3, strokeLinejoin: 'round' }} />
+        ))}
+        <text x={CX} y={230} textAnchor="middle" fontSize={24} fontWeight={700} fill={INK}>No son partes iguales</text>
       </svg>
     </div>
   )

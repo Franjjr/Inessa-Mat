@@ -13,14 +13,15 @@ import type { SpeechOptions } from '@/types'
 import { onGesture, onVisibility, resumeQuietly } from './context'
 import { music } from './music'
 import { clamp } from './notes'
-import { chunkForSpeech, toSpeakable, type SpeechLang } from './speechText'
+import { chunkForSpeech, toSpeakable, type SpeechGender, type SpeechLang } from './speechText'
 import { fetchClip, neuralAvailable, playClip, stopClip } from './neuralVoice'
 import { isSpanish, pickBestVoice, pickEnglishVoice, scoreVoice } from './voices'
 
 export type SpeechCharacter = NonNullable<SpeechOptions['voice']>
 
 export const CHARACTERS: Record<SpeechCharacter, { pitch: number; rate: number }> = {
-  lumi: { pitch: 1.04, rate: 0.95 },
+  // Lumi explains: a little slower than before (still above the guardian) (the natural voice is set the same way in api/tts.ts).
+  lumi: { pitch: 1.04, rate: 0.92 },
   companion: { pitch: 1.1, rate: 1.0 },
   narrator: { pitch: 1.0, rate: 0.95 },
   guardian: { pitch: 0.94, rate: 0.9 },
@@ -35,10 +36,16 @@ export function langOf(character: SpeechCharacter | undefined): SpeechLang {
 const MAX_QUEUE = 4
 const CANCEL_GAP_MS = 120
 
+/** What say() accepts: the shared speech options plus the gender of a number with no noun behind it. */
+export type SayOptions = SpeechOptions & { gender?: SpeechGender }
+
 interface Job {
   chunks: string[]
   index: number
   opts: SpeechOptions
+  /** Once a clip of this step failed, the rest of the step is spoken by the device voice (no voice switching mid-step);
+      the next step tries the natural voice again. */
+  deviceRest?: boolean
   resolve: () => void
   done: boolean
   retried: boolean
@@ -227,7 +234,7 @@ function speakChunk(job: Job): void {
   const character = job.opts.voice ?? 'lumi'
   // The adult's device voice is Spanish: it never speaks the English character.
   const adultVoice = langOf(character) === 'es' && !!preferredVoiceId()
-  if (adultVoice || job.opts.deviceOnly || !neuralAvailable()) {
+  if (adultVoice || job.opts.deviceOnly || job.deviceRest || !neuralAvailable()) {
     speakChunkOnDevice(job)
     return
   }
@@ -236,12 +243,14 @@ function speakChunk(job: Job): void {
   void fetchClip(job.chunks[job.index], character).then(async (url) => {
     if (job !== current || job.done) return
     if (!url) {
+      job.deviceRest = true
       speakChunkOnDevice(job)
       return
     }
     const played = await playClip(url, job.opts.rate ?? 1)
     if (job !== current || job.done) return
     if (!played) {
+      job.deviceRest = true
       speakChunkOnDevice(job)
       return
     }
@@ -329,10 +338,10 @@ function speakChunkOnDevice(job: Job): void {
   check(true)
 }
 
-export function say(text: string, opts: SpeechOptions = {}): Promise<void> {
+export function say(text: string, opts: SayOptions = {}): Promise<void> {
   wire()
   const s = synth()
-  const clean = toSpeakable(text, langOf(opts.voice))
+  const clean = toSpeakable(text, langOf(opts.voice), { gender: opts.gender })
   if ((!enabled && !opts.force) || !clean || ((!s || !UtteranceCtor()) && !neuralAvailable())) return Promise.resolve()
   return new Promise<void>((resolve) => {
     if (opts.interrupt) stopAll()

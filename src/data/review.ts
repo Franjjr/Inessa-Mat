@@ -1,8 +1,11 @@
 /* Local review log of wrong answers. Its purpose: an adult can look at the answers the app marked wrong and check
    whether a right answer was judged wrong (a false negative). It stays on this device: nothing is sent anywhere, and
    no child or family id is stored. It is bounded: only the newest REVIEW_LIMIT notes are kept. The adult sees it,
-   exports it and deletes it in Ajustes («Respuestas marcadas como mal», src/adult/settings/ReviewNotesCard.tsx). */
+   exports it and deletes it in Ajustes («Respuestas marcadas como mal», src/adult/settings/ReviewNotesCard.tsx).
+   A handwritten answer also keeps what the app read, digit by digit (confidence, alternatives, the 28×28 image of the
+   ink), so the adult can tell a misread from a maths slip. Old notes without it still load. */
 import type { AttemptRecord, ErrorType, InputMode, ISODate } from '@/types'
+import { takeInkReading, type InkReading } from '@/ink/readLog'
 import { db } from './db'
 
 export const REVIEW_LIMIT = 300
@@ -22,6 +25,8 @@ export interface WrongAnswerNote {
   /** What the app expected (clipped). */
   expected: string
   inputMode: InputMode
+  /** Handwritten answers: what the app read from the ink (missing in older notes and for typed answers). */
+  ink?: InkReading
 }
 
 function reviewAppVersion(): string {
@@ -36,6 +41,7 @@ function clip(text: string | undefined): string {
  *  (the transaction must include db.reviewNotes). Right answers and ungraded retries are ignored. */
 export async function noteWrongAnswer(attempt: AttemptRecord): Promise<void> {
   if (attempt.correct || attempt.graded === false) return
+  const ink = takeInkReading(String(attempt.kind), attempt.given)
   await db.reviewNotes.add({
     at: attempt.createdAt,
     appVersion: reviewAppVersion(),
@@ -45,6 +51,7 @@ export async function noteWrongAnswer(attempt: AttemptRecord): Promise<void> {
     given: clip(attempt.given),
     expected: clip(attempt.expected),
     inputMode: attempt.inputMode,
+    ...(ink ? { ink } : {}),
   })
   const count = await db.reviewNotes.count()
   if (count > REVIEW_LIMIT) await db.reviewNotes.limit(count - REVIEW_LIMIT).delete() // the oldest go first

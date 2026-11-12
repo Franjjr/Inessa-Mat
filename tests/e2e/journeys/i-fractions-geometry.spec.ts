@@ -22,7 +22,11 @@ test('answers a geometry item: a figure and its name, then the feedback appears'
   await expect(page.getByText('¿Qué figura es?')).toBeVisible()
   await page.getByRole('group', { name: 'Respuestas' }).getByRole('button').first().click()
   await page.getByRole('button', { name: /Comprobar/ }).click()
-  await expect(page.locator('[aria-live="polite"]').getByText(/Mira otra vez|Muy bien|¡Muy bien!/)).toBeVisible()
+  // Right: the praise; wrong: the corrector teaches what to look at (e.g. «Cuenta los lados…»), never a bare «Mira otra vez».
+  const live = page.locator('[aria-live="polite"]').filter({ hasText: /\S/ }).first()
+  await expect(live).toBeVisible()
+  await expect(live).not.toHaveText(/^Mira otra vez\.?$/)
+  await expect(page.getByRole('button', { name: /Siguiente/ })).toBeVisible()
 })
 
 test('the fraction view fits a phone (no horizontal scroll)', async ({ page }) => {

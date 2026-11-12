@@ -2,7 +2,7 @@ import { cleanup, render, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { applyNodeResult } from '@/content'
+import { applyNodeResult, season1, unlockThroughWorld } from '@/content'
 import { useActiveChild, createChild, updateProgress } from '@/data'
 import { flushTimers } from '@/data/__tests__/helpers'
 import { useLocalOnlyAuth } from '../host/testing'
@@ -124,5 +124,33 @@ describe('WorldMapScreen lock states', () => {
     expect(readRescue).toBeGreaterThan(0)
     expect(practiceRescue).toBeGreaterThan(readRescue)
     expect(practiceRescue).toBeCloseTo(readRescue * 3, 5)
+  })
+
+  it('an optional stop says it can be skipped, and the next step is the guardian', async () => {
+    const { child } = await childAt('w4')
+    const w4 = season1.worlds.find((w) => w.id === 'w4')!
+    await updateProgress(child.id, (p) => {
+      let q = unlockThroughWorld(p, 'w4')
+      for (const n of w4.nodes) if (n.kind !== 'guardian' && n.optional !== true) q = applyNodeResult(q, 'w4', n.id, { stars: 3, passed: true })
+      return q
+    })
+    renderMap('w4')
+    await waitFor(() => expect(nodeLabels().some((l) => l.includes('puedes saltarla'))).toBe(true))
+    const labels = nodeLabels()
+    const optional = labels.find((l) => l.includes('Dos formas de restar del cole'))!
+    expect(optional).toContain('puedes saltarla')
+    expect(optional).not.toContain('bloqueado')
+    expect(labels.find((l) => l.includes('aquí estás'))).toContain('El desafío de la osa Nieve')
+    expect(document.body.textContent).toContain('Puedes saltarla')
+    // The guardian is the current stop: its pill marks it, and no «¡Ayúdame!» is drawn under that pill.
+    expect(document.body.textContent).toContain('Aquí sigue')
+    expect(document.body.textContent).not.toContain('¡Ayúdame!')
+  })
+
+  it('a guardian that is not the current stop still asks for help', async () => {
+    await childAt('w1')
+    renderMap('w1')
+    await waitFor(() => expect(nodeLabels().some((l) => l.includes('aquí estás'))).toBe(true))
+    expect(document.body.textContent).toContain('¡Ayúdame!')
   })
 })

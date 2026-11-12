@@ -3,11 +3,13 @@
 import { useMemo, useRef, useState } from 'react'
 import type { ExerciseViewProps, WordProblemExercise } from '@/types'
 import { NumberInput } from '@/ink'
-import { speech } from '@/audio'
 import { useActivityHost } from '@/activities/host'
+import { ListenButton } from '@/activities/shared/ListenButton'
+import { statementFor } from '@/engine/statement'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
+import { ExerciseLayout } from './ExerciseLayout'
 import s from './WordProblemView.module.css'
 
 export interface WordProblemViewProps extends ExerciseViewProps {
@@ -35,6 +37,7 @@ export default function WordProblemView(props: WordProblemViewProps) {
       compact={compact}
       chooseOp={chooseOp}
       guided={guided}
+      retry={props}
     />
   )
 }
@@ -47,18 +50,30 @@ interface RoundProps {
   compact?: boolean
   chooseOp?: boolean
   guided?: boolean
+  /** «Inténtalo otra vez»: what the child wrote (the number, and what is left over) and the wrong boxes. */
+  retry?: RetryProps
 }
 
-function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp, guided }: RoundProps) {
+function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp, guided, retry }: RoundProps) {
   const host = useActivityHost()
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
-  const [picked, setPicked] = useState<WordProblemExercise['op'] | null>(null)
+  // A try again starts with what the child wrote: the number, the remainder, and the operation she had already found.
+  const before = initialOf(retry, 'number') ?? null
+  const beforeDiv = initialOf(retry, 'division') ?? null
+  const first = before ? before.value : beforeDiv ? beforeDiv.quotient : null
+  const firstRest = beforeDiv ? beforeDiv.remainder : null
+  /** 0: the answer box, 1: the box of what is left over. */
+  const wrongBox = useRetryWrong(retry, () => [
+    ...(first !== ex.answer ? [0] : []),
+    ...((ex.remainder ?? 0) > 0 && firstRest !== (ex.remainder ?? 0) ? [1] : []),
+  ])
+  const [picked, setPicked] = useState<WordProblemExercise['op'] | null>(() => (chooseOp && (before || beforeDiv) ? ex.op : null))
   const [opClue, setOpClue] = useState<string | null>(null)
   /** The wrong-operation clue has been counted for this problem (counted once, at the first wrong button). */
   const clueCounted = useRef(false)
-  const [value, setValue] = useState<number | null>(null)
-  const [rest, setRest] = useState<number | null>(null)
+  const [value, setValue] = useState<number | null>(first)
+  const [rest, setRest] = useState<number | null>(firstRest)
   const hasRemainder = (ex.remainder ?? 0) > 0
   const opReady = !chooseOp || picked === ex.op
 
@@ -86,22 +101,22 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
     if (c.correct) celebrate('small')
   }
 
-  const readAloud = () => {
-    void speech.say(text, { interrupt: true })
-  }
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  /** Before checking again, a box the child had wrong stays soft red until she changes it. */
+  const statusOf = (box: 0 | 1, now: number | null, then: number | null) =>
+    !flow.result && wrongBox.has(box) && now === then ? 'wrong' as const : status
   const readyToCheck = value !== null && opReady
 
   return (
-    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Problema">
-      <article className={s.story}>
-        <p className={s.text}>{text}</p>
-        {host.prefs.voice && (
-          <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">
-            🔊 Escuchar
-          </button>
-        )}
-      </article>
+    <ExerciseLayout
+      workClassName={`${s.view} ${compact ? s.compact : ''}`}
+      aria-label="Problema"
+      prompt={text}
+      actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} />}
+    >
+      {/* With the voice on the problem reads itself here: the «word» and «exercises» activities have no other «Escuchar»,
+          and the lesson (TrySlot) and the session (ExerciseStep) leave theirs out for a problem when the voice is on. */}
+      {host.prefs.voice && <ListenButton text={statementFor({ ...ex, text })} className={s.speak} />}
 
       {chooseOp && (
         <div className={s.ops} role="group" aria-label="¿Qué operación?">
@@ -135,11 +150,12 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
           }}
           maxDigits={4}
           size="lg"
-          status={status}
+          status={statusOf(0, value, first)}
           ariaLabel="Respuesta"
           placeholder="?"
           autoFocus={!chooseOp}
           disabled={!opReady}
+          checkButton={!hasRemainder}
         />
         <span className={s.unit}>{ex.unit}</span>
       </div>
@@ -147,13 +163,11 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
       {hasRemainder && (
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Sobra:')}</span>
-          <NumberInput value={rest} onChange={setRest} onSubmit={(r) => submit(value, r)} maxDigits={2} size="lg" status={status} ariaLabel="Lo que sobra" placeholder="?" disabled={!opReady} />
+          <NumberInput value={rest} onChange={setRest} onSubmit={(r) => submit(value, r)} maxDigits={2} size="lg" status={statusOf(1, rest, firstRest)} ariaLabel="Lo que sobra" placeholder="?" disabled={!opReady} checkButton={false} />
         </div>
       )}
 
       {guided && <p className={s.guide}>{host.t('Piensa qué pasa en la historia antes de escribir el número.')}</p>}
-
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} />
-    </section>
+    </ExerciseLayout>
   )
 }

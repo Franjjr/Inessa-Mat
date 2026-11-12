@@ -123,7 +123,7 @@ describe('bar problems: grading', () => {
     expect(checkBar(plain, perfect(plain)).correct).toBe(true)
   })
 
-  it('a quantity on the wrong piece is a bar-placement error, and the child is pointed to the drawing', () => {
+  it('a quantity on the wrong piece, with a wrong result, is a bar-placement error, and the child is pointed to the drawing', () => {
     const ex = samples('add', 1)[0]
     const known = ex.bar.map((b, i) => ({ b, i })).filter((x) => x.b.value !== null)
     expect(known.length).toBeGreaterThanOrEqual(2)
@@ -133,7 +133,7 @@ describe('bar problems: grading', () => {
     const swapped = [...placed]
     swapped[first] = placed[second]
     swapped[second] = placed[first]
-    const res = checkBar(ex, { ...perfect(ex), placed: swapped } as Answer)
+    const res = checkBar(ex, { ...perfect(ex), placed: swapped, results: [ex.answer + 1] } as Answer)
     if (placed[first] === placed[second]) return // equal numbers cannot be told apart on the bar
     expect(res.correct).toBe(false)
     expect(res.errorType).toBe('bar-placement')
@@ -142,14 +142,14 @@ describe('bar problems: grading', () => {
   it('a number still in the pool (not placed) is incomplete, not wrong', () => {
     const ex = samples('add', 1)[0]
     const placed = ex.bar.map((b) => (b.value === null ? null : null))
-    const res = checkBar(ex, { ...perfect(ex), placed } as Answer)
+    const res = checkBar(ex, { ...perfect(ex), placed, results: [ex.answer + 1] } as Answer)
     expect(res.correct).toBe(false)
     expect(res.errorType).toBe('incomplete')
   })
 
   it('the wrong operation is tagged operation, with the operation feedback', () => {
     const ex = samples('sub', 1)[0]
-    const wrong: Answer = { ...perfect(ex), ops: ex.steps.map((s) => (s.op === 'sub' ? 'add' : 'sub')) } as Answer
+    const wrong: Answer = { ...perfect(ex), ops: ex.steps.map((s) => (s.op === 'sub' ? 'add' : 'sub')), results: [ex.answer + 1] } as Answer
     const res = checkBar(ex, wrong)
     expect(res.correct).toBe(false)
     expect(res.errorType).toBe('operation')
@@ -158,10 +158,13 @@ describe('bar problems: grading', () => {
 
   it('in a two-step problem the first result is graded as its own step', () => {
     const ex = samples('two', 30).find((e) => e.steps.length === 2)!
-    const results = [ex.steps[0].result + 1, ex.steps[1].result]
+    const results = [ex.steps[0].result + 1, ex.steps[1].result + 1]
     const res = checkBar(ex, { ...perfect(ex), results } as Answer)
     expect(res.correct).toBe(false)
     expect(res.errorType).toBe('step')
+    expect(res.feedback).toContain('paso 1')
+    // P1: a slip in the first step that does not change the final result is not a fault.
+    expect(checkBar(ex, { ...perfect(ex), results: [ex.steps[0].result + 1, ex.answer] } as Answer).correct).toBe(true)
     const finalWrong = checkBar(ex, { ...perfect(ex), results: [ex.steps[0].result, ex.answer + 1] } as Answer)
     expect(finalWrong.errorType).toBe('fact')
   })
@@ -240,7 +243,7 @@ describe('bar:three (three steps, 4.º)', () => {
       results: ex.steps.map((s) => s.result),
     }
     expect(checkBar(ex, perfect).correct).toBe(true)
-    const midWrong = checkBar(ex, { ...perfect, results: [ex.steps[0].result + 1, ex.steps[1].result, ex.steps[2].result] } as Answer)
+    const midWrong = checkBar(ex, { ...perfect, results: [ex.steps[0].result + 1, ex.steps[1].result + 1, ex.steps[2].result + 1] } as Answer)
     expect(midWrong.errorType).toBe('step')
     const finalWrong = checkBar(ex, { ...perfect, results: [ex.steps[0].result, ex.steps[1].result, ex.answer + 1] } as Answer)
     expect(finalWrong.errorType).toBe('fact')

@@ -19,7 +19,7 @@ export const w5 = world({
     lessonNode('lesson-double', 'Doble, doble y doble', 'w5-double'),
     activityNode('chain', {
       kind: 'chain',
-      title: 'Doble, doble y doble',
+      title: 'Dobla tres veces',
       instructions: 'Dobla tres veces. ¡El último número es el resultado!',
       selector: { kinds: ['double-chain'], tables: [8] },
       count: 5,

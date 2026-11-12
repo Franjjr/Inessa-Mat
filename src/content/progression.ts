@@ -2,7 +2,8 @@
 
    - World 1 is always open; world N opens when world N−1's crystal is won (or when an adult unlocks it).
    - Inside a world nodes are sequential: a node opens when the previous one is done. Done nodes stay open for
-     replays, and once the crystal is won every node of that world is open.
+     replays, and once the crystal is won every node of that world is open. An optional node (`optional: true`, e.g. a
+     lesson on the family's other school method) never blocks: the nodes after it only wait for the required one before.
    - Finishing a node:
        story / lesson  → done; worth COMPLETION_STARS (1) when read or played, nothing when skipped (stars: 0). Stars are
                          earned by practising, not by reading
@@ -71,12 +72,22 @@ export function isNodeUnlocked(progress: ProgressState, worldId: string, nodeId:
   if (i < 0 || !isWorldUnlocked(progress, worldId)) return false
   const wp = progress.worlds[worldId]
   if (i === 0 || wp?.crystal || wp?.nodes[nodeId]?.done) return true
-  return wp?.nodes[world.nodes[i - 1].id]?.done === true
+  // The nearest node before this one that is not optional (an optional one opens with it but never blocks the rest).
+  let k = i - 1
+  while (k >= 0 && isOptionalNode(world.nodes[k])) k--
+  return k < 0 || wp?.nodes[world.nodes[k].id]?.done === true
 }
 
+/** A node the child may skip (NodeDef.optional; content without the field keeps the old rule). */
+export function isOptionalNode(node: WorldDef['nodes'][number]): boolean {
+  return node.optional === true
+}
+
+/** The first unfinished stop of a world, an optional one only when every required stop is done. */
 function frontierNode(progress: ProgressState, world: WorldDef): string {
   const wp = progress.worlds[world.id]
-  const open = world.nodes.find((n) => !wp?.nodes[n.id]?.done)
+  const undone = (n: WorldDef['nodes'][number]) => !wp?.nodes[n.id]?.done
+  const open = world.nodes.find((n) => undone(n) && !isOptionalNode(n)) ?? world.nodes.find(undone)
   return (open ?? world.nodes[world.nodes.length - 1]).id
 }
 

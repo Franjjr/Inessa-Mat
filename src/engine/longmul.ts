@@ -5,7 +5,7 @@ import type { Answer, CheckResult, Hint, LongMulExercise, Rng } from '@/types'
 import { digitAt, fromDigits, toDigits } from './arith'
 import { fmt } from './numeric'
 import { randInt } from './rng'
-import { mulColSkill } from './skills'
+import { MUL_COL_GENTLE, mulColSkill } from './skills'
 
 const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
 
@@ -21,8 +21,43 @@ export function makeLongMul(top: number, bottom: number): LongMulExercise {
   }
 }
 
-/** top with `top` digits (2 or 3) × bottom with `bottom` digits, no zero in the bottom: every row is a real partial. */
-export function genLongMul(rng: Rng, top: 2 | 3, bottom: 2 | 3): LongMulExercise {
+/** The first 2 × 2 of 3.º: the top 12-34 and the bottom 11-19, so the tens row is the top itself (× 1, shifted) and
+    the units row carries little (its units product stays under 30). Totals stay under 650. */
+function genGentle2x2(rng: Rng): LongMulExercise {
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const t = randInt(rng, 12, 34)
+    const b = randInt(rng, 11, 19)
+    if (t % 10 === 0 || (t % 10) * (b % 10) >= 30) continue
+    return makeLongMul(t, b)
+  }
+  return makeLongMul(23, 14)
+}
+
+/** Whether every carry of the row top × d is 1 or 2 at most (units product under 30, and so on to the tens). */
+function smallCarries(top: number, d: number): boolean {
+  const carry = Math.floor(((top % 10) * d) / 10)
+  return carry <= 2 && Math.floor((Math.floor(top / 10) * d + carry) / 10) <= 9
+}
+
+/** The entry of 3.º (mul:col:2x2:suave, topic mul-2-cifras-intro): mostly a bottom with tens 1 (the second row is the
+    top itself, shifted), and sometimes a bottom 21-39 where both rows carry only 1 or 2. No zero in the top's units
+    nor in the bottom. The exercise keeps the gentle skill, so its mastery is apart from the 4.º 2 × 2. */
+export function genLongMulGentle(rng: Rng): LongMulExercise {
+  if (rng() < 0.65) return { ...genGentle2x2(rng), skill: MUL_COL_GENTLE }
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const t = randInt(rng, 12, 39)
+    const b = randInt(rng, 21, 39)
+    if (t % 10 === 0 || b % 10 === 0) continue
+    if (!smallCarries(t, b % 10) || !smallCarries(t, Math.floor(b / 10))) continue
+    return { ...makeLongMul(t, b), skill: MUL_COL_GENTLE }
+  }
+  return { ...makeLongMul(23, 21), skill: MUL_COL_GENTLE }
+}
+
+/** top with `top` digits (2 or 3) × bottom with `bottom` digits, no zero in the bottom: every row is a real partial.
+    `gentle` (2 × 2 only) is the 3.º introduction: bottom 11-19 and small carries; 4.º keeps the full 12-99 × 12-99. */
+export function genLongMul(rng: Rng, top: 2 | 3, bottom: 2 | 3, gentle = false): LongMulExercise {
+  if (gentle && top === 2 && bottom === 2) return genGentle2x2(rng)
   const range = (digits: 2 | 3): [number, number] => (digits === 2 ? [12, 99] : [102, 999])
   const [topLo, topHi] = range(top)
   const [bottomLo, bottomHi] = range(bottom)
@@ -67,11 +102,18 @@ export function checkLongMul(ex: LongMulExercise, answer: Answer): CheckResult {
   return { correct: false, given, expected, errorType: 'other', feedback: '¡Casi! Revisa la suma de las filas, columna a columna.' }
 }
 
+/** The first row with the exercise's own numbers («Primera fila: 34 × 2 = ?»). By 1 the row is the top itself, so it
+    is said in words (the hint never shows a whole row). */
+function firstRow(ex: LongMulExercise): string {
+  const units = digitAt(ex.bottom, 0)
+  return units === 1 ? 'Primera fila: por 1, el número de arriba se copia igual.' : `Primera fila: ${fmt(ex.top)} × ${units} = ?`
+}
+
 export function hintsLongMul(ex: LongMulExercise): Hint[] {
   const threeRows = ex.partials.length > 2
   return [
     hint(1, 'Multiplica el de arriba por las unidades de abajo, como en 2 × 1.'),
     hint(2, `En la segunda fila multiplicas por las decenas: empieza dejando un 0 en las unidades.${threeRows ? ' La tercera fila va por las centenas: empieza dejando dos ceros.' : ''}`),
-    hint(3, 'Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades.'),
+    hint(3, `${firstRow(ex)} Pon las filas una debajo de otra y súmalas columna a columna, empezando por las unidades.`),
   ]
 }

@@ -2,7 +2,7 @@
    2-digit × 1-digit multiplication in a short story, then uses the column view (units first, carries optional). */
 import { useMemo } from 'react'
 import type { ActivityProps, ColumnAddExercise, ColumnMulExercise, ColumnSubExercise, Exercise, SubMethod } from '@/types'
-import { generate, normaliseSubMethod } from '@/engine'
+import { generate, methodFor } from '@/engine'
 import { adaptiveSelector } from '../facts/shared/items'
 import { useActivityHost } from '@/activities/host'
 import SubtractionView from '../views/SubtractionView'
@@ -35,9 +35,10 @@ export default function ColumnActivity({ config, onDone, onExit }: ActivityProps
   if (!ex || !isColumn(ex)) return null
   const guided = config.params?.guided === true || run.index === 0
   const proof = config.params?.proof === true
-  // Subtraction uses the child's favourite method (params.method overrides it for a fixed activity).
+  // Subtraction uses the school method the grown-up chose (params.method overrides it for a fixed activity); a retired
+  // method of old data becomes pedir prestado.
   const method: SubMethod | undefined = ex.kind === 'column-sub'
-    ? normaliseSubMethod(config.params?.method ?? host.prefs.subMethod)
+    ? methodFor('sub', { subMethod: config.params?.method ?? host.prefs.subMethod })
     : undefined
   return (
     <OpsShell title={config.title} index={run.index} total={run.total} onExit={onExit}>

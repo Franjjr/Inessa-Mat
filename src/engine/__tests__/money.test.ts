@@ -285,11 +285,11 @@ describe('dinero: presupuesto (money:budget, 4.º)', () => {
       } else if (ex.ask === 'short') {
         expect(total > ex.budget, ex.id).toBe(true)
         expect(ex.answer, ex.id).toBe(total - ex.budget)
-        expect(ex.question).toBe('¿Cuánto te falta?')
+        expect(ex.question).toBe('¿Cuánto te falta para comprarlo todo?')
       } else if (ex.ask === 'left') {
         expect(total < ex.budget, ex.id).toBe(true)
         expect(ex.answer, ex.id).toBe(ex.budget - total)
-        expect(ex.question).toBe('¿Cuánto te sobra?')
+        expect(ex.question).toBe('Si lo compras todo, ¿cuánto te sobra?')
       } else {
         const fitting = ex.items.filter((it) => it.price <= ex.budget)
         expect(fitting, ex.id).toHaveLength(1)

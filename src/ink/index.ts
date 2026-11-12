@@ -1,7 +1,11 @@
 /* PUBLIC API of the handwriting/answer-input module (agent: ink).
    UI components live in src/ink/*.tsx; the neural recogniser lives in src/ink/ml (agent: ml). */
 export { InkProvider } from './InkProvider'                 // <InkProvider childId? recognizer? penSeen?> loads the recogniser + personal samples, detects input mode
-export { useInputMode, useRecognizer, useInkLearning } from './hooks'
+export { useInputMode, useRecognizer, useInkLearning, useInkStore, useInkStoreState } from './hooks'
+export { askMisread, askReversed, inkReadingOf } from './questions'
+export { leaveInkReading } from './readLog'
+export type { InkReading, InkReadingDigit } from './readLog'
+export type { LearningStore, InkRead, InkQuestion } from './context'
 //   useInputMode()   → { mode, setPreferred(pref), isTouchDevice, penSeen, preference, forgetPen() }
 //   useRecognizer()  → { ready, recognize | null }
 //   useInkLearning() → { confirm(), discard(), recognitionFixes() } — confirm() after a CORRECT answer

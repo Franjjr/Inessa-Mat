@@ -83,6 +83,8 @@ export function makeDoubleChain(start: number, steps: number): DoubleChainExerci
   }
 }
 
+/** The four facts of a, b and a × b. A square (6, 6) has only two different facts: the answer lists each twice, and the
+    checker accepts each written twice (the view asks for four). */
 export function makeFactFamily(a: number, b: number): FactFamilyExercise {
   const p = a * b
   return {

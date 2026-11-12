@@ -1,4 +1,4 @@
-/* The four subtraction methods: the written steps each one expects, the grading of those steps, and the hints (which
+/* The subtraction methods (the two of school, plus the retired «parts» and «line» graders kept for old data): the written steps each one expects, the grading of those steps, and the hints (which
    must lead to the answer without giving it). One block per method, as the child meets them. */
 import { describe, expect, it } from 'vitest'
 import {
@@ -13,17 +13,17 @@ const digitsAnswer = (n: number, method: SubMethod, carries?: (number | null)[])
 })
 
 describe('method registry', () => {
-  it('lists the four subtraction methods, borrow first, and the default is borrow', () => {
-    expect(SUB_METHODS.map((m) => m.id)).toEqual(['borrow', 'carry', 'parts', 'line'])
+  it('lists the two school subtraction methods, borrow first, and the default is borrow', () => {
+    expect(SUB_METHODS.map((m) => m.id)).toEqual(['borrow', 'carry'])
     expect(DEFAULT_METHOD.sub).toBe('borrow')
   })
 
   it('names and validates methods; unknown stored values fall back to borrow', () => {
     expect(methodLabel('sub', 'carry')).toBe('Me llevo una abajo')
-    expect(isSubMethod('line')).toBe(true)
+    expect(isSubMethod('line')).toBe(false)
     expect(isSubMethod('cross')).toBe(false)
     expect(normaliseSubMethod(undefined)).toBe('borrow')
-    expect(normaliseSubMethod('parts')).toBe('parts')
+    expect(normaliseSubMethod('parts')).toBe('borrow')
   })
 })
 
@@ -188,12 +188,23 @@ describe('grading: por partes and saltos answer with steps', () => {
     expect(r.errorType).toBe('incomplete')
   })
 
+  it('parts: the last number written is the answer, whatever the steps before it', () => {
+    expect(check(ex, steps([null, null, 225])).correct).toBe(true)
+    expect(check(ex, steps([225, null, null])).correct).toBe(true)
+    expect(check(ex, steps([345, 325, 225])).correct).toBe(true)
+    expect(check(makeColumnSub(93, 12), steps([84, 81])).correct).toBe(true)
+    const r = check(ex, steps([252, 232, 224]))
+    expect(r.correct).toBe(false)
+    expect(r.feedback).toContain('paso 3')
+  })
+
   it('line: the stops rise from 127 to 352, and the total is the sum of the jumps', () => {
     expect(check(ex, steps([130, 300, 350], 'line', 225)).correct).toBe(true)
   })
 
-  it('line: a stop that goes back is graded at its jump; a wrong total is graded at the total', () => {
-    const back = check(ex, steps([130, 120, 350], 'line', 225))
+  it('line: the total decides; with a wrong total a stop that goes back is named, else the total', () => {
+    expect(check(ex, steps([130, 120, 350], 'line', 225)).correct).toBe(true)
+    const back = check(ex, steps([130, 120, 350], 'line', 226))
     expect(back.correct).toBe(false)
     expect(back.feedback).toContain('salto 2')
     const total = check(ex, steps([130, 300, 350], 'line', 224))

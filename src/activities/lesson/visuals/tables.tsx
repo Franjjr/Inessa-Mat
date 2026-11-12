@@ -9,11 +9,10 @@ import s from './visuals.module.css'
 
 /** × 1 stays the same, × 2 is the double, × 5 ends in 0 or 5, × 10 adds a zero. One card lights up per step. */
 export function EasyTablesVisual({ phase, runLength, reduced }: VisualProps) {
-  const st = stateOf({ phase, runLength })
-  const active = st === FINAL ? -1 : st - 1 // card 0..3 lights up after the intro step
+  const active = runLength > 1 ? phase - 1 : -1 // card 0..3 lights up after the intro step (the last card stays lit at the end)
   const cards = [
     { key: '×1', title: 'Se queda igual', body: <span className={s.eq}>7 × 1 = <span className={s.hl}>7</span></span> },
-    { key: '×2', title: 'Es el doble', body: <span className={s.eq}>2 × 8 = 8 + 8 = <span className={s.hl}>16</span></span> },
+    { key: '×2', title: 'Es el doble', body: <span className={s.eq}>8 + 8 = <span className={s.hl}>16</span></span> },
     {
       key: '×5',
       title: 'Acaba en 0 o en 5',
@@ -56,32 +55,56 @@ export function EasyTablesVisual({ phase, runLength, reduced }: VisualProps) {
 
 /* ------------------------------------------------------------ known facts */
 
-/** Facts of the table the child already knows from earlier worlds (the workbook's "ya la sabes" marks). */
-const KNOWN: Record<number, number[]> = {
-  6: [1, 2, 5, 10],
-  7: [1, 2, 4, 5, 6, 8, 10],
-  8: [1, 2, 5, 6, 7, 10],
+/** Order in which the classes of 3.º teach the tables (mirrors the syllabus of 3.º): a table's facts with the tables
+    taught before it, and with 1 and 10, are already known. */
+const CLASS_ORDER = [2, 5, 10, 3, 4, 6, 8, 7, 9]
+
+/** Factors the child knows of `table` in the order of the classes. */
+export function classKnownFactors(table: number): number[] {
+  const at = CLASS_ORDER.indexOf(table)
+  const before = at < 0 ? [2, 5, 10] : CLASS_ORDER.slice(0, at)
+  return [...new Set([1, 10, ...before])].sort((x, y) => x - y)
 }
 
-/** A times table: ✔ marks what is known, then ✨ marks the new facts, then the new rows are highlighted. */
+/** The adventure map teaches other tables first (6, then 8, then 7), so what is known there is its own list. Param
+    `map` = 1 is the state before the lesson of the table, 2 the one after the rhyme 5-6-7-8 (8 × 7 is then known). */
+const MAP_KNOWN: Record<number, number[]> = {
+  6: [1, 2, 5, 10],
+  7: [1, 2, 4, 5, 6, 8, 10],
+  8: [1, 2, 5, 6, 10],
+}
+
+/** Factors of `table` the child already knows: from the order of the classes, or from the map when `map` is 1 or 2. */
+export function knownFactors(table: number, map: number): number[] {
+  if (map <= 0) return classKnownFactors(table)
+  const base = MAP_KNOWN[table] ?? [1, 2, 5, 10]
+  return map >= 2 && table === 8 ? [...base, 7].sort((x, y) => x - y) : base
+}
+
+/** A times table: ✔ marks what is known (step 0), the facts known by turning them round are lit (step 1), then ✨ marks
+    the new facts and their rows are highlighted (step 2, and the last step of a run). */
 export function KnownFactsVisual({ params, phase, runLength, reduced }: VisualProps) {
   const table = numParam(params, 'table', 6)
   const st = stateOf({ phase, runLength })
-  const known = KNOWN[table] ?? [1, 2, 5, 10]
+  const known = knownFactors(table, numParam(params, 'map', 0))
   const rows = Array.from({ length: 10 }, (_, i) => i + 1)
+  // The second step of a run points at the facts that come from another table by turning them round (7 × 6 is 6 × 7).
+  const mirrors = table === 7 ? [6, 8] : []
+  // Ten facts in five rows must fit a short board (a 360 × 740 phone under a long bubble, a 1000 × 490 tablet): the rows
+  // shrink with the screen height (52 px at most, 34 at least) and the stage keeps a smaller gap and padding.
   return (
-    <div className={s.stage}>
-      <p className={s.eq}>La tabla del {table}</p>
+    <div className={s.stage} style={{ gap: 'var(--sp-2)', padding: 'var(--sp-2) var(--sp-3)' }}>
+      <p className={s.eq} style={{ margin: 0 }}>La tabla del {table}</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--sp-1)', width: '100%', maxWidth: 560 }} data-testid="known-table">
         {rows.map((k) => {
           const isKnown = known.includes(k)
           const isNew = !isKnown
-          const highlight = isNew && st >= 2
+          const highlight = (isNew && st >= 2) || (st === 1 && mirrors.includes(k))
           return (
             <motion.div
               key={k}
               className={s.chip}
-              style={{ justifyContent: 'space-between', minHeight: 44, padding: '0 var(--sp-4)', width: '100%', boxSizing: 'border-box', background: highlight ? 'var(--c-magic-soft)' : undefined, borderColor: highlight ? 'var(--c-magic)' : undefined }}
+              style={{ justifyContent: 'space-between', height: 'clamp(34px, 6vh, 52px)', padding: '0 var(--sp-3)', width: '100%', boxSizing: 'border-box', background: highlight ? 'var(--c-magic-soft)' : undefined, borderColor: highlight ? 'var(--c-magic)' : undefined }}
               initial={reduced ? false : { opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={motionT(reduced, { duration: 0.3, delay: 0.03 * k })}
@@ -89,7 +112,7 @@ export function KnownFactsVisual({ params, phase, runLength, reduced }: VisualPr
             >
               <span>{table} × {k} = {table * k}</span>
               {isKnown && <span className={s.ok} aria-label="ya la sabes">✔</span>}
-              {isNew && st >= 1 && <span className={s.tag}>✨ nueva</span>}
+              {isNew && st >= 2 && <span className={s.tag}>✨ nueva</span>}
             </motion.div>
           )
         })}
@@ -200,6 +223,16 @@ export function NineTrickVisual({ params, phase, runLength, reduced }: VisualPro
   const first = a - 1
   const second = 9 - first
   const product = 9 * a
+  // only: 'ten' draws just the «ten times, minus one» way (the digits trick of the 9 is taught later, in world 6).
+  if (params?.only === 'ten') {
+    return (
+      <div className={s.stage}>
+        <p className={`${s.eq} ${s.eqBig}`}>{a} × 9 = {st === FINAL || st >= 1 ? <span className={s.hl}>{product}</span> : '?'}</p>
+        <p className={s.eq}>{a} × 10 = {a * 10}</p>
+        {(st === FINAL || st >= 1) && <p className={s.eq}>{a * 10} − {a} = <span className={s.hl}>{product}</span></p>}
+      </div>
+    )
+  }
   return (
     <div className={s.stage}>
       <p className={`${s.eq} ${s.eqBig}`}>{a} × 9 = {st >= 1 ? <span className={s.hl}>{product}</span> : '?'}</p>
@@ -256,7 +289,7 @@ export function DoubleChainVisual({ params, phase, runLength, reduced }: VisualP
           )
         })}
       </div>
-      {shown > 0 && (
+      {shown > 1 && (
         <motion.p className={s.eq} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={motionT(reduced, { duration: 0.4, delay: 0.25 * steps })}>
           {Array.from({ length: steps }, () => '× 2').join(' ')} = × {factor}
         </motion.p>

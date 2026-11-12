@@ -5,11 +5,11 @@
    the child, the topic and the moment the visit starts, so they stay the same during one visit but differ on the next. */
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { LessonPlayer } from '@/activities'
+import { LessonPlayer, useActivityHost } from '@/activities'
 import type { ExerciseOutcome, SubjectId } from '@/types'
-import { classForTopic, markClassDone, type ClassDef, type ClassFinish } from '@/content/classes'
+import { classForMethods, classForTopic, markClassDone, type ClassDef, type ClassFinish } from '@/content/classes'
 import { allTopics, subjectOfTopic, syllabusFor, topicTitle, type SyllabusTopic } from '@/content/syllabus'
-import { createRng, generate, markClassToday } from '@/engine'
+import { createRng, generate, markClassToday, methodFor } from '@/engine'
 import { updateProgress, useActiveChild } from '@/data'
 import { BackButton, Button, Screen, Spinner, toast } from '@/ui'
 import { GameHostProvider } from '@/world/host/GameHost'
@@ -41,6 +41,11 @@ export default function ClassScreen() {
 
 function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic: SyllabusTopic; cls: ClassDef; subject: SubjectId }) {
   const navigate = useNavigate()
+  const host = useActivityHost()
+  // The class as the child's school teaches it: her subtraction and division methods (chosen by the grown-up).
+  const subMethod = methodFor('sub', host.prefs)
+  const divMethod = methodFor('div', host.prefs)
+  const lesson = useMemo(() => classForMethods(cls, { subMethod, divMethod }).lesson, [cls, subMethod, divMethod])
   const [phase, setPhase] = useState<Phase>('intro')
   const [index, setIndex] = useState(0)
   // The visit's own nonce: a new visit draws new «Ya lo sé» exercises, so the same ones cannot be learnt by heart.
@@ -77,7 +82,7 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
   }
 
   if (phase === 'lesson') {
-    return <LessonPlayer lesson={cls.lesson} onDone={() => void finish('lesson')} onExit={leave} />
+    return <LessonPlayer lesson={lesson} onDone={() => void finish('lesson')} onExit={leave} />
   }
 
   if (phase === 'done') {
@@ -161,6 +166,7 @@ function ClassRunner({ childId, topic, cls, subject }: { childId: string; topic:
                 </Button>
               )}
             </div>
+            {knowItAvailable && <p className={s.text}>Si ya lo sabes, pulsa «Ya lo sé». Te haré {KNOW_IT_COUNT} preguntas para comprobarlo.</p>}
           </div>
         </div>
       </div>

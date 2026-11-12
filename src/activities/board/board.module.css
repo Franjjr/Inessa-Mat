@@ -113,6 +113,28 @@
   color: var(--c-ink-soft);
 }
 
+/* The rules of the special squares, on screen before and during the race (P3PE-17). */
+.rules {
+  padding: var(--sp-3) var(--sp-4);
+  border: 3px dashed var(--c-gold);
+  border-radius: var(--r-md);
+  background: var(--c-gold-soft);
+  color: var(--c-ink);
+}
+.rulesTitle {
+  margin: 0 0 var(--sp-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+}
+.rulesList {
+  margin: 0;
+  padding-left: var(--sp-5);
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+}
+
 .msg {
   margin: 0;
   padding: var(--sp-3) var(--sp-4);

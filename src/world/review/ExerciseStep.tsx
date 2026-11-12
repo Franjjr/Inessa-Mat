@@ -5,18 +5,24 @@
      first answer is the graded one (mastery, the run's requeue); the attempt is reported once, at the end, with the
      retries it took.
    - «No lo sé» (allowDontKnow): before any answer. It records one wrong attempt with errorType 'dont-know', then shows
-     every hint («Así se hace»), which never give the final answer. Nothing else is graded.
+     the exercise solved step by step («Así se resuelve», engine/solution.ts), with its answer. Nothing else is graded.
+   - A wrong final answer shows the corrector's own message (what went wrong in this exercise) and the solution too:
+     the child never leaves an exercise without seeing how it is done.
    - «Ahora dilo tú» (eng-speak) is never an attempt: nothing is reported (no mastery, no stars in the wallet), it has no
      «Ahora no» nor «No lo sé» (the view has its own «Saltar»), and its message is the view's own (check.feedback). */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
+import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
-import { hintsFor, isCompletionOnly } from '@/engine'
+import { ENGLISH_LISTENING_KINDS, hintsFor, isCompletionOnly, methodFor } from '@/engine'
+import { statementFor } from '@/engine/statement'
+import { ListenButton } from '@/activities/shared/ListenButton'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
 import { guidedOutcome } from '@/activities/shared/guided'
-import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
+import { answerOf } from '@/activities/lesson/TrySlotRetry'
+import type { Answer, AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
 /** An attempt waiting to be reported: the outcome and the retry facts. graded: false for a retry row (see handleAnswered). */
@@ -54,11 +60,33 @@ export interface ExerciseStepProps {
 
 /**
  * asking: the child answers (first try). offered: wrong first try, «Inténtalo otra vez» on screen. retrying: the same
- * exercise again. dontknow: «No lo sé», the hints are shown. final: answered for good.
+ * exercise again. dontknow: «No lo sé», the solution is shown (maths) or the hints (Lengua, English). final: answered for good.
  */
 type Stage = 'asking' | 'offered' | 'retrying' | 'dontknow' | 'final'
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now())
+
+/** The exercise with its story templates rendered for this child ({child}, {pet}, their genders), so that the «Escuchar»
+    button reads the same names the screen shows. Strings without a template are left as they are. */
+function renderedForVoice<T>(value: T, t: (template: string) => string): T {
+  if (typeof value === 'string') return (value.includes('{') ? t(value) : value) as T
+  if (Array.isArray(value)) return value.map((v) => renderedForVoice(v, t)) as T
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, renderedForVoice(v, t)])) as T
+  }
+  return value
+}
+
+/** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
+    The problems read themselves when the voice is on; the English listening exercises, «Ahora dilo tú» and the dictation
+    play their own audio. */
+function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
+  if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
+  return voice && (kind === 'word-problem' || kind === 'bar-problem')
+}
+
+/** A short cheer in front of the corrector's message, never longer than the message itself. */
+const CHEER = 'Casi.'
 
 export function ExerciseStep({
   exercise, allowHints, okLabel, wrongLabel, feedbackFor, report = true, onContinue, onSkip, allowRetry = false, allowDontKnow = false,
@@ -67,6 +95,7 @@ export function ExerciseStep({
   const host = useActivityHost()
   const [stage, setStage] = useState<Stage>('asking')
   const [view, setView] = useState(0)
+  const [previous, setPrevious] = useState<{ answer?: Answer; wrongColumns?: number[] }>({})
   const [message, setMessage] = useState('')
   const [latest, setLatest] = useState<ExerciseOutcome | null>(null)
   const stageRef = useRef<Stage>('asking')
@@ -151,7 +180,11 @@ export function ExerciseStep({
     const factLine = ex.kind === 'fact-mul' && !o.check.correct && teach !== 'none'
       ? `¡Recuérdalo: ${ex.a} × ${ex.b} = ${ex.answer}!`
       : undefined
-    const custom = feedbackFor?.(o) ?? (ex.kind === 'eng-speak' ? o.check.feedback : factLine)
+    // The corrector's own message says what went wrong in THIS exercise: it is the message (a generic phrase only when
+    // the corrector has none).
+    const fromCheck = o.check.feedback?.trim()
+    const checkLine = fromCheck ? (o.check.correct || /^¡?casi/i.test(fromCheck) ? fromCheck : `${CHEER} ${fromCheck}`) : undefined
+    const custom = feedbackFor?.(o) ?? (ex.kind === 'eng-speak' ? o.check.feedback : factLine ?? checkLine)
     const phrase = o.check.correct
       ? pickPhrase('correct', hostRef.current.rng)
       : pickPhrase('wrong', hostRef.current.rng, o.check.errorType)
@@ -167,6 +200,12 @@ export function ExerciseStep({
       first.current = o
       // A view that already gave its own second try (facts) settles the exercise: no further retry here.
       const offer = allowRetry && !o.check.correct && !o.retries
+      // «Inténtalo otra vez» brings back what the child wrote, with the wrong boxes marked (not a blank exercise).
+      if (offer) {
+        const answer = answerOf(raw)
+        const wrong = raw.check.wrongColumns
+        setPrevious(answer ? { answer, wrongColumns: wrong && wrong.length ? [...wrong] : undefined } : {})
+      }
       pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false, graded: gradedHere() }
       show(o)
       if (offer) {
@@ -212,7 +251,7 @@ export function ExerciseStep({
     pending.current = { outcome: o, retries: 0, solvedOnRetry: false, graded: gradedHere() }
     send()
     setLatest(o)
-    setMessage(host.t('No pasa nada. Mira cada pista y, cuando lo entiendas, sigue.'))
+    setMessage(host.t('No pasa nada. Mira cómo se hace y, cuando lo entiendas, sigue.'))
     enter('dontknow')
   }
 
@@ -222,11 +261,25 @@ export function ExerciseStep({
   }
 
   const ok = latest?.check.correct === true
-  const hints = stage === 'dontknow'
-    ? hintsFor(exercise, host.prefs.subMethod, { divMethod: host.prefs.divMethod, tableMethod: host.prefs.tableMethod })
-    : []
+  // The school's method, chosen by the grown-up: a retired one (por partes, saltos, repartir por partes, multiplicar
+  // hacia arriba) saved in old settings becomes the school's method here too.
+  const subMethod = methodFor('sub', host.prefs)
+  const divMethod = methodFor('div', host.prefs)
+  const solutionOpts = { subMethod, divMethod, tableMethod: host.prefs.tableMethod }
+  // The solution is taught for maths only: Lengua and English keep their hints at «No lo sé» and their own messages at
+  // the end (their «solution» would only be «La respuesta es X»). A missed fact with teach 'full' was already worked
+  // and copied in its own view: no second solution under it.
+  const isMath = !exercise.kind.startsWith('lng-') && !exercise.kind.startsWith('eng-')
+  const teaches = isMath && !(exercise.kind === 'fact-mul' && teach === 'full')
+  const hints = stage === 'dontknow' && !isMath ? hintsFor(exercise, subMethod, { divMethod, tableMethod: host.prefs.tableMethod }) : []
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
+  // «Escuchar»: every exercise can be heard, also with the automatic reading off (unless its view reads itself).
+  // It shares the bottom row with «Ahora no» / «No lo sé» (in the flow, sticky): a row of its own over the exercise would
+  // push the keypad under that row on a short tablet (1000 × 490). Shown while the child answers.
+  const statement = useMemo(() => statementFor(renderedForVoice(exercise, host.t)), [exercise, host.t])
+  const listen = (stage === 'asking' || stage === 'retrying') && !readsItself(exercise.kind, host.prefs.voice)
+  const skipOffered = stage === 'asking' && !tried && (!!onSkip || allowDontKnow) && exercise.kind !== 'eng-speak'
 
   // Shrunk to fit the window (daily session, review, class, guardian, reading): no scrolling to answer or go on.
   return (
@@ -241,32 +294,37 @@ export function ExerciseStep({
           showFeedback={false}
           teach={teach}
           onTry={() => setTried(true)}
-          method={host.prefs.subMethod}
-          divMethod={host.prefs.divMethod}
+          method={subMethod}
+          divMethod={divMethod}
           tableMethod={host.prefs.tableMethod}
+          initialAnswer={stage === 'retrying' ? previous.answer : undefined}
+          wrongColumns={stage === 'retrying' ? previous.wrongColumns : undefined}
         />
       </div>
-      {stage === 'asking' && !tried && (onSkip || allowDontKnow) && exercise.kind !== 'eng-speak' && (
+      {(listen || skipOffered) && (
         <div className={s.skip}>
-          {onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
-          {allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
+          {listen && <ListenButton text={statement} />}
+          {skipOffered && onSkip && <Button size="sm" variant="secondary" onClick={onSkip}>Ahora no</Button>}
+          {skipOffered && allowDontKnow && <Button size="sm" variant="secondary" onClick={dontKnow}>No lo sé</Button>}
         </div>
       )}
       {stage === 'dontknow' && (
         <div className={s.feedback} data-tone="clue" role="status">
           <p className={s.message}>{message}</p>
-          <div className={s.hints}>
-            <h3 className={s.hintsTitle}>Así se hace</h3>
-            <ol className={s.hintList}>
-              {hints.map((h) => (
-                <li key={h.level} className={s.hintItem}>
-                  <p className={s.hintLevel}>Pista {h.level} de {hints.length}</p>
-                  <p className={s.hintText}>{host.t(h.text)}</p>
-                  <HintVisual hint={h} />
-                </li>
-              ))}
-            </ol>
-          </div>
+          {isMath ? <SolutionPanel exercise={exercise} opts={solutionOpts} /> : (
+            <div className={s.hints}>
+              <h3 className={s.hintsTitle}>Así se hace</h3>
+              <ol className={s.hintList}>
+                {hints.map((h) => (
+                  <li key={h.level} className={s.hintItem}>
+                    <p className={s.hintLevel}>Pista {h.level} de {hints.length}</p>
+                    <p className={s.hintText}>{host.t(h.text)}</p>
+                    <HintVisual hint={h} />
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
           <Button size="lg" variant="primary" onClick={finish}>{wrongText}</Button>
         </div>
       )}
@@ -282,6 +340,7 @@ export function ExerciseStep({
       {stage === 'final' && latest && (
         <div className={s.feedback} data-tone={ok ? 'good' : 'clue'} role="status">
           <p className={s.message}>{message}</p>
+          {!ok && teaches && <SolutionPanel exercise={exercise} opts={solutionOpts} />}
           <Button
             size="lg"
             variant={ok ? 'success' : 'primary'}

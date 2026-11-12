@@ -402,8 +402,13 @@ describe('check — column subtraction diagnosis', () => {
     // 652 − 271 = 381: tens 5 < 7 → child writes 2 (7 − 5) but handles the rest.
     expect(check(makeColumnSub(652, 271), dig(421)).errorType).toBe('smaller-from-larger')
   })
-  it('borrowed but answered 0 in the borrowing column → borrow-forgot', () => {
-    expect(check(makeColumnSub(734, 459), dig([0, 7, 2])).errorType).toBe('borrow-forgot')
+  it('borrowed but answered 0 in the borrowing column: borrow-forgot only when the neighbour was not crossed out', () => {
+    // 734 − 459 = 275 written 075 (the tens did lend: 2 7): the units never asked for the ten.
+    const r = check(makeColumnSub(734, 459), dig([0, 7, 2]))
+    expect(r.errorType).toBe('fact')
+    expect(r.feedback).toBe('En las unidades, 4 es menos que 9: pide prestado a la vecina. 14 − 9 = ?')
+    // 734 − 459 written 0 8 2: the tens kept their 3 too (8 = 13 − 5).
+    expect(check(makeColumnSub(734, 459), dig([0, 8, 2])).errorType).toBe('borrow-forgot')
   })
   it('borrowing across a zero: 503 − 128', () => {
     const ex = makeColumnSub(503, 128) // 375
@@ -469,7 +474,7 @@ describe('check — division (galera)', () => {
   it('remainder too big', () => {
     const r = check(ex, div(2, 7))
     expect(r.errorType).toBe('remainder-too-big')
-    expect(r.feedback).toBe('Lo que sobra (el resto) tiene que ser más pequeño que 5. ¡Cabe una vez más!')
+    expect(r.feedback).toBe('Lo que sobra (7) es más que 5: todavía puedes dar más a cada grupo.')
   })
   it('quotient off by one (too big / too small)', () => {
     const big = check(ex, div(4, 0))

@@ -254,7 +254,8 @@ export function buildNumericExercise(kind: ExerciseKind, skill: SkillKey, rng: R
         if (exact) v = Math.round(v / p.to) * p.to
         // A millar never rounds up to 10 000 (nor to 100 000 when wide): the numbers keep their digits.
         const lo = wide ? 10000 : p.to === 1000 ? 1000 : 10
-        const hi = wide ? 99499 : p.to === 1000 ? 9499 : 9999
+        // Nor to 10 000 to the centena (9 950) or to the decena (9 995): the answer fits the four boxes.
+        const hi = wide ? 99499 : p.to === 1000 ? 9499 : p.to === 100 ? 9949 : 9994
         v = Math.min(hi, Math.max(lo, v))
         return makeRound(v, p.to, max)
       }, used)
@@ -369,7 +370,7 @@ function wrongRound(ex: RoundExercise, v: number): CheckResult {
   const w = roundWords(ex.to)
   const feedback = v === other && other !== ex.answer
     ? `¡Casi! Ese es el número cortado, sin redondear. Mira la cifra de ${w.look}: ¿es 5 o más?`
-    : `¡Casi! Redondea ${ex.to === 1000 ? 'a los millares más cercanos' : `a las ${w.plural} más cercanas`}: mira la cifra de al lado.`
+    : `¡Casi! Redondea ${ex.to === 1000 ? 'al millar más cercano' : `a la ${w.one} más cercana`}: mira la cifra de al lado.`
   return res(false, given, expected, { errorType: 'other', feedback })
 }
 
@@ -417,9 +418,16 @@ function checkPlaceValue(ex: PlaceValueExercise, answer: Answer): CheckResult {
   if (ex.mode === 'expanded') {
     const expected = ex.parts.map(fmt).join(' + ')
     if (answer.type !== 'numbers') return res(false, '', expected, { errorType: 'other', feedback: 'Escribe cada parte en su casilla.' })
-    const values = ex.parts.map((_, i) => (isNum(answer.values[i]) ? (answer.values[i] as number) : null))
+    // Each box is read as what the child meant: an empty box where the part is 0 is a 0 (4 025 = 4 000 + 20 + 5), and
+    // the digit alone under its place («3» under centenas) is the same as its value (300).
+    const values = ex.parts.map((part, i) => {
+      const v = isNum(answer.values[i]) ? (answer.values[i] as number) : null
+      if (v === null) return part === 0 && answer.values.some((x) => isNum(x)) ? 0 : null
+      const place = 10 ** (ex.parts.length - 1 - i)
+      return v !== part && v * place === part ? part : v
+    })
     const given = values.map((v) => (v === null ? '?' : fmt(v))).join(' + ')
-    if (values.some((v) => v === null)) return res(false, given, expected, { errorType: 'incomplete', feedback: 'Rellena todas las casillas (si una cifra es 0, escribe 0).' })
+    if (values.some((v) => v === null)) return res(false, given, expected, { errorType: 'incomplete', feedback: 'Rellena las casillas que faltan (si una cifra es 0, puedes dejarla vacía).' })
     const wrong = ex.parts.flatMap((v, i) => (values[i] !== v ? [i] : []))
     if (wrong.length === 0) return res(true, given, expected, { feedback: OK.place[0] })
     const names = wrong.map((i) => placeName(ex.parts.length - 1 - i))
@@ -451,6 +459,17 @@ const hint = (level: 1 | 2 | 3, text: string, visual: Hint['visual'], params?: H
 /** The place a jump of `step` changes, with its article: «las decenas», «los millares». */
 const SIGN_WORD: Record<number, string> = { 10: 'las decenas', 100: 'las centenas', 1000: 'los millares', 10000: 'las decenas de millar' }
 
+
+/** The last hint of «escribe el número»: the words before «mil» are the millares; the rest, the centenas and down. */
+function wordsStep(value: number): string {
+  const words = numberWords(value)
+  const at = words.indexOf('mil')
+  if (at < 0) return `Sin la palabra «mil», «${words}» tiene 3 cifras o menos: escribe primero las centenas y no olvides los ceros.`
+  const before = words.slice(0, at).trim()
+  return before
+    ? `Delante de «mil» pone «${before}»: esos son los millares. Escríbelos y sigue con lo que va detrás, sin olvidar los ceros.`
+    : 'Empieza por «mil»: es 1 millar. Escríbelo y sigue con lo que va detrás, sin olvidar los ceros.'
+}
 
 /** Progressive hints for the numeric kinds. Level 3 never contains the answer. */
 /** The columns a comparison goes through, from the largest place of the numbers: five digits add the decenas de millar. */
@@ -487,7 +506,7 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
       return [
         hint(1, 'Lee de izquierda a derecha: primero los millares (si hay «mil»), luego las centenas, las decenas y las unidades.', 'place-value', params),
         hint(2, 'La palabra «mil» marca los millares: lo que va delante de «mil» dice cuántos millares hay.', 'place-value', params),
-        hint(3, ex.value >= 1000 ? 'Escribe primero las cifras de los millares y luego las del resto, sin olvidar los ceros.' : 'Sin la palabra «mil» el número tiene 3 cifras o menos: lee las centenas primero.', 'place-value', params),
+        hint(3, wordsStep(ex.value), 'place-value', params),
       ]
     }
     case 'compare': {
@@ -518,7 +537,7 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
         hint(1, `Redondear es buscar la ${w.one} más cercana.`, 'none'),
         hint(2, `Mira la cifra de ${w.look}: es un ${digit}. ¿Es 5 o más?`, 'place-value', { value: ex.value, to: ex.to }),
         hint(3, digit >= 5
-          ? `Como es 5 o más, la ${w.one} sube una vez. Las cifras de la derecha se quedan en 0.`
+          ? `Como es 5 o más, la ${w.one} sube 1. Las cifras de la derecha se quedan en 0.`
           : `Como es menos de 5, la ${w.one} se queda igual. Las cifras de la derecha pasan a 0.`, 'place-value', { value: ex.value, to: ex.to }),
       ]
     }
@@ -540,7 +559,7 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
       return [
         hint(1, `Las marcas van de ${fmt(ex.step)} en ${fmt(ex.step)}. Mira cuánto sube de una a otra.`, 'none'),
         hint(2, `Mira la marca de al lado: ${fmt(neighbour)}. ¿Cuántos ${fmt(ex.step)} hay de una marca a otra?`, 'none'),
-        hint(3, `Desde ${fmt(neighbour)} da saltos de ${fmt(ex.step)} ${dir}: ¿cuántos saltos hasta la marca vacía?`, 'none'),
+        hint(3, `Desde ${fmt(neighbour)}, un salto de ${fmt(ex.step)} ${dir} llega a ${fmt(neighbour)} ${ex.blank > 0 ? '+' : '−'} ${fmt(ex.step)} = ?`, 'none'),
       ]
     }
     default:

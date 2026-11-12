@@ -117,6 +117,10 @@ export default function ChildHomeScreen() {
   const inglesPlacementPending = !progress.flags?.placementIngles || !!progress.flags?.placementInglesRequested
   const banner = placementBannerOf(view, { math: mathPlacementPending, language: lenguaPlacementPending, english: inglesPlacementPending }, subjectIds)
 
+  // The first day has ONE main action: the placement test while it is pending. «Hoy», the adventure and the tiles wait, quieter.
+  const firstDay = banner !== null
+  const quiet = firstDay ? ` ${s.quiet}` : ''
+
   const continueTo = next
     ? `/play/w/${next.worldId}/${next.nodeId}`
     : progress.diplomaEarnedAt ? '/play/diploma' : `/play/w/${season.worlds[0].id}`
@@ -190,28 +194,28 @@ export default function ChildHomeScreen() {
         <div className={s.right}>
           {/* The placement test is a thin bar on top while it is pending (placementBannerOf); «Hoy» comes first after it. */}
           {banner === 'math' && (
-            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba')}>
+            <button type="button" className={s.banner} data-primary="true" onClick={() => navigate('/play/prueba')}>
               Antes de empezar: haz la prueba inicial ›
             </button>
           )}
           {banner === 'english' && (
-            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-ingles')}>
+            <button type="button" className={s.banner} data-primary="true" onClick={() => navigate('/play/prueba-ingles')}>
               Haz la prueba de Inglés antes de empezar ›
             </button>
           )}
           {banner === 'language' && (
-            <button type="button" className={s.banner} onClick={() => navigate('/play/prueba-lengua')}>
+            <button type="button" className={s.banner} data-primary="true" onClick={() => navigate('/play/prueba-lengua')}>
               Haz la prueba de Lengua antes de empezar ›
             </button>
           )}
           {today.kind === 'clase' ? (
-            <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
+            <button type="button" className={`${s.next} ${s.today}${quiet}`} data-primary={firstDay ? undefined : 'true'} onClick={() => navigate(today.to)}>
               <span className={s.nextKicker}>Hoy aprendemos</span>
               <span className={s.nextTitle}>{today.title}</span>
               <span className={s.nextCta}>¡Empezar la clase!</span>
             </button>
           ) : (
-            <button type="button" className={`${s.next} ${s.today}`} onClick={() => navigate(today.to)}>
+            <button type="button" className={`${s.next} ${s.today}${quiet}`} data-primary={firstDay ? undefined : 'true'} onClick={() => navigate(today.to)}>
               <span className={s.nextKicker}>{SESSION_KICKER[view]}</span>
               <span className={s.nextTitle}>{today.title}</span>
               <span className={s.nextText}>{SESSION_TEXT[view]}</span>
@@ -220,7 +224,7 @@ export default function ChildHomeScreen() {
           )}
 
           {view === 'math' && (
-            <button type="button" className={`${s.next} ${s.adventure}`} onClick={() => navigate(continueTo)}>
+            <button type="button" className={`${s.next} ${s.adventure}${quiet}`} onClick={() => navigate(continueTo)}>
               <span className={s.nextKicker}>Mi aventura</span>
               <span className={s.nextTitle}>{continueTitle}</span>
               {continueHook && <span className={s.nextText}>{continueHook}</span>}
@@ -228,7 +232,7 @@ export default function ChildHomeScreen() {
             </button>
           )}
 
-          <div className={s.tiles}>
+          <div className={`${s.tiles}${quiet}`}>
             {view === 'math' && due > 0 && <Tile label={`Repasar · ${due}`} tone="violet" onClick={() => navigate('/play/review')} />}
             {view === 'english' && <Tile label="Isla de Inglés" tone="green" onClick={() => navigate(`/play/w/${ISLAND_ID}`)} />}
             <Tile label="Jugar" tone="blue" onClick={() => navigate('/play/free')} />

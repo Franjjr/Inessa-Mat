@@ -173,7 +173,7 @@ export function describeSkill(skill: SkillKey): string {
       if (p.variant === 'round') return 'Divisiones entre decenas redondas (20, 30… 90)'
       return p.variant === 'exact' ? 'Divisiones entre un número de 2 cifras (exactas)' : 'Divisiones entre un número de 2 cifras con resto'
     case 'mulParts': return `Multiplicar ${p.digits} cifras por un número de 2 cifras, por partes`
-    case 'mulCol': return `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
+    case 'mulCol': return p.gentle ? 'Multiplicar 2 cifras por 2 cifras en columna (entrada suave de 3.º: decena 1 o llevadas pequeñas)' : `Multiplicar ${p.top} cifras por ${p.bottom} cifras en columna, con filas parciales`
     case 'decimal': return p.mode === 'shade' ? `Colorear y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
       : p.mode === 'read' ? `Leer y escribir ${p.places === 1 ? 'décimas' : 'centésimas'}`
         : p.mode === 'compare' ? 'Comparar decimales con los signos < = >' : 'Euros y céntimos escritos como decimal (2,45 €)'

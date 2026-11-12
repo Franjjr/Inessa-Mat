@@ -101,10 +101,10 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       return makeMental(family, n, 0, n, `¿Qué número es ${toRoman(n)}?`)
     }
     case 'combinadas': {
-      // a + b − c, from left to right: a + b stays up to 1 000 and the answer is never negative.
-      const a = randInt(rng, 10, 890)
-      const b = randInt(rng, 10, 1000 - a)
-      const c = randInt(rng, 1, Math.min(a + b - 1, 199))
+      // a + b − c, from left to right, «de cabeza»: every number has two digits at most and the answer is never negative.
+      const a = randInt(rng, 10, 89)
+      const b = randInt(rng, 10, 99)
+      const c = randInt(rng, 1, Math.min(a + b - 1, 99))
       return makeMental(family, a, b, a + b - c, `${fmt(a)} + ${fmt(b)} − ${fmt(c)} = ?`, { c })
     }
     case 'jerarquia': {
@@ -143,7 +143,7 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
         const u = randInt(rng, 1, 9)
         const answer = a * u
         if (u === a || [a, t + u, t].includes(answer)) continue
-        return makeMental(family, a, t + u, answer, `${a} × ${t + u} = ${a} × ${t} + __`)
+        return makeMental(family, a, t + u, answer, `${a} × ${t + u} es ${a} × ${t} más ${a} × ${u}. ¿Cuánto es ${a} × ${u}?`)
       }
     }
     case 'estimar': {
@@ -155,8 +155,8 @@ function mentalItem(family: MentalFamily, rng: Rng): MentalExercise {
       const a = plus ? randInt(rng, lo, hi) : randInt(rng, lo + 1, hi)
       const b = plus ? randInt(rng, lo, Math.min(hi, 999 - a)) : randInt(rng, lo, a - 1)
       const answer = plus ? roundToPlace(a, place) + roundToPlace(b, place) : roundToPlace(a, place) - roundToPlace(b, place)
-      const word = place === 10 ? 'decenas' : 'centenas'
-      return makeMental(family, a, b, answer, `Estima redondeando a las ${word}: ${fmt(a)} ${plus ? '+' : '−'} ${fmt(b)} = ?`, { place })
+      const word = place === 10 ? 'decena' : 'centena'
+      return makeMental(family, a, b, answer, `¿Cuánto da, más o menos, ${fmt(a)} ${plus ? '+' : '−'} ${fmt(b)}? Redondea cada número a la ${word} y ${plus ? 'suma' : 'resta'}.`, { place })
     }
   }
 }
@@ -223,7 +223,7 @@ const TIP: Record<MentalFamily, string> = {
   jerarquia: 'Primero se multiplica y se divide; después se suma y se resta.',
   parentesis: 'Primero se hace lo que está entre paréntesis; después, lo demás.',
   asociativa: 'Puedes agrupar los factores como quieras: busca los que sean fáciles de juntar.',
-  distributiva: 'Un número se puede partir en dos sumandos: multiplicar cada uno por el otro factor y sumar los dos productos da el mismo resultado.',
+  distributiva: 'Para multiplicar un número grande, pártelo en decenas y unidades: multiplica cada parte y suma los dos resultados.',
   estimar: 'Redondea los dos números al lugar que pide el enunciado y opera con los redondeados.',
   dobles: 'Parte el número en decenas y unidades, y dobla cada parte.',
   triples: 'Parte el número en decenas y unidades, y triplica cada parte.',
@@ -303,7 +303,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       return [
         hint(1, TIP.dobles),
         hint(2, `${a} = ${t} + ${u}. Dobla cada parte.`),
-        hint(3, `Dobla las decenas: ${t} + ${t} = ?. Después dobla las unidades: ${u} + ${u}.`),
+        hint(3, `Dobla las decenas: ${t} + ${t} = ? Después dobla las unidades: ${u} + ${u}.`),
       ]
     }
     case 'triples': {
@@ -407,7 +407,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       const round = b + 1
       return [
         hint(1, plus ? `Sumar ${b} es sumar ${round} y quitar 1.` : `Restar ${b} es restar ${round} y sumar 1.`),
-        hint(2, `${a} ${plus ? '+' : '−'} ${round} = ?. Después ${plus ? 'quita' : 'suma'} 1.`),
+        hint(2, `${a} ${plus ? '+' : '−'} ${round} = ? Después ${plus ? 'quita' : 'suma'} 1.`),
         hint(3, `Tienes ${plus ? a + round : a - round} y ${plus ? 'quitas' : 'sumas'} 1. ¿Cuánto queda?`),
       ]
     }
@@ -498,7 +498,7 @@ export function mentalHints(ex: MentalExercise): Hint[] {
       })
       return [
         hint(1, TIP.distributiva),
-        hint(2, `Parte el ${fmt(b)} en ${t} y otro número; el hueco es lo que da multiplicar ${a} por ese otro número.`),
+        hint(2, `Lo que te preguntan es solo una parte: la de las unidades. Es una cuenta de la tabla del ${a}.`),
         hint(3, example),
       ]
     }
@@ -652,6 +652,22 @@ export function holds(ex: EquationExercise, x: number): boolean {
 const res = (correct: boolean, given: string, expected: string, extra: Partial<CheckResult> = {}): CheckResult =>
   ({ correct, given, expected, ...extra })
 
+/** The tip of a wrong answer; the distributiva one with the numbers of the item: «Parte el 14 en 10 y 4: 10 × 3 y 4 × 3, y suma los dos.» */
+function mentalTip(ex: MentalExercise): string {
+  if (ex.family !== 'distributiva') return TIP[ex.family]
+  const u = ex.b % 10
+  return `Parte el ${ex.b} en ${ex.b - u} y ${u}: ${ex.a} × ${ex.b - u} y ${ex.a} × ${u}. Aquí te piden solo ${ex.a} × ${u}.`
+}
+
+/** estimar: the exact result and the rounded sum to write («50 + 30»), from the two numbers and the place. */
+function estimateParts(ex: MentalExercise & { place?: 10 | 100 }): { exact: number; rounded: string } | null {
+  if (!ex.place) return null
+  const ra = roundToPlace(ex.a, ex.place)
+  const rb = roundToPlace(ex.b, ex.place)
+  const plus = ex.answer === ra + rb
+  return { exact: plus ? ex.a + ex.b : ex.a - ex.b, rounded: `${fmt(ra)} ${plus ? '+' : '−'} ${fmt(rb)}` }
+}
+
 export function checkMental(ex: MentalExercise, answer: Answer): CheckResult {
   const expected = String(ex.answer)
   if (answer.type !== 'number') return res(false, '', expected, { errorType: 'other', feedback: 'Escribe solo el número.' })
@@ -659,8 +675,14 @@ export function checkMental(ex: MentalExercise, answer: Answer): CheckResult {
   const v = answer.value
   const given = String(v)
   if (v === ex.answer) return res(true, given, expected, { feedback: '¡Muy bien, de cabeza!' })
+  // estimar: the exact result is not a slip in a sum: the child skipped the rounding, so the note shows it.
+  const exact = ex.family === 'estimar' && ex.place ? estimateParts(ex) : null
+  if (exact && v === exact.exact) {
+    return res(false, given, expected, { errorType: 'other', feedback: `Esa es la cuenta exacta. Aquí redondea primero: ${exact.rounded} = ?` })
+  }
   const near = Math.abs(v - ex.answer) === 1
-  const feedback = near ? `¡Casi! Revisa la cuenta: ${TIP[ex.family]}` : `¡Casi! ${TIP[ex.family]}`
+  const tip = mentalTip(ex)
+  const feedback = near ? `¡Casi! Revisa la cuenta: ${tip.charAt(0).toLowerCase()}${tip.slice(1)}` : `¡Casi! ${tip}`
   return res(false, given, expected, { errorType: near ? 'fact' : 'other', feedback })
 }
 

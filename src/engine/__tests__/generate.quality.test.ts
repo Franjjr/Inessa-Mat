@@ -166,8 +166,8 @@ describe('"¿tiene sentido?" problems: the wrong answers are never the true resu
       const p = buildSense(rng)
       total++
       const correct = p.exercise.options[p.exercise.answer]
-      if (p.shown === p.right) expect(correct, p.exercise.id).toBe('Sí, tiene sentido')
-      else expect(correct, p.exercise.id).toBe('No, no tiene sentido')
+      if (p.shown === p.right) expect(correct, p.exercise.id).toMatch(/^Sí, (tiene sentido|es correcta)$/)
+      else expect(correct, p.exercise.id).toMatch(/^No, no (tiene sentido|es correcta)$/)
       expect(p.shown > 0, p.exercise.id).toBe(true)
       if (p.shown !== p.right && Math.abs(p.shown - p.right) <= 100 && p.shown !== p.right * 10 && p.shown * 10 !== p.right) near++
     }

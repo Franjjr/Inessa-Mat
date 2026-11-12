@@ -245,9 +245,12 @@ export function GameHostProvider({ worldId, nodeId, activity, subject: subjectPr
     }
 
     const setPreference: NonNullable<ActivityHost['setPreference']> = (key, value) => {
+      // The subtraction and division methods are the ones of the child's school: only the grown-up changes them
+      // (adult area, ChildSettingsCard). A lesson that still asks the child to pick one saves nothing.
+      if (key === 'subMethod' || key === 'divMethod') return
       const c = childRef.current
       if (!c) return
-      updateChild(c.id, { settings: { ...c.settings, [key]: value } }).catch((e) => reportError('setPreference', e))
+      updateChild(c.id, { settings: { ...c.settings, tableMethod: normaliseTableMethod(value) } }).catch((e) => reportError('setPreference', e))
     }
 
     return {

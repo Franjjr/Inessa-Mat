@@ -1,5 +1,6 @@
-/* Ordinal views (3.º): a queue of objects with the exit arrow, and sticker option buttons. Every tap target is at least
-   64px; the row wraps and never widens the page (phone 390 px). */
+/* Ordinal views (3.º): a queue of objects with the exit arrow, and sticker option buttons. The queue is ONE line, the
+   exit glued to the first object (p1n-08): a row that wraps has two «first» objects. Up to 64 px each; with less room
+   the objects shrink together, never onto a second line, and the page never widens (phone 390 px). */
 .view {
   display: flex;
   flex-direction: column;
@@ -22,7 +23,7 @@
 
 .row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
@@ -31,7 +32,7 @@
 
 .exit {
   flex: 0 0 auto;
-  width: 100%;
+  white-space: nowrap;
   text-align: center;
   font-family: var(--font-display);
   font-size: var(--fs-sm);
@@ -40,10 +41,14 @@
 }
 
 .item {
-  min-width: 64px;
-  min-height: 64px;
-  padding: var(--sp-2);
-  font-size: var(--fs-xl);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 64px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  font-size: clamp(18px, 3.4vw, var(--fs-xl));
   line-height: 1;
   background: var(--c-surface);
   border: var(--sticker-border, 3px solid var(--c-line));

@@ -5,17 +5,20 @@ import { celebrate } from '@/fx'
 import { fmt, roundWords } from '@/engine'
 import type { ExerciseViewProps, RoundExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
-export default function RoundView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function RoundView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'round') return null
-  return <RoundRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <RoundRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [value, setValue] = useState<number | null>(null)
+function RoundRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: RoundExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  const again = useRetryNumber(retry, ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const unit = roundWords(ex.to).one
 
@@ -26,23 +29,21 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
   }
 
   return (
-    <section className={s.view} aria-label="Redondear" data-kind={ex.kind}>
-      <p className={s.instructions}>Redondea a la {unit} más cercana.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Redondear" data-kind={ex.kind} prompt={<>Redondea a la {unit} más cercana.</>} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <p className={s.prompt}>{fmt(ex.value)}</p>
       <div className={s.row}>
         <NumberInput
           value={value}
           onChange={setValue}
           onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
-          maxDigits={Math.max(4, String(ex.value).length)}
+          maxDigits={Math.max(String(ex.answer).length, String(ex.value).length)}
           size="lg"
-          status={status}
+          status={again.marked(value, !!flow.result) ? 'wrong' : status}
           ariaLabel="Número redondeado"
           placeholder="?"
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

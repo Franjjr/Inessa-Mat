@@ -3,27 +3,43 @@
    reveals its steps by phase, like the other visuals; the last phase shows the whole. */
 import { motion } from 'motion/react'
 import type { VisualProps } from './types'
-import { POP, motionT, numParam, stateOf } from './types'
+import { FINAL, POP, motionT, numParam, stateOf } from './types'
 import s from './visuals.module.css'
 
 /* ------------------------------------------------------------------ bar model */
 
-/** Two parts drawn one after the other, then the bracket of the whole with the equation. */
+/** The bar of a problem: two parts and the whole. With b = 0 the second part is the unknown (a take-away problem: the
+    whole is `total`, the first part is `a` and the other one is drawn as «?» until the last step reveals it).
+    Known parts: step 0 the empty bar, step 1 both parts, step 2 (the last) the whole and the sum.
+    Optional params (for the problems of the classes):
+    - ask: 'total' — the parts are known and the whole is the unknown: the whole reads «?» until the last step.
+    - cross: 1 — a take-away: the first part (the one that goes away) is struck through.
+    - compare: 1 — two bars, one under the other: a on top, b below (b < a); the piece that b lacks is the «?»
+      (how many more) until the last step shows a − b. */
 export function BarModelVisual({ params, phase, runLength, reduced }: VisualProps) {
-  const a = Math.max(1, Math.min(60, Math.floor(numParam(params, 'a', 5))))
-  const b = Math.max(1, Math.min(60, Math.floor(numParam(params, 'b', 3))))
-  const total = a + b
   const st = stateOf({ phase, runLength })
+  if (Number(params.compare) === 1) return <CompareBars params={params} st={st} reduced={reduced} />
+  const unknown = params.b === 0
+  const askTotal = !unknown && params.ask === 'total'
+  const cross = Number(params.cross) === 1
+  const a = Math.max(1, Math.min(60, Math.floor(numParam(params, 'a', 5))))
+  const rawTotal = Math.floor(numParam(params, 'total', 0))
+  const b = unknown ? Math.max(1, rawTotal - a) : Math.max(1, Math.min(60, Math.floor(numParam(params, 'b', 3))))
+  const total = unknown ? Math.max(rawTotal, a + 1) : a + b
   const wa = (a / total) * 100
-  const piece = (widthPct: number, color: string, label: string, shown: boolean) => (
+  const piece = (widthPct: number, color: string, label: string, shown: boolean, struck = false) => (
     <motion.div
-      key={label}
+      key={label + color}
+      data-struck={struck ? 'yes' : undefined}
       initial={false}
       animate={{ opacity: shown ? 1 : 0.15, scale: shown ? 1 : 0.96 }}
       transition={motionT(reduced, POP)}
       style={{
         width: `${widthPct}%`, minWidth: 64, height: 'clamp(56px, 12cqh, 84px)', borderRadius: 'var(--r-md)',
-        background: color, border: '3px solid var(--c-ink-soft)', boxSizing: 'border-box',
+        background: struck
+          ? 'linear-gradient(to top right, transparent calc(50% - 2px), var(--c-ink-soft) calc(50% - 2px), var(--c-ink-soft) calc(50% + 2px), transparent calc(50% + 2px)), var(--c-primary-soft)'
+          : color,
+        border: '3px solid var(--c-ink-soft)', boxSizing: 'border-box',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: 'var(--font-display)', fontSize: 'var(--fs-lg)', color: 'var(--c-ink)',
       }}
@@ -31,29 +47,78 @@ export function BarModelVisual({ params, phase, runLength, reduced }: VisualProp
       {shown ? label : '?'}
     </motion.div>
   )
+  const secondLabel = unknown && st !== FINAL ? '?' : String(b)
+  const caption = unknown
+    ? st === FINAL ? `${total} − ${a} = ${b}` : `El total es ${total}`
+    : askTotal
+      ? st === FINAL ? `${a} + ${b} = ${total}` : 'El total es ?'
+      : st >= 2 ? `${a} + ${b} = ${total}` : 'El total es toda la barra'
   return (
     <div className={s.stage} style={{ justifyContent: 'center' }}>
       <div style={{ width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }} data-testid="bar-model">
         <div style={{ display: 'flex', gap: 6, width: '100%' }}>
-          {piece(wa, 'var(--c-primary-soft)', String(a), st >= 1)}
-          {piece(100 - wa, 'var(--c-gold-soft)', String(b), st >= 2)}
+          {piece(wa, 'var(--c-primary-soft)', String(a), st >= 1, cross && unknown)}
+          {piece(100 - wa, 'var(--c-gold-soft)', secondLabel, st >= 1)}
         </div>
         <motion.div
           initial={false}
-          animate={{ opacity: st >= 3 ? 1 : 0.2 }}
+          animate={{ opacity: unknown || askTotal || st >= 2 ? 1 : 0.2 }}
           transition={motionT(reduced, { duration: 0.4 })}
           style={{ borderTop: '3px solid var(--c-ink-soft)', textAlign: 'center', paddingTop: 6, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-md)' }}
+          data-testid="bar-total"
         >
-          {st >= 3 ? `${a} + ${b} = ${total}` : 'El total es toda la barra'}
+          {caption}
         </motion.div>
       </div>
     </div>
   )
 }
 
+/** Two bars to compare: a on top, b below, and the piece that b lacks to reach a drawn dashed with «?» (how many more)
+    until the last step writes a − b. */
+function CompareBars({ params, st, reduced }: { params: VisualProps['params']; st: number; reduced: boolean }) {
+  const a = Math.max(2, Math.min(60, Math.floor(numParam(params, 'a', 8))))
+  const b = Math.max(1, Math.min(a - 1, Math.floor(numParam(params, 'b', 5))))
+  const diff = a - b
+  const done = st === FINAL
+  const bar = (widthPct: number, color: string, label: string, dashed = false, testid?: string) => (
+    <div
+      data-testid={testid}
+      style={{
+        width: `${widthPct}%`, minWidth: 56, height: 'clamp(48px, 10cqh, 72px)', borderRadius: 'var(--r-md)',
+        background: dashed ? 'transparent' : color, border: `3px ${dashed ? 'dashed' : 'solid'} var(--c-ink-soft)`,
+        boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'var(--font-display)', fontSize: 'var(--fs-lg)', color: 'var(--c-ink)',
+      }}
+    >
+      {label}
+    </div>
+  )
+  return (
+    <div className={s.stage} style={{ justifyContent: 'center' }}>
+      <motion.div
+        initial={false}
+        animate={{ opacity: 1 }}
+        transition={motionT(reduced, { duration: 0.3 })}
+        style={{ width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}
+        data-testid="bar-model"
+      >
+        <div style={{ display: 'flex', width: '100%' }}>{bar(100, 'var(--c-primary-soft)', String(a))}</div>
+        <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+          {bar((b / a) * 100, 'var(--c-gold-soft)', String(b))}
+          {bar((diff / a) * 100, '', done ? String(diff) : '?', true, 'bar-diff')}
+        </div>
+        <div style={{ textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 'var(--fs-md)' }} data-testid="bar-total">
+          {done ? `${a} − ${b} = ${diff}` : '¿Cuántos más?'}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ repartir por partes */
 
-/** The dividend split into its parts, each part divided, and the quotients added: 84 ÷ 4 = 80 ÷ 4 + 4 ÷ 4 = 20 + 1. */
+/** The dividend split into its parts, each part divided, and the quotients added: 84 : 4 = 80 : 4 + 4 : 4 = 20 + 1. */
 export function DivPartsVisual({ params, phase, runLength, reduced }: VisualProps) {
   const dividend = Math.max(10, Math.min(999, Math.floor(numParam(params, 'dividend', 84))))
   const divisor = Math.max(2, Math.min(9, Math.floor(numParam(params, 'divisor', 4))))
@@ -86,7 +151,7 @@ export function DivPartsVisual({ params, phase, runLength, reduced }: VisualProp
             transition={motionT(reduced, { duration: 0.3 })}
             style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: 'var(--fs-lg)' }}
           >
-            {k < shownParts ? `${p.part}${k > 0 && parts[k - 1].r ? ` + ${parts[k - 1].r}` : ''} ÷ ${divisor} = ${p.q}${p.r ? ` y sobra ${p.r}` : ''}` : '…'}
+            {k < shownParts ? `${p.part}${k > 0 && parts[k - 1].r ? ` + ${parts[k - 1].r}` : ''} : ${divisor} = ${p.q}${p.r ? ` y sobra ${p.r}` : ''}` : '…'}
           </motion.p>
         ))}
         {st >= parts.length + 1 && (

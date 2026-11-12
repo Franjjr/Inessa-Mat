@@ -1,9 +1,9 @@
 /* Activity "exercises": rounds of any exercise kinds the selector asks for (problemas con barras, encuentra el error,
-   comprobar). Each round is the real exercise view of its kind, through ExerciseView. The child's favourite division
-   method is passed to the division rounds (the same as the division activity). */
+   comprobar). Each round is the real exercise view of its kind, through ExerciseView. The school methods the grown-up
+   chose are passed to the subtraction and division rounds (the same as the column and division activities). */
 import { useMemo } from 'react'
 import type { ActivityProps, Exercise } from '@/types'
-import { generate } from '@/engine'
+import { generate, methodFor } from '@/engine'
 import { adaptiveSelector } from '../facts/shared/items'
 import { guidedOutcome } from '../shared/guided'
 import { ExerciseView, useActivityHost } from '@/activities'
@@ -34,7 +34,8 @@ export default function ExercisesActivity({ config, onDone, onExit }: ActivityPr
           guided={guided}
           allowHints
           showFeedback
-          divMethod={host.prefs.divMethod}
+          method={methodFor('sub', host.prefs)}
+          divMethod={methodFor('div', host.prefs)}
           tableMethod={host.prefs.tableMethod}
         />
       </section>

@@ -76,7 +76,9 @@ describe('division methods graded by check()', () => {
   })
 
   it('a wrong part is named by its step (fact), and a wrong total or remainder is wrong too', () => {
-    const wrongPart = check(ex(84, 4), parts(84, 4, { parts: [19, 1] }))
+    // A right final quotient always counts (P1): a wrong part only guides when the total is wrong too.
+    expect(check(ex(84, 4), parts(84, 4, { parts: [19, 1] })).correct).toBe(true)
+    const wrongPart = check(ex(84, 4), parts(84, 4, { parts: [19, 1], quotient: 20 }))
     expect(wrongPart.correct).toBe(false)
     expect(wrongPart.errorType).toBe('fact')
     expect(wrongPart.feedback).toContain('paso 1')
@@ -85,7 +87,9 @@ describe('division methods graded by check()', () => {
   })
 
   it('an incomplete parts answer is incomplete, not wrong by a fact', () => {
-    expect(check(ex(84, 4), parts(84, 4, { parts: [20, null] })).errorType).toBe('incomplete')
+    expect(check(ex(84, 4), parts(84, 4, { parts: [20, null], quotient: null })).errorType).toBe('incomplete')
+    // With the right quotient and remainder written, a missing part does not matter (P1).
+    expect(check(ex(84, 4), parts(84, 4, { parts: [20, null] })).correct).toBe(true)
   })
 
   it('multiplicar hacia arriba: the rows up to the first one that passes, then the remainder', () => {

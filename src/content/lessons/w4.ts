@@ -1,11 +1,13 @@
-/* World 4 lessons: column subtraction with borrowing ("pide ayuda a la vecina"), the zero trap, the magic check, and
-   the four ways to subtract («Cuatro caminos para restar»), which ends with the child's favourite method. */
-import { SUB_METHODS } from '@/engine/methods'
-import type { LessonStep, SkillSelector, SubMethod } from '@/types'
+/* World 4 lessons: column subtraction with borrowing ("pide ayuda a la vecina"), the zero trap, the magic check, the
+   two ways of subtracting that schools teach («Dos formas de restar del cole») and the bar of the problems. */
+import type { SkillSelector } from '@/types'
 import { lesson, show, tryIt } from './dsl'
 
 const b352 = { a: 352, b: 127 }
 const z503 = { a: 503, b: 128 }
+// byColumn: 1 asks the drawing to follow the script «one intro step, then one step per column».
+const z4352 = { a: 4352, b: 1728 }
+const z4352Cols = { ...z4352, byColumn: 1 }
 
 export const w4Borrow = lesson('w4-borrow', 'Restar en la montaña', [
   show('borrow', b352, 'Regla 1: el número grande va arriba. Se resta el de arriba menos el de abajo.', 'polarbear'),
@@ -14,61 +16,62 @@ export const w4Borrow = lesson('w4-borrow', 'Restar en la montaña', [
   show('borrow', b352, 'El 5 se convierte en 4 y el 2 en 12. Ahora sí: 12 − 7 = 5.'),
   show('borrow', b352, 'Decenas: 4 − 2 = 2. Centenas: 3 − 1 = 2. ¡352 − 127 = 225!'),
   tryIt('borrow', b352, '¡Te toca! Si arriba hay un número más pequeño, pide ayuda a la vecina.', { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false }),
-  show('sub-check', b352, 'La prueba mágica: suma el resultado y el número de abajo. ¡Te tiene que dar el de arriba!'),
-  show('sub-check', b352, '225 + 127 = 352. ¡Está bien!'),
-  show('sub-check', b352, 'Si en tu cole restáis «llevando», ¡hazlo como en el cole! El resultado es el mismo.'),
+  show('sub-check', b352, 'Ahora, la prueba mágica. ¿Cómo sabemos que una resta está bien hecha?'),
+  show('sub-check', b352, 'Sumamos el resultado y el número de abajo: 225 más 127 son 352, el de arriba. ¡Está bien!'),
 ])
 
 export const w4Zero = lesson('w4-zero', 'La trampa del cero', [
   show('zero-borrow', z503, '3 − 8 no se puede. Y la vecina es un 0: ¡no tiene nada que prestar!'),
   show('zero-borrow', z503, 'Entonces se pide a la centena: el 5 pasa a 4, y el 0 pasa a 10.'),
-  show('zero-borrow', z503, 'Ahora el 10 presta 1 a las unidades: se queda en 9, y el 3 se convierte en 13.'),
+  show('zero-borrow', z503, 'Ahora el 10 le presta una decena a las unidades: se queda en 9 y el 3 se convierte en 13.'),
   show('zero-borrow', z503, '13 − 8 = 5. 9 − 2 = 7. 4 − 1 = 3. ¡503 − 128 = 375!'),
   tryIt('zero-borrow', z503, '¡Te toca! Cuidado con la trampa del cero.', { kinds: ['column-sub'], digits: 3, zeros: true }),
-  show('borrow', { a: 4352, b: 1728 }, 'Con 4 cifras se hace igual: casa por casa, empezando por la derecha.'),
-  tryIt('borrow', { a: 4352, b: 1728 }, '¡Una de 4 cifras! Y después, si quieres, haz la prueba mágica.', { kinds: ['column-sub'], digits: 4, regroup: 'one', zeros: false }),
-  show('sub-check', { a: 4352, b: 1728 }, 'La prueba mágica sirve siempre: 2624 + 1728 = 4352.'),
+  // Four digits, column by column: one step to set the numbers and one step per column.
+  show('borrow', z4352Cols, 'Con 4 cifras se hace igual: casa por casa, empezando por la derecha.'),
+  show('borrow', z4352Cols, 'Unidades: 2 menos 8 no se puede. Las decenas prestan: el 5 pasa a 4 y el 2 a 12. 12 menos 8 son 4.'),
+  show('borrow', z4352Cols, 'Decenas: 4 menos 2 son 2.'),
+  show('borrow', z4352Cols, 'Centenas: 3 menos 7 no se puede. Los millares prestan: el 4 pasa a 3 y el 3 a 13. 13 menos 7 son 6.'),
+  show('borrow', z4352Cols, 'Millares: 3 menos 1 son 2. Resultado: 2624.'),
+  tryIt('borrow', z4352Cols, '¡Una de 4 cifras! Y después, si quieres, haz la prueba mágica.', { kinds: ['column-sub'], digits: 4, regroup: 'one', zeros: false }),
+  show('sub-check', z4352, 'La prueba mágica sirve siempre: 2624 + 1728 = 4352.'),
 ])
 
-const fourWays = { a: 352, b: 127 }
-const threeDigitsOneBorrow: SkillSelector = { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false }
+/* «Dos formas de restar del cole»: the two ways that Spanish schools teach, with the same example. It is an optional
+   stop (the main lesson of subtracting is «Restar en la montaña»): the map shows it can be skipped and the guardian
+   does not wait for it. It asks for ONE try, with the way the grown-ups set in the settings (no fixed `method`: the
+   exercise reads ChildSettings.subMethod). The try is one of a fixed list shaped like the worked example 352 − 127
+   (3 digits, one borrowing in the units, no zero): 463 − 128, 574 − 236 or 382 − 145. */
+export const FOUR_WAYS_TRIES: [number, number][] = [[463, 128], [574, 236], [382, 145]]
+const threeDigitsOneBorrow: SkillSelector = { kinds: ['column-sub'], digits: 3, regroup: 'one', zeros: false, operands: FOUR_WAYS_TRIES }
 
-/** A "¡pruébalo tú!" step that must be solved with one method. */
-function tryWith(method: SubMethod, text: string): LessonStep {
-  return { ...tryIt('sub-check', fourWays, text, threeDigitsOneBorrow), method }
-}
-
-const labelOf = (id: SubMethod) => SUB_METHODS.find((m) => m.id === id)?.label ?? id
-
-export const w4FourWays = lesson('w4-four-ways', 'Cuatro caminos para restar', [
-  show('sub-check', fourWays, 'Para restar hay cuatro caminos. Los verás con el mismo ejemplo: 352 − 127.'),
-  show('borrow', fourWays, `Camino 1: ${labelOf('borrow')}. El 2 no puede con 7: la vecina presta 1 decena.`),
-  show('borrow', fourWays, 'El 5 se vuelve 4 y el 2, 12. Ahora: 12 − 7 = 5, 4 − 2 = 2 y 3 − 1 = 2.'),
-  tryWith('borrow', '¡Pruébalo tú! Pide prestado arriba.'),
-  show('sub-carry', fourWays, `Camino 2: ${labelOf('carry')}. 12 − 7 = 5, y al 2 de abajo le sumas 1.`),
-  show('sub-carry', fourWays, 'Ahora: 5 − 3 = 2 y 3 − 1 = 2. ¡225 otra vez!'),
-  tryWith('carry', '¡Pruébalo tú! Me llevo una abajo.'),
-  show('sub-parts', fourWays, `Camino 3: ${labelOf('parts')}. Parte el 127 en 100, 20 y 7, y quítalos uno a uno.`),
-  show('sub-parts', fourWays, '352 − 100 = 252, 252 − 20 = 232 y 232 − 7 = 225.'),
-  tryWith('parts', '¡Pruébalo tú! Resta por partes.'),
-  show('sub-line', fourWays, `Camino 4: ${labelOf('line')}. Desde 127 cuento hasta 352, saltando a números redondos.`),
-  show('sub-line', fourWays, '127 → 130 (3), 130 → 300 (170), 300 → 350 (50), 350 → 352 (2). En total, 225.'),
-  tryWith('line', '¡Pruébalo tú! Cuenta con saltos.'),
-  {
-    visual: 'sub-check',
-    params: fourWays,
-    text: '¿Cuál te ha resultado más fácil? Elígelo: será tu método favorito para restar.',
-    interaction: 'choose',
-    choices: SUB_METHODS.map((m) => ({ label: m.label, value: m.id })),
-  },
+export const w4FourWays = lesson('w4-four-ways', 'Dos formas de restar del cole', [
+  show('borrow', b352, 'En el cole hay dos formas de restar, y dan lo mismo. Mira 352 − 127. Primera forma: pedir prestado.'),
+  show('borrow', b352, 'Empezamos por las unidades: 2 − 7… ¡no se puede!'),
+  show('borrow', b352, 'Las decenas nos prestan 1 decena, que son 10 unidades.'),
+  show('borrow', b352, 'El 5 se convierte en 4 y el 2 en 12. Ahora sí: 12 − 7 = 5.'),
+  show('borrow', b352, 'Decenas: 4 menos 2 son 2. Centenas: 3 menos 1 son 2. Resultado: 225.'),
+  show('sub-carry', b352, 'Segunda forma: me llevo una. 2 menos 7 no se puede. Ponemos un 1 delante del 2: 12. 12 menos 7 son 5.'),
+  show('sub-carry', b352, 'Como hemos puesto 10 arriba, nos llevamos una: se la sumamos al 2 de abajo de las decenas. 2 y 1 son 3.'),
+  show('sub-carry', b352, 'Decenas: 5 menos 3 son 2.'),
+  show('sub-carry', b352, 'Centenas: 3 menos 1 son 2. Resultado: 225.'),
+  tryIt('sub-check', b352, '¡Pruébalo tú! Haz la forma que hacéis en tu cole. Si no sabes cuál es, pregunta a tu familia.', threeDigitsOneBorrow),
 ])
 
-/* «Dibujar la historia»: the bar diagram for problems. The child first sees the drawing for each kind (juntar, quitar,
-   comparar, repartir) and then solves it with the bar; the drawing is taken away once the bar is mastered. */
+/* «Dibujar la historia»: the bar diagram for problems. The child first sees the drawing for a sum (the whole is unknown)
+   and for a take-away (the whole is known and a part is the «?»), and then solves it with the bar. */
+
+const sumBar = { a: 5, b: 3, total: 8, ask: 'total' }
+const takeBar = { a: 4, b: 0, total: 13, cross: 1 }
 
 export const w4Bars = lesson('w4-bars', 'Dibujar la historia', [
-  show('bar-model', { a: 5, b: 3, total: 8 }, 'Para un problema puedes dibujar una barra. Cada parte es una cantidad y el total es la barra entera.'),
-  show('bar-model', { a: 5, b: 3, total: 8 }, 'Si Ana tiene 5 canicas y Luis tiene 3, las dos juntas son 5 + 3 = 8. Juntar es sumar.'),
-  show('bar-model', { a: 9, b: 4, total: 13 }, 'Y si de 13 quitas 4, lo que queda es 13 − 4 = 9. Quitar es restar.'),
-  tryIt('bar-model', { a: 5, b: 3, total: 8 }, '¡Te toca! Pon los números en la barra y elige la operación.', { kinds: ['bar-problem'], skills: ['bar:add'] }),
+  // ask: 'total' keeps the whole as «?» until the last step; cross: 1 strikes the part that goes away (BarModelVisual).
+  show('bar-model', sumBar, 'Para entender un problema, lo dibujamos con una barra. La barra entera es el total. Los trozos son las partes.'),
+  show('bar-model', sumBar, 'Ana tiene 5 canicas y Luis tiene 3. Dibujamos un trozo de 5 y otro trozo de 3.'),
+  show('bar-model', sumBar, '¿Cuántas tienen entre los dos? Es la barra entera. Juntamos los trozos: 5 más 3 son 8. Juntar es sumar.'),
+  // b = 0 draws the second part as «?» (see BarModelVisual): the whole is known, a part is missing.
+  show('bar-model', takeBar, 'Otro problema: Leo tenía 13 cromos y regala 4. Ahora la barra entera es lo que tenía: 13.'),
+  show('bar-model', takeBar, 'Los 4 que regala se tachan, porque se van. El otro trozo, con el signo de interrogación, es lo que le queda.'),
+  show('bar-model', takeBar, 'Para hallar un trozo que falta, al total le quitamos el otro trozo: 13 menos 4 son 9. Quitar es restar.'),
+  show('bar-model', { a: 5, b: 3, total: 8 }, 'Toca un número y después su trozo de la barra. Luego elige Juntar o Quitar y escribe el resultado.'),
+  tryIt('bar-model', { a: 5, b: 3, total: 8 }, '¡Te toca! Coloca los números, elige la operación y escribe cuánto es.', { kinds: ['bar-problem'], skills: ['bar:add', 'bar:sub'] }),
 ])

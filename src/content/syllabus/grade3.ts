@@ -83,7 +83,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
         { id: 'mul-2x1-llevando', name: 'Multiplicar 2 cifras por 1 (con llevada)', skills: ['mul:2x1:c1'], status: 'disponible', rungs: { dibujo: 'Llevadas de las unidades', numeros: 'La cuenta en columna con llevada', uso: 'Problemas de grupos' } },
         { id: 'mul-3x1', name: 'Multiplicar 3 cifras por 1', skills: ['mul:3x1:c0', 'mul:3x1:c1'], status: 'disponible', rungs: { dibujo: 'Descomponer 213 × 3 = 200 × 3 + 10 × 3 + 3 × 3', numeros: 'La cuenta en columna con llevadas', uso: 'Problemas de grupos grandes' } },
         { id: 'mul-10-100', name: 'Multiplicar por 10, 100 y 1 000', skills: ['mental:por10'], status: 'disponible', rungs: { dibujo: 'Las cifras se mueven a la izquierda en la tabla de valor posicional', numeros: '37 × 100 = 3 700: dos ceros a la derecha' } },
-        { id: 'mul-2-cifras-intro', name: 'Multiplicar por un número de 2 cifras (por partes)', skills: ['mul:2dx2d'], status: 'disponible', rungs: { dibujo: 'Un rectángulo partido en dos trozos', numeros: '23 × 14 = 23 × 4 + 23 × 10' } },
+        { id: 'mul-2-cifras-intro', name: 'Multiplicar por un número de 2 cifras (en columna)', skills: ['mul:col:2x2:suave'], status: 'disponible', rungs: { dibujo: 'Dos filas: por las unidades y por las decenas', numeros: '23 × 14: 23 × 4 = 92, 23 × 10 = 230 y se suman' } },
       ],
     },
     {
@@ -92,9 +92,9 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       topics: [
         { id: 'div-con-tablas', name: 'Dividir con las tablas', skills: divisionFactSkills(), status: 'disponible', rungs: { concreto: 'Repartir en cestas', dibujo: 'Grupos iguales', numeros: 'Pensar ¿qué por 4 da 28?', uso: 'Problemas de repartir' } },
         { id: 'div-exacta', name: 'División exacta de 2 cifras entre 1', skills: ['div:2x1:exact'], status: 'disponible', rungs: { numeros: 'La galera paso a paso', uso: 'Problemas de repartir' } },
-        { id: 'div-resto', name: 'División con resto', skills: ['div:2x1:rem'], status: 'disponible', rungs: { numeros: 'La prueba: divisor × cociente + resto', uso: 'Problemas de repartir con sobrante' } },
+        { id: 'div-resto', name: 'División con resto', skills: ['div:2x1:rem'], status: 'disponible', rungs: { numeros: 'La prueba: divisor por cociente, más el resto, da el dividendo', uso: 'Problemas de repartir con sobrante' } },
         { id: 'div-larga', name: 'División larga (bajar cifras)', skills: ['div:2x1:long'], status: 'disponible', rungs: { numeros: 'Bajar una cifra cada vez', uso: 'Problemas de repartir' } },
-        { id: 'div-3x1', name: 'Dividir 3 cifras entre 1', skills: ['div:3x1:exact', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera con tres cifras: bajar una cifra cada vez', uso: 'Comprobar con la prueba: divisor × cociente + resto' } },
+        { id: 'div-3x1', name: 'Dividir 3 cifras entre 1', skills: ['div:3x1:exact', 'div:3x1:rem'], status: 'disponible', rungs: { numeros: 'La galera con tres cifras: bajar una cifra cada vez', uso: 'Comprobar con la prueba: divisor por cociente, más el resto, da el dividendo' } },
       ],
     },
     {
@@ -132,7 +132,7 @@ export const GRADE3_SYLLABUS: Syllabus = withStageTerms({
       name: 'Fracciones',
       topics: [
         { id: 'fracciones-mitad-cuarto', name: 'Mitades, tercios y cuartos', skills: [...fractionFamily(['shade', 'read', 'name'], [2, 3, 4]), fractionSkill('equal')], status: 'disponible', rungs: { concreto: 'Colorear partes de un círculo, un rectángulo o una barra', dibujo: 'Leer la fracción: arriba las partes de color, abajo todas', numeros: 'Escribir la fracción con dos números', uso: 'Decir su nombre: un medio, dos tercios, tres cuartos' } },
-        { id: 'fraccion-cantidad', name: 'Fracción de una cantidad (¼ de 20)', skills: fractionFamily(['of'], [2, 3, 4]), status: 'disponible', rungs: { concreto: '20 objetos en grupos iguales', dibujo: 'Contar los objetos de un grupo', numeros: '¼ de 20 = 20 ÷ 4', uso: 'Problemas: reparto de caramelos o flores' } },
+        { id: 'fraccion-cantidad', name: 'Fracción de una cantidad (¼ de 20)', skills: fractionFamily(['of'], [2, 3, 4]), status: 'disponible', rungs: { concreto: '20 objetos en grupos iguales', dibujo: 'Contar los objetos de un grupo', numeros: '¼ de 20 = 20 : 4', uso: 'Problemas: reparto de caramelos o flores' } },
         { id: 'fracciones-comparar', name: 'Comparar fracciones con dibujos', skills: [fractionSkill('compare')], status: 'disponible', rungs: { dibujo: 'Dos barras de la misma longitud, una partida y otra coloreada', numeros: '½ y ¼: ¿cuál es mayor?' } },
         { id: 'fracciones-mas-partes', name: 'Fracciones de 5, 6, 8, 10 y 12 partes', skills: fractionFamily(['shade', 'read', 'name'], [5, 6, 8, 10, 12]), status: 'disponible', rungs: { dibujo: 'Figuras partidas en más partes iguales', numeros: 'Leer y escribir fracciones con denominador hasta 12' } },
       ],

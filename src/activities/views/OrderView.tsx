@@ -5,18 +5,25 @@ import { celebrate } from '@/fx'
 import { fmt } from '@/engine'
 import type { ExerciseViewProps, OrderExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryWrong, wrongEntries, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
-export default function OrderView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function OrderView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'order') return null
-  return <OrderRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <OrderRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [cells, setCells] = useState<(number | null)[]>(() => ex.values.map(() => null))
+function OrderRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: OrderExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the numbers the child wrote; the boxes in the wrong place are soft red until she changes them.
+  const [before] = useState(() => initialOf(retry, 'numbers')?.values ?? null)
+  const wrongBefore = useRetryWrong(retry, () => (before ? wrongEntries(before, ex.answer) : []))
+  const [cells, setCells] = useState<(number | null)[]>(() => ex.values.map((_, i) => before?.[i] ?? null))
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  // A box left empty on the last try is not marked: soft red means «está mal», not «te falta».
+  const statusOf = (i: number) => (!flow.result && wrongBefore.has(i) && before?.[i] != null && cells[i] === before[i] ? 'wrong' as const : status)
   const asc = ex.direction === 'asc'
 
   const submit = () => {
@@ -26,8 +33,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
   }
 
   return (
-    <section className={s.view} aria-label="Ordenar números" data-kind={ex.kind} data-direction={ex.direction}>
-      <p className={s.instructions}>{asc ? 'Escribe los números de menor a mayor.' : 'Escribe los números de mayor a menor.'}</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Ordenar números" data-kind={ex.kind} data-direction={ex.direction} prompt={asc ? 'Escribe los números de menor a mayor.' : 'Escribe los números de mayor a menor.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={cells.every((c) => c !== null)} />}>
       <div className={s.row} aria-label="Números para ordenar">
         {ex.values.map((v) => (
           <span key={v} className={s.card}><span className={s.cardNumber}>{fmt(v)}</span></span>
@@ -43,7 +49,7 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
               onSubmit={() => submit()}
               maxDigits={Math.max(4, String(Math.max(...ex.answer)).length)}
               size="lg"
-              status={status}
+              status={statusOf(i)}
               ariaLabel={`${i + 1}.º número`}
               placeholder="?"
               autoFocus={i === 0}
@@ -51,7 +57,6 @@ function OrderRound({ ex, onAnswered, showFeedback, allowHints }: { ex: OrderExe
           </span>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={cells.every((c) => c !== null)} />
-    </section>
+    </ExerciseLayout>
   )
 }

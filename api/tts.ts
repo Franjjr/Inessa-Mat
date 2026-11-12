@@ -20,7 +20,8 @@ type Character = 'lumi' | 'companion' | 'narrator' | 'guardian' | 'english'
     British voice for the English words (en-GB). When a voice changes, bump VOICE_REVISION in src/audio/neuralVoice.ts
     so devices fetch the new clips instead of their cached ones. */
 export const VOICES: Record<Character, { name: string; pitch: string; rate: string }> = {
-  lumi: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-4%' },
+  // Lumi explains maths: -10 % so every number can be followed. To be checked by ear with the father (VOICE_REVISION 2).
+  lumi: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-10%' },
   companion: { name: 'es-ES-IreneNeural', pitch: '0%', rate: '0%' },
   narrator: { name: 'es-ES-XimenaMultilingualNeural', pitch: '0%', rate: '-6%' },
   guardian: { name: 'es-ES-AlvaroNeural', pitch: '-3%', rate: '-8%' },

@@ -1,6 +1,7 @@
 /* Map layout helper: places N nodes at equal arc-length steps along a smooth Catmull-Rom curve through a world's
    control points. Coordinates are 0..1 (x → right, y → down). Equal spacing along a non-self-crossing curve keeps
-   nodes from overlapping; tests verify the minimum distance on tablet viewports. */
+   nodes from overlapping; the name tags are placed afterwards in real pixels (src/world/map/labels.ts), and
+   map-labels.test.ts verifies that nothing overlaps on tablet viewports. */
 export type Point = { x: number; y: number }
 
 function catmull(p0: number, p1: number, p2: number, p3: number, t: number): number {

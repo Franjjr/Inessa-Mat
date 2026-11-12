@@ -15,12 +15,23 @@ describe('hint visuals never draw the answer', () => {
     }
   })
 
-  it('the division share draws one group of the divisor, not the number of groups (the quotient)', () => {
+  it('the division share draws the first round of the sharing (one for each), not how many each gets (the result)', () => {
     const hint = hintsFor(makeFactDiv(42, 6))[1]
     const { container } = render(<HintVisual hint={hint} />)
-    // One group: the container has a single group element, with the six objects of the group.
-    expect(container.firstElementChild?.children.length).toBe(1)
-    expect(container.firstElementChild?.firstElementChild?.children.length).toBe(6)
+    // Six plates (the divisor), one object on each: the rounds, which are the answer, are the child's to count.
+    expect(container.firstElementChild?.children.length).toBe(6)
+    expect(container.firstElementChild?.firstElementChild?.children.length).toBe(1)
+  })
+
+  it('the 5 and one more draws 5 rows and the extra row apart; the 9 trick draws one less and the «?»', () => {
+    const five = render(<HintVisual hint={hintsFor(makeFactMul(6, 7))[1]} />)
+    const rows = five.getByTestId('dots-five-plus-one').children
+    expect(rows.length).toBe(6)
+    expect([...rows].filter((r) => r.getAttribute('data-extra') === 'true').length).toBe(1)
+    expect(rows[0].children.length).toBe(7)
+    const nine = render(<HintVisual hint={hintsFor(makeFactMul(7, 9))[1]} />)
+    expect(nine.container.textContent).toBe('6+?=9')
+    expect(nine.container.textContent).not.toContain('63')
   })
 
   it('the Lengua card shows its examples as chips, one per word, and nothing when it has none', () => {

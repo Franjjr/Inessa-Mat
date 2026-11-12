@@ -10,6 +10,8 @@ import { divSkill, isEasyFact, isFactSkill, isMentalSkill, mulSkill, parseSkill 
 import { createRng } from '../rng'
 import { markClassToday } from '../topicOfToday'
 import { initialProgress } from '@/content'
+import { classForTopic, markClassDone } from '@/content/classes'
+import { seasonIdForGrade } from '@/content/season'
 
 /** Skill keys the generator is told to make nothing for (empty set = the real generator). */
 const unmakeable = vi.hoisted(() => new Set<string>())
@@ -51,6 +53,11 @@ function masteredBefore(topicId: string): MasteryMap {
   return mastery
 }
 
+/** A progress whose classes of these topics have been given (nothing is asked, in the problem block, before its class). */
+function withClasses(...topicIds: string[]) {
+  return topicIds.reduce((p, id) => markClassDone(p, classForTopic(id, 3)!, 'skip'), initialProgress(child.id, now, seasonIdForGrade(3)))
+}
+
 /** The middle of the school year: the table of 3 is the next thing to learn. */
 const midYearMastery = () => masteredBefore('tabla-3')
 
@@ -63,7 +70,8 @@ describe('planDailySession', () => {
     expect(next.length).toBeGreaterThanOrEqual(4)
     expect(next.length).toBeLessThanOrEqual(6)
     expect(next.every((i) => i.block === 'new')).toBe(true)
-    expect(plan.blocks.find((b) => b.id === 'problem')!.items).toHaveLength(1)
+    // No problem yet: the class «Problemas de juntar» has not been given (daily-orden.test.ts).
+    expect(plan.blocks.find((b) => b.id === 'problem')!.items).toHaveLength(0)
     expect(plan.example).not.toBeNull()
     expect(plan.example!.statement.length).toBeGreaterThan(0)
   })
@@ -81,12 +89,14 @@ describe('planDailySession', () => {
   })
 
   it('the practice items fill at least 12 of the 15 minutes (estimated), so the session is mostly exercises', () => {
-    for (const mastery of [{}, midYearMastery()]) {
-      const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
-      const minutes = plan.practiceSeconds / 60
-      expect(minutes).toBeGreaterThanOrEqual(DAILY_MINUTES - 3)
-      expect(minutes).toBeLessThanOrEqual(DAILY_MINUTES)
-    }
+    // A child with no history has a shorter session: the mix never fills up with what was not taught.
+    const first = planDailySession({ child, mastery: {}, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(first.practiceSeconds / 60).toBeLessThanOrEqual(DAILY_MINUTES)
+    // ...but not an empty one: the first day still has a reasonable amount of practice.
+    expect(first.practiceSeconds / 60).toBeGreaterThanOrEqual(4)
+    const plan = planDailySession({ child, mastery: midYearMastery(), attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    expect(plan.practiceSeconds / 60).toBeGreaterThanOrEqual(DAILY_MINUTES - 3)
+    expect(plan.practiceSeconds / 60).toBeLessThanOrEqual(DAILY_MINUTES)
     const full = planDailySession({ child, mastery: midYearMastery(), attempts: [], syllabus: GRADE3_SYLLABUS, now })
     const sum = full.blocks.flatMap((b) => b.items).reduce((s, i) => s + estimateSeconds(i), 0)
     expect(sum).toBe(full.practiceSeconds)
@@ -154,7 +164,8 @@ describe('planDailySession', () => {
     const mastery = masteredBefore('reloj-en-punto-media-cuarto')
     for (const s of Object.keys(mastery)) if (parseSkill(s)?.type === 'div') delete mastery[s]
     mastery[divSkill(12, 3)] = m(divSkill(12, 3), 1, { dueDays: -1, seenDays: -1 })
-    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    const progress = withClasses('prob-sumar', 'prob-dividir')
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now, progress })
     const problem = plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise
     expect(problem.kind).toBe('bar-problem')
     expect(problem.skill).toBe('bar:div')
@@ -163,14 +174,14 @@ describe('planDailySession', () => {
   it('a problem topic gets the operation it teaches, even when the child practises another one more', () => {
     const mastery = masteredBefore('prob-sumar')
     for (let a = 2; a <= 9; a++) mastery[mulSkill(a, 7)] = m(mulSkill(a, 7), 4)
-    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now, progress: withClasses('prob-sumar') })
     expect(plan.topic?.id).toBe('prob-sumar')
     expect(plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise.skill).toBe('bar:add')
   })
 
   it('a child who practises no operation at all gets an addition problem', () => {
     const mastery: MasteryMap = { 'clock:read:30': m('clock:read:30', 3) }
-    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now })
+    const plan = planDailySession({ child, mastery, attempts: [], syllabus: GRADE3_SYLLABUS, now, progress: withClasses('prob-sumar') })
     expect(plan.blocks.find((b) => b.id === 'problem')!.items[0].exercise.skill).toBe('bar:add')
   })
 

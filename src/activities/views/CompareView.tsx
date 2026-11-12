@@ -5,8 +5,9 @@ import { celebrate } from '@/fx'
 import { fmt } from '@/engine'
 import type { CompareExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { RETRY_WRONG_CLASS, useRetryChoice, useRetryFlow, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 type Sign = '<' | '>' | '='
 
@@ -16,14 +17,17 @@ const SIGNS: { sign: Sign; label: string }[] = [
   { sign: '>', label: 'mayor que' },
 ]
 
-export default function CompareView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function CompareView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'compare') return null
-  return <CompareRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <CompareRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CompareExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean }) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [picked, setPicked] = useState<Sign | null>(null)
+function CompareRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: CompareExercise; onAnswered: ExerciseViewProps['onAnswered']; showFeedback: boolean; allowHints: boolean; retry?: RetryProps }) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with the sign the child picked, soft red until she changes it.
+  const again = useRetryChoice<Sign>(retry, (a) => (a.type === 'sign' && a.sign !== '≠' ? a.sign : null), ex.answer)
+  const [picked, setPicked] = useState<Sign | null>(again.first)
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
 
   const submit = () => {
@@ -33,8 +37,7 @@ function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Compar
   }
 
   return (
-    <section className={s.view} aria-label="Comparar números" data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>¿Qué signo va entre los dos números?</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Comparar números" data-kind={ex.kind} data-status={status} prompt={'¿Qué signo va entre los dos números?'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.row}>
         <span className={s.card}><span className={s.cardNumber}>{fmt(ex.left)}</span></span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>
@@ -45,7 +48,7 @@ function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Compar
           <button
             key={o.sign}
             type="button"
-            className={clsx(s.signBtn, picked === o.sign && s.signOn)}
+            className={clsx(s.signBtn, picked === o.sign && s.signOn, again.marked(o.sign, picked, !!flow.result) && RETRY_WRONG_CLASS)}
             onClick={() => { if (!flow.result?.correct) setPicked(o.sign) }}
             aria-pressed={picked === o.sign}
             aria-label={o.label}
@@ -54,7 +57,6 @@ function CompareRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Compar
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

@@ -311,12 +311,14 @@ describe('new geometry operations (3.º and 4.º)', () => {
     }
   })
 
-  it('no hint of a new operation contains the right option (Review Focus 3)', () => {
+  it('no hint of a new operation contains the right option alone (Review Focus 3): the rule of level 2 names them all', () => {
     for (const [op, make] of NEW_MAKERS) {
       for (const seed of WIDE) {
         const ex = make(createRng(seed))
         const right = ex.options[ex.answer]
-        for (const h of hintsFor(ex)) expect(mentions(h.text, right), `${op} ${seed}: ${h.text}`).toBe(false)
+        // A hint that names every option (the rule that ties each description to its name) gives none away.
+        const namesAll = (t: string) => ex.options.every((o) => mentions(t, o))
+        for (const h of hintsFor(ex)) if (!namesAll(h.text)) expect(mentions(h.text, right), `${op} ${seed}: ${h.text}`).toBe(false)
       }
     }
   })
@@ -415,7 +417,7 @@ describe('new geometry operations (3.º and 4.º)', () => {
 
   it('circle:parts: the highlighted part is the one named by the right option', () => {
     const seen = new Set<string>()
-    const word = { radius: 'radio', diameter: 'diámetro', chord: 'cuerda', arc: 'arco' } as const
+    const word = { radius: 'radio', diameter: 'diámetro', chord: 'cuerda que no pasa por el centro', arc: 'arco' } as const
     for (const seed of WIDE) {
       const ex = genCircleParts(createRng(seed))
       const f = ex.figures[0]
@@ -423,7 +425,7 @@ describe('new geometry operations (3.º and 4.º)', () => {
       expect(ex.options[ex.answer]).toBe(word[f.highlight])
       seen.add(word[f.highlight])
     }
-    expect(seen).toEqual(new Set(['radio', 'diámetro', 'cuerda', 'arco']))
+    expect(seen).toEqual(new Set(['radio', 'diámetro', 'cuerda que no pasa por el centro', 'arco']))
   })
 
   it('translate: the moved copy is the outline shifted, and the answer names that move', () => {

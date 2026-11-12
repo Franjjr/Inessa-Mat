@@ -2,7 +2,7 @@
    magic check (result + subtrahend = minuend). */
 import { motion } from 'motion/react'
 import type { VisualProps } from './types'
-import { FINAL, GLIDE, POP, digitsLE, lastStateOf, motionT, numParam, padLE, stateOf } from './types'
+import { FINAL, GLIDE, POP, digitsLE, motionT, numParam, padLE, stateOf } from './types'
 import { compensationSteps, lineStops, partsResults, subtrahendParts } from '@/engine/subMethods'
 import s from './visuals.module.css'
 
@@ -15,6 +15,8 @@ export interface BorrowPlan {
   bottom: number[]
   /** Top digits after each borrowing action (units first). Empty when nothing is borrowed. */
   snapshots: number[][]
+  /** For each snapshot, the column (units first) whose subtraction needed that borrowing. */
+  snapshotColumn: number[]
   /** Result digits (units first). */
   result: number[]
 }
@@ -27,6 +29,7 @@ export function planBorrow(a: number, b: number): BorrowPlan {
   const top = padLE(orig, width)
   const bottom = padLE(bottomDigits, width)
   const snapshots: number[][] = []
+  const snapshotColumn: number[] = []
   const result: number[] = []
   for (let i = 0; i < width; i++) {
     if (top[i] < bottom[i]) {
@@ -36,15 +39,17 @@ export function planBorrow(a: number, b: number): BorrowPlan {
       top[j] -= 1
       top[j - 1] += 10
       snapshots.push(top.slice())
+      snapshotColumn.push(i)
       for (let k = j - 1; k > i; k--) {
         top[k] -= 1
         top[k - 1] += 10
         snapshots.push(top.slice())
+        snapshotColumn.push(i)
       }
     }
     result.push(top[i] - bottom[i])
   }
-  return { width, orig: padLE(orig, width), bottom, snapshots, result }
+  return { width, orig: padLE(orig, width), bottom, snapshots, snapshotColumn, result }
 }
 
 interface BorrowProps extends VisualProps {
@@ -57,15 +62,21 @@ function BorrowColumns({ params, phase, runLength, reduced, borrowFrom }: Borrow
   const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
   const plan = planBorrow(a, b)
   const st = stateOf({ phase, runLength })
-  const last = lastStateOf({ runLength })
-  const snapIndex = st >= borrowFrom && plan.snapshots.length > 0 ? Math.min(st - borrowFrom, plan.snapshots.length - 1) : -1
-  const tops = snapIndex >= 0 ? plan.snapshots[snapIndex] : plan.orig
   const width = plan.width
-  // One column's result per phase: units at phase 3, tens at 4, hundreds at 5 (capped at the run's last phase).
-  const resultVisible = (k: number) => (k === 0 ? st >= 3 : st >= Math.min(3 + k, last)) || st === FINAL
+  // «Column by column» run: one intro step and then one step per column (units first), so the step k draws column k − 1
+  // with the borrowing it needed. It only runs when the steps ask for it (byColumn: 1), so an older script of the same
+  // length never changes meaning. The other runs follow the older script: rule, "no se puede", borrowing, results.
+  const byColumn = borrowFrom === 2 && numParam(params, 'byColumn', 0) === 1 && runLength === width + 1
+  const colsDone = st === FINAL ? width : phase
+  const snapIndex = byColumn
+    ? plan.snapshotColumn.filter((c) => c < colsDone).length - 1
+    : st >= borrowFrom && plan.snapshots.length > 0 ? Math.min(st - borrowFrom, plan.snapshots.length - 1) : -1
+  const tops = snapIndex >= 0 ? plan.snapshots[snapIndex] : plan.orig
+  // Older script: units at phase 3, tens at 4, hundreds at 5 (the last step of a run always shows them all).
+  const resultVisible = (k: number) => st === FINAL || (byColumn ? k < colsDone : st >= 3 + k)
   const cellVars = { '--col-w': 'clamp(54px, 9vmin, 80px)', '--col-h': 'clamp(56px, 9vmin, 84px)' } as React.CSSProperties
   const colOf = (p: number) => width - 1 - p
-  const hintOn = st < borrowFrom && plan.orig[0] < plan.bottom[0]
+  const hintOn = (byColumn ? colsDone === 0 : st < borrowFrom) && plan.orig[0] < plan.bottom[0]
   const lastComputed = (() => {
     for (let k = width - 1; k >= 0; k--) if (resultVisible(k)) return k
     return -1
@@ -107,7 +118,7 @@ function BorrowColumns({ params, phase, runLength, reduced, borrowFrom }: Borrow
           const k = colOf(p)
           const shown = resultVisible(k)
           return (
-            <div key={`r${p}`} className={s.cell}>
+            <div key={`r${p}`} className={s.cell} data-testid="result-cell">
               {shown && (
                 <motion.span key={`r-${st}-${p}`} initial={reduced ? false : { opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={motionT(reduced, POP)}>
                   {plan.result[k]}
@@ -140,7 +151,7 @@ export function ZeroBorrowVisual(props: VisualProps) {
   return <BorrowColumns {...props} borrowFrom={1} />
 }
 
-/** The magic check: result + subtrahend = minuend, plus the "llevando" variant (adding 10 to both numbers). */
+/** The check: result + subtrahend = minuend. */
 export function SubCheckVisual({ params, phase, runLength, reduced }: VisualProps) {
   const a = Math.max(0, Math.floor(numParam(params, 'a', 352)))
   const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
@@ -175,13 +186,6 @@ export function SubCheckVisual({ params, phase, runLength, reduced }: VisualProp
           </p>
         </motion.div>
       )}
-      {st === 2 && (
-        <motion.div className={s.panel} style={{ maxWidth: 420, width: 'auto' }} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={motionT(reduced, GLIDE)} data-testid="llevando">
-          <p className={s.muted}>Llevando: sumamos 10 arriba y 10 abajo, y la diferencia no cambia.</p>
-          <p className={s.eq}>{a} + 10 = {a + 10} · {b} + 10 = {b + 10}</p>
-          <p className={s.eq}>{a + 10} − {b + 10} = {c}</p>
-        </motion.div>
-      )}
     </div>
   )
 }
@@ -195,7 +199,20 @@ export function revealedCount(total: number, phase: number, runLength: number): 
   return Math.min(total, Math.ceil(((phase + 1) / runLength) * total))
 }
 
-/** «Me llevo una abajo»: the top digit gets +10 and the next digit of the subtrahend gets +1 (small, in magic colour). */
+/** The beats of «me llevo una»: the result of each column, and (after a column that takes a ten) the +1 that falls on
+    the next digit of the subtrahend. 352 − 127 has four: units, the +1 on the 2, tens, hundreds. */
+export function carryBeats(a: number, b: number): { kind: 'result' | 'bump'; k: number }[] {
+  const comp = compensationSteps(a, b)
+  const beats: { kind: 'result' | 'bump'; k: number }[] = []
+  comp.borrows.forEach((borrow, k) => {
+    beats.push({ kind: 'result', k })
+    if (borrow === 1 && k + 1 < comp.borrows.length) beats.push({ kind: 'bump', k: k + 1 })
+  })
+  return beats
+}
+
+/** «Me llevo una abajo»: the top digit gets +10 and the next digit of the subtrahend gets +1 (small, in magic colour).
+    Same layout as the other columns: the − sign on the row of the number below, then the line, then the = row. */
 export function SubCarryVisual({ params, phase, runLength }: VisualProps) {
   const a = Math.max(0, Math.floor(numParam(params, 'a', 352)))
   const b = Math.max(0, Math.floor(numParam(params, 'b', 127)))
@@ -205,15 +222,21 @@ export function SubCarryVisual({ params, phase, runLength }: VisualProps) {
   const topD = padLE(digitsLE(a), width)
   const botD = padLE(digitsLE(b), width)
   const resD = padLE(digitsLE(c), width)
-  const shownCols = revealedCount(width, phase, runLength)
-  const revealed = (k: number) => k < shownCols
+  const beats = carryBeats(a, b)
+  const shownBeats = beats.slice(0, revealedCount(beats.length, phase, runLength))
+  const revealed = (k: number) => shownBeats.some((x) => x.kind === 'result' && x.k === k)
+  const bumpShown = (k: number) => shownBeats.some((x) => x.kind === 'bump' && x.k === k)
   const st = stateOf({ phase, runLength })
   const colOf = (p: number) => width - 1 - p
   const cellVars = { '--col-w': 'clamp(54px, 9vmin, 80px)', '--col-h': 'clamp(56px, 9vmin, 84px)' } as React.CSSProperties
-  const lastK = (() => {
-    for (let k = width - 1; k >= 0; k--) if (revealed(k)) return k
-    return -1
-  })()
+  const last = shownBeats[shownBeats.length - 1]
+  const work = st === FINAL
+    ? `${a} − ${b} = ${c}`
+    : !last
+      ? ''
+      : last.kind === 'result'
+        ? `${topD[last.k] + 10 * comp.borrows[last.k]} − ${comp.adjusted[last.k]} = ${resD[last.k]}`
+        : `${botD[last.k]} + 1 = ${comp.adjusted[last.k]}`
   return (
     <div className={s.stage}>
       <div className={s.grid} style={{ ...cellVars, gridTemplateColumns: `auto repeat(${width}, var(--col-w))` }} data-testid="sub-carry-columns">
@@ -228,10 +251,10 @@ export function SubCarryVisual({ params, phase, runLength }: VisualProps) {
             </div>
           )
         })}
-        <div />
+        <div className={s.sign}>−</div>
         {Array.from({ length: width }, (_, p) => {
           const k = colOf(p)
-          const bumped = k >= 1 && revealed(k - 1) && comp.borrows[k - 1] === 1
+          const bumped = k >= 1 && (bumpShown(k) || (revealed(k) && comp.borrows[k - 1] === 1))
           return (
             <div key={`b${p}`} className={s.cell}>
               {bumped && (
@@ -239,27 +262,23 @@ export function SubCarryVisual({ params, phase, runLength }: VisualProps) {
                   {botD[k]}
                 </span>
               )}
-              {bumped ? <span style={{ color: 'var(--c-magic)' }} data-testid="sub-carry-mark">{comp.adjusted[k] % 10}</span> : k < digitsLE(b).length ? botD[k] : ''}
+              {bumped ? <span style={{ color: 'var(--c-magic)' }} data-testid="sub-carry-mark">{comp.adjusted[k]}</span> : k < digitsLE(b).length ? botD[k] : ''}
             </div>
           )
         })}
-        <div className={s.sign}>−</div>
         <div className={s.line} style={{ gridColumn: `1 / span ${width + 1}` }} />
+        <div className={s.sign}>=</div>
         {Array.from({ length: width }, (_, p) => {
           const k = colOf(p)
           return (
-            <div key={`r${p}`} className={s.cell}>
+            <div key={`r${p}`} className={s.cell} data-testid="result-cell">
               {revealed(k) ? resD[k] : <span className={s.cellEmpty} style={{ position: 'absolute', inset: 8 }} />}
             </div>
           )
         })}
         <div />
         <div className={s.work} style={{ gridColumn: `2 / span ${width}`, minHeight: 28 }} data-testid="sub-carry-work">
-          {st === FINAL
-            ? `${a} − ${b} = ${c}`
-            : lastK >= 0
-              ? `${topD[lastK] + 10 * comp.borrows[lastK]} − ${comp.adjusted[lastK] % 10} = ${resD[lastK]}`
-              : ''}
+          {work}
         </div>
       </div>
     </div>

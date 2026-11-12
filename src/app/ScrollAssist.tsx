@@ -3,35 +3,122 @@
    On a small tablet (a 1000 × 600 Galaxy Tab with the browser bars leaves ~490 px) a game cannot always fit, even
    shrunk (FitToScreen). Children do not know they have to scroll, and a swipe that starts on a writing surface
    (touch-action: none) does not scroll. A tap always works: «⬇» shows while there is more below, «⬆» once the
-   child has gone down (to write in a field above). Hidden when the whole page fits. */
-import { useEffect, useState } from 'react'
+   child has gone down (to write in a field above). Hidden when the whole page fits.
+
+   Never on top of a control (P3PE-12, P6-08): each button looks (elementsFromPoint) at what is under it, and moves to
+   the other corner of its edge when it would cover a button, a box or a link there. And while the page scrolls, a
+   spacer as tall as the button closes the page, so at the bottom nothing of the child's sits under «⬇» or «⬆». */
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import s from './ScrollAssist.module.css'
 
 /** Pixels that may stay hidden before the buttons show (sub-pixel rounding, a shadow). */
 const SLACK = 16
 /** Scroll (px) after which «⬆» shows: past the game header. */
 const UP_AFTER = 120
+/** Height of the space kept free at the end of a page that scrolls: a button and its margin. */
+export const SPACER = 84
+/** Distance of a button from the side of the window (ScrollAssist.module.css: .atLeft, .atRight). */
+const EDGE = 14
+/** Milliseconds after the last scroll event during which the page is taken to be still scrolling. */
+const SCROLLING = 200
 
-function measure() {
-  const el = document.scrollingElement ?? document.documentElement
-  const below = el.scrollHeight - window.innerHeight - window.scrollY
+type Side = 'left' | 'right'
+
+/** What a child can tap or write in: a button over one of these hides it. */
+const CONTROL = 'button, a[href], input, textarea, select, [role="button"], [role="textbox"], [role="slider"], [tabindex]:not([tabindex="-1"]), canvas'
+
+/** Whether the rectangle covers a control of the page (anything but the assistant's own buttons). */
+export function coversControl(rect: { left: number; top: number; right: number; bottom: number }, own: Element | null): boolean {
+  if (typeof document.elementsFromPoint !== 'function') return false
+  const xs = [rect.left + 4, (rect.left + rect.right) / 2, rect.right - 4]
+  const ys = [rect.top + 4, (rect.top + rect.bottom) / 2, rect.bottom - 4]
+  for (const x of xs) {
+    for (const y of ys) {
+      for (const el of document.elementsFromPoint(x, y)) {
+        if (own && own.contains(el)) continue
+        if (el.closest('[data-scroll-assist]')) continue
+        if (el.closest(CONTROL)) return true
+      }
+    }
+  }
+  return false
+}
+
+/** Height of the page without the assistant's spacer. The spacer is taken out of the layout for the reading: what it adds
+    depends on the page (all of it when it closes the page, nothing when the content overflows a box of the window's height,
+    like the placement, part of it when the content ends inside its room), so no fixed amount is right. Taking SPACER off
+    always hid «⬇» with up to SPACER px of the child's screen under the window (at 1000 × 490 a taller next question of the
+    placement left «Siguiente» out of reach, e2e r-ingles), and made a page that overflows by less than SPACER switch the
+    spacer on and off twice a second (the buttons moved under the child's finger). */
+function contentHeight(el: Element): number {
+  const spacer = document.querySelector<HTMLElement>('[data-scroll-spacer]')
+  if (!spacer) return el.scrollHeight
+  // WebKit (Safari, iPad) clamps the scroll on the forced layout of the shorter page and does not give it back: at the very
+  // bottom the page jumped up by the spacer's height on every reading, the end of the page was never reached and the smooth
+  // «Más abajo» was cut. The scroll is put back where it was.
+  const y = window.scrollY
+  const before = spacer.style.display
+  spacer.style.display = 'none'
+  const h = el.scrollHeight
+  spacer.style.display = before
+  if (window.scrollY !== y) window.scrollTo(0, y)
+  return h
+}
+
+/** Whether a control of the page (not the assistant's own) reaches below the bottom of the window. */
+function controlCutBelow(): boolean {
+  const bottom = window.innerHeight + 1
+  for (const el of document.querySelectorAll<HTMLElement>(CONTROL)) {
+    if (el.closest('[data-scroll-assist]')) continue
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0 && r.bottom > bottom && r.top < bottom + SLACK) return true
+  }
+  return false
+}
+
+/** What the page needs for the buttons. `height` is the content height without the spacer: a reading forces two layouts of
+    the whole page, so it is taken only when the content may have changed (an observer, a resize, the safety-net check) and
+    reused while the child scrolls (a scroll does not change it; on a cheap tablet a reading per frame made the swipe jerky). */
+function measure(height: number) {
+  const below = height - window.innerHeight - window.scrollY
+  // «⬇» also for less than SLACK when what is hidden is part of a control: a button cut by a few pixels at the bottom
+  // (a game at its smallest scale that still overflows a little) is not a whole tap (P6).
+  const down = below > SLACK || (below > 1 && controlCutBelow())
   // «⬆» only once the header is gone, so it never sits on «Salir» or the round counter.
-  return { down: below > SLACK, up: window.scrollY > UP_AFTER }
+  return { down, up: window.scrollY > UP_AFTER, scrolls: height > window.innerHeight + SLACK }
 }
 
 export function ScrollAssist() {
-  const [state, setState] = useState({ down: false, up: false })
+  const [state, setState] = useState({ down: false, up: false, scrolls: false })
+  const [downSide, setDownSide] = useState<Side>('left')
+  const [upSide, setUpSide] = useState<Side>('right')
+  const downRef = useRef<HTMLButtonElement>(null)
+  const upRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     let frame = 0
+    // The spacer is the assistant's own: it never makes the page «longer» by itself.
+    let height = 0
+    let stale = true
+    let lastScroll = -Infinity
     const update = () => {
       frame = 0
-      const next = measure()
-      setState((prev) => (prev.down === next.down && prev.up === next.up ? prev : next))
+      // Not in the middle of a scroll (a swipe, the smooth «Más abajo»): putting the scroll back would stop it. The height
+      // stays to be read and the next check (at most 500 ms later) reads it.
+      if (stale && performance.now() - lastScroll > SCROLLING) {
+        height = contentHeight(document.scrollingElement ?? document.documentElement)
+        stale = false
+      }
+      const next = measure(height)
+      setState((prev) => (prev.down === next.down && prev.up === next.up && prev.scrolls === next.scrolls ? prev : next))
+      placeButtons.current()
     }
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    // Something may have changed the content: read the height again on the next frame.
+    const schedule = () => { stale = true; if (!frame) frame = requestAnimationFrame(update) }
+    // Only the scroll moved: the buttons follow it with the height already read.
+    const onScroll = () => { lastScroll = performance.now(); if (!frame) frame = requestAnimationFrame(update) }
     update()
-    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', schedule)
     // Content grows and shrinks without a scroll or a resize (feedback, a new round, a picture that loads). The observers
     // react at once, but they miss layouts whose <html>/<body> keep their size while the content overflows (seen in the
@@ -44,13 +131,36 @@ export function ScrollAssist() {
     mutationObserver?.observe(document.body, { childList: true, subtree: true, characterData: true })
     return () => {
       if (frame) cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', schedule)
       window.clearInterval(timer)
       resizeObserver?.disconnect()
       mutationObserver?.disconnect()
     }
   }, [])
+
+  // Each shown button looks at what is under it and takes the other corner of its edge when it covers a control there
+  // (and the other corner is free): after each render, and on every check of the effect above (the page under a fixed
+  // button changes without a render here).
+  const sides = useRef({ down: downSide, up: upSide })
+  sides.current = { down: downSide, up: upSide }
+  const placeButtons = useRef(() => {})
+  placeButtons.current = () => {
+    const place = (btn: HTMLButtonElement | null, side: Side, set: (s: Side) => void) => {
+      if (!btn) return
+      // Both corners of the edge, from the button's size (not from where it is drawn now: no back and forth).
+      const r = btn.getBoundingClientRect()
+      const w = r.right - r.left
+      const at = (s: Side) => (s === 'left'
+        ? { left: EDGE, right: EDGE + w, top: r.top, bottom: r.bottom }
+        : { left: window.innerWidth - EDGE - w, right: window.innerWidth - EDGE, top: r.top, bottom: r.bottom })
+      const other: Side = side === 'left' ? 'right' : 'left'
+      if (coversControl(at(side), btn) && !coversControl(at(other), btn)) set(other)
+    }
+    place(downRef.current, sides.current.down, setDownSide)
+    place(upRef.current, sides.current.up, setUpSide)
+  }
+  useLayoutEffect(() => { placeButtons.current() })
 
   const smooth = typeof window !== 'undefined' && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   const go = (dir: 1 | -1) => {
@@ -61,13 +171,14 @@ export function ScrollAssist() {
 
   return (
     <>
+      {state.scrolls && <div className={s.spacer} style={{ height: SPACER }} data-scroll-spacer="" aria-hidden />}
       {state.up && (
-        <button type="button" className={`${s.btn} ${s.up}`} onClick={() => go(-1)} aria-label="Subir">
+        <button ref={upRef} type="button" className={`${s.btn} ${s.up} ${upSide === 'left' ? s.atLeft : s.atRight}`} onClick={() => go(-1)} aria-label="Subir" data-scroll-assist="">
           <span aria-hidden>⬆</span>
         </button>
       )}
       {state.down && (
-        <button type="button" className={`${s.btn} ${s.down}`} onClick={() => go(1)} aria-label="Ver lo de abajo">
+        <button ref={downRef} type="button" className={`${s.btn} ${s.down} ${downSide === 'left' ? s.atLeft : s.atRight}`} onClick={() => go(1)} aria-label="Ver lo de abajo" data-scroll-assist="">
           <span aria-hidden>⬇</span>
           <span className={s.label}>Más abajo</span>
         </button>

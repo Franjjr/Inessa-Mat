@@ -15,12 +15,13 @@ const sumar2d = clase({
     show('place-value', { n: 34 }, 'El 34 son 3 decenas y 4 unidades. Mi amiga Dani trae 25 más: sumamos 34 + 25.', 'ladybug'),
   ],
   ejemplo: [
-    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Empezamos por las unidades: 4 + 5 = 9. Escribo el 9.'),
-    show('carry', { a: 34, b: 25 }, 'Decenas: 3 + 2 = 5. ¡34 + 25 = 59!'),
-    show('carry', { a: 38, b: 25 }, 'Ahora una con llevada: 38 + 25. Empezamos por las unidades.'),
-    show('groups', { groups: 1, perGroup: 10, emoji: '🔵' }, '¿Por qué nos llevamos 1? Diez unidades juntas forman una decena: ya no son unidades sueltas, son 1 decena.', 'owl'),
-    show('carry', { a: 38, b: 25 }, '8 + 5 = 13. Escribo el 3 y me llevo 1 decena.'),
-    show('carry', { a: 38, b: 25 }, 'Decenas: 3 + 2 + 1 = 6. ¡38 + 25 = 63!'),
+    show('carry', { a: 34, b: 25 }, 'Vamos a sumar 34 + 25. Ponemos un número debajo del otro: unidades con unidades y decenas con decenas.'),
+    show('carry', { a: 34, b: 25 }, 'Empezamos por las unidades: 4 + 5 = 9. Escribo el 9 abajo.'),
+    show('carry', { a: 34, b: 25 }, 'Ahora las decenas: 3 + 2 = 5. Escribo el 5. ¡34 + 25 = 59!'),
+    show('groups', { groups: 1, perGroup: 10, emoji: '🔵' }, 'A veces las unidades suman 10 o más. Diez unidades juntas forman 1 decena: ya no son unidades sueltas.', 'owl'),
+    show('carry', { a: 38, b: 25 }, 'Otra: 38 + 25. Las ponemos en columna.'),
+    show('carry', { a: 38, b: 25 }, 'Unidades: 8 + 5 = 13. Escribo el 3 abajo y el 1 pequeñito arriba, encima de las decenas: me llevo una.'),
+    show('carry', { a: 38, b: 25 }, 'Decenas: 3 + 2 = 5, y la que me llevaba, 6. ¡38 + 25 = 63!'),
   ],
   guiada: [
     tryIt('carry', { a: 34, b: 25 }, '¡Te toca! Empieza por las unidades.', { skills: ['add:2d:c0'] }),
@@ -125,22 +126,22 @@ const restarSinLlevar = clase({
   ],
   ejemplo: [
     show('borrow', { a: 586, b: 243 }, 'Vamos a restar 586 − 243. Empezamos por las unidades, como en las sumas.'),
-    show('borrow', { a: 586, b: 243 }, 'Miro las unidades: 6 y 3.'),
-    show('borrow', { a: 586, b: 243 }, 'El 6 es más grande que el 3. No hace falta pedir ayuda a la vecina.'),
+    show('borrow', { a: 586, b: 243 }, 'Arriba hay un 6 y abajo un 3. Al 6 le puedo quitar 3.'),
+    show('borrow', { a: 586, b: 243 }, 'Como el de arriba es más grande, no hace falta pedir ayuda a la vecina.'),
     show('borrow', { a: 586, b: 243 }, 'Unidades: 6 − 3 = 3. Escribo el 3 abajo.'),
     show('borrow', { a: 586, b: 243 }, 'Decenas: 8 − 4 = 4. Escribo el 4.'),
     show('borrow', { a: 586, b: 243 }, 'Centenas: 5 − 2 = 3. ¡586 − 243 = 343!'),
   ],
   guiada: [
     tryIt('borrow', { a: 586, b: 243 }, '¡Te toca! Empieza por las unidades.', { skills: ['sub:3d:b0'] }),
-    tryIt('borrow', { a: 586, b: 243 }, 'Mira si la cifra de arriba es más pequeña que la de abajo.', { skills: ['sub:3d:b0'] }),
+    tryIt('borrow', { a: 586, b: 243 }, '¡Otra! En cada columna, el número de arriba menos el de abajo.', { skills: ['sub:3d:b0'] }),
   ],
   sola: [
     tryIt('borrow', { a: 586, b: 243 }, '¡Tu turno! Unidades primero.', { skills: ['sub:3d:b0'] }),
     tryIt('borrow', { a: 586, b: 243 }, '¡Tu turno! De derecha a izquierda.', { kinds: ['column-sub'], digits: 3, regroup: 'none' }),
     tryIt('borrow', { a: 586, b: 243 }, '¡Tu turno! Sin pistas.', { skills: ['sub:3d:b0'] }),
   ],
-  cierre: show('borrow', { a: 586, b: 243 }, 'La regla: resta cifra con cifra, de derecha a izquierda; si la de arriba es más pequeña, pide ayuda a la vecina.'),
+  cierre: show('borrow', { a: 586, b: 243 }, 'La regla: se resta columna a columna, empezando por las unidades: el de arriba menos el de abajo.'),
 })
 
 const restarPrestando = clase({
@@ -150,7 +151,7 @@ const restarPrestando = clase({
   mapLessonId: 'w4-borrow',
   para: [
     show('place-value', { n: 352 }, 'Un oso polar cuida 352 ovejas en la montaña.', 'polarbear'),
-    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127. Cuando no alcanza, a esto lo llamamos pedir prestado arriba.', 'polarbear'),
+    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127. Fíjate: en las unidades, arriba hay un 2 y abajo un 7. Hoy aprendemos qué hacer cuando arriba hay menos.', 'polarbear'),
   ],
   ejemplo: w4Borrow.steps.slice(0, 5),
   guiada: [
@@ -165,6 +166,35 @@ const restarPrestando = clase({
   cierre: show('borrow', { a: 352, b: 127 }, 'La regla: si arriba falta, la vecina presta 1 decena, que son 10 unidades.'),
 })
 
+/** The same class for a school that subtracts with «me llevo una abajo» (methodFor('sub') === 'carry'): same story,
+    same tries (solved with that method by the class screen), the worked example and the rule said that way. */
+export const restarPrestandoLlevando = clase({
+  id: 'c3-resta-prestando',
+  topicId: 'resta-3d-prestando',
+  title: 'Restar llevando',
+  mapLessonId: 'w4-borrow',
+  para: [
+    show('place-value', { n: 352 }, 'Un oso polar cuida 352 ovejas en la montaña.', 'polarbear'),
+    show('place-value', { n: 352 }, '127 se han ido a pastar lejos. ¿Cuántas quedan? Restamos 352 − 127. Fíjate: en las unidades, arriba hay un 2 y abajo un 7. Hoy aprendemos qué hacer cuando arriba hay menos.', 'polarbear'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 352, b: 127 }, '352 − 127. Empezamos por las unidades: 2 menos 7 no se puede.', 'polarbear'),
+    show('sub-carry', { a: 352, b: 127 }, 'Le ponemos un 1 delante al 2: 12 menos 7 son 5. Escribo el 5.'),
+    show('sub-carry', { a: 352, b: 127 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas de abajo pasa a ser 3.'),
+    show('sub-carry', { a: 352, b: 127 }, 'Decenas: 5 menos 3 son 2. Centenas: 3 menos 1 son 2. ¡225!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Te toca! Si arriba hay un número más pequeño, ponle un 1 delante y llévate una abajo.', { skills: ['sub:3d:b1'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Otra! Primero el 1 delante, después la resta, y no olvides la que te llevas.', { skills: ['sub:3d:b1'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Si arriba no alcanza, me llevo una.', { skills: ['sub:3d:b1'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Ojo: a veces hay que llevarse una dos veces.', { skills: ['sub:3d:b2'] }),
+    tryIt('sub-carry', { a: 352, b: 127 }, '¡Tu turno! Sin pistas, de derecha a izquierda.', { skills: ['sub:3d:b2'] }),
+  ],
+  cierre: show('sub-carry', { a: 352, b: 127 }, 'La regla: si arriba falta, le ponemos un 1 delante, que son 10 más, y abajo, en la columna siguiente, me llevo una.'),
+})
+
 const restarCeros = clase({
   id: 'c3-resta-ceros',
   topicId: 'resta-con-ceros',
@@ -174,7 +204,13 @@ const restarCeros = clase({
     show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
     show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. Cuando no alcanza, hay que pedir prestado arriba. ¡Ojo con el cero!', 'ladybug'),
   ],
-  ejemplo: w4Zero.steps.slice(0, 4),
+  ejemplo: [
+    ...w4Zero.steps.slice(0, 4),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Con cuatro cifras se hace igual. 6 003 − 2 178: el 3 no puede con el 8, y las dos vecinas son ceros.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Se pide al 6: el 6 pasa a 5, los dos ceros se vuelven 9 y el 3 se vuelve 13. Unidades: 13 − 8 = 5.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Decenas: 9 − 7 = 2. Centenas: 9 − 1 = 8.'),
+    show('zero-borrow', { a: 6003, b: 2178 }, 'Millares: 5 − 2 = 3. ¡6 003 − 2 178 = 3 825!'),
+  ],
   guiada: [
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Te toca! Cuidado con la trampa del cero.', { skills: ['sub:3d:z'] }),
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Otra! Si la vecina es un cero, mira más lejos.', { skills: ['sub:3d:z'] }),
@@ -185,6 +221,41 @@ const restarCeros = clase({
     tryIt('zero-borrow', { a: 503, b: 128 }, '¡Tu turno! Sin pistas: ahora con cuatro casas y ceros.', { skills: ['sub:4d:z'] }),
   ],
   cierre: show('zero-borrow', { a: 503, b: 128 }, 'La regla: si el cero no tiene nada que prestar, se pide a la cifra siguiente, el cero pasa a ser 10 y ese 10 presta 1 a las unidades.'),
+})
+
+/** «Restar con ceros» for a school that subtracts with «me llevo una» (SUB_VARIANTS, porMetodo.ts): with that method a
+    zero on top is one more digit, 0 plus 10 is 10, and nothing is asked to a neighbour. Same story and tries. One step
+    per beat of the drawing (carryBeats): units, the +1 below, tens, the +1 below, hundreds. */
+export const restarCerosLlevando = clase({
+  id: 'c3-resta-ceros',
+  topicId: 'resta-con-ceros',
+  title: 'Restar con ceros',
+  mapLessonId: 'w4-zero',
+  para: [
+    show('place-value', { n: 503 }, 'En la papelería quedan 503 tebeos en la estantería.', 'ladybug'),
+    show('place-value', { n: 503 }, 'Se llevan 128. Para saber cuántos quedan, restamos 503 − 128. ¡Mira el cero de las decenas!', 'ladybug'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 503, b: 128 }, '503 − 128. Unidades: 3 menos 8 no se puede. Le ponemos un 1 delante al 3: 13 menos 8 son 5.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas pasa a ser 3.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Decenas: arriba hay un 0, y 0 menos 3 no se puede. Le ponemos un 1 delante: 10 menos 3 son 7.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Otra vez me llevo una: el 1 de las centenas de abajo pasa a ser 2.'),
+    show('sub-carry', { a: 503, b: 128 }, 'Centenas: 5 menos 2 son 3. ¡503 − 128 = 375! El cero se resta como los demás números.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Con cuatro cifras, igual. 6 003 − 2 178. Unidades: 3 menos 8 no se puede; 13 menos 8 son 5, y me llevo una: el 7 pasa a 8.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Decenas: 0 menos 8 no se puede. Con un 1 delante, 10 menos 8 son 2, y me llevo una: el 1 de abajo pasa a 2.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Centenas: 0 menos 2 tampoco se puede. Con un 1 delante, 10 menos 2 son 8, y me llevo una: el 2 de los millares pasa a 3.'),
+    show('sub-carry', { a: 6003, b: 2178 }, 'Millares: 6 menos 3 son 3. ¡6 003 − 2 178 = 3 825!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Te toca! Si arriba no alcanza, ponle un 1 delante y llévate una abajo. Con el cero, igual.', { skills: ['sub:3d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Otra! Un 0 arriba con un 1 delante es 10.', { skills: ['sub:3d:z'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Cuidado con el cero.', { skills: ['sub:3d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Ahora con cuatro casas.', { skills: ['sub:4d:z'] }),
+    tryIt('sub-carry', { a: 503, b: 128 }, '¡Tu turno! Sin pistas: ahora con cuatro casas y ceros.', { skills: ['sub:4d:z'] }),
+  ],
+  cierre: show('sub-carry', { a: 503, b: 128 }, 'La regla: con ceros se hace igual. Si arriba no alcanza, le ponemos un 1 delante y abajo, en la columna siguiente, me llevo una.'),
 })
 
 const restarCuatroCifras = clase({
@@ -213,6 +284,35 @@ const restarCuatroCifras = clase({
     tryIt('borrow', { a: 4365, b: 1228 }, '¡Tu turno! Muchas ayudas seguidas.', { skills: ['sub:4d:b3'] }),
   ],
   cierre: show('borrow', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, pide 1 decena a la vecina.'),
+})
+
+/** «Restar con cuatro cifras» for «me llevo una» (SUB_VARIANTS, porMetodo.ts). One step per beat of the drawing:
+    units, the +1 below, tens, hundreds, thousands. Same story and tries. */
+export const restarCuatroCifrasLlevando = clase({
+  id: 'c3-resta-4d',
+  topicId: 'resta-4d',
+  title: 'Restar con cuatro cifras',
+  para: [
+    show('place-value', { n: 4365 }, 'En la fiesta del cole hay 4 365 pegatinas.', 'ladybug'),
+    show('place-value', { n: 4365 }, 'Se reparten 1 228. ¿Cuántas quedan? Restamos 4 365 − 1 228. Si arriba no alcanza, me llevo una.', 'ladybug'),
+  ],
+  ejemplo: [
+    show('sub-carry', { a: 4365, b: 1228 }, '4 365 − 1 228. Unidades: 5 menos 8 no se puede. Le ponemos un 1 delante: 15 menos 8 son 7.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Como arriba hemos añadido 10, abajo me llevo una: el 2 de las decenas pasa a ser 3.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Decenas: 6 menos 3 son 3. Escribo el 3.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Centenas: 3 menos 2 es 1. Escribo el 1.'),
+    show('sub-carry', { a: 4365, b: 1228 }, 'Millares: 4 menos 1 son 3. ¡4 365 − 1 228 = 3 137!'),
+  ],
+  guiada: [
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Te toca! Cuatro casas, de derecha a izquierda.', { skills: ['sub:4d:b0'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Otra! Empieza por las unidades.', { skills: ['sub:4d:b0'] }),
+  ],
+  sola: [
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Si arriba no alcanza, me llevo una.', { skills: ['sub:4d:b1'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Algunas casas se llevan una.', { skills: ['sub:4d:b2'] }),
+    tryIt('sub-carry', { a: 4365, b: 1228 }, '¡Tu turno! Muchas llevadas seguidas.', { skills: ['sub:4d:b3'] }),
+  ],
+  cierre: show('sub-carry', { a: 4365, b: 1228 }, 'La regla no cambia con más casas: si arriba falta, le ponemos un 1 delante y abajo, en la columna siguiente, me llevo una.'),
 })
 
 /* Multiplicar, de menos a más. Mismo esquema: para qué sirve, un ejemplo resuelto, dos prácticas con pistas, tres o
@@ -275,6 +375,7 @@ const mul3x1 = clase({
     show('column-mul', { top: 213, bottom: 3 }, 'Decenas: 1 × 3 = 3 decenas, que son 30. Escribo el 3 en las decenas.'),
     show('column-mul', { top: 213, bottom: 3 }, 'Centenas: 2 × 3 = 6 centenas, que son 600.'),
     show('column-mul', { top: 213, bottom: 3 }, '600 + 30 + 9 = 639. ¡213 × 3 = 639!'),
+    show('column-mul', { top: 247, bottom: 3 }, 'Otra, con llevadas: 3 por 7, 21. Escribo el 1 y me llevo 2. 3 por 4, 12, y los 2 que llevaba, 14: escribo el 4 y me llevo 1. 3 por 2, 6, y el 1 que llevaba, 7. ¡247 × 3 = 741!'),
   ],
   guiada: [
     tryIt('column-mul', { top: 213, bottom: 3 }, '¡Te toca! Empieza por las unidades, como siempre.', { skills: ['mul:3x1:c0'] }),
@@ -291,17 +392,19 @@ const mul3x1 = clase({
 const mulPor10 = clase({
   id: 'c3-mul-10-100',
   topicId: 'mul-10-100',
-  title: 'Multiplicar por 10 y por 100',
+  title: 'Multiplicar y dividir por 10, 100 y 1 000',
   para: [
     show('place-value', { n: 34 }, 'En el huerto de Sam, cada bancal tiene 34 tomates.', 'frog'),
     show('place-value', { n: 34 }, 'Sam tiene 10 bancales iguales. ¿Cuántos tomates son? Multiplicamos 34 × 10.', 'frog'),
   ],
   ejemplo: [
     show('place-value', { n: 34 }, 'Vamos a multiplicar 34 × 10. El 34 tiene 3 decenas y 4 unidades.'),
-    show('place-value', { n: 340 }, 'Al multiplicar por 10, cada cifra sube una casa y las unidades se completan con un 0. ¡34 × 10 = 340!'),
-    show('place-value', { n: 3400 }, 'Por 100, cada cifra sube dos casas: el 3 pasa a los millares y el 4 a las centenas. ¡34 × 100 = 3 400!'),
-    show('place-value', { n: 5000 }, 'Por 1 000, cada cifra sube tres casas: 5 × 1 000 = 5 000.'),
-    show('place-value', { n: 34 }, 'Al dividir entre 100 se quitan dos ceros: 3 400 : 100 = 34.'),
+    show('place-value', { n: 340 }, '34 × 10: cada cifra se mueve una casa a la izquierda, y en las unidades queda un 0. ¡34 × 10 = 340!'),
+    show('place-value', { n: 3400 }, '34 × 100: cada cifra se mueve dos casas a la izquierda, y quedan dos ceros. ¡34 × 100 = 3 400!'),
+    show('place-value', { n: 5000 }, '5 × 1 000: tres casas a la izquierda, tres ceros: 5 000.'),
+    show('place-value', { n: 34 }, 'Dividir es al revés: las cifras se mueven a la derecha. 340 : 10 = 34.'),
+    show('place-value', { n: 34 }, '3 400 : 100 = 34: dos casas a la derecha, se quitan dos ceros.'),
+    show('place-value', { n: 6 }, 'Y 6 000 : 1 000 = 6: se quitan tres ceros.'),
   ],
   guiada: [
     tryIt('place-value', { n: 340 }, '¡Te toca! Fíjate en cuántos ceros tiene el 10, el 100 o el 1 000.', { skills: ['mental:por10'] }),
@@ -312,34 +415,38 @@ const mulPor10 = clase({
     tryIt('place-value', { n: 3400 }, '¡Tu turno! Cuenta los ceros del número por el que multiplicas o divides.', { skills: ['mental:por10'] }),
     tryIt('place-value', { n: 3400 }, '¡Tu turno! Sin pistas: decide si los ceros se añaden o se quitan.', { skills: ['mental:por10'] }),
   ],
-  cierre: show('place-value', { n: 3400 }, 'Multiplicar por 10, 100 o 1 000 añade ceros a la derecha, y dividir entre ellos los quita.'),
+  cierre: show('place-value', { n: 3400 }, 'Multiplicar por 10, 100 o 1 000 mueve las cifras a la izquierda y añade ceros. Dividir las mueve a la derecha y quita ceros.'),
 })
 
 const mul2x2Partes = clase({
   id: 'c3-mul-2x2-partes',
   topicId: 'mul-2-cifras-intro',
-  title: 'Multiplicar por dos cifras, por partes',
+  title: 'Multiplicar por dos cifras, en columna',
   para: [
     show('place-value', { n: 23 }, 'En la frutería hay 23 cajas de naranjas.', 'owl'),
     show('place-value', { n: 14 }, 'Cada caja tiene 14 naranjas. ¿Cuántas son? Calculemos 23 × 14: partimos el 14 en 4 y 10, y empezamos por el 4.', 'owl'),
   ],
   ejemplo: [
-    show('split-multiply', { n: 23, m: 4 }, 'El 23 son 20 y 3.'),
-    show('split-multiply', { n: 23, m: 4 }, '20 × 4 = 80 y 3 × 4 = 12.'),
-    show('split-multiply', { n: 23, m: 4 }, '80 + 12 = 92. Esta es la primera parte: 23 × 4 = 92.'),
-    show('place-value', { n: 230 }, 'Ahora las decenas: 23 × 10 = 230. Al multiplicar por 10, cada cifra sube una casa.'),
-    show('carry', { a: 230, b: 92 }, 'Juntamos las dos partes: 230 + 92 = 322. ¡23 × 14 = 322!'),
+    show('column-mul', { top: 23, bottom: 4 }, 'Vamos a multiplicar 23 × 14 como en el cole, en columna. Primero por las unidades de abajo, el 4: 3 por 4, 12: escribo el 2 y me llevo 1. 2 por 4, 8, y 1 que llevaba, 9. ¡23 × 4 = 92!'),
+    show('place-value', { n: 230 }, 'Debajo va la segunda fila. Multiplicamos por la decena de abajo, el 1 de 14, que vale 10: 23 × 10 = 230. Cada cifra sube una casa.'),
+    show('carry', { a: 230, b: 92 }, 'Juntamos las dos filas: 230 + 92 = 322. ¡23 × 14 = 322!'),
+    show('big-text', { text: '23 × 34', sub: '23 × 4 = 92' }, 'Otra: 23 × 34. Primero 23 × 4 = 92.'),
+    show('big-text', { text: '23 × 30 = 690', sub: '23 × 3 = 69, y un 0 detrás' }, 'Después 23 × 30: 23 × 3 = 69 y le pongo un 0 detrás: 690.'),
+    show('carry', { a: 690, b: 92 }, '690 + 92 = 782. ¡23 × 34 = 782!'),
+    show('column-mul', { top: 47, bottom: 6 }, 'Ahora una con llevada también en la segunda fila: 47 × 36. Primero 47 × 6: 7 por 6, 42: escribo el 2 y me llevo 4. 4 por 6, 24, y 4 que llevaba, 28. ¡282!'),
+    show('big-text', { text: '47 × 30 = 1 410', sub: '47 × 3 = 141, y un 0 detrás' }, 'Después 47 × 30: 47 × 3 = 141 (7 por 3, 21: escribo 1 y me llevo 2; 4 por 3, 12, y 2, 14) y un 0 detrás: 1 410.'),
+    show('carry', { a: 1410, b: 282 }, '1 410 + 282 = 1 692. ¡47 × 36 = 1 692!'),
   ],
   guiada: [
-    tryIt('split-multiply', { n: 23, m: 4 }, '¡Te toca! Parte el número de abajo en decenas y unidades.', { skills: ['mul:2dx2d'] }),
-    tryIt('split-multiply', { n: 23, m: 4 }, '¡Otra! Multiplica primero por las unidades de abajo.', { skills: ['mul:2dx2d'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Te toca! Multiplica por las unidades de abajo y, debajo, por las decenas.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Otra! Empieza por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
   ],
   sola: [
-    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Primero por las unidades de abajo.', { skills: ['mul:2dx2d'] }),
-    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Después por las decenas: pon un cero detrás.', { skills: ['mul:2dx2d'] }),
-    tryIt('split-multiply', { n: 23, m: 4 }, '¡Tu turno! Sin pistas: las dos partes y su suma.', { skills: ['mul:2dx2d'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Primero por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto; delante, escribe lo que da el número de arriba por la decena de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Sin pistas: las dos filas y su suma.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
   ],
-  cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras, parto el número de abajo en decenas y unidades, multiplico por cada parte y sumo los dos resultados.'),
+  cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras: primero por las unidades de abajo, debajo por las decenas con un 0 detrás, y sumo las dos filas.'),
 })
 
 /* Dividir, de menos a más. Mismo esquema. La galera se enseña como en el cole: cada paso lleva su cociente, su producto
@@ -358,18 +465,18 @@ const dividirRepartir = clase({
   mapLessonId: 'w8-share',
   para: [
     show('place-value', { n: 12 }, 'En el barco de la capitana Sol hay 12 gemas brillantes.', 'octopus'),
-    show('place-value', { n: 12 }, 'Quiere guardarlas en 3 cofres, con lo mismo en cada uno. ¿Cuántas van en cada cofre? Repartimos: 12 ÷ 3.', 'octopus'),
+    show('place-value', { n: 12 }, 'Quiere guardarlas en 3 cofres, con lo mismo en cada uno. ¿Cuántas van en cada cofre? Dividir se escribe con dos puntitos: 12 : 3.', 'octopus'),
   ],
   ejemplo: [
     show('share', GEMAS, 'Vamos a repartir 12 gemas en 3 cofres. Las pongo de una en una, sin saltarme ningún cofre.'),
     show('share', GEMAS, 'Ya están repartidas: a cada cofre le ha tocado lo mismo.'),
-    show('share', GEMAS, '12 ÷ 3 = 4. Se lee «doce entre tres es cuatro»: cada cofre tiene 4 gemas.'),
+    show('share', GEMAS, '12 : 3 = 4. Se lee «doce entre tres es cuatro»: cada cofre tiene 4 gemas.'),
     show('groups', { groups: 3, perGroup: 4, emoji: '💎' }, 'Dividir también es agrupar: ¿cuántos cofres de 4 gemas se llenan con 12? Vamos llenando cofres de 4.', 'owl'),
-    show('big-text', { text: '12 ÷ 4 = 3', sub: '3 cofres llenos' }, 'Los dos caminos dan lo mismo: repartir 12 en 3 cofres da 4 a cada uno, y llenar cofres de 4 da 3 cofres.', 'owl'),
+    show('big-text', { text: '12 : 4 = 3', sub: '3 cofres llenos' }, 'Los dos caminos dan lo mismo: repartir 12 en 3 cofres da 4 a cada uno, y llenar cofres de 4 da 3 cofres.', 'owl'),
   ],
   guiada: [
     tryIt('share', GEMAS, '¡Te toca! Reparte de una en una, a todos les toca lo mismo.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
-    tryIt('share', GEMAS, '¡Otra! ¿Qué número por el de abajo da el de arriba?', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
+    tryIt('share', GEMAS, '¡Otra! ¿Qué número multiplicado por el segundo da el primero? En 12 : 3, piensa: 3 por cuánto da 12.', { kinds: ['fact-div'], tables: [2, 3, 5], factorRange: [2, 5] }),
   ],
   sola: [
     tryIt('share', GEMAS, '¡Tu turno! Piensa en la multiplicación al revés.', { kinds: ['fact-div'], tables: [6, 7, 8], factorRange: [2, 9] }),
@@ -386,12 +493,12 @@ const dividirExacta = clase({
   mapLessonId: 'w8-galera',
   para: [
     show('place-value', { n: 84 }, 'En el zoo, cuatro monos comparten 84 plátanos del día.', 'owl'),
-    show('place-value', { n: 84 }, 'Quieren que cada mono tenga lo mismo. ¿Cuántos plátanos le tocan a cada uno? Dividimos 84 ÷ 4 con la galera.', 'owl'),
+    show('place-value', { n: 84 }, 'Quieren que cada mono tenga lo mismo. ¿Cuántos plátanos le tocan a cada uno? Dividimos 84 : 4 con la galera.', 'owl'),
   ],
   ejemplo: [
     show('galera', GAL84, 'Esta es la casita: 84 entre 4. Con el 8: ¿cuántas veces cabe el 4? Dos. Escribo el 2, 2 × 4 = 8 y 8 − 8 = 0.'),
     show('galera', GAL84, 'Bajo el 4: ¿cuántas veces cabe el 4 en el 4? Una. Escribo el 1 junto al 2, 1 × 4 = 4 y 4 − 4 = 0.'),
-    show('galera', GAL84, 'Los cocientes, 2 y 1, forman el 21: ¡84 ÷ 4 = 21!'),
+    show('galera', GAL84, 'Los cocientes, 2 y 1, forman el 21: ¡84 : 4 = 21!'),
   ],
   guiada: [
     tryIt('galera', GAL84, '¡Te toca! Empieza por la primera cifra de la izquierda.', { kinds: ['division'], divisionVariants: ['exact'], tables: [2, 3, 4] }),
@@ -411,12 +518,12 @@ const dividirResto = clase({
   title: 'Dividir y sobrar',
   para: [
     show('place-value', { n: 17 }, 'En el campamento hay 17 sándwiches para la excursión.', 'ladybug'),
-    show('place-value', { n: 17 }, 'Las bandejas caben 5 sándwiches. ¿Cuántas bandejas llenas salen y cuántos sobran? Dividimos 17 ÷ 5.', 'ladybug'),
+    show('place-value', { n: 17 }, 'En cada bandeja caben 5 sándwiches. ¿Cuántas bandejas llenas salen y cuántos sobran? Dividimos 17 : 5.', 'ladybug'),
   ],
   ejemplo: [
-    show('galera', GAL17, 'Esta es la casita: 17 entre 5. ¿Cuántas veces cabe el 5 en el 17? Tres. Escribo el 3, 3 × 5 = 15 y 17 − 15 = 2.'),
-    show('division-check', GAL17, 'La prueba: 3 × 5 + 2 = ?'),
-    show('division-check', GAL17, 'Sí: 3 × 5 + 2 = 17. Sobran 2, y la prueba lo confirma.'),
+    show('galera', GAL17, 'Esta es la casita: 17 entre 5. ¿Cuántas veces cabe el 5 en el 17? Tres. Escribo el 3, 3 × 5 = 15 y 17 − 15 = 2. Sobran 2.'),
+    show('division-check', GAL17, 'La prueba: el divisor por el cociente, más el resto, tiene que dar el dividendo. ¿Cuánto es 5 × 3 + 2?'),
+    show('division-check', GAL17, 'Sí: 5 × 3 + 2 = 17. El resto, 2, es más pequeño que 5: está bien.'),
   ],
   guiada: [
     tryIt('galera', GAL17, '¡Te toca! ¿Cuánto sobra al final?', { kinds: ['division'], divisionVariants: ['rem'], tables: [2, 3] }),
@@ -436,12 +543,12 @@ const dividirBajar = clase({
   title: 'Dividir bajando una cifra',
   para: [
     show('place-value', { n: 72 }, 'La abuela Rosa tiene 72 botones guardados en su costurero.', 'polarbear'),
-    show('place-value', { n: 72 }, 'Quiere guardarlos en 3 cajas iguales para la feria. ¿Cuántos botones van en cada caja? Dividimos 72 ÷ 3.', 'polarbear'),
+    show('place-value', { n: 72 }, 'Quiere guardarlos en 3 cajas iguales para la feria. ¿Cuántos botones van en cada caja? Dividimos 72 : 3.', 'polarbear'),
   ],
   ejemplo: [
     show('galera', GAL72, 'Esta es la casita: 72 entre 3. Con el 7: ¿cuántas veces cabe el 3? Dos. Escribo el 2, 2 × 3 = 6 y 7 − 6 = 1.'),
     show('galera', GAL72, 'Bajo el 2: queda 12. ¿Cuántas veces cabe el 3 en el 12? Cuatro. Escribo el 4, 4 × 3 = 12 y 12 − 12 = 0.'),
-    show('galera', GAL72, 'Los cocientes, 2 y 4, forman el 24: ¡72 ÷ 3 = 24!'),
+    show('galera', GAL72, 'Los cocientes, 2 y 4, forman el 24: ¡72 : 3 = 24!'),
   ],
   guiada: [
     tryIt('galera', GAL72, '¡Te toca! Reparte primero las decenas.', { kinds: ['division'], divisionVariants: ['long'], tables: [2, 3] }),
@@ -461,15 +568,15 @@ const dividir3x1 = clase({
   title: 'Dividir tres cifras entre una',
   para: [
     show('place-value', { n: 384 }, 'En la fábrica de chocolate hay 384 bombones recién hechos.', 'ladybug'),
-    show('place-value', { n: 384 }, 'Hay que meterlos en 4 cajas iguales. ¿Cuántos caben en cada caja? Dividimos 384 ÷ 4, con tres cifras.', 'ladybug'),
+    show('place-value', { n: 384 }, 'Hay que meterlos en 4 cajas iguales. ¿Cuántos caben en cada caja? Dividimos 384 : 4, con tres cifras.', 'ladybug'),
   ],
   ejemplo: [
     show('galera', GAL384, 'Esta es la casita: 384 entre 4. Con las dos primeras cifras, el 38: ¿cuántas veces cabe el 4? Nueve. Escribo el 9, 9 × 4 = 36 y 38 − 36 = 2.'),
-    show('galera', GAL384, 'Bajo el 4: queda 24. ¿Cuántas veces cabe el 4 en el 24? Seis. Escribo el 6, 6 × 4 = 24 y 24 − 24 = 0. ¡384 ÷ 4 = 96!'),
+    show('galera', GAL384, 'Bajo el 4: queda 24. ¿Cuántas veces cabe el 4 en el 24? Seis. Escribo el 6, 6 × 4 = 24 y 24 − 24 = 0. ¡384 : 4 = 96!'),
     show('galera', GAL387, 'Ahora 387, y sobra algo. Empieza igual: con el 38, el 4 cabe nueve veces. Escribo el 9, 9 × 4 = 36 y 38 − 36 = 2.'),
     show('galera', GAL387, 'Bajo el 7: queda 27. ¿Cuántas veces cabe el 4 en el 27? Seis. Escribo el 6, 6 × 4 = 24 y 27 − 24 = 3: sobran 3.'),
-    show('division-check', GAL387, 'La prueba: 96 × 4 + 3 = ?'),
-    show('division-check', GAL387, '96 × 4 + 3 = 387. ¡La prueba está bien!'),
+    show('division-check', GAL387, 'La prueba: el divisor por el cociente, más el resto. ¿Cuánto es 4 × 96 + 3?'),
+    show('division-check', GAL387, '4 × 96 + 3 = 387. ¡Da el dividendo, la prueba está bien!'),
   ],
   guiada: [
     tryIt('galera', GAL384, '¡Te toca! Empieza por las dos primeras cifras.', { skills: ['div:3x1:exact'] }),
@@ -480,7 +587,7 @@ const dividir3x1 = clase({
     tryIt('galera', GAL387, '¡Tu turno! Ahora puede sobrar algo al final.', { skills: ['div:3x1:rem'] }),
     tryIt('galera', GAL387, '¡Tu turno! Sin pistas: al final, comprueba con la prueba.', { skills: ['div:3x1:rem'] }),
   ],
-  cierre: show('division-check', GAL387, 'La regla: se reparte cifra a cifra, y la prueba es cociente × divisor + resto = dividendo.'),
+  cierre: show('division-check', GAL387, 'La regla: se reparte cifra a cifra, y la prueba es: el divisor por el cociente, más el resto, da el dividendo.'),
 })
 
 export const GRADE3_CLASSES: ClassDef[] = [

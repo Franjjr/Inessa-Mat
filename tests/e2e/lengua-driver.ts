@@ -2,7 +2,7 @@
    tapped one after another, «Comprobar», «Siguiente»), until the session is over. Shared by the Lengua journey and the
    caligrafía journey. The driver answers whatever is on screen, so that the flow goes on; the answers are not checked here. */
 import type { Locator, Page } from '@playwright/test'
-import { settle } from './helpers'
+import { answerForVisibleInput, settle } from './helpers'
 
 export const CONTINUE = /^(Siguiente|Ver mi resultado|Terminar|Inténtalo otra vez|¡Ahora las preguntas!|¡Entendido, a por ello!|¡Lo he entendido!)/
 
@@ -56,21 +56,29 @@ export async function answerAnything(page: Page): Promise<boolean> {
     await check(page)
     return true
   }
-  // Number boxes still empty (a «?» or the placeholder): each one takes a 2 from the keypad or the physical keyboard.
+  // Number boxes: the right number when the box or the equation on screen says it (a maths item that teaches after a
+  // wrong try asks for the right answer before going on), otherwise a 2. A box holding another number than the right
+  // one is cleared first. Typed with the keypad or the physical keyboard.
   const boxes = page.getByRole('textbox').and(page.locator(':not([aria-label="Escribe la palabra completa"])'))
   let acted = false
   const n = await boxes.count()
   for (let i = 0; i < n; i++) {
     const box = boxes.nth(i)
     if (!(await box.isVisible().catch(() => false))) continue
-    if (/\d/.test(((await box.innerText().catch(() => '')) ?? '').replace(/\s+/g, ' '))) continue
+    const written = ((await box.innerText().catch(() => '')) ?? '').replace(/\D+/g, '')
+    const want = await answerForVisibleInput(page, box).catch(() => null)
+    const value = want === null ? '2' : String(want)
+    if (written && (want === null || written === value)) continue
     await box.click()
+    if (written) for (let k = 0; k < written.length; k++) await page.keyboard.press('Backspace')
     const pad = page.getByRole('group', { name: 'Teclado de números' })
-    if (await pad.isVisible().catch(() => false)) await pad.getByRole('button', { name: '2', exact: true }).click()
-    else await page.keyboard.type('2')
+    if (await pad.isVisible().catch(() => false)) {
+      for (const ch of value) await pad.getByRole('button', { name: ch, exact: true }).click()
+    } else await page.keyboard.type(value)
     acted = true
   }
-  if (!acted) return false
+  // «Inténtalo otra vez» brings back what was written: with nothing new to write, check it again (the flow goes on).
+  if (!acted) return check(page)
   await check(page)
   return true
 }

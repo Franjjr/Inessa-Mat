@@ -73,11 +73,13 @@ const relojDigital = clase({
     show('clock', { h: 14, m: 30, digital: 1 }, 'Son las 14:30 en el reloj digital. Después de las 12 del mediodía, las horas siguen contando: son las dos y media de la tarde.', 'ladybug'),
   ],
   ejemplo: [
-    show('clock', { h: 12, m: 0, digital: 1 }, '12:00 son las doce en punto del mediodía. Después empieza la tarde, y las horas siguen contando: 13, 14, 15…'),
+    show('clock', { h: 12, m: 0, digital: 1 }, 'En el reloj digital, 12:00 son las doce del mediodía. Después empieza la tarde, y las horas siguen contando: 13, 14, 15…'),
     show('clock', { h: 18, m: 45, digital: 1 }, '18:45 son las siete menos cuarto de la tarde: faltan 15 minutos para las 19:00.'),
     show('clock', { h: 21, m: 10, digital: 1 }, '21:10 son las nueve y diez de la noche. De 21 a 23 también es de la noche.'),
     show('clock', { h: 9, m: 20, digital: 1 }, '09:20 son las nueve y veinte de la mañana. De 6 a 11 es de la mañana.'),
     show('clock', { h: 3, m: 0, digital: 1 }, '03:00 son las tres de la noche. De 1 a 5 es de la noche y el número no cambia: a esa hora no son las 15:00.'),
+    show('clock', { h: 17, m: 0, digital: 1 }, 'Por la tarde, al número del reloj de agujas le sumas 12: las cinco de la tarde son 5 + 12 = 17, las 17:00.'),
+    show('clock', { h: 0, m: 0, digital: 1 }, 'Las 00:00 son las doce de la noche, la medianoche.'),
   ],
   guiada: [
     tryIt('big-text', { text: 'mañana · tarde · noche' }, '¡Te toca! Mira la hora de 24 horas: de 6 a 11 es de la mañana; 12 es del mediodía; de 13 a 20, de la tarde; de 21 a 23 y de 0 a 5, de la noche.', { skills: ['clock:convert:day'] }),

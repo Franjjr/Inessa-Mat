@@ -47,6 +47,7 @@ import type { ID, InputMode } from './common'
  *   measure:word                                      add two measures (mixed units) in a word problem
  *   measure:estimate                                  ¿es razonable? a claimed measure
  *   mul:col:2x2|3x2|3x3                               multiplicar en columna, con filas parciales (4.º, src/engine/longmul.ts)
+ *   mul:col:2x2:suave                                 entrada suave de 3.º: decena 1 o llevadas pequeñas
  *   num:ordinal:10|20|30                              ordinales (3.º): tocar el n-.º de una fila (10), leer y escribir el ordinal (20, 30)
  *   dec:shade:1|2 | dec:read:1|2                      décimas (1) and centésimas (2): colour the bar or the grid of 100, read the words and write the number
  *   dec:compare | dec:money                           comparing two decimals with < = >; euros with céntimos as a decimal (2,45 € = 2 euros y 45 céntimos)
@@ -874,7 +875,7 @@ export type Answer =
   | { type: 'hunt'; ok: boolean | null; column: number | null; value: number | null }  // encuentra el error
   | { type: 'verdict'; ok: boolean | null; value: number | null }          // comprobar: the verdict and the check
   | { type: 'division-parts'; parts: (number | null)[]; quotient: number | null; remainder: number | null } // repartir por partes
-  | { type: 'climb'; products: (number | null)[]; remainder: number | null } // multiplicar hacia arriba
+  | { type: 'climb'; products: (number | null)[]; remainder: number | null; quotient?: number | null } // multiplicar hacia arriba (old data): the quotient written, if any
   | { type: 'time'; hour: number | null; minute: number | null }        // reloj: the hour and the minutes
   | { type: 'choice'; index: number | null }                             // reloj (frases), días de la semana, shape-choice
   | { type: 'shade'; chosen: number[] }                                    // fraction-shade: the parts the child coloured
@@ -915,9 +916,10 @@ export type ErrorType =
   | 'quotient-off'         // quotient off by one with consistent remainder logic
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
-  | 'recognition'          // the handwriting was misread (not a maths error!). No code path assigns it yet: engine check() does not, and
-                            // the ink layer (src/ink/context.ts) only collects the digit recognitions. Consumers ignore it in accuracy and
-                            // mastery (src/engine/mastery.ts); it stays in the union for attempts already stored and for dev data (src/data/dev.ts)
+  | 'recognition'          // the handwriting was misread (not a maths error!). The answer flows (src/activities/groups/flow.ts and
+                            // src/activities/facts/shared/flow.ts) set it on a right answer after the child told the app it misread her
+                            // («No, lo escribo otra vez», «No, yo he escrito otra cosa»). engine check() never does. Consumers ignore it in
+                            // accuracy and mastery (src/engine/mastery.ts); attempts already stored and dev data (src/data/dev.ts) keep it
   | 'calig-shape'          // Caligrafía: the letter's form is off (worst criterion of a cursive try)
   | 'calig-line'           // Caligrafía: the letter does not sit on the baseline
   | 'calig-size'           // Caligrafía: the letter is too big or too small
@@ -1004,6 +1006,12 @@ export interface SkillSelector {
   zeros?: boolean
   /** Division variants allowed. */
   divisionVariants?: DivisionExercise['variant'][]
+  /** Division: never a dividend whose units are 0 (80 : 2, 60 : 3), e.g. for the exact tries of a lesson where the
+   *  zero would be a second difficulty. Implemented by the generator (src/engine/generate.ts). */
+  noZeroUnitsDividend?: boolean
+  /** Column ops: draw only from these operand pairs (e.g. the subtractions of a lesson, [[463, 128], [574, 236]]).
+   *  Each pair is [first, second] operand (minuend and subtrahend in a subtraction). Implemented by the generator. */
+  operands?: [number, number][]
   /** Prefer items the child has not mastered yet (requires mastery passed to generate). */
   adaptive?: boolean
 }

@@ -1,7 +1,7 @@
 /* 4.º: multiplicar en columna de menos a más (2 × 2, 3 × 2, 3 × 3). Each item is checked with plain arithmetic: the
    partial rows add up to the answer, the check grades the total, and the hints never give the answer or a whole row. */
 import { describe, expect, it } from 'vitest'
-import { check, createRng, genLongMul, hintsFor, isValidSkill, makeLongMul, mentalSkill, parseSkill, statementOf } from '@/engine'
+import { check, createRng, generate, genLongMul, hintsFor, isValidSkill, makeLongMul, mentalSkill, parseSkill, statementOf } from '@/engine'
 import { checkLongMul, hintsLongMul } from '@/engine/longmul'
 import { toDigits } from '@/engine/arith'
 import { buildMental, mentalHints } from '@/engine/calc'
@@ -152,5 +152,59 @@ describe('mental:triples', () => {
       expect(ex.a).toBeGreaterThanOrEqual(2)
       expect(ex.skill).toBe(mentalSkill('triples'))
     }
+  })
+})
+
+/** Carries of one partial row: top × one digit, column by column (toDigits is units first). */
+function rowCarries(top: number, d: number): number[] {
+  const out: number[] = []
+  let carry = 0
+  for (const t of toDigits(top)) {
+    const p = t * d + carry
+    carry = Math.floor(p / 10)
+    out.push(carry)
+  }
+  return out.slice(0, -1)
+}
+
+describe('the gentle entry of 3.º (mul:col:2x2:suave)', () => {
+  it('is a valid skill of its own, parsed as a gentle 2 × 2 in columns', () => {
+    expect(isValidSkill('mul:col:2x2:suave')).toBe(true)
+    expect(parseSkill('mul:col:2x2:suave')).toEqual({ type: 'mulCol', top: 2, bottom: 2, gentle: true })
+    expect(isValidSkill('mul:col:3x2:suave')).toBe(false)
+  })
+
+  it('the second factor has tens 1, or every carry of both rows is small (1 or 2); 400 seeds', () => {
+    let tensOne = 0
+    for (let seed = 1; seed <= 400; seed++) {
+      const [ex] = generate({ skills: ['mul:col:2x2:suave'] }, 1, { rng: createRng(seed) }) as LongMulExercise[]
+      expect(ex.kind).toBe('long-mul')
+      expect(ex.skill).toBe('mul:col:2x2:suave')
+      expect(String(ex.top)).toHaveLength(2)
+      expect(String(ex.bottom)).toHaveLength(2)
+      expect(String(ex.bottom)).not.toContain('0')
+      expect(ex.top % 10).not.toBe(0)
+      expect(ex.partials.reduce((s, p) => s + p, 0)).toBe(ex.answer)
+      const [u, t] = toDigits(ex.bottom)
+      for (const d of [u, t]) for (const c of rowCarries(ex.top, d)) expect(c, `${ex.top} × ${ex.bottom}`).toBeLessThanOrEqual(2)
+      if (t === 1) tensOne++
+    }
+    // mostly the tens 1 (the row of the tens is the top itself), but not only
+    expect(tensOne).toBeGreaterThan(200)
+    expect(tensOne).toBeLessThan(400)
+  })
+
+  it('the 4.º keys keep the full range: 12-99 × 12-99, with carries in both rows somewhere', () => {
+    let bigBoth = false
+    let bigTens = false
+    for (let seed = 1; seed <= 400; seed++) {
+      const ex = genLongMul(createRng(seed), 2, 2)
+      expect(ex.skill).toBe('mul:col:2x2')
+      const [u, t] = toDigits(ex.bottom)
+      if (t >= 5) bigTens = true
+      if (Math.max(...rowCarries(ex.top, u)) >= 3 && Math.max(...rowCarries(ex.top, t)) >= 3) bigBoth = true
+    }
+    expect(bigTens).toBe(true)
+    expect(bigBoth).toBe(true)
   })
 })

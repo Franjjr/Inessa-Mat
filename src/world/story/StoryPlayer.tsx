@@ -101,16 +101,31 @@ export default function StoryPlayer({ story, onDone, onSkip, onExit }: StoryPlay
     end()
   }
 
-  const speakLine = () => {
+  const [talking, setTalking] = useState(false)
+  // Each reading gets a number so an old one finishing does not switch the «Parar» of a newer one off.
+  const reading = useRef(0)
+
+  /** `asked`: the child pressed «Escuchar», so it speaks even when the voice setting is off. */
+  const speakLine = (asked = false) => {
     if (!line) return
     const plain = renderTemplate(line.text, ctx).replace(/^—\s*/, '')
     const voice = line.speaker === 'companion' ? 'companion' : SPEAKER_VOICE[line.speaker] ?? 'narrator'
     // English between asterisks («*Hello!*») is said by the English voice; the rest by the speaker (see sayMixed.ts).
     const parts = parseMixed(plain)
     const said = parts
-      ? sayMixed(parts, { spanish: voice as SpanishVoice, interrupt: true })
-      : speech.say(plain, { voice, interrupt: true })
-    void said.catch(() => undefined)
+      ? sayMixed(parts, { spanish: voice as SpanishVoice, interrupt: true, force: asked })
+      : speech.say(plain, { voice, interrupt: true, force: asked })
+    const mine = ++reading.current
+    setTalking(true)
+    void said.catch(() => undefined).finally(() => {
+      if (reading.current === mine) setTalking(false)
+    })
+  }
+
+  const stopLine = () => {
+    reading.current += 1
+    speech.stop()
+    setTalking(false)
   }
 
   const advance = () => {
@@ -123,8 +138,13 @@ export default function StoryPlayer({ story, onDone, onSkip, onExit }: StoryPlay
     if (!beat) return
     if (line?.sfx) sfx.play(line.sfx as SfxName)
     if (autoRead) speakLine()
+    // Without automatic reading, a line the child asked for stops when the story moves on.
+    else if (talking) stopLine()
     // Runs once per beat: the sound and the spoken line belong to that beat only.
   }, [index])
+
+  // Leaving the story cuts the voice if it was the one speaking.
+  useEffect(() => () => { if (reading.current > 0) speech.stop() }, [])
 
   // Keyboard: Enter, Space and → continue; Escape leaves (when the caller allows it). Keys pressed on a real
   // button (Salir, Saltar) keep their own meaning, and a held key does not race through the whole story.
@@ -226,18 +246,17 @@ export default function StoryPlayer({ story, onDone, onSkip, onExit }: StoryPlay
               >
                 {speakerLabel && <span className={s.speaker}>{speakerLabel}</span>}
                 <p className={s.text}>{text}</p>
-                {voiceOn && !autoRead && (
-                  <button
-                    type="button"
-                    className={s.listen}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      speakLine()
-                    }}
-                  >
-                    🔊 Escuchar
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className={s.listen}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (talking) stopLine()
+                    else speakLine(true)
+                  }}
+                >
+                  {talking ? '⏹ Parar' : autoRead ? '🔊 Escuchar otra vez' : '🔊 Escuchar'}
+                </button>
                 <span className={s.hint} aria-hidden="true">Toca para seguir ›</span>
               </motion.div>
             )}

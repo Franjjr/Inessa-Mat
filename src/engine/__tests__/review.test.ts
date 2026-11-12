@@ -196,22 +196,23 @@ describe('robustness and hint consistency', () => {
     expect(check(makeColumnSub(734, 459), dig([15, 7, 2])).given).toBe('27[15]')
     expect(check(makeColumnAdd([245, 137]), dig([12, 8, 3])).given).toBe('38[12]')
   })
-  it('long division hint starts with the tens and never states the partial quotient (fixed spells like 85 ÷ 4)', () => {
+  it('long division hint starts with the first number the galera takes and never states the partial quotient (85 : 4)', () => {
     const t = hintsFor(makeDivision(85, 4))[2].text
-    expect(t).toBe('Empieza por las decenas: ¿cuántas veces cabe el 4 en el 8? Escríbelo arriba y resta. Lo que sobre, júntalo con el 5.')
+    expect(t).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.')
   })
 })
 
 describe('senior review, round 2', () => {
-  it('the mirror of a Cave fact (7 × 6) shows the Cave visual with the table orientation (6, 7) at the worked step', () => {
+  it('the mirror of a Cave fact (7 × 6) shows the Cave visual with the table orientation (6, 7), drawing and worked step', () => {
     const h = hintsFor(makeFactMul(7, 6))
-    expect(h[1]).toMatchObject({ visual: 'mirror', params: { a: 7, b: 6 } })
+    // One trick for the three hints: the drawing is the Cave's (6 × 7), as the worked step.
+    expect(h[1]).toMatchObject({ visual: 'dots-five-plus-one', params: { a: 6, b: 7 } })
     expect(h[2]).toMatchObject({ visual: 'dots-five-plus-one', params: { a: 6, b: 7 } })
-    expect(h[2].text).toBe('5 × 7 = 35. Y una fila más: 35 + 7 = ?')
+    expect(h[2].text).toBe('7 × 6 es 6 × 7. 5 × 7 = 35. Y una fila más: 35 + 7 = ?')
   })
 
   it('the 5 trick is worded as a calculation, not as an equality', () => {
-    expect(strategyForFact(5, 6).text).toBe('La del 5 acaba en 0 o en 5: calcula 6 × 10 = 60 y toma la mitad.')
+    expect(strategyForFact(5, 6).text).toBe('Cuenta de 5 en 5, 6 veces. En la tabla del 5 todo acaba en 0 o en 5.')
   })
 
   it('a missing or malformed answer still reports the real expected answer in the log', () => {

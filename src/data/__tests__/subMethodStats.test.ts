@@ -48,13 +48,16 @@ describe('subtraction methods in the summary', () => {
     ])
   })
 
-  it('the report reads the favourite from the settings, and borrow when none is stored', () => {
-    const list = [attempt({ correct: true, context: { method: 'line' } as AttemptRecord['context'] })]
+  it('the report reads the school method from the settings, and borrow when none is stored', () => {
+    const list = [attempt({ correct: true, context: { method: 'carry' } as AttemptRecord['context'] })]
     const stats = statsFromLocal(list, list, [], null)
-    expect(buildSummary(child('line'), null, {}, stats).subtractionMethods).toEqual({
-      preferred: 'line',
-      byMethod: [{ method: 'line', attempts: 1, correct: 1 }],
+    expect(buildSummary(child('carry'), null, {}, stats).subtractionMethods).toEqual({
+      preferred: 'carry',
+      byMethod: [{ method: 'carry', attempts: 1, correct: 1 }],
     })
+    // An old profile with a retired method (saltos en la recta) reads as pedir prestado; its old attempts are not compared.
+    const old = [attempt({ correct: true, context: { method: 'line' } as AttemptRecord['context'] })]
+    expect(buildSummary(child('line'), null, {}, statsFromLocal(old, old, [], null)).subtractionMethods).toEqual({ preferred: 'borrow', byMethod: [] })
     expect(buildSummary(child(), null, {}, null).subtractionMethods).toEqual({ preferred: 'borrow', byMethod: [] })
   })
 })

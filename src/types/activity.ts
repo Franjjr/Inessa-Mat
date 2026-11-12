@@ -1,5 +1,5 @@
 import type { ActivityConfig } from './content'
-import type { AttemptInput, CheckResult, DivMethod, Exercise, ErrorType, SubMethod, TableMethod } from './exercise'
+import type { Answer, AttemptInput, CheckResult, DivMethod, Exercise, ErrorType, SubMethod, TableMethod } from './exercise'
 import type { InputMode } from './common'
 
 export interface ActivityResult {
@@ -47,6 +47,12 @@ export interface ExerciseViewProps {
   /** A wrong try that the view follows with another one (or with the copy step): the exercise has begun, so the
    *  screen around it can drop «Ahora no» / «No lo sé». Only FactView calls it for now. */
   onTry?: () => void
+  /** «Inténtalo otra vez»: what the child wrote on the previous try, so the view starts with it instead of empty boxes.
+   *  Optional: a view that does not read it starts empty, as before. */
+  initialAnswer?: Answer
+  /** «Inténtalo otra vez»: the columns or steps the corrector marked wrong (CheckResult.wrongColumns) on the previous try,
+   *  so the view can mark those boxes. Optional: ignored by views that do not read it. */
+  wrongColumns?: number[]
 }
 
 export interface ExerciseOutcome {

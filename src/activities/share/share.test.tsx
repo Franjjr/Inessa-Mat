@@ -74,4 +74,29 @@ describe('share activity · guiding highlight', () => {
     const bins = screen.getAllByRole('button', { name: /^Amiga \d+:/ })
     expect(bins[0].className).toMatch(/next/)
   })
+
+  it('MD-6: a friend who already has more than another one gets nothing more (fair sharing, never unequal)', () => {
+    render(<ShareActivity config={config} onDone={() => {}} onExit={() => {}} />)
+    const counts = () => screen.getAllByRole('button', { name: /^Amiga \d+:/ }).map((b) => Number(/: (\d+)/.exec(b.getAttribute('aria-label') ?? '')?.[1]))
+    const bins = () => screen.getAllByRole('button', { name: /^Amiga \d+:/ })
+    fireEvent.click(bins()[0])
+    expect(counts()[0]).toBe(1)
+    // A second one to the same friend while another has none: refused, with the reason.
+    fireEvent.click(bins()[0])
+    expect(counts()[0]).toBe(1)
+    expect(screen.getByRole('status').textContent).toBe('Primero a la que menos tiene.')
+  })
+
+  it('MD-6: the plates stay on screen while the child writes the answer', () => {
+    render(<ShareActivity config={config} onDone={() => {}} onExit={() => {}} />)
+    const total = Number(/Reparte (\d+)/.exec(screen.getByText(/Reparte \d+/).textContent ?? '')?.[1])
+    for (let i = 0; i < total; i++) {
+      const bins = screen.getAllByRole('button', { name: /^Amiga \d+:/ })
+      const c = bins.map((b) => Number(/: (\d+)/.exec(b.getAttribute('aria-label') ?? '')?.[1]))
+      fireEvent.click(bins[c.indexOf(Math.min(...c))])
+    }
+    expect(screen.getByText('¿Cuántos le tocan a cada amiga?')).toBeTruthy()
+    const plates = screen.getByRole('list', { name: 'Los platos de las amigas' })
+    expect(plates.querySelectorAll('[role="listitem"]').length).toBeGreaterThan(0)
+  })
 })

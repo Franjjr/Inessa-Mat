@@ -39,25 +39,42 @@
 }
 .hookText { font-family: var(--font-read); font-weight: 700; font-size: var(--fs-sm); color: var(--c-ink); line-height: 1.3; }
 
+.scrollWrap { position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* A soft top edge: a tag scrolling out at the top fades instead of showing half cut. */
 .scroll {
   position: relative;
-  z-index: 1;
   flex: 1;
   min-height: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
-/* Tall enough to scroll on tablets; never shorter than the visible area. */
+/* The stage height is set by the screen from the real size of the area (see labels.ts): tall enough that no name tag
+   lands on another stop. */
 .stage {
   position: relative;
   width: 100%;
-  height: max(100%, 96vw);
   min-height: 560px;
 }
-/* Phones: a taller stage spreads the nodes so their name tags do not stack on each other. */
-@media (max-width: 600px) {
-  .stage { height: max(100%, 200vh); }
+/* Arrow at the bottom edge while there is more path to scroll to. */
+.more {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: var(--sticker-border);
+  border-radius: 50%;
+  background: var(--c-yellow);
+  color: var(--c-ink);
+  font-size: var(--fs-sm);
+  pointer-events: none;
+  /* Semi-transparent: a tag passing under it stays readable. */
+  opacity: .6;
 }
 .path { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .pathBase, .pathDone {
@@ -74,8 +91,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  min-width: 96px;
+  justify-content: center;
   padding: 0;
   border: 0;
   background: none;
@@ -86,7 +102,7 @@
 }
 .node:focus-visible { outline: 4px solid var(--c-magic); outline-offset: 6px; border-radius: 24px; }
 .node:active .badge { transform: scale(.94); }
-.badge { position: relative; display: inline-flex; transition: transform var(--dur-fast) var(--ease-out); }
+.badge { position: relative; display: inline-flex; flex: none; transition: transform var(--dur-fast) var(--ease-out); }
 .locked { cursor: pointer; }
 .locked .badge { filter: grayscale(.7) opacity(.6); }
 
@@ -103,6 +119,7 @@
   100% { transform: scale(1.25); opacity: 0; }
 }
 .here {
+  /* left comes from labels.ts (Placed.pillDx): centred, or pushed inwards near an edge of the stage. */
   position: absolute;
   top: -22px;
   left: 50%;
@@ -124,9 +141,9 @@
   50% { transform: translate(-50%, -5px); }
 }
 .guardianTag {
+  /* left comes from labels.ts (Placed.helpX): right of the icon, or left of it near the right edge of the stage. */
   position: absolute;
   top: -12px;
-  right: -36px;
   padding: 2px 10px;
   border-radius: var(--r-pill);
   background: var(--c-magic);
@@ -135,14 +152,20 @@
   font-size: var(--fs-xs);
   white-space: nowrap;
 }
+.tag {
+  /* Placed by the screen (labels.ts): next to the icon, on the side that is free. */
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  /* Inside the button: touching the name opens the stop. */
+  cursor: pointer;
+}
 .label {
-  /* A fixed width (never wider than the phone screen) and at most two lines: a long name never climbs over the trunk
-     of the path. Near the left or right edge the label slides inwards so it stays inside the viewport. */
-  --w: min(200px, calc(100vw - 32px));
-  --cx: calc(var(--x, .5) * 100vw);
-  width: var(--w);
-  max-width: var(--w);
-  transform: translateX(max(calc(16px - var(--cx) + var(--w) / 2), min(0px, calc(100vw - 16px - var(--cx) - var(--w) / 2))));
+  /* At most two lines (three on a phone, below): a long name never climbs over the trunk of the path. */
+  align-self: stretch;
   padding: 4px 12px;
   border: 2px solid var(--sticker-line);
   border-radius: var(--r-md);
@@ -160,7 +183,21 @@
   overflow: hidden;
 }
 .locked .label { color: #5f4f7d; }
+/* Phones (stage up to PHONE_W, labels.ts): the tag is narrow, so a long name gets a third line instead of «…». */
+@media (max-width: 600px) { .label { -webkit-line-clamp: 3; } }
 .stars { display: inline-flex; gap: 2px; }
+/* An optional stop (NodeDef.optional): one short line under its name, height reserved in labels.ts (OPTIONAL_PX). */
+.skippable {
+  padding: 1px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  border: 1.5px dashed var(--sticker-line);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--c-ink);
+}
 
 @media (prefers-reduced-motion: reduce) {
   .current .badge::after, .here { animation: none; }
@@ -169,3 +206,18 @@
 
 /* Child-sized tap targets for sm buttons (the shared sm button is 44px). */
 .touch.touch { min-height: 56px; min-width: 56px; }
+
+/* Low tablets (1000x490): the header and the story strip share one row. */
+.band { display: contents; }
+@media (max-height: 600px) {
+  .band { position: relative; z-index: var(--z-hud); display: flex; align-items: center; gap: var(--sp-2); }
+  .top { flex: none; padding: max(4px, env(safe-area-inset-top)) 0 4px max(12px, env(safe-area-inset-left)); gap: var(--sp-2); }
+  .titleBox { flex: none; max-width: 220px; align-items: flex-start; }
+  .kicker, .crystalText { display: none; }
+  .crystalBox { min-width: 0; }
+  .crystalBox svg { width: 34px; height: 34px; }
+  .title { font-size: var(--fs-sm); text-align: left; line-height: 1.1; }
+  .hook { flex: 1; min-width: 0; margin: 4px max(12px, env(safe-area-inset-right)) 4px 0; padding: 2px 6px 2px var(--sp-3); }
+  .hookText { font-size: var(--fs-xs); line-height: 1.2; }
+  .touch.touch { min-height: 44px; min-width: 44px; }
+}

@@ -24,24 +24,9 @@
   color: var(--c-ink);
   padding-right: 120px;
 }
+/* «Escuchar» (the common ListenButton), above the work, on the right. */
+.speak { align-self: flex-end; }
 
-.speak {
-  position: absolute;
-  top: var(--sp-4);
-  right: var(--sp-4);
-  min-height: var(--tap-min);
-  padding: 0 var(--sp-4);
-  border: 0;
-  border-radius: var(--r-pill);
-  background: var(--c-primary-soft);
-  color: var(--c-primary-strong);
-  font-family: var(--font-display);
-  font-size: var(--fs-sm);
-  font-weight: 600;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-.speak:focus-visible { outline: 3px solid var(--c-primary); outline-offset: 2px; }
 
 .ops {
   display: flex;

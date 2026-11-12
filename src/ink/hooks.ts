@@ -1,7 +1,7 @@
 /* Public hooks of the ink module. */
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import type { AnswerInputPreference, DigitRecognizer, InputMode } from '@/types'
-import { useInk } from './context'
+import { useInk, type LearningStore } from './context'
 
 export interface InputModeState {
   mode: InputMode
@@ -48,6 +48,18 @@ export interface InkLearning {
   confirmDoubts(): void
   /** Call before grading: returns true (and shows the "¿Has escrito…?" prompt) when a digit is still in doubt. */
   requestConfirm(): boolean
+}
+
+/** The ink store itself (pending ink, reads, questions): for the answer flows and the answer bar. */
+export function useInkStore(): LearningStore {
+  return useInk().learning
+}
+
+/** Re-renders when the ink store changes (pending ink, questions, answer bars) and returns it. */
+export function useInkStoreState(): LearningStore {
+  const store = useInk().learning
+  useSyncExternalStore(store.subscribe, () => store.version)
+  return store
 }
 
 export function useInkLearning(): InkLearning {

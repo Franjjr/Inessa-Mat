@@ -292,10 +292,19 @@
   box-sizing: border-box;
 }
 
+/* The cards the child taps keep the raised sticker look of every button, with the button colour on the edge (P3PE-15);
+   the cards that only show a price (.cardStatic) look like a label: dashed edge, no shadow. */
 .cardButton {
   cursor: pointer;
   touch-action: manipulation;
   min-height: 150px;
+  border-color: var(--c-primary);
+}
+
+.cardStatic {
+  border-style: dashed;
+  box-shadow: none;
+  background: var(--c-surface-2);
 }
 
 .cardButton:focus-visible {
@@ -376,6 +385,14 @@
   align-items: center;
   gap: var(--sp-1);
   min-width: 0;
+}
+
+/* The box being written comes above its neighbours: its eraser and keypad toggle, drawn to its right, are never under
+   the next box (P3PE-12: nothing covers a button). */
+.amountCol:focus-within,
+.amountLead:focus-within {
+  position: relative;
+  z-index: 2;
 }
 
 .comma {

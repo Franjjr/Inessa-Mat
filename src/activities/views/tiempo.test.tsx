@@ -8,7 +8,7 @@ import type { CalendarExercise } from '@/types'
 import CalendarView from './CalendarView'
 import ClockReadView from './ClockReadView'
 import ClockSetView from './ClockSetView'
-import { angleOf, handAngles, hourFromAngle, minuteFromAngle } from './Clock'
+import { angleOf, handAngles, hourFromAngle, minuteFromAngle, moveMinuteHand } from './Clock'
 import TimeConvertView from './TimeConvertView'
 import TimeDurationView from './TimeDurationView'
 
@@ -38,6 +38,30 @@ const comprobar = () => screen.getByRole('button', { name: /Comprobar/ })
 const noDigitalReadout = () => expect(document.body.textContent ?? '').not.toMatch(/\d{1,2}:\d{2}/)
 
 describe('clock hand maths', () => {
+  it('H8: «las N menos 5…25» set short hand first (on the number the phrase says), then the long hand: the hour stays right', () => {
+    const misses: string[] = []
+    let total = 0
+    for (let h = 1; h <= 12; h++) {
+      for (const minute of [35, 40, 45, 50, 55]) {
+        const startMinute = (minute + 30) % 60 // ClockSetView startFor
+        const nextHour = (h % 12) + 1
+        const aim = (nextHour % 12) * 30 // the short hand dragged onto the number of the phrase
+        const afterShort = { hour: hourFromAngle(aim, startMinute), minute: startMinute }
+        const final = moveMinuteHand(afterShort, minute, aim)
+        total++
+        if (final.hour !== h) misses.push(`${nextHour} menos ${60 - minute} → ${final.hour}:${minute}`)
+      }
+    }
+    expect(total).toBe(60)
+    expect(misses).toEqual([])
+  })
+
+  it('H8: the long hand alone (the short one never dragged, or moved with the buttons) keeps the hour', () => {
+    expect(moveMinuteHand({ hour: 4, minute: 20 }, 50, null)).toEqual({ hour: 4, minute: 50 })
+    // An aim that no longer gives the current hour (the +/− buttons changed it) is ignored.
+    expect(moveMinuteHand({ hour: 7, minute: 20 }, 50, 120)).toEqual({ hour: 7, minute: 50 })
+  })
+
   it('snaps the minute hand to the fives and reads the hour under the hour hand', () => {
     expect(minuteFromAngle(0)).toBe(0)
     expect(minuteFromAngle(95)).toBe(15)
