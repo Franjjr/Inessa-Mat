@@ -130,6 +130,10 @@ describe('voz natural', () => {
     ['12:3 = 4', 'doce entre tres son cuatro'],
     ['3 × 4 = 12, así que 12 : 3 = 4.', 'tres por cuatro son doce, así que doce entre tres son cuatro.'],
     ['Paso 1: 3 decenas', 'Paso uno: tres decenas'],
+    // With the part of the day, the hour has no «en punto».
+    ['A las 12:00 del mediodía comemos.', 'A las doce del mediodía comemos.'],
+    ['Son las 9:00 de la mañana.', 'Son las nueve de la mañana.'],
+    ['Son las 9:00.', 'Son las nueve en punto.'],
     // An arrow next to the way it goes is not said twice.
     ['Debajo tienes las flechas: ← izquierda y derecha →.', 'Debajo tienes las flechas: flecha izquierda y derecha.'],
     ['Gira a la derecha →', 'Gira a la derecha'],

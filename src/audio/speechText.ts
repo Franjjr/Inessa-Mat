@@ -263,8 +263,12 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
 
     // Hours "07:05" (before the maths: ":" would be read as a division).
     // A ":" after the hour ("de 10:00 a 10:45: son 45 minutos") is punctuation; only ":" and a digit goes on with the number.
-    s = s.replace(/(^|[^\p{L}\d:])(?:(las?)\s+)?([01]?\d|2[0-3]):([0-5]\d)(?![\p{L}\d]|:\d)/giu, (_m, pre: string, art: string | undefined, h: string, mm: string) => {
-      const words = clockWords(Number(h), Number(mm))
+    s = s.replace(/(^|[^\p{L}\d:])(?:(las?)\s+)?([01]?\d|2[0-3]):([0-5]\d)(?![\p{L}\d]|:\d)/giu, (m, pre: string, art: string | undefined, h: string, mm: string, offset: number, whole: string) => {
+      let words = clockWords(Number(h), Number(mm))
+      // "12:00 del mediodía" is "las doce del mediodía": with the part of the day, "en punto" is one thing too many.
+      if (/^\s+(?:del mediodía|de la mañana|de la tarde|de la noche|de la madrugada)/iu.test(whole.slice(offset + m.length))) {
+        words = words.replace(/ en punto$/, '')
+      }
       return `${pre}${art && art[0] !== art[0].toLowerCase() ? words[0].toUpperCase() + words.slice(1) : words}`
     })
 
