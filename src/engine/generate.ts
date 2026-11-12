@@ -787,7 +787,11 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'div4x1') return retry(() => genDivision4(rng, p.variant === 'rem', TABLES_2_9(ctx)), used, rng)!
   if (p.type === 'div3x2') return retry(() => genDivision2d(rng, p.variant === 'rem', p.variant === 'round'), used, rng)!
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
-  if (p.type === 'mulCol') return retry(() => genLongMul(rng, p.top, p.bottom), used, rng)!
+  if (p.type === 'mulCol') {
+    // A selector that asks for few carries (regroup 'none' or 'one') gets the gentle 3.º introduction of 2 × 2.
+    const gentle = ctx.regroupExplicit && (ctx.regroup === 'none' || ctx.regroup === 'one')
+    return retry(() => genLongMul(rng, p.top, p.bottom, gentle), used, rng)!
+  }
   if (p.type === 'ordinal') return retry(() => genOrdinal(rng, p.top), used, rng)!
   if (p.type === 'decimal') return retry(() => genDecimal(rng, p.mode, p.places), used, rng)!
   if (p.type === 'decimal-op') return retry(() => genDecimalOp(rng, p.op, p.places), used, rng)!

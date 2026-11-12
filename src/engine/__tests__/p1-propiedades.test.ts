@@ -323,3 +323,24 @@ describe('mensajes de la resta según el método (auditoría p1-mensajes)', () =
     expect(check(makeColumnSub(52, 27), { type: 'digits', digits: [5, 3] }).feedback).toContain('vecina')
   })
 })
+
+describe('multiplicar en columna 2 × 2: la entrada suave de 3.º', () => {
+  const draw = (regroup?: 'one') => generate({ skills: ['mul:col:2x2'], ...(regroup ? { regroup } : {}) }, 40, { rng: createRng(7) })
+    .filter((e) => e.kind === 'long-mul')
+
+  it('con pocas llevadas (regroup one) el de abajo va de 11 a 19 y la fila de las unidades lleva poco', () => {
+    const items = draw('one')
+    expect(items.length).toBeGreaterThan(10)
+    for (const ex of items) {
+      expect(ex.bottom, ex.id).toBeGreaterThanOrEqual(11)
+      expect(ex.bottom, ex.id).toBeLessThanOrEqual(19)
+      expect(ex.top, ex.id).toBeLessThanOrEqual(34)
+      expect((ex.top % 10) * (ex.bottom % 10), ex.id).toBeLessThan(30)
+      expect(ex.answer).toBe(ex.top * ex.bottom)
+    }
+  })
+
+  it('sin pedirlo, 4.º sigue con el rango completo 12-99 × 12-99', () => {
+    expect(draw().some((ex) => ex.bottom > 19 || ex.top > 34)).toBe(true)
+  })
+})
