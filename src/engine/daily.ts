@@ -7,7 +7,7 @@
    Failed items come back later in the same run (src/activities/shared/requeue.ts) and on later days (mastery).
    Scaffolding: a multiplication fact failed twice in the last days is shown as an array (dibujo) until answered
    correctly without hints. The planner only decides WHAT is asked; the runner in src/world/session shows it. */
-import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
+import type { AttemptRecord, ChildProfile, Exercise, ExerciseKind, Hint, HintVisual, MasteryMap, ProgressState, ReadingDef, Rng, SkillKey, SkillMastery } from '@/types'
 import { availableSkills, behindTopics, isTopicMastered, teachingOrder, type Syllabus, type SyllabusTopic } from '@/content/syllabus'
 import { classForTopic, isClassDone } from '@/content/classes'
 import { placedTopicIds, topicOfToday } from './topicOfToday'
@@ -18,6 +18,7 @@ import { generate } from './generate'
 import { lenguaStatement } from './lengua/exercises'
 import { statementEnglish } from './ingles/exercises'
 import { hintsFor } from './hints'
+import { solutionFor, type SolutionOptions } from './solution'
 import { fmt, numberWords, roundWords } from './numeric'
 import { moneyStatement } from './money'
 import { measureStatement } from './measure'
@@ -102,7 +103,7 @@ export interface DailyPlan {
   /** The topic taught in «Lo nuevo» (null when every available topic is mastered). */
   topic: SyllabusTopic | null
   /** Worked example for «Lo nuevo»: not graded and not counted as practice. */
-  example: { exercise: Exercise; statement: string; steps: string[]; answer?: string | null } | null
+  example: { exercise: Exercise; statement: string; steps: string[]; answer?: string | null; visual?: HintVisual; params?: Hint['params'] } | null
   blocks: { id: DailyBlockId; items: DailyItem[] }[]
   /** Estimated seconds of items (the example and the transitions are not counted). */
   practiceSeconds: number
@@ -343,19 +344,31 @@ function closeSteps(texts: string[]): string[] {
     .filter((t) => t.length > 0)
 }
 
-/** Worked example for the new topic: a fresh exercise of the skill (its own seed). Columns are solved in full, one step
-    per column; the other kinds use their hints without any open «= ?»; the last step is always the answer. */
-function exampleFor(skill: SkillKey, rng: Rng, now: Date): DailyPlan['example'] {
+/** The old walkthrough (before solution.ts): columns in full, the other kinds from their hints without any open «= ?». */
+function fallbackSteps(ex: Exercise): string[] {
+  if (ex.kind === 'column-sub') return subtractionSteps(ex.minuend, ex.subtrahend)
+  if (ex.kind === 'column-add') return additionSteps(ex.operands)
+  if (ex.kind === 'column-mul' && ex.bottom < 10) return multiplicationSteps(ex.top, ex.bottom)
+  return closeSteps(hintsFor(ex).map((h) => h.text))
+}
+
+/** Worked example for the new topic: a fresh exercise of the skill (its own seed), solved the way the app teaches it
+    («Así se resuelve», solution.ts) with the child's methods (the school's subtraction and division), and its drawing.
+    No step asks anything back; the last step is always the answer as the child would write it. */
+function exampleFor(skill: SkillKey, rng: Rng, now: Date, methods: SolutionOptions = {}): DailyPlan['example'] {
   const [ex] = generate({ skills: [skill] }, 1, { rng: createRng(hashString(`example:${skill}:${rng()}`)), now })
   if (!ex) return null
-  const answer = workedAnswer(ex)
-  let steps: string[]
-  if (ex.kind === 'column-sub') steps = subtractionSteps(ex.minuend, ex.subtrahend)
-  else if (ex.kind === 'column-add') steps = additionSteps(ex.operands)
-  else if (ex.kind === 'column-mul' && ex.bottom < 10) steps = multiplicationSteps(ex.top, ex.bottom)
-  else steps = closeSteps(hintsFor(ex).map((h) => h.text))
+  let solved: ReturnType<typeof solutionFor> | null = null
+  try { solved = solutionFor(ex, methods) } catch { solved = null }
+  const answer = workedAnswer(ex) ?? solved?.answer ?? null
+  const fromSolution = solved ? closeSteps(solved.steps) : []
+  // The solution's own «Resultado: …» line is replaced by the answer as the child writes it.
+  const steps = (fromSolution.length ? fromSolution : fallbackSteps(ex))
+    .map((t) => t.replace(/^Resultado:[^.]*\.\s*/, '').trim())
+    .filter((t) => t.length > 0)
   if (answer) steps.push(`Resultado: ${answer}.`)
-  return { exercise: ex, statement: statementOf(ex).replace(/ = \?$/, ''), steps, answer }
+  const visual = solved?.visual && solved.visual !== 'none' ? solved.visual : undefined
+  return { exercise: ex, statement: statementOf(ex).replace(/ = \?$/, ''), steps, answer, ...(visual ? { visual, params: solved?.params } : {}) }
 }
 
 /** The operations from the simplest to the most advanced. */
@@ -411,6 +424,8 @@ export interface PlanInput {
   term?: number
   /** The child's progress: a class finished today keeps its topic as today's topic (topicOfToday). */
   progress?: ProgressState
+  /** The methods of the child's school (methodFor) and her favourite tables trick: the worked example follows them. */
+  methods?: SolutionOptions
   rng?: Rng
 }
 
@@ -492,7 +507,7 @@ export function planDailySession(input: PlanInput): DailyPlan {
       const target = Math.max(NEW_MIN, Math.min(NEW_MAX, allowed.length * 2))
       const seq: SkillKey[] = []
       for (let i = 0; seq.length < target; i++) seq.push(allowed[i % allowed.length])
-      example = exampleFor(allowed[0], rng, now)
+      example = exampleFor(allowed[0], rng, now, input.methods)
       for (const s of seq) {
         const ex = make(s, rng)
         if (ex) newItems.push({ exercise: ex, block: 'new', scaffold: scaffold.has(s), isNew: !mastery[s] })

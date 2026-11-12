@@ -350,6 +350,21 @@
   }
 }
 
+/* The drawing of the worked example (the same one «Así se resuelve» shows), under its steps. */
+.exampleVisual {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--sp-3);
+}
+
+/* Short landscape tablets (1000 × 490): the exercise needs every pixel. The block label of an exercise goes, and the
+   header is lower; the title, the clock and the exit stay (P3PE-11). */
+@media (max-height: 600px) {
+  .root { padding-top: var(--sp-2); gap: var(--sp-2); }
+  .header { min-height: 48px; }
+  .playChip { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .progressFill { transition: none; }
 }
