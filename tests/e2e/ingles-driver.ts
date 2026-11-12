@@ -83,9 +83,15 @@ export async function tapReachable(page: Page, loc: Locator, label: string, opts
   let moreShown = false
   let viaMore = false
   for (let k = 0; k < 4 && !(await inWindow(loc)); k++) {
-    // «⬇ Más abajo» is checked every half second: give it a moment to show after a change of the layout.
+    // «⬇ Más abajo» is checked every half second: give it a moment to show after a change of the layout. A screen that is
+    // still settling (a new question laid out, then shrunk by FitToScreen a frame later; slow under a loaded machine) may
+    // instead bring the element into the window by itself: whichever comes first, within 2 s.
     const more = page.getByRole('button', { name: 'Ver lo de abajo' })
-    await more.waitFor({ state: 'visible', timeout: 1_200 }).catch(() => undefined)
+    const deadline = Date.now() + 2_000
+    while (Date.now() < deadline && !(await more.isVisible().catch(() => false)) && !(await inWindow(loc))) {
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    if (await inWindow(loc)) break
     moreShown = await more.isVisible().catch(() => false)
     if (!moreShown) break
     viaMore = true

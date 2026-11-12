@@ -48,6 +48,21 @@
   .bar > .side:last-child { margin-right: 200px; }
 }
 
+/* A tablet in portrait (820 px): «Pista», «Revisar», «Siguiente» and the room kept for the companion left the message a
+   few pixels, one word per line («Cuenta los lados…», e2e i-fractions-geometry). The message takes a row of its own above
+   the buttons, and the room for the companion is only what the buttons can spare (P6). The short landscape layout has
+   its own (src/styles/exercise.css: the bar in the statement's column). */
+@media (orientation: portrait) and (min-width: 761px) {
+  .bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: 'msg msg' 'left right';
+  }
+  .side:first-child { grid-area: left; }
+  .bar > .side:last-child { grid-area: right; margin-right: clamp(0px, calc(100% - 340px), 200px); }
+  .message { grid-area: msg; }
+  .message:empty { display: none; }
+}
+
 @media (max-width: 760px) {
   .bar { grid-template-columns: 1fr; }
   .side, .side:first-child { justify-content: center; }

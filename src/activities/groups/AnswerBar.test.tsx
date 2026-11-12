@@ -69,3 +69,21 @@ describe('AnswerBar: the solution after the second wrong check (P4)', () => {
     expect(screen.queryByTestId('solution-panel')).toBeNull()
   })
 })
+
+/** A source file as text (the CSS module is not processed in the tests). */
+async function source(path: string): Promise<string> {
+  const fs = (await import(/* @vite-ignore */ 'node:' + 'fs')) as { readFileSync(p: string, enc: 'utf8'): string }
+  const cwd = (globalThis as { process?: { cwd(): string } }).process!.cwd()
+  return fs.readFileSync(`${cwd}/${path}`, 'utf8')
+}
+
+describe('AnswerBar: the message is never squeezed between the buttons (P6)', () => {
+  it('on a tablet in portrait the message has a row of its own above the buttons', async () => {
+    // At 820 px (iPad portrait) «Pista», «Revisar», «Siguiente» and the room kept for the companion left the message a
+    // few pixels: «Cuenta los lados…» came one word per line, unreadable.
+    const css = await source('src/activities/groups/AnswerBar.module.css')
+    const portrait = /@media \(orientation: portrait\) and \(min-width: 761px\) \{([\s\S]*?)\n\}/.exec(css)?.[1] ?? ''
+    expect(portrait).toMatch(/grid-template-areas:\s*'msg msg'\s*'left right'/)
+    expect(portrait).toMatch(/\.message \{ grid-area: msg; \}/)
+  })
+})

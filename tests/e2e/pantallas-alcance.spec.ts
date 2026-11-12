@@ -3,7 +3,7 @@
    family of the 2.º–4.º syllabus, plus the subtraction and division methods) in a copy of the session's frame at
    1000 × 490 (a short Android tablet with its browser bars) and 1180 × 820 (iPad), with a finger, and checks, as the
    screen opens:
-   - «✓ Comprobar» (the answer bar's) is inside the window (P3PE-01), and every case shows one, or «Seguir» (a screen
+   - «✓ Comprobar» and «💡 Pista» (the answer bar's) are inside the window (P3PE-01), and every case shows one, or «Seguir» (a screen
      that leads to the next one), unless it is listed in NO_CHECK (a view answered by a tap);
    - the statement (.ex-prompt) is ≥ 20 px on screen at 1180 × 820 (P3PE-06);
    - nothing sits on a visible button: elementFromPoint at its centre is the button itself, the scroll assistant
@@ -50,8 +50,9 @@ async function measure(page: Page, id: string): Promise<Measure> {
       return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'
     }
     const buttons = [...document.querySelectorAll<HTMLElement>('button')].filter(visible)
+    // «Comprobar» and «Pista» of the answer bar: both always in view (P3PE-01).
     const checks = buttons
-      .filter((b) => /Comprobar/.test(b.textContent ?? ''))
+      .filter((b) => /Comprobar|Pista/.test(b.textContent ?? ''))
       .map((b) => { const r = b.getBoundingClientRect(); return { top: r.top, bottom: r.bottom } })
     const forward = buttons.filter((b) => /Comprobar|Seguir/.test(b.textContent ?? '')).length
     const promptEl = root.querySelector('.ex-prompt')
@@ -88,7 +89,7 @@ for (const [width, height] of [[1000, 490], [1180, 820]] as const) {
         const bad: string[] = []
         // A case with no «Comprobar» in view never passes for free.
         if (m.forward === 0 && !NO_CHECK.some((re) => re.test(id))) noCheck.push(id)
-        for (const c of m.checks) if (c.bottom > height + 1 || c.top < 0) bad.push(`${id} (Comprobar ${Math.round(c.top)}–${Math.round(c.bottom)}, escala ${m.scale})`)
+        for (const c of m.checks) if (c.bottom > height + 1 || c.top < 0) bad.push(`${id} (Comprobar o Pista ${Math.round(c.top)}–${Math.round(c.bottom)}, escala ${m.scale})`)
         const smallHere = width === 1180 && (m.prompt === null || m.prompt < 20) ? [`${id}: ${m.prompt === null ? 'sin .ex-prompt' : `${m.prompt.toFixed(1)} px`}`] : []
         if (VIEWS_PENDING.test(id)) {
           if (bad.length || smallHere.length || noCheck.at(-1) === id) pending.push(id)
@@ -107,7 +108,7 @@ for (const [width, height] of [[1000, 490], [1180, 820]] as const) {
       if (pending.length) console.log('PENDIENTES (otros grupos)\n' + pending.join('\n'))
       if (noCheck.length) console.log('SIN COMPROBAR NI SEGUIR\n' + noCheck.join('\n'))
       expect(noCheck, 'sin «Comprobar» ni «Seguir» a la vista').toEqual([])
-      expect(out, 'Comprobar fuera de la pantalla').toEqual([])
+      expect(out, '«Comprobar» o «Pista» fuera de la pantalla').toEqual([])
       expect(covered, 'botones tapados').toEqual([])
       expect(small, 'enunciado < 20 px').toEqual([])
     })

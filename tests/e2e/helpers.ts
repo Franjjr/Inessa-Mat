@@ -283,6 +283,16 @@ export async function driveExercises(page: Page, finished: () => Promise<boolean
       await settle(page, 300)
       continue
     }
+    // Nothing left that the driver answers (no empty box it can solve, no choice, no token) and «Comprobar» is active: the
+    // child checks with the button. Seen in place value with a 0 («Si una cifra es 0, puedes escribir 0 o dejar la casilla
+    // vacía»): the box of the 0 stays empty (its «0» is only the placeholder) and the Enter of the last box moves the focus
+    // to it instead of checking (a product defect of src/ink/NumberInput.tsx, noted for integration).
+    const check = page.getByRole('button', { name: /Comprobar/ }).last()
+    if (await check.isVisible().catch(() => false) && await check.isEnabled().catch(() => false)) {
+      await check.click()
+      await settle(page, 300)
+      continue
+    }
     await settle(page, 300)
   }
   throw new Error('exercises did not finish')
