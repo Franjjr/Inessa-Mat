@@ -1843,7 +1843,7 @@ exports[`temario de Inglés de 3.º > the maths and Lengua temarios keep their c
               "numeros": "23 × 14: 23 × 4 = 92, 23 × 10 = 230 y se suman",
             },
             "skills": [
-              "mul:col:2x2",
+              "mul:col:2x2:suave",
             ],
             "status": "disponible",
             "term": 3,

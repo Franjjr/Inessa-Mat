@@ -51,6 +51,7 @@
                             is a round ten (20, 30… 90), exact (the first step of the family)
    mul:2dx2d | mul:3dx2d    multiplying by a two-digit number by parts (4.º)
    mul:col:2x2|3x2|3x3      multiplying in columns, with partial rows: 2- or 3-digit top × 2- or 3-digit bottom (4.º, src/engine/longmul.ts)
+   mul:col:2x2:suave        the gentle 2 × 2 of 3.º: the bottom with tens 1, or carries of 1 or 2 in both rows
    measure:unit:<dim>       medida: unit of a real object, dim = length|mass|capacity
    measure:convert:<dim>    simple conversions (1 m = 100 cm, medio kilo = 500 g)
    measure:convert:<dim>:all  every unit of the dimension (km … mm, kg … mg, kl … ml): one step first, then several; whole numbers only
@@ -150,7 +151,7 @@ export type ParsedSkill =
   | { type: 'decimal-op'; op: 'add' | 'sub'; places: DecimalPlaces }
   | { type: 'div3x2'; variant: 'exact' | 'rem' | 'round' }
   | { type: 'mulParts'; digits: 2 | 3 }
-  | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3 }
+  | { type: 'mulCol'; top: 2 | 3; bottom: 2 | 3; gentle?: true }
   | { type: 'ordinal'; top: OrdinalMax }
   | { type: 'chart'; variant: 'pict' | 'pict:x' | 'bars' | 'table' | 'freq' | 'mode' }
   | { type: 'chance'; variant: 'chance' | 'likely' }
@@ -185,6 +186,8 @@ export function ordinalSkill(max: OrdinalMax): SkillKey {
 export function mulColSkill(top: 2 | 3, bottom: 2 | 3): SkillKey {
   return `mul:col:${top}x${bottom}`
 }
+/** The gentle entry of 3.º to the 2 × 2 in columns (its own skill: the 4.º keys keep their full range). */
+export const MUL_COL_GENTLE: SkillKey = 'mul:col:2x2:suave'
 export function mul2x1Skill(carry: boolean): SkillKey {
   return carry ? 'mul:2x1:c1' : 'mul:2x1:c0'
 }
@@ -323,6 +326,7 @@ export function parseSkill(key: SkillKey): ParsedSkill | null {
   if ((m = key.match(/^mul:([23])dx2d$/))) return { type: 'mulParts', digits: Number(m[1]) as 2 | 3 }
   if ((m = key.match(/^num:ordinal:(10|20|30)$/))) return { type: 'ordinal', top: Number(m[1]) as OrdinalMax }
   if ((m = key.match(/^mul:col:([23])x([23])$/))) return { type: 'mulCol', top: Number(m[1]) as 2 | 3, bottom: Number(m[2]) as 2 | 3 }
+  if (key === MUL_COL_GENTLE) return { type: 'mulCol', top: 2, bottom: 2, gentle: true }
   if ((m = key.match(/^div:4x1:(exact|rem)$/))) return { type: 'div4x1', variant: m[1] as 'exact' | 'rem' }
   if ((m = key.match(/^dec:(shade|read):([12])$/))) return { type: 'decimal', mode: m[1] as 'shade' | 'read', places: Number(m[2]) as DecimalPlaces }
   if ((m = key.match(/^dec:(compare|money)$/))) return { type: 'decimal', mode: m[1] as 'compare' | 'money' }

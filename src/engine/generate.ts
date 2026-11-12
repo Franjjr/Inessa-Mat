@@ -22,7 +22,7 @@ import { buildMoney, MONEY_MODES } from './money'
 import { buildMeasure } from './measure'
 import { CHART_SKILLS, buildChance, buildChart, buildLikely } from './data'
 import { genDivision2d, genDivision4, genMul3x1, genMulParts } from './bigops'
-import { genLongMul } from './longmul'
+import { genLongMul, genLongMulGentle } from './longmul'
 import { galeraShowsAnswer } from './divParts'
 import { genOrdinal } from './ordinals'
 import { genDecimal, genDecimalOp } from './decimals'
@@ -831,6 +831,8 @@ export function buildExercise(kind: ExerciseKind, skill: SkillKey, ctx: Ctx, rng
   if (p.type === 'mulParts') return retry(() => genMulParts(rng, p.digits), used, rng)!
   if (p.type === 'mulCol') {
     // A selector that asks for few carries (regroup 'none' or 'one') gets the gentle 3.º introduction of 2 × 2.
+    // The 3.º entry has its own key (mul:col:2x2:suave): small carries, the exercise keeps that skill.
+    if (p.gentle) return retry(() => genLongMulGentle(rng), used, rng)!
     const gentle = ctx.regroupExplicit && (ctx.regroup === 'none' || ctx.regroup === 'one')
     return retry(() => genLongMul(rng, p.top, p.bottom, gentle), used, rng)!
   }

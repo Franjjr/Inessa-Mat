@@ -374,13 +374,13 @@ const mul2x2Partes = clase({
     show('carry', { a: 1410, b: 282 }, '1 410 + 282 = 1 692. ¡47 × 36 = 1 692!'),
   ],
   guiada: [
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Te toca! Multiplica por las unidades de abajo y, debajo, por las decenas.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Otra! Empieza por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Te toca! Multiplica por las unidades de abajo y, debajo, por las decenas.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Otra! Empieza por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
   ],
   sola: [
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Primero por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto, escribe 23 × 1 delante de él.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
-    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Sin pistas: las dos filas y su suma.', { kinds: ['long-mul'], skills: ['mul:col:2x2'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Primero por las unidades de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Después por las decenas: el cero ya está puesto; delante, escribe el número de arriba por la decena de abajo.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
+    tryIt('column-mul', { top: 23, bottom: 14 }, '¡Tu turno! Sin pistas: las dos filas y su suma.', { kinds: ['long-mul'], skills: ['mul:col:2x2:suave'] }),
   ],
   cierre: show('carry', { a: 230, b: 92 }, 'Para multiplicar por dos cifras: primero por las unidades de abajo, debajo por las decenas con un 0 detrás, y sumo las dos filas.'),
 })

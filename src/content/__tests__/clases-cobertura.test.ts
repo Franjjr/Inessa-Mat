@@ -14,7 +14,7 @@ function digitsOfSkill(skill: string): number {
   if (m) return Number(m[1])
   m = skill.match(/^(?:mul|div):(\d)x1(?::|$)/)
   if (m) return Number(m[1])
-  m = skill.match(/^mul:col:(\d)x\d$/)
+  m = skill.match(/^mul:col:(\d)x\d(?::|$)/)
   return m ? Number(m[1]) : 0
 }
 

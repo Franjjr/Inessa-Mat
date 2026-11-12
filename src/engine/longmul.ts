@@ -5,7 +5,7 @@ import type { Answer, CheckResult, Hint, LongMulExercise, Rng } from '@/types'
 import { digitAt, fromDigits, toDigits } from './arith'
 import { fmt } from './numeric'
 import { randInt } from './rng'
-import { mulColSkill } from './skills'
+import { MUL_COL_GENTLE, mulColSkill } from './skills'
 
 const hint = (level: 1 | 2 | 3, text: string): Hint => ({ level, text, visual: 'none' })
 
@@ -31,6 +31,27 @@ function genGentle2x2(rng: Rng): LongMulExercise {
     return makeLongMul(t, b)
   }
   return makeLongMul(23, 14)
+}
+
+/** Whether every carry of the row top × d is 1 or 2 at most (units product under 30, and so on to the tens). */
+function smallCarries(top: number, d: number): boolean {
+  const carry = Math.floor(((top % 10) * d) / 10)
+  return carry <= 2 && Math.floor((Math.floor(top / 10) * d + carry) / 10) <= 9
+}
+
+/** The entry of 3.º (mul:col:2x2:suave, topic mul-2-cifras-intro): mostly a bottom with tens 1 (the second row is the
+    top itself, shifted), and sometimes a bottom 21-39 where both rows carry only 1 or 2. No zero in the top's units
+    nor in the bottom. The exercise keeps the gentle skill, so its mastery is apart from the 4.º 2 × 2. */
+export function genLongMulGentle(rng: Rng): LongMulExercise {
+  if (rng() < 0.65) return { ...genGentle2x2(rng), skill: MUL_COL_GENTLE }
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const t = randInt(rng, 12, 39)
+    const b = randInt(rng, 21, 39)
+    if (t % 10 === 0 || b % 10 === 0) continue
+    if (!smallCarries(t, b % 10) || !smallCarries(t, Math.floor(b / 10))) continue
+    return { ...makeLongMul(t, b), skill: MUL_COL_GENTLE }
+  }
+  return { ...makeLongMul(23, 21), skill: MUL_COL_GENTLE }
 }
 
 /** top with `top` digits (2 or 3) × bottom with `bottom` digits, no zero in the bottom: every row is a real partial.
