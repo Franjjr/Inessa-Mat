@@ -307,11 +307,11 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
   const other = ex.dividend === 85 && ex.divisor === 4
   const sub = short
     ? (other
-      ? 'Escribe el cociente y, al final, el resto. Ejemplo con 97 ÷ 4: en 9 cabe 2 y sobra 1; bajo el 7, en 17 caben 4 y sobra 1. Escribo 24 y resto 1.'
-      : 'Escribe el cociente y, al final, el resto. Ejemplo con 85 ÷ 4: en 8 cabe 2 y no sobra nada; bajo el 5 cabe 1 y sobra 1. Escribo 21 y resto 1.')
+      ? 'Ejemplo con 97 ÷ 4: en 9 cabe 2 y sobra 1; bajo el 7, en 17 caben 4 y sobra 1. Escribo 24 y resto 1.'
+      : 'Ejemplo con 85 ÷ 4: en 8 cabe 2 y no sobra nada; bajo el 5 cabe 1 y sobra 1. Escribo 21 y resto 1.')
     : (other
-      ? 'Escribe el cociente y lo que sobra en cada paso. Ejemplo con 97 ÷ 4: en 9 cabe 2 (4 × 2 = 8) y sobra 1; bajo el 7, en 17 caben 4 (4 × 4 = 16) y sobra 1. Sale 24 y resto 1.'
-      : 'Escribe el cociente y lo que sobra en cada paso. Ejemplo con 85 ÷ 4: en 8 cabe 2 (4 × 2 = 8) y no sobra nada; bajo el 5 cabe 1 (4 × 1 = 4) y sobra 1. Sale 21 y resto 1.')
+      ? 'Ejemplo con 97 ÷ 4: en 9 cabe 2 (4 × 2 = 8) y sobra 1; bajo el 7, en 17 caben 4 (4 × 4 = 16) y sobra 1. Sale 24 y resto 1.'
+      : 'Ejemplo con 85 ÷ 4: en 8 cabe 2 (4 × 2 = 8) y no sobra nada; bajo el 5 cabe 1 (4 × 1 = 4) y sobra 1. Sale 21 y resto 1.')
 
   return (
     <ExerciseLayout
@@ -323,7 +323,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
       actions={<AnswerBar flow={flow} onCheck={check} canCheck={complete} />}
     >
       <TermsLegend firstTime={firstTime} />
-      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
+      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle className={s.work}>
         <div
           className={s.galera}
           style={{
