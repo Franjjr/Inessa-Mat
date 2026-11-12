@@ -268,6 +268,10 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
       return `${pre}${art && art[0] !== art[0].toLowerCase() ? words[0].toUpperCase() + words.slice(1) : words}`
     })
 
+    // What is left of "12:3" is not an hour: it is the school's division sign, "doce entre tres". Only unspaced, so
+    // "Paso 1: 3 decenas" stays punctuation ("12 : 3" with spaces is already a division for the maths reader).
+    s = s.replace(/(\d):(?=\d)/g, '$1 : ')
+
     // Comparisons between two numbers read like a sentence: "5 > 3" → "5 es mayor que 3".
     s = s.replace(/(\d)\s*([<>≠≤≥])\s*(?=[\d])/g, (_m, d: string, sign: string) =>
       `${d} es ${{ '<': 'menor que', '>': 'mayor que', '≠': 'distinto de', '≤': 'menor o igual que', '≥': 'mayor o igual que' }[sign]} `)
@@ -344,9 +348,15 @@ export function toSpeakable(input: string, lang: SpeechLang = 'es', opts: Speaka
         const after = whole.slice(offset + run.length)
         // The text already says which way ("→ a la derecha", "← izquierda"): the arrow is only "flecha".
         const named = new RegExp(`^\\s*(?:${phrase}|${short})(?![\\p{L}])`, 'iu').test(after)
-        if (named) return ' flecha '
+        const saysFlecha = /flechas?\s*$/iu.test(before)
+        // "La flecha → a la derecha": the word "flecha" and the way are both there; the arrow adds nothing.
+        if (named) return saysFlecha ? ' ' : ' flecha '
+        // "… y derecha →", "Gira a la derecha →": the way was just said; repeating it is "a la derecha a la derecha".
+        if (new RegExp(`(?:${phrase}|${short})\\s*$`, 'iu').test(before)) return ' '
+        // "La flecha → va a la derecha": the way comes a few words later.
+        if (saysFlecha && n === 1 && new RegExp(`^(?:\\s*[\\p{L}]+){0,3}\\s+(?:${phrase}|${short})(?![\\p{L}])`, 'iu').test(after)) return ' '
         // "Las flechas →→ son…": the word "flechas" is already there.
-        if (/flechas?\s*$/iu.test(before)) return n > 1 ? ` ${numberToSpanish(n, 'f')} ${phrase} ` : ` ${phrase} `
+        if (saysFlecha) return n > 1 ? ` ${numberToSpanish(n, 'f')} ${phrase} ` : ` ${phrase} `
         if (n > 1) return ` ${numberToSpanish(n, 'f')} flechas ${phrase} `
         // A single "→" between two things ("14 → 28", "8 → 16 → …", "5, 10 → ?") is only a pause.
         const afterWord = /[\p{L}\d]\s*$/u.test(before)
