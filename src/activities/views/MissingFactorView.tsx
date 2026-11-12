@@ -22,7 +22,7 @@ export default function MissingFactorView({ exercise, onAnswered, guided, allowH
   const [draft, setDraft] = useState<number | null>(before ?? null)
   const done = flow.phase === 'done'
   const correct = done && !!flow.last?.correct
-  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before) ? 'wrong' : 'idle'
+  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before && before !== ex.answer) ? 'wrong' : 'idle'
   const missingFirst = ex.missing === 'a'
 
   const submit = (v: number | null) => {

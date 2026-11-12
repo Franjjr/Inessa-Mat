@@ -35,7 +35,7 @@ export default function FactView({ exercise, onAnswered, guided, allowHints = tr
   const sign = isDiv ? '÷' : '×'
   const done = flow.phase === 'done'
   const correct = done && !!flow.last?.correct
-  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before) ? 'wrong' : 'idle'
+  const status = correct ? 'correct' : flow.phase === 'retry' || (before !== null && draft === before && before !== ex.answer) ? 'wrong' : 'idle'
   const copying = flow.phase === 'copy'
   // The clue after a wrong try: always where the view shows its feedback; with teach, also where it does not.
   const showClue = !!flow.clue && (showFeedback || (teaching !== 'none' && (flow.phase === 'retry' || copying)))

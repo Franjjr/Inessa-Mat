@@ -46,6 +46,35 @@ describe('DivisionView: layout and keys', () => {
   })
 })
 
+/** Types digits on whatever has the focus, like a child with the keyboard. */
+const typeOnFocus = (...keys: string[]) => keys.forEach((k) => act(() => { fireEvent.keyDown(document.activeElement as Element, { key: k }) }))
+
+describe('DivisionView: typing the answer in one go', () => {
+  it('without subtractions «1, 2, 0» is a quotient of 12 and a remainder of 0 (96 ÷ 8)', () => {
+    render(<DivisionView exercise={makeDivision(96, 8)} onAnswered={vi.fn()} divMethod="galera-short" />)
+    typeOnFocus('1', '2', '0')
+    expect(digit(/cociente, cifra 1/)).toBe('1')
+    expect(digit(/cociente, cifra 2/)).toBe('2')
+    expect(digit(/^resto/)).toBe('0')
+  })
+
+  it('with subtractions «2, 0, 1, 0» is 21 with its remainders (84 ÷ 4 → 21)', () => {
+    render(<DivisionView exercise={makeDivision(84, 4)} onAnswered={vi.fn()} />)
+    typeOnFocus('2', '0', '2', '0')
+    expect(digit(/cociente, cifra 1/)).toBe('2')
+    expect(digit(/cociente, cifra 2/)).toBe('2')
+  })
+
+  it('a remainder of one digit that cannot grow moves on to the next quotient digit (990 ÷ 90)', () => {
+    render(<DivisionView exercise={makeDivision(990, 90)} onAnswered={vi.fn()} />)
+    typeOnFocus('1', '9', '1', '0')
+    expect(digit(/cociente, cifra 1/)).toBe('1')
+    expect(digit(/cociente, cifra 2/)).toBe('1')
+    expect(digit(/^resto del paso 1, decenas$/)).toBe('')
+    expect(digit(/^resto del paso 1$/)).toBe('9')
+  })
+})
+
 describe('DivisionView: the words of the galera', () => {
   it('the first time the four words come with what they mean; once she has checked one, only the words', () => {
     const first = render(<DivisionView exercise={makeDivision(84, 4)} onAnswered={vi.fn()} />)

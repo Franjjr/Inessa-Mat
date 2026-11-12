@@ -60,7 +60,7 @@ describe('one division method, the galera of the school', () => {
 
   it('the prompt says what to write in each step', () => {
     render(<DivisionView exercise={makeDivision(96, 4)} onAnswered={vi.fn()} />)
-    expect(screen.getByText(/Escribe el cociente y, en cada paso, lo que sobra: así sabrás qué cifra bajar\. Ejemplo con 85 ÷ 4/)).toBeTruthy()
+    expect(screen.getByText(/Escribe el cociente y lo que sobra en cada paso\. Ejemplo con 85 ÷ 4: en 8 cabe 2/)).toBeTruthy()
   })
 
   it('65 ÷ 7: before the quotient digit there is no «63»; after it, «7 × 9 = 63»', () => {

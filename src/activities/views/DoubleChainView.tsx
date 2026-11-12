@@ -44,7 +44,7 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
   const goal = `${times} × ${ex.start} = ${done ? last : '?'}`
 
   const before = current >= 0 ? priorAt(current) : null
-  const oldWrong = before !== null && draft === before && (wrongColumns ? wrongColumns.includes(current) : before !== ex.answer[current])
+  const oldWrong = before !== null && draft === before && (wrongColumns && wrongColumns.length ? wrongColumns.includes(current) : before !== ex.answer[current])
 
   // Link 0 is the given start; link i+1 is slot i.
   const cells: SequenceCell[] = [
@@ -70,7 +70,7 @@ export default function DoubleChainView({ exercise, onAnswered, guided, allowHin
     <ExerciseLayout
       aria-label="Cadena de dobles"
       prompt={`Dobla ${ex.answer.length === 1 ? 'una vez' : `${ex.answer.length} veces`} el ${ex.start}, un eslabón tras otro.`}
-      sub={`Ejemplo: el doble de ${ex.start === 5 ? 4 : 5} es ${ex.start === 5 ? 8 : 10}, porque ${ex.start === 5 ? '4 + 4' : '5 + 5'}. Doblar es sumar el número a sí mismo.`}
+      sub={`Ejemplo: el doble de ${ex.start === 5 ? 4 : 5} es ${ex.start === 5 ? 8 : 10}, porque ${ex.start === 5 ? '4 + 4 = 8' : '5 + 5 = 10'}. Doblar es sumar el número a sí mismo.`}
       actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
         onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
     >

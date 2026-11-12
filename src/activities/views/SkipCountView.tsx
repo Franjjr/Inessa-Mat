@@ -40,7 +40,7 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
   const allCorrect = done && !!flow.last?.correct
 
   const before = current >= 0 ? priorAt(current) : null
-  const oldWrong = before !== null && draft === before && (wrongColumns ? wrongColumns.includes(current) : before !== ex.answer[current])
+  const oldWrong = before !== null && draft === before && (wrongColumns && wrongColumns.length ? wrongColumns.includes(current) : before !== ex.answer[current])
 
   const cells: SequenceCell[] = ex.values.map((v, i) => {
     const slot = hidden.indexOf(i)
@@ -64,7 +64,7 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
     <ExerciseLayout
       aria-label={`Collar de ${ex.step}`}
       prompt={`Completa el collar: cuenta de ${ex.step} en ${ex.step}.`}
-      sub={`Ejemplo: de ${ex.step === 5 ? 2 : 5} en ${ex.step === 5 ? 2 : 5} es ${[1, 2, 3, 4].map((k) => k * (ex.step === 5 ? 2 : 5)).join(', ')}. Escribe el número de la perla marcada.`}
+      sub={`Ejemplo: contando de ${ex.step === 5 ? 2 : 5} en ${ex.step === 5 ? 2 : 5}: ${[1, 2, 3, 4].map((k) => k * (ex.step === 5 ? 2 : 5)).join(', ')}. Escribe el número de la perla marcada.`}
       actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
         onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
     >

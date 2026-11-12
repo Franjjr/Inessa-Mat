@@ -13,6 +13,13 @@ import s from './FactFamilyView.module.css'
 /** What the child does here, said in a child's words. */
 export const FAMILY_INSTRUCTION = 'Escribe las cuatro cuentas que salen con estos tres números.'
 
+/** The worked example of the family: never the exercise itself (3, 4 and 12 is the example unless it is the exercise). */
+export function familyExample(a: number, b: number): string {
+  const is23 = (a === 2 && b === 3) || (a === 3 && b === 2)
+  const [x, y, z] = is23 ? [3, 4, 12] : [2, 3, 6]
+  return `Ejemplo con ${x}, ${y} y ${z}: ${x} × ${y} = ${z}, ${y} × ${x} = ${z}, ${z} ÷ ${x} = ${y} y ${z} ÷ ${y} = ${x}.`
+}
+
 interface Row {
   left: string
   right: string
@@ -57,7 +64,7 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { setDraft(priorAt(current)) }, [current])
   const before = current >= 0 ? priorAt(current) : null
-  const oldWrong = before !== null && draft === before && (wrongColumns ? wrongColumns.includes(current) : before !== expected[current])
+  const oldWrong = before !== null && draft === before && (wrongColumns && wrongColumns.length ? wrongColumns.includes(current) : before !== expected[current])
 
   const submit = (v: number | null) => {
     if (v === null || done) return
@@ -68,7 +75,7 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
     <ExerciseLayout
       aria-label="Familia de operaciones"
       prompt={FAMILY_INSTRUCTION}
-      sub={p === 6 ? 'Ejemplo con 3, 4 y 12: 3 × 4 = 12, 4 × 3 = 12, 12 ÷ 3 = 4 y 12 ÷ 4 = 3.' : 'Ejemplo con 2, 3 y 6: 2 × 3 = 6, 3 × 2 = 6, 6 ÷ 2 = 3 y 6 ÷ 3 = 2.'}
+      sub={familyExample(a, b)}
       actions={<FactViewBar allowHints={allowHints} hintsShown={flow.hintsShown} hintsTotal={flow.hints.length} canHint={flow.canHint}
         onHint={flow.askHint} onCheck={() => submit(draft)} canCheck={draft !== null} done={done} />}
     >

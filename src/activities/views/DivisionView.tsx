@@ -138,8 +138,23 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
 
   // The quotient is typed like a calculator while its last open cell is empty; the remainder, while a cell of it is free.
   const lastOpen = steps.reduce((acc, _, j) => (open(j) ? j : acc), 0)
-  const qCalculator = qs[lastOpen] === null
+  // Without subtractions every cell of the quotient is there from the start, so a quotient typed as read («1», «2»)
+  // goes right to left like a calculator and the cursor has somewhere to wait.
+  const qCalculator = short ? qs.some((q) => q === null) : qs[lastOpen] === null
+  const qShown = (j: number) => short || open(j)
   const remainderNumber = (j: number) => (twoDigitRem && !(rs[j] !== null && rts[j] !== null) ? `r${j}` : undefined)
+
+  // A remainder of one digit that cannot grow (a remainder is smaller than the divisor: 9 followed by any digit is
+  // more than 90) is finished: the cursor goes on to the next quotient cell instead of waiting for a second digit.
+  useEffect(() => {
+    if (!twoDigitRem) return
+    const j = steps.findIndex((_, i) => rs[i] !== null && rts[i] === null && (rs[i] as number) * 10 >= ex.divisor)
+    if (j < 0 || j >= k - 1) return
+    const a = document.activeElement
+    if (!(a instanceof HTMLElement) || a.getAttribute('aria-label') !== (showRemainder && j === k - 1 ? 'resto' : `resto del paso ${j + 1}`)) return
+    const next = document.querySelector<HTMLElement>(`[aria-label="cociente, cifra ${j + 2}"]`)
+    next?.focus()
+  }, [rs, rts, twoDigitRem, ex.divisor, steps, k, showRemainder])
 
   const check = () => {
     if (!complete) return
@@ -172,7 +187,7 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
 
   // Row 2: quotient digits under the top bar, one per open step.
   steps.forEach((_, j) => {
-    if (!open(j)) return
+    if (!qShown(j)) return
     cells.push(
       <div key={`q${j}`} className={`${s.cell} ${s.quotient}`} style={{ gridRow: 2, gridColumn: n + 2 + j }}>
         <DigitCell
@@ -288,13 +303,15 @@ function GaleraRound({ ex, onAnswered, guided, allowHints, showFeedback, compact
     ? host.t(`La prueba mágica: ${quotientOf(steps)} × ${ex.divisor} + ${remainderOf(steps)} = ${ex.dividend}`)
     : null
 
-  // The example is worked before the child is asked (like at school); it is not this exercise.
-  const eg = ex.dividend === 85 && ex.divisor === 4 ? { n: 97, d: 4, text: 'En 9 cabe 2 veces el 4 (4 × 2 = 8) y sobra 1. Bajo el 7: en 17 caben 4 veces el 4 (4 × 4 = 16) y sobra 1. Sale 24 y resto 1.' }
-    : { n: 85, d: 4, text: 'En 8 cabe 2 veces el 4 (4 × 2 = 8) y no sobra nada. Bajo el 5: en 5 cabe 1 vez el 4 (4 × 1 = 4) y sobra 1. Sale 21 y resto 1.' }
-  const egShort = ex.dividend === 85 && ex.divisor === 4 ? 'Ejemplo con 97 ÷ 4: sale 24 y resto 1.' : 'Ejemplo con 85 ÷ 4: sale 21 y resto 1.'
+  // The example is worked before the child is asked (like at school); it is not this exercise. One short line each.
+  const other = ex.dividend === 85 && ex.divisor === 4
   const sub = short
-    ? `Escribe solo el cociente y, al final, el resto. ${egShort}`
-    : `Escribe el cociente y, en cada paso, lo que sobra: así sabrás qué cifra bajar. Ejemplo con ${eg.n} ÷ ${eg.d}: ${eg.text}`
+    ? (other
+      ? 'Escribe el cociente y, al final, el resto. Ejemplo con 97 ÷ 4: en 9 cabe 2 y sobra 1; bajo el 7, en 17 caben 4 y sobra 1. Escribo 24 y resto 1.'
+      : 'Escribe el cociente y, al final, el resto. Ejemplo con 85 ÷ 4: en 8 cabe 2 y no sobra nada; bajo el 5 cabe 1 y sobra 1. Escribo 21 y resto 1.')
+    : (other
+      ? 'Escribe el cociente y lo que sobra en cada paso. Ejemplo con 97 ÷ 4: en 9 cabe 2 (4 × 2 = 8) y sobra 1; bajo el 7, en 17 caben 4 (4 × 4 = 16) y sobra 1. Sale 24 y resto 1.'
+      : 'Escribe el cociente y lo que sobra en cada paso. Ejemplo con 85 ÷ 4: en 8 cabe 2 (4 × 2 = 8) y no sobra nada; bajo el 5 cabe 1 (4 × 1 = 4) y sobra 1. Sale 21 y resto 1.')
 
   return (
     <ExerciseLayout

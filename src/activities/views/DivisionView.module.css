@@ -47,7 +47,7 @@
   overflow-x: auto;
 }
 @media (max-width: 480px) {
-  .galera { --galera-gutter: 24px; padding: var(--sp-3) var(--sp-2); }
+  .galera { --galera-gutter: 24px; padding: calc(var(--sp-3) + 14px) var(--sp-2) calc(var(--sp-3) + 16px); }
 }
 
 .cell {
