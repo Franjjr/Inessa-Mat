@@ -20,6 +20,8 @@ const PILL_CHAR = 9.2
 // Clears the gold ring around icons so two neighbouring rings never touch.
 const ICON_RING = 12
 const HELP = { w: 100, h: 24 }
+/** Up to this stage width the screen is a phone: close stops are spread apart (spreadForPhone). */
+export const PHONE_W = 600
 
 /** Width of the name tag: 200 px, but 160 px at most on narrow screens (and never wider than the screen). */
 export function labelWidth(stageW: number): number {
@@ -44,6 +46,9 @@ export function pillOf(petName: string | undefined): { text: string; w: number }
 
 export interface StopInput { node: NodeDef; title: string; done: boolean; current: boolean; crystal: boolean; petName?: string }
 export interface Placed {
+  /** Centre of the icon as a fraction of the stage (0..1): node.pos, except on a phone where close stops are spread
+      apart (see spreadForPhone). The screen draws the icon and the path from here. */
+  pos: { x: number; y: number }
   /** Icon box, label block (name + stars) and the optional extra tags, all in stage pixels. */
   icon: Box
   label: Box
@@ -97,10 +102,56 @@ function crowd(c: { x: number; y: number }[], i: number): number {
   return m
 }
 
+/** Phones are narrow: stops a path puts side by side (node.pos) are closer than an icon with its ring, and the stage
+    cannot widen. Their centres keep their x and are moved apart vertically, in path order, until no two icons (with
+    their gold rings) touch and no «Aquí sigue» pill or «¡Ayúdame!» tag of a stop could land on the icon above it. The
+    result does not depend on which stop is the current one, so the icons never jump as the child progresses. */
+export function spreadForPhone(stops: StopInput[], centres: { x: number; y: number }[], sizes: number[], H: number): { x: number; y: number }[] {
+  const out = centres.map((c) => ({ ...c }))
+  const pillHalf = pillOf(stops[0]?.petName).w / 2
+  // Above the icon: the pill (its top 22 px over the icon) or the help tag of the guardian (12 px over it).
+  const ABOVE = PILL_H - 8
+  const top = (i: number) => sizes[i] / 2 + ABOVE + 4
+  const bottom = (i: number) => H - sizes[i] / 2 - MARGIN
+  // Upper/lower of each pair from the authored order (by y, then by path order), so the order never flips.
+  const upper = (i: number, j: number) => (centres[i].y < centres[j].y || (centres[i].y === centres[j].y && i < j) ? i : j)
+  for (let pass = 0; pass < 200; pass++) {
+    let moved = false
+    for (let i = 0; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        const u = upper(i, j)
+        const l = u === i ? j : i
+        const ru = sizes[u] / 2
+        const rl = sizes[l] / 2
+        const dx = Math.abs(out[i].x - out[j].x)
+        let need = 0
+        if (dx < ru + rl + 2 * ICON_RING) need = ru + rl + 2 * ICON_RING
+        // The pill (centred over the lower icon) or the guardian's tag (up to 36 px right of it) over the upper icon.
+        if (dx < Math.max(pillHalf, rl + 36) + ru) need = Math.max(need, ru + rl + ABOVE + 2)
+        const dy = out[l].y - out[u].y
+        if (need === 0 || dy >= need) continue
+        const deficit = need - dy
+        const upRoom = Math.max(0, out[u].y - top(u))
+        const downRoom = Math.max(0, bottom(l) - out[l].y)
+        let up = Math.min(upRoom, deficit / 2)
+        let down = Math.min(downRoom, deficit - up)
+        up = Math.min(upRoom, deficit - down)
+        if (up + down <= 0.01) continue
+        out[u].y -= up
+        out[l].y += down
+        moved = true
+      }
+    }
+    if (!moved) break
+  }
+  return out
+}
+
 function place(stops: StopInput[], W: number, H: number): { placed: Placed[]; overlaps: string[] } {
   const w = labelWidth(W)
   const sizes = stops.map(iconSize)
-  const centres = stops.map((s) => ({ x: s.node.pos.x * W, y: s.node.pos.y * H }))
+  const authored = stops.map((s) => ({ x: s.node.pos.x * W, y: s.node.pos.y * H }))
+  const centres = W <= PHONE_W ? spreadForPhone(stops, authored, sizes, H) : authored
   const icons = stops.map((_, i) => around(centres[i].x, centres[i].y, sizes[i], sizes[i]))
   const extras = stops.map((s, i) => extrasOf(s, centres[i].x, centres[i].y, sizes[i]))
   const labels: (Box | null)[] = stops.map(() => null)
@@ -131,7 +182,7 @@ function place(stops: StopInput[], W: number, H: number): { placed: Placed[]; ov
       if (bad === 0) break
     }
     labels[i] = best!.box
-    result[i] = { icon: icons[i], label: best!.box, extras: extras[i], dx: best!.dx, dy: best!.dy, w, h }
+    result[i] = { pos: W <= PHONE_W ? { x: s.node.pos.x, y: centres[i].y / H } : s.node.pos, icon: icons[i], label: best!.box, extras: extras[i], dx: best!.dx, dy: best!.dy, w, h }
   }
   const overlaps: string[] = []
   for (let i = 0; i < stops.length; i++) {

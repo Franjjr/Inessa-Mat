@@ -64,7 +64,6 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
   }), [world, wp, progress])
 
   const current = states.find((x) => !x.locked && !x.done)?.node.id
-  const path = useMemo(() => world.nodes.map((n) => n.pos), [world])
   const trainable = states.filter((x) => x.node.kind !== 'guardian')
   // Rescue 0..1: how much of the companion's trouble has loosened, from the stars of the stops (3 for a full
   // practice): finishing a reading does not free the companion as much as practising (full once the crystal is won).
@@ -108,6 +107,8 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [states, current, crystal, area, isIsland, world.nodes.length, child.nickname, ctx.petName])
   const stageHeight = { height: `${layout.height}px` }
+  // The path goes through the icons as they are drawn (on a phone close stops are spread apart, see labels.ts).
+  const path = useMemo(() => layout.placed.map((p) => p.pos), [layout])
 
   // Bring the child's next step into view with the step after it also in view, and room above for its pill.
   useEffect(() => {
@@ -210,7 +211,7 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
                 type="button"
                 ref={isCurrent ? currentRef : undefined}
                 className={`${s.node} ${isCurrent ? s.current : ''} ${locked ? s.locked : ''} ${done ? s.done : ''}`}
-                style={{ left: `${node.pos.x * 100}%`, top: `${node.pos.y * 100}%`, width: size, height: size }}
+                style={{ left: `${pl.pos.x * 100}%`, top: `${pl.pos.y * 100}%`, width: size, height: size }}
                 aria-label={`${label}${stateText}`}
                 aria-disabled={locked || undefined}
                 onClick={() => openNode(node, locked)}
