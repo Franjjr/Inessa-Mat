@@ -1,0 +1,7 @@
+/* The ink of a handwritten answer in the list of answers marked wrong (ReviewNotesCard). */
+.line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-1); color: var(--c-ink-mute); }
+.thumbs { display: inline-flex; gap: 2px; }
+.thumb { width: 28px; height: 28px; border-radius: 4px; flex: none; }
+.thumbBg { fill: var(--c-surface-2); }
+.thumbInk { fill: var(--c-ink); }
+.digits { white-space: nowrap; }

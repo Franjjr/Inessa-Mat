@@ -1,5 +1,6 @@
 /* A number written digit by digit in the step views (resta por partes, saltos en la recta). Digits are units first in
-   the state; the cells are drawn left to right. Focus order is set by the parent CellGroup through the cell ids. */
+   the state; the cells are drawn left to right. Focus order is set by the parent CellGroup through the cell ids.
+   The cells share a numberId: typed digits go in like on a calculator («172» typed as read is 172), see CellGroup. */
 import { DigitCell } from '@/ink'
 import s from './SubStepViews.module.css'
 
@@ -38,6 +39,7 @@ export function SubStepNumber({ prefix, width, digits, onDigit, label }: SubStep
           <div key={i} className={s.digit}>
             <DigitCell
               cellId={`${prefix}${i}`}
+              numberId={prefix}
               variant="result"
               size="md"
               place={placeOf(i)}

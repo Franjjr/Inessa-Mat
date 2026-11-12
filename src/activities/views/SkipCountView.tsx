@@ -1,6 +1,6 @@
 /* Skip counting (skip-count): a necklace of beads, some hidden. The child writes the hidden beads one by one. */
 import clsx from 'clsx'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NumberInput } from '@/ink'
 import type { ExerciseViewProps, SkipCountExercise } from '@/types'
 import { useActivityHost } from '../host'
@@ -41,10 +41,12 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
     return { text: '', state: slot === current ? 'current' : 'open' }
   })
 
+  // A new slot starts with an empty pad; after a wrong try what she wrote stays (clearKey).
+  useEffect(() => { setDraft(null) }, [current])
+
   const submit = (v: number | null) => {
     if (v === null || done) return
     flow.submit(v)
-    setDraft(null)
   }
 
   return (
@@ -55,7 +57,8 @@ export default function SkipCountView({ exercise, onAnswered, guided, allowHints
         <div className={s.inputRow}>
           <p className={shared.instructions}>¿Qué número va en la perla marcada?</p>
           <NumberInput
-            key={`${current}-${flow.attemptKey}`}
+            key={current}
+            clearKey={flow.attemptKey}
             value={draft}
             onChange={setDraft}
             onSubmit={submit}

@@ -5,11 +5,17 @@ import type { Direction } from './order'
 export interface CellEntry {
   el: HTMLElement
   cellId?: string
+  /** Cells of one number share it (see DigitCell `numberId`). */
+  numberId?: string
   /** An optional cell (a carry mark): typing never moves the cursor into it; the child taps it to write there. */
   optional?: boolean
   focusable(): boolean
   focus(): void
   input(d: number, via: 'keyboard' | 'keypad'): void
+  /** Sets the digit without moving on (the group places the digits of a number typed like on a calculator). */
+  assign(d: number | null, via: 'keyboard' | 'keypad'): void
+  /** The digit the cell holds now. */
+  value(): number | null
   clear(): void
   isEmpty(): boolean
   /** Recognise pending ink right now (before submitting). Returns true when something was flushed. */
@@ -28,6 +34,12 @@ export interface CellGroupApi {
   /** Backspace on an empty cell: go to the previous cell and clear it. */
   back(uid: string): void
   submit(): void
+  /** 'ltr': the digits of a number go in like on a calculator; 'column': units first (a column operation's result). */
+  typingOrder: 'ltr' | 'column'
+  /** A digit typed in a cell of a number (ltr groups): placed at the units, the rest move left. False: not handled. */
+  typeInNumber(uid: string, d: number, via: 'keyboard' | 'keypad'): boolean
+  /** Backspace in a cell of a number (ltr groups): the last digit typed goes. False: not handled. */
+  deleteInNumber(uid: string): boolean
   /** The group shows an on-screen keypad right now (cells skip their own digit picker). */
   keypadVisible: boolean
   /** A finger tried to write although a pen is in use: point the child to the keypad toggle. */

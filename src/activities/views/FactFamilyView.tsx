@@ -1,12 +1,15 @@
 /* Fact family (fact-family): a triangle with a, b and p, and the four related facts to write. */
 import clsx from 'clsx'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NumberInput } from '@/ink'
 import type { ExerciseViewProps, FactFamilyExercise } from '@/types'
 import { useSlotFlow } from '../facts/shared/flow'
 import { HintPanel } from '../facts/shared/HintPanel'
 import shared from '../facts/shared/shared.module.css'
 import s from './FactFamilyView.module.css'
+
+/** What the child does here, said in a child's words. */
+export const FAMILY_INSTRUCTION = 'Escribe las cuatro cuentas que salen con estos tres números.'
 
 interface Row {
   left: string
@@ -42,10 +45,12 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
   const allCorrect = done && !!flow.last?.correct
   const current = flow.current
 
+  // A new slot starts with an empty pad; after a wrong try what she wrote stays (clearKey).
+  useEffect(() => { setDraft(null) }, [current])
+
   const submit = (v: number | null) => {
     if (v === null || done) return
     flow.submit(v)
-    setDraft(null)
   }
 
   return (
@@ -57,6 +62,7 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
         <text x="150" y="142" className={s.num} textAnchor="middle">{b}</text>
       </svg>
 
+      <p className={shared.instructions}>{FAMILY_INSTRUCTION}</p>
       <ol className={s.rows} aria-label="Escribe las cuatro operaciones">
         {rows.map((r, i) => {
           const closed = flow.closed[i]
@@ -66,7 +72,8 @@ export default function FactFamilyView({ exercise, onAnswered, guided, allowHint
               <span className={s.rowText}>{r.left} {r.op} {r.right} =</span>
               {isCurrent ? (
                 <NumberInput
-                  key={`${i}-${flow.attemptKey}`}
+                  key={i}
+                  clearKey={flow.attemptKey}
                   value={draft}
                   onChange={setDraft}
                   onSubmit={submit}

@@ -3,10 +3,10 @@
    along x (robust to multi-stroke 4/5/7 and slight overlaps), each digit is recognised and typeset over the
    faded ink. Big ✓ button and Enter submit. Keyboard digits, Backspace, Escape; inline keypad fallback. */
 import clsx from 'clsx'
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from 'react'
 import type { DigitRecognition, InkStroke, NumberInputProps } from '@/types'
 import { sfx } from '@/audio'
-import { IDLE_MS, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
+import { CONTINUE_MAX_HEIGHT, IDLE_MS, PEN_IDLE_FALLBACK_MS, UNMOUNT_FORGET_MS } from './constants'
 import { isDoubtfulRead } from './confusable'
 import { useInk } from './context'
 import { isScribble, overlapFraction, segmentStrokes, segmentZone, spreadCentres, strokeBBox, strokesNear, type BBox } from './geometry'
@@ -36,7 +36,20 @@ export interface NumberInputExtraProps {
    * number, a fraction, hour and minutes) hide it and check with their shared «Comprobar»; Enter still submits.
    */
   checkButton?: boolean
+  /**
+   * After a wrong try the view changes this key instead of remounting the pad: what the child wrote stays on screen
+   * (with what the app read), and the pad empties only when she starts writing or typing again.
+   */
+  clearKey?: string | number
 }
+
+/** «Aquí solo cabe una cifra» / «Aquí solo caben 2 cifras». */
+export function tooManyDigitsText(max: number): string {
+  return max === 1 ? 'Aquí solo cabe una cifra.' : `Aquí solo caben ${max} cifras.`
+}
+
+/** Shown under a pad with ink after a wrong try. */
+export const TAP_TO_CHANGE_TEXT = 'Toca un número para cambiarlo.'
 
 interface SegView {
   key: string
@@ -70,9 +83,12 @@ function placeholderFor(mode: string): string {
 export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const {
     value, maxDigits = 3, size = 'md', autoFocus, disabled, placeholder, status = 'idle', ariaLabel, className, keypadToggle = true, checkButton = true,
-    keypadPosition = 'below',
+    keypadPosition = 'below', clearKey,
   } = props
   const ink = useInk()
+  const store = ink.learning
+  // The pad's ✓ hides while an answer bar with its own «Comprobar» is on screen (one check button per screen).
+  useSyncExternalStore(store.subscribe, () => store.version)
   const uid = useId()
   const padRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -84,6 +100,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
   const [toggled, setToggled] = useState(false)
   const [, setTick] = useState(0)
   const [padSize, setPadSize] = useState({ width: 0, height: 0 })
+  /** More digits written than the box takes: the number is not accepted. */
+  const [tooMany, setTooMany] = useState(false)
+  /** What is on the pad was already checked: the next stroke or key starts a new answer. */
+  const stale = useRef(false)
   const anchorRef = useRef<HTMLSpanElement>(null)
 
   const overrides = useRef(new Map<string, number>())
@@ -123,6 +143,8 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     const { ink: ctx } = latest.current
     ctx.learning.forgetPrefix(`${uid}:`)
     if (!strokes.length) {
+      ctx.learning.setBusy(uid, false)
+      setTooMany(false)
       setSegs([])
       setInkState('none')
       const v = typedRef.current ? Number(typedRef.current) : null
@@ -136,6 +158,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       return lastEmitted.current
     }
     waits.current = 0
+    ctx.learning.setBusy(uid, false)
     const H = surface.size.current.height || 100
     const views: SegView[] = segmentStrokes(strokes, { zoneHeight: H }).map((seg) => {
       const key = seg.strokes.map(sid).sort((a, b) => a - b).join(',')
@@ -152,12 +175,27 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     const live = new Set(views.map((v) => v.key))
     for (const k of [...overrides.current.keys()]) if (!live.has(k)) overrides.current.delete(k)
     for (const v of views) if (v.digit != null && v.rec) ctx.learning.report(`${uid}:${v.key}`, v.digit, v.rec)
-    // Low-confidence digits must be confirmed (or rewritten) before the answer is graded.
     for (const v of views) {
-      if (v.digit != null && v.doubtful) ctx.learning.doubt(`${uid}:${v.key}`, v.digit)
+      const key = `${uid}:${v.key}`
+      if (v.digit == null) ctx.learning.unknown(key)
+      else if (v.rec) {
+        ctx.learning.noteRead(key, v.rec, v.doubtful)
+        if (overrides.current.has(v.key)) ctx.learning.confirmRead(key, v.digit)
+      }
+      // Low-confidence digits must be confirmed (or rewritten) before the answer is graded.
+      if (v.digit != null && v.doubtful) ctx.learning.doubt(key, v.digit)
     }
     setSegs(views)
     setInkState('done')
+    // More digits than the box takes: never cut the number, the child is told and writes it again.
+    const max = latest.current.props.maxDigits ?? 3
+    const over = views.length > max
+    setTooMany(over)
+    if (over) {
+      ctx.learning.unknown(`${uid}:over`, tooManyDigitsText(max))
+      emit(null)
+      return null
+    }
     const complete = views.length > 0 && views.every((v) => v.digit != null)
     const val = complete ? Number(views.map((v) => v.digit).join('')) : null
     emit(val)
@@ -176,7 +214,10 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     clearIdle()
     surface.capture.current?.clear()
     overrides.current.clear()
+    stale.current = false
     latest.current.ink.learning.forgetPrefix(`${uid}:`)
+    latest.current.ink.learning.setBusy(uid, false)
+    setTooMany(false)
     setSegs([])
     setTypedBoth('')
     setInkState('none')
@@ -186,13 +227,17 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   const typeDigit = (d: number, via: 'keyboard' | 'keypad') => {
     if (disabled) return
+    if (stale.current) { stale.current = false; setTypedBoth('') }
     if ((surface.capture.current?.strokes.length ?? 0) > 0) {
       surface.capture.current?.clear()
       overrides.current.clear()
       latest.current.ink.learning.forgetPrefix(`${uid}:`)
+      latest.current.ink.learning.setBusy(uid, false)
+      setTooMany(false)
       setSegs([])
       setInkState('none')
     }
+    latest.current.ink.learning.noteTyped()
     if (via === 'keyboard') latest.current.ink.noteKeyboard()
     const t = typedRef.current.length >= maxDigits ? typedRef.current : typedRef.current + String(d)
     setTypedBoth(t)
@@ -231,6 +276,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     latest.current.props.onSubmit(v)
   }
 
+  const pickAltRef = useRef<(key: string, d: number) => void>(() => {})
   const pickAlt = (key: string, d: number) => {
     setPopover(null)
     const seg = segRef.current.find((x) => x.key === key)
@@ -238,10 +284,12 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     const isFix = !seg || seg.digit !== d
     if (seg?.rec && isFix) learning.corrected(d, seg.rec)
     if (isFix) learning.countFix()
+    learning.known(`${uid}:${key}`)
     overrides.current.set(key, d)
     recognizeAll()
     sfx.play('select', { volume: 0.4 })
   }
+  pickAltRef.current = pickAlt
 
   const surface = useInkSurface({
     surfaceRef: padRef,
@@ -253,6 +301,16 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
       onStrokeStart() {
         clearIdle()
         setPopover(null)
+        // A new answer after a wrong try: the old one goes as soon as she writes again.
+        if (stale.current) {
+          stale.current = false
+          surface.capture.current?.clear()
+          overrides.current.clear()
+          latest.current.ink.learning.forgetPrefix(`${uid}:`)
+          setSegs([])
+          setTooMany(false)
+        }
+        latest.current.ink.learning.setBusy(uid, true)
         if (typedRef.current) { setTypedBoth(''); emit(null) }
         setInkState('writing')
       },
@@ -266,17 +324,23 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           setTimeout(recognizeAll, 0)
           return false
         }
-        // Ink written over a doubtful digit is its rewrite: the old digit's strokes go, so only the new ink is read.
+        // A digit written over a digit already read is its rewrite: the old digit's strokes go, so only the new ink is
+        // read. A small mark (the bar of a 7, the hat of a 5) still adds to the digit under it.
         const sb = strokeBBox(stroke)
-        const doubtful = segRef.current.filter((x) => x.doubtful && x.digit != null && overlapFraction(x.bbox, sb, 6) > 0.35)
-        if (doubtful.length) removeStrokes(new Set(doubtful.flatMap((x) => x.strokes)))
+        const tall = sb.height >= zone.height * CONTINUE_MAX_HEIGHT
+        const under = segRef.current.filter((x) => (x.doubtful || tall) && overlapFraction(x.bbox, sb, 6) > 0.35)
+        if (under.length) removeStrokes(new Set(under.flatMap((x) => x.strokes)))
+        latest.current.ink.learning.setBusy(uid, true)
         setInkState('writing')
         idle.current = setTimeout(recognizeAll, IDLE_MS)
         return true
       },
       onStrokeCancel() {
         if (surface.capture.current?.strokes.length) idle.current = setTimeout(recognizeAll, IDLE_MS)
-        else setInkState(segRef.current.length ? 'done' : 'none')
+        else {
+          latest.current.ink.learning.setBusy(uid, false)
+          setInkState(segRef.current.length ? 'done' : 'none')
+        }
       },
       onTap(info) {
         if (disabled) return
@@ -302,6 +366,45 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     },
   })
 
+  // A wrong try: keep what is written, start afresh with the next stroke or key (see `clearKey`).
+  const firstClearKey = useRef(clearKey)
+  useEffect(() => {
+    if (clearKey === firstClearKey.current) return
+    firstClearKey.current = clearKey
+    stale.current = true
+  }, [clearKey])
+
+  // Register with the ink store: grading reads pending ink first; a question can erase a digit or open its picker.
+  useEffect(() => {
+    if (disabled) return
+    return store.registerSurface(uid, {
+      flush: () => {
+        if (!idle.current && !surface.capture.current?.writing) return false
+        waits.current = 99 // grading now: recognise with whatever is available
+        recognizeAll()
+        return true
+      },
+      rewrite: (readKey) => {
+        const segKey = readKey?.slice(uid.length + 1)
+        const seg = segKey ? segRef.current.find((x) => x.key === segKey) : null
+        if (seg) {
+          removeStrokes(new Set(seg.strokes))
+          recognizeAll()
+        } else clearAll()
+        padRef.current?.focus({ preventScroll: true })
+      },
+      pick: (readKey) => {
+        const segKey = readKey?.slice(uid.length + 1)
+        if (segKey && segRef.current.some((x) => x.key === segKey)) setPopover(segKey)
+      },
+      choose: (readKey, d) => {
+        const segKey = readKey?.slice(uid.length + 1)
+        if (segKey && segRef.current.some((x) => x.key === segKey)) pickAltRef.current(segKey, d)
+      },
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store, uid, disabled])
+
   // External value changes (next exercise / reset) replace whatever is on the pad.
   useEffect(() => {
     const v = value ?? null
@@ -311,6 +414,9 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     surface.capture.current?.clear()
     overrides.current.clear()
     latest.current.ink.learning.forgetPrefix(`${uid}:`)
+    latest.current.ink.learning.setBusy(uid, false)
+    stale.current = false
+    setTooMany(false)
     setSegs([])
     setInkState('none')
     setPopover(null)
@@ -402,6 +508,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
             return (
               <span
                 key={seg.key}
+                data-ink-key={`${uid}:${seg.key}`}
                 className={clsx(s.digit, seg.digit == null && s.unknown)}
                 style={{ left: centres[i], fontSize: fontPx }}
                 data-seg={seg.key}
@@ -452,7 +559,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
               </button>
             </span>
           )}
-          {!keypadVisible && checkButton && (
+          {!keypadVisible && checkButton && !store.hasBar() && (
             <button
               type="button"
               className={s.check}
@@ -468,6 +575,11 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
         </div>}
       </div>
 
+      {tooMany && <p className={s.note} role="status">{tooManyDigitsText(maxDigits)}</p>}
+      {!tooMany && status === 'wrong' && showDigits && !disabled && (
+        <p className={s.note} role="note">{TAP_TO_CHANGE_TEXT}</p>
+      )}
+
       {keypadVisible && (
         <Keypad
           className={s.keypad}
@@ -476,7 +588,8 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
           disabled={disabled}
           onDigit={(d) => typeDigit(d, 'keypad')}
           onDelete={backspace}
-          onSubmit={submit}
+          // One check button per screen: with an answer bar, its «Comprobar» grades (Enter still works).
+          onSubmit={store.hasBar() ? undefined : submit}
           submitDisabled={!canSubmit}
         />
       )}

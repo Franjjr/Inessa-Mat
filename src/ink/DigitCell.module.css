@@ -233,3 +233,28 @@
   .digit, .typed, .unsure, .clear, .st_wrong .surface, .st_hint .surface { animation: none; }
   .canvas, .surface { transition: none; }
 }
+
+/* ---- column order: an arrow over the cell that is typed next (units first, then to the left) */
+.arrow {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 2px);
+  translate: -50% 0;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  line-height: 1;
+  color: var(--c-primary);
+  pointer-events: none;
+}
+.twoDigits {
+  white-space: normal;
+  width: min(260px, 70vw);
+  text-align: center;
+}
+/* a digit the doubt prompt asks about */
+.surface[data-doubt="true"] {
+  border-color: var(--c-gold);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-gold) 45%, transparent);
+}

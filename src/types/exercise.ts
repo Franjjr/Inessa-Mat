@@ -915,9 +915,10 @@ export type ErrorType =
   | 'quotient-off'         // quotient off by one with consistent remainder logic
   | 'operation'            // used the wrong operation in a word problem
   | 'incomplete'           // left cells empty
-  | 'recognition'          // the handwriting was misread (not a maths error!). No code path assigns it yet: engine check() does not, and
-                            // the ink layer (src/ink/context.ts) only collects the digit recognitions. Consumers ignore it in accuracy and
-                            // mastery (src/engine/mastery.ts); it stays in the union for attempts already stored and for dev data (src/data/dev.ts)
+  | 'recognition'          // the handwriting was misread (not a maths error!). The answer flows (src/activities/groups/flow.ts and
+                            // src/activities/facts/shared/flow.ts) set it on a right answer after the child told the app it misread her
+                            // («No, lo escribo otra vez», «No, yo he escrito otra cosa»). engine check() never does. Consumers ignore it in
+                            // accuracy and mastery (src/engine/mastery.ts); attempts already stored and dev data (src/data/dev.ts) keep it
   | 'calig-shape'          // Caligrafía: the letter's form is off (worst criterion of a cursive try)
   | 'calig-line'           // Caligrafía: the letter does not sit on the baseline
   | 'calig-size'           // Caligrafía: the letter is too big or too small
