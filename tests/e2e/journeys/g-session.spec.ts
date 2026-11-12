@@ -115,8 +115,9 @@ test.describe('Mi sesión de hoy', () => {
     const bar = page.getByRole('progressbar')
     const planned = (await bar.getAttribute('aria-label'))!.replace(/^Ejercicio \d+ de /, '')
     await noSe.click()
-    await expect(page.getByRole('heading', { name: 'Así se hace' })).toBeVisible()
-    await expect(page.getByText(/^Pista 1 de \d$/)).toBeVisible()
+    // Maths: «No lo sé» teaches with the solution worked step by step (not the hints), and the child goes on.
+    await expect(page.getByRole('heading', { name: 'Así se resuelve' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Así se resuelve' }).getByRole('listitem').first()).toBeVisible()
     await expect(page.getByRole('button', { name: 'Ahora no' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: 'No lo sé' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Siguiente' }).click()
