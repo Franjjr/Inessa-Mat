@@ -8,6 +8,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function FractionReadView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'fraction-read') return null
@@ -27,9 +28,7 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionR
   }
 
   return (
-    <section className={s.view} aria-label="Leer fracciones" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>¿Qué fracción está coloreada?</p>
-      <p className={s.instructions}>Arriba, las partes de color. Abajo, todas las partes iguales.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Leer fracciones" data-kind={ex.kind} data-status={status} prompt={'¿Qué fracción está coloreada?'} sub={'Arriba, las partes de color. Abajo, todas las partes iguales.'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />}>
       <div className={s.figureBox}>
         <FigureSvg figure={ex.figure} label="Figura con partes de color" className={s.figure} />
       </div>
@@ -59,7 +58,6 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: FractionR
           placeholder="?"
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={top !== null && bottom !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

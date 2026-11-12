@@ -7,6 +7,7 @@ import { celebrate } from '@/fx'
 import type { ExerciseViewProps, ShapeChoiceExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
 
@@ -27,13 +28,25 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
   }
 
   return (
-    <section className={s.view} aria-label="Elegir la respuesta" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>{ex.question}</p>
+    <ExerciseLayout
+      workClassName={s.view}
+      aria-label="Elegir la respuesta"
+      data-kind={ex.kind}
+      data-status={status}
+      prompt={ex.question}
+      actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}
+    >
       {ex.figures.length > 0 && (
         <div className={s.figureRow}>
           {ex.figures.map((f, i) => (
             <div key={i} className={s.figureBox}>
-              <FigureSvg figure={f} label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'} className={`${s.figure} ${ex.figures.length > 1 ? s.figureSmall : ''}`} />
+              <FigureSvg
+                figure={f}
+                label={ex.figures.length > 1 ? `Figura ${i + 1}` : 'Figura'}
+                // Two fractions to compare stay big (P3PE-05): only three or more figures are drawn small.
+                className={`${s.figure} ${ex.figures.length > 2 ? s.figureSmall : ''}`}
+                lying={ex.skill === 'geo:solid:roll'}
+              />
             </div>
           ))}
         </div>
@@ -51,7 +64,6 @@ function ChoiceRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ShapeCh
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

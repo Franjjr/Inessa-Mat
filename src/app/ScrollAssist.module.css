@@ -1,5 +1,6 @@
 /* Floating scroll buttons: above the game (HUD level), below dialogs and toasts. Never on a page that fits.
-   In the corners: games are centred, so the sides are free (the companion buddy sits bottom right). */
+   In the corners: games are centred, so the sides are usually free (the companion buddy sits bottom right); a button
+   that would cover a control moves to the other corner of its edge. */
 .btn {
   position: fixed;
   z-index: calc(var(--z-hud) + 5);
@@ -25,12 +26,10 @@
 .btn > span[aria-hidden] { font-size: 26px; line-height: 1; }
 
 .down {
-  left: max(14px, env(safe-area-inset-left));
   bottom: max(14px, env(safe-area-inset-bottom));
   animation: nudge 1.4s var(--ease-out) infinite;
 }
 .up {
-  right: max(14px, env(safe-area-inset-right));
   top: max(10px, env(safe-area-inset-top));
   background: var(--c-surface);
   color: var(--c-primary-strong);
@@ -39,6 +38,13 @@
 }
 
 .label { white-space: nowrap; }
+
+/* The corner of each button: the one where it covers no control (ScrollAssist.tsx picks it). */
+.atLeft { left: max(14px, env(safe-area-inset-left)); }
+.atRight { right: max(14px, env(safe-area-inset-right)); }
+
+/* The free space at the end of a page that scrolls: at the bottom, nothing of the child's sits under a button. */
+.spacer { flex: none; width: 100%; pointer-events: none; }
 
 @keyframes nudge {
   0%, 100% { transform: translateY(0); }

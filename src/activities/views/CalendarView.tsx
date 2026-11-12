@@ -12,6 +12,7 @@ import type { CalendarExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './clock.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
@@ -42,8 +43,7 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
 
   if (ex.topic === 'weekday' && ex.week) {
     return (
-      <section className={s.view} aria-label="Días de la semana" data-kind={ex.kind} data-topic={ex.topic} data-status={status}>
-        <p className={s.instructions}>{ex.prompt}</p>
+      <ExerciseLayout workClassName={s.view} aria-label="Días de la semana" data-kind={ex.kind} data-topic={ex.topic} data-status={status} prompt={ex.prompt} actions={<AnswerBar flow={flow} onCheck={submitChoice} canCheck={choice !== null} />}>
         <div className={s.week} role="group" aria-label="Semana">
           {WEEKDAYS.map((d, i) => (
             <span key={d} className={clsx(s.day, i === ex.week!.today && s.dayToday)}>
@@ -64,15 +64,13 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
             </button>
           ))}
         </div>
-        <AnswerBar flow={flow} onCheck={submitChoice} canCheck={choice !== null} />
-      </section>
+      </ExerciseLayout>
     )
   }
 
   if (ex.topic === 'month') {
     return (
-      <section className={s.view} aria-label="Días de un mes" data-kind={ex.kind} data-topic={ex.topic} data-status={status}>
-        <p className={s.instructions}>{ex.prompt}</p>
+      <ExerciseLayout workClassName={s.view} aria-label="Días de un mes" data-kind={ex.kind} data-topic={ex.topic} data-status={status} prompt={ex.prompt} actions={<AnswerBar flow={flow} onCheck={() => submitNumber()} canCheck={value !== null} />}>
         <div className={s.months} role="group" aria-label="Meses del año">
           {MONTH_NAMES.map((m) => (
             <span key={m} className={clsx(s.month, m === ex.month && s.monthOn)}>{m}</span>
@@ -93,20 +91,18 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
             autoFocus
           />
         </div>
-        <AnswerBar flow={flow} onCheck={() => submitNumber()} canCheck={value !== null} />
-      </section>
+      </ExerciseLayout>
     )
   }
 
   const u = ex.units
   return (
-    <section className={s.view} aria-label="Unidades de tiempo" data-kind={ex.kind} data-topic="units" data-status={status}>
-      <p className={s.instructions}>{ex.prompt}</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Unidades de tiempo" data-kind={ex.kind} data-topic="units" data-status={status} prompt={ex.prompt} actions={<AnswerBar flow={flow} onCheck={() => submitNumber()} canCheck={value !== null} />}>
       {u && (
         <div className={s.units}>
           <span className={s.card}><span className={s.cardNumber}>{unitLabel(u.amount, u.from)}</span></span>
           <span className={s.arrow} aria-hidden>→</span>
-          <span className={s.card}><span className={s.cardNumber}>¿? {u.to}</span></span>
+          <span className={s.card}><span className={s.cardNumber}>{howMany(u.to)}</span></span>
         </div>
       )}
       <div className={s.answerNumber}>
@@ -124,7 +120,11 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submitNumber()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
+}
+
+/** «¿cuántos segundos?», «¿cuántas horas?»: the question on the card, never a bare «¿?» (P3PE-17). */
+export function howMany(unit: string): string {
+  return `¿${/as$/.test(unit) ? 'cuántas' : 'cuántos'} ${unit}?`
 }

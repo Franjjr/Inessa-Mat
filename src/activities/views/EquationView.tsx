@@ -10,6 +10,7 @@ import type { EqTerm, EquationExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function EquationView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'equation') return null
@@ -52,15 +53,13 @@ function EqRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationExe
   )
 
   return (
-    <section className={s.view} aria-label="Igualdad" data-kind={ex.kind}>
-      <p className={s.instructions}>Los dos lados del = tienen que valer lo mismo. ¿Qué número falta?</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} prompt="¿Qué número falta?" sub="Los dos lados del = tienen que valer lo mismo." actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, box)}</span>
         <span className={s.eqEq} aria-hidden>=</span>
         <span className={s.eqSide}>{sideNodes(ex.right, box)}</span>
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }
 
@@ -81,8 +80,7 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
   }
 
   return (
-    <section className={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>¿Los dos lados valen lo mismo? Elige = o ≠.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Igualdad" data-kind={ex.kind} data-status={status} prompt="¿Valen lo mismo los dos lados?" sub="Toca = si valen lo mismo, o ≠ si no." actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       <div className={s.eq}>
         <span className={s.eqSide}>{sideNodes(ex.left, null)}</span>
         <span className={s.sign} aria-hidden>{picked ?? '?'}</span>
@@ -102,7 +100,6 @@ function SameRound({ ex, onAnswered, showFeedback, allowHints }: { ex: EquationE
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

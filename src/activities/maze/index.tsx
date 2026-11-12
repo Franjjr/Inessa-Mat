@@ -1,5 +1,8 @@
 /* "El laberinto": from the unicorn to the gem, stepping right or down only and only on numbers of the table.
-   Each tap is a fact: the attempt is logged per tapped cell. Wrong taps are gentle clues, never failures. */
+   Each tap is a fact: the attempt is logged per tapped cell. Wrong taps are gentle clues, never failures.
+   A tap on another number of the table (further along the path, or out of reach) is not a mistake of the fact that was
+   next (MD-7): the child knew that number is of the table. It logs nothing and says where to look. Only a number that
+   is not of the table is logged as a missed fact. */
 import clsx from 'clsx'
 import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
@@ -93,15 +96,18 @@ export default function MazeActivity({ config, onDone, onExit }: ActivityProps) 
       setClue('Ya has pasado por ahí. ¡Mira hacia delante!')
       return
     }
+    if (multiple) {
+      // Right about the table, only not the next step: nothing is logged, nothing counts against the child.
+      setClue(`¡Ese también es del ${table}! Pero antes hay otro más cerca: busca al lado del unicornio.`)
+      return
+    }
     log(cell, false, ms)
     sfx.play('wrong')
     haptics.error()
     host.react('wrong')
     setWrongHere((w) => w + 1)
     setShakeCell({ cell, key: Date.now() })
-    const base = multiple
-      ? `Ese sí es del ${table}, pero el camino va a la derecha o hacia abajo.`
-      : `Ese número no es de la tabla del ${table}. ¡Busca otro!`
+    const base = `Ese número no es de la tabla del ${table}. ¡Busca otro!`
     // Second miss: say the fact first (the highlight on the right cell comes with it), never the highlight alone.
     setClue(wrongHere + 1 >= 2 ? `Fíjate: ${factText(expected)}. ¡Pisa el ${maze.values[expected]}!` : base)
   }

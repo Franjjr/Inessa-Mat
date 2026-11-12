@@ -7,6 +7,7 @@ import type { ExerciseViewProps, RoundExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function RoundView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'round') return null
@@ -26,15 +27,14 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
   }
 
   return (
-    <section className={s.view} aria-label="Redondear" data-kind={ex.kind}>
-      <p className={s.instructions}>Redondea a la {unit} más cercana.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Redondear" data-kind={ex.kind} prompt={<>Redondea a la {unit} más cercana.</>} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       <p className={s.prompt}>{fmt(ex.value)}</p>
       <div className={s.row}>
         <NumberInput
           value={value}
           onChange={setValue}
           onSubmit={(v) => { setValue(v); if (!flow.submitted) submit(v) }}
-          maxDigits={Math.max(4, String(ex.value).length)}
+          maxDigits={Math.max(String(ex.answer).length, String(ex.value).length)}
           size="lg"
           status={status}
           ariaLabel="Número redondeado"
@@ -42,7 +42,6 @@ function RoundRound({ ex, onAnswered, showFeedback, allowHints }: { ex: RoundExe
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }

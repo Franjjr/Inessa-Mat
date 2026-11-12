@@ -5,12 +5,12 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ActivityConfig, ActivityHost, MasteryMap } from '@/types'
 import { ActivityHostProvider } from '@/activities/host'
-import BubblesActivity from './index'
+import BubblesActivity, { distractors } from './index'
 
 vi.mock('@/audio', () => ({
   sfx: { play: vi.fn() },
   haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() },
-  speech: { say: vi.fn(async () => {}) },
+  speech: { say: vi.fn(async () => {}), stop: vi.fn() },
 }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
 
@@ -111,5 +111,23 @@ describe('BubblesActivity wrong taps', () => {
     // One logged attempt for the question, however many taps it took.
     expect(h.reportAttempt).toHaveBeenCalledTimes(1)
     expect(h.reportAttempt.mock.calls[0][0].check.correct).toBe(false)
+  })
+})
+
+describe('MD-8: no bubble is a + b', () => {
+  it('for the facts of the tables (1 to 10 by 1 to 10), no distractor equals a + b, and there are always enough', () => {
+    const bad: string[] = []
+    let facts = 0
+    for (let a = 1; a <= 10; a++) {
+      for (let b = 1; b <= 10; b++) {
+        facts++
+        const d = distractors(a, b)
+        if (a * b !== a + b && d.includes(a + b)) bad.push(`${a}×${b}`)
+        expect(d.length).toBeGreaterThanOrEqual(5)
+        expect(d).not.toContain(a * b)
+      }
+    }
+    expect(facts).toBe(100)
+    expect(bad).toEqual([])
   })
 })

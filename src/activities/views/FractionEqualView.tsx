@@ -6,6 +6,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function FractionEqualView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'fraction-equal') return null
@@ -28,8 +29,7 @@ function EqualRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Fraction
   }
 
   return (
-    <section className={s.view} aria-label="Figuras partidas en partes iguales" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>Toca las figuras que NO están partidas en partes iguales.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Figuras partidas en partes iguales" data-kind={ex.kind} data-status={status} prompt={'Toca las figuras que NO están partidas en partes iguales.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={marked.length > 0} />}>
       <div className={s.figureRow}>
         {ex.figures.map((f, i) => {
           const on = marked.includes(i)
@@ -47,7 +47,6 @@ function EqualRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Fraction
           )
         })}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={marked.length > 0} />
-    </section>
+    </ExerciseLayout>
   )
 }

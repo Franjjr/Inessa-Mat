@@ -18,6 +18,23 @@
   color: var(--c-ink-soft);
 }
 
+/* The sign above a calculation that may be wrong on purpose (p1n-01): a note pinned on the board, never a model. */
+.sign {
+  margin: 0;
+  align-self: center;
+  max-width: 34em;
+  padding: var(--sp-2) var(--sp-4);
+  border: 3px dashed var(--c-warn);
+  border-radius: var(--r-lg);
+  background: var(--c-warn-soft);
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: #7c2d12;
+  text-align: center;
+  text-wrap: balance;
+}
+
 /* The written calculation, digits on a grid so the columns line up. */
 .calc {
   display: grid;

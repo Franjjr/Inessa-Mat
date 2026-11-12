@@ -8,6 +8,7 @@ import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
+import { ExerciseLayout } from './ExerciseLayout'
 import s from './WordProblemView.module.css'
 
 export interface WordProblemViewProps extends ExerciseViewProps {
@@ -93,15 +94,17 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
   const readyToCheck = value !== null && opReady
 
   return (
-    <section className={`${s.view} ${compact ? s.compact : ''}`} aria-label="Problema">
-      <article className={s.story}>
-        <p className={s.text}>{text}</p>
-        {host.prefs.voice && (
-          <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">
-            🔊 Escuchar
-          </button>
-        )}
-      </article>
+    <ExerciseLayout
+      workClassName={`${s.view} ${compact ? s.compact : ''}`}
+      aria-label="Problema"
+      prompt={text}
+      actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} />}
+    >
+      {host.prefs.voice && (
+        <button type="button" className={s.speak} onClick={readAloud} aria-label="Leer en voz alta">
+          🔊 Escuchar
+        </button>
+      )}
 
       {chooseOp && (
         <div className={s.ops} role="group" aria-label="¿Qué operación?">
@@ -140,6 +143,7 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
           placeholder="?"
           autoFocus={!chooseOp}
           disabled={!opReady}
+          checkButton={!hasRemainder}
         />
         <span className={s.unit}>{ex.unit}</span>
       </div>
@@ -147,13 +151,11 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
       {hasRemainder && (
         <div className={s.answer}>
           <span className={s.answerLabel}>{host.t('Sobra:')}</span>
-          <NumberInput value={rest} onChange={setRest} onSubmit={(r) => submit(value, r)} maxDigits={2} size="lg" status={status} ariaLabel="Lo que sobra" placeholder="?" disabled={!opReady} />
+          <NumberInput value={rest} onChange={setRest} onSubmit={(r) => submit(value, r)} maxDigits={2} size="lg" status={status} ariaLabel="Lo que sobra" placeholder="?" disabled={!opReady} checkButton={false} />
         </div>
       )}
 
       {guided && <p className={s.guide}>{host.t('Piensa qué pasa en la historia antes de escribir el número.')}</p>}
-
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} />
-    </section>
+    </ExerciseLayout>
   )
 }

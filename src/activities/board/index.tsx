@@ -27,6 +27,22 @@ const ROLL_MS = 620
 const COLS = 5
 const OPPONENTS: Opponent[] = ['lumi', 'borron', 'owl', 'frog', 'ladybug', 'polarbear', 'octopus', 'fairy', 'dragon', 'queen']
 
+/** The rules of the special squares, said before the race (P3PE-17): «Si caes en ☁️, retrocedes 2 casillas.».
+    One line per kind of square (same emoji and same move). */
+export function specialRules(specials: Special[]): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const sp of specials) {
+    const key = `${sp.emoji}:${sp.move}`
+    if (seen.has(key) || sp.move === 0) continue
+    seen.add(key)
+    const n = Math.abs(sp.move)
+    const squares = n === 1 ? 'casilla' : 'casillas'
+    out.push(`Si caes en ${sp.emoji}, ${sp.move > 0 ? 'avanzas' : 'retrocedes'} ${n} ${squares}.`)
+  }
+  return out
+}
+
 function readSpecials(raw: unknown, squares: number): Special[] {
   if (!Array.isArray(raw)) return []
   return raw
@@ -206,6 +222,7 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
     return { row: rows - k, col: col + 1 }
   }
   const specialAt = (n: number) => specials.find((x) => x.at === n)
+  const rules = specialRules(specials)
   const stars = starsFor(correct, Math.max(answered, 1), starThresholds)
 
   if (phase === 'done') {
@@ -279,6 +296,15 @@ function Race({ title, exercises, squares, specials, opponent, starThresholds, o
           )}
 
           {message && phase !== 'question' && <p className={s.msg} aria-live="polite">{message}</p>}
+
+          {rules.length > 0 && phase !== 'question' && (
+            <div className={s.rules} role="note" aria-label="Reglas del tablero">
+              <p className={s.rulesTitle}>{host.t('Reglas del tablero')}</p>
+              <ul className={s.rulesList}>
+                {rules.map((r) => <li key={r}>{r}</li>)}
+              </ul>
+            </div>
+          )}
         </div>
       </section>
     </OpsShell>

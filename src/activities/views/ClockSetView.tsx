@@ -8,6 +8,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { ClockFace, TimeSteppers, capitalize, type FaceTime } from './Clock'
 import s from './clock.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function ClockSetView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'clock-set') return null
@@ -29,8 +30,7 @@ function SetRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ClockSetEx
   }
 
   return (
-    <section className={s.view} aria-label="Poner la hora en el reloj" data-kind={ex.kind} data-status={status}>
-      <p className={s.instructions}>Pon el reloj en:</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Poner la hora en el reloj" data-kind={ex.kind} data-status={status} prompt="Pon el reloj en esta hora:" actions={<AnswerBar flow={flow} onCheck={submit} canCheck />}>
       <p className={s.target}>{capitalize(ex.prompt)}</p>
       <div className={s.setRow}>
         <ClockFace
@@ -40,10 +40,12 @@ function SetRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ClockSetEx
         />
         <div className={s.side}>
           <p className={s.instructions}>Arrastra la aguja larga a los minutos (de cinco en cinco) y la corta a la hora.</p>
+          {/menos/.test(ex.prompt) && (
+            <p className={s.instructions}>Con «menos», la aguja corta está casi en el número que dice la frase.</p>
+          )}
           <TimeSteppers time={time} onChange={(t) => { if (!locked) setTime(t) }} />
         </div>
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck />
-    </section>
+    </ExerciseLayout>
   )
 }

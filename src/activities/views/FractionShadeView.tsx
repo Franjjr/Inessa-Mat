@@ -8,6 +8,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { FigureSvg } from './FigureSvg'
 import s from './FractionsGeometry.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function FractionShadeView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'fraction-shade') return null
@@ -30,9 +31,7 @@ function ShadeRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Fraction
   }
 
   return (
-    <section className={s.view} aria-label="Colorear fracciones" data-kind={ex.kind} data-status={status}>
-      <p className={s.prompt}>Colorea {fractionName(ex.numerator, ex.denominator)} de la figura.</p>
-      <p className={s.instructions}>Toca las partes para colorearlas. Si tocas otra vez, se quita el color.</p>
+    <ExerciseLayout workClassName={s.view} aria-label="Colorear fracciones" data-kind={ex.kind} data-status={status} prompt={<>Colorea {fractionName(ex.numerator, ex.denominator)} de la figura.</>} sub={'Toca las partes para colorearlas. Si tocas otra vez, se quita el color.'} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={chosen.length > 0} />}>
       <div className={s.figureBox}>
         <FigureSvg
           figure={ex.figure}
@@ -42,7 +41,6 @@ function ShadeRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Fraction
           className={s.figure}
         />
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={chosen.length > 0} />
-    </section>
+    </ExerciseLayout>
   )
 }

@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ActivityConfig } from '@/types'
-import BoardActivity from './index'
+import BoardActivity, { specialRules } from './index'
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
@@ -87,5 +87,22 @@ describe('board: a wrong answer comes back', () => {
     fireEvent.click(screen.getByRole('button', { name: 'fallar' }))
     expect(screen.queryByText(/volverá a salir/)).toBeNull()
     expect(screen.getByText(/puede volver a salir más adelante/)).toBeTruthy()
+  })
+
+  it('P3PE-17: the rules of the special squares are on a sign: «Si caes en ☁️, retrocedes 2 casillas.»', () => {
+    const specials = [
+      { at: 4, emoji: '☁️', text: '¡Una nube! Retrocedes 2.', move: -2 },
+      { at: 7, emoji: '🌈', text: '¡Arcoíris! Avanzas 1.', move: 1 },
+      { at: 9, emoji: '☁️', text: '¡Otra nube!', move: -2 },
+    ]
+    expect(specialRules(specials)).toMatchInlineSnapshot(`
+      [
+        "Si caes en ☁️, retrocedes 2 casillas.",
+        "Si caes en 🌈, avanzas 1 casilla.",
+      ]
+    `)
+    render(<BoardActivity config={{ ...config, params: { ...config.params, specials } }} onDone={() => {}} onExit={() => {}} />)
+    const sign = screen.getByRole('note', { name: 'Reglas del tablero' })
+    expect(sign.textContent).toContain('Si caes en ☁️, retrocedes 2 casillas.')
   })
 })

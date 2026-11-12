@@ -11,6 +11,7 @@ import { bare } from '@/engine'
 import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
 import g from './FractionsGeometry.module.css'
 import s from './DataViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 type DataEx = ChartExercise | ChanceExercise | PatternExercise | PositionExercise
 
@@ -42,9 +43,8 @@ function ChoiceRound({ flow, options, question, children, emoji = false }: { flo
     if (flow.submit({ type: 'choice', index: picked }).correct) celebrate('small')
   }
   return (
-    <>
+    <ExerciseLayout workClassName={g.view} prompt={question} actions={<AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />}>
       {children}
-      <p className={g.prompt}>{question}</p>
       <div className={g.optionGrid} role="group" aria-label="Respuestas">
         {options.map((o, i) => (
           <button
@@ -58,8 +58,7 @@ function ChoiceRound({ flow, options, question, children, emoji = false }: { flo
           </button>
         ))}
       </div>
-      <AnswerBar flow={flow} onCheck={submit} canCheck={picked !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 
@@ -71,9 +70,8 @@ function NumberRound({ flow, question, ariaLabel, children, maxDigits = 3 }: { f
     if (flow.submit({ type: 'number', value: v }).correct) celebrate('small')
   }
   return (
-    <>
+    <ExerciseLayout workClassName={g.view} prompt={question} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
       {children}
-      <p className={g.prompt}>{question}</p>
       <div className={g.inputRow}>
         <NumberInput
           value={value}
@@ -87,8 +85,7 @@ function NumberRound({ flow, question, ariaLabel, children, maxDigits = 3 }: { f
           autoFocus
         />
       </div>
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </>
+    </ExerciseLayout>
   )
 }
 

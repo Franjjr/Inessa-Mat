@@ -53,11 +53,19 @@ function ShareRound({ ex, emoji, container, onAnswered, skippable }: RoundProps)
   const [tray, setTray] = useState<number[]>(() => Array.from({ length: ex.dividend }, (_, i) => i))
   const [bins, setBins] = useState<number[][]>(() => Array.from({ length: ex.divisor }, () => []))
   const [skipped, setSkipped] = useState(false)
+  const [warn, setWarn] = useState<string | null>(null)
   const fewest = bins.reduce((best, b, i) => (b.length < bins[best].length ? i : best), 0)
   const shared = tray.length === 0 || skipped
 
   const give = (bin: number) => {
     if (tray.length === 0) return
+    // Fair sharing (MD-6): a friend who already has more than another one waits; the sharing never gets unequal.
+    if (bins[bin].length > bins[fewest].length) {
+      setWarn(host.t('Primero a la que menos tiene.'))
+      sfx.play('wrong', { volume: 0.4 })
+      return
+    }
+    setWarn(null)
     const id = tray[tray.length - 1]
     setTray((prev) => prev.slice(0, -1))
     setBins((prev) => prev.map((b, i) => (i === bin ? [...b, id] : b)))
@@ -109,6 +117,7 @@ function ShareRound({ ex, emoji, container, onAnswered, skippable }: RoundProps)
             </button>
           ))}
         </div>
+        {warn && <p className={s.warn} role="status">{warn}</p>}
         <p className={s.note}>{host.t('Toca una amiga para darle uno. Toca un objeto para devolverlo.')}</p>
         {skippable && (
           <button type="button" className={s.skip} onClick={() => setSkipped(true)}>
@@ -119,10 +128,28 @@ function ShareRound({ ex, emoji, container, onAnswered, skippable }: RoundProps)
     )
   }
 
-  return <ShareAnswer ex={ex} onAnswered={onAnswered} />
+  return <ShareAnswer ex={ex} onAnswered={onAnswered} plates={skipped ? null : bins.map((b) => b.length)} emoji={emoji} container={container} />
 }
 
-function ShareAnswer({ ex, onAnswered }: { ex: FactDivExercise; onAnswered: RoundProps['onAnswered'] }) {
+/** The plates of the friends, still on screen while the child writes how many each one got (MD-6). Not tappable. */
+function Plates({ counts, emoji, container }: { counts: number[]; emoji: string; container: string | null }) {
+  const host = useActivityHost()
+  return (
+    <div className={s.bins} role="list" aria-label="Los platos de las amigas" data-plates="">
+      {counts.map((n, b) => (
+        <div key={b} role="listitem" className={`${s.bin} ${s.binStill}`} aria-label={`${host.t('Amiga')} ${b + 1}: ${n} ${emoji}`}>
+          <span className={s.friend} aria-hidden>{container ?? FRIENDS[b % FRIENDS.length]}</span>
+          <span className={s.binLabel}>{host.t(`Amiga ${b + 1}`)}</span>
+          <span className={s.binItems} aria-hidden>
+            {Array.from({ length: n }, (_, k) => <span key={k} className={s.binItem}>{emoji}</span>)}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ShareAnswer({ ex, onAnswered, plates, emoji, container }: { ex: FactDivExercise; onAnswered: RoundProps['onAnswered']; plates: number[] | null; emoji: string; container: string | null }) {
   const host = useActivityHost()
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: true, allowHints: true })
   const [value, setValue] = useState<number | null>(null)
@@ -137,6 +164,7 @@ function ShareAnswer({ ex, onAnswered }: { ex: FactDivExercise; onAnswered: Roun
   return (
     <section className={s.stage} aria-label="¿Cuántos le tocan a cada amiga?">
       <p className={s.prompt}>{host.t('¿Cuántos le tocan a cada amiga?')}</p>
+      {plates && <Plates counts={plates} emoji={emoji} container={container} />}
       <p className={s.equation}>{ex.dividend} ÷ {ex.divisor} = ?</p>
       <p className={s.note}>{host.t('Mira cuántos tiene cada amiga y escríbelo.')}</p>
       <div className={s.answer}>

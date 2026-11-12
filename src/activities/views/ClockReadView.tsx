@@ -9,6 +9,7 @@ import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import { ClockFace, TimeFields, capitalize } from './Clock'
 import s from './clock.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function ClockReadView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'clock-read') return null
@@ -36,10 +37,22 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ClockRead
   const canCheck = ex.mode === 'phrase' ? choice !== null : hour !== null && minute !== null
 
   return (
-    <section className={s.view} aria-label="Leer el reloj" data-kind={ex.kind} data-mode={ex.mode} data-status={status}>
-      <p className={s.instructions}>
-        {ex.mode === 'phrase' ? '¿Qué hora marca el reloj? Elige la frase.' : '¿Qué hora marca el reloj? Escribe la hora y los minutos.'}
-      </p>
+    <ExerciseLayout
+      workClassName={s.view}
+      aria-label="Leer el reloj"
+      data-kind={ex.kind}
+      data-mode={ex.mode}
+      data-status={status}
+      prompt="¿Qué hora marca el reloj?"
+      sub={ex.mode === 'phrase' ? 'Elige la frase.' : 'Escribe la hora y los minutos.'}
+      actions={(
+        <AnswerBar
+          flow={flow}
+          onCheck={() => (ex.mode === 'phrase' ? submitChoice() : submitTime())}
+          canCheck={canCheck}
+        />
+      )}
+    >
       <div className={s.row}>
         <ClockFace time={{ hour: ex.hour, minute: ex.minute }} label="Reloj: lee la hora" />
       </div>
@@ -69,12 +82,6 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ClockRead
           autoFocus
         />
       )}
-
-      <AnswerBar
-        flow={flow}
-        onCheck={() => (ex.mode === 'phrase' ? submitChoice() : submitTime())}
-        canCheck={canCheck}
-      />
-    </section>
+    </ExerciseLayout>
   )
 }

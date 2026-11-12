@@ -29,6 +29,17 @@ export function hourFromAngle(deg: number, minute: number): number {
   return r === 0 ? 12 : r
 }
 
+/**
+ * The time after the long hand moves to `minute` (H8). The short hand stays where the child left it: when they aimed it
+ * (`hourAim`, the angle they dragged it to) and that aim still gives the current hour, the hour is read again from that
+ * same angle with the new minutes. So «las cuatro menos diez» set short hand first (on the 4, with the minutes still
+ * elsewhere) ends at 3:50, not at 4:50: on the face 3:50 is the short hand almost on the 4.
+ */
+export function moveMinuteHand(time: FaceTime, minute: number, hourAim: number | null): FaceTime {
+  if (hourAim === null || hourFromAngle(hourAim, time.minute) !== time.hour) return { hour: time.hour, minute }
+  return { hour: hourFromAngle(hourAim, minute), minute }
+}
+
 /** Hand angles for a face time: the hour hand moves with the minutes. */
 export function handAngles(t: FaceTime): { hour: number; minute: number } {
   return { hour: (t.hour % 12) * 30 + t.minute * 0.5, minute: t.minute * 6 }
@@ -60,6 +71,8 @@ export interface ClockFaceProps {
 export function ClockFace({ time, onChange, label, numbers = true }: ClockFaceProps) {
   const svgRef = useRef<SVGSVGElement>(null)
   const grab = useRef<'hour' | 'minute' | null>(null)
+  /** The angle the child last dragged the short hand to (see moveMinuteHand). */
+  const hourAim = useRef<number | null>(null)
   const interactive = !!onChange
   const hands = handAngles(time)
 
@@ -85,8 +98,9 @@ export function ClockFace({ time, onChange, label, numbers = true }: ClockFacePr
     const p = aim(e)
     if (!p) return
     if (grab.current === 'minute') {
-      onChange({ hour: time.hour, minute: minuteFromAngle(p.deg) })
+      onChange(moveMinuteHand(time, minuteFromAngle(p.deg), hourAim.current))
     } else {
+      hourAim.current = p.deg
       onChange({ hour: hourFromAngle(p.deg, time.minute), minute: time.minute })
     }
   }

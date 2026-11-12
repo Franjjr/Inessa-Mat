@@ -57,8 +57,9 @@ test.describe('Journey H: new exercise views (development gallery)', () => {
     await page.locator('[data-slot]').first().click()
     await expect(chips).toHaveCount(before - 1)
     await shot(page, 'h2-bar-placed')
-    // The check stays disabled: the operation and the result are still missing.
-    await expect(page.getByRole('button', { name: /Comprobar/ }).last()).toBeDisabled()
+    // One thing per screen: the bar has no «Comprobar», and «Seguir» waits until every number is placed.
+    await expect(page.getByRole('button', { name: /Comprobar/ })).toHaveCount(0)
+    await expect(page.getByRole('button', { name: /Seguir/ })).toBeDisabled()
   })
 
   test('encuentra el error: the child says if the calculation is right, then marks the column and writes the right result', async ({ page }) => {

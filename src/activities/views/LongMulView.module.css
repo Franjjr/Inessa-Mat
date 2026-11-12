@@ -53,6 +53,27 @@
   align-self: center;
 }
 
+/* The names of the columns (whole words) and of each row («38 × 70 =», «suma»): P3PE-13. */
+.name {
+  font-family: var(--font-read);
+  font-size: var(--fs-xs);
+  color: var(--c-ink-mute);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rowLabel {
+  justify-self: end;
+  align-self: center;
+  padding-right: var(--sp-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--c-primary-strong);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 .line {
   height: 5px;
   border-radius: var(--r-pill);

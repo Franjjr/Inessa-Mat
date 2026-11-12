@@ -8,6 +8,9 @@
 @font-face { font-family: 'Baloo 2'; src: url('/fonts/Baloo2-800.woff2') format('woff2'); font-weight: 800; font-display: swap; }
 
 :root {
+  /* Light colours only (CR-3, P6-07): a browser in dark mode must not repaint the app (with the meta in index.html). */
+  color-scheme: light only;
+
   /* Typography: Baloo 2 (OFL) for titles, numbers and buttons; Andika (literacy font, single-storey a/g) for reading text. */
   --font-display: 'Baloo 2', system-ui, sans-serif;
   --font-read: 'Andika', system-ui, sans-serif;

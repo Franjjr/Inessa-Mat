@@ -1,5 +1,7 @@
 /* Number line with jumps of 10, 100 or 1 000 (num:line:*). Tick mode: a mark is missing and the child writes it.
-   Jump mode: the child starts from a point and jumps one step; the child writes where it lands. */
+   Jump mode: the child starts from a point and jumps one step; the child writes where it lands.
+   The answer box never sits among the labels of the line (P3PE-09): the empty mark shows «?» and the box goes under
+   the line, right below that mark, joined to it by an arrow. The box has no ✓ of its own: «Comprobar» is the one check. */
 import { useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
@@ -8,6 +10,7 @@ import type { ExerciseViewProps, NumberLineExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { useAnswerFlow } from '../groups/flow'
 import s from './NumericViews.module.css'
+import { ExerciseLayout } from './ExerciseLayout'
 
 export default function NumberLineView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
   if (exercise.kind !== 'number-line') return null
@@ -40,17 +43,21 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
       status={status}
       ariaLabel={isJump ? 'Adónde caes' : 'Marca que falta'}
       placeholder="?"
+      checkButton={false}
       autoFocus
     />
   )
 
   return (
-    <section className={s.view} aria-label="Recta numérica" data-kind={ex.kind} data-mode={ex.mode}>
-      <p className={s.instructions}>
-        {isJump
-          ? `Salta ${fmt(ex.step)} ${word}. ¿En qué número caes?`
-          : `Las marcas van de ${fmt(ex.step)} en ${fmt(ex.step)}. ¿Qué número va en la marca vacía?`}
-      </p>
+    <ExerciseLayout
+      workClassName={s.view}
+      aria-label="Recta numérica"
+      data-kind={ex.kind}
+      data-mode={ex.mode}
+      prompt={isJump ? `Salta ${fmt(ex.step)} ${word}. ¿En qué número caes?` : '¿Qué número va en la marca del «?»?'}
+      sub={isJump ? undefined : `Las marcas van de ${fmt(ex.step)} en ${fmt(ex.step)}.`}
+      actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}
+    >
 
       {isJump && ex.start !== null && (
         <div className={s.row} aria-label={`Empiezas en ${fmt(ex.start)}`}>
@@ -64,7 +71,7 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
           const pct = ((t - first) / span) * 100
           return (
             <div key={t} className={s.tick} data-pos={Math.round(pct)}>
-              {blank ? answerBox : <span className={s.tickLabel}>{fmt(t)}</span>}
+              {blank ? <span className={s.tickBlank} aria-label="Marca vacía">?</span> : <span className={s.tickLabel}>{fmt(t)}</span>}
               <span className={s.tickMark} aria-hidden />
             </div>
           )
@@ -78,6 +85,25 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
         )}
       </div>
 
+      {!isJump && ex.blank !== null && (
+        <div className={s.lineAnswer} data-line-answer="">
+          {ex.ticks.map((t, i) => (
+            <div
+              key={t}
+              className={s.lineAnswerCell}
+              style={i === ex.blank ? { justifyContent: i === 0 ? 'flex-start' : i === ex.ticks.length - 1 ? 'flex-end' : 'center' } : undefined}
+            >
+              {i === ex.blank && (
+                <div className={s.lineAnswerBox}>
+                  <span className={s.lineArrow} aria-hidden>↑</span>
+                  {answerBox}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
       {isJump && (
         <div className={s.row}>
           <span className={s.sign}>Caes en</span>
@@ -85,7 +111,6 @@ function LineRound({ ex, onAnswered, showFeedback, allowHints }: { ex: NumberLin
         </div>
       )}
 
-      <AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />
-    </section>
+    </ExerciseLayout>
   )
 }
