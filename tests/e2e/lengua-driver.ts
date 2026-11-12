@@ -77,7 +77,8 @@ export async function answerAnything(page: Page): Promise<boolean> {
     } else await page.keyboard.type(value)
     acted = true
   }
-  if (!acted) return false
+  // «Inténtalo otra vez» brings back what was written: with nothing new to write, check it again (the flow goes on).
+  if (!acted) return check(page)
   await check(page)
   return true
 }
