@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useMemo, useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
-import { DIMENSION_NAME, fmt } from '@/engine'
+import { fmt, measureStatement } from '@/engine'
 import { useActivityHost } from '@/activities/host'
 import { useMediaQuery } from '@/activities/lesson/useLessonMedia'
 import type {
@@ -55,7 +55,7 @@ function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) 
   const [picked, setPicked] = useState<string | null>(null)
   const locked = !!flow.result?.correct
   return (
-    <ExerciseLayout workClassName={s.view} prompt={<>¿Qué unidad usarías para medir {DIMENSION_NAME[ex.dimension]} de {ex.object}?</>} actions={<AnswerBar flow={flow} onCheck={() => picked && celebrateIfRight(flow, { type: 'option', value: picked })} canCheck={picked !== null} />}>
+    <ExerciseLayout workClassName={s.view} prompt={measureStatement(ex)} actions={<AnswerBar flow={flow} onCheck={() => picked && celebrateIfRight(flow, { type: 'option', value: picked })} canCheck={picked !== null} />}>
       <div className={m.stage}>
         <span className={r.objectEmoji} aria-hidden>{ex.emoji}</span>
         <span className={r.objectName}>{ex.object}</span>

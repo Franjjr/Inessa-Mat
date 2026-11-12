@@ -74,17 +74,36 @@ describe('column calculations explain themselves (P3PE-13)', () => {
     expect(container.querySelector('.ex-prompt')?.textContent).toBe(columnPrompt('column-sub', 'borrow'))
   })
 
-  it('after a wrong subtraction there is one message only (no second bubble), and it names a column', () => {
-    // 742 − 258 = 484; the child writes 494: the tens are wrong.
-    const { container } = render(<ColumnView exercise={makeColumnSub(742, 258)} onAnswered={() => {}} method="borrow" />)
-    const cell = (name: RegExp) => screen.getByRole('textbox', { name })
-    fireEvent.keyDown(cell(/unidades del resultado/), { key: '4' })
-    fireEvent.keyDown(cell(/decenas del resultado/), { key: '9' })
-    fireEvent.keyDown(cell(/centenas del resultado/), { key: '4' })
-    act(() => { fireEvent.keyDown(cell(/unidades del resultado/), { key: 'Enter' }) })
-    const bubbles = container.querySelectorAll('[aria-live="polite"] p')
-    expect(bubbles.length).toBe(1)
-    expect(bubbles[0].textContent).toMatch(/unidad|decena|centena/)
+  it('the result is typed units first: an arrow «←» sits over the cell that types next (column and long multiplication)', () => {
+    const { unmount } = render(<ColumnView exercise={makeColumnAdd([368, 257])} onAnswered={() => {}} showFeedback={false} />)
+    act(() => { screen.getByRole('textbox', { name: /unidades del resultado/ }).focus() })
+    expect(screen.getAllByTestId('column-arrow').length).toBe(1)
+    unmount()
+    render(<LongMulView exercise={makeLongMul(38, 74)} onAnswered={() => {}} showFeedback={false} />)
+    act(() => { screen.getAllByRole('textbox').find((b) => b.closest('[data-row-label]') === null && /unidades/.test(b.getAttribute('aria-label') ?? ''))!.focus() })
+    expect(screen.getAllByTestId('column-arrow').length).toBe(1)
+  })
+
+  it('after a wrong subtraction there is one message only (no second bubble), and it teaches the borrowing', () => {
+    // 742 − 258 = 484; the child writes 494: the decenas did not give back the ten they lent.
+    const write = (ex: ReturnType<typeof makeColumnSub>, digits: [string, string, string]) => {
+      const { container, unmount } = render(<ColumnView exercise={ex} onAnswered={() => {}} method="borrow" />)
+      const cell = (name: RegExp) => screen.getByRole('textbox', { name })
+      fireEvent.keyDown(cell(/unidades del resultado/), { key: digits[0] })
+      fireEvent.keyDown(cell(/decenas del resultado/), { key: digits[1] })
+      fireEvent.keyDown(cell(/centenas del resultado/), { key: digits[2] })
+      act(() => { fireEvent.keyDown(cell(/unidades del resultado/), { key: 'Enter' }) })
+      const bubbles = [...container.querySelectorAll('[aria-live="polite"] p')].map((p) => p.textContent ?? '')
+      unmount()
+      return bubbles
+    }
+    const tens = write(makeColumnSub(742, 258), ['4', '9', '4'])
+    expect(tens.length).toBe(1)
+    expect(tens[0]).toMatch(/vecina/)
+    // 528 − 143 = 385; the child writes 485: the lender is the centenas, and the message names it.
+    const hundreds = write(makeColumnSub(528, 143), ['5', '8', '4'])
+    expect(hundreds.length).toBe(1)
+    expect(hundreds[0]).toMatch(/centena/)
   })
 
   it('long multiplication: each row says what it is («38 × 4 =», «38 × 70 =», «suma») and the columns are named', () => {

@@ -122,15 +122,15 @@ describe('comprobar view', () => {
 })
 
 describe('division views by the child\'s method', () => {
-  it('repartir por partes shows the parts; the climb shows the rows (for a small quotient)', () => {
-    const parts = makeDivision3(384, 4)
-    const { unmount } = render(<DivisionView exercise={parts} onAnswered={vi.fn()} divMethod="div-parts" />)
-    expect(screen.getByRole('region', { name: 'Repartir por partes' })).toBeTruthy()
-    unmount()
-    const climb = makeDivision3(28, 4)
-    render(<DivisionView exercise={climb} onAnswered={vi.fn()} divMethod="climb" />)
-    expect(screen.getByRole('region', { name: 'Multiplicar hacia arriba' })).toBeTruthy()
-    expect(screen.getByRole('textbox', { name: /producto de 4 por 1/ })).toBeTruthy()
+  it('the retired methods (repartir por partes, multiplicar hacia arriba) show the school galera', () => {
+    for (const [ex, method] of [[makeDivision3(384, 4), 'div-parts'], [makeDivision3(28, 4), 'climb']] as const) {
+      const { unmount } = render(<DivisionView exercise={ex} onAnswered={vi.fn()} divMethod={method} />)
+      expect(screen.getByRole('region', { name: 'División en galera' })).toBeTruthy()
+      expect(screen.queryByRole('region', { name: 'Repartir por partes' })).toBeNull()
+      expect(screen.queryByRole('region', { name: 'Multiplicar hacia arriba' })).toBeNull()
+      expect(screen.queryByText(/Repartir por partes|Multiplicar hacia arriba/)).toBeNull()
+      unmount()
+    }
   })
 
   it('climb falls back to the galera when the quotient is too big for the rows', () => {

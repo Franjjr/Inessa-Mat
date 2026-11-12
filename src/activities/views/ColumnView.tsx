@@ -272,7 +272,7 @@ function ColumnRound({ ex, onAnswered, allowHints, showFeedback, compact, proof,
       actions={<AnswerBar flow={flow} onCheck={check} canCheck={res.some((v) => v !== null)} />}
     >
       {auxCaption && <p className={s.auxCaption} data-aux-caption="">{host.t(auxCaption)}</p>}
-      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle>
+      <CellGroup order={order} onSubmit={check} keypadPosition="below" keypadToggle typingOrder="column">
         <div className={s.grid} style={{ gridTemplateColumns: `minmax(1.1em, auto) repeat(${cols}, auto)` }}>
           {cells}
         </div>

@@ -10,15 +10,18 @@ import CheckCalcView, { CHECK_SIGN, proofOptional } from './CheckCalcView'
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn() }, haptics: { success: vi.fn(), error: vi.fn(), tap: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
 
-// The grading of a right verdict without the proof is the engine's (p1n-02, src/engine/bugs.ts). Here the engine is told to
-// accept it when the test asks, so the view is tested both ways.
+// The grading of a right verdict without the proof is the engine's (p1n-02, src/engine/bugs.ts): the real engine accepts it.
+// Here the engine can also be told to require the proof (`strict`), so the view is tested both ways.
 // `half`: the engine grades only the right verdict without the proof (the wrong one comes back incomplete).
-const engine = vi.hoisted(() => ({ proofOptional: false, half: false }))
+const engine = vi.hoisted(() => ({ proofOptional: false, half: false, strict: false }))
 vi.mock('@/engine', async (importOriginal) => {
   const real = await importOriginal<typeof import('@/engine')>()
   return {
     ...real,
     check: (ex: Exercise, a: Answer) => {
+      if (engine.strict && ex.kind === 'check-calc' && a.type === 'verdict' && a.value === null && a.ok !== null) {
+        return { correct: false, given: '?', expected: '', errorType: 'incomplete' as const }
+      }
       if (engine.proofOptional && ex.kind === 'check-calc' && a.type === 'verdict' && a.value === null) {
         const right = a.ok === (ex as CheckCalcExercise).ok
         if (engine.half && !right) return { correct: false, given: '?', expected: '', errorType: 'incomplete' as const }
@@ -59,12 +62,14 @@ describe('comprobar: the proof box (p1n-02)', () => {
   })
 
   it('while the engine needs the proof, Comprobar waits for it', () => {
-    engine.proofOptional = false
+    engine.strict = true
     const ex = genCheckCalc('sub', createRng(9), false)
     expect(proofOptional(ex)).toBe(false)
-    render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
+    const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
     fireEvent.click(screen.getByRole('button', { name: /No está bien/ }))
     expect(comprobar().disabled).toBe(true)
+    unmount()
+    engine.strict = false
   })
 
   it('when the engine grades a right verdict alone, «No está bien» without the proof can be checked, and it is right', () => {
@@ -81,13 +86,18 @@ describe('comprobar: the proof box (p1n-02)', () => {
     engine.proofOptional = false
   })
 
-  it('the real engine: the box is required for a right and for a wrong calculation alike (no «si quieres» either way)', () => {
+  it('the real engine: the box is optional for a right and for a wrong calculation alike, and a right verdict alone is right', () => {
     engine.proofOptional = false
     for (const ok of [true, false]) {
       const ex = genCheckCalc('add', createRng(5), ok)
-      expect(proofOptional(ex)).toBe(false)
-      const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={vi.fn()} showFeedback={false} />)
-      expect(screen.queryByText(/si quieres/)).toBeNull()
+      expect(proofOptional(ex)).toBe(true)
+      const onAnswered = vi.fn()
+      const { unmount } = render(<CheckCalcView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+      // The label is the same for both, so it never tells whether this calculation is wrong.
+      expect(screen.getByText(/si quieres/)).toBeTruthy()
+      fireEvent.click(screen.getByRole('button', { name: ok ? /Sí, está bien/ : /No está bien/ }))
+      fireEvent.click(comprobar())
+      expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
       unmount()
     }
   })

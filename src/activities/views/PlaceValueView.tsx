@@ -111,7 +111,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
         <ExerciseLayout
           workClassName={s.view}
           prompt="Escribe cuánto vale cada cifra."
-          sub="Si la cifra es 0, su casilla puede quedar vacía."
+          sub="Si una cifra es 0, puedes escribir 0 o dejar la casilla vacía."
           actions={<AnswerBar flow={flow} onCheck={submitCells} canCheck={cellsReady} />}
         >
           {guided && (
