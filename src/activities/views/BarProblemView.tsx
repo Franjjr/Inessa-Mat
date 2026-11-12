@@ -11,6 +11,8 @@ import type { BarOp, BarProblemExercise, BarSlot, ExerciseViewProps } from '@/ty
 import { barChips } from '@/engine'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
+import { ListenButton } from '@/activities/shared/ListenButton'
+import { statementFor } from '@/engine/statement'
 import { celebrate } from '@/fx'
 import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
@@ -321,6 +323,10 @@ function BarRound({ ex, onAnswered, guided, allowHints, showFeedback, compact, r
         </>
       )}
     >
+      {/* With the voice on the problem reads itself here: the «word» and «exercises» activities have no other «Escuchar»,
+          and the lesson (TrySlot) and the session (ExerciseStep) leave theirs out for a problem when the voice is on. */}
+      {host.prefs.voice && <ListenButton text={statementFor({ ...ex, text })} className={s.speak} />}
+
       {current === 'place' && (
         <>
           <p className={s.guideStep} data-guide="">{host.t(guideText(1, 'place', 'op'))}</p>

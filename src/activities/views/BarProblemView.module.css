@@ -23,6 +23,8 @@
   color: var(--c-ink);
   padding-right: 120px;
 }
+/* «Escuchar» (the common ListenButton), above the work, on the right. */
+.speak { align-self: flex-end; }
 
 /* The bar card: rows of pieces (one row per bar), the numbers to place below. */
 .barCard {

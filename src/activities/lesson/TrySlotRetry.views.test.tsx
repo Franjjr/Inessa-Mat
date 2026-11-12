@@ -248,11 +248,15 @@ describe('WordProblemView', () => {
     expect(invalid(box('Respuesta'))).toBe(true)
   })
 
-  it('has no «Escuchar» of its own, also with the voice on (the common one of the screen reads it)', () => {
+  it('reads itself with the voice on (also in the «word» and «exercises» activities, which add no «Escuchar»)', () => {
     const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
     render(<ActivityHostProvider value={voiceOn}><WordProblemView exercise={story} onAnswered={vi.fn()} showFeedback={false} /></ActivityHostProvider>)
-    expect(screen.queryByRole('button', { name: /Leer en voz alta|Escuchar/ })).toBeNull()
-    expect(screen.queryByText(/Escuchar/)).toBeNull()
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
+  })
+
+  it('has no «Escuchar» of its own with the voice off (the common one of the lesson or the session reads it)', () => {
+    render(<WordProblemView exercise={story} onAnswered={vi.fn()} showFeedback={false} />)
+    expect(screen.queryByRole('button', { name: /Escuchar/ })).toBeNull()
   })
 })
 
@@ -268,10 +272,13 @@ describe('BarProblemView', () => {
     expect(invalid(box('Respuesta'))).toBe(true)
   })
 
-  it('has no «Escuchar» of its own, also with the voice on', () => {
+  it('reads itself with the voice on, and not with the voice off', () => {
     const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
-    render(<ActivityHostProvider value={voiceOn}><BarProblemView exercise={genBarProblem('add', createRng(3), true)} onAnswered={vi.fn()} showFeedback={false} /></ActivityHostProvider>)
-    expect(screen.queryByText(/Escuchar/)).toBeNull()
+    const { unmount } = render(<ActivityHostProvider value={voiceOn}><BarProblemView exercise={genBarProblem('add', createRng(3), true)} onAnswered={vi.fn()} showFeedback={false} /></ActivityHostProvider>)
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
+    unmount()
+    render(<BarProblemView exercise={genBarProblem('add', createRng(3), true)} onAnswered={vi.fn()} showFeedback={false} />)
+    expect(screen.queryByRole('button', { name: /Escuchar/ })).toBeNull()
   })
 
   it('with the drawing: the numbers go back on the bar and a piece with another number is marked', () => {

@@ -75,10 +75,13 @@ function renderedForVoice<T>(value: T, t: (template: string) => string): T {
   return value
 }
 
-/** Whether the exercise's own view already plays its audio: then «Escuchar» is not added. The English listening
-    exercises, «Ahora dilo tú» and the dictation play their own; the problems use this common «Escuchar» too. */
-function readsItself(kind: Exercise['kind']): boolean {
-  return kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)
+/** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
+    The problems read themselves when the voice is on (their view is also used where nothing else reads them: the «word»
+    and «exercises» activities); the English listening exercises, «Ahora dilo tú» and the dictation play their own audio.
+    The same rule as in world/review/ExerciseStep. */
+function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
+  if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
+  return voice && (kind === 'word-problem' || kind === 'bar-problem')
 }
 
 /** What a wrong try leaves for the next one: the answer the view sent and the corrector's wrong boxes. */
@@ -311,7 +314,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
           style={{ transform: `scale(${fit.scale})`, '--fit-scale': fit.scale } as CSSProperties}
         >
           {/* «Escuchar»: the try can be heard, also with the automatic reading off (unless its view reads itself). */}
-          {!readsItself(exercise.kind) && (
+          {!readsItself(exercise.kind, host.prefs.voice) && (
             <div className={s.listenRow}>
               <ListenButton text={statementFor(renderedForVoice(exercise, host.t))} />
             </div>

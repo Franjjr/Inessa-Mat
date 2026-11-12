@@ -1,7 +1,7 @@
 /* «Inténtalo otra vez» brings back the SAME exercise with what the child wrote (P2, P4): TrySlot passes the answer the view
    sent (outcome.answer) as initialAnswer, and the corrector's wrong boxes as wrongColumns. A real column view checks it
    end to end: the digits are still there and the wrong column is marked. */
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
 import type { Answer, ColumnAddExercise, ExerciseViewProps, SkillSelector } from '@/types'
@@ -16,10 +16,12 @@ vi.mock('@/activities', async () => {
   const host = await import('@/activities/host')
   const { createElement } = await import('react')
   const real = await import('@/activities/views/ColumnView')
-  // The fake view sends a wrong answer with the digits it wrote; a column exercise is drawn by the real view.
+  const realWord = await import('@/activities/views/WordProblemView')
+  // The fake view sends a wrong answer with the digits it wrote; a column exercise and a word problem are drawn by the real view.
   const ExerciseView = (props: ExerciseViewProps) => {
     seen.push(props)
     if (props.exercise.kind === 'column-add') return createElement(real.default, props)
+    if (props.exercise.kind === 'word-problem') return createElement(realWord.default, props as Parameters<typeof realWord.default>[0])
     const answer: Answer = { type: 'digits', digits: [7, 2] }
     return createElement('div', { 'data-testid': 'fake-exercise', 'data-id': props.exercise.id },
       createElement('button', {
@@ -76,13 +78,16 @@ describe('TrySlot «Inténtalo otra vez» keeps what the child wrote', () => {
     })
   })
 
-  it('a word problem has the common «Escuchar» also with the voice on (its view no longer has its own)', () => {
+  it('a word problem has one «Escuchar» with the voice on (its own) and with the voice off (the common one)', () => {
     const voiceOn = { ...defaultActivityHost, prefs: { ...defaultActivityHost.prefs, voice: true } }
     render(
       <ActivityHostProvider value={voiceOn}>
         <TrySlot selector={{ kinds: ['word-problem'] }} seedKey="retry-listen" onSettled={vi.fn()} />
       </ActivityHostProvider>,
     )
+    expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
+    cleanup()
+    render(<TrySlot selector={{ kinds: ['word-problem'] }} seedKey="retry-listen" onSettled={vi.fn()} />)
     expect(screen.getAllByRole('button', { name: /Escuchar/ })).toHaveLength(1)
   })
 })

@@ -4,6 +4,8 @@ import { useMemo, useRef, useState } from 'react'
 import type { ExerciseViewProps, WordProblemExercise } from '@/types'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
+import { ListenButton } from '@/activities/shared/ListenButton'
+import { statementFor } from '@/engine/statement'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
 import { initialOf, useRetryFlow, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
@@ -112,6 +114,10 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, chooseOp
       prompt={text}
       actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} />}
     >
+      {/* With the voice on the problem reads itself here: the «word» and «exercises» activities have no other «Escuchar»,
+          and the lesson (TrySlot) and the session (ExerciseStep) leave theirs out for a problem when the voice is on. */}
+      {host.prefs.voice && <ListenButton text={statementFor({ ...ex, text })} className={s.speak} />}
+
       {chooseOp && (
         <div className={s.ops} role="group" aria-label="¿Qué operación?">
           <p className={s.opsTitle}>{host.t('¿Qué hacemos con los números?')}</p>
