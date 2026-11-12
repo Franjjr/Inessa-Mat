@@ -20,6 +20,7 @@ import { INGLES_CLASSES } from './ingles3'
 
 export { clase } from './dsl'
 export type { ClassDef, ClassInput } from './dsl'
+export { classForMethods, type ClassMethods } from './porMetodo'
 
 /** The maths classes (3.º): one array per block of topics, concatenated. */
 export const CLASSES: ClassDef[] = [...GRADE3_CLASSES, ...NUMEROS_CLASSES, ...TABLAS_CLASSES, ...PROBLEMAS_CLASSES, ...MENTAL_CLASSES, ...FRACCIONES_CLASSES, ...DINERO_CLASSES, ...TIEMPO_CLASSES, ...MEDIDA_CLASSES, ...GEOMETRIA_CLASSES, ...DATOS_CLASSES]
