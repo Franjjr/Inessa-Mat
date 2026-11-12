@@ -39,7 +39,7 @@ function MoneyRound({ ex, onAnswered, showFeedback, allowHints }: { ex: MoneyEx 
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const status = statusOf(flow)
   return (
-    <section className={s.view} aria-label="Dinero" data-kind="money" data-mode={ex.mode} data-status={status}>
+    <section className="ex-shell" aria-label="Dinero" data-kind="money" data-mode={ex.mode} data-status={status}>
       {(() => {
         switch (ex.mode) {
           case 'recognise': return <Recognise ex={ex} flow={flow} />
@@ -349,8 +349,7 @@ function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
   return (
     <ExerciseLayout
       workClassName={s.view}
-      prompt={ex.question}
-      sub={ex.text}
+      prompt={<>{ex.text}<br /><span>{ex.question}</span></>}
       actions={choose
         ? (
           <AnswerBar
@@ -412,20 +411,21 @@ function Budget({ ex, flow }: { ex: MoneyBudgetExercise; flow: AnswerFlow }) {
 
 interface Amount { e: number | null; c: number | null }
 /** An amount can be checked once either box is written: an empty box is 0 (2 € is «2» and nothing in the céntimos,
-    50 céntimos is nothing in the euros and «50»), as the child writes it on paper (P3PE-15). */
-export const amountReady = (a: Amount) => a.e !== null || a.c !== null
+    50 céntimos is nothing in the euros and «50»), as the child writes it on paper (P3PE-15). With `whole` (only the
+    euros box is shown) the euros must be written: nothing typed is never checked as a wrong «0 €» (P1, P2). */
+export const amountReady = (a: Amount, whole = false) => (whole ? a.e !== null : a.e !== null || a.c !== null)
 /** The amount sent to the check: an empty box counts as 0. */
 export const amountValues = (a: Amount): [number, number] => [a.e ?? 0, a.c ?? 0]
 
 /** Two writing pads (euros, a decimal comma, céntimos) and the answer bar, for the view's own layout (the boxes in the
     work, the bar beside the statement). `whole`: only the euros. */
 function useAmountAnswer(flow: AnswerFlow, whole = false): { fields: ReactNode; bar: ReactNode } {
-  const [amount, setAmount] = useState<Amount>({ e: null, c: whole ? 0 : null })
+  const [amount, setAmount] = useState<Amount>({ e: null, c: null })
   const check = (a: Amount) => {
-    if (amountReady(a)) submitWith(flow, { type: 'numbers', values: amountValues(a) })
+    if (amountReady(a, whole)) submitWith(flow, { type: 'numbers', values: amountValues(a) })
   }
   const status = statusOf(flow)
-  const bar = <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount)} />
+  const bar = <AnswerBar flow={flow} onCheck={() => check(amount)} canCheck={amountReady(amount, whole)} />
   if (whole) {
     return {
       bar,

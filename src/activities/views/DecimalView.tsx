@@ -32,7 +32,7 @@ function DecimalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Decima
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   return (
-    <section className={s.view} aria-label="Décimas y centésimas" data-kind={ex.kind} data-mode={ex.mode} data-status={status}>
+    <section className="ex-shell" aria-label="Décimas y centésimas" data-kind={ex.kind} data-mode={ex.mode} data-status={status}>
       {ex.mode === 'compare' ? <Compare ex={ex} flow={flow} /> : <WriteNumber ex={ex} flow={flow} status={status} />}
     </section>
   )

@@ -16,6 +16,14 @@
   --fs-prompt-sub-side: 16px;
 }
 
+/* A view's own wrapper around its .ex-layout (aria-label, data-kind): only as wide as its place, with no gap or
+   padding of its own, so it never adds height on a short screen. */
+.ex-shell {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 .ex-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);

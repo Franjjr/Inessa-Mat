@@ -64,7 +64,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
   }
 
   return (
-    <section className={s.view} aria-label={ex.value >= 10000 ? 'Números de 5 cifras' : 'Números hasta 9 999'} data-kind={ex.kind} data-mode={ex.mode}>
+    <section className="ex-shell" aria-label={ex.value >= 10000 ? 'Números de 5 cifras' : 'Números hasta 9 999'} data-kind={ex.kind} data-mode={ex.mode}>
       {ex.mode === 'blocks' && (
         <ExerciseLayout workClassName={s.view} prompt={'Cuenta los bloques de cada clase y escribe el número.'} actions={<AnswerBar flow={flow} onCheck={() => submitValue()} canCheck={value !== null} />}>
           <div className={s.blocks} aria-label="Bloques">

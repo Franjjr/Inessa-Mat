@@ -30,7 +30,7 @@ function MeasureRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Measur
   const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   return (
-    <section className={s.view} aria-label="Medida" data-kind="measure" data-mode={ex.mode} data-status={status}>
+    <section className="ex-shell" aria-label="Medida" data-kind="measure" data-mode={ex.mode} data-status={status}>
       {(() => {
         switch (ex.mode) {
           case 'unit': return <UnitRound ex={ex} flow={flow} />
