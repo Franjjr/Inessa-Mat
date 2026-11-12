@@ -151,6 +151,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided, retry }:
                     ariaLabel={`Valor de ${placeName(top - i) === 'millares' ? 'los' : 'las'} ${placeName(top - i)}`}
                     checkButton={false}
                     placeholder={zeroAt(i) ? '0' : '?'}
+                    optional={zeroAt(i)}
                     autoFocus={i === 0}
                   />
                 </span>

@@ -7,12 +7,14 @@ import { ExerciseStep } from './ExerciseStep'
 
 // The exercise view is covered by the activities module. Here a stub answers on click with the next scripted outcome
 // (a correct one when the script is empty), so only the step is tested.
-const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0, guidedSeen: [] as unknown[] }))
+const script = vi.hoisted(() => ({ outcomes: [] as unknown[], mounts: 0, guidedSeen: [] as unknown[], props: [] as Record<string, unknown>[] }))
 
 vi.mock('@/activities', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/activities')>()
   const React = await import('react')
-  function ExerciseView({ onAnswered, guided }: { onAnswered: (o: unknown) => void; guided?: boolean }) {
+  function ExerciseView(props: { onAnswered: (o: unknown) => void; guided?: boolean; initialAnswer?: unknown; wrongColumns?: number[] }) {
+    const { onAnswered, guided } = props
+    script.props.push({ initialAnswer: props.initialAnswer, wrongColumns: props.wrongColumns })
     React.useEffect(() => { script.mounts += 1; script.guidedSeen.push(guided === true) }, [])
     return React.createElement('div', null,
       React.createElement('input', { 'aria-label': 'Respuesta' }),
@@ -35,6 +37,7 @@ beforeEach(() => {
   script.outcomes = []
   script.mounts = 0
   script.guidedSeen = []
+  script.props = []
 })
 
 function renderStep(props: Partial<React.ComponentProps<typeof ExerciseStep>> = {}, reportAttempt = vi.fn()) {
@@ -129,6 +132,17 @@ describe('ExerciseStep «Inténtalo otra vez»', () => {
     await user.click(screen.getByRole('button', { name: 'Siguiente' }))
     expect(onContinue).toHaveBeenCalledTimes(1)
     expect(onContinue.mock.calls[0][0].check.correct).toBe(false) // the first answer decides the run (requeue), as before
+  })
+
+  it('a retry brings back what the child wrote and the wrong boxes; the first try starts empty', async () => {
+    const user = userEvent.setup()
+    const answer = { type: 'digits', digits: [7, 4] }
+    script.outcomes = [{ ...wrong({ check: { correct: false, given: '47', expected: '42', wrongColumns: [0] } }), answer }, right]
+    renderStep({ allowRetry: true })
+    expect(script.props.at(-1)).toEqual({ initialAnswer: undefined, wrongColumns: undefined })
+    await user.click(screen.getByRole('button', { name: 'Responder' }))
+    await user.click(await screen.findByRole('button', { name: 'Inténtalo otra vez' }))
+    expect(script.props.at(-1)).toEqual({ initialAnswer: answer, wrongColumns: [0] })
   })
 
   it('a wrong retry shows the feedback and «Siguiente», with retries but not solved on retry', async () => {

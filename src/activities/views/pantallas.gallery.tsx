@@ -89,7 +89,7 @@ function SessionFrame({ c }: { c: PantallaCase }) {
         <div className={s.progressTrack}><div className={s.progressFill} style={{ width: '30%' }} /></div>
         <div className={s.stage}>
           <div className={s.card}>
-            <p className={s.blockChip}>Lo nuevo de hoy</p>
+            <p className={`${s.blockChip} ${s.playChip}`}>Lo nuevo de hoy</p>
             <ExerciseStep
               key={c.id}
               exercise={c.exercise}

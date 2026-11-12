@@ -189,6 +189,16 @@ describe('PlaceValueView, expanded form (p1n-03/04)', () => {
     expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 
+  it('3 040 with 3 000 and 40 written: Enter in the last box checks (the empty zero boxes are optional)', () => {
+    const onAnswered = vi.fn()
+    render(<PlaceValueView exercise={makePlaceValue(3040, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)
+    fireEvent.change(box(/Valor de los millares/), { target: { value: '3000' } })
+    fireEvent.change(box(/Valor de las decenas/), { target: { value: '40' } })
+    fireEvent.keyDown(box(/Valor de las decenas/), { key: 'Enter' })
+    expect(onAnswered).toHaveBeenCalledTimes(1)
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+  })
+
   it('the empty box of a non-zero digit is still needed, and a wrong part is wrong', () => {
     const onAnswered = vi.fn()
     render(<PlaceValueView exercise={makePlaceValue(1509, 'expanded')} onAnswered={onAnswered} showFeedback={false} />)

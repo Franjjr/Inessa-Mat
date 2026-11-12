@@ -15,7 +15,7 @@
 import { expect, test, type Page } from '@playwright/test'
 
 /** Kinds whose view is another group's file and does not use ExerciseLayout yet. */
-const VIEWS_PENDING = /^(fact-mul|fact-div|missing-factor|skip-count|double-chain|fact-family|division|mul-parts)__/
+const VIEWS_PENDING = /^$never/
 
 /** Cases answered without «Comprobar» or «Seguir» (a tap is the answer). Any other case without them fails. */
 const NO_CHECK: RegExp[] = []

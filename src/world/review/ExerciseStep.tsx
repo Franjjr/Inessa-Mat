@@ -21,7 +21,8 @@ import { ListenButton } from '@/activities/shared/ListenButton'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
 import { guidedOutcome } from '@/activities/shared/guided'
-import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
+import { answerOf } from '@/activities/lesson/TrySlotRetry'
+import type { Answer, AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
 /** An attempt waiting to be reported: the outcome and the retry facts. graded: false for a retry row (see handleAnswered). */
@@ -94,6 +95,7 @@ export function ExerciseStep({
   const host = useActivityHost()
   const [stage, setStage] = useState<Stage>('asking')
   const [view, setView] = useState(0)
+  const [previous, setPrevious] = useState<{ answer?: Answer; wrongColumns?: number[] }>({})
   const [message, setMessage] = useState('')
   const [latest, setLatest] = useState<ExerciseOutcome | null>(null)
   const stageRef = useRef<Stage>('asking')
@@ -198,6 +200,12 @@ export function ExerciseStep({
       first.current = o
       // A view that already gave its own second try (facts) settles the exercise: no further retry here.
       const offer = allowRetry && !o.check.correct && !o.retries
+      // «Inténtalo otra vez» brings back what the child wrote, with the wrong boxes marked (not a blank exercise).
+      if (offer) {
+        const answer = answerOf(raw)
+        const wrong = raw.check.wrongColumns
+        setPrevious(answer ? { answer, wrongColumns: wrong && wrong.length ? [...wrong] : undefined } : {})
+      }
       pending.current = { outcome: o, retries: o.retries ?? 0, solvedOnRetry: false, graded: gradedHere() }
       show(o)
       if (offer) {
@@ -289,6 +297,8 @@ export function ExerciseStep({
           method={subMethod}
           divMethod={divMethod}
           tableMethod={host.prefs.tableMethod}
+          initialAnswer={stage === 'retrying' ? previous.answer : undefined}
+          wrongColumns={stage === 'retrying' ? previous.wrongColumns : undefined}
         />
       </div>
       {(listen || skipOffered) && (

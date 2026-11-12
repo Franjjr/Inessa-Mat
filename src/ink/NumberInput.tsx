@@ -41,6 +41,8 @@ export interface NumberInputExtraProps {
    * (with what the app read), and the pad empties only when she starts writing or typing again.
    */
   clearKey?: string | number
+  /** An empty box is a valid answer (a place worth 0): Enter in the last box checks instead of jumping here. */
+  optional?: boolean
 }
 
 /** «Aquí solo cabe una cifra» / «Aquí solo caben 2 cifras». */
@@ -117,7 +119,7 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
 
   // In keypad mode only one box on the screen shows the keypad: the one touched last.
   const activePad = useIsActivePad(uid)
-  usePadSlot(uid, value != null, () => padRef.current?.focus({ preventScroll: true }))
+  usePadSlot(uid, value != null || !!props.optional, () => padRef.current?.focus({ preventScroll: true }))
   const keypadVisible = (ink.mode === 'keypad' && activePad) || toggled
   const palm = usePalmGuard()
   const [nudging, nudge] = useNudge()

@@ -573,7 +573,7 @@ function checkClimb(ex: DivisionExercise, answer: Extract<Answer, { type: 'climb
   const stop = products.findIndex((p) => p >= ex.dividend)
   const expected = showDivision(ex.quotient, ex.remainder)
   const written = answer.products.map((v) => (isNum(v) ? v : null))
-  const sent = (answer as { quotient?: number | null }).quotient
+  const sent = answer.quotient
   const filled = written.map((v, k) => (v === null ? -1 : k)).filter((k) => k >= 0)
   const given = written.filter((v) => v !== null).join(' · ')
   const rest = remainderWritten(ex, isNum(answer.remainder) ? answer.remainder : null)
