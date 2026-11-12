@@ -2,7 +2,7 @@
    a correct answer unlocks "Siguiente". The slot owns the feedback (showFeedback off), so the child never sees two
    "Siguiente" buttons. One help ladder, always on the SAME exercise:
    1. A miss: the corrector's own message (what went wrong, not a generic «¡Casi!») and the first hint, then «Inténtalo
-      otra vez» with the same numbers.
+      otra vez» with the same numbers and what the child wrote, the wrong boxes marked (TrySlotRetry.ts).
    2. A second miss: the exercise stays on screen, solved step by step below it («Así se resuelve», engine/solution.ts),
       and the child may write the answer again to keep it. The step is settled at once: errors are clues, never a wall.
    A multiplication fact (teach 'full') ends at its copy step instead: the view already gave two tries and showed the
@@ -17,8 +17,9 @@ import { speech } from '@/audio'
 import { createRng, ENGLISH_LISTENING_KINDS, generate, hintsFor } from '@/engine'
 import { solutionFor } from '@/engine/solution'
 import { statementFor } from '@/engine/statement'
-import type { DivMethod, Exercise, ExerciseOutcome, SkillSelector, SubMethod, TableMethod } from '@/types'
+import type { Answer, DivMethod, Exercise, ExerciseOutcome, SkillSelector, SubMethod, TableMethod } from '@/types'
 import { Button } from '@/ui'
+import { answerOf } from './TrySlotRetry'
 import s from './TrySlot.module.css'
 
 /** Misses allowed before the lesson shows the solution and continues (exercises that end at their first wrong answer). */
@@ -75,11 +76,20 @@ function renderedForVoice<T>(value: T, t: (template: string) => string): T {
 }
 
 /** Whether the exercise's own view already has a button that reads it aloud: then «Escuchar» is not added a second time.
-    The problems read themselves when the voice is on; the English listening exercises, «Ahora dilo tú» and the dictation
-    play their own audio. */
+    The problems read themselves when the voice is on (their view is also used where nothing else reads them: the «word»
+    and «exercises» activities); the English listening exercises, «Ahora dilo tú» and the dictation play their own audio.
+    The same rule as in world/review/ExerciseStep. */
 function readsItself(kind: Exercise['kind'], voice: boolean): boolean {
   if (kind === 'eng-speak' || kind === 'lng-dictation' || ENGLISH_LISTENING_KINDS.includes(kind)) return true
   return voice && (kind === 'word-problem' || kind === 'bar-problem')
+}
+
+/** What a wrong try leaves for the next one: the answer the view sent and the corrector's wrong boxes. */
+function previousOf(outcome: ExerciseOutcome): { answer?: Answer; wrongColumns?: number[] } {
+  const answer = answerOf(outcome)
+  if (!answer) return {}
+  const wrongColumns = outcome.check.wrongColumns
+  return wrongColumns && wrongColumns.length ? { answer, wrongColumns: [...wrongColumns] } : { answer }
 }
 
 /** FNV-1a, so the same lesson step always starts with the same exercise. */
@@ -133,7 +143,8 @@ function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLEl
 
 export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, tableMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
-  /** Each «Inténtalo otra vez» (and the copy after the solution) draws the same exercise again, cleared. */
+  /** Each «Inténtalo otra vez» (and the copy after the solution) draws the same exercise again: after a miss with what the
+      child wrote and the wrong boxes marked (previous), for the copy empty. */
   const [round, setRound] = useState(0)
   const [misses, setMisses] = useState(0)
   const [status, setStatus] = useState<Status>('idle')
@@ -141,6 +152,9 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
   const [feedback, setFeedback] = useState('')
   /** After the solution: idle (the view stays as it was), writing (the child asked to write it), missed (the copy was wrong). */
   const [copy, setCopy] = useState<'idle' | 'writing' | 'missed'>('idle')
+  /** «Inténtalo otra vez» (and a wrong copy): what the child wrote and the boxes the corrector found wrong, so the same
+      exercise comes back with her answer and those boxes marked (P2, P4). Empty: the exercise comes back empty. */
+  const [previous, setPrevious] = useState<{ answer?: Answer; wrongColumns?: number[] }>({})
   const wrapRef = useRef<HTMLDivElement>(null)
   const innerRef = useRef<HTMLDivElement>(null)
   const footerRef = useRef<HTMLDivElement>(null)
@@ -232,6 +246,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
         // A wrong copy is never a silent wipe: the child is told, and the same exercise comes back to write again.
         setCopy('missed')
         say(COPY_MISSED_LINE)
+        setPrevious(previousOf(outcome))
         setRound((r) => r + 1)
       }
       return
@@ -268,6 +283,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     } else {
       const clue = check.feedback?.trim() || hintsFor(exercise, method, { divMethod, tableMethod })[0]?.text || ''
       setFeedback(clue)
+      setPrevious(previousOf(outcome))
       setStatus('missed')
       say(`${MISSED_LINE} ${clue}`)
     }
@@ -280,6 +296,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
 
   /** After the solution: the same exercise again, empty, to write the answer once more (optional: the step is settled). */
   const copyAgain = () => {
+    setPrevious({})
     setCopy('writing')
     setRound((r) => r + 1)
   }
@@ -314,6 +331,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
             method={method}
             divMethod={divMethod}
             tableMethod={tableMethod ?? host.prefs.tableMethod}
+            initialAnswer={previous.answer}
+            wrongColumns={previous.wrongColumns}
           />
         </div>
       </div>

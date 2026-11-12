@@ -11,14 +11,15 @@ import { celebrate } from '@/fx'
 import { fmt, numberWords, placeName } from '@/engine'
 import type { ExerciseViewProps, PlaceValueExercise } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryNumber, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
 import { ExerciseLayout } from './ExerciseLayout'
 
-export default function PlaceValueView({ exercise, onAnswered, showFeedback = true, allowHints = true, guided }: ExerciseViewProps) {
+export default function PlaceValueView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true, guided } = props
   if (exercise.kind !== 'place-value') return null
   return (
-    <PlaceRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} guided={!!guided} />
+    <PlaceRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} guided={!!guided} retry={props} />
   )
 }
 
@@ -38,14 +39,28 @@ interface RoundProps {
   showFeedback: boolean
   allowHints: boolean
   guided: boolean
+  /** «Inténtalo otra vez»: the number or the parts the child wrote, and the boxes that were wrong. */
+  retry?: RetryProps
 }
 
-function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundProps) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [value, setValue] = useState<number | null>(null)
-  const [cells, setCells] = useState<(number | null)[]>(() => ex.parts.map(() => null))
-  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided, retry }: RoundProps) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
   const top = ex.parts.length - 1
+  // A try again starts with what the child wrote; a wrong box stays soft red until she changes it.
+  const again = useRetryNumber(retry, ex.value)
+  const [value, setValue] = useState<number | null>(again.first)
+  const [before] = useState(() => initialOf(retry, 'numbers')?.values ?? null)
+  // A part is right as its value (300) or as the digit alone under its place (3), as the corrector reads it.
+  const wrongBefore = useRetryWrong(retry, () => (before
+    ? ex.parts.flatMap((part, i) => {
+      const v = before[i] ?? null
+      return v === part || (v !== null && v * 10 ** (top - i) === part) ? [] : [i]
+    })
+    : []))
+  const [cells, setCells] = useState<(number | null)[]>(() => ex.parts.map((_, i) => before?.[i] ?? null))
+  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const valueStatus = again.marked(value, !!flow.result) ? 'wrong' as const : status
+  const cellStatus = (i: number) => (!flow.result && wrongBefore.has(i) && cells[i] === (before?.[i] ?? null) ? 'wrong' as const : status)
   // Up to 9 999 four boxes; the five-digit numbers (10 000 and over) need five.
   const maxDigits = Math.max(4, ex.parts.length)
 
@@ -79,7 +94,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
               onSubmit={(v) => { setValue(v); if (!flow.submitted) submitValue(v) }}
               maxDigits={maxDigits}
               size="lg"
-              status={status}
+              status={valueStatus}
               ariaLabel="Número de los bloques"
               placeholder="?"
               autoFocus
@@ -98,7 +113,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
               onSubmit={(v) => { setValue(v); if (!flow.submitted) submitValue(v) }}
               maxDigits={maxDigits}
               size="lg"
-              status={status}
+              status={valueStatus}
               ariaLabel="Número en cifras"
               placeholder="?"
               autoFocus
@@ -132,7 +147,7 @@ function PlaceRound({ ex, onAnswered, showFeedback, allowHints, guided }: RoundP
                     onSubmit={() => submitCells()}
                     maxDigits={top - i + 1}
                     size="lg"
-                    status={status}
+                    status={cellStatus(i)}
                     ariaLabel={`Valor de ${placeName(top - i) === 'millares' ? 'los' : 'las'} ${placeName(top - i)}`}
                     checkButton={false}
                     placeholder={zeroAt(i) ? '0' : '?'}

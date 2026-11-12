@@ -7,10 +7,11 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import type { Answer, ExerciseViewProps, LongMulExercise } from '@/types'
 import { hintsFor, toDigits } from '@/engine'
+import { wrongColumnsOf } from '@/engine/diagnose'
 import { CellGroup, DigitCell } from '@/ink'
 import { celebrate } from '@/fx'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, useRetryFlow, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './LongMulView.module.css'
 import { ExerciseLayout } from './ExerciseLayout'
 
@@ -22,9 +23,10 @@ export function partialLabel(top: number, digit: number, place: number): string 
   return `${top} × ${digit * 10 ** place} =`
 }
 
-export default function LongMulView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function LongMulView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'long-mul') return null
-  return <LongMulRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <LongMulRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
 interface RoundProps {
@@ -32,19 +34,27 @@ interface RoundProps {
   onAnswered: ExerciseViewProps['onAnswered']
   showFeedback: boolean
   allowHints: boolean
+  /** «Inténtalo otra vez»: the rows and the total the child wrote, and the columns of the total that were wrong. */
+  retry?: RetryProps
 }
 
-function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) {
+function LongMulRound({ ex, onAnswered, showFeedback, allowHints, retry }: RoundProps) {
   const hints = useMemo(() => hintsFor(ex), [ex])
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints, hints })
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints, hints })
+  const [before] = useState(() => initialOf(retry, 'long-mul'))
   /** Columns of the result; every row is written in the same columns, shifted to the left by its place. */
   const cols = toDigits(ex.answer).length
   const topDigits = toDigits(ex.top)
   const bottomDigits = toDigits(ex.bottom)
+  // A try again starts with what the child wrote: her rows and her total (only the total is graded and marked).
   const [rows, setRows] = useState<(number | null)[][]>(() =>
-    ex.partials.map((_, j) => Array.from({ length: cols }, (_, k) => (k < j ? 0 : null))))
-  const [total, setTotal] = useState<(number | null)[]>(() => Array.from({ length: cols }, () => null))
+    ex.partials.map((_, j) => Array.from({ length: cols }, (_, k) => (k < j ? 0 : before?.rows[j]?.[k] ?? null))))
+  const [total, setTotal] = useState<(number | null)[]>(() => Array.from({ length: cols }, (_, k) => before?.total[k] ?? null))
+  const wrongBefore = useRetryWrong(retry, () => (before ? wrongColumnsOf(before.total, ex.answer, cols) : []))
   const status = flow.result?.correct ? 'correct' : 'idle'
+  /** Before checking again, a column of the total the child had wrong stays soft red until she changes it. */
+  const totalStatus = (k: number) =>
+    !flow.result && wrongBefore.has(k) && before?.total[k] != null && total[k] === before.total[k] ? 'wrong' as const : status
 
   const setRow = (j: number, k: number, d: number | null) =>
     setRows((prev) => prev.map((r, jj) => (jj === j ? r.map((v, kk) => (kk === k ? d : v)) : r)))
@@ -139,7 +149,7 @@ function LongMulRound({ ex, onAnswered, showFeedback, allowHints }: RoundProps) 
           size="md"
           place={placeOf(k)}
           value={total[k]}
-          status={status}
+          status={totalStatus(k)}
           onChange={(d) => setTotalAt(k, d)}
           ariaLabel={`${PLACE_NAMES[k]} del resultado`}
         />

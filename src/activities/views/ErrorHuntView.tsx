@@ -13,7 +13,7 @@ import { useActivityHost } from '@/activities/host'
 import { celebrate } from '@/fx'
 import { Button } from '@/ui'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { initialOf, RETRY_WRONG_CLASS, useRetryFlow, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import { ExerciseLayout } from './ExerciseLayout'
 import s from './BugViews.module.css'
 
@@ -26,7 +26,7 @@ export default function ErrorHuntView(props: ExerciseViewProps) {
   const { exercise, onAnswered, allowHints = true, showFeedback = true, compact } = props
   if (exercise.kind !== 'error-hunt') return null
   return (
-    <HuntRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} />
+    <HuntRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} retry={props} />
   )
 }
 
@@ -36,14 +36,38 @@ interface RoundProps {
   allowHints: boolean
   showFeedback: boolean
   compact?: boolean
+  /** «Inténtalo otra vez»: the verdict, the column and the result the child gave; the wrong ones are marked. */
+  retry?: RetryProps
 }
 
-function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundProps) {
+/** What to mark on a try again of an encuentra el error: the verdict when it was the wrong one, else the column tapped
+    when the written result is right there, and the result when it is not the right one. Worked out here: the
+    corrector names the column tapped also when that column was a good one (only the result was wrong). */
+export function huntRetryMarks(ex: ErrorHuntExercise, retry: RetryProps | undefined): { verdict: boolean; column: boolean; value: boolean } {
+  const before = initialOf(retry, 'hunt')
+  const none = { verdict: false, column: false, value: false }
+  if (!before || before.ok === null) return none
+  if (before.ok !== (ex.wrongColumn === null)) return { ...none, verdict: true }
+  if (before.ok) return none
+  const c = before.column
+  const errorColumn = c !== null && digitAt(ex.shown, c) !== digitAt(ex.answer, c)
+  return { verdict: false, column: c !== null && !errorColumn, value: before.value !== null && before.value !== ex.answer }
+}
+
+function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact, retry }: RoundProps) {
   const host = useActivityHost()
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback, allowHints })
-  const [verdict, setVerdict] = useState<'ok' | 'error' | null>(null)
-  const [column, setColumn] = useState<number | null>(null)
-  const [value, setValue] = useState<number | null>(null)
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  // A try again starts with what the child said: the verdict, the column and the result, the wrong ones soft red.
+  const [before] = useState(() => initialOf(retry, 'hunt'))
+  const [marks] = useState(() => huntRetryMarks(ex, retry))
+  const [verdict, setVerdict] = useState<'ok' | 'error' | null>(before?.ok === true ? 'ok' : before?.ok === false ? 'error' : null)
+  const [column, setColumn] = useState<number | null>(before?.ok === false ? before.column : null)
+  const [value, setValue] = useState<number | null>(before?.ok === false ? before.value : null)
+  const checked = !!flow.result
+  const firstVerdict = before?.ok === true ? 'ok' : before?.ok === false ? 'error' : null
+  const verdictMarked = (v: 'ok' | 'error') => !checked && marks.verdict && verdict === v && firstVerdict === v
+  const columnMarked = (i: number) => !checked && marks.column && column === i && before?.column === i
+  const valueMarked = !checked && marks.value && value === (before?.value ?? null)
   // One extra empty column on the left: a missing digit of the written result can be pointed at too.
   const cols = useMemo(() => Math.max(digitCount(ex.top), digitCount(ex.bottom), digitCount(ex.shown)) + 1, [ex])
   const order = useMemo(() => Array.from({ length: cols }, (_, k) => cols - 1 - k), [cols]) // left to right
@@ -86,7 +110,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
             <button
               key={`r${i}`}
               type="button"
-              className={clsx(s.digit, s.hit, picked && s.picked)}
+              className={clsx(s.digit, s.hit, picked && s.picked, columnMarked(i) && RETRY_WRONG_CLASS)}
               style={{ gridColumn: cols - i, gridRow: 4 }}
               aria-label={label}
               aria-pressed={picked}
@@ -104,6 +128,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
         <Button
           size="lg"
           variant={verdict === 'ok' ? 'success' : 'secondary'}
+          className={clsx(verdictMarked('ok') && RETRY_WRONG_CLASS)}
           aria-pressed={verdict === 'ok'}
           onClick={() => { setVerdict('ok'); setColumn(null); setValue(null) }}
         >
@@ -112,6 +137,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
         <Button
           size="lg"
           variant={verdict === 'error' ? 'primary' : 'secondary'}
+          className={clsx(verdictMarked('error') && RETRY_WRONG_CLASS)}
           aria-pressed={verdict === 'error'}
           onClick={() => setVerdict('error')}
         >
@@ -132,7 +158,7 @@ function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact }: RoundP
               onSubmit={(v) => { setValue(v); if (column !== null) submit(v, column, 'error') }}
               maxDigits={4}
               size="lg"
-              status={status}
+              status={valueMarked ? 'wrong' : status}
               ariaLabel="Resultado correcto"
               placeholder="?"
               autoFocus

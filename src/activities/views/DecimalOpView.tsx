@@ -9,15 +9,19 @@ import { celebrate } from '@/fx'
 import { fmtDecimal, toDigits } from '@/engine'
 import type { DecimalOpExercise, ExerciseViewProps } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
-import { useAnswerFlow } from '../groups/flow'
+import { digitsOf, initialOf, useRetryFlow, useRetryWrong, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
 import d from './DecimalViews.module.css'
 import { ExerciseLayout } from './ExerciseLayout'
 
-export default function DecimalOpView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function DecimalOpView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'decimal-op') return null
-  return <OpRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <OpRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
+
+/** Index of a decimal box among the marks of a try again (the whole boxes are 0, 1, 2… units first). */
+const DEC_MARK = 100
 
 const WHOLE_NAMES = ['unidades', 'decenas', 'centenas']
 const DEC_NAMES = ['décimas', 'centésimas']
@@ -28,8 +32,8 @@ export function wholeFromDigits(digits: (number | null)[]): number | null {
   return digits.reduce<number>((sum, v, k) => sum + (v ?? 0) * 10 ** k, 0)
 }
 
-function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpExercise } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
+function OpRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: DecimalOpExercise; retry?: RetryProps } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const add = ex.op === 'add'
   const places = ex.places
@@ -38,8 +42,25 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
   const aw = fmtDecimal(ex.answer, places).split(',')[0]
   // As many whole columns as the longest whole part (the numbers' or the result's): a sum may carry into a new one.
   const wholeCols = Math.max(lw.length, rw.length, aw.length)
-  const [whole, setWhole] = useState<(number | null)[]>(() => Array.from({ length: wholeCols }, () => null))
-  const [decs, setDecs] = useState<(number | null)[]>(() => Array.from({ length: places }, () => null))
+  // A try again starts with the boxes the child wrote; a wrong box is soft red until she changes it.
+  const [before] = useState(() => {
+    const v = initialOf(retry, 'numbers')?.values
+    return v ? { whole: digitsOf(v[0], wholeCols), decs: Array.from({ length: places }, (_, i) => v[1 + i] ?? null) } : null
+  })
+  const wrongBefore = useRetryWrong(retry, () => {
+    if (!before) return []
+    const wantWhole = digitsOf(Math.floor(ex.answer / 100), wholeCols)
+    const wantDecs = [Math.floor((ex.answer % 100) / 10), ex.answer % 10]
+    return [
+      ...wantWhole.flatMap((w, k) => ((before.whole[k] ?? 0) !== (w ?? 0) ? [k] : [])),
+      // An empty centésimas box counts as 0, as the corrector reads it.
+      ...before.decs.flatMap((d, i) => ((d ?? (i === 1 ? 0 : null)) !== wantDecs[i] ? [DEC_MARK + i] : [])),
+    ]
+  })
+  const [whole, setWhole] = useState<(number | null)[]>(() => before?.whole ?? Array.from({ length: wholeCols }, () => null))
+  const [decs, setDecs] = useState<(number | null)[]>(() => before?.decs ?? Array.from({ length: places }, () => null))
+  const cellStatus = (mark: number, now: number | null, then: number | null | undefined) =>
+    !flow.result && wrongBefore.has(mark) && now === (then ?? null) ? 'wrong' as const : status
 
   const wholeValue = wholeFromDigits(whole)
   const tenths = decs[0]
@@ -89,7 +110,7 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
           variant="result"
           size="md"
           value={whole[k]}
-          status={status}
+          status={cellStatus(k, whole[k], before?.whole[k])}
           onChange={(v) => setWhole((prev) => prev.map((x, j) => (j === k ? v : x)))}
           ariaLabel={`${WHOLE_NAMES[k]} del resultado`}
         />
@@ -105,7 +126,7 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints }: { ex: DecimalOpEx
           variant="result"
           size="md"
           value={decs[i]}
-          status={status}
+          status={cellStatus(DEC_MARK + i, decs[i], before?.decs[i])}
           onChange={(v) => setDecs((prev) => prev.map((x, j) => (j === i ? v : x)))}
           ariaLabel={`${DEC_NAMES[i]} del resultado`}
           autoFocus={i === places - 1}

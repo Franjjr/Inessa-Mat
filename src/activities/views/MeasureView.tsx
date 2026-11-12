@@ -2,7 +2,7 @@
    (the object does not always start at 0), add two measures in mixed units, and say whether a claimed measure is
    reasonable. Numbers are typed in the same writing pad as the other numeric views. */
 import clsx from 'clsx'
-import { useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState } from 'react'
 import { NumberInput } from '@/ink'
 import { celebrate } from '@/fx'
 import { fmt, measureStatement } from '@/engine'
@@ -13,7 +13,8 @@ import type {
 } from '@/types'
 import { AnswerBar } from '../groups/AnswerBar'
 import { MeasureRuler } from './MeasureRuler'
-import { useAnswerFlow, type AnswerFlow } from '../groups/flow'
+import type { AnswerFlow } from '../groups/flow'
+import { RETRY_WRONG_CLASS, useRetryChoice, useRetryFlow, useRetryNumber, type RetryProps } from '@/activities/lesson/TrySlotRetry'
 import s from './NumericViews.module.css'
 import m from './MoneyViews.module.css'
 import r from './MeasureView.module.css'
@@ -21,15 +22,20 @@ import { ExerciseLayout } from './ExerciseLayout'
 
 type MeasureEx = MeasureUnitExercise | MeasureConvertExercise | MeasureRulerExercise | MeasureAddExercise | MeasureEstimateExercise
 
-export default function MeasureView({ exercise, onAnswered, showFeedback = true, allowHints = true }: ExerciseViewProps) {
+export default function MeasureView(props: ExerciseViewProps) {
+  const { exercise, onAnswered, showFeedback = true, allowHints = true } = props
   if (exercise.kind !== 'measure') return null
-  return <MeasureRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} />
+  return <MeasureRound key={exercise.id} ex={exercise} onAnswered={onAnswered} showFeedback={showFeedback} allowHints={allowHints} retry={props} />
 }
 
-function MeasureRound({ ex, onAnswered, showFeedback, allowHints }: { ex: MeasureEx } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
-  const flow = useAnswerFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
+/** «Inténtalo otra vez»: what the child gave on the last try, for the screen of each mode (see TrySlotRetry.ts). */
+const RetryContext = createContext<RetryProps | undefined>(undefined)
+
+function MeasureRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: MeasureEx; retry?: RetryProps } & Pick<ExerciseViewProps, 'onAnswered' | 'showFeedback' | 'allowHints'>) {
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback: showFeedback ?? true, allowHints: allowHints ?? true })
   const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   return (
+    <RetryContext.Provider value={retry}>
     <section className="ex-shell" aria-label="Medida" data-kind="measure" data-mode={ex.mode} data-status={status}>
       {(() => {
         switch (ex.mode) {
@@ -41,6 +47,7 @@ function MeasureRound({ ex, onAnswered, showFeedback, allowHints }: { ex: Measur
         }
       })()}
     </section>
+    </RetryContext.Provider>
   )
 }
 
@@ -52,7 +59,8 @@ const celebrateIfRight = (flow: AnswerFlow, answer: Parameters<AnswerFlow['submi
 // ---------------------------------------------------------------- unit of an object
 
 function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) {
-  const [picked, setPicked] = useState<string | null>(null)
+  const again = useRetryChoice<string>(useContext(RetryContext), (a) => (a.type === 'option' ? a.value : null), ex.answer)
+  const [picked, setPicked] = useState<string | null>(again.first)
   const locked = !!flow.result?.correct
   return (
     <ExerciseLayout workClassName={s.view} prompt={measureStatement(ex)} actions={<AnswerBar flow={flow} onCheck={() => picked && celebrateIfRight(flow, { type: 'option', value: picked })} canCheck={picked !== null} />}>
@@ -65,7 +73,7 @@ function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) 
           <button
             key={o.unit}
             type="button"
-            className={clsx(m.choice, picked === o.unit && m.choiceOn)}
+            className={clsx(m.choice, picked === o.unit && m.choiceOn, again.marked(o.unit, picked, !!flow.result) && RETRY_WRONG_CLASS)}
             aria-pressed={picked === o.unit}
             onClick={() => { if (!locked) setPicked(o.unit) }}
           >
@@ -80,8 +88,9 @@ function UnitRound({ ex, flow }: { ex: MeasureUnitExercise; flow: AnswerFlow }) 
 // ---------------------------------------------------------------- conversion
 
 function ConvertRound({ ex, flow }: { ex: MeasureConvertExercise; flow: AnswerFlow }) {
-  const [value, setValue] = useState<number | null>(null)
-  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const again = useRetryNumber(useContext(RetryContext), ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
+  const status = again.marked(value, !!flow.result) ? 'wrong' as const : flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
     <ExerciseLayout workClassName={s.view} prompt={ex.toBig ? 'Pasa a la unidad grande.' : 'Pasa a la unidad pequeña.'} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
@@ -125,8 +134,9 @@ function Ruler({ max, start, end }: { max: number; start: number; end: number })
 }
 
 function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }) {
-  const [value, setValue] = useState<number | null>(null)
-  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const again = useRetryNumber(useContext(RetryContext), ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
+  const status = again.marked(value, !!flow.result) ? 'wrong' as const : flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
     <ExerciseLayout
@@ -159,8 +169,9 @@ function RulerRound({ ex, flow }: { ex: MeasureRulerExercise; flow: AnswerFlow }
 function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
   const host = useActivityHost()
   const text = useMemo(() => host.t(ex.text), [host, ex.text])
-  const [value, setValue] = useState<number | null>(null)
-  const status = flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
+  const again = useRetryNumber(useContext(RetryContext), ex.answer)
+  const [value, setValue] = useState<number | null>(again.first)
+  const status = again.marked(value, !!flow.result) ? 'wrong' as const : flow.result ? (flow.result.correct ? 'correct' : 'wrong') : 'idle'
   const submit = (v: number | null = value) => { if (v !== null) celebrateIfRight(flow, { type: 'number', value: v }) }
   return (
     <ExerciseLayout workClassName={s.view} prompt={text} actions={<AnswerBar flow={flow} onCheck={() => submit()} canCheck={value !== null} />}>
@@ -185,7 +196,8 @@ function AddRound({ ex, flow }: { ex: MeasureAddExercise; flow: AnswerFlow }) {
 // ---------------------------------------------------------------- estimate
 
 function EstimateRound({ ex, flow }: { ex: MeasureEstimateExercise; flow: AnswerFlow }) {
-  const [ok, setOk] = useState<boolean | null>(null)
+  const again = useRetryChoice<boolean>(useContext(RetryContext), (a) => (a.type === 'verdict' ? a.ok : null), ex.answer)
+  const [ok, setOk] = useState<boolean | null>(again.first)
   const locked = !!flow.result?.correct
   return (
     <ExerciseLayout workClassName={s.view} prompt={'¿Es razonable lo que dice?'} actions={<AnswerBar flow={flow} onCheck={() => ok !== null && celebrateIfRight(flow, { type: 'verdict', ok, value: null })} canCheck={ok !== null} />}>
@@ -194,10 +206,10 @@ function EstimateRound({ ex, flow }: { ex: MeasureEstimateExercise; flow: Answer
         <span className={r.claim}>{ex.claim}</span>
       </div>
       <div className={m.choices} role="group" aria-label="Respuesta">
-        <button type="button" className={clsx(m.choice, ok === true && m.choiceOn)} aria-pressed={ok === true} onClick={() => { if (!locked) setOk(true) }}>
+        <button type="button" className={clsx(m.choice, ok === true && m.choiceOn, again.marked(true, ok, !!flow.result) && RETRY_WRONG_CLASS)} aria-pressed={ok === true} onClick={() => { if (!locked) setOk(true) }}>
           Sí, es razonable
         </button>
-        <button type="button" className={clsx(m.choice, ok === false && m.choiceOn)} aria-pressed={ok === false} onClick={() => { if (!locked) setOk(false) }}>
+        <button type="button" className={clsx(m.choice, ok === false && m.choiceOn, again.marked(false, ok, !!flow.result) && RETRY_WRONG_CLASS)} aria-pressed={ok === false} onClick={() => { if (!locked) setOk(false) }}>
           No, no es razonable
         </button>
       </div>
