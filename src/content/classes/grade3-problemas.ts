@@ -41,8 +41,9 @@ const probRestar = clase({
     show('big-text', { text: '¿Qué sé? ¿Qué me preguntan? ¿Qué operación?' }, 'Las mismas tres preguntas de siempre: qué sé, qué me preguntan y qué operación.', 'ladybug'),
   ],
   ejemplo: [
-    show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan.'),
-    show('bar-model', { a: 9, b: 4, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta.'),
+    // The bar with its unknown: the whole (13) and the part that goes (4); what is left is the «?» until the last step.
+    show('bar-model', { a: 4, b: 0, total: 13 }, '¿Qué sé? Dani tenía 13 cromos y regala 4. ¿Qué me preguntan? Cuántos le quedan: es el «?» de la barra.'),
+    show('bar-model', { a: 4, b: 0, total: 13 }, '¿Qué operación? Quitar: de la barra entera se separa la parte que se va. Es una resta: 13 − 4 = 9.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'le quedan 9 cromos' }, 'Solución: 13 − 4 = 9. A Dani le quedan 9 cromos.'),
     show('big-text', { text: 'Pepa 13 · Dani 4', sub: '¿cuántos más tiene Pepa?' }, 'Comparar también se resta. Pepa tiene 13 cromos y Dani tiene 4. ¿Cuántos más tiene Pepa? Lo que le sobra a Pepa, cuando Dani ya no tiene más que poner, es la diferencia.'),
     show('big-text', { text: '13 − 4 = 9', sub: 'Pepa tiene 9 cromos más' }, 'Solución: 13 − 4 = 9. Pepa tiene 9 cromos más que Dani.'),
