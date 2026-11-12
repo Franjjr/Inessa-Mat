@@ -99,5 +99,72 @@ describe('ScrollAssist', () => {
       document.elementsFromPoint = original
     }
   })
-})
+  /** A page 2000 px tall whose last 84 px are the spacer, with a browser that clamps the scroll when the page gets shorter,
+      as WebKit (Safari, iPad) does on the forced layout of a reading. Returns the reads made with the spacer taken out. */
+  function webkitLikePage(startY: number) {
+    let y = startY
+    const reads = { hidden: 0 }
+    const scrollYDesc = Object.getOwnPropertyDescriptor(window, 'scrollY')
+    Object.defineProperty(window, 'scrollY', { get: () => y, configurable: true })
+    vi.spyOn(window, 'scrollTo').mockImplementation(((a: number | ScrollToOptions, b?: number) => {
+      y = typeof a === 'number' ? (b ?? 0) : (a.top ?? y)
+    }) as typeof window.scrollTo)
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      configurable: true,
+      get: () => {
+        const spacer = document.querySelector<HTMLElement>('[data-scroll-spacer]')
+        if (spacer && spacer.style.display !== 'none') return 2000
+        if (spacer) {
+          reads.hidden++
+          y = Math.min(y, 2000 - 84 - window.innerHeight) // the clamp of the shorter page
+        }
+        return 2000 - 84
+      },
+    })
+    return {
+      reads,
+      y: () => y,
+      setY: (v: number) => { y = v },
+      restore: () => { if (scrollYDesc) Object.defineProperty(window, 'scrollY', scrollYDesc) },
+    }
+  }
 
+  it('P6 (Safari/iPad): reading the page height never moves the page, also at the very bottom', async () => {
+    const bottom = 2000 - window.innerHeight
+    const page = webkitLikePage(bottom)
+    try {
+      const { container } = render(<ScrollAssist />)
+      await waitFor(() => expect(container.querySelector('[data-scroll-spacer]')).toBeTruthy())
+      // The content changes (a feedback box): the height is read again, with the child at the end of the page.
+      act(() => { document.body.appendChild(document.createElement('div')) })
+      await waitFor(() => expect(page.reads.hidden).toBeGreaterThan(0))
+      await new Promise((r) => setTimeout(r, 50))
+      expect(page.y()).toBe(bottom)
+    } finally {
+      page.restore()
+    }
+  })
+
+  it('scrolling does not re-read the page height (no forced layout on every frame of a swipe)', async () => {
+    const page = webkitLikePage(0)
+    try {
+      const { container } = render(<ScrollAssist />)
+      await waitFor(() => expect(container.querySelector('[data-scroll-spacer]')).toBeTruthy())
+      await new Promise((r) => setTimeout(r, 50))
+      page.reads.hidden = 0
+      for (const v of [100, 300, 600, 900]) {
+        page.setY(v)
+        act(() => { window.dispatchEvent(new Event('scroll')) })
+        await new Promise((r) => setTimeout(r, 20))
+      }
+      expect(page.reads.hidden).toBe(0)
+      // Near the end the buttons still follow the scroll: «Más abajo» goes once nothing is below.
+      page.setY(2000 - 84 - window.innerHeight)
+      act(() => { window.dispatchEvent(new Event('scroll')) })
+      await waitFor(() => expect(screen.queryByRole('button', { name: DOWN })).toBeNull())
+      expect(page.reads.hidden).toBe(0)
+    } finally {
+      page.restore()
+    }
+  })
+})

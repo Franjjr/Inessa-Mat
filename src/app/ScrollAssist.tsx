@@ -19,6 +19,8 @@ const UP_AFTER = 120
 export const SPACER = 84
 /** Distance of a button from the side of the window (ScrollAssist.module.css: .atLeft, .atRight). */
 const EDGE = 14
+/** Milliseconds after the last scroll event during which the page is taken to be still scrolling. */
+const SCROLLING = 200
 
 type Side = 'left' | 'right'
 
@@ -51,10 +53,15 @@ export function coversControl(rect: { left: number; top: number; right: number; 
 function contentHeight(el: Element): number {
   const spacer = document.querySelector<HTMLElement>('[data-scroll-spacer]')
   if (!spacer) return el.scrollHeight
+  // WebKit (Safari, iPad) clamps the scroll on the forced layout of the shorter page and does not give it back: at the very
+  // bottom the page jumped up by the spacer's height on every reading, the end of the page was never reached and the smooth
+  // «Más abajo» was cut. The scroll is put back where it was.
+  const y = window.scrollY
   const before = spacer.style.display
   spacer.style.display = 'none'
   const h = el.scrollHeight
   spacer.style.display = before
+  if (window.scrollY !== y) window.scrollTo(0, y)
   return h
 }
 
@@ -69,10 +76,10 @@ function controlCutBelow(): boolean {
   return false
 }
 
-function measure() {
-  const el = document.scrollingElement ?? document.documentElement
-  // The spacer is the assistant's own: it never makes the page «longer» by itself.
-  const height = contentHeight(el)
+/** What the page needs for the buttons. `height` is the content height without the spacer: a reading forces two layouts of
+    the whole page, so it is taken only when the content may have changed (an observer, a resize, the safety-net check) and
+    reused while the child scrolls (a scroll does not change it; on a cheap tablet a reading per frame made the swipe jerky). */
+function measure(height: number) {
   const below = height - window.innerHeight - window.scrollY
   // «⬇» also for less than SLACK when what is hidden is part of a control: a button cut by a few pixels at the bottom
   // (a game at its smallest scale that still overflows a little) is not a whole tap (P6).
@@ -90,15 +97,28 @@ export function ScrollAssist() {
 
   useEffect(() => {
     let frame = 0
+    // The spacer is the assistant's own: it never makes the page «longer» by itself.
+    let height = 0
+    let stale = true
+    let lastScroll = -Infinity
     const update = () => {
       frame = 0
-      const next = measure()
+      // Not in the middle of a scroll (a swipe, the smooth «Más abajo»): putting the scroll back would stop it. The height
+      // stays to be read and the next check (at most 500 ms later) reads it.
+      if (stale && performance.now() - lastScroll > SCROLLING) {
+        height = contentHeight(document.scrollingElement ?? document.documentElement)
+        stale = false
+      }
+      const next = measure(height)
       setState((prev) => (prev.down === next.down && prev.up === next.up && prev.scrolls === next.scrolls ? prev : next))
       placeButtons.current()
     }
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    // Something may have changed the content: read the height again on the next frame.
+    const schedule = () => { stale = true; if (!frame) frame = requestAnimationFrame(update) }
+    // Only the scroll moved: the buttons follow it with the height already read.
+    const onScroll = () => { lastScroll = performance.now(); if (!frame) frame = requestAnimationFrame(update) }
     update()
-    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', schedule)
     // Content grows and shrinks without a scroll or a resize (feedback, a new round, a picture that loads). The observers
     // react at once, but they miss layouts whose <html>/<body> keep their size while the content overflows (seen in the
@@ -111,7 +131,7 @@ export function ScrollAssist() {
     mutationObserver?.observe(document.body, { childList: true, subtree: true, characterData: true })
     return () => {
       if (frame) cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', schedule)
       window.clearInterval(timer)
       resizeObserver?.disconnect()
