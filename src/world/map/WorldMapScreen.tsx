@@ -98,13 +98,13 @@ function WorldMap({ world, child, progress }: { world: WorldDef; child: ChildPro
     return () => ro.disconnect()
   }, [])
 
-  // The island has many stops (one group per stage): its stage is as tall as they need, so they never stack on each other.
+  // The island has many stops (one group per stage): its stage starts as tall as they need and, like every world,
+  // grows when a tag would still land on another (phones, tall tablets).
   const isIsland = world.id === ISLAND_ID
   const layout = useMemo(() => layoutMap(
     states.map(({ node, done }) => ({ node, title: renderTemplate(node.title, ctx), done, current: node.id === current, crystal, petName: ctx.petName })),
     area.w,
-    isIsland ? world.nodes.length * ISLAND_STOP_PX : baseStageHeight(area.w, area.h, area.vh),
-    isIsland,
+    isIsland ? Math.max(world.nodes.length * ISLAND_STOP_PX, area.h) : baseStageHeight(area.w, area.h, area.vh),
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ), [states, current, crystal, area, isIsland, world.nodes.length, child.nickname, ctx.petName])
   const stageHeight = { height: `${layout.height}px` }
