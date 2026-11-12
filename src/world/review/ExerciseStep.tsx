@@ -10,16 +10,18 @@
      the child never leaves an exercise without seeing how it is done.
    - «Ahora dilo tú» (eng-speak) is never an attempt: nothing is reported (no mastery, no stars in the wallet), it has no
      «Ahora no» nor «No lo sé» (the view has its own «Saltar»), and its message is the view's own (check.feedback). */
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { ExerciseView, useActivityHost } from '@/activities'
 import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { HintVisual } from '@/activities/facts/shared/HintPanel'
 import { pickPhrase } from '@/content'
-import { hintsFor, isCompletionOnly } from '@/engine'
+import { hintsFor, isCompletionOnly, methodFor } from '@/engine'
+import { statementFor } from '@/engine/statement'
+import { ListenButton } from '@/activities/shared/ListenButton'
 import { Button } from '@/ui'
 import { FitToScreen } from '@/activities/shared/FitToScreen'
 import { guidedOutcome } from '@/activities/shared/guided'
-import type { AttemptInput, DivMethod, Exercise, ExerciseOutcome, SubMethod } from '@/types'
+import type { AttemptInput, Exercise, ExerciseOutcome } from '@/types'
 import s from './ExerciseStep.module.css'
 
 /** An attempt waiting to be reported: the outcome and the retry facts. graded: false for a retry row (see handleAnswered). */
@@ -63,14 +65,15 @@ type Stage = 'asking' | 'offered' | 'retrying' | 'dontknow' | 'final'
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now())
 
-/* The method a session exercise is solved with. The column methods are the school's ones: «por partes» and «saltos en la
-   recta», once saved by a lesson pick for every subtraction, are not used here (the column comes back). The registry
-   function methodFor (engine/methods.ts, group «métodos del cole») replaces these two at integration. */
-export function sessionSubMethod(pref: SubMethod | undefined): SubMethod {
-  return pref === 'carry' ? 'carry' : 'borrow'
-}
-export function sessionDivMethod(pref: DivMethod | undefined): DivMethod {
-  return pref === 'galera-short' ? 'galera-short' : 'galera'
+/** The exercise with its story templates rendered for this child ({child}, {pet}, their genders), so that the «Escuchar»
+    button reads the same names the screen shows. Strings without a template are left as they are. */
+function renderedForVoice<T>(value: T, t: (template: string) => string): T {
+  if (typeof value === 'string') return (value.includes('{') ? t(value) : value) as T
+  if (Array.isArray(value)) return value.map((v) => renderedForVoice(v, t)) as T
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, renderedForVoice(v, t)])) as T
+  }
+  return value
 }
 
 /** A short cheer in front of the corrector's message, never longer than the message itself. */
@@ -242,8 +245,10 @@ export function ExerciseStep({
   }
 
   const ok = latest?.check.correct === true
-  const subMethod = sessionSubMethod(host.prefs.subMethod)
-  const divMethod = sessionDivMethod(host.prefs.divMethod)
+  // The school's method, chosen by the grown-up: a retired one (por partes, saltos, repartir por partes, multiplicar
+  // hacia arriba) saved in old settings becomes the school's method here too.
+  const subMethod = methodFor('sub', host.prefs)
+  const divMethod = methodFor('div', host.prefs)
   const solutionOpts = { subMethod, divMethod, tableMethod: host.prefs.tableMethod }
   // The solution is taught for maths only: Lengua and English keep their hints at «No lo sé» and their own messages at
   // the end (their «solution» would only be «La respuesta es X»). A missed fact with teach 'full' was already worked
@@ -253,10 +258,17 @@ export function ExerciseStep({
   const hints = stage === 'dontknow' && !isMath ? hintsFor(exercise, subMethod, { divMethod, tableMethod: host.prefs.tableMethod }) : []
   const wrongText = wrongLabel ?? okLabel
   const inputLocked = stage === 'offered' || stage === 'dontknow' || stage === 'final'
+  // «Escuchar»: every exercise can be heard, also with the automatic reading off. «Ahora dilo tú» has its own voice.
+  const statement = useMemo(() => statementFor(renderedForVoice(exercise, host.t)), [exercise, host.t])
 
   // Shrunk to fit the window (daily session, review, class, guardian, reading): no scrolling to answer or go on.
   return (
     <FitToScreen className={s.stepOuter} innerClassName={s.step}>
+      {exercise.kind !== 'eng-speak' && (
+        <div className={s.listenRow}>
+          <ListenButton text={statement} />
+        </div>
+      )}
       <div ref={viewRef} className={s.view} inert={inputLocked ? true : undefined}>
         <ExerciseView
           key={view}

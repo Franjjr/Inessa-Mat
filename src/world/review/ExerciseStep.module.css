@@ -13,6 +13,12 @@
   width: 100%;
 }
 
+/* «Escuchar»: its own row above the exercise (in the flow, it covers nothing), at the reading end of the line. */
+.listenRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* «Ahora no» / «No lo sé»: kept at the bottom of the step while it scrolls (sticky, in the flow: it takes its own room
    and covers nothing), well apart from each other and big enough for a finger. */
 .skip {
