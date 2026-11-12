@@ -5,7 +5,7 @@
    lesson narration is off in these tests (voice: false), the dictation is never planned here, and the «Escuchar» button of
    a passage speaks only on an explicit press, which these tests never make (R16). */
 import { expect, test } from '@playwright/test'
-import { devFlag, devMasterUntilTopic, devSettings, seedDemo } from '../helpers'
+import { devFlag, devMasterUntilTopic, devSettings, openSession, seedDemo } from '../helpers'
 import { check, openLetterKeyboard, playUntil, sessionEnded, typeLetters } from '../lengua-driver'
 
 const READING_TITLE = 'El camaleón que quería parecer otro'
@@ -19,7 +19,7 @@ test.describe('Lengua de 3.º', () => {
     await page.goto('/play')
 
     // Maths first (the home's «Hoy» opens today's maths class first, see n-hoy): the maths session, then Lengua.
-    await page.goto('/play/sesion')
+    await openSession(page)
     await expect(page).toHaveURL(/\/play\/sesion$/)
     await page.getByRole('button', { name: '¡Empezar!' }).click()
     await playUntil(page, () => sessionEnded(page), 600)
