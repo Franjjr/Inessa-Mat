@@ -97,7 +97,6 @@ function DurationRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeD
           status={status}
           ariaLabel="Minutos que pasan"
           placeholder="?"
-          keypadToggle={false}
           autoFocus
         />
       </div>

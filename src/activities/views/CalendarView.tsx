@@ -87,7 +87,6 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
             status={status}
             ariaLabel="Días del mes"
             placeholder="?"
-            keypadToggle={false}
             autoFocus
           />
         </div>
@@ -116,7 +115,6 @@ function CalRound({ ex, onAnswered, showFeedback, allowHints }: { ex: CalendarEx
           status={status}
           ariaLabel="Cuántas"
           placeholder="?"
-          keypadToggle={false}
           autoFocus
         />
       </div>

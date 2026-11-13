@@ -4,8 +4,8 @@
    with the minutes (at 3:20 it sits a third of the way from the 3 to the 4), so the child moves it to the nearest hour
    and never has to aim it to the minute. */
 import clsx from 'clsx'
-import { useRef, type PointerEvent as ReactPointerEvent } from 'react'
-import { NumberInput } from '@/ink'
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { CellGroup, DigitCell } from '@/ink'
 import s from './clock.module.css'
 
 /** A time on the face: hour 1..12 (12 = the 12 of the clock), minute 0..59 (set in fives when dragged). */
@@ -169,8 +169,21 @@ export function TimeSteppers({ time, onChange }: { time: FaceTime; onChange: (t:
   )
 }
 
-/** The answer as two boxes, hour and minutes, written with the handwriting pad (NumberInput). */
-export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, autoFocus }: {
+/** Two digits of a time part as a number: 3 written in either cell is 3; nothing written is null. */
+const partOf = (digits: (number | null)[]): number | null =>
+  digits.every((d) => d === null) ? null : Number(digits.map((d) => d ?? '').join(''))
+
+/** Two cells for a part already known (a retry, a remount): «7» → [null, 7], «45» → [4, 5]. */
+const digitsOf = (v: number | null): (number | null)[] =>
+  v === null ? [null, null] : v >= 10 ? [Math.floor(v / 10) % 10, v % 10] : [null, v]
+
+/** The hour, then the minutes, each from its units cell (where the typed digits enter). */
+const TIME_ORDER = ['h1', 'h0', 'm1', 'm0']
+
+/** The answer as hour and minutes, two digit cells each, like the other maths answers: written with the pencil or a
+    finger, or typed with the number keypad. One keypad for both parts, under them (a keypad under the hour would push the
+    minutes off a short tablet); the digits of each part fill like a calculator (numberId). */
+export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, autoFocus, maxHour = 23 }: {
   hour: number | null
   minute: number | null
   onHour: (v: number | null) => void
@@ -178,42 +191,57 @@ export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, a
   status: 'idle' | 'correct' | 'wrong'
   onSubmit: (h: number | null, m: number | null) => void
   autoFocus?: boolean
+  /** The largest hour the answer can have: 12 on the clock face, 23 in the 24-hour time (default). */
+  maxHour?: number
 }) {
+  const [h, setH] = useState(() => digitsOf(hour))
+  const [m, setM] = useState(() => digitsOf(minute))
+  const latest = useRef({ hour, minute })
+  latest.current = { hour, minute }
+  const cellStatus = status === 'idle' ? undefined : status
+  // The keypad fills both cells of a part in one go: each change builds on the digits already set, not on the last render.
+  const digits = useRef({ h, m })
+  const set = (part: 'h' | 'm', i: number, d: number | null) => {
+    const next = digits.current[part].map((x, k) => (k === i ? d : x))
+    digits.current = { ...digits.current, [part]: next }
+    if (part === 'h') { setH(next); onHour(partOf(next)) } else { setM(next); onMinute(partOf(next)) }
+  }
+  const cells = (part: 'h' | 'm', label: string) => (part === 'h' ? h : m).map((v, i) => (
+    <DigitCell
+      key={`${part}${i}`}
+      cellId={`${part}${i}`}
+      numberId={part}
+      variant="result"
+      size="lg"
+      value={v}
+      status={cellStatus}
+      onChange={(d) => set(part, i, d)}
+      ariaLabel={`${label}, cifra ${i + 1}`}
+      // The cursor waits in the units cell of the hour: the digits typed enter there, like on a calculator.
+      autoFocus={autoFocus && part === 'h' && i === 1}
+    />
+  ))
   return (
-    <div className={s.fields} role="group" aria-label="Hora y minutos">
-      <div className={s.field}>
-        <span className={s.fieldLabel}>Hora</span>
-        <NumberInput
-          value={hour}
-          onChange={onHour}
-          onSubmit={(v) => onHour(v)}
-          maxDigits={2}
-          size="lg"
-          status={status}
-          ariaLabel="Hora"
-          checkButton={false}
-          placeholder="?"
-          autoFocus={autoFocus}
-          keypadToggle={false}
-        />
+    <CellGroup
+      onSubmit={() => onSubmit(latest.current.hour, latest.current.minute)}
+      order={TIME_ORDER}
+      keypadPosition="below"
+      keypadToggle
+      // An hour that cannot take a second digit (a 3 when no hour is 30 or more) is complete: typing 3, 2, 0 gives 3:20.
+      numberComplete={(id, digits) => id === 'h' && digits.length === 1 && Number(digits) * 10 > maxHour}
+    >
+      <div className={s.fields} role="group" aria-label="Hora y minutos">
+        <div className={s.field}>
+          <span className={s.fieldLabel}>Hora</span>
+          <div className={s.digits} role="group" aria-label="Hora">{cells('h', 'hora')}</div>
+        </div>
+        <span className={s.colon} aria-hidden>:</span>
+        <div className={s.field}>
+          <span className={s.fieldLabel}>Minutos</span>
+          <div className={s.digits} role="group" aria-label="Minutos">{cells('m', 'minutos')}</div>
+        </div>
       </div>
-      <span className={s.colon} aria-hidden>:</span>
-      <div className={s.field}>
-        <span className={s.fieldLabel}>Minutos</span>
-        <NumberInput
-          value={minute}
-          onChange={onMinute}
-          onSubmit={(v) => onSubmit(hour, v)}
-          maxDigits={2}
-          size="lg"
-          status={status}
-          ariaLabel="Minutos"
-          checkButton={false}
-          placeholder="?"
-          keypadToggle={false}
-        />
-      </div>
-    </div>
+    </CellGroup>
   )
 }
 

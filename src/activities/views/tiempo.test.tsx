@@ -14,7 +14,9 @@ import TimeDurationView from './TimeDurationView'
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn() }, haptics: { tap: vi.fn(), success: vi.fn(), error: vi.fn() } }))
 vi.mock('@/fx', () => ({ celebrate: vi.fn() }))
-vi.mock('@/ink', () => ({
+vi.mock('@/ink', async (importOriginal) => ({
+  // The real digit cells of the time answers (hour and minutes); NumberInput is a plain box.
+  ...(await importOriginal<typeof import('@/ink')>()),
   NumberInput: (p: {
     value: number | null
     onChange: (v: number | null) => void
@@ -33,6 +35,15 @@ vi.mock('@/ink', () => ({
   useInkLearning: () => ({ requestConfirm: () => false, recognitionFixes: () => 0, confirm() {}, discard() {} }),
   useInputMode: () => ({ mode: 'keypad' }),
 }))
+
+/** Writes a time in the digit cells: each digit typed in its own cell, from the left. */
+function typeTime(hour: string, minutes: string) {
+  const put = (part: string, value: string) => [...value.padStart(2, ' ')].forEach((d, i) => {
+    if (d !== ' ') fireEvent.keyDown(screen.getByRole('textbox', { name: `${part}, cifra ${i + 1}` }), { key: d })
+  })
+  put('hora', hour)
+  put('minutos', minutes)
+}
 
 const comprobar = () => screen.getByRole('button', { name: /Comprobar/ })
 const noDigitalReadout = () => expect(document.body.textContent ?? '').not.toMatch(/\d{1,2}:\d{2}/)
@@ -102,8 +113,7 @@ describe('ClockReadView', () => {
   it('writes the hour and the minutes in write mode', () => {
     const ex = makeClockRead(11, 45, 'write', createRng(5), 15)
     render(<ClockReadView exercise={ex} onAnswered={() => {}} showFeedback allowHints />)
-    fireEvent.change(screen.getByRole('textbox', { name: 'Hora' }), { target: { value: '11' } })
-    fireEvent.change(screen.getByRole('textbox', { name: 'Minutos' }), { target: { value: '45' } })
+    typeTime('11', '45')
     fireEvent.click(comprobar())
     expect(screen.getByText(/¡Muy bien!/)).toBeTruthy()
   })
@@ -141,8 +151,8 @@ describe('TimeDurationView', () => {
   it('asks the end time with two boxes and the minutes that pass with one', () => {
     const end = makeTimeDuration('end', { hour: 5, minute: 0 }, 90)
     const { unmount } = render(<TimeDurationView exercise={end} onAnswered={() => {}} showFeedback allowHints />)
-    expect(screen.getByRole('textbox', { name: 'Hora' })).toBeTruthy()
-    expect(screen.getByRole('textbox', { name: 'Minutos' })).toBeTruthy()
+    expect(screen.getAllByRole('textbox', { name: /^hora, cifra/ })).toHaveLength(2)
+    expect(screen.getAllByRole('textbox', { name: /^minutos, cifra/ })).toHaveLength(2)
     unmount()
     const el = makeTimeDuration('elapsed', { hour: 4, minute: 15 }, 45)
     render(<TimeDurationView exercise={el} onAnswered={() => {}} showFeedback allowHints />)

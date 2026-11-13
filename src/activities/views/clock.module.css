@@ -208,6 +208,11 @@
   min-width: 0;
 }
 
+.digits {
+  display: flex;
+  gap: var(--sp-1);
+}
+
 .fieldLabel {
   font-family: var(--font-read);
   font-size: var(--fs-xs);

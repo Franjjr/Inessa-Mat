@@ -3,7 +3,7 @@
    Tab follows the order, Backspace on an empty cell goes back, Enter submits, and an on-screen keypad
    (keypad mode, or the "123" fallback toggle) types into the current cell. */
 import clsx from 'clsx'
-import { useCallback, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from 'react'
 import { useInk } from './context'
 import { CellGroupContext, type CellEntry, type CellGroupApi } from './groupContext'
 import { computeOrder, neighbor, step, type CellOrder, type Direction, type OrderItem } from './order'
@@ -26,6 +26,9 @@ export interface CellGroupProps {
    * Cells without a `numberId` always follow `order`.
    */
   typingOrder?: 'ltr' | 'column'
+  /** A number typed like a calculator that is complete before all its cells are written (an hour «3» can only be 3):
+   *  the cursor goes on to the next number, as when every cell is written. */
+  numberComplete?: (numberId: string, digits: string) => boolean
   /** Enter key or the keypad's ✓. */
   onSubmit?: () => void
   /** Move to the next cell after a typed digit (default true). */
@@ -45,9 +48,11 @@ export const NEXT_NUMBER_TIP = '¿Ya has terminado este número? Toca la casilla
 
 export function CellGroup({
   children, order = 'dom', onSubmit, autoAdvance = true, keypad = 'auto', keypadToggle = true,
-  keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr',
+  keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr', numberComplete,
 }: CellGroupProps) {
-  const { mode } = useInk()
+  const { mode, learning } = useInk()
+  // One check button per screen: with an answer bar, its «Comprobar» grades and the keypad has no ✓ (Enter still works).
+  useSyncExternalStore(learning.subscribe, () => learning.version)
   const entries = useRef(new Map<string, CellEntry>())
   const [currentId, setCurrentId] = useState<string | null>(null)
   const [version, setVersion] = useState(0)
@@ -59,8 +64,8 @@ export function CellGroup({
   const [unfinished, setUnfinished] = useState<string | null>(null)
   const keypadVisible = keypad === 'show' || (keypad === 'auto' && (mode === 'keypad' || toggled))
 
-  const latest = useRef({ order, onSubmit, autoAdvance, typingOrder })
-  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance, typingOrder } })
+  const latest = useRef({ order, onSubmit, autoAdvance, typingOrder, numberComplete })
+  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance, typingOrder, numberComplete } })
   const orderKey = typeof order === 'string' ? order : order.join('|')
 
   const items = useCallback((): OrderItem[] => {
@@ -165,7 +170,8 @@ export function CellGroup({
     const digits = before.length >= cells.length ? String(d) : before + String(d)
     fillNumber(cells, digits, via)
     const next = nextAfter(uid, cells)
-    if (digits.length >= cells.length && latest.current.autoAdvance) {
+    const complete = digits.length >= cells.length || !!latest.current.numberComplete?.(e.numberId, digits)
+    if (complete && latest.current.autoAdvance) {
       // The number is complete: go on to the first cell after it (the next number) in the typing order.
       setUnfinished(null)
       focusCell(next ?? units)
@@ -231,7 +237,7 @@ export function CellGroup({
               <Keypad
                 onDigit={onDigit}
                 onDelete={onDelete}
-                onSubmit={onSubmit ? () => api.submit() : undefined}
+                onSubmit={onSubmit && !learning.hasBar() ? () => api.submit() : undefined}
                 layout={keypadLayout ?? (keypadPosition === 'below' ? 'wide' : 'grid')}
               />
             )}

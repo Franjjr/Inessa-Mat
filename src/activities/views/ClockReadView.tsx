@@ -73,6 +73,7 @@ function ReadRound({ ex, onAnswered, showFeedback, allowHints }: { ex: ClockRead
         </div>
       ) : (
         <TimeFields
+          maxHour={12}
           hour={hour}
           minute={minute}
           onHour={setHour}
