@@ -21,82 +21,86 @@ export interface WordTemplate {
   maxDigits: number
   /** Story-fixed {b} (6 legs of a ladybug, 8 tentacles, 7 days a week, 4 wheels...). */
   fixed?: number
+  /** «Datos» of the notebook: the child-facing name of {a} and of {b} («Quiere colgar», «Ya ha colgado»). */
+  data: [string, string]
+  /** The solution as a sentence, {n} the result: «Le faltan {n} banderines por colgar.» */
+  say: string
 }
 
 export const WORD_TEMPLATES: WordTemplate[] = [
   // ---------------------------------------------------------------- add
-  { id: 'add-peces', op: 'add', unit: 'peces', minDigits: 2, maxDigits: 4,
+  { id: 'add-peces', data: ['Peces dorados', 'Peces azules'], say: 'Hay {n} peces en total.', op: 'add', unit: 'peces', minDigits: 2, maxDigits: 4,
     text: 'En el río nadan {a} peces dorados y {b} peces azules. ¿Cuántos peces hay en total?' },
-  { id: 'add-nenufares', op: 'add', unit: 'nenúfares', minDigits: 2, maxDigits: 3,
+  { id: 'add-nenufares', data: ['Por la mañana', 'Por la tarde'], say: 'Ha contado {n} nenúfares en total.', op: 'add', unit: 'nenúfares', minDigits: 2, maxDigits: 3,
     text: 'La Rana Saltarina ha contado {a} nenúfares por la mañana y {b} por la tarde. ¿Cuántos nenúfares ha contado en total?' },
-  { id: 'add-estrellas', op: 'add', unit: 'estrellas', minDigits: 2, maxDigits: 4,
+  { id: 'add-estrellas', data: ['El lunes', 'El martes'], say: 'Ha encendido {n} estrellas en los dos días.', op: 'add', unit: 'estrellas', minDigits: 2, maxDigits: 4,
     text: 'Lumi ha encendido {a} estrellas el lunes y {b} estrellas el martes. ¿Cuántas estrellas ha encendido en los dos días?' },
-  { id: 'add-conchas', op: 'add', unit: 'conchas', minDigits: 2, maxDigits: 3,
+  { id: 'add-conchas', data: ['{child} encuentra', '{pet} encuentra'], say: 'Tienen {n} conchas entre los dos.', op: 'add', unit: 'conchas', minDigits: 2, maxDigits: 3,
     text: '{child} y {pet} recogen conchas en la orilla del lago. {child} encuentra {a} y {pet} encuentra {b}. ¿Cuántas conchas tienen entre los dos?' },
-  { id: 'add-libros', op: 'add', unit: 'libros', minDigits: 2, maxDigits: 4,
+  { id: 'add-libros', data: ['Libros que hay', 'Le regalan'], say: 'Ahora tiene {n} libros.', op: 'add', unit: 'libros', minDigits: 2, maxDigits: 4,
     text: 'En la biblioteca del Búho Sabio hay {a} libros. Hoy le regalan {b} libros más. ¿Cuántos libros tiene ahora?' },
-  { id: 'add-herraduras', op: 'add', unit: 'herraduras', minDigits: 3, maxDigits: 4,
+  { id: 'add-herraduras', data: ['El año pasado', 'Este año'], say: 'Ha forjado {n} herraduras en total.', op: 'add', unit: 'herraduras', minDigits: 3, maxDigits: 4,
     text: 'La dragona Chispa forjó {a} herraduras el año pasado y {b} este año. ¿Cuántas herraduras ha forjado en total?' },
-  { id: 'add-margaritas', op: 'add', unit: 'margaritas', minDigits: 2, maxDigits: 4,
+  { id: 'add-margaritas', data: ['Margaritas rojas', 'Margaritas amarillas'], say: 'Hay {n} margaritas.', op: 'add', unit: 'margaritas', minDigits: 2, maxDigits: 4,
     text: 'En el Jardín del Arcoíris han florecido {a} margaritas rojas y {b} margaritas amarillas. ¿Cuántas margaritas hay?' },
-  { id: 'add-borron', op: 'add', unit: 'números', minDigits: 2, maxDigits: 3,
+  { id: 'add-borron', data: ['Primero escondió', 'Después escondió'], say: 'Ha escondido {n} números en total.', op: 'add', unit: 'números', minDigits: 2, maxDigits: 3,
     text: 'Borrón escondió {a} números en la niebla y después escondió {b} más. ¿Cuántos números ha escondido en total?' },
   // ---------------------------------------------------------------- sub
-  { id: 'sub-tazas', op: 'sub', unit: 'tazas', minDigits: 3, maxDigits: 4,
+  { id: 'sub-tazas', data: ['Tenía', 'Ha vendido'], say: 'Le quedan {n} tazas.', op: 'sub', unit: 'tazas', minDigits: 3, maxDigits: 4,
     text: 'La osa Nieve tenía {a} tazas de chocolate y ha vendido {b}. ¿Cuántas tazas le quedan?' },
-  { id: 'sub-copos', op: 'sub', unit: 'copos', minDigits: 2, maxDigits: 4,
+  { id: 'sub-copos', data: ['Había', 'El sol ha derretido'], say: 'Quedan {n} copos.', op: 'sub', unit: 'copos', minDigits: 2, maxDigits: 4,
     text: 'En la cima de la montaña había {a} copos de nieve. El sol ha derretido {b}. ¿Cuántos copos quedan?' },
-  { id: 'sub-luces', op: 'sub', unit: 'luces', minDigits: 2, maxDigits: 3,
+  { id: 'sub-luces', data: ['Brillan', 'Apaga'], say: 'Siguen encendidas {n} luces.', op: 'sub', unit: 'luces', minDigits: 2, maxDigits: 3,
     text: 'En el castillo brillan {a} luces. Borrón sopla y apaga {b}. ¿Cuántas luces siguen encendidas?' },
-  { id: 'sub-perlas', op: 'sub', unit: 'perlas', minDigits: 2, maxDigits: 3,
+  { id: 'sub-perlas', data: ['Tiene', 'Regala'], say: 'Le quedan {n} perlas.', op: 'sub', unit: 'perlas', minDigits: 2, maxDigits: 3,
     text: 'El pulpo Octavio tiene {a} perlas y regala {b} a sus amigos. ¿Cuántas perlas le quedan?' },
-  { id: 'sub-saltos', op: 'sub', unit: 'saltos', minDigits: 2, maxDigits: 3,
+  { id: 'sub-saltos', data: ['Saltos de la Rana', 'Saltos de {pet}'], say: 'La Rana ha dado {n} saltos más.', op: 'sub', unit: 'saltos', minDigits: 2, maxDigits: 3,
     text: 'La Rana Saltarina ha dado {a} saltos y {pet} ha dado {b}. ¿Cuántos saltos más ha dado la Rana?' },
-  { id: 'sub-banderines', op: 'sub', unit: 'banderines', minDigits: 2, maxDigits: 3,
+  { id: 'sub-banderines', data: ['Quiere colgar', 'Ya ha colgado'], say: 'Le faltan {n} banderines por colgar.', op: 'sub', unit: 'banderines', minDigits: 2, maxDigits: 3,
     text: 'La Reina Aurora quiere colgar {a} banderines en el castillo. Ya ha colgado {b}. ¿Cuántos le faltan por colgar?' },
-  { id: 'sub-paginas', op: 'sub', unit: 'páginas', minDigits: 2, maxDigits: 3,
+  { id: 'sub-paginas', data: ['Páginas del libro', 'Ya ha leído'], say: 'Le quedan {n} páginas por leer.', op: 'sub', unit: 'páginas', minDigits: 2, maxDigits: 3,
     text: '{child} lee un libro de magia de {a} páginas. Ya ha leído {b}. ¿Cuántas páginas le quedan por leer?' },
-  { id: 'sub-pasos', op: 'sub', unit: 'pasos', minDigits: 3, maxDigits: 4,
+  { id: 'sub-pasos', data: ['Hay que andar', 'Ya han andado'], say: 'Les faltan {n} pasos.', op: 'sub', unit: 'pasos', minDigits: 3, maxDigits: 4,
     text: 'Para llegar a la Forja del Dragón hay que andar {a} pasos. {child} y {pet} ya han andado {b}. ¿Cuántos pasos les faltan?' },
   // ---------------------------------------------------------------- mul
-  { id: 'mul-mariquitas', op: 'mul', unit: 'patas', minDigits: 1, maxDigits: 1, fixed: 6,
+  { id: 'mul-mariquitas', data: ['Mariquitas', 'Patas de cada mariquita'], say: 'Hay {n} patas en la pista.', op: 'mul', unit: 'patas', minDigits: 1, maxDigits: 1, fixed: 6,
     text: 'En la pista de baile de la cueva hay {a} mariquitas. Cada mariquita tiene {b} patas. ¿Cuántas patas hay en la pista?' },
-  { id: 'mul-pulpos', op: 'mul', unit: 'tentáculos', minDigits: 1, maxDigits: 1, fixed: 8,
+  { id: 'mul-pulpos', data: ['Pulpos', 'Tentáculos de cada pulpo'], say: 'Hay {n} tentáculos en la salida.', op: 'mul', unit: 'tentáculos', minDigits: 1, maxDigits: 1, fixed: 8,
     text: 'En la salida de la carrera del lago hay {a} pulpos. Cada pulpo tiene {b} tentáculos. ¿Cuántos tentáculos hay en la salida?' },
-  { id: 'mul-arcoiris', op: 'mul', unit: 'franjas', minDigits: 1, maxDigits: 1, fixed: 7,
+  { id: 'mul-arcoiris', data: ['Arcoíris', 'Colores de cada arcoíris'], say: 'Pinta {n} franjas de color.', op: 'mul', unit: 'franjas', minDigits: 1, maxDigits: 1, fixed: 7,
     text: 'El Hada Iris pinta {a} arcoíris. Cada arcoíris tiene {b} colores. ¿Cuántas franjas de color pinta en total?' },
-  { id: 'mul-semanas', op: 'mul', unit: 'días', minDigits: 1, maxDigits: 1, fixed: 7,
+  { id: 'mul-semanas', data: ['Semanas de excursión', 'Días de una semana'], say: 'La excursión dura {n} días.', op: 'mul', unit: 'días', minDigits: 1, maxDigits: 1, fixed: 7,
     text: 'Una semana tiene {b} días. {pet} se va de excursión {a} semanas. ¿Cuántos días dura la excursión?' },
-  { id: 'mul-ruedas', op: 'mul', unit: 'ruedas', minDigits: 1, maxDigits: 1, fixed: 4,
+  { id: 'mul-ruedas', data: ['Carrozas', 'Ruedas de cada carroza'], say: 'Hay {n} ruedas.', op: 'mul', unit: 'ruedas', minDigits: 1, maxDigits: 1, fixed: 4,
     text: 'Delante del castillo hay {a} carrozas. Cada carroza tiene {b} ruedas. ¿Cuántas ruedas hay?' },
-  { id: 'mul-setas', op: 'mul', unit: 'setas', minDigits: 1, maxDigits: 1,
+  { id: 'mul-setas', data: ['Cestas', 'Setas en cada cesta'], say: 'Hay {n} setas en total.', op: 'mul', unit: 'setas', minDigits: 1, maxDigits: 1,
     text: '{pet} ha encontrado {a} cestas con {b} setas en cada una. ¿Cuántas setas hay en total?' },
-  { id: 'mul-flores', op: 'mul', unit: 'flores', minDigits: 1, maxDigits: 2,
+  { id: 'mul-flores', data: ['Filas', 'Flores en cada fila'], say: 'Planta {n} flores.', op: 'mul', unit: 'flores', minDigits: 1, maxDigits: 2,
     text: 'Lumi planta {a} filas de flores con {b} flores en cada fila. ¿Cuántas flores planta?' },
-  { id: 'mul-escudos', op: 'mul', unit: 'piedras', minDigits: 1, maxDigits: 2,
+  { id: 'mul-escudos', data: ['Escudos', 'Piedras de cada escudo'], say: 'Necesita {n} piedras.', op: 'mul', unit: 'piedras', minDigits: 1, maxDigits: 2,
     text: 'La dragona Chispa fabrica {a} escudos. Cada escudo lleva {b} piedras brillantes. ¿Cuántas piedras necesita?' },
-  { id: 'mul-gemas', op: 'mul', unit: 'gemas', minDigits: 2, maxDigits: 2,
+  { id: 'mul-gemas', data: ['Cajas', 'Gemas en cada caja'], say: 'Son {n} gemas en total.', op: 'mul', unit: 'gemas', minDigits: 2, maxDigits: 2,
     text: 'Chispa necesita {a} cajas con {b} gemas cada una. ¿Cuántas gemas son en total?' },
-  { id: 'mul-cromos', op: 'mul', unit: 'cromos', minDigits: 1, maxDigits: 2,
+  { id: 'mul-cromos', data: ['Sobres', 'Cromos en cada sobre'], say: 'Tiene {n} cromos.', op: 'mul', unit: 'cromos', minDigits: 1, maxDigits: 2,
     text: '{child} tiene {a} sobres de cromos mágicos. En cada sobre hay {b} cromos. ¿Cuántos cromos tiene?' },
   // ---------------------------------------------------------------- div
-  { id: 'div-hadas', op: 'div', unit: 'estrellas', minDigits: 1, maxDigits: 2,
+  { id: 'div-hadas', data: ['Estrellas que reparte', 'Hadas'], say: 'Cada hada recibe {n} estrellas.', op: 'div', unit: 'estrellas', minDigits: 1, maxDigits: 2,
     text: 'La Reina Aurora reparte {a} estrellas entre {b} hadas, las mismas para cada una. ¿Cuántas estrellas recibe cada hada?' },
-  { id: 'div-torres', op: 'div', unit: 'estrellas', minDigits: 2, maxDigits: 2,
+  { id: 'div-torres', data: ['Estrellas que tiene', 'Torres'], say: 'Pondrá {n} estrellas en cada torre.', op: 'div', unit: 'estrellas', minDigits: 2, maxDigits: 2,
     text: 'La reina tiene {a} estrellas y quiere repartirlas por igual entre las {b} torres del castillo. ¿Cuántas estrellas pondrá en cada torre?' },
-  { id: 'div-mariquitas', op: 'div', unit: 'mariquitas', minDigits: 1, maxDigits: 2, fixed: 6,
+  { id: 'div-mariquitas', data: ['Patas que se ven', 'Patas de cada mariquita'], say: 'Hay {n} mariquitas.', op: 'div', unit: 'mariquitas', minDigits: 1, maxDigits: 2, fixed: 6,
     text: 'En la cueva se ven {a} patas de mariquita. Cada mariquita tiene {b} patas. ¿Cuántas mariquitas hay?' },
-  { id: 'div-pulpos', op: 'div', unit: 'pulpos', minDigits: 1, maxDigits: 2, fixed: 8,
+  { id: 'div-pulpos', data: ['Tentáculos que cuenta', 'Tentáculos de cada pulpo'], say: 'Hay {n} pulpos.', op: 'div', unit: 'pulpos', minDigits: 1, maxDigits: 2, fixed: 8,
     text: 'Octavio cuenta {a} tentáculos en el agua. Cada pulpo tiene {b} tentáculos. ¿Cuántos pulpos hay?' },
-  { id: 'div-semanas', op: 'div', unit: 'semanas', minDigits: 1, maxDigits: 2, fixed: 7,
+  { id: 'div-semanas', data: ['Días que faltan', 'Días de una semana'], say: 'Faltan {n} semanas.', op: 'div', unit: 'semanas', minDigits: 1, maxDigits: 2, fixed: 7,
     text: 'Faltan {a} días para la gran fiesta de Numeria. Una semana tiene {b} días. ¿Cuántas semanas faltan?' },
-  { id: 'div-conchas', op: 'div', unit: 'bolsas', minDigits: 1, maxDigits: 2,
+  { id: 'div-conchas', data: ['Conchas', 'Conchas en cada bolsa'], say: 'Llena {n} bolsas.', op: 'div', unit: 'bolsas', minDigits: 1, maxDigits: 2,
     text: 'El pulpo Octavio guarda {a} conchas en bolsas de {b} conchas. ¿Cuántas bolsas llena?' },
-  { id: 'div-galletas', op: 'div', unit: 'galletas', minDigits: 1, maxDigits: 2,
+  { id: 'div-galletas', data: ['Galletas', 'Amigos'], say: 'A cada uno le tocan {n} galletas.', op: 'div', unit: 'galletas', minDigits: 1, maxDigits: 2,
     text: '{child} reparte {a} galletas entre {b} amigos, a partes iguales. ¿Cuántas galletas le tocan a cada uno?' },
-  { id: 'div-libros', op: 'div', unit: 'libros', minDigits: 1, maxDigits: 2,
+  { id: 'div-libros', data: ['Libros', 'Estanterías'], say: 'Pone {n} libros en cada estantería.', op: 'div', unit: 'libros', minDigits: 1, maxDigits: 2,
     text: 'El Búho Sabio coloca {a} libros en {b} estanterías, los mismos en cada una. ¿Cuántos libros pone en cada estantería?' },
-  { id: 'div-chuches', op: 'div', unit: 'chuches', minDigits: 1, maxDigits: 2,
+  { id: 'div-chuches', data: ['Chuches', 'Montones'], say: 'Hay {n} chuches en cada montón.', op: 'div', unit: 'chuches', minDigits: 1, maxDigits: 2,
     text: '{pet} tiene {a} chuches y hace {b} montones iguales. ¿Cuántas chuches hay en cada montón?' },
 ]
 
@@ -111,6 +115,41 @@ export function fillTemplate(text: string, a: number, b: number): string {
 
 export function getWordTemplate(id: string): WordTemplate | undefined {
   return WORD_TEMPLATES.find((t) => t.id === id)
+}
+
+/** One «dato» of the story: its name and its number. */
+export interface WordDatum { label: string; value: number }
+
+/** The notebook of a story problem: its «Datos» (in the order the story tells them), its question, and the solution
+    sentence. Null for a story that is not from the bank (no names for its numbers). */
+export interface WordNotebook {
+  data: [WordDatum, WordDatum]
+  question: string
+  /** «Le faltan 28 banderines por colgar.»; with a remainder, «… y sobran 2.». */
+  sentence: (n: number, rest?: number) => string
+  /** The sentence around the result box: [«Le faltan», «banderines por colgar.»]. */
+  parts: [string, string]
+}
+
+export function wordNotebook(ex: { id: string; text: string; operands: [number, number] }): WordNotebook | null {
+  // Ids of the bank: word-problem:<template>:<a>,<b>
+  const t = getWordTemplate(ex.id.split(':')[1] ?? '')
+  if (!t) return null
+  const [a, b] = ex.operands
+  const first: WordDatum = { label: t.data[0], value: a }
+  const second: WordDatum = { label: t.data[1], value: b }
+  // The order of the story: «Una semana tiene {b} días. … {a} semanas» tells {b} first.
+  const bFirst = t.text.indexOf('{b}') < t.text.indexOf('{a}')
+  const question = (ex.text.match(/¿[^¿?]*\?/g) ?? []).at(-1) ?? ''
+  return {
+    data: bFirst ? [second, first] : [first, second],
+    question,
+    sentence: (n, rest) => {
+      const base = t.say.replace('{n}', String(n))
+      return rest ? `${base.replace(/\.$/, '')} y sobran ${rest}.` : base
+    },
+    parts: [t.say.split('{n}')[0].trim(), (t.say.split('{n}')[1] ?? '').trim()],
+  }
 }
 
 // ---------------------------------------------------------------- ¿tiene sentido? (word:sense, 4.º)

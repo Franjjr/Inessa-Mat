@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { WordProblemExercise } from '@/types'
 import { InkProvider } from '@/ink/InkProvider'
 import { scriptedRecognizer } from '@/ink/dev/scripted'
+import { WORD_TEMPLATES, wordNotebook } from '@/engine'
 import WordProblemView, { calculationFor, planMistake } from './WordProblemView'
 
 vi.mock('@/audio', () => ({ sfx: { play: vi.fn() }, speech: { say: vi.fn(), stop: vi.fn() }, haptics: { success: vi.fn(), error: vi.fn(), tap: vi.fn() } }))
@@ -17,6 +18,9 @@ const velas: WordProblemExercise = {
   id: 'wp-velas', kind: 'word-problem', skill: 'word:sub:2' as WordProblemExercise['skill'], difficulty: 2,
   text: 'La Reina Aurora quiere poner 45 velas. Ya ha puesto 17. ¿Cuántas le faltan?', op: 'sub', operands: [45, 17], answer: 28, unit: 'velas',
 }
+
+/** The number a box holds (NumberInput keeps it on its wrapper). */
+const boxValue = (name: string) => screen.getByRole('textbox', { name }).closest('[data-value]')?.getAttribute('data-value')
 
 /** Writes the planteamiento: the two numbers and the operation. */
 async function plan(user: ReturnType<typeof userEvent.setup>, a: number, op: RegExp, b: number) {
@@ -148,5 +152,88 @@ describe('WordProblemView with a remainder (H19)', () => {
     // The planteamiento shows one «Comprobar» (the bar's).
     const checks = () => screen.getAllByRole('button', { name: /Comprobar/ }).filter((b) => !/_key_/.test(b.className))
     expect(checks()).toHaveLength(1)
+  })
+})
+
+describe('«Datos»: the numbers of the story beside their names (as in the notebook)', () => {
+  // A story of the bank: its id names the template, so the view knows the name of each number.
+  const banderines: WordProblemExercise = {
+    id: 'word-problem:sub-banderines:45,17', kind: 'word-problem', skill: 'word:sub:2' as WordProblemExercise['skill'], difficulty: 2,
+    text: 'La Reina Aurora quiere colgar 45 banderines en el castillo. Ya ha colgado 17. ¿Cuántos le faltan por colgar?',
+    op: 'sub', operands: [45, 17], answer: 28, unit: 'banderines',
+  }
+
+  it('every story of the bank has two names and a sentence with the result', () => {
+    for (const t of WORD_TEMPLATES) {
+      expect(t.data.every((d) => d.trim().length > 0), t.id).toBe(true)
+      expect(t.say, t.id).toMatch(/^[A-ZÁÉÍÓÚ].*\{n\}.*\.$/)
+    }
+    const nb = wordNotebook(banderines)!
+    expect(nb.data).toEqual([{ label: 'Quiere colgar', value: 45 }, { label: 'Ya ha colgado', value: 17 }])
+    expect(nb.question).toBe('¿Cuántos le faltan por colgar?')
+    expect(nb.sentence(28)).toBe('Le faltan 28 banderines por colgar.')
+    expect(nb.sentence(3, 2)).toBe('Le faltan 3 banderines por colgar y sobran 2.')
+    // «Una semana tiene {b} días. … {a} semanas»: the data in the order the story tells them.
+    const semanas = wordNotebook({ id: 'word-problem:mul-semanas:3,7', text: '', operands: [3, 7] })!
+    expect(semanas.data.map((d) => d.value)).toEqual([7, 3])
+    expect(wordNotebook(small)).toBeNull()
+  })
+
+  it('the data, then the planteamiento with those numbers, the subtraction in boxes and the solution as a sentence', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    render(<WordProblemView exercise={banderines} onAnswered={onAnswered} showFeedback={false} />)
+    expect(screen.getByText('¿Cuántos le faltan por colgar?')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Primer número' })).toBeNull()
+    await user.type(screen.getByRole('textbox', { name: 'Quiere colgar' }), '45')
+    await user.type(screen.getByRole('textbox', { name: 'Ya ha colgado' }), '17')
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    // The planteamiento starts with the numbers of the data: only the operation is left to choose.
+    expect(boxValue('Primer número')).toBe('45')
+    expect(boxValue('Segundo número')).toBe('17')
+    expect(screen.getByText('Quiere colgar 45 · Ya ha colgado 17')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /Quitar/ }))
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    await screen.findByRole('region', { name: 'Operación en columna' })
+    fireEvent.keyDown(screen.getByRole('textbox', { name: /^unidades del resultado/ }), { key: '8' })
+    fireEvent.keyDown(screen.getByRole('textbox', { name: /^decenas del resultado/ }), { key: '2' })
+    await user.click(screen.getAllByRole('button', { name: /Comprobar/ }).filter((b) => !/_key_/.test(b.className))[0])
+    await waitFor(() => expect(onAnswered).toHaveBeenCalledTimes(1))
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
+    expect(onAnswered.mock.calls[0][0].hintsUsed).toBe(0)
+    expect(screen.getByText('Solución: Le faltan 28 banderines por colgar.')).toBeInTheDocument()
+  })
+
+  it('a wrong dato says which one to look for (a clue); the second miss writes them and goes on', async () => {
+    const user = userEvent.setup()
+    render(<WordProblemView exercise={banderines} onAnswered={vi.fn()} showFeedback={false} />)
+    await user.type(screen.getByRole('textbox', { name: 'Quiere colgar' }), '45')
+    await user.type(screen.getByRole('textbox', { name: 'Ya ha colgado' }), '71')
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    expect(screen.getByText('Vuelve a leer la historia y busca el dato «Ya ha colgado».')).toBeInTheDocument()
+    expect(screen.queryByRole('textbox', { name: 'Primer número' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    expect(screen.getByText(/Mira los datos de la historia/)).toBeInTheDocument()
+    expect(boxValue('Segundo número')).toBe('17')
+  })
+
+  it('small numbers: the result is written inside the solution sentence', async () => {
+    const user = userEvent.setup()
+    const onAnswered = vi.fn()
+    const setas: WordProblemExercise = {
+      id: 'word-problem:mul-setas:4,5', kind: 'word-problem', skill: 'word:mul' as WordProblemExercise['skill'], difficulty: 2,
+      text: '{pet} ha encontrado 4 cestas con 5 setas en cada una. ¿Cuántas setas hay en total?', op: 'mul', operands: [4, 5], answer: 20, unit: 'setas',
+    }
+    render(<WordProblemView exercise={setas} onAnswered={onAnswered} showFeedback={false} />)
+    await user.type(screen.getByRole('textbox', { name: 'Cestas' }), '4')
+    await user.type(screen.getByRole('textbox', { name: 'Setas en cada cesta' }), '5')
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    await user.click(screen.getByRole('button', { name: /Repetir/ }))
+    await user.click(screen.getByRole('button', { name: /Comprobar/ }))
+    expect(screen.getByText('Hay')).toBeInTheDocument()
+    expect(screen.getByText('setas en total.')).toBeInTheDocument()
+    await user.type(screen.getByRole('textbox', { name: 'Respuesta' }), '20{Enter}')
+    await waitFor(() => expect(onAnswered).toHaveBeenCalledTimes(1))
+    expect(onAnswered.mock.calls[0][0].check.correct).toBe(true)
   })
 })

@@ -1,4 +1,6 @@
 /* Exercise view "word-problem": a short Spanish story with its numbers, solved as in the school notebook.
+   0. Datos (the stories of the bank): the child copies each number of the story beside its name («Quiere colgar: 45»)
+      and reads the question; a wrong one is a clue. The planteamiento then starts with those numbers.
    1. Planteamiento: the child writes the two numbers of the story and picks the operation (+ − × ÷); the app says
       whether it is well set out (a wrong one is a clue, never a mark).
    2. Operación: the calculation in boxes, with the same views as the column operations and the galera. Small numbers
@@ -7,7 +9,7 @@
    Only the result is graded (P1): the planteamiento and the boxes guide. */
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react'
 import type { Answer, Exercise, ExerciseOutcome, ExerciseViewProps, WordProblemExercise } from '@/types'
-import { makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDivision3, makeLongMul } from '@/engine'
+import { makeColumnAdd, makeColumnMul, makeColumnSub, makeDivision, makeDivision3, makeLongMul, wordNotebook } from '@/engine'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
 import { ListenButton } from '@/activities/shared/ListenButton'
@@ -133,8 +135,12 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
   const [b, setB] = useState<number | null>(again ? (ex.op === 'sub' ? Math.min(...ex.operands) : ex.operands[1]) : null)
   const [picked, setPicked] = useState<WordProblemExercise['op'] | null>(again ? ex.op : null)
   const calc = useMemo(() => calculationFor(ex), [ex])
-  /** plan: numbers and operation; calc: the boxes; head: the result alone (small numbers, or «Lo sé de cabeza»). */
-  const [stage, setStage] = useState<'plan' | 'calc' | 'head'>(again ? (calc && !before && !beforeDiv ? 'calc' : 'head') : 'plan')
+  const notebook = useMemo(() => wordNotebook(ex), [ex])
+  /** data: the «Datos»; plan: numbers and operation; calc: the boxes; head: the result alone (small numbers, or «Lo sé de cabeza»). */
+  const [stage, setStage] = useState<'data' | 'plan' | 'calc' | 'head'>(again ? (calc && !before && !beforeDiv ? 'calc' : 'head') : notebook ? 'data' : 'plan')
+  const [data, setData] = useState<(number | null)[]>(() => (again && notebook ? notebook.data.map((d) => d.value) : [null, null]))
+  const [dataClue, setDataClue] = useState<string | null>(null)
+  const dataMisses = useRef(0)
   const [planClue, setPlanClue] = useState<string | null>(null)
   /** The planteamiento clue has been counted for this problem (counted once, at the first wrong planteamiento). */
   const clueCounted = useRef(false)
@@ -143,6 +149,31 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
   const hasRemainder = (ex.remainder ?? 0) > 0
 
   const planMisses = useRef(0)
+  /** A clue taken (a wrong «Datos» or planteamiento) counts once as a hint used. */
+  const takeClue = () => {
+    if (clueCounted.current) return
+    clueCounted.current = true
+    flow.countClue()
+  }
+  const checkData = () => {
+    if (!notebook) return
+    const wrong = notebook.data.findIndex((d, i) => data[i] !== d.value)
+    if (wrong >= 0) {
+      takeClue()
+      dataMisses.current += 1
+      if (dataMisses.current < 2) {
+        setDataClue(host.t(`Vuelve a leer la historia y busca el dato «${notebook.data[wrong].label}».`))
+        return
+      }
+      // The second miss: the data are shown (never stuck on them) and the child goes on to the planteamiento.
+      setData(notebook.data.map((d) => d.value))
+      setDataClue(host.t('Mira los datos de la historia. Ahora, el planteamiento.'))
+    } else setDataClue(null)
+    // The planteamiento starts with the numbers of the data, in the order of the story.
+    setA(notebook.data[0].value)
+    setB(notebook.data[1].value)
+    setStage('plan')
+  }
   /** The next step comes into view when it opens (the story above stays one scroll away). */
   // Stable: a callback ref runs on mount only, not on every render (no scrolling while the child writes).
   const toView = useCallback((el: HTMLElement | null) => { el?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }) }, [])
@@ -150,10 +181,7 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
     const mistake = planMistake(ex, a, picked, b)
     if (mistake) {
       // A wrong planteamiento is a clue taken: counted once as a hint used, so trying one by one does not climb mastery.
-      if (!clueCounted.current) {
-        clueCounted.current = true
-        flow.countClue()
-      }
+      takeClue()
       planMisses.current += 1
       if (planMisses.current < 2) {
         setPlanClue(host.t(mistake))
@@ -196,9 +224,16 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
     !flow.result && wrongBox.has(box) && now === then ? 'wrong' as const : status
   const readyToCheck = value !== null
   const planReady = a !== null && b !== null && picked !== null
-  const planned = stage !== 'plan'
+  const planned = stage !== 'plan' && stage !== 'data'
+  const dataReady = data.every((d) => d !== null)
+  /** The steps are numbered from the «Datos» when the story has them. */
+  const n0 = notebook ? 1 : 0
+  /** The solution as a sentence around the box («Le faltan [ ] banderines por colgar.»); 1 reads «1 banderines», so it keeps the unit. */
+  const parts = notebook && ex.answer !== 1 ? notebook.parts : null
 
-  const actions = stage === 'plan'
+  const actions = stage === 'data'
+    ? <AnswerBar flow={flow} onCheck={checkData} canCheck={dataReady} />
+    : stage === 'plan'
     ? <AnswerBar flow={flow} onCheck={checkPlan} canCheck={planReady} />
     : stage === 'head' || flow.result ? <AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck && !flow.result} /> : null
 
@@ -213,7 +248,47 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
           and the lesson (TrySlot) and the session (ExerciseStep) leave theirs out for a problem when the voice is on. */}
       {host.prefs.voice && <ListenButton text={statementFor({ ...ex, text })} className={s.speak} />}
 
-      {planned ? (
+      {notebook && (stage === 'data' ? (
+        <section className={s.step} aria-label="Datos">
+          <p className={s.stepTitle}>{host.t('1. Datos: escribe los números que da la historia.')}</p>
+          <dl className={s.dataList}>
+            {notebook.data.map((d, i) => (
+              <div key={i} className={s.dataRow}>
+                <dt className={s.dataLabel}>{host.t(`${d.label}:`)}</dt>
+                <dd className={s.dataBox}>
+                  <NumberInput
+                    value={data[i]}
+                    onChange={(v) => { setData((prev) => prev.map((x, k) => (k === i ? v : x))); setDataClue(null) }}
+                    onSubmit={(v) => setData((prev) => prev.map((x, k) => (k === i ? v : x)))}
+                    maxDigits={4}
+                    size="lg"
+                    ariaLabel={host.t(d.label)}
+                    placeholder="?"
+                    checkButton={false}
+                    autoFocus={i === 0}
+                  />
+                </dd>
+              </div>
+            ))}
+            {notebook.question && (
+              <div className={s.dataRow}>
+                <dt className={s.dataLabel}>{host.t('Pregunta:')}</dt>
+                <dd className={s.dataQuestion}>{host.t(notebook.question)}</dd>
+              </div>
+            )}
+          </dl>
+          {dataClue && <p className={s.opClue} role="status">{dataClue}</p>}
+        </section>
+      ) : (
+        // The data once written: one line.
+        <section className={s.planDone} aria-label="Datos">
+          <span className={s.planDoneLabel}>{host.t('Datos:')}</span>
+          <span className={s.dataDone}>{notebook.data.map((d) => `${host.t(d.label)} ${d.value}`).join(' · ')}</span>
+          {dataClue && stage === 'plan' && <span className={s.opClue} role="status">{dataClue}</span>}
+        </section>
+      ))}
+
+      {stage === 'data' ? null : planned ? (
         // Set out: one line, so the calculation and its «Comprobar» fit on the screen.
         <section className={s.planDone} aria-label="Planteamiento">
           <span className={s.planDoneLabel}>{host.t('Planteamiento:')}</span>
@@ -222,9 +297,9 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
         </section>
       ) : (
         <section className={s.step} aria-label="Planteamiento">
-          <p className={s.stepTitle}>{host.t('1. Planteamiento: escribe los números de la historia y elige la operación.')}</p>
+          <p className={s.stepTitle}>{host.t(notebook ? '2. Planteamiento: elige la operación y mira el orden de los números.' : '1. Planteamiento: escribe los números de la historia y elige la operación.')}</p>
           <div className={s.planRow}>
-            <NumberInput value={a} onChange={(v) => { setA(v); setPlanClue(null) }} onSubmit={(v) => setA(v)} maxDigits={4} size="lg" ariaLabel="Primer número" placeholder="?" checkButton={false} autoFocus />
+            <NumberInput value={a} onChange={(v) => { setA(v); setPlanClue(null) }} onSubmit={(v) => setA(v)} maxDigits={4} size="lg" ariaLabel="Primer número" placeholder="?" checkButton={false} autoFocus={!notebook} />
             <span className={s.planSign} aria-label={picked ? `Operación ${SIGN[picked]}` : 'Operación sin elegir'}>{picked ? SIGN[picked] : '?'}</span>
             <NumberInput value={b} onChange={(v) => { setB(v); setPlanClue(null) }} onSubmit={(v) => setB(v)} maxDigits={4} size="lg" ariaLabel="Segundo número" placeholder="?" checkButton={false} />
           </div>
@@ -248,7 +323,7 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
 
       {stage === 'calc' && calc && (
         <section className={s.step} aria-label="Operación" ref={toView}>
-          <p className={s.stepTitle}>{host.t('2. Operación: haz la cuenta en las casillas.')}</p>
+          <p className={s.stepTitle}>{host.t(`${2 + n0}. Operación: haz la cuenta en las casillas.`)}</p>
           <Suspense fallback={null}>
             {calc.kind === 'long-mul'
               ? <LongMulView exercise={calc} onAnswered={calcAnswered} allowHints={allowHints} showFeedback={false} compact />
@@ -264,9 +339,9 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
 
       {stage === 'head' && (
         <section className={s.step} aria-label="Solución" ref={toView}>
-          <p className={s.stepTitle}>{host.t(calc ? 'Escribe el resultado.' : '2. Resultado: hazlo de cabeza y escríbelo.')}</p>
+          <p className={s.stepTitle}>{host.t(calc ? (notebook ? `${3 + n0}. Solución: escribe el resultado.` : 'Escribe el resultado.') : `${2 + n0}. ${notebook ? 'Solución' : 'Resultado'}: hazlo de cabeza y escríbelo.`)}</p>
           <div className={s.answer}>
-            <span className={s.answerLabel}>{host.t('Solución:')}</span>
+            <span className={s.answerLabel}>{host.t(parts ? parts[0] : 'Solución:')}</span>
             <NumberInput
               value={value}
               onChange={setValue}
@@ -279,7 +354,7 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
               autoFocus
               checkButton={!hasRemainder}
             />
-            <span className={s.unit}>{ex.unit}</span>
+            <span className={s.unit}>{parts ? host.t(parts[1]) : ex.unit}</span>
           </div>
           {hasRemainder && (
             <div className={s.answer}>
@@ -291,7 +366,9 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
       )}
 
       {stage === 'calc' && flow.result?.correct && (
-        <p className={s.solution}>{host.t(`Solución: ${ex.answer} ${ex.unit}${hasRemainder ? ` y sobran ${ex.remainder}` : ''}.`)}</p>
+        <p className={s.solution}>{host.t(parts && notebook
+          ? `Solución: ${notebook.sentence(ex.answer, hasRemainder ? ex.remainder : undefined)}`
+          : `Solución: ${ex.answer} ${ex.unit}${hasRemainder ? ` y sobran ${ex.remainder}` : ''}.`)}</p>
       )}
 
       {guided && <p className={s.guide}>{host.t('Piensa qué pasa en la historia antes de escribir los números.')}</p>}
