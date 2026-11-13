@@ -388,7 +388,7 @@ describe('comprobar (auditoría p1-numeros p1n-02, p1n-07; P4-21)', () => {
 
   it('la pista 1 de comprobar una división habla del número que reparte y de lo que sobra', () => {
     const ex = checks.find((e) => e.op === 'div')!
-    expect(hintsFor(ex)[0].text).toBe('Multiplica el resultado por el número que reparte y suma lo que sobra: ¿te sale el número del principio?')
+    expect(hintsFor(ex)[0].text).toBe('Multiplica el resultado por el número entre el que repartes y suma lo que sobra: ¿te sale el número del principio?')
   })
 })
 

@@ -479,7 +479,7 @@ export function checkHints(ex: CheckCalcExercise): Hint[] {
     ? 'Para comprobar una resta, suma el resultado y el número de abajo: ¿sale el de arriba?'
     : ex.op === 'add'
       ? 'Para comprobar una suma, resta el número de abajo al resultado: ¿sale el otro número?'
-      : 'Multiplica el resultado por el número que reparte y suma lo que sobra: ¿te sale el número del principio?'
+      : 'Multiplica el resultado por el número entre el que repartes y suma lo que sobra: ¿te sale el número del principio?'
   const l3 = ex.op === 'sub'
     ? `${ex.claimed} + ${ex.right} = ?`
     : ex.op === 'add'

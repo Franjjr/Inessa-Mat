@@ -24,7 +24,9 @@ export function minuteFromAngle(deg: number): number {
 
 /** The hour under the hour hand, given the minutes (the hour hand is offset by half a degree per minute). */
 export function hourFromAngle(deg: number, minute: number): number {
-  const h = Math.round((deg - minute * 0.5) / 30)
+  // At «y media» the short hand sits half way: a child who puts it on the number of the phrase (on the 3 for «las tres
+  // y media») means that hour, so the tie leans to it.
+  const h = Math.round((deg - minute * 0.5) / 30 + (minute === 30 ? 0.25 : 0))
   const r = ((h % 12) + 12) % 12
   return r === 0 ? 12 : r
 }
@@ -229,6 +231,8 @@ export function TimeFields({ hour, minute, onHour, onMinute, status, onSubmit, a
       keypadToggle
       // An hour that cannot take a second digit (a 3 when no hour is 30 or more) is complete: typing 3, 2, 0 gives 3:20.
       numberComplete={(id, digits) => id === 'h' && digits.length === 1 && Number(digits) * 10 > maxHour}
+      // No hour is more than maxHour: 1, 3, 0 on a clock of 12 is 1:30 (the 3 goes to the minutes), not 13:00.
+      numberAccepts={(id, digits) => id !== 'h' || Number(digits) <= maxHour}
     >
       <div className={s.fields} role="group" aria-label="Hora y minutos">
         <div className={s.field}>

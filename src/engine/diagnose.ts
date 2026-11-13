@@ -114,7 +114,9 @@ export function diagnoseSub(minuend: number, subtrahend: number, given: readonly
     if (shifted > 0 && value === shifted) return { errorType: 'misaligned', wrongColumns: wrong }
   }
   if (isShiftedLeft(given, an.answer)) return { errorType: 'misaligned', wrongColumns: wrong }
-  if (value === smallerFromLargerValue(minuend, subtrahend)) return { errorType: 'smaller-from-larger', wrongColumns: wrong }
+  // The same value as «the smaller from the larger» only names that slip when a wrong column has the smaller digit on
+  // top (352 − 127 written 235 is the neighbour not crossed out: 7 − 2 and 12 − 7 both give 5).
+  if (value === smallerFromLargerValue(minuend, subtrahend) && wrong.some((i) => i < cols && m(i) < s(i))) return { errorType: 'smaller-from-larger', wrongColumns: wrong }
   const zeroCols = new Set(an.zeroChains.flat())
   if (an.zeroBorrow && wrong.some((i) => zeroCols.has(i))) return { errorType: 'zero-borrow', wrongColumns: wrong }
   if (wrong.some((i) => i < cols && m(i) < s(i) && g(i) === s(i) - m(i))) return { errorType: 'smaller-from-larger', wrongColumns: wrong }

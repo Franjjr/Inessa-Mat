@@ -8,7 +8,7 @@ import type {
   AngleTapExercise, Answer, AngleFigure, AreaExercise, GridFigure, CheckResult, CircleFigure, ErrorType, Hint, LineFigure, LinesFigure, PerimeterExercise,
   PolygonFigure, Rng, ShapeChoiceExercise, ShapeCountExercise, SolidFigure, SolidName,
 } from '@/types'
-import { pick, randInt, shuffle } from './rng'
+import { pick, randInt, range, shuffle } from './rng'
 import { geoSkill, type GeoOp } from './skills'
 
 // ---------------------------------------------------------------- polygons
@@ -61,6 +61,17 @@ export const cornerDot = (a: [number, number], p: [number, number], b: [number, 
 
 /** Indexes of the corners whose inside angle is exactly a right angle: the two sides are perpendicular (dot product 0)
     and the corner turns the way the polygon turns (a concave corner of 270° is not a right angle). Exact coordinates. */
+/** The cosine of the corner at point i (0 = a right corner). */
+function cornerCos(points: readonly [number, number][], i: number): number {
+  const n = points.length
+  const p = points[i]
+  const a = points[(i - 1 + n) % n]
+  const b = points[(i + 1) % n]
+  const u = [a[0] - p[0], a[1] - p[1]]
+  const v = [b[0] - p[0], b[1] - p[1]]
+  return (u[0] * v[0] + u[1] * v[1]) / (Math.hypot(u[0], u[1]) * Math.hypot(v[0], v[1]))
+}
+
 export function rightCorners(points: readonly [number, number][]): number[] {
   const out: number[] = []
   const n = points.length
@@ -280,6 +291,8 @@ export function genAngleTap(rng: Rng): AngleTapExercise {
     }
     const right = rightCorners(pts)
     if (kind === 'oblique' && right.length > 0) continue
+    // A corner that is not right must not look right either (88° looks square): at least 11,5° away from 90°.
+    if (pts.some((_, i) => !right.includes(i) && Math.abs(cornerCos(pts, i)) < 0.2)) continue
     const turned = rotatePoints(pts.map(([x, y]) => [x * 12, y * 12] as [number, number]), randInt(rng, 0, 359))
     return {
       id: `angle-tap:${kind}:${turned.map((p) => p.join(',')).join(';')}`,
@@ -525,9 +538,9 @@ export function genQuadName(rng: Rng): ShapeChoiceExercise {
     base = [[0, 0], [a, 0], [a, b], [0, b]]
   } else if (kind === 'rombo') {
     // Equal sides from diagonals of different length: no right corner.
+    // Diagonals at least 2 apart: 5 and 6 give corners of 80° and 100°, which look like a turned square.
     const p = randInt(rng, 2, 6)
-    let q = randInt(rng, 2, 6)
-    if (q === p) q = p === 6 ? 5 : p + 1
+    const q = pick(rng, range(2, 6).filter((v) => Math.abs(v - p) >= 2))
     base = [[-p, 0], [0, -q], [p, 0], [0, q]]
   } else if (kind === 'romboide') {
     // A slanted parallelogram: the sides differ and no corner is square.

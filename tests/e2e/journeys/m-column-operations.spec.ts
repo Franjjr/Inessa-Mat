@@ -25,7 +25,8 @@ test.describe('on a phone', () => {
     await expect(page.getByRole('textbox', { name: 'parcial 2, centenas' })).toHaveText(/2/)
     await expect(page.getByRole('textbox', { name: 'centenas del resultado' })).toHaveText(/3/)
 
-    await pad.getByRole('button', { name: 'Comprobar', exact: true }).click()
+    // The keypad has no ✓ of its own when the answer bar is there: its «Comprobar» grades the column.
+    await page.getByRole('button', { name: /Comprobar/ }).click()
     await expect(view).toHaveAttribute('data-status', 'correct')
   })
 
@@ -51,8 +52,8 @@ test.describe('on a phone', () => {
     await pad.getByRole('button', { name: '5', exact: true }).click()
     await expect(page.getByRole('textbox', { name: 'décimas del resultado' })).toHaveText(/2/)
 
-    // The keypad's check grades the column.
-    await pad.getByRole('button', { name: 'Comprobar', exact: true }).click()
+    // The keypad has no ✓ of its own when the answer bar is there: its «Comprobar» grades the column.
+    await page.getByRole('button', { name: /Comprobar/ }).click()
     await expect(view).toHaveAttribute('data-status', 'correct')
   })
 })

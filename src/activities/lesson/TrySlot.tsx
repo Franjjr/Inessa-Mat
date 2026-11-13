@@ -14,7 +14,7 @@ import { SolutionPanel } from '@/activities/shared/SolutionPanel'
 import { ListenButton } from '@/activities/shared/ListenButton'
 import { settleScale } from '@/activities/shared/FitToScreen'
 import { speech } from '@/audio'
-import { createRng, ENGLISH_LISTENING_KINDS, generate, hintsFor } from '@/engine'
+import { createRng, ENGLISH_LISTENING_KINDS, generate, hintsFor, methodFor } from '@/engine'
 import { solutionFor } from '@/engine/solution'
 import { statementFor } from '@/engine/statement'
 import type { Answer, DivMethod, Exercise, ExerciseOutcome, SkillSelector, SubMethod, TableMethod } from '@/types'
@@ -143,6 +143,9 @@ function controlsReachable(wrap: HTMLElement, inner: HTMLElement, footer: HTMLEl
 
 export default function TrySlot({ selector, seedKey, onSettled, settled, method, divMethod, tableMethod, allowHints = true, grown = false, onOverflow }: Props) {
   const host = useActivityHost()
+  // The method of the step (a lesson that teaches one), or else the one the adult chose for the school (Ajustes).
+  const subM = method ?? methodFor('sub', host.prefs)
+  const divM = divMethod ?? methodFor('div', host.prefs)
   /** Each «Inténtalo otra vez» (and the copy after the solution) draws the same exercise again: after a miss with what the
       child wrote and the wrong boxes marked (previous), for the copy empty. */
   const [round, setRound] = useState(0)
@@ -170,7 +173,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     () => generate(selector, 1, { rng: createRng(seedOf(`${seedKey}:0`)) })[0],
     [selector, seedKey],
   )
-  const solutionOpts = useMemo(() => ({ subMethod: method, divMethod, tableMethod }), [method, divMethod, tableMethod])
+  const solutionOpts = useMemo(() => ({ subMethod: subM, divMethod: divM, tableMethod }), [subM, divM, tableMethod])
 
   // No exercise could be generated for this selector: nothing to check, so the step is settled at once.
   useEffect(() => {
@@ -281,7 +284,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     if (nextMisses >= MAX_MISSES) {
       giveUp()
     } else {
-      const clue = check.feedback?.trim() || hintsFor(exercise, method, { divMethod, tableMethod })[0]?.text || ''
+      const clue = check.feedback?.trim() || hintsFor(exercise, subM, { divMethod: divM, tableMethod })[0]?.text || ''
       setFeedback(clue)
       setPrevious(previousOf(outcome))
       setStatus('missed')
@@ -318,7 +321,7 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
     setRound((r) => r + 1)
   }
 
-  const firstHint = status === 'missed' ? hintsFor(exercise, method, { divMethod, tableMethod })[0]?.text : undefined
+  const firstHint = status === 'missed' ? hintsFor(exercise, subM, { divMethod: divM, tableMethod })[0]?.text : undefined
   const solvedShown = status === 'gaveUp' || status === 'copied'
 
   return (
@@ -347,8 +350,8 @@ export default function TrySlot({ selector, seedKey, onSettled, settled, method,
             allowHints={allowHints && !solvedShown}
             showFeedback={false}
             teach="full"
-            method={method}
-            divMethod={divMethod}
+            method={subM}
+            divMethod={divM}
             tableMethod={tableMethod ?? host.prefs.tableMethod}
             initialAnswer={previous.answer}
             wrongColumns={previous.wrongColumns}

@@ -198,7 +198,7 @@ describe('robustness and hint consistency', () => {
   })
   it('long division hint starts with the first number the galera takes and never states the partial quotient (85 : 4)', () => {
     const t = hintsFor(makeDivision(85, 4))[2].text
-    expect(t).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.')
+    expect(t).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo de el número entre el que repartes (el divisor). Multiplícalo por ese mismo número, réstalo y baja la cifra siguiente.')
   })
 })
 
