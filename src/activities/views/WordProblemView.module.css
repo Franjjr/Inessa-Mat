@@ -109,3 +109,88 @@
   .opButtons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .text { padding-right: 0; padding-top: 44px; }
 }
+
+/* The three steps of the notebook: planteamiento, operación, solución. */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.stepTitle {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+.planRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.planSign {
+  min-width: 48px;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl, 2.4rem);
+  font-weight: 700;
+  color: var(--c-primary-strong);
+}
+.planOk {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-read);
+  font-size: var(--fs-sm);
+  color: var(--c-good-strong, #166534);
+}
+.headLink {
+  align-self: center;
+  min-height: var(--tap-min);
+  padding: var(--sp-2) var(--sp-4);
+  border: 2px dashed var(--c-line);
+  border-radius: var(--r-lg);
+  background: transparent;
+  color: var(--c-ink-soft);
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+.solution {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+/* The planteamiento once set out: one line. */
+.planDone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+.planDoneLabel {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+.planDoneOp {
+  font-family: var(--font-display);
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+/* Inside the story, the calculation's own instruction is a reminder, not the statement: smaller, so the boxes and their
+   «Comprobar» fit under the story. */
+.step :global(.ex-prompt) {
+  font-size: var(--fs-md);
+  line-height: 1.3;
+}

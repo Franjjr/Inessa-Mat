@@ -57,6 +57,9 @@ const idle = () => wait(Math.max(IDLE_MS, CONTINUE_MS) + 40)
 
 const fact67: FactMulExercise = { id: 'f-6x7', kind: 'fact-mul', skill: 'mul:6x7' as FactMulExercise['skill'], difficulty: 1, a: 6, b: 7, answer: 42 }
 
+/** The story already set out (as on «Inténtalo otra vez»): the view opens at the result box, the ink under test. */
+const SOLUTION_STEP = { type: 'number', value: null } as const
+
 describe('P2-01 · «Comprobar» justo después de escribir: la última cifra cuenta', () => {
   it('ColumnView 368 + 257 escrito a mano y Comprobar enseguida → se califica 625', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
@@ -80,7 +83,7 @@ describe('P2-01 · «Comprobar» justo después de escribir: la última cifra cu
     }
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
     // The 3 is read after the pause; then both digits are read again: 3 and 0.
-    withInk([{ digit: 3 }, { digit: 3 }, { digit: 0 }], <WordProblemView exercise={ex} onAnswered={onAnswered} showFeedback={false} />)
+    withInk([{ digit: 3 }, { digit: 3 }, { digit: 0 }], <WordProblemView exercise={ex} initialAnswer={SOLUTION_STEP} onAnswered={onAnswered} showFeedback={false} />)
     const pad = surfaceOf('Respuesta')
     act(() => replayStrokes(pad, handwrite(3, { x: 40, y: 0, w: 100, h: H }, { pointerType: 'pen' })))
     idle()
@@ -96,7 +99,7 @@ describe('P2-01 · «Comprobar» justo después de escribir: la última cifra cu
       id: 'wp-3-2', kind: 'word-problem', skill: 'word:add:3' as WordProblemExercise['skill'], difficulty: 2,
       text: 'Ana tiene 3 estrellas y le dan 2 más. ¿Cuántas tiene ahora?', op: 'add', operands: [3, 2], answer: 5, unit: 'estrellas',
     }
-    withInk([], <WordProblemView exercise={ex} onAnswered={() => {}} />)
+    withInk([], <WordProblemView exercise={ex} initialAnswer={SOLUTION_STEP} onAnswered={() => {}} />)
     expect(screen.getAllByRole('button', { name: /Comprobar/ })).toHaveLength(1)
   })
 })
