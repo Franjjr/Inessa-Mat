@@ -77,7 +77,7 @@ export function statementFor(ex: Exercise, ctx: TemplateContext = DEFAULT_CONTEX
     case 'error-hunt':
       return `Dani ha hecho esta cuenta: ${fmt(ex.top)} ${SIGN[ex.op]} ${fmt(ex.bottom)} = ${fmt(ex.shown)}. ¿Está bien hecha? Si tiene un error, tócalo.`
     case 'check-calc': {
-      const rest = ex.remainder ? ` y sobran ${ex.remainder}` : ''
+      const rest = ex.remainder ? ` y sobra${ex.remainder === 1 ? '' : 'n'} ${ex.remainder}` : ''
       return `Dani dice que ${fmt(ex.left)} ${SIGN[ex.op]} ${fmt(ex.right)} = ${fmt(ex.claimed)}${rest}. Escribe la cuenta para comprobarlo y di si está bien.`
     }
     case 'place-value':

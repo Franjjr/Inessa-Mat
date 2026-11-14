@@ -38,6 +38,22 @@ export function nextEmptyPad(id: string): string | null {
   return order.find((other) => other !== id && filled.get(other) === false) ?? null
 }
 
+const typers = new Map<string, (d: number, via: 'keyboard' | 'keypad') => void>()
+
+/** How a digit is typed into this box (a full box hands the next digit typed to the next empty one). */
+export function usePadTyper(id: string, type: (d: number, via: 'keyboard' | 'keypad') => void): void {
+  useEffect(() => { typers.set(id, type) })
+  useEffect(() => () => { typers.delete(id) }, [id])
+}
+
+/** Types a digit into another box. False when that box is not on screen. */
+export function typeInPad(id: string, d: number, via: 'keyboard' | 'keypad'): boolean {
+  const type = typers.get(id)
+  if (!type) return false
+  type(d, via)
+  return true
+}
+
 /** Moves the child to another box: it takes the keypad and the focus. */
 export function moveToPad(id: string): void {
   focusPad(id)

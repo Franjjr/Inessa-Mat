@@ -29,6 +29,9 @@ export interface CellGroupProps {
   /** A number typed like a calculator that is complete before all its cells are written (an hour «3» can only be 3):
    *  the cursor goes on to the next number, as when every cell is written. */
   numberComplete?: (numberId: string, digits: string) => boolean
+  /** False when a number cannot take these digits (an hour 13 on a clock of 12): the number already written is complete
+      and the digit goes to the next number (1, 3, 0 on the clock is 1:30, not 13:00). */
+  numberAccepts?: (numberId: string, digits: string) => boolean
   /** Enter key or the keypad's ✓. */
   onSubmit?: () => void
   /** Move to the next cell after a typed digit (default true). */
@@ -48,7 +51,7 @@ export const NEXT_NUMBER_TIP = '¿Ya has terminado este número? Toca la casilla
 
 export function CellGroup({
   children, order = 'dom', onSubmit, autoAdvance = true, keypad = 'auto', keypadToggle = true,
-  keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr', numberComplete,
+  keypadPosition = 'below', keypadLayout, className, style, typingOrder = 'ltr', numberComplete, numberAccepts,
 }: CellGroupProps) {
   const { mode, learning } = useInk()
   // One check button per screen: with an answer bar, its «Comprobar» grades and the keypad has no ✓ (Enter still works).
@@ -64,8 +67,8 @@ export function CellGroup({
   const [unfinished, setUnfinished] = useState<string | null>(null)
   const keypadVisible = keypad === 'show' || (keypad === 'auto' && (mode === 'keypad' || toggled))
 
-  const latest = useRef({ order, onSubmit, autoAdvance, typingOrder, numberComplete })
-  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance, typingOrder, numberComplete } })
+  const latest = useRef({ order, onSubmit, autoAdvance, typingOrder, numberComplete, numberAccepts })
+  useLayoutEffect(() => { latest.current = { order, onSubmit, autoAdvance, typingOrder, numberComplete, numberAccepts } })
   const orderKey = typeof order === 'string' ? order : order.join('|')
 
   const items = useCallback((): OrderItem[] => {
@@ -157,7 +160,7 @@ export function CellGroup({
   }
   const digitsOf = (cells: [string, CellEntry][]) => cells.map(([, e]) => e.value()).filter((v) => v != null).join('')
 
-  const typeInNumber = useCallback((uid: string, d: number, via: 'keyboard' | 'keypad') => {
+  const typeInNumber = useCallback((uid: string, d: number, via: 'keyboard' | 'keypad'): boolean => {
     if (latest.current.typingOrder !== 'ltr') return false
     const e = entries.current.get(uid)
     if (!e?.numberId) return false
@@ -166,6 +169,18 @@ export function CellGroup({
     // Only the units cell (where the cursor waits) types like a calculator; a cell she taps on purpose takes the digit.
     if (uid !== units) return false
     const before = digitsOf(cells)
+    // The number cannot take this digit (1 then 3 on a clock of 12): it is complete, and the digit starts the next one.
+    if (before && before.length < cells.length && latest.current.numberAccepts?.(e.numberId, before + String(d)) === false) {
+      const after = nextAfter(uid, cells)
+      const target = after ? entries.current.get(after) : undefined
+      if (after && target?.numberId) {
+        const nextCells = numberCells(target.numberId)
+        const nextUnits = nextCells[nextCells.length - 1][0]
+        setUnfinished(null)
+        focusCell(nextUnits)
+        return typeInNumberRef.current(nextUnits, d, via)
+      }
+    }
     // A full number starts again: the child is writing a new one over it.
     const digits = before.length >= cells.length ? String(d) : before + String(d)
     fillNumber(cells, digits, via)
@@ -181,6 +196,8 @@ export function CellGroup({
     }
     return true
   }, [numberCells, nextAfter, focusCell])
+  const typeInNumberRef = useRef(typeInNumber)
+  typeInNumberRef.current = typeInNumber
 
   const deleteInNumber = useCallback((uid: string) => {
     if (latest.current.typingOrder !== 'ltr') return false

@@ -117,7 +117,7 @@ export function useAnswerFlow(exercise: Exercise, opts: AnswerFlowOptions): Answ
     if (store.canAsk() && !reported.current) {
       // «625» typed as read into a row that fills units first became 526: ask, do not grade.
       if (!c.correct && !reversedAsked.current && store.wasTyped()) {
-        const rev = reversedAnswer(answer)
+        const rev = reversedAnswer(answer, exercise.kind)
         if (rev && grade(rev).correct) {
           reversedAsked.current = true
           askReversed(store, shownAnswer(rev) ?? c.expected, owner)

@@ -67,7 +67,20 @@ function reverseRow(digits: Digits): (number | null)[] | null {
  * The answer with the written number reversed: what the child meant when she typed «625» in reading order into a
  * row filled units first (it became 526). Only for the result rows of column operations. null when not applicable.
  */
-export function reversedAnswer(a: Answer): Answer | null {
+export function reversedAnswer(a: Answer, kind?: string): Answer | null {
+  // A sum of decimals in columns («numbers»: whole part, tenths, hundredths), filled from the last decimal: 3,75 typed
+  // as read became 5,73. The digits as written, reversed, split again with the same number of decimals.
+  if (a.type === 'numbers' && kind === 'decimal-op') {
+    const [whole, ...decs] = a.values
+    const places = decs[1] == null ? 1 : 2
+    if (whole == null || decs.slice(0, places).some((d) => d == null)) return null
+    const written = `${whole}${decs.slice(0, places).join('')}`
+    const rev = [...written].reverse().join('')
+    if (rev === written) return null
+    const w = Number(rev.slice(0, rev.length - places))
+    const d = rev.slice(rev.length - places).split('').map(Number)
+    return { ...a, values: [w, d[0], places === 2 ? d[1] : null] }
+  }
   if (a.type === 'digits') {
     const rev = reverseRow(a.digits)
     return rev ? { ...a, digits: rev } : null

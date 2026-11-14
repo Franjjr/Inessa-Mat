@@ -16,7 +16,7 @@ import { usePalmGuard } from './usePalmGuard'
 import { AltPopover } from './AltPopover'
 import { ALL_DIGITS, alternativeDigits } from './alternatives'
 import { Keypad } from './Keypad'
-import { focusPad, moveToPad, nextEmptyPad, useIsActivePad, usePadSlot } from './activePad'
+import { focusPad, moveToPad, nextEmptyPad, typeInPad, useIsActivePad, usePadSlot, usePadTyper } from './activePad'
 import { CheckIcon, EraserIcon, KeypadIcon, PencilIcon } from './icons'
 import { NudgeBubble, useNudge } from './Nudge'
 import s from './NumberInput.module.css'
@@ -241,13 +241,27 @@ export function NumberInput(props: NumberInputProps & NumberInputExtraProps) {
     }
     latest.current.ink.learning.noteTyped()
     if (via === 'keyboard') latest.current.ink.noteKeyboard()
-    const t = typedRef.current.length >= maxDigits ? typedRef.current : typedRef.current + String(d)
+    if (typedRef.current.length >= maxDigits) {
+      // A full box: the digit goes on to the next empty box (0,4 then 5 → the centésimas), never lost in silence; with
+      // no other box, the child is told it does not fit.
+      const next = nextEmptyPad(uid)
+      if (next) {
+        moveToPad(next)
+        typeInPad(next, d, via)
+      } else setTooMany(true)
+      return
+    }
+    setTooMany(false)
+    const t = typedRef.current + String(d)
     setTypedBoth(t)
     emit(t ? Number(t) : null)
   }
 
+  usePadTyper(uid, typeDigit)
+
   const backspace = () => {
     if (disabled) return
+    setTooMany(false)
     const segs = segRef.current
     if ((surface.capture.current?.strokes.length ?? 0) > 0) {
       const last = segs[segs.length - 1]

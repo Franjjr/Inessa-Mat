@@ -71,6 +71,8 @@ const SIGN: Record<WordProblemExercise['op'], string> = { add: '+', sub: '−', 
 /** The result the calculation view sent, as the answer of the story. */
 function answerFromCalc(ex: WordProblemExercise, o: ExerciseOutcome): Answer {
   const withRest = (ex.remainder ?? 0) > 0
+  // A calculation left half done («?65») is not an answer of 65: the story stays incomplete.
+  if (o.check.errorType === 'incomplete') return withRest ? { type: 'division', quotient: null, remainder: null } : { type: 'number', value: null }
   if (o.check.correct) {
     return withRest ? { type: 'division', quotient: ex.answer, remainder: ex.remainder ?? 0 } : { type: 'number', value: ex.answer }
   }
@@ -137,7 +139,8 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
   const calc = useMemo(() => calculationFor(ex), [ex])
   const notebook = useMemo(() => wordNotebook(ex), [ex])
   /** data: the «Datos»; plan: numbers and operation; calc: the boxes; head: the result alone (small numbers, or «Lo sé de cabeza»). */
-  const [stage, setStage] = useState<'data' | 'plan' | 'calc' | 'head'>(again ? (calc && !before && !beforeDiv ? 'calc' : 'head') : notebook ? 'data' : 'plan')
+  // A try again comes back to the boxes of the calculation when the story has them («Lo sé de cabeza» still skips them).
+  const [stage, setStage] = useState<'data' | 'plan' | 'calc' | 'head'>(again ? (calc ? 'calc' : 'head') : notebook ? 'data' : 'plan')
   const [data, setData] = useState<(number | null)[]>(() => (again && notebook ? notebook.data.map((d) => d.value) : [null, null]))
   const [dataClue, setDataClue] = useState<string | null>(null)
   const dataMisses = useRef(0)
@@ -235,7 +238,7 @@ function WordRound({ ex, onAnswered, allowHints, showFeedback, compact, guided, 
     ? <AnswerBar flow={flow} onCheck={checkData} canCheck={dataReady} />
     : stage === 'plan'
     ? <AnswerBar flow={flow} onCheck={checkPlan} canCheck={planReady} />
-    : stage === 'head' || flow.result ? <AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck && !flow.result} /> : null
+    : stage === 'head' || flow.result ? <AnswerBar flow={flow} onCheck={() => submit()} canCheck={readyToCheck} /> : null
 
   return (
     <ExerciseLayout

@@ -145,7 +145,7 @@ function OpRound({ ex, onAnswered, showFeedback, allowHints, retry }: { ex: Deci
       sub="Empieza por la derecha. Escribe una cifra en cada casilla: la coma ya está puesta."
       actions={<AnswerBar flow={flow} onCheck={submit} canCheck={canCheck} />}
     >
-      <CellGroup order={order} onSubmit={submit} keypadPosition="below" keypadToggle>
+      <CellGroup order={order} onSubmit={submit} keypadPosition="below" keypadToggle typingOrder="column">
         <div className={d.opGrid} style={{ gridTemplateColumns: `1.2em repeat(${wholeCols}, auto) auto repeat(${places}, auto)` }}>
           {cells}
         </div>

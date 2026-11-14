@@ -389,10 +389,12 @@ describe('check — column addition diagnosis', () => {
 })
 
 describe('check — column subtraction diagnosis', () => {
-  it('52 − 17 answered 45 → smaller-from-larger', () => {
+  it('52 − 17 answered 45: the units are right (12 − 7 = 5) and only the tens are wrong → the neighbour not crossed out', () => {
+    // 7 − 2 also gives 5, but the marked column is the tens, where 5 is not smaller than 1: «arriba hay un número más
+    // pequeño» would be false there.
     const r = check(makeColumnSub(52, 17), dig(45))
-    expect(r).toMatchObject({ correct: false, errorType: 'smaller-from-larger', wrongColumns: [1] })
-    expect(r.feedback).toBe('Arriba hay un número más pequeño: ¡pide ayuda a la vecina!')
+    expect(r).toMatchObject({ correct: false, errorType: 'borrow-forgot', wrongColumns: [1] })
+    expect(r.feedback).not.toMatch(/más pequeño/)
   })
   it('734 − 459: 385 → borrow-forgot (no decrement); 325 → smaller-from-larger', () => {
     expect(check(makeColumnSub(734, 459), dig(385))).toMatchObject({ errorType: 'borrow-forgot' })
