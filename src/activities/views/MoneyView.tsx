@@ -126,7 +126,7 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
   const [dragging, setDragging] = useState<number | null>(null)
   const [ghost, setGhost] = useState<{ x: number; y: number; value: number } | null>(null)
   const drag = useRef<{ value: number; x: number; y: number; moved: boolean } | null>(null)
-  const justDragged = useRef(false)
+  const justDragged = useRef<{ value: number; at: number } | null>(null)
   const locked = !!flow.result?.correct
 
   const removeAt = (i: number) => {
@@ -153,7 +153,9 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
       setDragging(null)
       setGhost(null)
       if (!d || !d.moved) return
-      justDragged.current = true
+      // Swallow only the click that may follow this drag at once (a browser may send it to the coin): after a real drag
+      // it often never comes, and a mark left up would eat the next tap.
+      justDragged.current = { value: d.value, at: Date.now() }
       const el = document.elementFromPoint(e.clientX, e.clientY)
       if (el?.closest?.('[data-tray]')) setTray((t) => [...t, d.value])
     }
@@ -166,7 +168,10 @@ function Pay({ ex, flow }: { ex: MoneyPayExercise; flow: AnswerFlow }) {
   }, [])
 
   const onPurseClick = (value: number) => {
-    if (justDragged.current) { justDragged.current = false; return }
+    const dragged = justDragged.current
+    justDragged.current = null
+    // The click a browser may send to the coin just dragged (the same coin, at once) is not a second tap.
+    if (dragged && dragged.value === value && Date.now() - dragged.at < 400) return
     if (!locked) setTray((t) => [...t, value])
   }
 

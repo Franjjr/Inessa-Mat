@@ -84,7 +84,7 @@ describe('division hints', () => {
     expect(hintsFor(makeDivision3(5248, 8))[2].text).toContain('Mira la primera cifra, 5: el 8 no cabe. Coge dos cifras: 52.')
     expect(hintsFor(makeDivision3(894, 3))[2].text).toContain('en el 8')
     expect(hintsFor(makeDivision3(8940, 3))[2].text).toContain('en el 8')
-    expect(hintsFor(makeDivision3(894, 3))[0].text).toBe('Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número que reparte.')
+    expect(hintsFor(makeDivision3(894, 3))[0].text).toBe('Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número entre el que repartes (el divisor).')
   })
 
   it('no division hint says «arriba» or «fila», and «galera sin restas» does not speak of subtracting', () => {

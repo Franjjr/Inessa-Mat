@@ -16,7 +16,7 @@ import { lineStops, partsResults, subtrahendParts } from './subMethods'
 import { firstPartial, hintsFor } from './hints'
 import { euros } from './money'
 import { fmtDecimal } from './decimals'
-import { expectedClock } from './clock'
+import { expectedClock, toDigitalStep } from './clock'
 import { explainHunt } from './bugs'
 
 export interface SolutionOptions {
@@ -289,10 +289,10 @@ function barSteps(ex: BarProblemExercise): string[] {
   return out
 }
 
-function huntSolution(ex: ErrorHuntExercise): Solution {
+function huntSolution(ex: ErrorHuntExercise, opts: SolutionOptions = {}): Solution {
   const sym = ex.op === 'add' ? '+' : ex.op === 'sub' ? '−' : '×'
   const steps = [`Hago la cuenta bien: ${num(ex.top)} ${sym} ${num(ex.bottom)}.`]
-  steps.push(...(ex.op === 'add' ? columnAddSteps([ex.top, ex.bottom]) : ex.op === 'sub' ? columnSubSteps(ex.top, ex.bottom) : columnMulSteps(ex.top, ex.bottom)))
+  steps.push(...(ex.op === 'add' ? columnAddSteps([ex.top, ex.bottom]) : ex.op === 'sub' ? subSteps(ex.top, ex.bottom, opts.subMethod) : columnMulSteps(ex.top, ex.bottom)))
   if (ex.wrongColumn === null) {
     steps.push(`Sale ${num(ex.answer)}, lo mismo que en la cuenta: todas las casas están bien.`)
     return { steps, answer: `${explainHunt(ex)}.` }
@@ -318,7 +318,7 @@ function checkCalcSolution(ex: CheckCalcExercise): Solution {
       ex.ok ? `Sale ${num(ex.left)}, el de arriba: la cuenta está bien.` : `Tendría que salir ${num(ex.left)}, y sale ${num(ex.answer)}: la cuenta está mal.`]
   } else {
     const r = ex.remainder ?? 0
-    steps = [`Para comprobar una división, multiplico el resultado por el número que reparte y sumo lo que sobra: ${num(ex.right)} × ${num(ex.claimed)} + ${r} = ${num(ex.answer)}.`,
+    steps = [`Para comprobar una división, multiplico el resultado por el número entre el que reparto y sumo lo que sobra: ${num(ex.right)} × ${num(ex.claimed)} + ${r} = ${num(ex.answer)}.`,
       ex.ok ? `Sale ${num(ex.left)}, el número que se reparte: la cuenta está bien.` : `Tendría que salir ${num(ex.left)}, y sale ${num(ex.answer)}: la cuenta está mal.`]
   }
   return { steps, answer: `${num(ex.answer)}; la cuenta está ${verdict}` }
@@ -630,14 +630,14 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
         answer: num(ex.answer as number),
       }
     }
-    case 'error-hunt': return huntSolution(ex)
+    case 'error-hunt': return huntSolution(ex, opts)
     case 'check-calc': return checkCalcSolution(ex)
     case 'clock-read': {
       const phrase = expectedClock(ex)
       return { steps: [`La aguja corta marca la hora y la larga, los minutos: ${ex.minute} minutos.`, `Son ${phrase}.`], answer: phrase }
     }
     case 'clock-set': return { steps: ['Pon primero la aguja larga en los minutos, contando de 5 en 5 desde el 12.', `Después, la aguja corta en la hora: ${ex.prompt}.`, `En el reloj digital, ${time(ex.answer.hour, ex.answer.minute)}.`], answer: ex.prompt }
-    case 'time-convert': return { steps: [`«${ex.phrase}» en el reloj de 24 horas: ${time(ex.answer.hour, ex.answer.minute)}.`, ex.answer.hour >= 13 ? `Por la tarde y por la noche, a la hora se le suma 12: ${ex.answer.hour - 12} + 12 = ${ex.answer.hour}.` : 'Por la mañana la hora se escribe igual.'], answer: ex.direction === 'to-phrase' ? `${ex.phrase} (${expectedClock(ex)})` : expectedClock(ex) }
+    case 'time-convert': return { steps: [`«${ex.phrase}» en el reloj de 24 horas: ${time(ex.answer.hour, ex.answer.minute)}.`, ex.answer.hour >= 13 ? `Por la tarde y por la noche, a la hora se le suma 12: ${ex.answer.hour - 12} + 12 = ${ex.answer.hour}.` : toDigitalStep(ex.answer.hour)], answer: ex.direction === 'to-phrase' ? `${ex.phrase} (${expectedClock(ex)})` : expectedClock(ex) }
     case 'time-duration': {
       const start = time(ex.start.hour, ex.start.minute)
       const end = time(ex.end.hour, ex.end.minute)
@@ -714,9 +714,13 @@ export function solutionFor(ex: Exercise, opts: SolutionOptions = {}): Solution 
       const values = ex.categories.map((c) => `${c.label}: ${num(c.value)}`)
       const steps = values.length ? [`Leo cada uno: ${values.join('; ')}.`] : strategySteps(ex, opts).slice(0, 1)
       if (ex.ask === 'difference' && ex.categories.length) {
-        const sorted = [...ex.categories].map((c) => c.value).sort((a, b) => b - a)
-        const pair = sorted.flatMap((a) => sorted.map((b) => [a, b])).find(([a, b]) => a - b === ex.answer)
-        if (pair) steps.push(`${num(pair[0])} − ${num(pair[1])} = ${num(ex.answer)}.`)
+        // The two categories of the question are at the end of the id («:0-2»), as the hints read them.
+        const asked = ex.id.match(/:(\d+)-(\d+)$/)
+        const p = asked ? [ex.categories[Number(asked[1])]?.value, ex.categories[Number(asked[2])]?.value] : []
+        const pair = p.length === 2 && p[0] !== undefined && p[1] !== undefined
+          ? [Math.max(p[0], p[1]), Math.min(p[0], p[1])]
+          : undefined
+        if (pair && pair[0] - pair[1] === ex.answer) steps.push(`${num(pair[0])} − ${num(pair[1])} = ${num(ex.answer)}.`)
       } else if (ex.ask === 'total' && ex.categories.length) {
         steps.push(`${ex.categories.map((c) => num(c.value)).join(' + ')} = ${num(ex.answer)}.`)
       }

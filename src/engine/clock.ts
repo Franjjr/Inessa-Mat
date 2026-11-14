@@ -21,7 +21,7 @@ function shortHand(t: ClockTime): string {
 }
 
 /** The last step of «escribe la hora de 24 horas», from the period the phrase says. */
-function toDigitalStep(hour24: number): string {
+export function toDigitalStep(hour24: number): string {
   if (hour24 === 0) return 'Las doce de la noche se escriben con 00 en el reloj de 24 horas. Después escribe los minutos.'
   const period = periodOf(hour24)
   if (hour24 <= 12) return `La frase dice «${period}»: la hora se escribe igual que en el reloj de agujas. Después escribe los minutos.`
@@ -399,7 +399,7 @@ export function hintsClock(ex: Exercise): Hint[] | null {
         return [
           hint(1, 'Dibuja la recta del tiempo: marca la hora de salida y cuenta hacia delante.', 'time-line'),
           hint(2, 'Una hora son 60 minutos. Una hora y media son 60 más 30 minutos.', 'time-line'),
-          hint(3, `Empieza a las ${clockPhrase(ex.start.hour, ex.start.minute)} y dura ${durationWords(ex.duration)}. Cuenta primero hasta la siguiente hora en punto y después lo que falta.`, 'time-line'),
+          hint(3, `Empieza a ${clockPhrase(ex.start.hour, ex.start.minute)} y dura ${durationWords(ex.duration)}. Cuenta primero hasta la siguiente hora en punto y después lo que falta.`, 'time-line'),
         ]
       }
       return [
@@ -476,7 +476,7 @@ export function statementClock(ex: Exercise): string | null {
     case 'clock-set': return `Pon el reloj en ${ex.prompt}`
     case 'time-convert': return ex.direction === 'to-digital' ? `Escribe la hora de 24 horas: ${ex.phrase}` : `¿Qué frase dice ${digital(ex.answer.hour, ex.answer.minute)}?`
     case 'time-duration': return ex.ask === 'end'
-      ? `Empieza a las ${clockPhrase(ex.start.hour, ex.start.minute)} y dura ${ex.duration} minutos. ¿A qué hora acaba?`
+      ? `Empieza a ${clockPhrase(ex.start.hour, ex.start.minute)} y dura ${ex.duration} minutos. ¿A qué hora acaba?`
       : `¿Cuántos minutos pasan de ${clockPhrase(ex.start.hour, ex.start.minute)} a ${clockPhrase(ex.end.hour, ex.end.minute)}?`
     case 'calendar': return ex.prompt
     default: return null

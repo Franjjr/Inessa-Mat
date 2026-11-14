@@ -84,6 +84,8 @@ describe('P2-01 · «Comprobar» justo después de escribir: la última cifra cu
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
     // The 3 is read after the pause; then both digits are read again: 3 and 0.
     withInk([{ digit: 3 }, { digit: 3 }, { digit: 0 }], <WordProblemView exercise={ex} initialAnswer={SOLUTION_STEP} onAnswered={onAnswered} showFeedback={false} />)
+    // A try again of a story with a calculation comes back to its boxes: «Lo sé de cabeza» goes to the result box.
+    fireEvent.click(screen.getByRole('button', { name: 'Lo sé de cabeza' }))
     const pad = surfaceOf('Respuesta')
     act(() => replayStrokes(pad, handwrite(3, { x: 40, y: 0, w: 100, h: H }, { pointerType: 'pen' })))
     idle()

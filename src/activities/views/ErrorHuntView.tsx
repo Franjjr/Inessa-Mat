@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react'
 import clsx from 'clsx'
 import type { ErrorHuntExercise, ExerciseViewProps } from '@/types'
-import { digitAt, digitCount } from '@/engine'
+import { digitAt, digitCount, hintsFor } from '@/engine'
 import { columnWithArticle } from '@/engine'
 import { NumberInput } from '@/ink'
 import { useActivityHost } from '@/activities/host'
@@ -23,10 +23,10 @@ export const HUNT_SIGN = 'Dani ha hecho esta cuenta. Puede tener un fallo a prop
 const SIGN: Record<ErrorHuntExercise['op'], string> = { add: '+', sub: '−', mul: '×' }
 
 export default function ErrorHuntView(props: ExerciseViewProps) {
-  const { exercise, onAnswered, allowHints = true, showFeedback = true, compact } = props
+  const { exercise, onAnswered, allowHints = true, showFeedback = true, compact, method } = props
   if (exercise.kind !== 'error-hunt') return null
   return (
-    <HuntRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} retry={props} />
+    <HuntRound key={exercise.id} ex={exercise} onAnswered={onAnswered} allowHints={allowHints} showFeedback={showFeedback} compact={compact} retry={props} method={method} />
   )
 }
 
@@ -38,6 +38,8 @@ interface RoundProps {
   compact?: boolean
   /** «Inténtalo otra vez»: the verdict, the column and the result the child gave; the wrong ones are marked. */
   retry?: RetryProps
+  /** The subtraction method the adult chose: the messages and hints of a subtraction follow it. */
+  method?: ExerciseViewProps['method']
 }
 
 /** What to mark on a try again of an encuentra el error: the verdict when it was the wrong one, else the column tapped
@@ -54,9 +56,11 @@ export function huntRetryMarks(ex: ErrorHuntExercise, retry: RetryProps | undefi
   return { verdict: false, column: c !== null && !errorColumn, value: before.value !== null && before.value !== ex.answer }
 }
 
-function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact, retry }: RoundProps) {
+function HuntRound({ ex, onAnswered, allowHints, showFeedback, compact, retry, method }: RoundProps) {
   const host = useActivityHost()
-  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints })
+  const subMethod = ex.op === 'sub' && method === 'carry' ? 'carry' : undefined
+  const hints = useMemo(() => hintsFor(ex, subMethod), [ex, subMethod])
+  const flow = useRetryFlow(ex, { onAnswered, showFeedback, allowHints, hints, method: subMethod })
   // A try again starts with what the child said: the verdict, the column and the result, the wrong ones soft red.
   const [before] = useState(() => initialOf(retry, 'hunt'))
   const [marks] = useState(() => huntRetryMarks(ex, retry))
