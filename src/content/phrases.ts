@@ -134,11 +134,11 @@ export const ERROR_PHRASES: Partial<Record<ErrorType, TemplateString[]>> = {
     'Coloca los números empezando por la derecha. ¡Cada uno en su casa!',
   ],
   'remainder-too-big': [
-    'Lo que sobra tiene que ser más pequeño que el número que reparte. ¡Cabe una vez más!',
+    'Lo que sobra tiene que ser más pequeño que el número entre el que repartes (el divisor). ¡Cabe una vez más!',
     'Si sobra tanto, ¡todavía puedes repartir otra vuelta!',
   ],
   'quotient-off': [
-    'Multiplica tu resultado por el número que reparte y suma lo que sobra: ¿te da el número del principio?',
+    'Multiplica tu resultado por el número entre el que repartes y suma lo que sobra: ¿te da el número del principio?',
     'Busca en la tabla el número que más se acerca sin pasarse.',
   ],
   operation: [

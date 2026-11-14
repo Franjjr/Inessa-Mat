@@ -389,16 +389,16 @@ export function mentalHints(ex: MentalExercise): Hint[] {
     case 'decenas': {
       const op = sign(ex)
       return [
-        hint(1, TIP.decenas),
-        hint(2, `${fmt(a)} tiene ${decenas(a / 10)}. Cambia solo las decenas.`),
+        hint(1, crossTip(ex) ? 'Las unidades se quedan igual: haz la cuenta con las decenas.' : TIP.decenas),
+        hint(2, crossTip(ex) ?? `${fmt(a)} tiene ${decenas(a / 10)}. Cambia solo las decenas.`),
         hint(3, `Haz la cuenta con las decenas: ${a / 10} ${op} ${b / 10} = ? decenas.`),
       ]
     }
     case 'centenas': {
       const op = sign(ex)
       return [
-        hint(1, TIP.centenas),
-        hint(2, `${fmt(a)} tiene ${Math.floor(a / 100)} centenas. Cambia solo las centenas.`),
+        hint(1, crossTip(ex) ? 'Las decenas y las unidades se quedan igual: haz la cuenta con las centenas.' : TIP.centenas),
+        hint(2, crossTip(ex) ?? `${fmt(a)} tiene ${Math.floor(a / 100)} centenas. Cambia solo las centenas.`),
         hint(3, `Haz la cuenta con las centenas: ${Math.floor(a / 100)} ${op} ${b / 100} = ? centenas.`),
       ]
     }
@@ -652,8 +652,22 @@ export function holds(ex: EquationExercise, x: number): boolean {
 const res = (correct: boolean, given: string, expected: string, extra: Partial<CheckResult> = {}): CheckResult =>
   ({ correct, given, expected, ...extra })
 
+/** decenas / centenas that pass to another centena or millar (190 + 30 = 220): «only the tens change» is false there,
+    so the tip counts the tens (or the hundreds) instead. Null when only that digit changes. */
+function crossTip(ex: MentalExercise): string | null {
+  if (ex.family !== 'decenas' && ex.family !== 'centenas') return null
+  const unit = ex.family === 'decenas' ? 10 : 100
+  if (Math.floor(ex.a / (unit * 10)) === Math.floor(ex.answer / (unit * 10))) return null
+  const op = ex.answer >= ex.a ? '+' : '−'
+  const word = ex.family === 'decenas' ? 'decenas' : 'centenas'
+  const rest = ex.family === 'decenas' ? 'Las unidades se quedan igual' : 'Las decenas y las unidades se quedan igual'
+  return `${rest}; cuenta las ${word}: ${Math.floor(ex.a / unit)} ${op} ${Math.floor(Math.abs(ex.answer - ex.a) / unit)} = ${Math.floor(ex.answer / unit)} ${word}.`
+}
+
 /** The tip of a wrong answer; the distributiva one with the numbers of the item: «Parte el 14 en 10 y 4: 10 × 3 y 4 × 3, y suma los dos.» */
 function mentalTip(ex: MentalExercise): string {
+  const cross = crossTip(ex)
+  if (cross) return cross
   if (ex.family !== 'distributiva') return TIP[ex.family]
   const u = ex.b % 10
   return `Parte el ${ex.b} en ${ex.b - u} y ${u}: ${ex.a} × ${ex.b - u} y ${ex.a} × ${u}. Aquí te piden solo ${ex.a} × ${u}.`

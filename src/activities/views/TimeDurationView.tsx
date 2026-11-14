@@ -75,6 +75,8 @@ function DurationRound({ ex, onAnswered, showFeedback, allowHints }: { ex: TimeD
           onMinute={setMinute}
           status={status}
           onSubmit={(h, m) => { setMinute(m); if (!flow.submitted) submitTime(h, m) }}
+          // The end is read on a clock of hands: hours 1 to 12.
+          maxHour={12}
           autoFocus
         />
       </ExerciseLayout>

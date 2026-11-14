@@ -247,12 +247,12 @@ function firstStepText(n: number, d: number, answers: number[]): string {
         `Mira la primera cifra: el ${d} no cabe. Coge ${take} cifras: ${value}. ¿Cuántas veces cabe el ${d} en ${value}?`,
         `Mira la primera cifra: el ${d} no cabe. Coge ${take} cifras. ¿Cuántas veces cabe el ${d} en ese número?`,
       ]
-  return safeText([...candidates, 'Mira la primera cifra. Si el número que reparte no cabe, coge una cifra más. ¿Cuántas veces cabe?'], answers)
+  return safeText([...candidates, 'Mira la primera cifra. Si el número entre el que repartes (el divisor) no cabe, coge una cifra más. ¿Cuántas veces cabe?'], answers)
 }
 
-const GALERA_STEP = 'Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.'
-const SHORT_GALERA_STEP = 'Escribe ese número debajo del número que reparte. Lo que sobra, calcúlalo de cabeza y escríbelo pequeño, y baja la cifra siguiente.'
-const LEFT_FIRST = 'Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número que reparte.'
+const GALERA_STEP = 'Escribe ese número debajo de el número entre el que repartes (el divisor). Multiplícalo por ese mismo número, réstalo y baja la cifra siguiente.'
+const SHORT_GALERA_STEP = 'Escribe ese número debajo de el número entre el que repartes (el divisor). Lo que sobra, calcúlalo de cabeza y escríbelo pequeño, y baja la cifra siguiente.'
+const LEFT_FIRST = 'Empieza por la izquierda: coge las cifras que hagan falta para que quepa el número entre el que repartes (el divisor).'
 /** The galera without subtractions: the first hint never asks for a written «resta», it says what is done in the head. */
 const SHORT_LEFT_FIRST = 'Empieza por la izquierda, como siempre. Hazlo de cabeza: lo que sobra al repartir se junta con la cifra siguiente. Escribe solo lo que sale en cada paso.'
 
@@ -270,7 +270,7 @@ function twoDigitDivisorHints(ex: DivisionExercise, short: boolean): Hint[] {
     `Primer número: ${value}. ${rounded}: piensa en la tabla del ${table} (${think}) y comprueba multiplicando por ${d}.`,
     `${rounded}: piensa en la tabla del ${table} (${think}) y comprueba multiplicando por ${d}.`,
     `${rounded}: piensa en su tabla, sin el cero, y comprueba multiplicando por ${d}.`,
-    'Redondea el número que reparte, piensa en su tabla y comprueba multiplicando por el número de verdad.',
+    'Redondea el número entre el que repartes (el divisor), piensa en su tabla y comprueba multiplicando por el número de verdad.',
   ], [ex.quotient, ex.remainder])
   return [
     hint(1, short ? SHORT_LEFT_FIRST : LEFT_FIRST, 'none'),
@@ -455,7 +455,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'mental':
     case 'equation': return hintsCalc(ex) ?? []
     case 'bar-problem': return barHints(ex)
-    case 'error-hunt': return huntHints(ex)
+    case 'error-hunt': return huntHints(ex, method)
     case 'check-calc': return checkHints(ex)
     case 'clock-read':
     case 'clock-set':

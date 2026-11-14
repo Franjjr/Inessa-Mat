@@ -374,12 +374,20 @@ function wrongRound(ex: RoundExercise, v: number): CheckResult {
   return res(false, given, expected, { errorType: 'other', feedback })
 }
 
+/** A jump that passes to another centena or millar (95 + 10 = 105): more than one digit changes. */
+function jumpCrosses(ex: NumberLineExercise): boolean {
+  const start = ex.start ?? 0
+  return Math.floor(start / (ex.step * 10)) !== Math.floor(ex.answer / (ex.step * 10))
+}
+
 function wrongLine(ex: NumberLineExercise, v: number): CheckResult {
   const given = String(v)
   const expected = String(ex.answer)
   const word = SIGN_WORD[ex.step]
   const feedback = ex.mode === 'jump'
-    ? `¡Casi! Un salto de ${fmt(ex.step)} cambia solo ${word}. El resto de cifras se queda igual.`
+    ? (jumpCrosses(ex)
+      ? `¡Casi! Aquí ${word} pasan ${ex.jump > 0 ? 'de 9 a 0' : 'de 0 a 9'} y cambia también la cifra de la izquierda. Cuenta ${fmt(ex.step)} ${ex.jump > 0 ? 'más' : 'menos'} desde ${fmt(ex.start ?? 0)}.`
+      : `¡Casi! Un salto de ${fmt(ex.step)} cambia solo ${word}. El resto de cifras se queda igual.`)
     : `¡Casi! Las marcas van de ${fmt(ex.step)} en ${fmt(ex.step)}. Mira la marca de al lado.`
   return res(false, given, expected, { errorType: 'fact', feedback })
 }
@@ -548,7 +556,9 @@ export function hintsNumeric(ex: Exercise): Hint[] | null {
         const d = digitAtPlace(ex.start ?? 0, Math.log10(ex.step))
         return [
           hint(1, `Empieza en ${fmt(ex.start ?? 0)} y da un salto de ${fmt(ex.step)} ${dir}.`, 'none'),
-          hint(2, `Un salto de ${fmt(ex.step)} cambia solo ${word}. ¿Qué cifras se quedan igual?`, 'none'),
+          hint(2, jumpCrosses(ex)
+            ? `Aquí ${word} pasan ${ex.jump > 0 ? 'de 9 a 0' : 'de 0 a 9'}, así que también cambia la cifra de su izquierda.`
+            : `Un salto de ${fmt(ex.step)} cambia solo ${word}. ¿Qué cifras se quedan igual?`, 'none'),
           hint(3, ex.jump > 0 && d <= 8
             ? `La cifra de ${word} de ${fmt(ex.start ?? 0)} es ${d}. ¿Cuánto es ${d} + 1?`
             : `Cuenta ${fmt(ex.step)} en ${fmt(ex.step)} desde ${fmt(ex.start ?? 0)} y mira qué cifra cambia.`, 'none'),

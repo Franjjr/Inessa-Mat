@@ -313,9 +313,10 @@ describe('problema de texto con resto', () => {
 })
 
 describe('mensajes de la resta según el método (auditoría p1-mensajes)', () => {
-  it('«me llevo una»: 52 − 27 = 35 (restar el pequeño del grande) habla de «me llevo una», no de la vecina', () => {
+  it('«me llevo una»: 52 − 27 = 35 habla de «me llevo una», no de la vecina', () => {
+    // Only the tens are wrong (the units 5 are right): the 1 «llevada» was not added below.
     const r = check(makeColumnSub(52, 27), { type: 'digits', digits: [5, 3], method: 'carry' }, { method: 'carry' })
-    expect(r.errorType).toBe('smaller-from-larger')
+    expect(r.errorType).toBe('borrow-forgot')
     expect(r.feedback).toContain('Me llevo una')
     expect(r.feedback).not.toMatch(/vecina/)
   })

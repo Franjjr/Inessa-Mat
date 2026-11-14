@@ -130,7 +130,7 @@ describe('hintsFor', () => {
     expect(hintsFor(makeDivision(17, 5))[2].text).toContain('Cuenta de 5 en 5')
     expect(hintsFor(makeDivision(17, 5))[2].text).not.toContain('15')
     // Level 3 names the next step (the tens and the question), never the partial quotient or the remainder.
-    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo del número que reparte. Multiplícalo por el número que reparte, réstalo y baja la cifra siguiente.')
+    expect(hintsFor(makeDivision(84, 4))[2].text).toBe('Mira la primera cifra, el 8: ¿cuántas veces cabe el 4 en el 8? Escribe ese número debajo de el número entre el que repartes (el divisor). Multiplícalo por ese mismo número, réstalo y baja la cifra siguiente.')
     expect(hintsFor(makeDivision(72, 3))[2].text).toContain('¿cuántas veces cabe el 3 en el 7?')
     // The worked step works another case: it never lists this item's jumps (6, 12… 42 would show the quotient 7).
     expect(hintsFor(makeFactDiv(42, 6))[2].text).toContain('Ahora cuenta tú de 6 en 6 hasta 42')
