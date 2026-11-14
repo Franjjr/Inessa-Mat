@@ -455,7 +455,7 @@ export function hintsFor(ex: Exercise, method?: SubMethod, options: HintOptions 
     case 'mental':
     case 'equation': return hintsCalc(ex) ?? []
     case 'bar-problem': return barHints(ex)
-    case 'error-hunt': return huntHints(ex)
+    case 'error-hunt': return huntHints(ex, method)
     case 'check-calc': return checkHints(ex)
     case 'clock-read':
     case 'clock-set':

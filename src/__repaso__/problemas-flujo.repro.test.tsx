@@ -7,6 +7,7 @@ import type { CheckCalcExercise, ErrorHuntExercise, WordProblemExercise } from '
 import { ActivityHostProvider, defaultActivityHost } from '@/activities/host'
 import WordProblemView from '@/activities/views/WordProblemView'
 import TrySlot from '@/activities/lesson/TrySlot'
+import { check, hintsFor } from '@/engine'
 import { solutionFor } from '@/engine/solution'
 import { statementFor } from '@/engine/statement'
 import { FOUR_WAYS_TRIES } from '@/content/lessons/w4'
@@ -126,5 +127,23 @@ describe('Voz', () => {
       op: 'div', left: 25, right: 4, claimed: 6, remainder: 1, answer: 25, ok: true, errorType: null,
     }
     expect(statementFor(ex)).toMatch(/y sobra 1\b/)
+  })
+})
+
+describe('«Encuentra el error» de una resta con «Me llevo una»', () => {
+  const hunt: ErrorHuntExercise = {
+    id: 'error-hunt:sub:352−127=235', kind: 'error-hunt', skill: 'hunt:sub' as ErrorHuntExercise['skill'], difficulty: 3,
+    op: 'sub', top: 352, bottom: 127, shown: 235, answer: 225, wrongColumn: 1, errorType: 'borrow-forgot',
+  }
+  /* ERA UN FALLO: con «Me llevo una» elegido, decir «está bien» a una resta con el 1 sin llevar respondía «Si la vecina
+     te presta, ella se queda con 1 menos», y la pista 3 preguntaba por la vecina: el método que no usa su colegio. */
+  it('el mensaje y la pista hablan de «me llevo una», no de la vecina; con pedir prestado, de la vecina', () => {
+    const carry = check(hunt, { type: 'hunt', ok: true, column: null, value: null }, { method: 'carry' })
+    expect(carry.feedback).toMatch(/me llevo una/i)
+    expect(carry.feedback).not.toMatch(/vecina/)
+    expect(hintsFor(hunt, 'carry')[2].text).toMatch(/me llevo una/i)
+    expect(hintsFor(hunt, 'carry')[2].text).not.toMatch(/vecina/)
+    expect(check(hunt, { type: 'hunt', ok: true, column: null, value: null }).feedback).toMatch(/vecina/)
+    expect(hintsFor(hunt)[2].text).toMatch(/vecina/)
   })
 })

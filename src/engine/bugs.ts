@@ -331,7 +331,19 @@ function wrongColumnsOf(ex: ErrorHuntExercise): number[] {
  * result, it is right, whatever column she tapped (the column only guides). Without the right result, the column and
  * the number she wrote say where to look.
  */
-export function checkErrorHunt(ex: ErrorHuntExercise, answer: Answer): CheckResult {
+/* «Me llevo una abajo»: the same wrong digit of a subtraction is the 1 not added below in the next house (there is no
+   neighbour that lends). The messages of the subtractions follow the method the adult chose. */
+const MISSED_CARRY: Partial<Record<ErrorType, string>> = {
+  'borrow-forgot': 'Con «me llevo una», la cifra de abajo de la casa de al lado tiene 1 más. ¡Mira esa resta!',
+  'zero-borrow': 'Cuidado con las casas que tienen un 0 arriba: si arriba hay menos, súmale 10 y llévate una abajo.',
+}
+const HUNT_WORKED_CARRY: Partial<Record<ErrorType, string>> = {
+  'borrow-forgot': 'Con «me llevo una», ¿se ha sumado 1 a la cifra de abajo de la casa de al lado?',
+  'zero-borrow': 'Cuidado con el 0 de arriba: si arriba hay menos, súmale 10 y llévate una abajo.',
+}
+const carrySub = (ex: ErrorHuntExercise, method?: string) => ex.op === 'sub' && method === 'carry'
+
+export function checkErrorHunt(ex: ErrorHuntExercise, answer: Answer, method?: string): CheckResult {
   const expected = ex.wrongColumn === null ? 'bien' : `columna ${ex.wrongColumn + 1}: ${ex.answer}`
   const shown = String(ex.shown)
   if (answer.type !== 'hunt') return { correct: false, given: '', expected, errorType: 'other', feedback: '¿Me lo escribes otra vez?' }
@@ -342,7 +354,8 @@ export function checkErrorHunt(ex: ErrorHuntExercise, answer: Answer): CheckResu
     return { correct: false, given: 'error', expected, errorType: 'false-alarm', feedback: HUNT_FEEDBACK.falseAlarm }
   }
   const type: ErrorType = ex.errorType ?? 'other'
-  if (answer.ok === true) return { correct: false, given: `bien (${shown})`, expected, errorType: type, feedback: MISSED[type] }
+  const missed = (carrySub(ex, method) && MISSED_CARRY[type]) || MISSED[type]
+  if (answer.ok === true) return { correct: false, given: `bien (${shown})`, expected, errorType: type, feedback: missed }
   const column = answer.column ?? null
   const given = `error${column === null ? '' : ` en la columna ${column + 1}`}: ${answer.value ?? '?'}`
   if (answer.value === ex.answer) return { correct: true, given, expected, feedback: HUNT_FEEDBACK.correct }
@@ -463,13 +476,13 @@ export const HUNT_WORKED: Record<ErrorType, string> = {
 }
 
 /** Hints of an encuentra el error: the method, the column, then the kind of mistake, never the right result. */
-export function huntHints(ex: ErrorHuntExercise): Hint[] {
+export function huntHints(ex: ErrorHuntExercise, method?: string): Hint[] {
   const where = ex.wrongColumn !== null ? ` Mira bien ${columnWithArticle(ex.wrongColumn)}.` : ' Si todas las columnas salen bien, la cuenta está bien.'
   const params = { a: ex.top, b: ex.bottom, digits: Math.max(digitCount(ex.top), digitCount(ex.bottom), digitCount(ex.shown)) }
   return [
     { level: 1, text: 'Repasa la cuenta desde las unidades, columna a columna. Puede haber un solo error.', visual: 'none' },
     { level: 2, text: 'Mira cada columna: ¿lo que se escribe es lo que sale de hacer esa columna?', visual: 'place-value', params },
-    { level: 3, text: `${ex.errorType ? HUNT_WORKED[ex.errorType] : 'Repasa la cuenta columna a columna.'}${where}`, visual: 'none' },
+    { level: 3, text: `${ex.errorType ? (carrySub(ex, method) && HUNT_WORKED_CARRY[ex.errorType]) || HUNT_WORKED[ex.errorType] : 'Repasa la cuenta columna a columna.'}${where}`, visual: 'none' },
   ]
 }
 

@@ -697,7 +697,7 @@ export function check(exercise: Exercise, answer: Answer, context: CheckContext 
     case 'mental':
     case 'equation': return checkCalc(exercise, answer) ?? wrongShape(expectedText(exercise))
     case 'bar-problem': return checkBar(exercise as BarProblemExercise, answer)
-    case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer)
+    case 'error-hunt': return checkErrorHunt(exercise as ErrorHuntExercise, answer, context.method)
     case 'check-calc': return checkCheckCalc(exercise as CheckCalcExercise, answer)
     case 'clock-read':
     case 'clock-set':
