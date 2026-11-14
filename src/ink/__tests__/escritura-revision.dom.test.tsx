@@ -74,6 +74,9 @@ const fact = (a: number, b: number): FactMulExercise =>
 /** A confident 7 whose second choice is the 2: no question before grading, but a misread is believable. */
 const SEVEN: ScriptedAnswer = { digit: 7, alternatives: [7, 2] }
 
+/** The story already set out (as on «Inténtalo otra vez»): the view opens at the result box, the ink under test. */
+const SOLUTION_STEP = { type: 'number', value: null } as const
+
 describe('«No, yo he escrito otra cosa»: una vez y solo si es creíble', () => {
   it('dos disputas seguidas no son posibles y el segundo fallo de verdad lleva a la solución', () => {
     const onAnswered = vi.fn<(o: ExerciseOutcome) => void>()
@@ -233,7 +236,7 @@ describe('un solo botón de comprobar', () => {
       id: 'wp-3-2', kind: 'word-problem', skill: 'word:add:3' as WordProblemExercise['skill'], difficulty: 2,
       text: 'Ana tiene 3 estrellas y le dan 2 más. ¿Cuántas tiene ahora?', op: 'add', operands: [3, 2], answer: 5, unit: 'estrellas',
     }
-    withInk([], <><KeypadMode /><WordProblemView exercise={ex} onAnswered={() => {}} /></>)
+    withInk([], <><KeypadMode /><WordProblemView exercise={ex} initialAnswer={SOLUTION_STEP} onAnswered={() => {}} /></>)
     surfaceOf('Respuesta').focus()
     expect(screen.getByRole('group', { name: 'Teclado de números' })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Comprobar/ })).toHaveLength(1)
